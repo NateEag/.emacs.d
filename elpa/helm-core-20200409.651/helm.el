@@ -33,7 +33,6 @@
 
 (require 'cl-lib)
 (require 'async)
-(require 'advice) ; Shutup byte compiler about ad-deactivate.
 (require 'helm-lib)
 (require 'helm-multi-match)
 (require 'helm-source)
@@ -2629,7 +2628,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                 :around #'helm--suspend-read-passwd)
     ;; Ensure linum-mode is disabled in Helm buffers to preserve
     ;; performances (Issue #1894).
-    (advice-add 'linum-on :override #'helm--advice-linum-on))
+    (advice-add 'linum-on :override #'helm--advice-linum-on '((depth . 100))))
   (helm-log (concat "[Start session] " (make-string 41 ?+)))
   (helm-log "any-prompt = %S" any-prompt)
   (helm-log "any-preselect = %S" any-preselect)
@@ -2913,16 +2912,12 @@ Don't use this directly, use instead `helm' with the keyword
           (setq helm-current-buffer orig-helm-current-buffer)
           (setq helm-onewindow-p orig-one-window-p)
           ;; Be sure advices, hooks, and local modes keep running.
-          (if (fboundp 'advice-add)
-              (progn
-                (advice-add 'tramp-read-passwd
-                            :around #'helm--suspend-read-passwd)
-                (advice-add 'ange-ftp-get-passwd
-                            :around #'helm--suspend-read-passwd)
-                (advice-add 'epa-passphrase-callback-function
-                            :around #'helm--suspend-read-passwd))
-            (ad-activate 'tramp-read-passwd)
-            (ad-activate 'ange-ftp-get-passwd))
+          (advice-add 'tramp-read-passwd
+                      :around #'helm--suspend-read-passwd)
+          (advice-add 'ange-ftp-get-passwd
+                      :around #'helm--suspend-read-passwd)
+          (advice-add 'epa-passphrase-callback-function
+                      :around #'helm--suspend-read-passwd)
           (unless helm-allow-mouse
             (helm--remap-mouse-mode 1))
           (unless (cl-loop for h in post-command-hook

@@ -337,7 +337,7 @@ When only `add-text-properties' is available APPEND is ignored."
   :set (lambda (var val)
          (set var val)
          (if val
-             (advice-add 'push-mark :override #'helm--advice-push-mark)
+             (advice-add 'push-mark :override #'helm--advice-push-mark '((depth . 100)))
            (advice-remove 'push-mark #'helm--advice-push-mark))))
 
 ;; This the version of Emacs-27 written by Stefan
@@ -807,21 +807,11 @@ ARGS is (cand1 cand2 ...) or ((disp1 . real1) (disp2 . real2) ...)
                if (listp elm) append elm
                else collect elm))))
 
-(cl-defgeneric helm-take-first-elements (seq n)
+(defun helm-take-first-elements (seq n)
   "Return the first N elements of SEQ if SEQ is longer than N.
 It is used for narrowing list of candidates to the
 `helm-candidate-number-limit'."
   (if (> (length seq) n) (cl-subseq seq 0 n) seq))
-
-(cl-defmethod helm-take-first-elements ((seq list) n)
-  "Optimized for lists, same as `seq-take'."
-  (if (> (length seq) n)
-      (let ((result '()))
-        (while (and seq (> n 0))
-          (setq n (1- n))
-          (push (pop seq) result))
-        (nreverse result))
-    seq))
 
 (defun helm-source-by-name (name &optional sources)
   "Get a Helm source in SOURCES by NAME.
@@ -1020,7 +1010,7 @@ Example:
 
 (defun helm-describe-class (class)
   "Display documentation of Eieio CLASS, a symbol or a string."
-  (advice-add 'cl--print-table :override #'helm-source--cl--print-table)
+  (advice-add 'cl--print-table :override #'helm-source--cl--print-table '((depth . 100)))
   (unwind-protect
        (let ((helm-describe-function-function 'describe-function))
          (helm-describe-function class))

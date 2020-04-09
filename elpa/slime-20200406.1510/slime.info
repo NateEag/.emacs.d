@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.24.  (Last updated March 5, 2020)
+manual for version 2.24.  (Last updated April 9, 2020)
 
    Written by Luke Gorrie and others.
 
@@ -374,8 +374,6 @@ SLIME installation with bundled extensions:
      ;; _Setup load-path, autoloads and your lisp system_
      (add-to-list 'load-path "~/dir/to/cloned/slime")
      (require 'slime-autoloads)
-     ;; _Also setup the slime-fancy contrib_
-     (add-to-list 'slime-contribs 'slime-fancy)
 
    See *note Loading Contribs:: for more information on SLIME’s contrib
 system.
@@ -2048,7 +2046,8 @@ File: slime.info,  Node: Loading Contribs,  Next: REPL,  Up: Contributed Package
 Contrib packages aren’t loaded by default.  You have to modify your
 setup a bit so that Emacs knows where to find them and which of them to
 load.  Generally, you set the variable ‘slime-contribs’ with the list of
-package-names that you want to use.  For example, a setup to load the
+package-names that you want to use.  Its default value is ‘slime-fancy’
+which loads almost everything.  For example, a setup to load the
 ‘slime-scratch’ and ‘slime-editing-commands’ packages looks like:
 
      ;; _Setup load-path and autoloads_
@@ -2061,17 +2060,6 @@ package-names that you want to use.  For example, a setup to load the
 
    After starting SLIME, the commands of both packages should be
 available.
-
-   The REPL and ‘slime-fancy’ modules deserve special mention.  Many
-users consider the REPL (*note REPL::) essential while ‘slime-fancy’
-(*note slime-fancy::) loads the REPL and almost all of the popular
-contribs.  So, if you aren’t sure what to choose start with:
-
-     (setq slime-contribs '(slime-repl)) ; repl only
-
-   If you like what you see try this:
-
-     (setq slime-contribs '(slime-fancy)) ; almost everything
 
 8.1.1 Loading and unloading “on the fly”
 ----------------------------------------
@@ -2894,12 +2882,6 @@ collects and stores them in your lisp environment until, on user’s
 request, they are fetched into Emacs and displayed in a dialog-like
 interactive view.
 
-   To use this contrib, add it to ‘slime-contribs’ in your ‘~/.emacs’,
-either directly by setting up ‘slime-fancy’ (*note slime-fancy::).
-
-     ;; setting up 'slime-fancy would also have worked
-     (add-to-list 'slime-contribs 'slime-trace-dialog)
-
    After starting up SLIME, SLIME’s Trace Dialog installs a _Trace_ menu
 in the menu-bar of any ‘slime-mode’ buffer and adds two new commands,
 with respective key-bindings:
@@ -3031,7 +3013,8 @@ File: slime.info,  Node: slime-fancy,  Next: Quicklisp,  Prev: SLIME Enhanced M-
 ================================
 
 ‘slime-fancy’ is a meta package which loads a combination of the most
-popular packages.
+popular packages.  It is the default value of ‘slime-contribs’, thus it
+is loaded by default.
 
 
 File: slime.info,  Node: Quicklisp,  Prev: slime-fancy,  Up: Contributed Packages
@@ -3247,12 +3230,12 @@ Key (Character) Index
 * C-c M-o:                               REPL commands.       (line  36)
 * C-c M-p:                               Recovery.            (line  20)
 * C-c M-q:                               Editing Commands.    (line  11)
-* C-c M-t:                               SLIME Trace Dialog.  (line  32)
-* C-c T:                                 SLIME Trace Dialog.  (line  45)
+* C-c M-t:                               SLIME Trace Dialog.  (line  26)
+* C-c T:                                 SLIME Trace Dialog.  (line  39)
 * C-c ~:                                 Recovery.            (line  15)
 * C-j:                                   REPL commands.       (line  24)
 * C-j <1>:                               Scratch Buffer.      (line  13)
-* C-k:                                   SLIME Trace Dialog.  (line  89)
+* C-k:                                   SLIME Trace Dialog.  (line  83)
 * C-M-x:                                 Evaluation.          (line  19)
 * C-RET:                                 REPL commands.       (line  15)
 * C-x 4 .:                               Finding definitions. (line  23)
@@ -3274,8 +3257,8 @@ Key (Character) Index
                                                               (line  17)
 * g <2>:                                 Multiple connections.
                                                               (line  61)
-* g <3>:                                 SLIME Trace Dialog.  (line  82)
-* G:                                     SLIME Trace Dialog.  (line  85)
+* g <3>:                                 SLIME Trace Dialog.  (line  76)
+* G:                                     SLIME Trace Dialog.  (line  79)
 * i:                                     Examining frames.    (line  34)
 * l:                                     Inspector.           (line  41)
 * M-,:                                   Finding definitions. (line  18)
@@ -3529,12 +3512,12 @@ Command and Function Index
                                                               (line  65)
 * slime-toggle-profile-fdefinition:      Profiling.           (line  11)
 * slime-toggle-trace-fdefinition:        Disassembly.         (line  12)
-* slime-trace-dialog:                    SLIME Trace Dialog.  (line  45)
+* slime-trace-dialog:                    SLIME Trace Dialog.  (line  39)
 * slime-trace-dialog-clear-fetched-traces: SLIME Trace Dialog.
-                                                              (line  89)
-* slime-trace-dialog-fetch-status:       SLIME Trace Dialog.  (line  82)
-* slime-trace-dialog-fetch-traces:       SLIME Trace Dialog.  (line  85)
-* slime-trace-dialog-toggle-trace:       SLIME Trace Dialog.  (line  32)
+                                                              (line  83)
+* slime-trace-dialog-fetch-status:       SLIME Trace Dialog.  (line  76)
+* slime-trace-dialog-fetch-traces:       SLIME Trace Dialog.  (line  79)
+* slime-trace-dialog-toggle-trace:       SLIME Trace Dialog.  (line  26)
 * slime-undefine-function:               Evaluation.          (line  52)
 * slime-unprofile-all:                   Profiling.           (line  17)
 * slime-untrace-all:                     Disassembly.         (line  17)
@@ -3635,102 +3618,102 @@ Node: Installation7326
 Node: Running8592
 Node: Setup Tuning9135
 Node: Basic customization9666
-Node: Multiple Lisps10732
-Node: Loading Swank faster13226
-Ref: init-example14319
-Node: SLIME mode14608
-Node: User-interface conventions15206
-Node: Temporary buffers15615
-Node: Inferior-lisp17068
-Node: Multithreading17893
-Node: Key bindings19138
-Ref: describe-key20604
-Ref: describe-bindings20747
-Ref: describe-mode20890
-Ref: view-lossage21074
-Node: Evaluation22269
-Node: Compilation24174
-Node: Completion26933
-Node: Finding definitions27564
-Node: Documentation28704
-Node: Cross-reference30871
-Node: Xref buffer commands32608
-Node: Macro-expansion33167
-Node: Disassembly34188
-Node: Recovery34733
-Node: Inspector35502
-Node: Profiling37740
-Node: Other38537
-Node: Semantic indentation38790
-Ref: Semantic indentation-Footnote-140921
-Node: Reader conditionals41016
-Node: Debugger41367
-Node: Examining frames42007
-Node: Restarts43139
-Ref: sldb-quit43353
-Node: Frame Navigation43780
-Node: Stepping44480
-Node: Miscellaneous45152
-Node: Misc46091
-Node: slime-selector46278
-Node: slime-macroexpansion-minor-mode47660
-Node: Multiple connections48515
-Node: Customization51575
-Node: Emacs-side customization51750
-Ref: slime-completion-at-point-functions52443
-Ref: slime-net-coding-system53334
-Node: Hooks54007
-Ref: slime-connected-hook54372
-Node: Lisp-side54856
-Node: Communication style55266
-Node: Other configurables57828
-Ref: *SLDB-QUIT-RESTART*59226
-Node: Tips and Tricks61817
-Node: Connecting to a remote lisp62042
-Node: Setting up the lisp image62747
-Ref: Setting up the lisp image-Footnote-164635
-Ref: Setting up the lisp image-Footnote-264715
-Node: Setting up Emacs64891
-Ref: Setting up Emacs-Footnote-165727
-Node: Setting up pathname translations65907
-Node: Global IO Redirection67548
-Node: Auto-SLIME68481
-Node: Contributed Packages68902
-Node: Loading Contribs69651
-Node: REPL71973
-Node: REPL commands73388
-Node: Input Navigation74549
-Node: Shortcuts76073
-Node: slime-mrepl77569
-Node: inferior-slime-mode78077
-Node: Compound Completion78782
-Ref: slime-complete-symbol*78959
-Ref: Compound Completion-Footnote-182211
-Node: Fuzzy Completion82335
-Ref: slime-fuzzy-complete-symbol82588
-Node: slime-autodoc-mode85880
-Node: ASDF87298
-Node: Banner89256
-Node: Editing Commands89702
-Node: Fancy Inspector91329
-Node: Presentations92060
-Ref: Presentations-Footnote-198616
-Node: Typeout frames98857
-Node: TRAMP99981
-Node: Documentation Links100257
-Node: Xref and Class Browser100682
-Node: Highlight Edits101274
-Node: Scratch Buffer101746
-Ref: slime-scratch101908
-Node: SLIME Trace Dialog102563
-Node: slime-sprof106813
-Node: SLIME Enhanced M-.107801
-Node: slime-fancy108183
-Node: Quicklisp108459
-Node: Credits108987
-Node: Key Index114591
-Node: Command Index126381
-Node: Variable Index141623
+Node: Multiple Lisps10639
+Node: Loading Swank faster13133
+Ref: init-example14226
+Node: SLIME mode14515
+Node: User-interface conventions15113
+Node: Temporary buffers15522
+Node: Inferior-lisp16975
+Node: Multithreading17800
+Node: Key bindings19045
+Ref: describe-key20511
+Ref: describe-bindings20654
+Ref: describe-mode20797
+Ref: view-lossage20981
+Node: Evaluation22176
+Node: Compilation24081
+Node: Completion26840
+Node: Finding definitions27471
+Node: Documentation28611
+Node: Cross-reference30778
+Node: Xref buffer commands32515
+Node: Macro-expansion33074
+Node: Disassembly34095
+Node: Recovery34640
+Node: Inspector35409
+Node: Profiling37647
+Node: Other38444
+Node: Semantic indentation38697
+Ref: Semantic indentation-Footnote-140828
+Node: Reader conditionals40923
+Node: Debugger41274
+Node: Examining frames41914
+Node: Restarts43046
+Ref: sldb-quit43260
+Node: Frame Navigation43687
+Node: Stepping44387
+Node: Miscellaneous45059
+Node: Misc45998
+Node: slime-selector46185
+Node: slime-macroexpansion-minor-mode47567
+Node: Multiple connections48422
+Node: Customization51482
+Node: Emacs-side customization51657
+Ref: slime-completion-at-point-functions52350
+Ref: slime-net-coding-system53241
+Node: Hooks53914
+Ref: slime-connected-hook54279
+Node: Lisp-side54763
+Node: Communication style55173
+Node: Other configurables57735
+Ref: *SLDB-QUIT-RESTART*59133
+Node: Tips and Tricks61724
+Node: Connecting to a remote lisp61949
+Node: Setting up the lisp image62654
+Ref: Setting up the lisp image-Footnote-164542
+Ref: Setting up the lisp image-Footnote-264622
+Node: Setting up Emacs64798
+Ref: Setting up Emacs-Footnote-165634
+Node: Setting up pathname translations65814
+Node: Global IO Redirection67455
+Node: Auto-SLIME68388
+Node: Contributed Packages68809
+Node: Loading Contribs69558
+Node: REPL71518
+Node: REPL commands72933
+Node: Input Navigation74094
+Node: Shortcuts75618
+Node: slime-mrepl77114
+Node: inferior-slime-mode77622
+Node: Compound Completion78327
+Ref: slime-complete-symbol*78504
+Ref: Compound Completion-Footnote-181756
+Node: Fuzzy Completion81880
+Ref: slime-fuzzy-complete-symbol82133
+Node: slime-autodoc-mode85425
+Node: ASDF86843
+Node: Banner88801
+Node: Editing Commands89247
+Node: Fancy Inspector90874
+Node: Presentations91605
+Ref: Presentations-Footnote-198161
+Node: Typeout frames98402
+Node: TRAMP99526
+Node: Documentation Links99802
+Node: Xref and Class Browser100227
+Node: Highlight Edits100819
+Node: Scratch Buffer101291
+Ref: slime-scratch101453
+Node: SLIME Trace Dialog102108
+Node: slime-sprof106096
+Node: SLIME Enhanced M-.107084
+Node: slime-fancy107466
+Node: Quicklisp107822
+Node: Credits108350
+Node: Key Index113954
+Node: Command Index125744
+Node: Variable Index140986
 
 End Tag Table
 

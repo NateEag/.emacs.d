@@ -5,7 +5,7 @@
 ;; Author:        Kazuo YAGI <kazuo.yagi@gmail.com>
 ;; Maintainer:    Kazuo YAGI <kazuo.yagi@gmail.com>
 ;; URL:           http://github.com/kyagi/shell-pop-el
-;; Package-Version: 20170304.1416
+;; Package-Version: 20200315.1139
 ;; Version:       0.64
 ;; Created:       2009-05-31 23:57:08
 ;; Keywords:      shell, terminal, tools
@@ -155,6 +155,11 @@ effect when `shell-pop-window-position' value is \"full\"."
   :type 'boolean
   :group 'shell-pop)
 
+(defcustom shell-pop-cleanup-buffer-at-process-exit t
+  "If non-nil, cleanup the shell's buffer after its process exits."
+  :type 'boolean
+  :group 'shell-pop)
+
 (defun shell-pop--set-universal-key (symbol value)
   (set-default symbol value)
   (when value (global-set-key (read-kbd-macro value) 'shell-pop))
@@ -183,6 +188,11 @@ The input format is the same as that of `kbd'."
 
 (defcustom shell-pop-out-hook nil
   "Hook run before buffer pop-out"
+  :type 'hook
+  :group 'shell-pop)
+
+(defcustom shell-pop-process-exit-hook nil
+  "Hook run when the shell's process exits."
   :type 'hook
   :group 'shell-pop)
 
@@ -267,6 +277,9 @@ The input format is the same as that of `kbd'."
          process
          (lambda (_proc change)
            (when (string-match-p "\\(?:finished\\|exited\\)" change)
+             (run-hooks 'shell-pop-process-exit-hook)
+             (when shell-pop-cleanup-buffer-at-process-exit
+               (kill-buffer))
              (if (one-window-p)
                  (switch-to-buffer shell-pop-last-buffer)
                (delete-window)))))))))

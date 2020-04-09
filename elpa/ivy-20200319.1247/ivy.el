@@ -1740,9 +1740,12 @@ minibuffer."
         (ivy--cd (ivy--parent-dir (expand-file-name ivy--directory)))
         (ivy--exhibit))
     (ignore-errors
-      (let ((pt (point)))
+      (let ((pt (point))
+            (last-command (if (eq last-command 'ivy-backward-kill-word)
+                              'kill-region
+                            last-command)))
         (forward-word -1)
-        (delete-region (point) pt)))))
+        (kill-region pt (point))))))
 
 (defvar ivy--regexp-quote #'regexp-quote
   "Store the regexp quoting state.")
@@ -1998,6 +2001,11 @@ May supersede `ivy-initial-inputs-alist'."
 (defvar ivy-unwind-fns-alist nil
   "An alist associating commands to their :unwind values.")
 
+(defvar ivy-init-fns-alist nil
+  "An alist associating commands to their :init values.
+An :init is a function with no arguments.
+`ivy-read' calls it to initialize.")
+
 (defun ivy--alist-set (alist-sym key val)
   (let ((cell (assoc key (symbol-value alist-sym))))
     (if cell
@@ -2009,18 +2017,19 @@ May supersede `ivy-initial-inputs-alist'."
 
 (cl-defun ivy-configure (caller
                          &key
-                           initial-input
-                           height
-                           occur
-                           update-fn
-                           unwind-fn
-                           index-fn
-                           sort-fn
-                           format-fn
-                           display-transformer-fn
-                           more-chars
-                           grep-p
-                           exit-codes)
+                         initial-input
+                         height
+                         occur
+                         update-fn
+                         init-fn
+                         unwind-fn
+                         index-fn
+                         sort-fn
+                         format-fn
+                         display-transformer-fn
+                         more-chars
+                         grep-p
+                         exit-codes)
   "Configure `ivy-read' params for CALLER."
   (declare (indent 1))
   (when initial-input
@@ -2033,6 +2042,8 @@ May supersede `ivy-initial-inputs-alist'."
     (ivy--alist-set 'ivy-update-fns-alist caller update-fn))
   (when unwind-fn
     (ivy--alist-set 'ivy-unwind-fns-alist caller unwind-fn))
+  (when init-fn
+    (ivy--alist-set 'ivy-init-fns-alist caller init-fn))
   (when index-fn
     (ivy--alist-set 'ivy-index-functions-alist caller index-fn))
   (when sort-fn
@@ -2193,6 +2204,9 @@ session-specific data.
 CALLER is a symbol to uniquely identify the caller to `ivy-read'.
 It is used, along with COLLECTION, to determine which
 customizations apply to the current completion session."
+  (let ((init-fn (ivy-alist-setting ivy-init-fns-alist caller)))
+    (when init-fn
+      (funcall init-fn)))
   ;; get un-stuck from an existing `read-key' overriding minibuffer keys
   (when (equal overriding-local-map '(keymap))
     (keyboard-quit))
@@ -2409,7 +2423,9 @@ This is useful for recursive `ivy-read'."
                                                counsel-switch-buffer)))
                          predicate)))
             (dynamic-collection
-             (setq coll (ivy--dynamic-collection-cands (or initial-input ""))))
+             (setq coll (if (eq this-command 'ivy-resume)
+                            ivy--all-candidates
+                          (ivy--dynamic-collection-cands (or initial-input "")))))
             ((consp (car-safe collection))
              (setq collection (cl-remove-if-not predicate collection))
              (when (and sort (setq sort-fn (ivy--sort-function caller)))
@@ -3212,8 +3228,8 @@ Possible choices are 'ivy-magic-slash-non-match-cd-selected,
   (let (remote)
     (cond
       ;; Windows
-      ((string-match "\\`[[:alpha:]]:/" ivy--directory)
-       (match-string 0 ivy--directory))
+      ;; ((string-match "\\`[[:alpha:]]:/" ivy--directory)
+      ;;  (match-string 0 ivy--directory))
       ;; Remote root if on remote
       ((setq remote (file-remote-p ivy--directory))
        (concat remote "/"))
@@ -3374,7 +3390,8 @@ Should be run via minibuffer `post-command-hook'."
           ;; "Waiting for process to die...done" message interruptions
           (let ((inhibit-message t)
                 coll in-progress)
-            (unless (equal ivy--old-text ivy-text)
+            (unless (or (equal ivy--old-text ivy-text)
+                        (eq this-command 'ivy-resume))
               (while-no-input
                 (setq coll (ivy--dynamic-collection-cands ivy-text))
                 (when (eq coll 0)
@@ -3596,7 +3613,10 @@ CANDIDATES are assumed to be static."
         (setq res (append
                    (ivy--filter ivy-text (cadr source))
                    res))))
-    (setq ivy--all-candidates res)))
+    (setq ivy--all-candidates
+          (if (cdr ivy--extra-candidates)
+              (delete-dups res)
+            res))))
 
 (defun ivy--shorter-matches-first (_name cands)
   "Sort CANDS according to their length."
@@ -3974,7 +3994,9 @@ and SEPARATOR is used to join them."
    "\n"))
 
 (defun ivy-format-function-line (cands)
-  "Transform CANDS into a string for minibuffer."
+  "Transform CANDS into a string for minibuffer.
+Note that since Emacs 27, `ivy-current-match' needs to have :extend t attribute.
+It has it by default, but the current theme also needs to set it."
   (ivy--format-function-generic
    (lambda (str)
      (ivy--add-face (concat str "\n") 'ivy-current-match))

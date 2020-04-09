@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "lsp-clients" "lsp-clients.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-clients.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clients" '("lsp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clients" '("expand-start-command" "lsp-" "parse-rf-language-server-")))
 
 ;;;***
 
@@ -49,7 +49,7 @@ Explain a clang-tidy ERROR by scraping documentation from llvm.org.
 ;;;### (autoloads nil "lsp-dart" "lsp-dart.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-dart.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dart" '("lsp-dart-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dart" '("lsp-dart-" "treemacs-")))
 
 ;;;***
 
@@ -157,6 +157,13 @@ Entry point that defers server startup until buffer is visible.
 This avoids overloading the server with many files when starting Emacs." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("dash-expand:&lsp-" "lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-perl" "lsp-perl.el" (0 0 0 0))
+;;; Generated autoloads from lsp-perl.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perl" '("lsp-perl-language-server-")))
 
 ;;;***
 

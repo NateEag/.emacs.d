@@ -378,10 +378,14 @@ PARAMS progress report notification data."
   :group 'lsp-rust
   :package-version '(lsp-mode . "6.2.2"))
 
-(defcustom lsp-rust-analyzer-enabled-feature-flags ["completion.insertion.add-call-parenthesis"
-                                                    "completion.enable-postfix"
-                                                    "notifications.workspace-loaded"]
-  "Feature flags to set."
+(defcustom lsp-rust-analyzer-enabled-feature-flags []
+  "Feature flags to enable (all feature flags are currently enabled by default)."
+  :type 'lsp-string-vector
+  :group 'lsp-rust
+  :package-version '(lsp-mode . "6.2.2"))
+
+(defcustom lsp-rust-analyzer-disabled-feature-flags []
+  "Feature flags to disable (all feature flags are currently enabled by default)."
   :type 'lsp-string-vector
   :group 'lsp-rust
   :package-version '(lsp-mode . "6.2.2"))
@@ -394,7 +398,9 @@ PARAMS progress report notification data."
 
 (defun lsp-rust-analyzer--make-init-options ()
   "Init options for rust-analyzer"
-  (let ((feature-flags (--map (cons (intern it) t) lsp-rust-analyzer-enabled-feature-flags)))
+  (let ((feature-flags (or (append (--map (cons (intern it) json-false) lsp-rust-analyzer-disabled-feature-flags)
+                                   (--map (cons (intern it) t) lsp-rust-analyzer-enabled-feature-flags))
+                           (make-hash-table))))
     `(:lruCapacity ,lsp-rust-analyzer-lru-capacity
       :maxInlayHintLength ,lsp-rust-analyzer-max-inlay-hint-length
       :cargoWatchEnable ,(lsp-json-bool lsp-rust-analyzer-cargo-watch-enable)
@@ -445,7 +451,7 @@ PARAMS progress report notification data."
 (defun lsp-rust-analyzer-syntax-tree ()
   "Display syntax tree for current buffer."
   (interactive)
-  (-if-let* ((workspace (lsp-find-workspace 'rust-analyzer default-directory))
+  (-if-let* ((workspace (lsp-find-workspace 'rust-analyzer))
              (root (lsp-workspace-root default-directory))
              (params (list :textDocument (lsp--text-document-identifier)
                            :range (if (use-region-p)
@@ -471,7 +477,7 @@ PARAMS progress report notification data."
 (defun lsp-rust-analyzer-status ()
   "Displays status information for rust-analyzer."
   (interactive)
-  (-if-let* ((workspace (lsp-find-workspace 'rust-analyzer default-directory))
+  (-if-let* ((workspace (lsp-find-workspace 'rust-analyzer))
              (root (lsp-workspace-root default-directory))
              (results (with-lsp-workspace workspace
                         (lsp-send-request (lsp-make-request
@@ -549,7 +555,7 @@ PARAMS progress report notification data."
   nil)
 
 (defun lsp-rust-analyzer-initialized? ()
-  (when-let ((workspace (lsp-find-workspace 'rust-analyzer (buffer-file-name))))
+  (when-let ((workspace (lsp-find-workspace 'rust-analyzer)))
     (eq 'initialized (lsp--workspace-status workspace))))
 
 (defun lsp-rust-analyzer-inlay-hints-change-handler (&rest _rest)
@@ -580,7 +586,7 @@ PARAMS progress report notification data."
 (defun lsp-rust-analyzer-expand-macro ()
   "Expands the macro call at point recursively."
   (interactive)
-  (-if-let (workspace (lsp-find-workspace 'rust-analyzer default-directory))
+  (-if-let (workspace (lsp-find-workspace 'rust-analyzer))
       (-if-let* ((params (list :textDocument (lsp--text-document-identifier)
                                :position (lsp--cur-position)))
                  (response (with-lsp-workspace workspace
@@ -624,10 +630,10 @@ PARAMS progress report notification data."
 
 (defun lsp-rust-analyzer-run (runnable)
   (interactive (list (lsp-rust-analyzer--select-runnable)))
-  (-let* (((&hash "env" "bin" "args" "label") runnable)
+  (-let* (((&hash "env" "bin" "args" "extraArgs" "label") runnable)
           (compilation-environment (-map (-lambda ((k v)) (concat k "=" v)) (ht-items env))))
     (compilation-start
-     (string-join (append (list bin) args '()) " ")
+     (string-join (append (list bin) args (when extraArgs '("--")) extraArgs '()) " ")
      ;; cargo-process-mode is nice, but try to work without it...
      (if (functionp 'cargo-process-mode) 'cargo-process-mode nil)
      (lambda (_) (concat "*" label "*")))

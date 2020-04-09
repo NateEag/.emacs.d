@@ -4,7 +4,7 @@
 ;; Copyright 2011-2020 François-Xavier Bois
 
 ;; Version: 16.0.29
-;; Package-Version: 20200301.1948
+;; Package-Version: 20200406.759
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -328,6 +328,12 @@ See web-mode-block-face."
     ("css"        . "/*"))
   "Default comment format for a language"
   :type '(alist :key-type string :value-type string)
+  :group 'web-mode)
+
+(defcustom web-mode-script-template-types
+  '("text/x-handlebars" "text/x-jquery-tmpl" "text/x-jsrender" "text/html" "text/ng-template" "text/x-template" "text/mustache" "text/x-dust-template")
+  "<script> block types that are interpreted as HTML."
+  :type '(repeat string)
   :group 'web-mode)
 
 ;;---- FACES -------------------------------------------------------------------
@@ -1579,6 +1585,7 @@ shouldn't be moved back.)")
       "session" "t" "telephone_field" "telephone_field_tag"
       "time_tag" "translate" "url_field" "url_field_tag"
       "url_options" "video_path" "video_tag" "simple_form_for"
+      "javascript_pack_tag" "stylesheet_pack_tag" "csp_meta_tag"
 
       ))))
 
@@ -1800,7 +1807,7 @@ shouldn't be moved back.)")
       "implements" "import" "in" "instanceof" "interface" "let"
       "new" "of" "package" "private" "protected" "public"
       "return" "set" "static" "super" "switch"
-      "throw" "try" "typeof" "var" "void" "while" "with" "yield"))))
+      "throw" "try" "type" "typeof" "var" "void" "while" "with" "yield"))))
 
 (defvar web-mode-javascript-constants
   (regexp-opt
@@ -2579,6 +2586,11 @@ another auto-completion with different ac-sources (e.g. ac-php)")
   (unless (fboundp 'string-suffix-p)
     (fset 'string-suffix-p (symbol-function 'web-mode-string-suffix-p)))
 
+  (unless (fboundp 'seq-some)
+    (defun seq-some (pred seq)
+      (unless (null seq)
+        (or (funcall pred (car seq))
+            (seq-some pred (cdr seq))))))
   ) ;eval-and-compile
 
 ;;---- MAJOR MODE --------------------------------------------------------------
@@ -4778,7 +4790,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
               (setq element-content-type "markdown"))
              ((string-match-p " type[ ]*=[ ]*[\"']text/ruby" script)
               (setq element-content-type "ruby"))
-             ((string-match-p " type[ ]*=[ ]*[\"']text/\\(x-handlebars\\|x-jquery-tmpl\\|x-jsrender\\|html\\|ng-template\\|template\\|x-template\\|mustache\\|x-dust-template\\)" script)
+             ((seq-some (lambda (x)
+                          (string-match-p (concat "type[ ]*=[ ]*[\"']" x) script))
+                        web-mode-script-template-types)
               (setq element-content-type "html"
                     part-close-tag nil))
              ((string-match-p " type[ ]*=[ ]*[\"']application/\\(ld\\+json\\|json\\)" script)
@@ -6019,6 +6033,13 @@ another auto-completion with different ac-sources (e.g. ac-php)")
   (web-mode-scan-region (point-min) (point-max)))
 
 ;;---- FONTIFICATION -----------------------------------------------------------
+
+;; 1/ after-change
+;; 2/ extend-region
+;; 3/ propertize
+;; 4/ font-lock-highlight
+;; 5/ highlight-region
+;; 6/ post-command
 
 (defun web-mode-font-lock-highlight (limit)
   ;;(message "font-lock-highlight: point(%S) limit(%S) change-beg(%S) change-end(%S)" (point) limit web-mode-change-beg web-mode-change-end)
@@ -9067,9 +9088,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
 (defun web-mode-line-number (&optional pos)
   (setq pos (or pos (point)))
-  (+
-   (count-lines 1 pos)
-   (if (= (current-column) 0) 1 0)))
+  (+ (count-lines 1 pos) (if (= (web-mode-column-at-pos pos) 0) 1 0)))
 
 (defun web-mode-block-is-control (pos)
   (save-excursion
@@ -9820,7 +9839,7 @@ Pos should be in a tag."
 (defun web-mode-lify-region ()
   "Transform current REGION in an html list (<li>line1</li>...)"
   (interactive)
-  (let (beg end)
+  (let (beg end lines)
     (save-excursion
       (when  mark-active
         (setq beg (region-beginning)
@@ -10200,6 +10219,8 @@ Prompt user if TAG-NAME isn't provided."
          (overlay-put overlay 'font-lock-face 'web-mode-folded-face)
          (put-text-property beg-inside end-inside 'invisible t))
        ))))
+
+;;---- COMMENT ------------------------------------------------------------------
 
 (defun web-mode-toggle-comments ()
   "Toggle comments visbility."
@@ -11066,19 +11087,6 @@ Prompt user if TAG-NAME isn't provided."
     (web-mode-set-content-type "jsx"))
    ))
 
-(defun web-mode-on-after-change (beg end len)
-  ;;(message "after-change: pos=%d, beg=%d, end=%d, len=%d, ocmd=%S, cmd=%S" (point) beg end len this-original-command this-command)
-  ;;(backtrace)
-  ;;(message "this-command=%S" this-command)
-  (when (eq this-original-command 'yank)
-    (setq web-mode-fontification-off t))
-  (when (or (null web-mode-change-beg) (< beg web-mode-change-beg))
-    (setq web-mode-change-beg beg))
-  (when (or (null web-mode-change-end) (> end web-mode-change-end))
-    (setq web-mode-change-end end))
-  ;;(message "on-after-change: fontification-off(%S) change-beg(%S) change-end(%S)" web-mode-fontification-off web-mode-change-beg web-mode-change-end)
-  )
-
 (defun web-mode-auto-complete ()
   "Autocomple at point."
   (interactive)
@@ -11196,9 +11204,12 @@ Prompt user if TAG-NAME isn't provided."
       (cond
        ((and (eq char ?\=)
              (not (looking-at-p "[ ]*[\"']")))
-        (if (= web-mode-auto-quote-style 2)
-            (insert "''")
-          (insert "\"\""))
+        (cond ((= web-mode-auto-quote-style 2)
+               (insert "''"))
+              ((= web-mode-auto-quote-style 3)
+               (insert "{}"))
+              (t
+               (insert "\"\"")))
         (if (looking-at-p "[ \n>]")
             (backward-char)
           (insert " ")
@@ -11254,12 +11265,23 @@ Prompt user if TAG-NAME isn't provided."
 
     ))
 
+;; NOTE: after-change triggered before post-command
+
+(defun web-mode-on-after-change (beg end len)
+  ;;(message "after-change: pos=%d, beg=%d, end=%d, len=%d, ocmd=%S, cmd=%S" (point) beg end len this-original-command this-command)
+  ;;(backtrace)
+  (when (eq this-original-command 'yank)
+    (setq web-mode-fontification-off t))
+  (when (or (null web-mode-change-beg) (< beg web-mode-change-beg))
+    (setq web-mode-change-beg beg))
+  (when (or (null web-mode-change-end) (> end web-mode-change-end))
+    (setq web-mode-change-end end))
+  ;;(message "on-after-change: fontification-off(%S) change-beg(%S) change-end(%S)" web-mode-fontification-off web-mode-change-beg web-mode-change-end)
+  )
+
 (defun web-mode-on-post-command ()
+  ;;(message "post-command: cmd=%S, state=%S, beg=%S, end=%S" this-command web-mode-expand-previous-state web-mode-change-beg web-mode-change-end)
   (let (ctx n char)
-
-    ;;(message "this-command=%S (%S)" this-command web-mode-expand-previous-state)
-    ;;(message "%S: %S %S" this-command web-mode-change-beg web-mode-change-end)
-
     (when (and web-mode-expand-previous-state
                (not (member this-command web-mode-commands-like-expand-region)))
       (when (eq this-command 'keyboard-quit)

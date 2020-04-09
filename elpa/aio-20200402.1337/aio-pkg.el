@@ -1,4 +1,4 @@
-(define-package "aio" "20190601.753" "async/await for Emacs Lisp"
+(define-package "aio" "20200402.1337" "async/await for Emacs Lisp"
   '((emacs "26.1"))
   :authors
   '(("Christopher Wellons" . "wellons@nullprogram.com"))

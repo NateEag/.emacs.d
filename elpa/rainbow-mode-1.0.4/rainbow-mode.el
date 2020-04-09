@@ -4,7 +4,7 @@
 
 ;; Author: Julien Danjou <julien@danjou.info>
 ;; Keywords: faces
-;; Version: 1.0.3
+;; Version: 1.0.4
 
 ;; This file is part of GNU Emacs.
 
@@ -1130,7 +1130,7 @@ Return a value between 0 and 1."
 ;;; Mode
 
 (defun rainbow-turn-on ()
-  "Turn on raibow-mode."
+  "Turn on rainbow-mode."
   (font-lock-add-keywords nil
                           rainbow-hexadecimal-colors-font-lock-keywords
                           t)
@@ -1212,6 +1212,12 @@ This will fontify with colors the string like \"#aabbcc\" or \"blue\"."
 
 ;;;; ChangeLog:
 
+;; 2020-03-30  Julien Danjou  <julien@danjou.info>
+;; 
+;; 	fix(rainbow-mode): fix typo in docstring
+;; 
+;; 	Thanks Bauke Jan Douma <bjdouma@xs4all.nl>
+;; 
 ;; 2019-12-23  Julien Danjou  <julien@danjou.info>
 ;; 
 ;; 	Release rainbow-mode 1.0.3

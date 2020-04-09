@@ -15,10 +15,8 @@
 A major mode for editing BNF grammars.
 
 \\{bnf-mode-map}
-The variable `bnf-mode-algol-comments-style' can be changed to control
-comments style used in grammars.
 
-Turning on BNF mode calls the value of `prog-mode-hook' and then of
+Turning on BNF Mode calls the value of `prog-mode-hook' and then of
 `bnf-mode-hook', if they are non-nil.
 
 \(fn)" t nil)

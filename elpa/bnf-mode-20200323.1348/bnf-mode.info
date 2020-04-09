@@ -1,17 +1,25 @@
 This is bnf-mode.info, produced by makeinfo version 6.5 from
 bnf-mode.texi.
 
-     Copyright © 2019, 2020 Free Software Foundation, Inc.
+BNF Mode is a GNU Emacs major mode for editing BNF grammars.  Presently
+it provides basic syntax and font-locking for BNF files.  BNF notation
+is supported exactly form as it was first announced in the ALGOL 60
+report.
 
-     You can redistribute this document and/or modify it under the terms
-     of the GNU General Public License as published by the Free Software
-     Foundation, either version 3 of the License, or (at your option)
-     any later version.
+This manual is for BNF Mode version 0.4.5.
 
-     This document is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-     General Public License for more details.
+   Copyright © 2019-2020 Free Software Foundation, Inc.
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, with the Front-Cover Texts
+     being “A GNU Manual,” and with the Back-Cover Texts as in (a)
+     below.  A copy of the license is included in the section entitled
+     “GNU Free Documentation License.”
+
+     (a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
+     modify this GNU manual.”
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * BNF Mode: (bnf-mode).         Major mode for editing BNF grammars.
@@ -22,25 +30,6 @@ File: bnf-mode.info,  Node: Top,  Next: Introduction,  Up: (dir)
 
 BNF Mode User Manual
 ********************
-
-BNF Mode is a GNU Emacs major mode for editing BNF grammars.  Currently
-this mode provides basic syntax and font-locking for BNF files.  BNF
-notation is supported exactly form as it was first announced in the
-ALGOL 60 report.
-
-This manual is for BNF Mode version 0.4.4.
-
-     Copyright © 2019, 2020 Free Software Foundation, Inc.
-
-     You can redistribute this document and/or modify it under the terms
-     of the GNU General Public License as published by the Free Software
-     Foundation, either version 3 of the License, or (at your option)
-     any later version.
-
-     This document is distributed in the hope that it will be useful,
-     but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-     General Public License for more details.
 
 * Menu:
 
@@ -74,10 +63,40 @@ File: bnf-mode.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: 
 1 Introduction
 **************
 
-BNF Mode is a GNU Emacs major mode for editing BNF grammars.  Currently
-this mode provides basic syntax and font-locking for BNF files.  BNF
-notation is supported exactly form as it was first announced in the
-ALGOL 60 report.
+BNF Mode is a GNU Emacs major mode for editing BNF grammars.  Presently
+it provides basic syntax and font-locking for BNF files.  BNF notation
+is supported exactly form as it was first announced in the ALGOL 60
+report.
+
+   Bellow canonical BNF notation represented with a BNF is presented.
+The syntax of the BNF has been carefully copied from Revised ALGOL 60
+report.  For more see <http://www.masswerk.at/algol60/report.htm>.
+
+     <syntax>         ::= <rule> | <rule> <syntax>
+     <rule>           ::= <opt-ws> < <rule-name> > <opt-ws>
+                          ::= <opt-ws> <expression> <line-end>
+     <opt-ws>         ::= <space> <opt-ws> | <empty>
+     <expression>     ::= <list> | <list> <opt-ws> <or> <opt-ws>
+                          <expression>
+     <line-end>       ::= <opt-ws> <EOL> | <line-end> <line-end>
+     <list>           ::= <term> | <term> <opt-ws> <list>
+     <term>           ::= <literal> | < <rule-name> >
+     <literal>        ::= <character> <text>
+     <character>      ::= <letter> | <digit> | <symbol>
+     <letter>         ::= A | B | C | D | E | F | G | H | I | J | K | L |
+                          M | N | O | P | Q | R | S | T | U | V | W | X |
+                          Y | Z | a | b | c | d | e | f | g | h | i | j |
+                          k | l | m | n | o | p | q | r | s | t | u | v |
+                          w | x | y | z
+     <digit>          ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+     <symbol>         ::= <or>  | <space>   | ! | # | $ | % | & | ( | ) |
+                          * | + | , | - | . | / | : | ~ | > | = | < | ? |
+                          @ | [ | \ | ] | ^ | _ | ` | ' | " | { | } | ;
+     <rule-name>      ::= <letter> | <rule-name> <rule-char>
+     <rule-char>      ::= <letter> | <digit> | -
+     <space>          ::= <space, tab or new line character>
+     <or>             ::= |
+     <empty>          ::=
 
 
 File: bnf-mode.info,  Node: Installation,  Next: Usage,  Prev: Introduction,  Up: Top
@@ -112,22 +131,20 @@ yourself with it by reading the documentation in the Emacs manual, see
    • To use Elpa:
 
      (require 'package)
-     (add-to-list 'package-archives
-                  '("gnu" . "https://elpa.gnu.org/packages/") t)
      (package-initialize)
 
    • For those who want only formal, tagged releases use Melpa Stable:
 
      (require 'package)
      (add-to-list 'package-archives
-                  '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+                  '("melpa-stable" . "https://stable.melpa.org/packages/") t)
      (package-initialize)
 
    • For those who want rolling releases as they happen use Melpa:
 
      (require 'package)
      (add-to-list 'package-archives
-                  '("melpa" . "http://melpa.org/packages/") t)
+                  '("melpa" . "https://melpa.org/packages/") t)
      (package-initialize)
 
    Melpa tracks BNF Mode’s Git repository and updates relatively soon
@@ -229,24 +246,17 @@ File: bnf-mode.info,  Node: Customizing,  Next: Project Links,  Prev: Usage,  Up
 4 Customizing
 *************
 
-There are not so much customize options yet.  The most interested option
-is ‘bnf-mode-algol-comments-style’.  Setting it to non-nil means use for
-BNF comments style introduced in ALGOL 60.  The following "comment"
-conventions will hold:
+There are not so much customization options yet.
 
-The sequence of basic symbols                      Is equivalent to
---------------------------------------------------------------------------
-‘; comment <any sequence not containing ;>;’       ‘;’
-‘begin comment <any sequence not containing ;>;’   ‘begin’
+   To customize ‘abbrev-mode’ for ‘bnf-mode’, simple add preffered
+abbreviations to ‘bnf-mode-abbrev-table’.
 
-
-   Enabling this feature will disable comments recognition which use
-semicolon only (‘;’).
-
-
-   To customize BNF Mode options, use command as follows:
-
-     M-x customize-group bnf RET
+   If you want, you can go without any customizations at all.  The above
+settings are the most bang for the buck in terms of customization.  So
+users that typically don’t like customize a lot are advised to look at
+these settings first.  To customize BNF Mode options using textual GUI
+system, use the following command: ‘M-x’ ‘customize-group’ ‘RET’ ‘bnf’
+‘RET’.
 
 
 File: bnf-mode.info,  Node: Project Links,  Next: Bibliography,  Prev: Customizing,  Up: Top
@@ -332,13 +342,13 @@ Index
 * Menu:
 
 * Cask, installation:                    Installing from Elpa or Melpa.
-                                                               (line 52)
+                                                               (line 50)
 * Customizing:                           Customizing.          (line  6)
 * Elpa, installation:                    Installing from Elpa or Melpa.
                                                                (line 12)
 * Installation:                          Installation.         (line  6)
 * Melpa, installation:                   Installing from Elpa or Melpa.
-                                                               (line 19)
+                                                               (line 17)
 
 
 File: bnf-mode.info,  Node: Variable Index,  Prev: Index,  Up: Top
@@ -346,28 +356,23 @@ File: bnf-mode.info,  Node: Variable Index,  Prev: Index,  Up: Top
 Variable Index
 **************
 
- [index ]
-* Menu:
-
-* bnf-mode-algol-comments-style:         Customizing.           (line 6)
-
 
 
 Tag Table:
-Node: Top767
-Node: Introduction2295
-Node: Installation2640
-Node: Installing from Elpa or Melpa3162
-Node: Installing using El-get5478
-Node: Installing from the Git Repository6157
-Node: Usage7058
-Node: Customizing7343
-Node: Project Links8168
-Node: Bugs Tracker8339
-Node: Change Log8572
-Node: Bibliography8821
-Node: Index9979
-Node: Variable Index10686
+Node: Top1103
+Node: Introduction1802
+Node: Installation3803
+Node: Installing from Elpa or Melpa4325
+Node: Installing using El-get6542
+Node: Installing from the Git Repository7221
+Node: Usage8122
+Node: Customizing8407
+Node: Project Links9084
+Node: Bugs Tracker9255
+Node: Change Log9488
+Node: Bibliography9737
+Node: Index10895
+Node: Variable Index11602
 
 End Tag Table
 

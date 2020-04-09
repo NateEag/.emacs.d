@@ -11,22 +11,22 @@
 
 (autoload 'helm-swoop-back-to-last-point "helm-swoop" "\
 Go back to last position where `helm-swoop' was called.
-If $CANSEL is non-nil, store `helm-swoop-last-point'.
+If CANCEL is non-nil, store `helm-swoop-last-point'.
 
-\(fn &optional $CANCEL)" t nil)
+\(fn &optional CANCEL)" t nil)
 
 (autoload 'helm-swoop "helm-swoop" "\
 List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list.
 
-\(fn &key $QUERY $SOURCE ($MULTILINE current-prefix-arg))" t nil)
+\(fn &key QUERY SOURCE (MULTILINE current-prefix-arg))" t nil)
 
 (autoload 'helm-swoop-from-isearch "helm-swoop" "\
 Invoke `helm-swoop' from isearch." t nil)
 
 (autoload 'helm-multi-swoop "helm-swoop" "\
-Multi swoop for $QUERY in $BUFLIST.
+Multi swoop for QUERY in BUFLIST.
 
 Usage:
   \\[execute-extended-command] helm-multi-swoop
@@ -37,27 +37,27 @@ Usage:
 If you have done helm-multi-swoop before, you can skip select buffers step.
 Last selected buffers will be applied to helm-multi-swoop.
 
-\(fn &optional $QUERY $BUFLIST)" t nil)
+\(fn &optional QUERY BUFLIST)" t nil)
 
 (autoload 'helm-multi-swoop-all "helm-swoop" "\
-Apply all buffers to helm-multi-swoop for $QUERY.
+Apply all buffers to helm-multi-swoop for QUERY.
 
-\(fn &optional $QUERY)" t nil)
+\(fn &optional QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-org "helm-swoop" "\
-Applie all `org-mode' buffers to helm-multi-swoop for $QUERY.
+Applie all `org-mode' buffers to helm-multi-swoop for QUERY.
 
-\(fn &optional $QUERY)" t nil)
+\(fn &optional QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-current-mode "helm-swoop" "\
-Applie all buffers of the same mode as the current buffer to helm-multi-swoop for $QUERY.
+Applie all buffers of the same mode as the current buffer to helm-multi-swoop for QUERY.
 
-\(fn &optional $QUERY)" t nil)
+\(fn &optional QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-projectile "helm-swoop" "\
-Apply all opened buffers of the current project to helm-multi-swoop for $QUERY.
+Apply all opened buffers of the current project to helm-multi-swoop for QUERY.
 
-\(fn &optional $QUERY)" t nil)
+\(fn &optional QUERY)" t nil)
 
 (autoload 'helm-swoop-without-pre-input "helm-swoop" "\
 Start helm-swoop without pre input query." t nil)

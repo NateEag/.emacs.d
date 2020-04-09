@@ -1,9 +1,12 @@
 ;;; origami-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "origami" "origami.el" (23400 19273 0 0))
+;;;### (autoloads nil "origami" "origami.el" (0 0 0 0))
 ;;; Generated autoloads from origami.el
 
 (autoload 'origami-mode "origami" "\
@@ -19,6 +22,8 @@ Key bindings:
 \\{origami-mode-map}
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-origami-mode 'globalized-minor-mode t)
 
 (defvar global-origami-mode nil "\
 Non-nil if Global Origami mode is enabled.
@@ -42,10 +47,19 @@ See `origami-mode' for more information on Origami mode.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "origami" '("origami-")))
+
 ;;;***
 
-;;;### (autoloads nil nil ("origami-parsers.el" "origami-pkg.el")
-;;;;;;  (23400 19273 0 0))
+;;;### (autoloads nil "origami-parsers" "origami-parsers.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from origami-parsers.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "origami-parsers" '("origami-")))
+
+;;;***
+
+;;;### (autoloads nil nil ("origami-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -53,5 +67,6 @@ See `origami-mode' for more information on Origami mode.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; origami-autoloads.el ends here

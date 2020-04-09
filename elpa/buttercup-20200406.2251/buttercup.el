@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.20
+;; Version: 1.21
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/jorgenschaefer/emacs-buttercup
@@ -123,14 +123,14 @@ a call to `save-match-data', as `format-spec' modifies that."
 This macro knows three forms:
 
 \(expect ARG :MATCHER ARGS...)
-  Fail the current test iff the matcher does not match these arguments.
+  Fail the current test if the matcher does not match these arguments.
   See `buttercup-define-matcher' for more information on matchers.
 
 \(expect (function ARG...))
-  Fail the current test iff the function call does not return a true value.
+  Fail the current test if the function call does not return a true value.
 
 \(expect ARG)
-  Fail the current test iff ARG is not true."
+  Fail the current test if ARG is not true."
   (let ((wrapped-args
          (mapcar (lambda (expr) `(lambda () (quote ,expr) ,expr)) args)))
     `(buttercup-expect
@@ -790,6 +790,10 @@ Return CHILD."
   (time-subtract
    (or (buttercup-suite-or-spec-time-ended suite-or-spec) (current-time))
    (or (buttercup-suite-or-spec-time-started suite-or-spec) (current-time))))
+
+(defun buttercup-elapsed-time-string (suite-or-spec)
+  "Convert the elapsed time for SUITE-OR-SPEC to a short string."
+  (seconds-to-string (float-time (buttercup-elapsed-time suite-or-spec))))
 
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Suites: describe
@@ -1591,9 +1595,7 @@ EVENT and ARG are described in `buttercup-reporter'."
          (buttercup--print "  %s" (buttercup-spec-failure-description arg)))
         (t
          (error "Unknown spec status %s" (buttercup-spec-status arg))))
-       (buttercup--print " (%s)\n"
-                         (seconds-to-string
-                          (float-time (buttercup-elapsed-time arg)))))
+       (buttercup--print " (%s)\n" (buttercup-elapsed-time-string arg)))
 
       (`suite-done
        (when (= 0 (length (buttercup-suite-or-spec-parents arg)))
@@ -1628,15 +1630,15 @@ EVENT and ARG are described in `buttercup-reporter'."
                                     buttercup-reporter-batch--start-time))))
          (if (> pending 0)
              (buttercup--print
-              "Ran %s out of %s specs, %s failed, in %.1f seconds.\n"
+              "Ran %s out of %s specs, %s failed, in %s.\n"
               (- defined pending)
               defined
               failed
-              duration)
-           (buttercup--print "Ran %s specs, %s failed, in %.1f seconds.\n"
+              (seconds-to-string duration))
+           (buttercup--print "Ran %s specs, %s failed, in %s.\n"
                              defined
                              failed
-                             duration))))
+                             (seconds-to-string duration)))))
 
       (_
        (error "Unknown event %s" event)))))
@@ -1672,9 +1674,7 @@ EVENT and ARG are described in `buttercup-reporter'."
                              (buttercup-spec-failure-description arg))))
         (t
          (error "Unknown spec status %s" (buttercup-spec-status arg))))
-       (buttercup--print " (%s)\n"
-                         (seconds-to-string
-                          (float-time (buttercup-elapsed-time arg))))))
+       (buttercup--print " (%s)\n" (buttercup-elapsed-time-string arg))))
 
     (`buttercup-done
      (dolist (failed buttercup-reporter-batch--failures)

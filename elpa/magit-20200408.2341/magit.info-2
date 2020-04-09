@@ -875,6 +875,12 @@ the faster ‘vfork’ will be used.  (The creation of child processes still
 takes about twice as long on Darwin compared to Linux.)  See (1) for
 more information.
 
+   On Catalina, and potentially other macOS releases, there may be a
+performance problem where any action takes 20 times longer on Darwin
+than on Linux.  This can be fixed by setting ‘magit-git-executable’ to
+the absolute path of the ‘git’ executable, instead of relying on
+resolving the ‘$PATH’.
+
    ---------- Footnotes ----------
 
    (1) 
@@ -1819,7 +1825,6 @@ A.2 FAQ - Issues and Errors
 * I am having problems committing::
 * I am using MS Windows and cannot push with Magit::
 * I am using OS X and SOMETHING works in shell, but not in Magit: I am using OS X and SOMETHING works in shell but not in Magit.
-* Diffs contain control sequences::
 * Expanding a file to show the diff causes it to disappear::
 * Point is wrong in the COMMIT_EDITMSG buffer::
 * The mode-line information isn't always up-to-date::
@@ -1874,7 +1879,7 @@ push on the command line.
 <https://github.com/magit/magit/wiki/Pushing-with-Magit-from-Windows>.
 
 
-File: magit.info,  Node: I am using OS X and SOMETHING works in shell but not in Magit,  Next: Diffs contain control sequences,  Prev: I am using MS Windows and cannot push with Magit,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: I am using OS X and SOMETHING works in shell but not in Magit,  Next: Expanding a file to show the diff causes it to disappear,  Prev: I am using MS Windows and cannot push with Magit,  Up: FAQ - Issues and Errors
 
 A.2.5 I am using OS X and SOMETHING works in shell, but not in Magit
 --------------------------------------------------------------------
@@ -1889,31 +1894,9 @@ you are using on the shell.
 tag signing", then you’ll also need to synchronize ‘$GPG_AGENT_INFO’.
 
 
-File: magit.info,  Node: Diffs contain control sequences,  Next: Expanding a file to show the diff causes it to disappear,  Prev: I am using OS X and SOMETHING works in shell but not in Magit,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: Expanding a file to show the diff causes it to disappear,  Next: Point is wrong in the COMMIT_EDITMSG buffer,  Prev: I am using OS X and SOMETHING works in shell but not in Magit,  Up: FAQ - Issues and Errors
 
-A.2.6 Diffs contain control sequences
--------------------------------------
-
-This happens when you configure Git to always color diffs and/or all of
-its output.  The valid values for relevant Git variables ‘color.ui’ and
-‘color.diff’ are ‘false’, ‘true’ and ‘always’, and the default is
-‘true’.  You should leave it that way because then you get colorful
-output in terminals by default but when git’s output is consumed by
-something else, then no color control sequences are used.
-
-   If you actually use some other tool that requires setting ‘color.ui’
-and/or ‘color.diff’ to ‘always’ (which is highly unlikely), then you can
-override these settings just for Magit by using:
-
-     (setq magit-git-global-arguments
-           (nconc magit-git-global-arguments
-                  '("-c" "color.ui=false"
-                    "-c" "color.diff=false")))
-
-
-File: magit.info,  Node: Expanding a file to show the diff causes it to disappear,  Next: Point is wrong in the COMMIT_EDITMSG buffer,  Prev: Diffs contain control sequences,  Up: FAQ - Issues and Errors
-
-A.2.7 Expanding a file to show the diff causes it to disappear
+A.2.6 Expanding a file to show the diff causes it to disappear
 --------------------------------------------------------------
 
 This is probably caused by a change of a ‘diff.*’ Git variable.  You
@@ -1923,7 +1906,7 @@ that setting in Magit by customizing ‘magit-git-global-arguments’.
 
 File: magit.info,  Node: Point is wrong in the COMMIT_EDITMSG buffer,  Next: The mode-line information isn't always up-to-date,  Prev: Expanding a file to show the diff causes it to disappear,  Up: FAQ - Issues and Errors
 
-A.2.8 Point is wrong in the ‘COMMIT_EDITMSG’ buffer
+A.2.7 Point is wrong in the ‘COMMIT_EDITMSG’ buffer
 ---------------------------------------------------
 
 Neither Magit nor ‘git-commit‘ fiddle with point in the buffer used to
@@ -1947,7 +1930,7 @@ help:
 
 File: magit.info,  Node: The mode-line information isn't always up-to-date,  Next: A branch and tag sharing the same name breaks SOMETHING,  Prev: Point is wrong in the COMMIT_EDITMSG buffer,  Up: FAQ - Issues and Errors
 
-A.2.9 The mode-line information isn’t always up-to-date
+A.2.8 The mode-line information isn’t always up-to-date
 -------------------------------------------------------
 
 Magit is not responsible for the version control information that is
@@ -1973,8 +1956,8 @@ consider disabling VC when using Git:
 
 File: magit.info,  Node: A branch and tag sharing the same name breaks SOMETHING,  Next: My Git hooks work on the command-line but not inside Magit,  Prev: The mode-line information isn't always up-to-date,  Up: FAQ - Issues and Errors
 
-A.2.10 A branch and tag sharing the same name breaks SOMETHING
---------------------------------------------------------------
+A.2.9 A branch and tag sharing the same name breaks SOMETHING
+-------------------------------------------------------------
 
 Or more generally, ambiguous refnames break SOMETHING.
 
@@ -1989,7 +1972,7 @@ that we can investigate whether there is a simple fix.
 
 File: magit.info,  Node: My Git hooks work on the command-line but not inside Magit,  Next: git-commit-mode isn't used when committing from the command-line,  Prev: A branch and tag sharing the same name breaks SOMETHING,  Up: FAQ - Issues and Errors
 
-A.2.11 My Git hooks work on the command-line but not inside Magit
+A.2.10 My Git hooks work on the command-line but not inside Magit
 -----------------------------------------------------------------
 
 When Magit calls ‘git’ it adds a few global arguments including
@@ -2003,7 +1986,7 @@ GIT_LITERAL_PATHSPECS’.
 
 File: magit.info,  Node: git-commit-mode isn't used when committing from the command-line,  Next: Point ends up inside invisible text when jumping to a file-visiting buffer,  Prev: My Git hooks work on the command-line but not inside Magit,  Up: FAQ - Issues and Errors
 
-A.2.12 ‘git-commit-mode’ isn’t used when committing from the command-line
+A.2.11 ‘git-commit-mode’ isn’t used when committing from the command-line
 -------------------------------------------------------------------------
 
 The reason for this is that ‘git-commit.el’ has not been loaded yet
@@ -2058,7 +2041,7 @@ that succeeds, do nothing else.  Otherwise start ‘emacs &’ (and
 
 File: magit.info,  Node: Point ends up inside invisible text when jumping to a file-visiting buffer,  Prev: git-commit-mode isn't used when committing from the command-line,  Up: FAQ - Issues and Errors
 
-A.2.13 Point ends up inside invisible text when jumping to a file-visiting buffer
+A.2.12 Point ends up inside invisible text when jumping to a file-visiting buffer
 ---------------------------------------------------------------------------------
 
 This can happen when you type ‘RET’ on a hunk to visit the respective
@@ -3488,7 +3471,6 @@ Appendix F Variable Index
                                                               (line 118)
 * magit-log-margin:                      Log Margin.          (line  12)
 * magit-log-margin-show-committer-date:  Log Margin.          (line  49)
-* magit-log-section-args:                Status Options.      (line  38)
 * magit-log-section-commit-count:        Status Sections.     (line 136)
 * magit-log-select-margin:               Select from Log.     (line  30)
 * magit-log-show-refname-after-summary:  Log Buffer.          (line  75)

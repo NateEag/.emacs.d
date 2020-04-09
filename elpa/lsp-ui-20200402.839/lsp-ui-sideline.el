@@ -344,7 +344,10 @@ is set to t."
              lines))
 
 (defun lsp-ui-sideline--diagnostics (bol eol)
-  "Show diagnostics on the current line."
+  "Show diagnostics belonging to the current line.
+Loop over flycheck errors with `flycheck-overlay-errors-in'.
+Find appropriate position for sideline overlays with `lsp-ui-sideline--find-line'.
+Push sideline overlays on `lsp-ui-sideline--ovs'."
   (when (bound-and-true-p flycheck-mode)
     (dolist (e (flycheck-overlay-errors-in bol (1+ eol)))
       (let* ((lines (--> (flycheck-error-format-message-and-id e)
@@ -449,7 +452,8 @@ from the language server."
                      :context (list :diagnostics (lsp-cur-line-diagnostics)))
              (lsp--text-document-code-action-params))
            (lambda (actions) (lsp-ui-sideline--code-actions actions bol eol))
-           :mode 'alive))
+           :mode 'alive
+           :cancel-token :lsp-ui-code-actions))
         ;; Go through all symbols and request hover information.  Note that the symbols are
         ;; traversed backwards as `forward-symbol' with a positive argument will jump just past the
         ;; current symbol.  By going from the end of the line towards the front, point will be placed

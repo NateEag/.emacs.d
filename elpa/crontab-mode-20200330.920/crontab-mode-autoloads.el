@@ -16,7 +16,7 @@ Major mode for editing crontab file.
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("/crontab\\.X*[[:alnum:]]+\\'" . crontab-mode))
+(add-to-list 'auto-mode-alist '("/crontab\\(\\.X*[[:alnum:]]+\\)?\\'" . crontab-mode))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "crontab-mode" '("crontab-")))
 

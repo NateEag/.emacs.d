@@ -4,7 +4,7 @@
 
 ;; Author: Mario Rodas <marsam@users.noreply.github.com>
 ;; URL: https://github.com/emacs-pe/crontab-mode
-;; Package-Version: 20190827.1300
+;; Package-Version: 20200330.920
 ;; Keywords: languages
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "24"))
@@ -175,7 +175,7 @@
        'crontab-indent-line))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("/crontab\\.X*[[:alnum:]]+\\'" . crontab-mode))
+(add-to-list 'auto-mode-alist '("/crontab\\(\\.X*[[:alnum:]]+\\)?\\'" . crontab-mode))
 
 (provide 'crontab-mode)
 ;;; crontab-mode.el ends here

@@ -1,4 +1,4 @@
-(define-package "jq-mode" "20190718.913" "Edit jq scripts."
+(define-package "jq-mode" "20200317.852" "Edit jq scripts."
   '((emacs "25.1"))
   :authors
   '(("Bjarte Johansen <Bjarte dot Johansen at gmail dot com>"))

@@ -1,4 +1,4 @@
-;;; jq-mode.el --- Edit jq scripts.
+;;; jq-mode.el --- Edit jq scripts.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015--2018 Bjarte Johansen
 
@@ -62,8 +62,7 @@
 (defun jq-indent-line ()
   "Indent current line as a jq-script."
   (interactive)
-  (let ((indent-column 0)
-        (current (current-indentation)))
+  (let ((indent-column 0))
     (save-mark-and-excursion
      (if (> 0 (forward-line -1))
          (setq indent-column (current-indentation))
@@ -147,7 +146,9 @@
     ;; Format strings and escaping
     (,(concat "@" (regexp-opt jq--escapings) "\\b") . font-lock-type-face)
     ;; Keywords
-    ,(concat "\\b" (regexp-opt jq--keywords) "\\b")))
+    ,(concat "\\b" (regexp-opt jq--keywords) "\\b")
+    ;; Functions
+    ("\\bdef\\s-*\\([_[:alnum:]]+\\)\\s-*\(" (1 font-lock-function-name-face))))
 
 (defvar jq-mode-map
   (let ((map (make-sparse-keymap)))
@@ -165,6 +166,12 @@
     syntax-table)
   "Syntax table for `jq-mode.'")
 
+(defun jq-completion-at-point ()
+  (when-let ((bnds (bounds-of-thing-at-point 'symbol)))
+    (unless (eq ?$ (char-before (car bnds))) ; Ignore variables
+      (list (car bnds) (cdr bnds) jq--builtins))))
+
+(defvar company-keywords-alist)
 (with-eval-after-load 'company-keywords
   (add-to-list 'company-keywords-alist
                `(jq-mode . ,(append jq--keywords
@@ -177,7 +184,8 @@
   :group 'jq
   (setq-local indent-line-function #'jq-indent-line)
   (setq-local font-lock-defaults '(jq-font-lock-keywords))
-  (setq-local comment-start "# "))
+  (setq-local comment-start "# ")
+  (add-hook 'completion-at-point-functions #'jq-completion-at-point nil t))
 
 ;;; jq-interactively
 (defgroup jq-interactive nil
@@ -245,14 +253,15 @@
   (remove-hook 'minibuffer-setup-hook #'jq-interactive--minibuffer-setup)
   (delete-overlay jq-interactive--overlay))
 
-(defun jq-interactive--update (beg end len)
-  (let ((contents (minibuffer-contents-no-properties)))
-    (unless (or (not (minibufferp))
-                (and (string= "" contents)
-                     (equal last-command 'previous-history-element))
-                (string= contents jq-interactive--last-minibuffer-contents))
-      (setq jq-interactive--last-minibuffer-contents contents)
-      (jq-interactive--feedback))))
+(defun jq-interactive--update (_beg _end _len)
+  (unless (> (minibuffer-depth) 1)
+    (let ((contents (minibuffer-contents-no-properties)))
+      (unless (or (not (minibufferp))
+                  (and (string= "" contents)
+                       (equal last-command 'previous-history-element))
+                  (string= contents jq-interactive--last-minibuffer-contents))
+        (setq jq-interactive--last-minibuffer-contents contents)
+        (jq-interactive--feedback)))))
 
 (defun jq-interactive-indent-line ()
   "Indents a jq expression in the jq-interactive mini-buffer."

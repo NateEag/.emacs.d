@@ -174,8 +174,7 @@ MOMENT is an encoded date"
          (full-date-string (ledger-format-date reference-date))
          ;; Pre-fill year and month, but not day: this assumes DD is the last format arg.
          (initial-string (replace-regexp-in-string "[0-9]+$" "" full-date-string))
-         (entered-string (read-string "Transaction: "
-                                      initial-string 'ledger-minibuffer-history)))
+         (entered-string (ledger-read-date "Date: ")))
     (if (string= initial-string entered-string)
         full-date-string
       entered-string)))
@@ -192,7 +191,8 @@ MOMENT is an encoded date"
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
 If INSERT-AT-POINT is non-nil insert the transaction there,
 otherwise call `ledger-xact-find-slot' to insert it at the
-correct chronological place in the buffer."
+correct chronological place in the buffer.  Interactively, the
+date is requested via `ledger-read-date'."
   (interactive (list (ledger-read-transaction)))
   (let* ((args (with-temp-buffer
                  (insert transaction-text)

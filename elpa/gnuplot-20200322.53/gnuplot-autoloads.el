@@ -16,7 +16,7 @@ work with newer and older versions.
 
 Report bugs at https://github.com/emacsorphanage/gnuplot/issues
 
-			    ------O------
+                            ------O------
 
 Gnuplot-mode includes two different systems for keyword
 completion and documentation lookup: a newer one,
@@ -31,11 +31,11 @@ distribution, or is available at the `gnuplot-mode' web page:
 https://github.com/emacsorphanage/gnuplot/
 
 With the new context-sensitive mode active, gnuplot-mode can also
-provide `eldoc-mode' syntax hints as you type.  This requires a
+provide function/`eldoc-mode' syntax hints as you type.  This requires a
 separate file of strings, `gnuplot-eldoc.el', which is also
 provided by recent Gnuplot distributions.
 
-			    ------O------
+                            ------O------
 
 There are several known shortcomings of `gnuplot-mode', version 0.5g
 and up.  Many of the shortcomings involve the graphical interface
@@ -57,7 +57,7 @@ a list:
  5.  The GUI handling of \"hidden3d\" is flaky and \"cntrparam\" is
      unsupported.
 
-			    ------O------
+                            ------O------
 
  Key bindings:
  \\{gnuplot-mode-map}" t nil)

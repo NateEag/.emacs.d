@@ -473,8 +473,8 @@ DEBUG-SESSION is the debug session triggering the event."
                            (define-key it [mouse-1] command))
               'help-echo hover-text))
 
-(declare-function posframe-show "posframe")
-(declare-function posframe-hide "posframe")
+(declare-function posframe-show "ext:posframe")
+(declare-function posframe-hide "ext:posframe")
 
 (defun dap-ui--update-controls (&rest _)
   (let* ((session (dap--cur-session))
@@ -521,8 +521,7 @@ DEBUG-SESSION is the debug session triggering the event."
   :init-value nil
   :global t
   :require 'dap-ui
-  (unless (and (fboundp 'posframe-show)
-               (fboundp 'posframe-hide))
+  (unless (require 'posframe nil t)
     (error "Displaying DAP controls requires that the posframe Emacs package is installed"))
   (cond
    (dap-ui-controls-mode

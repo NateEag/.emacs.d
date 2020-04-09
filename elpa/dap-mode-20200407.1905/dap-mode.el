@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(require 'lsp)
+(require 'lsp-mode)
 (require 'json)
 (require 'f)
 (require 'dash)
@@ -178,7 +178,8 @@ The hook will be called with the session file and the new set of breakpoint loca
   ;; The result of initialize request. It holds the server capabilities.
   (initialize-result nil)
   (error-message nil)
-  (loaded-sources nil))
+  (loaded-sources nil)
+  (program-proc))
 
 (cl-defstruct dap--parser
   (waiting-for-response nil)
@@ -574,14 +575,17 @@ thread exection but the server will log message."
                            (dap--resp-handler)
                            debug-session)
         (dap--resume-application debug-session))
-    (lsp--error "There is no stopped thread?")))
+    (lsp--error "Currently active thread is not stopped. Use `dap-switch-thread' or select stopped thread from sessions view.")))
 
 (defun dap-disconnect (session)
   "Disconnect from the currently active session."
   (interactive (list (dap--cur-active-session-or-die)))
   (dap--send-message (dap--make-request "disconnect"
                                         (list :restart :json-false))
-                     (dap--resp-handler)
+                     (lambda (result)
+                       (when-let (proc (dap--debug-session-program-proc session))
+                         (lsp--info "Killing process %s" proc)
+                         (kill-process proc)))
                      session)
   (dap--resume-application session))
 
@@ -597,7 +601,7 @@ thread exection but the server will log message."
                              (dap--resp-handler)
                              debug-session)
           (dap--resume-application debug-session))
-      (lsp--error "There is no stopped thread?"))))
+      (lsp--error "Currently active thread is not stopped. Use `dap-switch-thread' or select stopped thread from sessions view."))))
 
 (defun dap-step-in ()
   "Debug step in."
@@ -610,7 +614,7 @@ thread exection but the server will log message."
                            (dap--resp-handler)
                            (dap--cur-active-session-or-die))
         (dap--resume-application (dap--cur-active-session-or-die)))
-    (lsp--error "There is no stopped thread?")))
+    (lsp--error "Currently active thread is not stopped. Use `dap-switch-thread' or select stopped thread from sessions view.")))
 
 (defun dap-step-out ()
   "Debug step in."
@@ -623,7 +627,7 @@ thread exection but the server will log message."
                            (dap--resp-handler)
                            (dap--cur-active-session-or-die))
         (dap--resume-application (dap--cur-active-session-or-die)))
-    (lsp--error "There is no stopped thread?")))
+    (lsp--error "Currently active thread is not stopped. Use `dap-switch-thread' or select stopped thread from sessions view.")))
 
 (defun dap-restart-frame (debug-session frame-id)
   "Restarts current frame."
@@ -643,7 +647,7 @@ thread exection but the server will log message."
       (progn
         (when (dap--session-running debug-session)
           (message "Disconnecting from %s" (dap--debug-session-name debug-session))
-          (dap-disconnect))
+          (dap-disconnect debug-session))
         (dap-debug (dap--debug-session-launch-args debug-session)))
     (user-error "There is session to restart")))
 
@@ -794,6 +798,13 @@ thread exection but the server will log message."
                      (run-hooks 'dap-session-changed-hook))
                    debug-session)))
       ("exited" (dap--mark-session-as-terminated debug-session))
+      ("continued"
+       (-let [(&hash "threadId" thread-id) body]
+         (remhash thread-id (dap--debug-session-thread-states debug-session))
+         (if (and (equal thread-id (dap--debug-session-thread-id debug-session))
+                  (equal debug-session (dap--cur-session)))
+             (dap--resume-application debug-session)
+           (run-hooks 'dap-session-changed-hook))))
       ("stopped"
        (-let [(&hash "threadId" thread-id "type" "reason") body]
          (puthash thread-id type (dap--debug-session-thread-states debug-session))
@@ -1149,18 +1160,23 @@ before starting the debug process."
                    :wait-for-port :type :request :port
                    :environment-variables :hostName host) launch-args)
           (session-name (dap--calculate-unique-name name (dap--get-sessions)))
-          (default-directory (or cwd default-directory)))
+          (default-directory (or cwd default-directory))
+          program-process)
     (mapc (-lambda ((env . value)) (setenv env value)) environment-variables)
     (plist-put launch-args :name session-name)
 
     (when program-to-start
-      (compilation-start program-to-start 'dap-server-log-mode
-                         (lambda (_) (concat "*" session-name " server log*"))))
+
+      (setf program-process
+            (get-buffer-process
+             (compilation-start program-to-start 'dap-server-log-mode
+                                (lambda (_) (concat "*" session-name " server log*"))))))
     (when wait-for-port
       (dap--wait-for-port host port dap-connect-retry-count dap-connect-retry-interval))
 
     (unless skip-debug-session
       (let ((debug-session (dap--create-session launch-args)))
+        (setf (dap--debug-session-program-proc debug-session) program-process)
         (dap--send-message
          (dap--initialize-message type)
          (dap--session-init-resp-handler

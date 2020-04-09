@@ -176,6 +176,8 @@ INITIAL-INPUT can be given as the initial minibuffer input.
 
 \(fn &optional INITIAL-INPUT)" t nil)
 
+(autoload 'counsel-tracker "counsel" nil t nil)
+
 (autoload 'counsel-fzf "counsel" "\
 Open a file using the fzf shell command.
 INITIAL-INPUT can be given as the initial minibuffer input.
@@ -240,7 +242,7 @@ EXTRA-RG-ARGS string, if non-nil, is appended to `counsel-rg-base-command'.
 RG-PROMPT, if non-nil, is passed as `ivy-read' prompt argument.
 
 Example input with inclusion and exclusion file patterns:
-    -g*.py -g!*test* -- ...
+    require i -- -g*.el
 
 \(fn &optional INITIAL-INPUT INITIAL-DIRECTORY EXTRA-RG-ARGS RG-PROMPT)" t nil)
 
@@ -301,6 +303,9 @@ Capture something." t nil)
 
 (autoload 'counsel-org-agenda-headlines "counsel" "\
 Choose from headers of `org-mode' files in the agenda." t nil)
+
+(autoload 'counsel-org-link "counsel" "\
+Insert a link to an headline with completion." t nil)
 
 (autoload 'counsel-mark-ring "counsel" "\
 Browse `mark-ring' interactively.

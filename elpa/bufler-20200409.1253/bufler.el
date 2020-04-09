@@ -4,7 +4,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/bufler.el
-;; Package-Version: 0.2-pre
+;; Package-Version: 0.3-pre
 ;; Package-Requires: ((emacs "26.3") (dash "2.17") (dash-functional "2.17") (f "0.17") (pretty-hydra "0.2.2") (magit-section "0.1"))
 ;; Keywords: convenience
 
@@ -173,7 +173,7 @@ May be used to add extra space between groups in `bufler-list'."
                  (const :tag "Blank line after top-level groups"
                         ((0 . "\n")))
                  (alist :key-type (integer :tag "Group level")
-			:value-type (string :tag "Suffix string"))))
+                        :value-type (string :tag "Suffix string"))))
 
 (defcustom bufler-cache-related-dirs-p t
   "Whether to cache whether directory pairs are related.
@@ -257,109 +257,108 @@ buffer list has not yet changed)."
   (interactive "P")
   (let (format-table)
     (cl-labels
-	;; This gets a little hairy because we have to wrap `-group-by'
-	;; to implement "chains" of grouping functions.
-	((insert-thing (thing path &optional (level 0))
-		       (pcase thing
-			 ((pred bufferp) (insert-buffer thing))
-			 (_ (insert-group thing (append path (list (car thing))) level))))
-	 (insert-buffer
-	  (buffer) (magit-insert-section nil (bufler-buffer buffer)
+        ;; This gets a little hairy because we have to wrap `-group-by'
+        ;; to implement "chains" of grouping functions.
+        ((insert-thing (thing path &optional (level 0))
+                       (pcase thing
+                         ((pred bufferp)
+                          (when (buffer-live-p thing)
+                            ;; Killed buffers can remain in `bufler-cache' because, apparently, the hash
+                            ;; of `buffer-list' does not necessarily change when a buffer is killed and
+                            ;; has not yet been GC'ed.  So we test here and only insert live buffers.
+                            (insert-buffer thing)))
+                         (_ (insert-group thing (append path (list (car thing))) level))))
+         (insert-buffer
+          (buffer) (magit-insert-section nil (bufler-buffer buffer)
                      (insert (gethash buffer format-table) "\n")))
-	 (insert-group
-	  (group path level) (pcase (car group)
-			       ('nil (pcase-let* ((`(,_type . ,things) group))
+         (insert-group
+          (group path level) (pcase (car group)
+                               ('nil (pcase-let* ((`(,_type . ,things) group))
                                        (--each things
                                          (insert-thing it path level))))
-			       (_ (pcase-let* ((`(,type . ,things) group)
-					       (num-buffers 0)
-					       (suffix (alist-get level bufler-list-group-separators)))
-				    ;; This almost seems lazy, using `-tree-map-nodes'
-				    ;; with `bufferp', but it works, and it's correct,
-				    ;; and since `bufferp' is in C, maybe it's even fast.
+                               (_ (pcase-let* ((`(,type . ,things) group)
+                                               (num-buffers 0)
+                                               (suffix (alist-get level bufler-list-group-separators)))
+                                    ;; NOTE: When `bufler-use-cache' is enabled, killed buffers can
+                                    ;; remain in the list of groups returned by `bufler-buffers', because
+                                    ;; the cache retains references to the killed buffers.  We avoid
+                                    ;; inserting killed buffers with two tests: 1. If a group contains no
+                                    ;; live buffers, we cancel the group's section immediately.  2. If
+                                    ;; the group contains some live buffers, we insert it, and we test
+                                    ;; the liveness of each buffer before inserting it.
 
-				    ;; NOTE: Sometimes killed buffers remain in the list
-				    ;; of buffers returned by `bufler-buffers'.  I haven't
-				    ;; figured out why.  Maybe we're keeping a reference
-				    ;; to them in the list buffer or in the cached groups.
-				    ;; Anyway, as long as that is the case, we have to
-				    ;; avoid inserting killed buffers, and we have to
-				    ;; avoid showing empty sections.  So we only increment
-				    ;; the number of buffers for live ones, and if there
-				    ;; aren't any, we cancel the section.
+                                    ;; MAYBE: Find a more elegant way, so we could avoid testing buffers'
+                                    ;; liveness twice.
 
-				    ;; FIXME: Track down what's causing killed buffers to remain in
-				    ;; `bufler-buffers', even though there don't seem to be any in `buffer-list'.
-
-				    ;; TODO: Return `bufler-group' structs from `bufler-buffers'.
-				    (-tree-map-nodes #'bufferp
-						     (lambda (buffer)
-						       (when (buffer-live-p buffer)
-							 (cl-incf num-buffers)))
-						     group)
-				    (magit-insert-section (bufler-group (make-bufler-group
-									 :type type :path path
-									 :elements (cdr things)))
-				      (if (> num-buffers 0)
-					  (progn
-					    (magit-insert-heading (make-string (* 2 level) ? )
-					      (format-group type level)
-					      (propertize (format " (%s)" num-buffers)
-							  'face 'bufler-size))
-					    (--each things
-					      (insert-thing it path (1+ level)))
-					    (when suffix
-					      (insert suffix)))
-					(magit-cancel-section)))))))
-	 (format-group
-	  (group level) (let* ((string (cl-typecase group
-					 (string group)
-					 (otherwise (prin1-to-string group)))))
-			  (propertize string
-				      'face (list :inherit (list 'bufler-group (bufler-level-face level))))))
-	 (hidden-p (buffer)
-		   (string-prefix-p " " (buffer-name buffer)))
-	 (as-string
-	  (arg) (cl-typecase arg
-		  (string arg)
-		  (otherwise (format "%s" arg))))
-	 (format< (test-dir buffer-dir)
-		  (string< (as-string test-dir) (as-string buffer-dir)))
-	 (boring-p (buffer)
-		   (hidden-p buffer)))
+                                    ;; TODO: Return `bufler-group' structs from `bufler-buffers'.
+                                    (-tree-map-nodes #'bufferp
+                                                     (lambda (buffer)
+                                                       (when (buffer-live-p buffer)
+                                                         (cl-incf num-buffers)))
+                                                     group)
+                                    (magit-insert-section (bufler-group (make-bufler-group
+                                                                         :type type :path path
+                                                                         :elements (cdr things)))
+                                      (if (> num-buffers 0)
+                                          (progn
+                                            (magit-insert-heading (make-string (* 2 level) ? )
+                                              (format-group type level)
+                                              (propertize (format " (%s)" num-buffers)
+                                                          'face 'bufler-size))
+                                            (--each things
+                                              (insert-thing it path (1+ level)))
+                                            (when suffix
+                                              (insert suffix)))
+                                        (magit-cancel-section)))))))
+         (format-group
+          (group level) (let* ((string (cl-typecase group
+                                         (string group)
+                                         (otherwise (prin1-to-string group)))))
+                          (propertize string
+                                      'face (list :inherit (list 'bufler-group (bufler-level-face level))))))
+         (hidden-p (buffer)
+                   (string-prefix-p " " (buffer-name buffer)))
+         (as-string
+          (arg) (cl-typecase arg
+                  (string arg)
+                  (otherwise (format "%s" arg))))
+         (format< (test-dir buffer-dir)
+                  (string< (as-string test-dir) (as-string buffer-dir)))
+         (boring-p (buffer)
+                   (hidden-p buffer)))
       (when force-refresh
-	(setf bufler-cache nil))
+        (setf bufler-cache nil))
       (pcase-let* ((inhibit-read-only t)
-		   (bufler-vc-refresh force-refresh)
-		   (groups (bufler-buffers))
-		   (`(,*format-table . ,column-sizes) (bufler-format-buffer-groups groups))
-		   (header (concat (format (format " %%-%ss" (cdar column-sizes)) (caar column-sizes))
-				   (cl-loop for (name . size) in (cdr column-sizes)
-					    for spec = (format " %%-%ss" size)
-					    concat (format spec name))))
-		   (pos))
-	;; `format-table' is bound around the labeled functions.
-	(setf format-table *format-table)
-	(when bufler-reverse
-	  (setf groups (nreverse (-sort #'format< groups))))
-	(with-current-buffer (get-buffer-create "*Bufler*")
-	  (setf pos (point))
-	  (bufler-list-mode)
-	  (erase-buffer)
-	  (magit-insert-section (bufler-root)
-	    (--each groups
-	      (insert-thing it nil 0)))
-	  (setf header-line-format header)
-	  (setf buffer-read-only t)
-	  (pop-to-buffer (current-buffer))
-	  (goto-char pos))
-	;; Cancel cache-clearing idle timer and start a new one.
-	(when bufler-cache-related-dirs-timer
-	  (cancel-timer bufler-cache-related-dirs-timer))
-	(setf bufler-cache-related-dirs-timer
-	      (run-with-idle-timer bufler-cache-related-dirs-timeout nil
-				   (lambda ()
-				     (setf bufler-cache-related-dirs (make-hash-table :test #'equal)))))))))
+                   (bufler-vc-refresh force-refresh)
+                   (groups (bufler-buffers))
+                   (`(,*format-table . ,column-sizes) (bufler-format-buffer-groups groups))
+                   (header (concat (format (format " %%-%ss" (cdar column-sizes)) (caar column-sizes))
+                                   (cl-loop for (name . size) in (cdr column-sizes)
+                                            for spec = (format " %%-%ss" size)
+                                            concat (format spec name))))
+                   (pos))
+        ;; `format-table' is bound around the labeled functions.
+        (setf format-table *format-table)
+        (when bufler-reverse
+          (setf groups (nreverse (-sort #'format< groups))))
+        (with-current-buffer (get-buffer-create "*Bufler*")
+          (setf pos (point))
+          (bufler-list-mode)
+          (erase-buffer)
+          (magit-insert-section (bufler-root)
+            (--each groups
+              (insert-thing it nil 0)))
+          (setf header-line-format header)
+          (setf buffer-read-only t)
+          (pop-to-buffer (current-buffer))
+          (goto-char pos))
+        ;; Cancel cache-clearing idle timer and start a new one.
+        (when bufler-cache-related-dirs-timer
+          (cancel-timer bufler-cache-related-dirs-timer))
+        (setf bufler-cache-related-dirs-timer
+              (run-with-idle-timer bufler-cache-related-dirs-timeout nil
+                                   (lambda ()
+                                     (setf bufler-cache-related-dirs (make-hash-table :test #'equal)))))))))
 
 ;;;###autoload
 (defalias 'bufler #'bufler-list)
@@ -384,7 +383,7 @@ command.
 
 NAME, okay, `checkdoc'?"
   (declare (indent defun)
-	   (debug (symbolp stringp def-form
+           (debug (symbolp stringp def-form
                            &rest [&or [":let*" (&rest &or symbolp (gate symbolp &optional def-form))]
                                       [":refresh-p" booleanp]])))
   `(defun ,(intern (concat "bufler-list-buffer-" (symbol-name name))) (&rest _args)
@@ -403,19 +402,19 @@ NAME, okay, `checkdoc'?"
   (lambda (buffer)
     (let ((bufler-window (selected-window)))
       (ignore-errors
-	;; Ignoring the error seems like the easiest way to handle
-	;; this.  There are a surprising number of nuances in getting
-	;; this to behave exactly as desired in all cases.
-	(delete-window bufler-window))
+        ;; Ignoring the error seems like the easiest way to handle
+        ;; this.  There are a surprising number of nuances in getting
+        ;; this to behave exactly as desired in all cases.
+        (delete-window bufler-window))
       (pop-to-buffer buffer '((display-buffer-reuse-window
-			       display-buffer-same-window)))))
+                               display-buffer-same-window)))))
   :refresh-p nil)
 
 (bufler-define-buffer-command peek "Peek at buffer in another window."
   (lambda (buffer)
     (display-buffer buffer '((display-buffer-use-some-window
-			      display-buffer-pop-up-window)
-			     (inhibit-same-window . t))))
+                              display-buffer-pop-up-window)
+                             (inhibit-same-window . t))))
   :refresh-p nil)
 
 (bufler-define-buffer-command save "Save buffer."
@@ -493,10 +492,10 @@ NAME, okay, `checkdoc'?"
 If PATH, return only buffers from the group at PATH."
   (cl-flet ((buffers
              () (bufler-group-tree groups
-		  (cl-loop with buffers = (cl-delete-if-not #'buffer-live-p (buffer-list))
-			   for fn in bufler-filter-fns
-			   do (setf buffers (cl-remove-if fn buffers))
-			   finally return buffers))))
+                  (cl-loop with buffers = (cl-delete-if-not #'buffer-live-p (buffer-list))
+                           for fn in bufler-filter-fns
+                           do (setf buffers (cl-remove-if fn buffers))
+                           finally return buffers))))
     (let ((buffers (if bufler-use-cache
                        (let ((hash (sxhash (buffer-list))))
                          (if (equal hash (car bufler-cache))
@@ -543,6 +542,10 @@ Each cell is suitable for completion functions."
                                              alist) nil t)))
     (alist-get key alist nil nil testfn)))
 
+(defun bufler-buffer-workspace-path (buffer)
+  "Return workspace path for BUFFER."
+  (butlast (bufler-group-tree-leaf-path (bufler-buffers) buffer)))
+
 (defun bufler-format-path (path)
   "Return PATH formatted as a string."
   (string-join (cl-loop for level from 0
@@ -579,7 +582,7 @@ Each cell is suitable for completion functions."
                            (with-current-buffer buffer
                              ;; Unfortunately, this seems to be necessary to get the correct state.
                              (vc-state-refresh (buffer-file-name buffer)
-					       (vc-backend (buffer-file-name buffer))))
+                                               (vc-backend (buffer-file-name buffer))))
                            (pcase (vc-state (buffer-file-name buffer))
                              ((and 'edited it)
                               (propertize (format " %s" it)
@@ -649,27 +652,27 @@ buffer's depth in the group tree."
   (let ((fn-name (intern (concat "bufler-column-format-" (downcase name)))))
     `(progn
        (defun ,fn-name (buffer depth)
-	 (if-let ((string (progn ,@body)))
-	     (if ,face
-		 (propertize string 'face ,face)
-	       string)
-	   ""))
+         (if-let ((string (progn ,@body)))
+             (if ,face
+                 (propertize string 'face ,face)
+               string)
+           ""))
        (setf (map-elt bufler-column-format-fns ,name) #',fn-name))))
 
 (bufler-define-column "Name" nil
   ;; MAYBE: Move indentation back to `bufler-list'.  But this seems to
   ;; work well, and that might be more complicated.
   (let ((mode-annotation (when (cl-loop for fn in bufler-buffer-mode-annotate-preds
-					thereis (funcall fn buffer))
-			   (propertize (concat (replace-regexp-in-string
-						(rx "-mode" eos) ""
-						(symbol-name (buffer-local-value 'major-mode buffer))
-						t t)
-					       " ")
-				       'face 'bufler-mode))))
+                                        thereis (funcall fn buffer))
+                           (propertize (concat (replace-regexp-in-string
+                                                (rx "-mode" eos) ""
+                                                (symbol-name (buffer-local-value 'major-mode buffer))
+                                                t t)
+                                               " ")
+                                       'face 'bufler-mode))))
     (concat (make-string (* 2 depth) ? )
-	    mode-annotation
-	    (buffer-name buffer))))
+            mode-annotation
+            (buffer-name buffer))))
 
 (bufler-define-column "Size" 'bufler-size
   (ignore depth)
@@ -679,10 +682,10 @@ buffer's depth in the group tree."
   (ignore depth)
   (when (buffer-file-name buffer)
     (when (and bufler-vc-refresh
-	       (vc-registered (buffer-file-name buffer)))
+               (vc-registered (buffer-file-name buffer)))
       (with-current-buffer buffer
-	(vc-state-refresh (buffer-file-name buffer)
-			  (vc-backend (buffer-file-name buffer)))))
+        (vc-state-refresh (buffer-file-name buffer)
+                          (vc-backend (buffer-file-name buffer)))))
     (pcase (vc-state (buffer-file-name buffer))
       ('nil nil)
       ((and 'edited it) (propertize (symbol-name it) 'face 'bufler-vc))
@@ -701,10 +704,10 @@ Each string corresponds to a function in
 `bufler-column-format-fns'.  Custom columns must be defined with
 `bufler-define-column'."
   :type '(repeat (choice (const "Name")
-			 (const "Size")
-			 (const "VC State")
-			 (const "Path")
-			 (string :tag "Custom column"))))
+                         (const "Size")
+                         (const "VC State")
+                         (const "Path")
+                         (string :tag "Custom column"))))
 
 (defun bufler-format-buffer-groups (groups)
   "Return a cons (table . column-sizes) for GROUPS.
@@ -715,52 +718,51 @@ according to `bufler-columns' and takes into account the width of
 all the buffers' values for each column."
   ;; Let's see if this works, and if it's fast enough.
   (let ((table (make-hash-table))
-	(columns bufler-columns)
-	column-sizes)
+        (columns bufler-columns)
+        column-sizes)
     (cl-labels ((format-column
-		 (buffer depth column-name)
-		 (let* ((fn (alist-get column-name bufler-column-format-fns nil nil #'string=))
-			(value (funcall fn buffer depth))
-			(current-column-size (or (map-elt column-sizes column-name) 0)))
-		   (setf (map-elt column-sizes column-name)
-			 (max current-column-size (1+ (length (format "%s" value)))))
-		   value))
-		(format-buffer
-		 (buffer depth) (puthash buffer (--map (format-column buffer depth it)
-						       columns)
-					 table))
-		(each-buffer
-		 (fn groups depth) (--each groups
-				     (cl-typecase it
-				       (buffer (format-buffer it depth))
-				       (list (each-buffer fn it
-							  ;; A nil head means same visual depth.
-							  (if (car it)
-							      (1+ depth)
-							    depth)))))))
+                 (buffer depth column-name)
+                 (let* ((fn (alist-get column-name bufler-column-format-fns nil nil #'string=))
+                        (value (funcall fn buffer depth))
+                        (current-column-size (or (map-elt column-sizes column-name) 0)))
+                   (setf (map-elt column-sizes column-name)
+                         (max current-column-size (1+ (length (format "%s" value)))))
+                   value))
+                (format-buffer
+                 (buffer depth) (puthash buffer (--map (format-column buffer depth it)
+                                                       columns)
+                                         table))
+                (each-buffer
+                 (fn groups depth) (--each groups
+                                     (cl-typecase it
+                                       (buffer (format-buffer it depth))
+                                       (list (each-buffer fn it
+                                                          ;; A nil head means same visual depth.
+                                                          (if (car it)
+                                                              (1+ depth)
+                                                            depth)))))))
       (each-buffer #'format-buffer groups 0)
       ;; Now format each buffer's string using the column sizes.
       (let* ((column-sizes (nreverse column-sizes))
-	     (format-string (string-join (cl-loop for (_name . size) in column-sizes
-						  collect (format "%%-%ss" size))
-					 " ")))
-	(maphash (lambda (buffer column-values)
-		   (puthash buffer (apply #'format format-string column-values)
-			    table))
-		 table)
-	(cons table column-sizes)))))
+             (format-string (string-join (cl-loop for (_name . size) in column-sizes
+                                                  collect (format "%%-%ss" size))
+                                         " ")))
+        (maphash (lambda (buffer column-values)
+                   (puthash buffer (apply #'format format-string column-values)
+                            table))
+                 table)
+        (cons table column-sizes)))))
 
 ;;;;; Hydra
 
 (require 'pretty-hydra)
 
 (pretty-hydra-define hydra:bufler
-  (:hint t :foreign-keys run :quit-key "q" :post (progn
-						   (quit-window)))
+  (:hint t :foreign-keys run :quit-key "?" :exit t)
   ("Bufler"
    (("g" #'bufler "Refresh")
     ("m" #'bufler-mode "Toggle mode")
-    ("q" nil "Quit"))
+    ("q" #'quit-window "Quit"))
    "Buffer"
    (("SPC" #'bufler-list-buffer-peek "Peek at")
     ("RET" #'bufler-list-buffer-switch "Switch to")
@@ -884,14 +886,14 @@ If it matches, NAME is returned, otherwise nil."
   (cl-check-type name string)
   (when (and (buffer-file-name buffer)
              (string-match-p regexp (buffer-file-name buffer)))
-    (propertize name 'face 'magit-head)))
+    name))
 
 (defun bufler-group-name-match (name regexp buffer)
   "Group BUFFERs whose names match REGEXP.
 If it matches, NAME is returned, otherwise nil."
   (cl-check-type name string)
   (when (string-match-p regexp (buffer-name buffer))
-    (propertize name 'face 'magit-head)))
+    name))
 
 (defun bufler-group-mode-match (name regexp buffer)
   "Group buffers whose major modes match REGEXP.
@@ -900,7 +902,7 @@ nil."
   (cl-check-type name string)
   (let ((mode-name (symbol-name (buffer-local-value 'major-mode buffer))))
     (when (string-match-p regexp mode-name)
-      (propertize name 'face 'magit-head))))
+      name)))
 
 ;;;;;; Auto-groups
 
@@ -910,19 +912,23 @@ nil."
 ;; raised to the next level.  (This is implemented in the `bufler'
 ;; function.)
 
-(defmacro bufler-defauto-group (name &rest body)
-  "Define a grouping function named `bufler-group-by-NAME'.
+(eval-and-compile
+  ;; This macro must be enclosed in `eval-and-compile' so that the call
+  ;; to it in another `eval-and-compile' will work.  See discussion at
+  ;; <https://lists.gnu.org/archive/html/emacs-devel/2020-04/msg00430.html>.
+  (defmacro bufler-defauto-group (name &rest body)
+    "Define a grouping function named `bufler-group-by-NAME'.
 It takes one argument, a buffer, which is bound to `buffer' in
 BODY.  It should return a key by which to group its buffer, or
 nil if it should not be grouped.
 
 NAME, okay, `checkdoc'?"
-  (declare (indent defun))
-  (let* ((fn-name (intern (concat "bufler-group-auto-" (symbol-name name))))
-         (docstring (format "Group buffers by %s." name)))
-    `(defun ,fn-name (buffer)
-       ,docstring
-       ,@body)))
+    (declare (indent defun))
+    (let* ((fn-name (intern (concat "bufler-group-auto-" (symbol-name name))))
+           (docstring (format "Group buffers by %s." name)))
+      `(defun ,fn-name (buffer)
+         ,docstring
+         ,@body))))
 
 (bufler-defauto-group file
   (when-let* ((filename (or (buffer-file-name buffer)
@@ -936,8 +942,7 @@ NAME, okay, `checkdoc'?"
               'face 'magit-section-heading))
 
 (bufler-defauto-group mode
-  (propertize (symbol-name (buffer-local-value 'major-mode buffer))
-              'face 'magit-head))
+  (symbol-name (buffer-local-value 'major-mode buffer)))
 
 (bufler-defauto-group indirect
   (when (buffer-base-buffer buffer)

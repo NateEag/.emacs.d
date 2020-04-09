@@ -3,8 +3,9 @@
 ;; Copyright (c) 2013, 2016-2017  Free Software Foundation, Inc.
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
+;; Homepage: https://github.com/ahyatt/emacs-websocket
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20200102.637
+;; Package-Version: 20200321.102
 ;; Version: 1.12
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;

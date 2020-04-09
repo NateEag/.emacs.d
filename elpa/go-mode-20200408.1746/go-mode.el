@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20200112.2140
+;; Package-Version: 20200408.1746
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -128,6 +128,11 @@ constant is changed.")
 
 (defcustom go-fontify-function-calls t
   "Fontify function and method calls if this is non-nil."
+  :type 'boolean
+  :group 'go)
+
+(defcustom go-fontify-variables t
+  "Fontify variable declarations if this is non-nil."
   :type 'boolean
   :group 'go)
 
@@ -403,6 +408,9 @@ For mode=set, all covered lines will have this weight."
     st)
   "Syntax table for Go mode.")
 
+(defvar go--default-face 'default
+  "A variable to refer to `default' face for use in font lock rules.")
+
 (defun go--build-font-lock-keywords ()
   ;; we cannot use 'symbols in regexp-opt because GNU Emacs <24
   ;; doesn't understand that
@@ -420,7 +428,7 @@ For mode=set, all covered lines will have this weight."
        ;; Post-match form that runs after last sub-match.
        (go--fontify-param-post)
        ;; Subexp 1 is the param variable name, if any.
-       (1 font-lock-variable-name-face)
+       (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face))
        ;; Subexp 2 is the param type name, if any. We set the LAXMATCH
        ;; flag to allow optional regex groups.
        (2 font-lock-type-face nil t)))
@@ -438,7 +446,7 @@ For mode=set, all covered lines will have this weight."
      ;; Match variable names in var decls, constant names in const
      ;; decls, and type names in type decls.
      (go--match-decl
-      (1 font-lock-variable-name-face nil t)
+      (1 ,(if go-fontify-variables 'font-lock-variable-name-face 'go--default-face) nil t)
       (2 font-lock-constant-face nil t)
       (3 font-lock-type-face nil t))
 
@@ -987,17 +995,15 @@ is done."
           indent
         (+ indent (current-indentation))))))
 
-(defconst go--operator-chars "*/%<>&\\^+\\-|=!,"
+(defconst go--operator-chars "*/%<>&\\^+\\-|=!,."
   "Individual characters that appear in operators.
-Comma is included because it is sometimes a dangling operator, so
-needs to be considered by `go--continuation-line-indents-p'")
+Comma and period are included because they can be dangling operators, so
+they need to be considered by `go--continuation-line-indents-p'")
 
 (defun go--operator-precedence (op)
-  "Go operator precedence (higher binds tighter).
-
-Comma gets the default 0 precedence which is appropriate because commas
-are loose binding expression separators."
+  "Go operator precedence (higher binds tighter)."
   (cl-case (intern op)
+    (\. 7) ; "." in "foo.bar", binds tightest
     (! 6)
     ((* / % << >> & &^) 5)
     ((+ - | ^) 4)
@@ -1622,18 +1628,22 @@ We are looking for the right-hand-side of the type alias"
             (not found-match)
             (re-search-forward go--label-re end t))
 
-      (setq found-match (or
-                         ;; Composite literal field names, e.g. "Foo{Bar:". Note
-                         ;; that this gives false positives for literal maps,
-                         ;; arrays, and slices.
-                         (go--in-composite-literal-p)
+      (save-excursion
+        (goto-char (match-beginning 1))
+        (skip-syntax-backward " ")
 
-                         ;; We are a label definition if we are at the beginning
-                         ;; of the line.
-                         (save-excursion
-                           (goto-char (match-beginning 1))
-                           (skip-syntax-backward " ")
-                           (bolp)))))
+        (setq found-match (or
+                           ;; We are a label/field name if we are at the
+                           ;; beginning of the line.
+                           (bolp)
+
+                           ;; Composite literal field names, e.g. "Foo{Bar:". Note
+                           ;; that this gives false positives for literal maps,
+                           ;; arrays, and slices.
+                           (and
+                            (or (eq (char-before) ?,) (eq (char-before) ?{))
+                            (go--in-composite-literal-p))))))
+
     found-match))
 
 (defun go--parameter-list-type (end)
@@ -2327,6 +2337,7 @@ description at POINT."
 (defun godef--successful-p (output)
   (not (or (string= "-" output)
            (string= "godef: no identifier found" output)
+           (string= "godef: no object" output)
            (go--string-prefix-p "godef: no declaration found for " output)
            (go--string-prefix-p "error finding import path for " output))))
 

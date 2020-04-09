@@ -2,7 +2,7 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.1.0
-;; Package-Version: 20200229.1525
+;; Package-Version: 20200319.2357
 ;; Package-Requires: ((emacs "25") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -115,8 +115,10 @@ instead of
               (with-temp-buffer
                 (unless (zerop exit-code)
                   (insert-file-contents stderr-tempfile)
-                  (warn "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
-                        exit-code (buffer-string) direnv--output-buffer-name))))))
+                  (display-warning 'direnv
+                    (format-message
+                      "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
+                      exit-code (buffer-string) direnv--output-buffer-name)))))))
       (delete-file stderr-tempfile))))
 
 (defun direnv--file-size (name)

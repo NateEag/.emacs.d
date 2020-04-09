@@ -1,13 +1,13 @@
 ;;; ace-window.el --- Quickly switch windows. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2020  Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20200304.1344
-;; Version: 0.9.0
-;; Package-Requires: ((avy "0.2.0"))
+;; Package-Version: 20200311.1025
+;; Version: 0.10.0
+;; Package-Requires: ((avy "0.5.0"))
 ;; Keywords: window, location
 
 ;; This file is part of GNU Emacs.
@@ -421,10 +421,6 @@ LEAF is (PT . WND)."
                       ol))
                   wnd-list))))
 
-(define-obsolete-variable-alias
-    'aw-flip-keys 'aw--flip-keys "0.1.0"
-    "Use `aw-dispatch-alist' instead.")
-
 (defvar aw-dispatch-function 'aw-dispatch-default
   "Function to call when a character not in `aw-keys' is pressed.")
 
@@ -636,9 +632,6 @@ https://github.com/abo-abo/ace-window/wiki/display-buffer."
 (defun aw-transpose-frame (w)
   "Select any window on frame and `tranpose-frame'."
   (transpose-frame (window-frame w)))
-
-(define-obsolete-function-alias
-    'ace-maximize-window 'ace-delete-other-windows "0.10.0")
 
 ;;;###autoload
 (defun ace-window (arg)

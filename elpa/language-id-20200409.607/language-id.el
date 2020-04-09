@@ -2,8 +2,8 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20200214.2254
-;; Version: 0.4.0
+;; Package-Version: 20200409.607
+;; Version: 0.5.1
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -35,6 +35,13 @@
 (defconst language-id--definitions
   '(
 
+    ;; JSON needs to come before JavaScript. Since json-mode is
+    ;; derived from javascript-mode, having JavaScript before JSON
+    ;; would cause JSON to be detected as JavaScript.
+    ("JSON"
+     json-mode
+     (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
+
     ;; TypeScript/TSX need to come before JavaScript/JSX because in
     ;; web-mode we can tell them apart by file name extension only.
     ;; This implies that unsaved temp buffers using TypeScript/TSX in
@@ -51,6 +58,8 @@
       (web-mode-content-type "jsx")
       (web-mode-engine "none")
       (language-id--file-name-extension ".tsx")))
+
+    ;; The rest of the definitions are in alphabetical order.
 
     ("Assembly" asm-mode nasm-mode)
     ("Bazel" bazel-mode)
@@ -74,8 +83,7 @@
     ("Go" go-mode)
     ("GraphQL" graphql-mode)
     ("Haskell" haskell-mode)
-    ("HCL" hcl-mode terraform-mode)
-    ("Terraform" terraform-mode)
+    ("HCL" hcl-mode)
     ("HTML"
      html-helper-mode html-mode mhtml-mode nxhtml-mode
      (web-mode (web-mode-content-type "html") (web-mode-engine "none")))
@@ -88,6 +96,7 @@
     ("JSON"
      json-mode
      (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
+    ("Jsonnet" jsonnet-mode)
     ("JSX"
      js2-jsx-mode jsx-mode rjsx-mode react-mode
      (web-mode (web-mode-content-type "jsx") (web-mode-engine "none")))
@@ -114,6 +123,8 @@
     ("Solidity" solidity-mode)
     ("SQL" sql-mode)
     ("Swift" swift-mode swift3-mode)
+    ("Terraform" terraform-mode)
+    ("TOML" toml-mode conf-toml-mode)
     ("Verilog" verilog-mode)
     ("Vue"
      vue-mode
@@ -129,11 +140,12 @@
   (let ((mode (if (listp mode) mode (list mode))))
     (cl-destructuring-bind (wanted-major-mode . variables) mode
       (and (derived-mode-p wanted-major-mode)
-           (cl-every (lambda (variable)
-                       (cl-destructuring-bind (symbol wanted-value) variable
-                         (equal wanted-value
-                                (when (boundp symbol) (symbol-value symbol)))))
-                     variables)))))
+           (cl-every
+            (lambda (variable)
+              (cl-destructuring-bind (symbol wanted-value) variable
+                (equal wanted-value
+                       (if (boundp symbol) (symbol-value symbol) nil))))
+            variables)))))
 
 (defun language-id-buffer ()
   "Get GitHub Linguist language name for current buffer.

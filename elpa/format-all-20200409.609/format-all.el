@@ -2,9 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200219.1628
+;; Package-Version: 20200409.609
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.4"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.5.1"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 ;;
@@ -47,6 +47,7 @@
 ;; - HTML/XHTML/XML (tidy)
 ;; - Java (clang-format)
 ;; - JavaScript/JSON/JSX (prettier)
+;; - Jsonnet (jsonnetfmt)
 ;; - Kotlin (ktlint)
 ;; - LaTeX (latexindent)
 ;; - Ledger (ledger-mode)
@@ -68,6 +69,7 @@
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
+;; - TOML (prettier prettier-plugin-toml)
 ;; - TypeScript/TSX (prettier)
 ;; - Verilog (iStyle)
 ;; - YAML (prettier)
@@ -513,6 +515,12 @@ Consult the existing formatters for examples of BODY."
   (:languages "Verilog")
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter jsonnetfmt
+  (:executable "jsonnetfmt")
+  (:install (macos "brew install jsonnet"))
+  (:languages "Jsonnet")
+  (:format (format-all--buffer-easy executable "-")))
+
 (define-format-all-formatter ktlint
   (:executable "ktlint")
   (:install (macos "brew install ktlint"))
@@ -573,10 +581,10 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter prettier
   (:executable "prettier")
-  (:install "npm install --global prettier @prettier/plugin-php prettier-plugin-solidity")
+  (:install "npm install --global prettier @prettier/plugin-php prettier-plugin-solidity prettier-plugin-toml")
   (:languages
    "CSS" "GraphQL" "JavaScript" "JSON" "JSX" "Less" "Markdown" "PHP"
-   "SCSS" "Solidity" "TSX" "TypeScript" "Vue" "YAML"
+   "SCSS" "Solidity" "TOML" "TSX" "TypeScript" "Vue" "YAML"
    ;; TODO: Use html-tidy instead of prettier for plain HTML. Enable
    ;; prettier's HTML support once we have multi-formatter support.
    ;; "HTML"

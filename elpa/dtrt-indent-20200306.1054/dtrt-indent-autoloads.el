@@ -15,16 +15,18 @@ With no argument, this command toggles the mode.  Non-null prefix
 argument turns on the mode.  Null prefix argument turns off the
 mode.
 
-If called interactively, enable Dtrt-Indent mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Dtrt-Indent mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 When dtrt-indent mode is enabled, the proper indentation offset
 and `indent-tabs-mode' will be guessed for newly opened files and
 adjusted transparently.
 
 \(fn &optional ARG)" t nil)
+
+(put 'dtrt-indent-global-mode 'globalized-minor-mode t)
 
 (defvar dtrt-indent-global-mode nil "\
 Non-nil if Dtrt-Indent-Global mode is enabled.

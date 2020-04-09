@@ -1,4 +1,4 @@
-(define-package "dtrt-indent" "20191019.2141" "Adapt to foreign indentation offsets" 'nil :keywords
+(define-package "dtrt-indent" "20200306.1054" "Adapt to foreign indentation offsets" 'nil :keywords
   '("convenience" "files" "languages" "c")
   :authors
   '(("Julian Scheid" . "julians37@googlemail.com"))

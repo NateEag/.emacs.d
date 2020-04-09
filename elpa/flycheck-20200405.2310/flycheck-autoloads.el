@@ -195,11 +195,12 @@ default `:verify' function of command checkers.
 Define SYMBOL as config file variable for CHECKER, with default FILE-NAME.
 
 SYMBOL is declared as customizable variable using `defcustom', to
-provide a configuration file for the given syntax CHECKER.
+provide configuration files for the given syntax CHECKER.
 CUSTOM-ARGS are forwarded to `defcustom'.
 
 FILE-NAME is the initial value of the new variable.  If omitted,
-the default value is nil.
+the default value is nil.  It can be either a string or a list of
+strings.
 
 Use this together with the `config-file' form in the `:command'
 argument to `flycheck-define-checker'.
@@ -226,6 +227,19 @@ Use this together with the `option', `option-list' and
 (function-put 'flycheck-def-option-var 'lisp-indent-function '3)
 
 (function-put 'flycheck-def-option-var 'doc-string-elt '4)
+
+(autoload 'flycheck-define-checker "flycheck" "\
+Define SYMBOL as command syntax checker with DOCSTRING and PROPERTIES.
+
+Like `flycheck-define-command-checker', but PROPERTIES must not
+be quoted.  Also, implicitly define the executable variable for
+SYMBOL with `flycheck-def-executable-var'.
+
+\(fn SYMBOL DOCSTRING &rest PROPERTIES)" nil t)
+
+(function-put 'flycheck-define-checker 'lisp-indent-function '1)
+
+(function-put 'flycheck-define-checker 'doc-string-elt '2)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck" '("flycheck-" "help-flycheck-checker-d" "list-flycheck-errors")))
 

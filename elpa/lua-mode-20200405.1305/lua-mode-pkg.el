@@ -1,4 +1,4 @@
-(define-package "lua-mode" "20191204.1434" "a major-mode for editing Lua scripts"
+(define-package "lua-mode" "20200405.1305" "a major-mode for editing Lua scripts"
   '((emacs "24.3"))
   :keywords
   '("languages" "processes" "tools")

@@ -31,9 +31,9 @@ with the specified arguments.
 
    This package has been superseded by Transient (*note
 (transient)Top::).  No new features will be added but bugs will be
-fixes.
+fixed.
 
-This manual is for Magit-Popup version 2.13.2.
+This manual is for Magit-Popup version 2.13.2 (v2.13.2+1).
 
      Copyright (C) 2015-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -133,7 +133,7 @@ This should illustrate the most basic differences:
 
    This package has been superseded by Transient (*note
 (transient)Top::).  No new features will be added but bugs will be
-fixes.
+fixed.
 
 
 File: magit-popup.info,  Node: Usage,  Next: Defining Prefix and Suffix Commands,  Prev: Introduction,  Up: Top
@@ -560,7 +560,7 @@ commands have to be defined separately using plain ‘defun’.
 
           Members of VALUE may also be nil.  This should only be used
           together with ‘:max-action-columns’ and allows having gaps in
-          the action grit, which can help arranging actions sensibly.
+          the action grid, which can help arranging actions sensibly.
 
         • ‘:default-action’
 
@@ -728,13 +728,13 @@ directly.
 
 Tag Table:
 Node: Top770
-Node: Introduction2139
-Node: Usage4478
-Node: Customizing Existing Popups9175
-Node: Other Options15316
-Node: Defining Prefix and Suffix Commands16859
-Node: Defining Prefix Commands19011
-Node: Defining Suffix Commands27706
+Node: Introduction2151
+Node: Usage4490
+Node: Customizing Existing Popups9187
+Node: Other Options15328
+Node: Defining Prefix and Suffix Commands16871
+Node: Defining Prefix Commands19023
+Node: Defining Suffix Commands27718
 
 End Tag Table
 

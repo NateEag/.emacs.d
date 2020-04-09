@@ -27,9 +27,9 @@ Setup `tide-mode' in current buffer." t nil)
 Minor mode for Typescript Interactive Development Environment.
 
 If called interactively, enable Tide mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+disable it if ARG is zero or negative.  If called from Lisp, also
+enable the mode if ARG is omitted or nil, and toggle it if ARG is
+`toggle'; disable the mode otherwise.
 
 \\{tide-mode-map}
 
@@ -48,10 +48,10 @@ highlights from previously highlighted identifier." t nil)
 Highlight instances of the identifier at point after a short
 timeout.
 
-If called interactively, enable Tide-Hl-Identifier mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Tide-Hl-Identifier mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

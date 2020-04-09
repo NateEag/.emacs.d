@@ -4,7 +4,7 @@
 ;; Author: Robert Weiner <rsw@gnu.org>
 ;; Maintainer: stardiviner <numbchild@gmail.com>
 ;; Keywords: documentation, eldoc, overlay
-;; Package-Version: 20200216.546
+;; Package-Version: 20200328.619
 ;; URL: https://github.com/stardiviner/eldoc-overlay
 ;; Created:  14th Jan 2017
 ;; Modified: 18th Dec 2017
@@ -69,13 +69,14 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
   "Display eldoc for the minibuffer when there or call the function indexed by `eldoc-overlay-backend'."
   (unless (or (company-tooltip-visible-p)
               (when (and (featurep 'company-box) (company-box--get-frame))
-                (frame-visible-p (company-box--get-frame))))
+                (frame-visible-p (company-box--get-frame)))
+              (not format-string))
     (if (and (minibufferp) (not eldoc-overlay-enable-in-minibuffer))
         (apply #'eldoc-minibuffer-message format-string args)
       (funcall (pcase eldoc-overlay-backend
                  (`inline-docs 'eldoc-overlay-inline-docs)
                  (`quick-peek 'eldoc-overlay-quick-peek))
-               (funcall eldoc-documentation-function)))))
+               (apply #'format-message format-string args)))))
 
 (defun eldoc-overlay-enable ()
   (setq-local eldoc-message-function #'eldoc-overlay-display)
@@ -90,7 +91,7 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
      (unless (delq nil (mapcar (lambda (buf) (buffer-local-value 'quick-peek--overlays buf)) (buffer-list)))
        (remove-hook 'post-command-hook #'quick-peek-hide)))
     ('inline-docs
-     ))
+     (inline-docs--clear-overlay)))
   (setq-local eldoc-message-function #'eldoc-minibuffer-message))
 
 ;;;###autoload
@@ -99,11 +100,15 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
   :require 'eldoc-overlay-mode
   :group 'eldoc-overlay
   :init-value nil
-  :global t
+  :global nil
   :lighter " ElDoc/overlay"
   (if eldoc-overlay-mode
       (eldoc-overlay-enable)
     (eldoc-overlay-disable)))
+
+;;;###autoload
+(define-globalized-minor-mode global-eldoc-overlay-mode
+  eldoc-overlay-mode eldoc-overlay-mode)
 
 ;;; ----------------------------------------------------------------------------
 

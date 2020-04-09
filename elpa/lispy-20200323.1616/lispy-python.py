@@ -187,12 +187,17 @@ def arglist(sym):
     return args
 
 def print_elisp(obj, end="\n"):
-    if hasattr(obj, "_asdict"):
+    if hasattr(obj, "_asdict") and obj._asdict is not None:
         # namedtuple
         print_elisp(obj._asdict(), end)
     elif hasattr(obj, "__array__"):
         # something that converts to a numpy array
         print_elisp(list(obj.__array__()))
+    elif isinstance(obj, set):
+        print("(")
+        for v in obj:
+            print_elisp(v, end=" ")
+        print(")")
     elif isinstance(obj, dict):
         print("(")
         for (k, v) in obj.items():
@@ -211,7 +216,7 @@ def print_elisp(obj, end="\n"):
                     print_elisp(x)
                 print(")")
             elif type(obj) is str:
-                print('"' + obj + '"', end=" ")
+                print('"' + re.sub("\"", "\\\"", obj) + '"', end=" ")
             else:
                 print('"' +  repr(obj) + '"', end=" ")
         else:

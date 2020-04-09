@@ -44,6 +44,26 @@ Find php.ini FILE by `php --ini'.
 
 ;;;***
 
+;;;### (autoloads nil "php-align" "php-align.el" (0 0 0 0))
+;;; Generated autoloads from php-align.el
+
+(autoload 'php-align-setup "php-align" "\
+Setup alignment configuration for PHP code." nil nil)
+
+(autoload 'php-align-mode "php-align" "\
+Alignment lines for PHP script.
+
+If called interactively, enable Php-Align mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-align" '("php-align-")))
+
+;;;***
+
 ;;;### (autoloads nil "php-face" "php-face.el" (0 0 0 0))
 ;;; Generated autoloads from php-face.el
 
@@ -134,6 +154,11 @@ Symbol value of the coding style of the project that PHP major mode refers to.
 Typically it is `pear', `drupal', `wordpress', `symfony2' and `psr2'.")
 
 (put 'php-project-coding-style 'safe-local-variable #'symbolp)
+
+(defvar-local php-project-align-lines t "\
+If T, automatically turn on `php-align-mode' by `php-align-setup'.")
+
+(put 'php-project-align-lines 'safe-local-variable #'booleanp)
 
 (defvar-local php-project-php-file-as-template 'auto "\
 

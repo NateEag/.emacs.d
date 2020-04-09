@@ -1,4 +1,4 @@
-(define-package "lsp-treemacs" "20200220.534" "LSP treemacs"
+(define-package "lsp-treemacs" "20200409.411" "LSP treemacs"
   '((emacs "25.1")
     (dash "2.14.1")
     (dash-functional "2.14.1")

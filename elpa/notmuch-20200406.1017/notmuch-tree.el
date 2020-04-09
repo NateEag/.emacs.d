@@ -42,6 +42,11 @@
 ;; the following variable is defined in notmuch.el
 (defvar notmuch-search-query-string)
 
+;; this variable distinguishes the unthreaded display from the normal tree display
+(defvar notmuch-tree-unthreaded nil
+  "A buffer local copy of argument unthreaded to the function notmuch-tree")
+(make-variable-buffer-local 'notmuch-tree-unthreaded)
+
 (defgroup notmuch-tree nil
   "Showing message and thread structure."
   :group 'notmuch)
@@ -50,6 +55,16 @@
   "View selected messages in new window rather than split-pane."
   :type 'boolean
   :group 'notmuch-tree)
+
+(defcustom notmuch-unthreaded-show-out t
+  "View selected messages in new window rather than split-pane."
+  :type 'boolean
+  :group 'notmuch-tree)
+
+(defun notmuch-tree-show-out ()
+  (if notmuch-tree-unthreaded
+      notmuch-unthreaded-show-out
+    notmuch-tree-show-out))
 
 (defcustom notmuch-tree-result-format
   `(("date" . "%12s  ")
@@ -70,6 +85,31 @@ Note the author string should not contain
                                              \(\"subject\" . \"%s\"\)\)\)"
   :type '(alist :key-type (string) :value-type (string))
   :group 'notmuch-tree)
+
+(defcustom notmuch-unthreaded-result-format
+  `(("date" . "%12s  ")
+    ("authors" . "%-20s")
+    ((("subject" . "%s")) ." %-54s ")
+    ("tags" . "(%s)"))
+  "Result formatting for unthreaded Tree view. Supported fields are: date,
+        authors, subject, tree, tags.  Tree means the thread tree
+        box graphics. The field may also be a list in which case
+        the formatting rules are applied recursively and then the
+        output of all the fields in the list is inserted
+        according to format-string.
+
+Note the author string should not contain
+        whitespace (put it in the neighbouring fields instead).
+        For example:
+        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
+                                             \(\"subject\" . \"%s\"\)\)\)"
+  :type '(alist :key-type (string) :value-type (string))
+  :group 'notmuch-tree)
+
+(defun notmuch-tree-result-format ()
+  (if notmuch-tree-unthreaded
+      notmuch-unthreaded-result-format
+    notmuch-tree-result-format))
 
 ;; Faces for messages that match the query.
 (defface notmuch-tree-match-face
@@ -254,6 +294,8 @@ FUNC."
     (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
+    (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
+    (define-key map "Z" 'notmuch-tree-from-unthreaded-current-query)
 
     ;; these use notmuch-show functions directly
     (define-key map "|" 'notmuch-show-pipe-message)
@@ -277,7 +319,8 @@ FUNC."
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
     (define-key map [mouse-1] 'notmuch-tree-show-message)
-    (define-key map "x" 'notmuch-tree-quit)
+    (define-key map "x" 'notmuch-tree-archive-message-then-next-or-exit)
+    (define-key map "X" 'notmuch-tree-archive-thread-then-exit)
     (define-key map "A" 'notmuch-tree-archive-thread)
     (define-key map "a" 'notmuch-tree-archive-message-then-next)
     (define-key map "z" 'notmuch-tree-to-tree)
@@ -434,6 +477,18 @@ NOT change the database."
     (notmuch-tree-close-message-window)
     (notmuch-tree query)))
 
+(defun notmuch-unthreaded-from-tree-current-query ()
+  "Switch from tree view to unthreaded view"
+  (interactive)
+  (unless notmuch-tree-unthreaded
+    (notmuch-tree-refresh-view 'unthreaded)))
+
+(defun notmuch-tree-from-unthreaded-current-query ()
+  "Switch from unthreaded view to tree view"
+  (interactive)
+  (when notmuch-tree-unthreaded
+    (notmuch-tree-refresh-view 'tree)))
+
 (defun notmuch-search-from-tree-current-query ()
   "Call notmuch search with the current query"
   (interactive)
@@ -501,8 +556,8 @@ NOT change the database."
 Shows in split pane or whole window according to value of
 `notmuch-tree-show-out'. A prefix argument reverses the choice."
   (interactive "P")
-  (if (or (and notmuch-tree-show-out  (not arg))
-	  (and (not notmuch-tree-show-out) arg))
+  (if (or (and (notmuch-tree-show-out) (not arg))
+	  (and (not (notmuch-tree-show-out)) arg))
       (notmuch-tree-show-message-out)
     (notmuch-tree-show-message-in)))
 
@@ -530,10 +585,10 @@ Shows in split pane or whole window according to value of
   (when (notmuch-tree-scroll-message-window)
     (notmuch-tree-next-matching-message)))
 
-(defun notmuch-tree-quit ()
+(defun notmuch-tree-quit (&optional kill-both)
   "Close the split view or exit tree."
-  (interactive)
-  (unless (notmuch-tree-close-message-window)
+  (interactive "P")
+  (when (or (not (notmuch-tree-close-message-window)) kill-both)
     (kill-buffer (current-buffer))))
 
 (defun notmuch-tree-close-message-window ()
@@ -563,6 +618,21 @@ message will be \"unarchived\", i.e. the tag changes in
   (notmuch-tree-archive-message unarchive)
   (notmuch-tree-next-matching-message))
 
+(defun notmuch-tree-archive-thread-then-exit ()
+  "Archive all messages in the current buffer, then exit notmuch-tree."
+  (interactive)
+  (notmuch-tree-archive-thread)
+  (notmuch-tree-quit t))
+
+(defun notmuch-tree-archive-message-then-next-or-exit ()
+  "Archive current message, then show next open message in current thread.
+
+If at the last open message in the current thread, then exit back
+to search results."
+  (interactive)
+  (notmuch-tree-archive-message)
+  (notmuch-tree-next-matching-message t))
+
 (defun notmuch-tree-next-message ()
   "Move to next message."
   (interactive)
@@ -577,37 +647,55 @@ message will be \"unarchived\", i.e. the tag changes in
   (when (window-live-p notmuch-tree-message-window)
     (notmuch-tree-show-message-in)))
 
-(defun notmuch-tree-prev-matching-message ()
+(defun notmuch-tree-goto-matching-message (&optional prev)
+  "Move to the next or previous matching message.
+
+Returns t if there was a next matching message in the thread to show,
+nil otherwise."
+  (let ((dir (if prev -1 nil))
+	(eobfn (if prev #'bobp #'eobp)))
+    (while (and (not (funcall eobfn))
+		(not (notmuch-tree-get-match)))
+      (forward-line dir))
+    (not (funcall eobfn))))
+
+(defun notmuch-tree-matching-message (&optional prev pop-at-end)
+  "Move to the next or previous matching message"
+  (interactive "P")
+  (forward-line (if prev -1 nil))
+  (if (and (not (notmuch-tree-goto-matching-message prev)) pop-at-end)
+      (notmuch-tree-quit pop-at-end)
+    (when (window-live-p notmuch-tree-message-window)
+      (notmuch-tree-show-message-in))))
+
+(defun notmuch-tree-prev-matching-message (&optional pop-at-end)
   "Move to previous matching message."
-  (interactive)
-  (forward-line -1)
-  (while (and (not (bobp)) (not (notmuch-tree-get-match)))
-    (forward-line -1))
-  (when (window-live-p notmuch-tree-message-window)
-    (notmuch-tree-show-message-in)))
+  (interactive "P")
+  (notmuch-tree-matching-message t pop-at-end))
 
-(defun notmuch-tree-next-matching-message ()
+(defun notmuch-tree-next-matching-message (&optional pop-at-end)
   "Move to next matching message."
-  (interactive)
-  (forward-line)
-  (while (and (not (eobp)) (not (notmuch-tree-get-match)))
-    (forward-line))
-  (when (window-live-p notmuch-tree-message-window)
-    (notmuch-tree-show-message-in)))
+  (interactive "P")
+  (notmuch-tree-matching-message nil pop-at-end))
 
-(defun notmuch-tree-refresh-view ()
+(defun notmuch-tree-refresh-view (&optional view)
   "Refresh view."
   (interactive)
   (when (get-buffer-process (current-buffer))
     (error "notmuch tree process already running for current buffer"))
   (let ((inhibit-read-only t)
 	(basic-query notmuch-tree-basic-query)
+	(unthreaded (cond ((eq view 'unthreaded) t)
+			  ((eq view 'tree) nil)
+			  (t notmuch-tree-unthreaded)))
 	(query-context notmuch-tree-query-context)
 	(target (notmuch-tree-get-message-id)))
     (erase-buffer)
     (notmuch-tree-worker basic-query
 			 query-context
-			 target)))
+			 target
+			 nil
+			 unthreaded)))
 
 (defun notmuch-tree-thread-top ()
   (when (notmuch-tree-get-message-properties)
@@ -620,10 +708,13 @@ message will be \"unarchived\", i.e. the tag changes in
   (notmuch-tree-thread-top))
 
 (defun notmuch-tree-next-thread ()
+  "Get the next thread in the current tree. Returns t if a thread was
+found or nil if not."
   (interactive)
   (forward-line 1)
   (while (not (or (notmuch-tree-get-prop :first) (eobp)))
-    (forward-line 1)))
+    (forward-line 1))
+  (not (eobp)))
 
 (defun notmuch-tree-thread-mapcar (function)
   "Iterate through all messages in the current thread
@@ -754,7 +845,7 @@ unchanged ADDRESS if parsing fails."
   ;; We need to save the previous subject as it will get overwritten
   ;; by the insert-field calls.
   (let ((previous-subject notmuch-tree-previous-subject))
-    (insert (notmuch-tree-format-field-list notmuch-tree-result-format msg))
+    (insert (notmuch-tree-format-field-list (notmuch-tree-result-format) msg))
     (notmuch-tree-set-message-properties msg)
     (notmuch-tree-set-prop :previous-subject previous-subject)
     (insert "\n")))
@@ -890,7 +981,7 @@ Complete list of currently available key bindings:
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
 					 results-buf)))))
 
-(defun notmuch-tree-worker (basic-query &optional query-context target open-target)
+(defun notmuch-tree-worker (basic-query &optional query-context target open-target unthreaded)
   "Insert the tree view of the search in the current buffer.
 
 This is is a helper function for notmuch-tree. The arguments are
@@ -898,6 +989,7 @@ the same as for the function notmuch-tree."
   (interactive)
   (notmuch-tree-mode)
   (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
+  (setq notmuch-tree-unthreaded unthreaded)
   (setq notmuch-tree-basic-query basic-query)
   (setq notmuch-tree-query-context (if (or (string= query-context "")
 					   (string= query-context "*"))
@@ -915,7 +1007,7 @@ the same as for the function notmuch-tree."
   (let* ((search-args (concat basic-query
 		       (if query-context (concat " and (" query-context ")"))
 		       ))
-	 (message-arg "--entire-thread"))
+	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
     (if (equal (car (process-lines notmuch-command "count" search-args)) "0")
 	(setq search-args basic-query))
     (notmuch-tag-clear-cache)
@@ -940,7 +1032,7 @@ the same as for the function notmuch-tree."
 	      ")")
     notmuch-tree-basic-query))
 
-(defun notmuch-tree (&optional query query-context target buffer-name open-target)
+(defun notmuch-tree (&optional query query-context target buffer-name open-target unthreaded)
   "Display threads matching QUERY in Tree View.
 
 The arguments are:
@@ -953,23 +1045,31 @@ The arguments are:
       current if it appears in the tree view results.
   BUFFER-NAME: the name of the buffer to display the tree view. If
       it is nil \"*notmuch-tree\" followed by QUERY is used.
-  OPEN-TARGET: If TRUE open the target message in the message pane."
+  OPEN-TARGET: If TRUE open the target message in the message pane.
+  UNTHREADED: If TRUE only show matching messages in an unthreaded view."
   (interactive)
   (if (null query)
-      (setq query (notmuch-read-query "Notmuch tree view search: ")))
+      (setq query (notmuch-read-query (concat "Notmuch "
+					      (if unthreaded "unthreaded " "tree ")
+					      "view search: "))))
   (let ((buffer (get-buffer-create (generate-new-buffer-name
 				    (or buffer-name
-					(concat "*notmuch-tree-" query "*")))))
+					(concat "*notmuch-"
+						(if unthreaded "unthreaded-" "tree-")
+						query "*")))))
 	(inhibit-read-only t))
 
     (switch-to-buffer buffer))
   ;; Don't track undo information for this buffer
   (set 'buffer-undo-list t)
 
-  (notmuch-tree-worker query query-context target open-target)
+  (notmuch-tree-worker query query-context target open-target unthreaded)
 
   (setq truncate-lines t))
 
+(defun notmuch-unthreaded (&optional query query-context target buffer-name open-target)
+  (interactive)
+  (notmuch-tree query query-context target buffer-name open-target t))
 
 ;;
 

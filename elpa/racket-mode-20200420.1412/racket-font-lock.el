@@ -93,13 +93,19 @@
               (or
                ;; #d #e #i or no hash prefix
                (seq (? "#" (any "dei"))
-                    (or (seq (? (any "-+"))
-                             (1+ digit)
-                             (? (any "./") (1+ digit)))
-                        (seq (1+ digit)
-                             ?e
-                             (? (any "-+"))
-                             (1+ digit))))
+                    (? (any "-+"))
+                    (1+ digit)
+                    (? (any "./") (1+ digit))
+                    (? ?e
+                       (? (any "-+"))
+                       (1+ digit))
+                    (? ?+
+                       (1+ digit)
+                       (? (any "./") (1+ digit))
+                       (? ?e
+                          (? (any "-+"))
+                          (1+ digit))
+                       ?i))
                ;; #x
                (seq "#x"
                     (? (any "-+"))
@@ -254,27 +260,31 @@ like \"#; #; 1 2\". For more examples see the issue 432 section
 of example/example.rkt."
   (while (re-search-forward (rx "#;") limit t)
     (if (racket--string-or-comment-p (match-beginning 0))
-        (goto-char (match-end 0))       ;issues 388, 408
-      (racket--region-set-face (match-beginning 0) (match-end 0)
-                               'font-lock-comment-delimiter-face t)
-      ;; Font-lock and count any additional successive prefixes
-      (goto-char (match-end 0))
-      (forward-comment (buffer-size))
-      (let ((num-prefixes 1))
-        (while (looking-at (rx "#;"))
-          (cl-incf num-prefixes)
-          (racket--region-set-face (match-beginning 0) (match-end 0)
-                                   'font-lock-comment-delimiter-face t)
-          (goto-char (match-end 0))
-          (forward-comment (buffer-size)))
-        ;; Font-lock as many successive sexprs as prefixes
-        (dotimes (_ num-prefixes)
-          (let ((beg (point)))
-            (forward-sexp 1)
-            (racket--region-set-face beg (point)
-                                     'font-lock-comment-face t)
-            (put-text-property beg (point) 'font-lock-multiline t)
-            (forward-comment (buffer-size)))))))
+        (goto-char (match-end 0))       ;issues #388, #408
+      (let ((first-prefix-begin (match-beginning 0)))
+        (racket--region-set-face (match-beginning 0) (match-end 0)
+                                 'font-lock-comment-delimiter-face t)
+        ;; Font-lock and count any additional successive prefixes
+        (goto-char (match-end 0))
+        (forward-comment (buffer-size))
+        (let ((num-prefixes 1))
+          (while (looking-at (rx "#;"))
+            (cl-incf num-prefixes)
+            (racket--region-set-face (match-beginning 0) (match-end 0)
+                                     'font-lock-comment-delimiter-face t)
+            (goto-char (match-end 0))
+            (forward-comment (buffer-size)))
+          ;; Font-lock as many successive sexprs as prefixes
+          (dotimes (_ num-prefixes)
+            (let ((beg (point)))
+              (forward-sexp 1)
+              (racket--region-set-face beg (point)
+                                       'font-lock-comment-face t)
+              (forward-comment (buffer-size)))))
+        ;; Cover everything from the beginning of the first prefix to
+        ;; the end of the last sexp with font-lock-multiline; #443.
+        (put-text-property first-prefix-begin (point)
+                           'font-lock-multiline t))))
   nil)
 
 (defun racket--string-or-comment-p (pos)

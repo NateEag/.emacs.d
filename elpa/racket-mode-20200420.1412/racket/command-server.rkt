@@ -8,6 +8,7 @@
          "elisp.rkt"
          "mod.rkt"
          "repl.rkt"
+         "repl-session.rkt"
          "util.rkt")
 
 (lazy-require
@@ -156,7 +157,7 @@
     [`(debug-eval ,src ,l ,c ,p ,code) (debug-eval src l c p code)]
     [`(debug-resume ,v)                (debug-resume v)]
     [`(debug-disable)                  (debug-disable)]
-    [`(exit)                           (exit-repl-session (current-session-id))]))
+    [`(break ,kind)                    (break-repl-thread (current-session-id) kind)]))
 
 ;;; A few commands defined here
 

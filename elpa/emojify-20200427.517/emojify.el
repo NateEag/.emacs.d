@@ -5,7 +5,7 @@
 ;; Author: Iqbal Ansari <iqbalansari02@yahoo.com>
 ;; Keywords: multimedia, convenience
 ;; URL: https://github.com/iqbalansari/emacs-emojify
-;; Version: 1.2
+;; Version: 1.2.1
 ;; Package-Requires: ((seq "1.11") (ht "2.0") (emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -61,6 +61,7 @@
 (declare-function org-element-type "org-element")
 (declare-function org-element-property "org-element")
 (declare-function org-element-at-point "org-element")
+(declare-function org-src-get-lang-mode "org-src")
 (declare-function org-src--get-lang-mode "org-src")
 
 ;; Required for integration with company-mode
@@ -130,7 +131,7 @@ priority on lower versions."
           overlays-at-pos))
     (overlays-at pos sorted)))
 
-(defun emojify--string-join (strings &optional separator)
+(defun emojify-string-join (strings &optional separator)
   "Join all STRINGS using SEPARATOR.
 
 This function is available on Emacs v24.4 and higher, it has been
@@ -148,6 +149,13 @@ If you just want to check `major-mode', use `derived-mode-p'."
     (while (and (not (memq mode modes))
                 (setq mode (get mode 'derived-mode-parent))))
     mode))
+
+(defun emojify-org-src-get-lang-mode (lang)
+  "Return major mode that should be used for LANG.
+LANG is a string, and the returned major mode is a symbol."
+  (if (fboundp 'org-src-get-lang-mode)
+      (org-src-get-lang-mode lang)
+    (org-src--get-lang-mode lang)))
 
 
 
@@ -219,13 +227,18 @@ and end of the emoji for which the form is being executed."
   (declare (debug t) (indent 2))
   `(let ((--emojify-loop-current-pos ,beg)
          (--emojify-loop-end ,end)
-         emoji-start)
+         (--emoji-positions nil)
+         --emoji-start)
      (while (and (> --emojify-loop-end --emojify-loop-current-pos)
-                 (setq emoji-start (text-property-any --emojify-loop-current-pos --emojify-loop-end 'emojified t)))
-       (let ((emoji-end (+ emoji-start
-                           (length (get-text-property emoji-start 'emojify-text)))))
-         ,@forms
-         (setq --emojify-loop-current-pos emoji-end)))))
+                 (setq --emoji-start (text-property-any --emojify-loop-current-pos --emojify-loop-end 'emojified t)))
+       (let ((--emoji-end (+ --emoji-start
+                             (length (get-text-property --emoji-start 'emojify-text)))))
+         (push (cons --emoji-start --emoji-end) --emoji-positions)
+         (setq --emojify-loop-current-pos --emoji-end)))
+     (dolist (--position --emoji-positions)
+       (let ((emoji-start (car --position))
+             (emoji-end (cdr --position)))
+         ,@forms))))
 
 (defun emojify-message (format-string &rest args)
   "Log debugging messages to buffer named 'emojify-log'.
@@ -557,7 +570,7 @@ Returns nil if the point is not at an org source block"
       (goto-char point)
       (let ((element (org-element-at-point)))
         (when (eq (org-element-type element) 'src-block)
-          (org-src--get-lang-mode (org-element-property :language element)))))))
+          (emojify-org-src-get-lang-mode (org-element-property :language element)))))))
 
 (defun emojify-looking-at-end-of-list-maybe (point)
   "Determine if POINT is end of a list.
@@ -911,7 +924,7 @@ make sure the point has a composition property otherwise this function will
 fail."
   (let* ((composition (find-composition point nil nil t))
          (characters (emojify--get-characters-for-composition composition)))
-    (emojify--string-join (seq-map #'char-to-string characters))))
+    (emojify-string-join (seq-map #'char-to-string characters))))
 
 (defun emojify--inside-rectangle-selection-p (beg end)
   "Check if region marked by BEG and END is inside a rectangular selection.
@@ -1287,7 +1300,14 @@ TARGET can either be a buffer object or a special value mode-line.  It is used
 to indicate where EMOJI would be displayed, properties like font-height are
 inherited from TARGET if provided.  See also `emojify--get-text-display-props'."
   (emojify-create-emojify-emojis)
-  (let ((emojify-emoji-styles (or styles emojify-emoji-styles)))
+  (let ((emojify-emoji-styles (or styles emojify-emoji-styles))
+        ;; Temporarily disable all `buffer-list-update-hook's, with-temp-buffer
+        ;; internally calls `get-buffer-create' (and `kill-buffer'), which cause
+        ;; this hook to be run. This is problematic because EXWM uses
+        ;; `buffer-list-update-hook' and this temporary buffer confuses EXWM's
+        ;; tracking code leading to
+        ;; https://github.com/iqbalansari/emacs-emojify/issues/64
+        buffer-list-update-hook)
     (with-temp-buffer
       (insert string)
       (emojify-display-emojis-in-region (point-min) (point-max) target)
@@ -1585,30 +1605,32 @@ Re-enable it when buffer changes back to multibyte encoding."
 
 ;; Displaying emojis in mode-line
 
-(defun emojify--emojied-mode-line (format)
+(defun emojify--emojified-mode-line (format)
   "Return an emojified version of mode-line FORMAT.
 
 The format is converted to the actual string to be displayed using
 `format-mode-line' and the unicode characters are replaced by images."
-  (if emojify-mode
-      ;; Remove "%e" from format since we keep it as first part of the
-      ;; emojified mode-line, see `emojify-emojify-mode-line'
-      (emojify-string (format-mode-line (delq "%e" format)) nil 'mode-line)
-    (format-mode-line format)))
+  (replace-regexp-in-string "%"
+                            "%%"
+                            (if emojify-mode
+                                ;; Remove "%e" from format since we keep it as first part of the
+                                ;; emojified mode-line, see `emojify-emojify-mode-line'
+                                (emojify-string (format-mode-line (delq "%e" format)) nil 'mode-line)
+                              (format-mode-line format))))
 
 (defun emojify-mode-line-emojified-p ()
   "Check if the mode-line is already emojified.
 
 If the `mode-line-format' is of following format
 
-\(\"%e\" (:eval (emojify-emojied-mode-line ... )))
+\(\"%e\" (:eval (emojify-emojified-mode-line ... )))
 
 We can assume the mode-line is already emojified."
   (and (consp mode-line-format)
        (equal (ignore-errors (cl-caadr mode-line-format))
               :eval)
        (equal (ignore-errors (car (cl-cadadr mode-line-format)))
-              'emojify--emojied-mode-line)))
+              'emojify--emojified-mode-line)))
 
 (defun emojify-emojify-mode-line ()
   "Emojify unicode characters in the mode-line.
@@ -1617,7 +1639,7 @@ This updates `mode-line-format' to a modified version which emojifies the
 mode-line before it is displayed."
   (unless (emojify-mode-line-emojified-p)
     (setq mode-line-format `("%e" (:eval
-                                   (emojify--emojied-mode-line ',mode-line-format))))))
+                                   (emojify--emojified-mode-line ',mode-line-format))))))
 
 (defun emojify-unemojify-mode-line ()
   "Restore `mode-line-format' to unemojified version.
@@ -1938,7 +1960,7 @@ This respects the `emojify-emoji-styles' variable."
                                                                               tone-stripped))
                          (words (split-string non-alphanumeric-stripped " " t " ")))
                     (concat "http://emojipedia.org/"
-                            (downcase (emojify--string-join words "-"))))
+                            (downcase (emojify-string-join words "-"))))
                   "\n"))))
     (emojify-description-mode)
     (setq emojify-described-emoji (ht-get emoji "emoji")))

@@ -1,4 +1,4 @@
-(define-package "magit-section" "20200318.1224" "Sections for read-only buffers"
+(define-package "magit-section" "20200425.2044" "Sections for read-only buffers"
   '((emacs "25.1")
     (dash "20180910"))
   :keywords

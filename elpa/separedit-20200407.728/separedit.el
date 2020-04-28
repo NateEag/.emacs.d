@@ -5,7 +5,7 @@
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
 ;; Version: 0.2.0
-;; Package-Version: 20200405.1521
+;; Package-Version: 20200407.728
 ;; Package-Requires: ((emacs "24.4") (dash "2.0") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
@@ -339,7 +339,7 @@ FORMAT-STRING and ARGS is the same as for `message'."
   (when separedit-debug-p
     (if noninteractive
         (apply #'message format-string args)
-      (with-current-buffer (get-buffer-create "*comment-log*")
+      (with-current-buffer (get-buffer-create "*separedit-log*")
         (outline-mode)
         (buffer-disable-undo)
         (let ((inhibit-read-only t))
@@ -1368,6 +1368,12 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                            (separedit--restore-point ,@point-info))))
           (edit-indirect-region beg end 'display-buffer))
       (user-error "Not inside a edit block"))))
+
+(defun separedit-mark-region (beg end &optional edit-buffer-mode)
+  "Mark region BEG and END as a block."
+  (list :beginning beg
+        :end       end
+        :lang-mode (or edit-buffer-mode separedit-default-mode)))
 
 ;;;###autoload
 (defun separedit-dwim (&optional block)

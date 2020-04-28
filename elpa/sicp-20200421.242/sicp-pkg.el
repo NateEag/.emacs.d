@@ -1,4 +1,4 @@
-(define-package "sicp" "20180823.1222" "Structure and Interpretation of Computer Programs in info format" 'nil :authors
+(define-package "sicp" "20200421.242" "Structure and Interpretation of Computer Programs in info format" 'nil :authors
   '(("Hal Abelson")
     ("Jerry Sussman")
     ("Julie Sussman"))

@@ -44,7 +44,7 @@ reading a new value in the minibuffer.
    Calling a suffix command usually causes the transient to be exited
 but suffix commands can also be configured to not exit the transient.
 
-This manual is for Transient version 0.2.0.
+This manual is for Transient version 0.2.0 (v0.2.0-1-gafa0c2f+1).
 
      Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1467,7 +1467,7 @@ File: transient.info,  Node: Group Methods,  Next: Prefix Classes,  Prev: Group 
 
      Functions that are called by this function may need to operate in
      the buffer from which the transient was called.  To do so they can
-     temporally make the ‘transient--source-buffer’ the current buffer.
+     temporarily make the ‘transient--source-buffer’ the current buffer.
 
 
 File: transient.info,  Node: Prefix Classes,  Next: Suffix Classes,  Prev: Group Methods,  Up: Classes and Methods
@@ -2392,46 +2392,46 @@ Appendix E Variable Index
 
 Tag Table:
 Node: Top751
-Node: Introduction3651
-Node: Usage9438
-Node: Invoking Transients9772
-Node: Aborting and Resuming Transients10804
-Node: Common Suffix Commands13463
-Node: Saving Values15217
-Ref: Saving Values-Footnote-116475
-Node: Using History16745
-Node: Getting Help for Suffix Commands18286
-Node: Enabling and Disabling Suffixes19679
-Node: Other Commands22969
-Node: Other Options23925
-Node: Modifying Existing Transients31049
-Node: Defining New Commands34453
-Node: Defining Transients34789
-Node: Binding Suffix and Infix Commands37221
-Node: Group Specifications38076
-Node: Suffix Specifications41409
-Node: Defining Suffix and Infix Commands44976
-Node: Using Infix Arguments48161
-Node: Transient State50381
-Node: Classes and Methods56254
-Node: Group Classes58468
-Node: Group Methods60385
-Node: Prefix Classes61030
-Node: Suffix Classes62122
-Node: Suffix Methods64366
-Node: Suffix Value Methods64687
-Node: Suffix Format Methods67447
-Node: Prefix Slots68899
-Node: Suffix Slots71376
-Node: Predicate Slots74227
-Node: Related Abstractions and Packages75475
-Node: Comparison With Prefix Keys and Prefix Arguments75762
-Node: Comparison With Other Packages86074
-Node: FAQ90265
-Node: Keystroke Index93999
-Node: Command Index95633
-Node: Function Index97420
-Node: Variable Index101577
+Node: Introduction3673
+Node: Usage9460
+Node: Invoking Transients9794
+Node: Aborting and Resuming Transients10826
+Node: Common Suffix Commands13485
+Node: Saving Values15239
+Ref: Saving Values-Footnote-116497
+Node: Using History16767
+Node: Getting Help for Suffix Commands18308
+Node: Enabling and Disabling Suffixes19701
+Node: Other Commands22991
+Node: Other Options23947
+Node: Modifying Existing Transients31071
+Node: Defining New Commands34475
+Node: Defining Transients34811
+Node: Binding Suffix and Infix Commands37243
+Node: Group Specifications38098
+Node: Suffix Specifications41431
+Node: Defining Suffix and Infix Commands44998
+Node: Using Infix Arguments48183
+Node: Transient State50403
+Node: Classes and Methods56276
+Node: Group Classes58490
+Node: Group Methods60407
+Node: Prefix Classes61053
+Node: Suffix Classes62145
+Node: Suffix Methods64389
+Node: Suffix Value Methods64710
+Node: Suffix Format Methods67470
+Node: Prefix Slots68922
+Node: Suffix Slots71399
+Node: Predicate Slots74250
+Node: Related Abstractions and Packages75498
+Node: Comparison With Prefix Keys and Prefix Arguments75785
+Node: Comparison With Other Packages86097
+Node: FAQ90288
+Node: Keystroke Index94022
+Node: Command Index95656
+Node: Function Index97443
+Node: Variable Index101600
 
 End Tag Table
 

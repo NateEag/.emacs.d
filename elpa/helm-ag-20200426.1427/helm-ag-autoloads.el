@@ -33,7 +33,7 @@ Not documented.
 (autoload 'helm-do-ag "helm-ag" "\
 Not documented.
 
-\(fn &optional BASEDIR TARGETS QUERY)" t nil)
+\(fn &optional BASEDIR TARGETS DEFAULT-INPUT)" t nil)
 
 (autoload 'helm-ag-project-root "helm-ag" "\
 Not documented.

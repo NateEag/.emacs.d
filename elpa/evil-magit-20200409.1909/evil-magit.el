@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20200302.1611
+;; Package-Version: 20200409.1909
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -503,14 +503,16 @@ denotes the original magit key for this command.")
              (aux-map (evil-get-auxiliary-keymap git-rebase-mode-map evil-magit-state)))
          (save-excursion
            (save-match-data
-             (flush-lines "^#.+ = ")
              (goto-char (point-min))
              (when (and (boundp 'git-rebase-show-instructions)
                         git-rebase-show-instructions
-                        (re-search-forward "^# Commands:\n" nil t))
+                        (re-search-forward
+                         (concat "^" (regexp-quote comment-start) "\\s-+p, pick") nil t))
+               (goto-char (line-beginning-position))
+               (flush-lines (concat "^" (regexp-quote comment-start) ".+ = "))
                (dolist (cmd evil-magit-rebase-commands-w-descriptions)
                  (insert
-                  (format "# %-8s %s\n"
+                  (format (concat comment-start " %-8s %s\n")
                           (if (and (car cmd)
                                    (eq (nth 1 cmd)
                                        (lookup-key aux-map (kbd (car cmd)))))

@@ -912,7 +912,8 @@ Return nil if can't move."
 
         ((or (looking-at lispy-outline)
              (and (bolp) (looking-at (lispy-comment-char))))
-         (let ((pt (point)))
+         (let ((pt (point))
+               (outline-regexp lispy-outline))
            (lispy-dotimes arg
              (outline-next-visible-heading 1)
              (if (looking-at lispy-outline)
@@ -980,7 +981,8 @@ Return nil if can't move."
 
         ((or (looking-at lispy-outline)
              (and (bolp) (looking-at (lispy-comment-char))))
-         (let ((pt (point)))
+         (let ((pt (point))
+               (outline-regexp lispy-outline))
            (lispy-dotimes arg
              (outline-previous-visible-heading 1)
              (if (looking-at lispy-outline)
@@ -4735,10 +4737,7 @@ SYM will take on each value of LST with each eval."
       (setq lispy--eval-data
             (lispy--eval-elisp-form (cadr expr) lexical-binding)))
     (if lispy--eval-data
-        (let* ((popped (pop lispy--eval-data))
-               (popped (if (symbolp popped)
-                           `(quote ,popped)
-                         popped)))
+        (let ((popped (pop lispy--eval-data)))
           (set sym popped))
       (setq lispy--eval-data
             (lispy--eval-elisp-form (cadr expr) lexical-binding))
@@ -5141,7 +5140,9 @@ When ARG isn't nil, show table of contents."
   (interactive "P")
   (require 'org)
   (outline-minor-mode 1)
-  (let ((org-outline-regexp outline-regexp))
+  (let* ((outline-regexp lispy-outline)
+         (org-outline-regexp outline-regexp)
+         (org-outline-regexp-bol "^;;"))
     (lispy-flet (org-unlogged-message (&rest _x))
       (if arg
           (org-content)
@@ -9546,7 +9547,7 @@ When ARG is non-nil, unquote the current string."
     ;; navigation
     (define-key map (kbd "C-a") 'lispy-move-beginning-of-line)
     (define-key map (kbd "C-e") 'lispy-move-end-of-line)
-    (define-key map (kbd "M-n") 'lispy-left-maybe)
+    (define-key map (kbd "M-o") 'lispy-left-maybe)
     ;; killing
     (define-key map (kbd "C-k") 'lispy-kill)
     (define-key map (kbd "M-d") 'lispy-kill-word)
@@ -9650,7 +9651,7 @@ When ARG is non-nil, unquote the current string."
     (define-key map (kbd "<M-return>") 'lispy-meta-return)
     (define-key map (kbd "M-k") 'lispy-move-up)
     (define-key map (kbd "M-j") 'lispy-move-down)
-    (define-key map (kbd "M-o") 'lispy-string-oneline)
+    (define-key map (kbd "M-O") 'lispy-string-oneline)
     (define-key map (kbd "M-p") 'lispy-clone)
     (define-key map (kbd "M-\"") 'paredit-meta-doublequote)
     map))
@@ -9698,7 +9699,7 @@ When ARG is non-nil, unquote the current string."
     (define-key map (kbd "<M-return>") 'lispy-meta-return)
     (define-key map (kbd "M-RET") 'lispy-meta-return)
     ;; misc
-    (define-key map (kbd "M-o") 'lispy-string-oneline)
+    (define-key map (kbd "M-O") 'lispy-string-oneline)
     (define-key map (kbd "M-i") 'lispy-iedit)
     (define-key map (kbd "<backtab>") 'lispy-shifttab)
     ;; outline

@@ -14,9 +14,7 @@ Major mode for editing Markdown files.
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
-
-(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
 
 (autoload 'gfm-mode "markdown-mode" "\
 Major mode for editing GitHub Flavored Markdown files.
@@ -36,10 +34,10 @@ Major mode for viewing GitHub Flavored Markdown content.
 (autoload 'markdown-live-preview-mode "markdown-mode" "\
 Toggle native previewing on save for a specific markdown file.
 
-If called interactively, enable Markdown-Live-Preview mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Markdown-Live-Preview mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

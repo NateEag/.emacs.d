@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20191230.1055
-;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
+;; Package-Version: 20200421.2222
+;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
 
@@ -585,6 +585,7 @@ requires Emacs to be built with ImageMagick support."
 (eval-and-compile
   (defconst markdown-rx-constituents
     `((newline . ,(rx "\n"))
+      ;; Note: #405 not consider markdown-list-indent-width however this is never used
       (indent . ,(rx (or (repeat 4 " ") "\t")))
       (block-end . ,(rx (and (or (one-or-more (zero-or-more blank) "\n") line-end))))
       (numeral . ,(rx (and (one-or-more (any "0-9#")) ".")))
@@ -1027,6 +1028,14 @@ Group 3 matches all attributes and whitespace following the tag name.")
 If POS is not given, use point instead."
   (get-text-property (or pos (point)) 'markdown-comment))
 
+(defun markdown-in-html-attr-p (pos)
+  "Return non-nil if POS is in a html attribute name or value."
+  (let ((face-prop (get-text-property pos 'face)))
+    (if (listp face-prop)
+        (cl-loop for face in face-prop
+                 thereis (memq face '(markdown-html-attr-name-face markdown-html-attr-value-face)))
+      (memq face-prop '(markdown-html-attr-name-face markdown-html-attr-value-face)))))
+
 (defun markdown-syntax-propertize-extend-region (start end)
   "Extend START to END region to include an entire block of text.
 This helps improve syntax analysis for block constructs.
@@ -1101,7 +1110,7 @@ at baseline (not inside of a nested list)."
       (list cur-bounds))
      ;; List item with greater indentation (four or more spaces).
      ;; Increase list level by consing CUR-BOUNDS onto BOUNDS.
-     ((and marker (>= indent (+ prev-indent 4)))
+     ((and marker (>= indent (+ prev-indent markdown-list-indent-width)))
       (cons cur-bounds bounds))
      ;; List item with greater or equal indentation (less than four spaces).
      ;; Keep list level the same by replacing the car of BOUNDS.
@@ -1114,7 +1123,7 @@ at baseline (not inside of a nested list)."
      ((< indent prev-indent)
       (while (and (> (length bounds) 1)
                   (setq prev-indent (cl-third (cadr bounds)))
-                  (< indent (+ prev-indent 4)))
+                  (< indent (+ prev-indent markdown-list-indent-width)))
         (setq bounds (cdr bounds)))
       (cons cur-bounds bounds))
      ;; Otherwise, do nothing.
@@ -2458,7 +2467,7 @@ it means we are at baseline (not inside of a nested list)."
     (setq levels (list indent)))
    ;; List item with greater indentation (four or more spaces).
    ;; Increase list level.
-   ((and marker (>= indent (+ (car levels) 4)))
+   ((and marker (>= indent (+ (car levels) markdown-list-indent-width)))
     (setq levels (cons indent levels)))
    ;; List item with greater or equal indentation (less than four spaces).
    ;; Do not increase list level.
@@ -2470,7 +2479,7 @@ it means we are at baseline (not inside of a nested list)."
    ;; that this block need not be the beginning of list item.
    ((< indent (car levels))
     (while (and (> (length levels) 1)
-                (< indent (+ (cadr levels) 4)))
+                (< indent (+ (cadr levels) markdown-list-indent-width)))
       (setq levels (cdr levels)))
     levels)
    ;; Otherwise, do nothing.
@@ -2989,7 +2998,7 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
                                  markdown-math-face)))
           (progn (goto-char (min (1+ begin) last))
                  (when (< (point) last)
-                   (markdown-match-italic last)))
+                   (markdown-match-bold last)))
         (set-match-data (list (match-beginning 2) (match-end 2)
                               (match-beginning 3) (match-end 3)
                               (match-beginning 4) (match-end 4)
@@ -3000,7 +3009,8 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
   "Match inline italics from the point to LAST."
   (let ((regex (if (memq major-mode '(gfm-mode gfm-view-mode))
                    markdown-regex-gfm-italic markdown-regex-italic)))
-    (when (markdown-match-inline-generic regex last)
+    (when (and (markdown-match-inline-generic regex last)
+               (not (markdown-in-html-attr-p (match-beginning 1))))
       (let ((begin (match-beginning 1))
             (end (match-end 1)))
         (if (or (markdown-inline-code-at-pos-p begin)
@@ -3262,6 +3272,17 @@ Made into a variable to allow for dynamic let-binding.")
       (setq ret (funcall condition)))
     ret))
 
+(defun markdown-metadata-line-p (pos regexp)
+  (save-excursion
+    (or (= (line-number-at-pos pos) 1)
+        (progn
+          (forward-line -1)
+          ;; skip multi-line metadata
+          (while (and (looking-at-p "^\\s-+[[:alpha:]]")
+                      (> (line-number-at-pos (point)) 1))
+            (forward-line -1))
+          (looking-at-p regexp)))))
+
 (defun markdown-match-generic-metadata (regexp last)
   "Match metadata declarations specified by REGEXP from point to LAST.
 These declarations must appear inside a metadata block that begins at
@@ -3282,7 +3303,8 @@ the buffer)."
       ;; before the beginning of the block, start there. Otherwise,
       ;; move back to FIRST.
       (goto-char (if (< first block-begin) block-begin first))
-      (if (re-search-forward regexp (min last block-end) t)
+      (if (and (re-search-forward regexp (min last block-end) t)
+               (markdown-metadata-line-p (point) regexp))
           ;; If a metadata declaration is found, set match-data and return t.
           (let ((key-beginning (match-beginning 1))
                 (key-end (match-end 1))
@@ -3517,7 +3539,7 @@ SEQ may be an atom or a sequence."
   "Apply font-lock properties to list markers from point to LAST."
   (when (markdown-match-list-items last)
     (let* ((indent (length (match-string-no-properties 1)))
-           (level (/ indent 4)) ;; level = 0, 1, 2, ...
+           (level (/ indent markdown-list-indent-width)) ;; level = 0, 1, 2, ...
            (bullet (nth (mod level (length markdown-list-item-bullets))
                         markdown-list-item-bullets)))
       (add-text-properties
@@ -3910,13 +3932,12 @@ This is an internal function called by
         ;; Extract and use properties of existing link, if any.
         (markdown-link-at-pos (point)))
     (let* ((ref (when ref (concat "[" ref "]")))
-           (defined-refs (append
-                          (mapcar (lambda (ref) (concat "[" ref "]"))
-                                  (mapcar #'car (markdown-get-defined-references)))))
+           (defined-refs (mapcar #'car (markdown-get-defined-references)))
+           (defined-ref-cands (mapcar (lambda (ref) (concat "[" ref "]")) defined-refs))
            (used-uris (markdown-get-used-uris))
            (uri-or-ref (completing-read
                         "URL or [reference]: "
-                        (append defined-refs used-uris)
+                        (append defined-ref-cands used-uris)
                         nil nil (or uri ref)))
            (ref (cond ((string-match "\\`\\[\\(.*\\)\\]\\'" uri-or-ref)
                        (match-string 1 uri-or-ref))
@@ -3928,7 +3949,7 @@ This is an internal function called by
                           (if ref
                               "Link text: "
                             "Link text (blank for plain URL): ")))
-           (text (read-string text-prompt text))
+           (text (completing-read text-prompt defined-refs nil nil text))
            (text (if (= (length text) 0) nil text))
            (plainp (and uri (not text)))
            (implicitp (string-equal ref ""))
@@ -6114,7 +6135,7 @@ increase the indentation by one level."
         (cond
          ;; Dedent: decrement indentation, find previous marker.
          ((= arg 4)
-          (setq indent (max (- cur-indent 4) 0))
+          (setq indent (max (- cur-indent markdown-list-indent-width) 0))
           (let ((prev-bounds
                  (save-excursion
                    (goto-char (nth 0 bounds))
@@ -6123,7 +6144,7 @@ increase the indentation by one level."
             (when prev-bounds
               (setq marker (nth 4 prev-bounds)))))
          ;; Indent: increment indentation by 4, use same marker.
-         ((= arg 16) (setq indent (+ cur-indent 4)))
+         ((= arg 16) (setq indent (+ cur-indent markdown-list-indent-width)))
          ;; Same level: keep current indentation and marker.
          (t (setq indent cur-indent)))
         (setq new-indent (make-string indent 32))
@@ -7634,16 +7655,24 @@ update this buffer's contents."
 
 ;;; Links =====================================================================
 
+(defun markdown-backward-to-link-start ()
+  "Backward link start position if current position is in link title."
+  ;; Issue #305
+  (when (eq (get-text-property (point) 'face) 'markdown-link-face)
+    (skip-chars-backward "^[")
+    (forward-char -1)))
+
 (defun markdown-link-p ()
   "Return non-nil when `point' is at a non-wiki link.
 See `markdown-wiki-link-p' for more information."
-  (let ((case-fold-search nil))
-    (and (not (markdown-wiki-link-p))
-         (not (markdown-code-block-at-point-p))
-         (or (thing-at-point-looking-at markdown-regex-link-inline)
-             (thing-at-point-looking-at markdown-regex-link-reference)
-             (thing-at-point-looking-at markdown-regex-uri)
-             (thing-at-point-looking-at markdown-regex-angle-uri)))))
+  (save-excursion
+    (let ((case-fold-search nil))
+      (when (and (not (markdown-wiki-link-p)) (not (markdown-code-block-at-point-p)))
+        (markdown-backward-to-link-start)
+        (or (thing-at-point-looking-at markdown-regex-link-inline)
+            (thing-at-point-looking-at markdown-regex-link-reference)
+            (thing-at-point-looking-at markdown-regex-uri)
+            (thing-at-point-looking-at markdown-regex-angle-uri))))))
 
 (make-obsolete 'markdown-link-link 'markdown-link-url "v2.3")
 
@@ -7659,6 +7688,7 @@ Value is a list of elements describing the link:
  6. bang (nil or \"!\")"
   (save-excursion
     (goto-char pos)
+    (markdown-backward-to-link-start)
     (let (begin end text url reference title bang)
       (cond
        ;; Inline or reference image or link at point.
@@ -7941,7 +7971,7 @@ window when OTHER is non-nil."
       (when other (other-window 1))
       (let ((default-directory wp))
         (find-file filename)))
-    (when (not (eq major-mode 'markdown-mode))
+    (unless (memq major-mode '(markdown-mode gfm-mode))
       (markdown-mode))))
 
 (defun markdown-follow-wiki-link-at-point (&optional arg)
@@ -9220,7 +9250,7 @@ Horizontal separator lines will be eliminated."
     (user-error "Not at a table"))
   (let* ((table (buffer-substring-no-properties
                  (markdown-table-begin) (markdown-table-end)))
-         ;; Convert table to a Lisp structure
+         ;; Convert table to Lisp structure
          (table (delq nil
                       (mapcar
                        (lambda (x)
@@ -9240,12 +9270,13 @@ Horizontal separator lines will be eliminated."
                                 table)))
                            (car table))))
     (goto-char (markdown-table-begin))
-    (re-search-forward "|") (backward-char)
-    (delete-region (point) (markdown-table-end))
-    (insert (mapconcat
-             (lambda(x)
-               (concat "| " (mapconcat 'identity x " | " ) "  |\n"))
-             contents ""))
+    (save-excursion
+      (re-search-forward "|") (backward-char)
+      (delete-region (point) (markdown-table-end))
+      (insert (mapconcat
+               (lambda(x)
+                 (concat "| " (mapconcat 'identity x " | " ) " |\n"))
+               contents "")))
     (markdown-table-goto-dline col_old)
     (markdown-table-goto-column dline_old))
   (markdown-table-align))
@@ -9614,9 +9645,8 @@ rows and columns and the column alignment."
   (add-hook 'kill-buffer-hook #'markdown-live-preview-remove-on-kill t t))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist
+             '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
 
 
 ;;; GitHub Flavored Markdown Mode  ============================================

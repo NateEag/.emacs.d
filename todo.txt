@@ -49,6 +49,8 @@
   in states that won't yield a working Emacs, which is kind of a pain. I might
   be able to just update/extend my `githooks/` dir and get what I need here.
 
+- Set up lsp-latex if I ever start using LaTeX seriously.
+
 - Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
   It's handy for bash but not sure how generally applicable it is. Teaching
   smart-dash-mode to be smarter about languages with variable sigils could be
@@ -93,6 +95,9 @@
   of my customizations looking at exactly the file and location I'm currently
   in. The idea is to make it easy to answer the question "Is a behavior my
   fault or is it a lower-level bug in my dependencies?"
+
+- Use elisp-depmap to see if I can find any packages I actually don't want in
+  my config.
 
 - Try porting the Readable library to Emacs Lisp. I have yet to really
   internalize reading Emacs Lisp, and it looks promising to me:
@@ -674,6 +679,9 @@
 
 - Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
   doing.
+
+- Try adapting flymake-phpstan to work with my PHP setup. Installed the package
+  so I have it if I ever have time for this again
 
 - Get lsp-mode and php-language-server showing function summaries in minibuffer,
   not just function signatures.

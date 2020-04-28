@@ -531,6 +531,8 @@ with Exiftran mandatory option is \"-i\"."
     (define-key map (kbd "M-.")           'helm-ff-run-etags)
     (define-key map (kbd "M-R")           'helm-ff-run-rename-file)
     (define-key map (kbd "M-C")           'helm-ff-run-copy-file)
+    (when (executable-find "rsync")
+      (define-key map (kbd "M-:")         'helm-ff-run-rsync-file))
     (define-key map (kbd "M-B")           'helm-ff-run-byte-compile-file)
     (define-key map (kbd "M-L")           'helm-ff-run-load-file)
     (define-key map (kbd "M-S")           'helm-ff-run-symlink-file)
@@ -704,6 +706,10 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
    'helm-ff-delete-files
    "Touch File(s) `M-T'" 'helm-ff-touch-files
    "Copy file(s) `M-C, C-u to follow'" 'helm-find-files-copy
+   (lambda ()
+     (and (executable-find "rsync")
+          "Rsync file(s) `M-:'"))
+   'helm-find-files-rsync
    "Rename file(s) `M-R, C-u to follow'" 'helm-find-files-rename
    "Backup files" 'helm-find-files-backup
    "Symlink files(s) `M-S, C-u to follow'" 'helm-find-files-symlink
@@ -854,8 +860,10 @@ belonging to each window."
 
 (defun helm-find-files-do-action (action)
   "Generic function for creating actions from `helm-source-find-files'.
-ACTION must be an action supported by `helm-dired-action'."
+ACTION can be `rsync' or any action supported by `helm-dired-action'."
   (require 'dired-async)
+  (when (eq action 'rsync)
+    (cl-assert (executable-find "rsync") nil "No command named rsync"))
   (let* ((ifiles (mapcar 'expand-file-name ; Allow modify '/foo/.' -> '/foo'
                          (helm-marked-candidates :with-wildcard t)))
          (cand   (helm-get-selection)) ; Target
@@ -863,6 +871,7 @@ ACTION must be an action supported by `helm-dired-action'."
          (prompt (format "%s %s file(s) %s: "
                          (if (and (and (fboundp 'dired-async-mode)
                                        dired-async-mode)
+                                  (not (eq action 'rsync))
                                   (null prefarg))
                              (concat "Async " (symbol-name action))
                            (capitalize (symbol-name action)))
@@ -897,8 +906,148 @@ ACTION must be an action supported by `helm-dired-action'."
     (unless (or dest-dir-p (file-directory-p dest-dir))
       (when (y-or-n-p (format "Create directory `%s'? " dest-dir))
         (make-directory dest-dir t)))
-    (helm-dired-action
-     dest :files ifiles :action action :follow prefarg)))
+    (if (eq action 'rsync)
+        (helm-rsync-copy-files ifiles dest)
+      (helm-dired-action
+       dest :files ifiles :action action :follow prefarg))))
+
+;; Rsync
+;;
+(defcustom helm-rsync-switches '("-a" "-z" "-r" "-h" "--info=all2")
+  "Rsync options to use with HFF Rsync action."
+  :type '(repeat string)
+  :group 'helm-files)
+
+(defcustom helm-rsync-percent-sign "％"
+  "Percentage unicode sign to use in Rsync reporter."
+  :type 'string
+  :group 'helm-files)
+
+(defvar helm-rsync-process-buffer "*helm-rsync*")
+(defvar helm-rsync-progress-str-alist nil)
+
+(defface helm-ff-rsync-progress
+  '((t (:inherit font-lock-warning-face)))
+  "Face used for rsync mode-line indicator."
+  :group 'helm-files-faces)
+
+(defun helm-rsync-remote2rsync (file)
+  (if (file-remote-p file)
+      (let ((localname (directory-file-name
+                        (expand-file-name (file-remote-p file 'localname))))
+            (user      (file-remote-p file 'user))
+            (host      (file-remote-p file 'host)))
+        (if user
+            (format "%s@%s:'%s'" user host (helm-rsync-quote-argument localname))
+          (format "%s:'%s'" host (helm-rsync-quote-argument localname))))
+    (directory-file-name
+     (expand-file-name file))))
+
+(defun helm-rsync-quote-argument (fname)
+  ;; Seems rsync already quote things like accentued chars and failed
+  ;; when passing such chars already quoted, so quote only spaces and
+  ;; only for remote path as specified in its documentation. IOW
+  ;; shell-quote-argument is not working with Rsync.
+  (mapconcat 'identity (split-string fname) "\\ "))
+
+(defun helm-rsync-format-mode-line-str (proc)
+  (format " [%s]"
+          (propertize (assoc-default proc helm-rsync-progress-str-alist)
+                      'face 'helm-ff-rsync-progress)))
+
+(defun helm-rsync-mode-line (proc)
+  "Add Rsync progress to the mode line."
+  (or global-mode-string (setq global-mode-string '("")))
+  (unless (member `(:eval (helm-rsync-format-mode-line-str ,proc))
+		  global-mode-string)
+    (setq global-mode-string
+	  (append global-mode-string
+		  `((:eval (helm-rsync-format-mode-line-str ,proc)))))))
+
+(defun helm-rsync-restore-mode-line (proc)
+  "Restore the mode line when Rsync finishes."
+  (setq global-mode-string
+	(remove `(:eval (helm-rsync-format-mode-line-str ,proc))
+                global-mode-string))
+  (force-mode-line-update))
+
+(defun helm-rsync-copy-files (files dest)
+  (setq files (cl-loop for f in files
+                       collect (helm-rsync-remote2rsync f))
+        dest (helm-rsync-remote2rsync dest))
+  (let ((proc (apply #'start-process
+                     "rsync" helm-rsync-process-buffer "rsync"
+                     (append helm-rsync-switches
+                             (append files (list dest))))))
+    (helm-rsync-mode-line proc)
+    (set-process-sentinel proc `(lambda (process event)
+                                  (cond ((string= event "finished\n")
+                                         (message "%s copied %s files"
+                                                  (capitalize (process-name process))
+                                                  ,(length files)))
+                                        (t (error "Process %s %s with code %s"
+                                                  (process-name process)
+                                                  (process-status process)
+                                                  (process-exit-status process))))
+                                  (setq helm-rsync-progress-str-alist
+                                        (delete (assoc process helm-rsync-progress-str-alist)
+                                                helm-rsync-progress-str-alist))
+                                  (helm-rsync-restore-mode-line process)
+                                  (force-mode-line-update)))
+    (set-process-filter proc #'helm-rsync-process-filter)))
+
+(defun helm-rsync-process-filter (proc output)
+  (let ((inhibit-read-only t)
+        fname progbar)
+    (with-current-buffer (process-buffer proc)
+      (when (string-match comint-password-prompt-regexp output)
+        ;; FIXME: Fully not tested and
+        ;; use an agent or auth-source
+        ;; or whatever to get password if
+        ;; available.
+        (process-send-string
+         proc (concat (read-passwd (match-string 0 output)) "\n")))
+      ;; Extract the progress bar.
+      (with-temp-buffer
+        (insert output)
+        (when (re-search-backward "[[:cntrl:]]" nil t)
+          (setq progbar (buffer-substring-no-properties
+                         (match-end 0) (point-max)))))
+      ;; Insert the text, advancing the process marker.
+      (save-excursion
+        (goto-char (process-mark proc))
+        (insert output)
+        (set-marker (process-mark proc) (point)))
+      (goto-char (process-mark proc))
+      ;; Extract the file name currently
+      ;; copied (Imply --info=all2 or all1).
+      (save-excursion
+        (when (re-search-backward "^[^[:cntrl:]]" nil t)
+          (setq fname (helm-basename
+                       (buffer-substring-no-properties
+                        (point) (point-at-eol))))))
+      ;; Now format the string for the mode-line.
+      (let ((ml-str (mapconcat 'identity
+                               (split-string
+                                (replace-regexp-in-string
+                                 "%" helm-rsync-percent-sign
+                                 progbar)
+                                " " t)
+                               " ")))
+        (setq ml-str (propertize ml-str 'help-echo
+                                 (format "%s->%s" (process-name proc) fname)))
+        ;; Now associate the formatted
+        ;; progress-bar string with process.
+        (helm-aif (assoc proc helm-rsync-progress-str-alist)
+            (setcdr it ml-str)
+          (setq helm-rsync-progress-str-alist
+                (push (cons proc ml-str) helm-rsync-progress-str-alist))))
+      ;; Finally update mode-line.
+      (force-mode-line-update t))))
+
+(defun helm-find-files-rsync (_candidate)
+  "Rsync files from `helm-find-files'."
+  (helm-find-files-do-action 'rsync))
 
 (defun helm-find-files-copy (_candidate)
   "Copy files from `helm-find-files'."
@@ -1688,6 +1837,13 @@ Called with a prefix arg open menu unconditionally."
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-find-files-copy)))
 (put 'helm-ff-run-copy-file 'helm-only t)
+
+(defun helm-ff-run-rsync-file ()
+  "Run Rsync file action from `helm-source-find-files'."
+  (interactive)
+  (with-helm-alive-p
+    (helm-exit-and-execute-action 'helm-find-files-rsync)))
+(put 'helm-ff-run-rsync-file 'helm-only t)
 
 (defun helm-ff-run-rename-file ()
   "Run Rename file action from `helm-source-find-files'."

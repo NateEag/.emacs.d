@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/reformatter-20200426.818/reformatter.el  -*- no-byte-compile: t -*-
+(define-package "reformatter" "20200426.818" "Define commands which run reformatters on the current buffer" '((emacs "24.3")) :commit "dc6278a6b1e3565604346ac41a6ffc3cbab04031" :keywords '("convenience" "tools") :authors '(("Steve Purcell" . "steve@sanityinc.com")) :maintainer '("Steve Purcell" . "steve@sanityinc.com") :url "https://github.com/purcell/reformatter.el")

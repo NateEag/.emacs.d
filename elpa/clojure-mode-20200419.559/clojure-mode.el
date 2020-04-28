@@ -9,7 +9,7 @@
 ;;       Bozhidar Batsov <bozhidar@batsov.com>
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20200405.1418
+;; Package-Version: 20200419.559
 ;; Keywords: languages clojure clojurescript lisp
 ;; Version: 5.12.0-snapshot
 ;; Package-Requires: ((emacs "25.1"))
@@ -445,7 +445,7 @@ The command will prompt you to select one of the available sections."
   (interactive)
   (browse-url clojure-grimoire-url))
 
-(defconst clojure-style-guide-url "https://github.com/bbatsov/clojure-style-guide"
+(defconst clojure-style-guide-url "https://guide.clojure.style"
   "The URL of the Clojure style guide.")
 
 (defun clojure-view-style-guide ()
@@ -457,21 +457,13 @@ The command will prompt you to select one of the available sections."
   "Prevent paredit from inserting useless spaces.
 See `paredit-space-for-delimiter-predicates' for the meaning of
 ENDP and DELIM."
-  (or endp
-      (not (memq delim '(?\" ?{ ?\( )))
-      (not (or (derived-mode-p 'clojure-mode)
-               (derived-mode-p 'cider-repl-mode)))
-      (save-excursion
-        (backward-char)
-        (cond ((eq (char-after) ?#)
-               (and (not (bobp))
-                    (or (char-equal ?w (char-syntax (char-before)))
-                        (char-equal ?_ (char-syntax (char-before))))))
-              ((and (eq delim ?\()
-                    (eq (char-after) ??)
-                    (eq (char-before) ?#))
-               nil)
-              (t)))))
+  (and (not endp)
+       ;; don't insert after opening quotes, auto-gensym syntax, or reader tags
+       (not (looking-back
+             (if (member delim clojure-omit-space-between-tag-and-delimiters)
+                 "\\_<\\(?:'+\\|#.*\\)"
+               "\\_<\\(?:'+\\|#\\)")
+             (point-at-bol)))))
 
 (defconst clojure--collection-tag-regexp "#\\(::[a-zA-Z0-9._-]*\\|:?\\([a-zA-Z0-9._-]+/\\)?[a-zA-Z0-9._-]+\\)"
   "Collection reader macro tag regexp.
@@ -480,29 +472,8 @@ collection literal (e.g. '[]' or '{}'), as reader macro tags.
 This includes #fully.qualified/my-ns[:kw val] and #::my-ns{:kw
 val} as of Clojure 1.9.")
 
-(defun clojure-no-space-after-tag (endp delimiter)
-  "Prevent inserting a space after a reader-literal tag.
-
-When a reader-literal tag is followed be an opening delimiter
-listed in `clojure-omit-space-between-tag-and-delimiters', this
-function returns t.
-
-This allows you to write things like #db/id[:db.part/user]
-and #::my-ns{:some \"map\"} without inserting a space between
-the tag and the opening bracket.
-
-See `paredit-space-for-delimiter-predicates' for the meaning of
-ENDP and DELIMITER."
-  (if endp
-      t
-    (or (not (member delimiter clojure-omit-space-between-tag-and-delimiters))
-        (save-excursion
-          (let ((orig-point (point)))
-            (not (and (re-search-backward
-                       clojure--collection-tag-regexp
-                       (line-beginning-position)
-                       t)
-                      (= orig-point (match-end 0)))))))))
+(make-obsolete-variable 'clojure--collection-tag-regexp nil "5.12.0")
+(make-obsolete #'clojure-no-space-after-tag #'clojure-space-for-delimiter-p "5.12.0")
 
 (declare-function paredit-open-curly "ext:paredit" t t)
 (declare-function paredit-close-curly "ext:paredit" t t)
@@ -526,10 +497,9 @@ replacement for `cljr-expand-let`."
     (let ((keymap (or keymap clojure-mode-map)))
       (define-key keymap "{" #'paredit-open-curly)
       (define-key keymap "}" #'paredit-close-curly))
+    (make-local-variable 'paredit-space-for-delimiter-predicates)
     (add-to-list 'paredit-space-for-delimiter-predicates
                  #'clojure-space-for-delimiter-p)
-    (add-to-list 'paredit-space-for-delimiter-predicates
-                 #'clojure-no-space-after-tag)
     (advice-add 'paredit-convolute-sexp :after #'clojure--replace-let-bindings-and-indent)))
 
 (defun clojure-mode-variables ()

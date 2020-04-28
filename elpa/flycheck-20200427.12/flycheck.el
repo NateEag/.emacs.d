@@ -2201,10 +2201,10 @@ Pop up a help buffer with the documentation of CHECKER."
                 (save-excursion
                   (while (re-search-backward "`\\([^`']+\\)'"
                                              beg-checker-list t)
-                    (when (flycheck-valid-checker-p
-                           (intern-soft (match-string 1)))
-                      (help-xref-button 1 'help-flycheck-checker-def checker
-                                        filename))))))))
+                    (let ((checker (intern-soft (match-string 1))))
+                      (when (flycheck-valid-checker-p checker)
+                        (help-xref-button 1 'help-flycheck-checker-doc
+                                          checker)))))))))
         ;; Call the custom print-doc function of the checker, if present
         (when print-doc
           (funcall print-doc checker))
@@ -3872,11 +3872,12 @@ The following PROPERTIES constitute an error level:
      property for error level categories is `priority', to
      influence the stacking of multiple error level overlays.
 
-`:fringe-bitmap BITMAP'
+`:fringe-bitmap BITMAPS'
      A fringe bitmap symbol denoting the bitmap to use for fringe
-     indicators for this level.  See Info node `(elisp)Fringe
-     Bitmaps' for more information about fringe bitmaps,
-     including a list of built-in fringe bitmaps.
+     indicators for this level, or a cons of two bitmaps (one for
+     narrow fringes and one for wide fringes).  See Info node
+     `(elisp)Fringe Bitmaps' for more information about fringe
+     bitmaps, including a list of built-in fringe bitmaps.
 
 `:fringe-face FACE'
      A face symbol denoting the face to use for fringe indicators
@@ -3893,8 +3894,12 @@ The following PROPERTIES constitute an error level:
         (plist-get properties :compilation-level))
   (setf (get level 'flycheck-overlay-category)
         (plist-get properties :overlay-category))
+  (setf (get level 'flycheck-fringe-bitmaps)
+        (let ((bitmap (plist-get properties :fringe-bitmap)))
+          (if (consp bitmap) bitmap (cons bitmap bitmap))))
+  ;; Kept for compatibility
   (setf (get level 'flycheck-fringe-bitmap-double-arrow)
-        (plist-get properties :fringe-bitmap))
+        (car (get level 'flycheck-fringe-bitmaps)))
   (setf (get level 'flycheck-fringe-face)
         (plist-get properties :fringe-face))
   (setf (get level 'flycheck-error-list-face)
@@ -3916,9 +3921,13 @@ The following PROPERTIES constitute an error level:
   "Get the overlay category for LEVEL."
   (get level 'flycheck-overlay-category))
 
-(defun flycheck-error-level-fringe-bitmap (level)
-  "Get the fringe bitmap for LEVEL."
-  (get level 'flycheck-fringe-bitmap-double-arrow))
+(defun flycheck-error-level-fringe-bitmap (level &optional hi-res)
+  "Get the fringe bitmap for LEVEL.
+
+Optional argument HI-RES non-nil means that the returned bitmap
+will be the high resolution version."
+  (let ((bitmaps (get level 'flycheck-fringe-bitmaps)))
+    (if hi-res (cdr bitmaps) (car bitmaps))))
 
 (defun flycheck-error-level-fringe-face (level)
   "Get the fringe face for LEVEL."
@@ -3943,32 +3952,49 @@ intended for use as `before-string' of an overlay to actually
 show the icon."
   (unless (memq side '(left-fringe right-fringe))
     (error "Invalid fringe side: %S" side))
-  (propertize "!" 'display
-              (list side
-                    (flycheck-error-level-fringe-bitmap level)
-                    (flycheck-error-level-fringe-face level))))
+  (let* ((fringe-width (pcase side
+                         (`left-fringe (car (window-fringes)))
+                         (`right-fringe (cadr (window-fringes)))))
+         (high-res (= 16 fringe-width)))
+    (propertize "!" 'display
+                (list side
+                      (flycheck-error-level-fringe-bitmap level high-res)
+                      (flycheck-error-level-fringe-face level)))))
 
 
 ;;; Built-in error levels
 (when (fboundp 'define-fringe-bitmap)
   (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
-    (vector #b00000000
-            #b00000000
-            #b00000000
-            #b00000000
-            #b00000000
-            #b10011000
-            #b01101100
-            #b00110110
-            #b00011011
-            #b00110110
-            #b01101100
-            #b10011000
-            #b00000000
-            #b00000000
-            #b00000000
-            #b00000000
-            #b00000000)))
+    [#b11011000
+     #b01101100
+     #b00110110
+     #b00011011
+     #b00110110
+     #b01101100
+     #b11011000
+     #b00000000])
+  (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow-hi-res
+    [#b0000000000000000
+     #b0000000000000000
+     #b1111001111000000
+     #b0111100111100000
+     #b0011110011110000
+     #b0001111001111000
+     #b0000111100111100
+     #b0000011110011110
+     #b0000011110011110
+     #b0000111100111100
+     #b0001111001111000
+     #b0011110011110000
+     #b0111100111100000
+     #b1111001111000000
+     #b0000000000000000
+     #b0000000000000000]
+    nil 16))
+
+(defconst flycheck-default-fringe-bitmaps
+  (cons 'flycheck-fringe-bitmap-double-arrow
+        'flycheck-fringe-bitmap-double-arrow-hi-res))
 
 (setf (get 'flycheck-error-overlay 'face) 'flycheck-error)
 (setf (get 'flycheck-error-overlay 'priority) 110)
@@ -3977,7 +4003,7 @@ show the icon."
   :severity 100
   :compilation-level 2
   :overlay-category 'flycheck-error-overlay
-  :fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
+  :fringe-bitmap flycheck-default-fringe-bitmaps
   :fringe-face 'flycheck-fringe-error
   :error-list-face 'flycheck-error-list-error)
 
@@ -3988,7 +4014,7 @@ show the icon."
   :severity 10
   :compilation-level 1
   :overlay-category 'flycheck-warning-overlay
-  :fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
+  :fringe-bitmap flycheck-default-fringe-bitmaps
   :fringe-face 'flycheck-fringe-warning
   :error-list-face 'flycheck-error-list-warning)
 
@@ -3999,7 +4025,7 @@ show the icon."
   :severity -10
   :compilation-level 0
   :overlay-category 'flycheck-info-overlay
-  :fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
+  :fringe-bitmap flycheck-default-fringe-bitmaps
   :fringe-face 'flycheck-fringe-info
   :error-list-face 'flycheck-error-list-info)
 
@@ -4795,10 +4821,15 @@ LEVEL is either an error level symbol, or nil, to remove the filter."
     (flycheck-error-list-refresh)
     (flycheck-error-list-recenter-at (point-min))))
 
-(defun flycheck-error-list-reset-filter ()
-  "Remove filters and show all errors in the error list."
-  (interactive)
-  (kill-local-variable 'flycheck-error-list-minimum-level))
+(defun flycheck-error-list-reset-filter (&optional refresh)
+  "Remove local error filters and reset to the default filter.
+
+Interactively, or with non-nil REFRESH, refresh the error list."
+  (interactive '(t))
+  (kill-local-variable 'flycheck-error-list-minimum-level)
+  (when refresh
+    (flycheck-error-list-refresh)
+    (flycheck-error-list-recenter-at (point-min))))
 
 (defun flycheck-error-list-apply-filter (errors)
   "Filter ERRORS according to `flycheck-error-list-minimum-level'."
@@ -7165,8 +7196,8 @@ information about warnings."
 (defun flycheck-c/c++-quoted-include-directory ()
   "Get the directory for quoted includes.
 
-C/C++ compiles typicall look up includes with quotation marks in
-the directory of the file being compiled.  However, since
+C/C++ compilers typically look up includes with quotation marks
+in the directory of the file being compiled.  However, since
 Flycheck uses temporary copies for syntax checking, it needs to
 explicitly determine the directory for quoted includes.
 
@@ -7367,12 +7398,15 @@ Requires GCC 4.4 or newer.  See URL `https://gcc.gnu.org/'."
             "-")
   :standard-input t
   :error-patterns
-  ((info line-start (or "<stdin>" (file-name)) ":" line ":" column
+  ((info line-start (or "<stdin>" (file-name))
+         ":" line (optional ":" column)
          ": note: " (message) line-end)
-   (warning line-start (or "<stdin>" (file-name)) ":" line ":" column
+   (warning line-start (or "<stdin>" (file-name))
+            ":" line (optional ":" column)
             ": warning: " (message (one-or-more (not (any "\n["))))
             (optional "[" (id (one-or-more not-newline)) "]") line-end)
-   (error line-start (or "<stdin>" (file-name)) ":" line ":" column
+   (error line-start (or "<stdin>" (file-name))
+          ":" line (optional ":" column)
           ": " (or "fatal error" "error") ": " (message) line-end))
   :modes (c-mode c++-mode)
   :next-checkers ((warning . c/c++-cppcheck)))
@@ -8927,7 +8961,7 @@ See URL `https://github.com/commercialhaskell/stack'."
             "-x" (eval
                   (pcase major-mode
                     (`haskell-mode "hs")
-                    (`literate-haskell-mode "lhs")))
+                    (`haskell-literate-mode "lhs")))
             source)
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ":"
@@ -8952,7 +8986,7 @@ See URL `https://github.com/commercialhaskell/stack'."
   :error-filter
   (lambda (errors)
     (flycheck-sanitize-errors (flycheck-dedent-error-messages errors)))
-  :modes (haskell-mode literate-haskell-mode)
+  :modes (haskell-mode haskell-literate-mode)
   :next-checkers ((warning . haskell-hlint))
   :working-directory (lambda (_)
                        (flycheck-haskell--find-stack-default-directory))
@@ -8986,7 +9020,7 @@ See URL `https://www.haskell.org/ghc/'."
             "-x" (eval
                   (pcase major-mode
                     (`haskell-mode "hs")
-                    (`literate-haskell-mode "lhs")))
+                    (`haskell-literate-mode "lhs")))
             source)
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ":"
@@ -9011,7 +9045,7 @@ See URL `https://www.haskell.org/ghc/'."
   :error-filter
   (lambda (errors)
     (flycheck-sanitize-errors (flycheck-dedent-error-messages errors)))
-  :modes (haskell-mode literate-haskell-mode)
+  :modes (haskell-mode haskell-literate-mode)
   :next-checkers ((warning . haskell-hlint))
   :working-directory flycheck-haskell--ghc-find-default-directory)
 
@@ -9079,7 +9113,7 @@ See URL `https://github.com/ndmitchell/hlint'."
           ": Error: "
           (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
           line-end))
-  :modes (haskell-mode literate-haskell-mode))
+  :modes (haskell-mode haskell-literate-mode))
 
 (flycheck-def-config-file-var flycheck-tidyrc html-tidy ".tidyrc")
 

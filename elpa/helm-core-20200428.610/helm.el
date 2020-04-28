@@ -1133,6 +1133,14 @@ session.  In this case you can add a defmethod called
 See [[https://github.com/emacs-helm/helm/wiki/FAQ#why-is-a-customizable-helm-source-nil][here]] for more infos,
 and for more complex examples of configuration [[https://github.com/thierryvolpiatto/emacs-tv-config/blob/master/init-helm.el#L340][here]].
 
+** Modify keybindings in Helm
+
+Helm main keymap is `helm-map', all keys bound in this map apply
+to all helm sources.  However, most sources have their own
+keymap, with each binding overriding its counterpart in
+`helm-map', you can see all bindings in effect in the [[Commands][Commands]]
+section (available only if the source have its own keymap and documentation of course).
+
 ** Matching in Helm
 
 All what you write in minibuffer is interpreted as a regexp or
@@ -5648,10 +5656,10 @@ don't exit and send message 'no match'."
              (empty-buffer-p (with-current-buffer helm-buffer
                                (eq (point-min) (point-max))))
              (unknown (and (not empty-buffer-p)
-                           (string= (get-text-property
-                                     0 'display
-                                     (helm-get-selection nil 'withprop src))
-                                    "[?]"))))
+                           (equal (get-text-property
+                                   0 'display
+                                   (helm-get-selection nil 'withprop src))
+                                  "[?]"))))
         (cond ((and (or empty-buffer-p unknown)
                     (memq minibuffer-completion-confirm
                           '(confirm confirm-after-completion)))
@@ -6790,7 +6798,7 @@ is not needed."
       (helm-follow-mode -1)
       (unwind-protect
           (if nomark
-              (message "Marking not allowed in this source")
+              (user-error "Marking not allowed in this source")
             (save-excursion
               (when ensure-beg-of-source
                 (goto-char (helm-get-previous-header-pos))
@@ -6813,11 +6821,17 @@ is not needed."
                     ;; autosave files/links and non--existent files.
                     (unless
                         (or (helm-this-visible-mark)
-                            (string= prefix "[?]") ; doesn't match
+                            ;; Non existing files in HFF and
+                            ;; RFN. Display may be an image. See
+                            ;; https://github.com/yyoncho/helm-treemacs-icons/issues/5
+                            ;; and also issue #2296. 
+                            (equal prefix "[?]")
+                            ;; Prefix is non-nil (an image?) and not a string.
+                            (and prefix (not (stringp prefix)))
                             (and filecomp-p
                                  (or
                                   ;; autosave files
-                                  (string-match-p "^[.]?#.*#?$" bn)
+                                  (string-match-p "\\`[.]?#.*#?\\'" bn)
                                   ;; dot files
                                   (member bn '("." ".."))
                                   ;; We need to test here when not using

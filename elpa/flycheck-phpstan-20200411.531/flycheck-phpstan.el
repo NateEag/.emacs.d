@@ -4,11 +4,11 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.4.0
-;; Package-Version: 20200405.1117
+;; Version: 0.5.0
+;; Package-Version: 20200411.531
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
-;; Package-Requires: ((emacs "24.3") (flycheck "26") (phpstan "0.4.0"))
+;; Package-Requires: ((emacs "24.3") (flycheck "26") (phpstan "0.5.0"))
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -47,7 +47,7 @@
 
 (defun flycheck-phpstan--enabled-and-set-variable ()
   "Return path to phpstan configure file, and set buffer execute in side effect."
-  (let ((enabled (or phpstan-working-dir (phpstan-get-config-file))))
+  (let ((enabled (phpstan-enabled)))
     (prog1 enabled
       (when (and phpstan-flycheck-auto-set-executable
                  (not (and (boundp 'flycheck-phpstan-executable)

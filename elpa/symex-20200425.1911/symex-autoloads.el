@@ -25,7 +25,7 @@ The main entry point for editing symbolic expressions using symex mode.
 Enter the symex evil state and show a hydra menu for accessing various
 features." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("hydra-symex" "symex-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("symex-")))
 
 ;;;***
 

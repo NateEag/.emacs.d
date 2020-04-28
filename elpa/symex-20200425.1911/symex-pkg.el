@@ -1,4 +1,4 @@
-(define-package "symex" "20200225.1928" "An evil way to edit Lisp symbolic expressions as trees"
+(define-package "symex" "20200425.1911" "An evil way to edit Lisp symbolic expressions as trees"
   '((emacs "24.4")
     (cl-lib "0.6.1")
     (lispy "0.26.0")

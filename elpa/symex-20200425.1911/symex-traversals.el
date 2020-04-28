@@ -44,9 +44,9 @@
   (circuit (move forward))
   "Go to last symex at present level.")
 
-(deftraversal symex--traversal-goto-outermost
+(deftraversal symex--traversal-goto-lowest
   (circuit (move out))
-  "Go to outermost (root) symex in present tree.")
+  "Go to lowest (root) symex in present tree.")
 
 (defun symex-goto-first ()
   "Select first symex at present level."
@@ -60,14 +60,14 @@
   (symex-execute-traversal symex--traversal-goto-last)
   (point))
 
-(defun symex-goto-outermost ()
-  "Select outermost symex."
+(defun symex-goto-lowest ()
+  "Select lowest symex."
   (interactive)
-  (symex-execute-traversal symex--traversal-goto-outermost)
+  (symex-execute-traversal symex--traversal-goto-lowest)
   (point))
 
-(defun symex-goto-innermost ()
-  "Select innermost symex."
+(defun symex-goto-highest ()
+  "Select highest symex."
   (interactive)
   (symex-execute-traversal (symex-traversal
                             (maneuver (move in)
@@ -120,6 +120,19 @@ when the way is blocked.")
   "Tree traversal focused on moving backwards, leveraging postorder backtracking
 when the way is blocked.")
 
+(deftraversal symex--traversal-climb-branch
+  (protocol (move in)
+            (detour (circuit (move forward))
+                    (move in))
+            (circuit (move forward))))
+
+(deftraversal symex--traversal-descend-branch
+  (protocol (precaution symex--traversal-goto-first
+                        (beforehand (not (at root))))
+            (maneuver (move out)
+                      (precaution (circuit (move backward))
+                                  (beforehand (not (at root)))))))
+
 (defun symex-traverse-forward ()
   "Traverse symex as a tree, using pre-order traversal."
   (interactive)
@@ -162,6 +175,19 @@ when the way is blocked.")
     (message "%s" result)
     result))
 
+(defun symex-climb-branch ()
+  "Climb up."
+  (interactive)
+  (let ((result (symex-execute-traversal symex--traversal-climb-branch)))
+    (message "%s" result)
+    result))
+
+(defun symex-descend-branch ()
+  "Descend the tree."
+  (interactive)
+  (let ((result (symex-execute-traversal symex--traversal-descend-branch)))
+    (message "%s" result)
+    result))
 
 (provide 'symex-traversals)
 ;;; symex-traversals.el ends here

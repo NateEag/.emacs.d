@@ -17,7 +17,7 @@
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
-;; Package-Version: 20200103.1659
+;; Package-Version: 20200420.1546
 ;; URL: https://github.com/yyoncho/helm-lsp
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (helm "2.0"))
 ;; Version: 0.1
@@ -37,6 +37,11 @@
 (defvar helm-lsp-symbols-result-p nil)
 (defvar helm-lsp-symbols-result nil)
 
+(defgroup helm-lsp nil
+  "`helm-lsp' group."
+  :group 'lsp-mode
+  :tag "Language Server")
+
 (defun helm-lsp-workspace-symbol-action (candidate)
   "Action for helm workspace symbol.
 CANDIDATE is the selected item in the helm menu."
@@ -49,7 +54,12 @@ CANDIDATE is the selected item in the helm menu."
 (defface helm-lsp-container-face
   '((t :height 0.8 :inherit shadow))
   "The face used for code lens overlays."
-  :group 'lsp-mode)
+  :group 'helm-lsp)
+
+(defcustom helm-lsp-treemacs-icons t
+  "If non-nil, use `lsp-treemacs' icons."
+  :group 'helm-lsp
+  :type 'boolean)
 
 (defun helm-lsp--extract-file-name (uri)
   (propertize
@@ -57,6 +67,11 @@ CANDIDATE is the selected item in the helm menu."
        (cl-second (s-match ".*\(\\(.*\\)" uri))
      (f-filename uri))
    'face 'helm-lsp-container-face))
+
+(defun helm-lsp--get-icon (kind)
+  (require 'lsp-treemacs)
+  (ht-get (treemacs-theme->gui-icons (treemacs--find-theme lsp-treemacs-theme))
+          (lsp-treemacs-symbol-kind->icon kind)))
 
 (defun helm-lsp--workspace-symbol (workspaces name input)
   "Search against WORKSPACES NAME with default INPUT."
@@ -100,11 +115,20 @@ CANDIDATE is the selected item in the helm menu."
                                           "name" "kind"))
                        (let ((type (or (alist-get kind lsp--symbol-kind) "Unknown")))
                          (cons
-                          (concat (if (s-blank? container-name)
-                                      name
-                                    (concat name " " (propertize container-name 'face 'helm-lsp-container-face) " -" ))
-                                  " "
-                                  (propertize (concat "(" type ")") 'face 'font-lock-type-face))
+                          (if (and (featurep 'lsp-treemacs)
+                                   helm-lsp-treemacs-icons)
+                              (concat
+                               (or (helm-lsp--get-icon kind)
+                                   (helm-lsp--get-icon 'fallback))
+                               (if (s-blank? container-name)
+                                   name
+                                 (concat name " " (propertize container-name 'face 'helm-lsp-container-face))))
+
+                            (concat (if (s-blank? container-name)
+                                        name
+                                      (concat name " " (propertize container-name 'face 'helm-lsp-container-face) " -" ))
+                                    " "
+                                    (propertize (concat "(" type ")") 'face 'font-lock-type-face)))
                           candidate)))
                      candidates))
                   :candidate-number-limit nil

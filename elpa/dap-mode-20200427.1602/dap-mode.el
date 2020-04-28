@@ -179,7 +179,9 @@ The hook will be called with the session file and the new set of breakpoint loca
   (initialize-result nil)
   (error-message nil)
   (loaded-sources nil)
-  (program-proc))
+  (program-proc)
+  ;; Optional metadata to set and get it.
+  (metadata (make-hash-table :test 'eql)))
 
 (cl-defstruct dap--parser
   (waiting-for-response nil)
@@ -758,6 +760,15 @@ thread exection but the server will log message."
       (dap--insert-at-point-max str))
     (setq-local buffer-read-only t)))
 
+(cl-defgeneric dap-handle-event (event-type session params)
+  "Extension point for handling custom events.
+EVENT-TYPE is the event to handle.
+SESSION is the session that has triggered the event.
+PARAMS are the event params.")
+
+(cl-defmethod dap-handle-event (event-type _session _params)
+  (message "No message handler for %s" event-type))
+
 (defun dap--on-event (debug-session event)
   "Dispatch EVENT for DEBUG-SESSION."
   (-let [(&hash "body" "event" event-type) event]
@@ -807,7 +818,8 @@ thread exection but the server will log message."
            (run-hooks 'dap-session-changed-hook))))
       ("stopped"
        (-let [(&hash "threadId" thread-id "type" "reason") body]
-         (puthash thread-id type (dap--debug-session-thread-states debug-session))
+         (puthash thread-id (or type reason)
+                  (dap--debug-session-thread-states debug-session))
          (dap--select-thread-id debug-session thread-id)
          (when (string= "exception" reason)
            (dap--send-message
@@ -831,7 +843,8 @@ thread exection but the server will log message."
        (-let [(&hash "body" (&hash "source")) event]
          (cl-pushnew source (dap--debug-session-loaded-sources debug-session))
          (run-hook-with-args 'dap-loaded-sources-changed-hook debug-session)))
-      (_ (message "No message handler for %s" event-type)))))
+      (_ (dap-handle-event (intern event-type) debug-session body)))))
+
 
 (defun dap--create-filter-function (debug-session)
   "Create filter function for DEBUG-SESSION."
@@ -1110,11 +1123,15 @@ RESULT to use for the callback."
   (-if-let (thread-id (dap--debug-session-thread-id (dap--cur-session)))
       (-if-let (stack-frames (gethash thread-id
                                       (dap--debug-session-thread-stack-frames (dap--cur-session))))
-          (let ((new-stack-frame (dap--completing-read "Select active frame: "
-                                                       stack-frames
-                                                       (lambda (it) (gethash "name" it))
-                                                       nil
-                                                       t)))
+          (let* ((index 0)
+                 (new-stack-frame (dap--completing-read "Select active frame: "
+                                                        stack-frames
+                                                        (-lambda ((frame &as &hash "name"))
+                                                          (if-let (frame-path (dap--get-path-for-frame frame))
+                                                              (format "%s: %s (in %s)" (incf index) name frame-path)
+                                                            (format "%s: %s" (incf index) name)))
+                                                        nil
+                                                        t)))
             (dap--go-to-stack-frame (dap--cur-session) new-stack-frame))
         (->> (dap--cur-session)
              dap--debug-session-name
@@ -1196,7 +1213,7 @@ before starting the debug process."
         (dap--set-cur-session debug-session)
         (push (cons session-name launch-args) dap--debug-configuration)
         (run-hook-with-args 'dap-session-created-hook debug-session))
-      (when (and program-to-start dap-auto-show-output)
+      (when (and dap-auto-show-output)
         (save-excursion (dap-go-to-output-buffer))))))
 
 (defun dap--set-breakpoints-in-file (file file-breakpoints)

@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/phpstan-20200405.1119/phpstan.el  -*- no-byte-compile: t -*-
-(define-package "phpstan" "20200405.1119" "Interface to PHPStan" '((emacs "24.3") (php-mode "1.22.3")) :commit "9345480715b12fe1346708e714ce8e12ce3a9ae2" :keywords '("tools" "php") :authors '(("USAMI Kenta" . "tadsan@zonu.me")) :maintainer '("USAMI Kenta" . "tadsan@zonu.me") :url "https://github.com/emacs-php/phpstan.el")

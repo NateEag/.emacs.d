@@ -43,7 +43,21 @@ NIL
 
 (put 'phpstan-config-file 'safe-local-variable #'(lambda (v) (if (consp v) (and (eq 'root (car v)) (stringp (cdr v))) (null v) (stringp v))))
 
-(defvar phpstan-level "0" "\
+(defvar-local phpstan-autoload-file nil "\
+Path to autoload file for PHPStan.
+
+STRING
+     Path to `phpstan' autoload file.
+
+`(root . STRING)'
+     Relative path to `phpstan' configuration file from project root directory.
+
+NIL
+     If `phpstan-enable-on-no-config-file', search \"vendor/autoload.php\" in (phpstan-get-working-dir).")
+
+(put 'phpstan-autoload-file 'safe-local-variable #'(lambda (v) (if (consp v) (and (eq 'root (car v)) (stringp (cdr v))) (null v) (stringp v))))
+
+(defvar-local phpstan-level nil "\
 Rule level of PHPStan.
 
 INTEGER or STRING
@@ -54,8 +68,6 @@ max
 
 NIL
      Use rule level specified in `phpstan' configuration file.")
-
-(make-variable-buffer-local 'phpstan-level)
 
 (put 'phpstan-level 'safe-local-variable #'(lambda (v) (or (null v) (integerp v) (eq 'max v) (and (stringp v) (string= "max" v) (string-match-p "\\`[0-9]\\'" v)))))
 

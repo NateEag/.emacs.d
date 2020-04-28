@@ -48,7 +48,7 @@
 ;; define the interpretor for geiser.
 ;; the geiser-costum--defcustom is a macro that will
 ;; call a declaration into the documentation of the
-;; structure of the methode and then define the method
+;; structure of the method and then define the method
 ;; with a defcustom: define a variable that represents an option users might want to set
 (geiser-custom--defcustom geiser-gambit-binary
   (cond ((eq system-type 'windows-nt) '("gsi.exe"))
@@ -107,7 +107,7 @@ this variable to t."
 (defconst geiser-gambit--debugger-prompt-regexp "[0-9]+> ")
 ;; taken from gerbil scheme
 (geiser-custom--defcustom geiser-gambit-debug-show-bt-p t
-  "Whether to autmatically show a full backtrace when entering the debugger.
+  "Whether to automatically show a full backtrace when entering the debugger.
 If `nil', only the last frame is shown."
   :type 'boolean
   :group 'geiser-gambit)
@@ -118,7 +118,7 @@ If `nil', only the last frame is shown."
   :group 'geiser-gambit)
 
 (geiser-custom--defcustom geiser-gambit-jump-on-debug-p nil
-  "Whether to autmatically jump to error when entering the debugger.
+  "Whether to automatically jump to error when entering the debugger.
 If `t', Geiser will use `next-error' to jump to the error's location."
   :type 'boolean
   :group 'geiser-gambit)

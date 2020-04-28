@@ -1,4 +1,4 @@
-;;; autodoc.rkt -- suport for autodoc echo
+;;; autodoc.rkt -- support for autodoc echo
 
 ;; Copyright (C) 2009, 2010, 2011, 2012, 2013 Jose Antonio Ortega Ruiz
 

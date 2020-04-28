@@ -28,7 +28,7 @@
 ;;> The meaning of \var{rest} is unknown.
 ;;> Return the alist with the first field, \scheme{result}, holds
 ;;> the result of evaluation \scheme{(write)}'d and the second
-;;> field, \scheme{output}, contains everyting that the evaluation
+;;> field, \scheme{output}, contains everything that the evaluation
 ;;> would print to the standard output.
 ;;> In case of an exception, the message is formatted with
 ;;> \scheme{(chibi show)} and written to both variables in addition
@@ -45,7 +45,7 @@
   (guard (err
           (else
            (show #t ; to standard output (to comint)
-                 "Geiser-chibi falure in scheme code\n")
+                 "Geiser-chibi failure in scheme code\n")
            (show #t "Error: \n" err "\n")
            (print-stack-trace)))
     (let* ((output (open-output-string))

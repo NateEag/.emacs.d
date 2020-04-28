@@ -66,13 +66,13 @@ this variable to t."
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-debug-show-bt-p nil
-  "Whether to autmatically show a full backtrace when entering the debugger.
+  "Whether to automatically show a full backtrace when entering the debugger.
 If `nil', only the last frame is shown."
   :type 'boolean
   :group 'geiser-guile)
 
 (geiser-custom--defcustom geiser-guile-jump-on-debug-p nil
-  "Whether to autmatically jump to error when entering the debugger.
+  "Whether to automatically jump to error when entering the debugger.
 If `t', Geiser will use `next-error' to jump to the error's location."
   :type 'boolean
   :group 'geiser-guile)

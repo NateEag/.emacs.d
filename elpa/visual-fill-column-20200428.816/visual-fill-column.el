@@ -7,7 +7,7 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; URL: https://github.com/joostkremers/visual-fill-column
-;; Package-Version: 20200303.2318
+;; Package-Version: 20200428.816
 ;; Created: 2015
 ;; Version: 1.11
 ;; Package-Requires: ((emacs "24.3"))
@@ -38,7 +38,7 @@
 ;;; Code:
 
 (defgroup visual-fill-column nil "Wrap lines according to `fill-column' in `visual-line-mode'."
-  :group 'wp
+  :group 'text
   :prefix "visual-fill-column-")
 
 (defcustom visual-fill-column-width nil

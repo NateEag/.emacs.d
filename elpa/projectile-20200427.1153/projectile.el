@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200329.1908
+;; Package-Version: 20200427.1153
 ;; Keywords: project, convenience
 ;; Version: 2.2.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -177,7 +177,7 @@ A value of nil means the cache never expires."
                  (integer :tag "Seconds")))
 
 (defcustom projectile-auto-update-cache t
-  "Wether the cache should automatically be updated when files are opened or deleted."
+  "Whether the cache should automatically be updated when files are opened or deleted."
   :group 'projectile
   :type 'boolean)
 

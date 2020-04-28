@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200409.609
+;; Package-Version: 20200422.1731
 ;; Version: 0.3.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.5.1"))
 ;; Keywords: languages util
@@ -65,6 +65,7 @@
 ;; - Rust (rustfmt)
 ;; - Scala (scalafmt)
 ;; - Shell script (shfmt)
+;; - Snakemake (snakefmt)
 ;; - Solidity (prettier prettier-plugin-solidity)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
@@ -649,6 +650,12 @@ Consult the existing formatters for examples of BODY."
             (mksh "mksh")
             (t "posix")))))
 
+(define-format-all-formatter snakefmt
+  (:executable "snakefmt")
+  (:install)
+  (:languages "_Snakemake")
+  (:format (format-all--buffer-easy executable "-")))
+
 (define-format-all-formatter sqlformat
   (:executable "sqlformat")
   (:install "pip install sqlparse")
@@ -703,7 +710,8 @@ languages do not yet have official GitHub Linguist identifiers,
 yet format-all needs to know about them anyway. That's why we
 have this custom language-id function in format-all. The
 unofficial languages IDs are prefixed with \"_\"."
-  (or (language-id-buffer)
+  (or (and (equal major-mode 'snakemake-mode) "_Snakemake")
+      (language-id-buffer)
       (and (or (equal major-mode 'angular-html-mode)
                (and (equal major-mode 'web-mode)
                     (equal (symbol-value 'web-mode-content-type) "html")

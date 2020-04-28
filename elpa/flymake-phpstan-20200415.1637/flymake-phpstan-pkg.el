@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/flymake-phpstan-20200415.1637/flymake-phpstan.el  -*- no-byte-compile: t -*-
+(define-package "flymake-phpstan" "20200415.1637" "Flymake backend for PHP using PHPStan" '((emacs "26.1") (phpstan "0.5.0")) :commit "2f715a186c5fe6576de83d4c0b64a37e2bfce101" :keywords '("tools" "php") :authors '(("USAMI Kenta" . "tadsan@zonu.me")) :maintainer '("USAMI Kenta" . "tadsan@zonu.me") :url "https://github.com/emacs-php/phpstan.el")

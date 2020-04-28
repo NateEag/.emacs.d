@@ -27,7 +27,7 @@ These are some of the commands that can be used in all buffers whose
 major-modes derive from ‘magit-mode’.  There are other common commands
 beside the ones below, but these didn’t fit well anywhere else.
 
-‘M-w’     (‘magit-copy-section-value’)
+‘C-w’     (‘magit-copy-section-value’)
 
      This command saves the value of the current section to the
      ‘kill-ring’, and, provided that the current section is a commit,
@@ -44,7 +44,7 @@ beside the ones below, but these didn’t fit well anywhere else.
      within a hunk, it strips the outer diff marker column before saving
      the text.
 
-‘C-w’     (‘magit-copy-buffer-revision’)
+‘M-w’     (‘magit-copy-buffer-revision’)
 
      This command saves the revision being displayed in the current
      buffer to the ‘kill-ring’ and also pushes it to the
@@ -2282,7 +2282,7 @@ Appendix C Keystroke Index
                                                               (line  42)
 * C-c M-s:                               Editing Commit Messages.
                                                               (line  34)
-* C-w:                                   Common Commands.     (line  27)
+* C-w:                                   Common Commands.     (line  10)
 * C-x g:                                 Status Buffer.       (line  22)
 * C-x u:                                 Editing Rebase Sequences.
                                                               (line  94)
@@ -2404,7 +2404,7 @@ Appendix C Keystroke Index
 * M-p <2>:                               Editing Rebase Sequences.
                                                               (line  43)
 * M-w:                                   Blaming.             (line 130)
-* M-w <1>:                               Common Commands.     (line  10)
+* M-w <1>:                               Common Commands.     (line  27)
 * M-x magit-debug-git-executable:        Git Executable.      (line  45)
 * M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  36)
 * M-x magit-describe-section-briefly:    Section Types and Values.
@@ -2518,9 +2518,9 @@ Appendix C Keystroke Index
 * T:                                     Notes.               (line   8)
 * T a:                                   Notes.               (line  52)
 * T c:                                   Notes.               (line  47)
-* t k:                                   Tagging.             (line  40)
+* t k:                                   Tagging.             (line  43)
 * T m:                                   Notes.               (line  38)
-* t p:                                   Tagging.             (line  47)
+* t p:                                   Tagging.             (line  50)
 * T p:                                   Notes.               (line  30)
 * t r:                                   Tagging.             (line  19)
 * T r:                                   Notes.               (line  22)
@@ -2552,12 +2552,13 @@ Appendix C Keystroke Index
 * x:                                     Editing Rebase Sequences.
                                                               (line  76)
 * x <1>:                                 Resetting.           (line   8)
-* X f:                                   Resetting.           (line  44)
+* X f:                                   Resetting.           (line  50)
 * X h:                                   Resetting.           (line  26)
-* X i:                                   Resetting.           (line  31)
+* X i:                                   Resetting.           (line  37)
+* X k:                                   Resetting.           (line  31)
 * X m:                                   Resetting.           (line  15)
 * X s:                                   Resetting.           (line  20)
-* X w:                                   Resetting.           (line  38)
+* X w:                                   Resetting.           (line  44)
 * X w <1>:                               Wip Modes.           (line  66)
 * Y:                                     Cherries.            (line  17)
 * y:                                     References Buffer.   (line   6)
@@ -2819,7 +2820,7 @@ Appendix D Command Index
 * magit-fetch-modules:                   Submodule Transient. (line  58)
 * magit-fetch-other:                     Fetching.            (line  36)
 * magit-fetch-refspec:                   Fetching.            (line  45)
-* magit-file-checkout:                   Resetting.           (line  44)
+* magit-file-checkout:                   Resetting.           (line  50)
 * magit-file-checkout <1>:               Minor Mode for Buffers Visiting Files.
                                                               (line 165)
 * magit-file-delete:                     Minor Mode for Buffers Visiting Files.
@@ -2952,11 +2953,12 @@ Appendix D Command Index
 * magit-reset-hard:                      Resetting.           (line  26)
 * magit-reset-index:                     Staging and Unstaging.
                                                               (line  87)
-* magit-reset-index <1>:                 Resetting.           (line  31)
+* magit-reset-index <1>:                 Resetting.           (line  37)
+* magit-reset-keep:                      Resetting.           (line  31)
 * magit-reset-mixed:                     Resetting.           (line  15)
 * magit-reset-quickly:                   Resetting.           (line   8)
 * magit-reset-soft:                      Resetting.           (line  20)
-* magit-reset-worktree:                  Resetting.           (line  38)
+* magit-reset-worktree:                  Resetting.           (line  44)
 * magit-reset-worktree <1>:              Wip Modes.           (line  66)
 * magit-reverse:                         Applying.            (line  44)
 * magit-reverse-in-index:                Staging and Unstaging.
@@ -3059,8 +3061,8 @@ Appendix D Command Index
 * magit-subtree-split:                   Subtree.             (line  59)
 * magit-tag:                             Tagging.             (line   8)
 * magit-tag-create:                      Tagging.             (line  14)
-* magit-tag-delete:                      Tagging.             (line  40)
-* magit-tag-prune:                       Tagging.             (line  47)
+* magit-tag-delete:                      Tagging.             (line  43)
+* magit-tag-prune:                       Tagging.             (line  50)
 * magit-tag-release:                     Tagging.             (line  19)
 * magit-toggle-buffer-lock:              Modes and Buffers.   (line  17)
 * magit-toggle-margin:                   Refreshing Logs.     (line  37)

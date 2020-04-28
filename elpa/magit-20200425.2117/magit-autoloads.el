@@ -1721,6 +1721,13 @@ Reset the `HEAD', index, and working tree to COMMIT.
 
 \(fn COMMIT)" t nil)
 
+(autoload 'magit-reset-keep "magit-reset" "\
+Reset the `HEAD' and index to COMMIT, while keeping uncommitted changes.
+
+\(git reset --keep REVISION)
+
+\(fn COMMIT)" t nil)
+
 (autoload 'magit-reset-index "magit-reset" "\
 Reset the index to COMMIT.
 Keep the `HEAD' and working tree as-is, so if COMMIT refers to the

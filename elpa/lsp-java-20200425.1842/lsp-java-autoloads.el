@@ -20,7 +20,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 \(fn &optional ARG)" t nil)
 (with-eval-after-load 'lsp-mode (require 'lsp-java))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-java" '("lsp-j")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-java" '("lsp-java-")))
 
 ;;;***
 
@@ -58,7 +58,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (autoload 'lsp-jt-show-report "lsp-jt" nil t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-jt" '("java-tests--roots" "lsp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-jt" '("lsp-jt-")))
 
 ;;;***
 

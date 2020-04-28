@@ -100,7 +100,7 @@ function result directly from the previously yielded promise."
 If the body signals an error, this error will be stored in the
 promise and rethrown in the promise's listeners."
   (declare (indent defun)
-           (debug (&define sexp [&rest [keywordp sexp]] def-body)))
+           (debug (form body)))
   (cl-assert (eq lexical-binding t))
   `(aio-resolve ,promise
                 (condition-case error
@@ -131,7 +131,9 @@ returns a promise that will resolve to the function's return
 value, or any uncaught error signal."
   (declare (indent defun)
            (doc-string 3)
-           (debug (&define sexp [&rest [keywordp sexp]] def-body)))
+           (debug (&define lambda-list lambda-doc
+                           [&optional ("interactive" interactive)]
+                           def-body)))
   (let ((args (make-symbol "args"))
         (promise (make-symbol "promise"))
         (split-body (macroexp-parse-body body)))
@@ -149,8 +151,10 @@ value, or any uncaught error signal."
   "Like `aio-lambda' but gives the function a name like `defun'."
   (declare (indent defun)
            (doc-string 3)
-           (debug (&define name sexp [&rest [keywordp sexp]] def-body)))
-  `(defalias ',name (aio-lambda ,arglist ,@body)))
+           (debug (&define name lambda-list def-body)))
+  `(progn
+     (defalias ',name (aio-lambda ,arglist ,@body))
+     (function-put ',name 'aio-defun-p t)))
 
 (defun aio-wait-for (promise)
   "Synchronously wait for PROMISE, blocking the current thread."
@@ -171,9 +175,22 @@ underlying asynchronous operation will not actually be canceled."
 
 Since BODY is evalued inside an asynchronous lambda, `aio-await'
 is available here. This macro evaluates to a promise for BODY's
-eventual result."
+eventual result.
+
+Beware: Dynamic bindings that are lexically outside
+‘aio-with-async’ blocks have no effect.  For example,
+
+  (defvar dynamic-var nil)
+  (defun my-func ()
+    (let ((dynamic-var 123))
+      (aio-with-async dynamic-var)))
+  (let ((dynamic-var 456))
+    (aio-wait-for (my-func)))
+  ⇒ 456
+
+Other global state such as the current buffer behaves likewise."
   (declare (indent 0)
-           (debug ([&rest [keywordp sexp]] def-body)))
+           (debug (body)))
   `(let ((promise (funcall (aio-lambda ()
                              (aio-await (aio-sleep 0))
                              ,@body))))
@@ -438,6 +455,15 @@ another asynchronous function uses `aio-sem-post'."
  `((,(rx "(aio-defun" (+ blank)
          (group (+ (or (syntax word) (syntax symbol)))))
     1 'font-lock-function-name-face)))
+
+(add-hook 'help-fns-describe-function-functions #'aio-describe-function)
+
+(defun aio-describe-function (function)
+  "Insert whether FUNCTION is an asynchronous function.
+This function is added to ‘help-fns-describe-function-functions’."
+  (when (function-get function 'aio-defun-p)
+    (insert "  This function is asynchronous; it returns "
+            "an ‘aio-promise’ object.\n")))
 
 (provide 'aio)
 

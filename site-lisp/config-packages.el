@@ -164,25 +164,28 @@ found it."
     ;;
     ;; A rebinding of the standard 'w' keybinding, since I use 'w' for
     ;; something else."
-    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)
+    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)))
 
-    (defun ne/notmuch-tag-sent-emails (&optional arg)
-      "Use shell command to tag sent emails as sent and read.
+(use-package notmuch-mua
+  :config
+  (defun ne/notmuch-tag-sent-emails (&optional arg)
+    "Use shell command to tag sent emails as sent and read.
 
 The shell command lives in my dotfiles repo."
 
-      (start-process "tag-sent-emails" nil "tag-sent-emails"))
+    (start-process "tag-sent-emails" nil "tag-sent-emails"))
 
-    (advice-add 'notmuch-mua-send-and-exit :after #'ne/notmuch-tag-sent-emails)
+  (advice-add 'notmuch-mua-send-and-exit :after #'ne/notmuch-tag-sent-emails)
 
-    (require 'notmuch-address)
-    (notmuch-address-setup)
-    ;; TODO Get address completion to work correctly. I can trigger it now, but
-    ;; it assumes I want the first result, which is not often true and thus
-    ;; forces me to type more than I want to.
-    (define-key message-mode-map
-                (kbd "<backtab>")
-                '(lambda () (interactive) (notmuch-address-expand-name)))))
+  (require 'notmuch-address)
+  (notmuch-address-setup)
+
+  ;; TODO Get address completion to work correctly. I can trigger it now, but
+  ;; it assumes I want the first result, which is not often true and thus
+  ;; forces me to type more than I want to.
+  (define-key message-mode-map
+    (kbd "<backtab>")
+    '(lambda () (interactive) (notmuch-address-expand-name))))
 
 (use-package uniquify
              :init

@@ -99,6 +99,9 @@
 
     ;; Dates and times are handy to be able to insert.
     ("d" . insert-date)
+    ;; FIXME Bind this to something smarter, like "d i". I'd have to first fix
+    ;; binding the above to "d d", which didn't work when I tried it.
+    ("i" . insert-date-path-format)
     ("t" . insert-time)
 
     ("o" . other-window)

@@ -120,6 +120,18 @@ By default it handles C-like function parameters, hence the name."
                    ((equal prefix '(16)) "%B %d, %Y"))))
       (insert (format-time-string format))))
 
+;; Insert the current date.
+;;;###autoload
+(defun insert-date-path-format (prefix)
+    "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
+     two prefix arguments, write out the day and month name."
+    (interactive "P")
+    (let ((format (cond
+                   ((not prefix) "%Y/%m/%d")
+                   ((equal prefix '(4)) "%d.%m.%Y")
+                   ((equal prefix '(16)) "%B %d, %Y"))))
+      (insert (format-time-string format))))
+
 ;; Insert the current time.
 ;;;###autoload
 (defun insert-time (prefix)

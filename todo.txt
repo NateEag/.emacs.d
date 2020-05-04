@@ -13,7 +13,7 @@
   Some tinkering via debug suggests that in `git-gutter:next-hunk`, the
   calculation of the local variable real-index is wrong. Going to the previous
   hunk, it never gets down to 0, and going to the next hunk, it never gets up
-  to 2. Incident count: 2
+  to 2. Incident count: 3
 
 - Add function to send a "refresh browser" request to Skewer. It's handy when
   you get a document's markup mangled, and if you have sites auto-skewering

@@ -187,6 +187,8 @@ The shell command lives in my dotfiles repo."
     (kbd "<backtab>")
     '(lambda () (interactive) (notmuch-address-expand-name))))
 
+(use-package message-attachment-reminder)
+
 (use-package uniquify
              :init
              (setq

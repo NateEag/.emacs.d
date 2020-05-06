@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/inform7-20200430.1539/inform7.el  -*- no-byte-compile: t -*-
+(define-package "inform7" "20200430.1539" "Major mode for working with Inform 7 files" '((emacs "24.3") (s "1.12.0")) :commit "a409bbc6f04264f7f00616a995fa6ecf59d33d0d" :keywords '("languages") :authors '(("Ben Moon" . "software@guiltydolphin.com")) :maintainer '("Ben Moon" . "software@guiltydolphin.com") :url "https://github.com/GuiltyDolphin/inform7-mode")

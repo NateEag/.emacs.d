@@ -576,6 +576,9 @@ The shell command lives in my dotfiles repo."
     (setq nxml-slash-auto-complete-flag t)
     (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))))
 
+(use-package jinja2-mode
+  :mode (("\\.j2\\'" . jinja2-mode)))
+
 (use-package web-mode
   :mode (("\\.html\\'" . web-mode)
          ("\\.tmpl\\'" . web-mode)

@@ -443,6 +443,7 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
         unknown-pattern)
     (unless (or (eq must-match t)
                 (string= helm-pattern "")
+                ;; Check if pattern is already member of candidates.
                 (helm-cr--pattern-in-candidates-p candidates))
       (setq candidates (append (list
                                 ;; Unquote helm-pattern
@@ -650,8 +651,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                           (if ,marked-candidates
                               (helm-marked-candidates)
                               (identity candidate)))))))
-    (let* ((minibuffer-completion-confirm must-match)
-           (minibuffer-completion-predicate test)
+    (let* ((minibuffer-completion-predicate test)
            (minibuffer-completion-table collection)
            (helm-read-file-name-mode-line-string
             (replace-regexp-in-string "helm-maybe-exit-minibuffer"
@@ -742,9 +742,8 @@ that use `helm-comp-read' See `helm-M-x' for example."
                     :help-message help-message
                     :action action-fn))
            (src-list (list src-hist
-                           (cons (cons 'must-match must-match)
-                                 (if candidates-in-buffer
-                                     src-1 src))))
+                           (if candidates-in-buffer
+                               src-1 src)))
            (helm-execute-action-at-once-if-one exec-when-only-one)
            (helm-quit-if-no-candidate quit-when-no-cand)
            result)
@@ -1058,7 +1057,7 @@ See documentation of `completing-read' and `all-completions' for details."
                                 initial-input hist def inherit-input-method))
          ;; Append the two extra args needed to set the buffer and source name
          ;; in helm specialized functions.
-         (any-args        (append def-args (list str-command buf-name)))
+         (others-args        (append def-args (list str-command buf-name)))
          helm-completion-mode-start-message ; Be quiet
          helm-completion-mode-quit-message
          ;; Be sure this pesty *completion* buffer doesn't popup.
@@ -1109,7 +1108,7 @@ See documentation of `completing-read' and `all-completions' for details."
     (unwind-protect
          (cond (;; An helm specialized function exists, run it.
                 (and def-com helm-mode)
-                (apply def-com any-args))
+                (apply def-com others-args))
                (;; Try to handle `ido-completing-read' everywhere.
                 (and def-com (eq def-com 'ido-completing-read))
                 (setcar (memq collection def-args)
@@ -1222,7 +1221,6 @@ Keys description:
                (not (memq helm-mm-matching-method '(multi1 multi3p)))))
          (hist (and history (helm-comp-read-get-candidates
                              history nil nil alistp)))
-         (minibuffer-completion-confirm must-match)
          (helm-ff--RET-disabled noret)
          (minibuffer-completion-predicate test)
          (minibuffer-completing-file-name t)
@@ -1345,7 +1343,7 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
          (def-args (list prompt dir default-filename mustmatch initial predicate))
          ;; Append the two extra args needed to set the buffer and source name
          ;; in helm specialized functions.
-         (any-args (append def-args (list str-command buf-name)))
+         (others-args (append def-args (list str-command buf-name)))
          (reading-directory (eq predicate 'file-directory-p))
          helm-completion-mode-start-message ; Be quiet
          helm-completion-mode-quit-message  ; Same here
@@ -1390,7 +1388,7 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
                       (and def-com helm-mode
                            (not (eq def-com 'ido-read-file-name))
                            (not (eq def-com 'incompatible)))
-                      (apply def-com any-args))
+                      (apply def-com others-args))
                      (;; Def-com value is `ido-read-file-name'
                       ;; run it with default args.
                       (and def-com (eq def-com 'ido-read-file-name))
@@ -1858,14 +1856,22 @@ Can be used for `completion-in-region-function' by advicing it with an
                                    (push-mark  it t t))))))
         ((consp result)                 ; crm.
          (let ((beg (+ start base-size))
-               (sep ","))
-           ;; Try to find a default separator.
+               (sep (or (and
+                         ;; If `crm-separator' is a string of length 1
+                         ;; assume it can be used as separator (#2298),
+                         ;; otherwise it is a regexp and use the value
+                         ;; it matches or default to "," if no match.
+                         (eq (length crm-separator) 1)
+                         crm-separator)
+                        ",")))
+           ;; Try to find a default separator. If `crm-separator' is a
+           ;; regexp use the string the regexp is matching.
            (save-excursion
              (goto-char beg)
              (when (looking-back crm-separator (1- (point)))
                (setq sep (match-string 0))))
            (funcall completion-list-insert-choice-function
-                    beg end (mapconcat 'identity result sep))))
+                    beg end (mapconcat 'identity (append result '("")) sep))))
         (t nil)))
 
 (defun helm-mode--in-file-completion-p ()

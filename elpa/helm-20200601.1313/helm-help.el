@@ -245,9 +245,8 @@ enabled by default to not confuse new users.
 
 **** Navigate with arrow keys
 
-You can use <right> and <left> arrows to go down or up one level, to enable
+You can use <right> and <left> arrows to go down or up one level, to disable
 this customize `helm-ff-lynx-style-map'.
-This is disabled by default.
 Note that using `setq' will NOT work.
 
 **** Use `\\<helm-find-files-map>\\[helm-execute-persistent-action]' (persistent action) on a directory to go down one level
@@ -260,16 +259,16 @@ On a symlinked directory a prefix argument expands to its true name.
 
 `DEL' by default is deleting char backward.
 
-But when `helm-ff-DEL-up-one-level-maybe' is non nil `DEL' behave
-differently depending of helm-pattern contents, it go up one
-level if pattern is a directory endings with \"/\" or disable HFF
-auto update and delete char backward if pattern is a filename or
-refer to a non existing path.  Going up one level can be disabled
-if necessary by deleting \"/\" at end of pattern using
+But when `helm-ff-DEL-up-one-level-maybe' is non nil `DEL' behaves
+differently depending on the contents of helm-pattern. It goes up one
+level if the pattern is a directory ending with \"/\" or disables HFF
+auto update and delete char backward if the pattern is a filename or
+refers to a non existing path.  Going up one level can be disabled
+if necessary by deleting \"/\" at the end of the pattern using
 \\<helm-map>\\[backward-char] and \\[helm-delete-minibuffer-contents].
 
 Note that when deleting char backward, helm takes care of
-disabling update letting you the time to edit your pattern for
+disabling update giving you the opportunity to edit your pattern for
 e.g. renaming a file or creating a new file or directory.
 When `helm-ff-auto-update-initial-value' is non nil you may want to
 disable it temporarily, see [[Toggle auto-completion with `C-c DEL'][Toggle auto-completion with `C-c DEL']] for this.
@@ -297,13 +296,6 @@ with `f1'.
 
 Note that when copying, renaming, etc. from `helm-find-files' the
 destination file is selected with `helm-read-file-name'.
-
-To avoid confusion when using `read-file-name' or `read-directory-name', `RET'
-follows its standard Emacs behaviour, i.e. it exits the minibuffer as soon as
-you press `RET'.  If you want the same behavior as in `helm-find-files', bind
-`helm-ff-RET' to the `helm-read-file-map':
-
-    (define-key helm-read-file-map (kbd \"RET\") 'helm-ff-RET)
 
 **** `TAB' behavior
 
@@ -469,6 +461,9 @@ Regardless Helm uses the basename of the pattern entered in the helm-find-files
 session by default.  Hitting `\\[next-history-element]' should just kick in the
 locate search with this pattern.  If you want Helm to automatically do this, add
 `helm-source-locate' to `helm-sources-using-default-as-input'.
+
+NOTE: On Windows use Everything with its command line ~es~ as a replacement of locate.
+See [[https://github.com/emacs-helm/helm/wiki/Locate#windows][Locate on Windows]]
 
 **** Recursive completion on subdirectories
 
@@ -1201,8 +1196,11 @@ search will be performed on basename only for efficiency (so don't add \"-b\" at
 prompt).  As soon as you separate the patterns with spaces, fuzzy matching will
 be disabled and search will be done on the full filename.  Note that in
 multi-match, fuzzy is completely disabled, which means that each pattern is a
-match regexp (i.e. \"helm\" will match \"helm\" but \"hlm\" will \*not* match
+match regexp (i.e. \"helm\" will match \"helm\" but \"hlm\" will *not* match
 \"helm\").
+
+NOTE: On Windows use Everything with its command line ~es~ as a replacement of locate.
+See [[https://github.com/emacs-helm/helm/wiki/Locate#windows][Locate on Windows]]
 
 *** Browse project
 
@@ -1319,11 +1317,15 @@ highlighted since there is no ~--color~-like option in GID itself.
 
 ** Tips
 
-Helm-AG is different from grep or ack-grep in that it works on a directory and
-not on a list of files.
+Helm-AG is different from grep or ack-grep in that it works on a
+directory recursively and not on a list of files.  It is called
+helm-AG but it support several backend, namely AG, RG and PT.
+Nowaday the best backend is Ripgrep aka RG, it is the fastest and
+is actively maintained, see `helm-grep-ag-command' and
+`helm-grep-ag-pipe-cmd-switches' to configure it.
 
 You can ignore files and directories with a \".agignore\" file, local to a
-directory or global when placed in the home directory. \(See the AG man page for
+directory or global when placed in the home directory. (See the AG man page for
 more details.)  That file follows the same syntax as `helm-grep-ignored-files'
 and `helm-grep-ignored-directories'.
 
@@ -1332,7 +1334,8 @@ As always you can access Helm AG from `helm-find-files'.
 Starting with version 0.30, AG accepts one or more TYPE arguments on its command
 line.  Helm provides completion on these TYPE arguments when available with your
 AG version.  Use a prefix argument when starting a Helm-AG session to enable this
-completion.
+completion.  See RG and AG man pages on how to add new types.
+
 
 Note: You can mark several types to match in the AG query.  The first AG
 versions providing this feature allowed only one type, so in this case only the

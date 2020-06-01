@@ -26,8 +26,6 @@
 (require 'helm-help)
 (require 'helm-occur)
 
-(declare-function ido-make-buffer-list "ido" (default))
-(declare-function ido-add-virtual-buffers-to-list "ido")
 (declare-function helm-comp-read "helm-mode")
 (declare-function helm-browse-project "helm-files")
 
@@ -132,6 +130,17 @@ This have no effect when `tab-bar-mode' is not available."
   :group 'helm-buffers
   :type 'boolean)
 
+(defcustom helm-buffer-list-reorder-fn #'helm-buffers-reorder-buffer-list
+  "A function in charge of ordering the initial buffer list.
+It takes two arguments VISIBLES buffers and OTHERS buffers.
+Arg VISIBLES handles the buffers visibles in this frame.
+Arg OTHERS handles all the other buffers.
+You can write a function that reorder VISIBLES and OTHERS as you want.
+Default function returns OTHERS buffers on top and VISIBLES buffer at the
+end.  See `helm-buffers-reorder-buffer-list'."
+  :group 'helm-buffers
+  :type 'function)
+
 
 ;;; Faces
 ;;
@@ -234,17 +243,6 @@ Note that this variable is buffer-local.")
       (define-key map (kbd "C-c C-t") 'helm-buffers-switch-to-buffer-new-tab))
     map)
   "Keymap for buffer sources in helm.")
-
-(defvar helm-buffers-ido-virtual-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o")   'helm-ff-run-switch-other-window)
-    (define-key map (kbd "C-c C-o") 'helm-ff-run-switch-other-frame)
-    (define-key map (kbd "M-g s")   'helm-ff-run-grep)
-    (define-key map (kbd "M-g z")   'helm-ff-run-zgrep)
-    (define-key map (kbd "M-D")     'helm-ff-run-delete-file)
-    (define-key map (kbd "C-c C-x") 'helm-ff-run-open-file-externally)
-    map))
 
 
 (defvar helm-buffer-max-len-mode nil)
@@ -353,48 +351,36 @@ Note that this variable is buffer-local.")
             #'helm-buffers-create-new-buffer-of)
    :keymap helm-buffer-not-found-map))
 
-(defvar ido-temp-list)
-(defvar ido-ignored-list)
-(defvar ido-process-ignore-lists)
-(defvar ido-use-virtual-buffers)
-(defvar ido-virtual-buffers)
-
-(defvar helm-source-ido-virtual-buffers
-  (helm-build-sync-source "Ido virtual buffers"
-    :candidates (lambda ()
-                  (let (ido-temp-list
-                        ido-ignored-list
-                        (ido-process-ignore-lists t))
-                    (when ido-use-virtual-buffers
-                      (ido-add-virtual-buffers-to-list)
-                      ido-virtual-buffers)))
-    :fuzzy-match helm-buffers-fuzzy-matching
-    :keymap helm-buffers-ido-virtual-map
-    :help-message 'helm-buffers-ido-virtual-help-message
-    :action '(("Find file" . helm-find-many-files)
-              ("Find file other window" . find-file-other-window)
-              ("Find file other frame" . find-file-other-frame)
-              ("Find file as root" . helm-find-file-as-root)
-              ("Grep File(s) `C-u recurse'" . helm-find-files-grep)
-              ("Zgrep File(s) `C-u Recurse'" . helm-ff-zgrep)
-              ("View file" . view-file)
-              ("Delete file(s)" . helm-delete-marked-files)
-              ("Open file externally (C-u to choose)"
-               . helm-open-file-externally))))
-
 
-(defvar ido-use-virtual-buffers)
-(defvar ido-ignore-buffers)
+(defun helm-buffers-get-visible-buffers ()
+  "Returns buffers visibles on current frame."
+  (let (result)
+    (walk-windows
+     (lambda (x)
+       (push (buffer-name (window-buffer x)) result))
+     nil 'visible)
+    result))
+
+(defun helm-buffer-list-1 (&optional visibles)
+  (cl-loop for b in (buffer-list)
+           for bn = (buffer-name b)
+           unless (member bn visibles)
+           collect bn))
+
+(defun helm-buffers-reorder-buffer-list (visibles others)
+  "Default function to reorder buffer-list.
+Arg VISIBLES handles the buffers visibles in this frame.
+Arg OTHERS handles all the other buffers.
+This function returns OTHERS buffers on top and VISIBLES buffer at the
+end."
+  (nconc others visibles))
+
 (defun helm-buffer-list ()
   "Return the current list of buffers.
-Currently visible buffers are put at the end of the list.
-See `ido-make-buffer-list' for more infos."
-  (require 'ido)
-  (let ((ido-process-ignore-lists t)
-        ido-ignored-list
-        ido-ignore-buffers
-        ido-use-virtual-buffers)
-    (ido-make-buffer-list nil)))
+The list is reordered with `helm-buffer-list-reorder-fn'."
+  (let* ((visibles (helm-buffers-get-visible-buffers))
+         (others   (helm-buffer-list-1 visibles)))
+    (funcall helm-buffer-list-reorder-fn visibles others)))
 
 (defun helm-buffer-size (buffer)
   "Return size of BUFFER."
@@ -585,12 +571,8 @@ Should be called after others transformers i.e (boring buffers)."
 (defun helm-buffers-sort-transformer (candidates source)
   (if (string= helm-pattern "")
       candidates
-      (if helm-buffers-fuzzy-matching
-          (let ((helm-pattern (helm-buffers--pattern-sans-filters)))
-            (funcall helm-fuzzy-sort-fn candidates source))
-          (sort candidates
-                (lambda (s1 s2)
-                  (< (string-width s1) (string-width s2)))))))
+    (let ((helm-pattern (helm-buffers--pattern-sans-filters)))
+      (funcall helm-fuzzy-sort-fn candidates source))))
 
 (defun helm-buffers-mark-similar-buffers-1 (&optional type)
   (with-helm-window
@@ -1122,7 +1104,6 @@ displayed with the `file-name-shadow' face if available."
     (setq helm-source-buffers-list
           (helm-make-source "Buffers" 'helm-source-buffers)))
   (helm :sources '(helm-source-buffers-list
-                   helm-source-ido-virtual-buffers
                    helm-source-buffer-not-found)
         :buffer "*helm buffers*"
         :keymap helm-buffer-map

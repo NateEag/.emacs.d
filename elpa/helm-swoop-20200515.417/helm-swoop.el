@@ -4,7 +4,8 @@
 ;; Copyright (C) 2013-2018  Shingo Fukuyama
 
 ;; Version: 2.0.0
-;; Package-Version: 20200321.231
+;; Package-Version: 20200515.417
+;; Package-Commit: 2efc552591102ab8b4408ad60a3c4be991bb8e93
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
@@ -96,10 +97,10 @@
 (require 'helm-utils)
 (require 'helm-grep)
 
-(declare-function migemo-search-pattern-get "migemo")
-(declare-function migemo-forward "migemo")
-(declare-function projectile-buffers-with-file-or-process "projectile")
-(declare-function projectile-project-buffers "projectile")
+(declare-function migemo-search-pattern-get "ext:migemo")
+(declare-function migemo-forward "ext:migemo")
+(declare-function projectile-buffers-with-file-or-process "ext:projectile")
+(declare-function projectile-project-buffers "ext:projectile")
 (defvar projectile-buffers-filter-function)
 
 ;;; @ helm-swoop ----------------------------------------------
@@ -229,7 +230,6 @@ If value is symbol `always', always do fontify."
     (define-key map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (define-key map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
-    (define-key map (kbd "^") 'helm-swoop-caret-match)
     map)
   "Keymap for helm-swoop.")
 
@@ -574,6 +574,10 @@ This function needs to call after latest helm-swoop-line-overlay set."
 
 ;; core ------------------------------------------------
 
+(defun helm-swoop--match-part (candidate)
+  "Extract the proper part of CANDIDATE."
+  (replace-regexp-in-string (rx bol (+? digit) " ") "" candidate))
+
 (defun helm-swoop--maybe-fontify! ()
   "Ensure the entired buffer is highlighted."
   (let ((fontify-safe-p (not (or (derived-mode-p 'magit-mode)
@@ -614,9 +618,11 @@ If LINUM is number, lines are separated by LINUM."
                   (replace-match ""))))
             (helm-swoop--buffer-substring (point-min) (point-max))))))))
 
-(defun helm-swoop--goto-line-action (line)
-  "Goto LINE action."
+(defun helm-swoop--goto-line-action (line &optional other-window)
+  "Goto LINE action.  If OTHER-WINDOW is non-nil, a new window will be open."
   (run-hooks 'helm-swoop-before-goto-line-action-hook)
+  (when other-window
+    (switch-to-buffer-other-window (current-buffer)))
   (helm-swoop--goto-line
    (when (string-match "^[0-9]+" line)
      (string-to-number (match-string 0 line))))
@@ -646,11 +652,13 @@ If LINUM is number, lines are separated by LINUM."
                      "[\\<helm-swoop-map>\\[helm-swoop-edit]] Edit mode, \
 [\\<helm-swoop-map>\\[helm-multi-swoop-all-from-helm-swoop]] apply all buffers"))
     (action . (("Go to Line" . helm-swoop--goto-line-action)
-               ("Edit" . helm-swoop--edit)))
+               ("Edit" . helm-swoop--edit)
+               ("Go to Line in Other Window" . (lambda (line) (helm-swoop--goto-line-action line t)))))
     ,(if (and helm-swoop-last-prefix-number
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
+    (match-part . ,#'helm-swoop--match-part)
     ;; (search . ,(helm-swoop-search-functions))
     ))
 
@@ -668,6 +676,7 @@ If LINUM is number, lines are separated by LINUM."
               (> multiline 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
+    (match-part . ,#'helm-swoop--match-part)
     ;; (search . ,(helm-swoop-search-functions))
     ))
 
@@ -857,43 +866,6 @@ If LINUM is number, lines are separated by LINUM."
         ;; Temporary apply second last buffer
         (let ((helm-last-buffer (cadr helm-buffers))) ad-do-it))
     ad-do-it))
-
-;; For caret beginning-match -----------------------------
-(defun helm-swoop--caret-match-delete (ov aft beg end &optional len)
-  "Caret match delete for OV, AFT in BEG to END and LEN."
-  (if aft
-      (- end beg len) ;; Unused argument? To avoid byte compile error
-    (delete-region (overlay-start ov) (1- (overlay-end ov)))))
-
-(defun helm-swoop-caret-match (&optional _resume)
-  "Caret match."
-  (interactive)
-  (let* ((prompt helm-swoop-prompt) ;; Accept change of the variable
-         (line-number-regexp "^[0-9]+.")
-         (prompt-regexp
-          (funcall `(lambda ()
-                      (rx bol ,prompt))))
-         (prompt-regexp-with-line-number
-          (funcall `(lambda ()
-                      (rx bol ,prompt (group ,line-number-regexp)))))
-         (disguise-caret
-          (lambda ()
-            (save-excursion
-              (re-search-backward prompt-regexp-with-line-number nil t)
-              (let ((ov (make-overlay (match-beginning 1) (match-end 1))))
-                (overlay-put ov 'face 'helm-swoop-target-word-face)
-                (overlay-put ov 'modification-hooks '(helm-swoop--caret-match-delete))
-                (overlay-put ov 'display "^")
-                (overlay-put ov 'evaporate t))))))
-    (if (and (minibufferp)
-             (string-match prompt-regexp
-                           (buffer-substring-no-properties
-                            (point-min) (point-max)))
-             (eq (point) (+ 1 (length helm-swoop-prompt))))
-        (progn
-          (insert line-number-regexp)
-          (funcall disguise-caret))
-      (insert "^"))))
 
 ;;; @ helm-swoop-edit -----------------------------------------
 

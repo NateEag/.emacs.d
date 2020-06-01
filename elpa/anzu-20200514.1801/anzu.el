@@ -5,7 +5,8 @@
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;; URL: https://github.com/emacsorphanage/anzu
-;; Package-Version: 20200331.1717
+;; Package-Version: 20200514.1801
+;; Package-Commit: 7b8688c84d6032300d0c415182c7c1ad6cb7f819
 ;; Version: 0.62
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -57,12 +58,12 @@
   "Minimum input length to enable anzu"
   :type 'integer)
 
-(defcustom anzu-search-threshold nil
+(defcustom anzu-search-threshold 1000
   "Limit of search number"
   :type '(choice (integer :tag "Threshold of search")
                  (const :tag "No threshold" nil)))
 
-(defcustom anzu-replace-threshold nil
+(defcustom anzu-replace-threshold 1000
   "Limit of replacement overlays."
   :type '(choice (integer :tag "Threshold of replacement overlays")
                  (const :tag "No threshold" nil)))

@@ -18,12 +18,12 @@ Load MODES's plugin RULES.
 Load plugins." t nil)
 
 (autoload 'evilmi-select-items "evil-matchit" "\
-Select items/tags and the region between them.
+Select NUM items/tags and the region between them.
 
 \(fn &optional NUM)" t nil)
 
 (autoload 'evilmi-delete-items "evil-matchit" "\
-Delete items/tags and the region between them.
+Delete NUM items/tags and the region between them.
 
 \(fn &optional NUM)" t nil)
 
@@ -33,23 +33,26 @@ Like Vim %.
 \(fn NUM)" t nil)
  (autoload 'evilmi-jump-items "evil-matchit" nil t)
 
-(autoload 'evilmi-version "evil-matchit" nil t nil)
+(autoload 'evilmi-version "evil-matchit" "\
+Print version." t nil)
 
 (autoload 'evil-matchit-mode "evil-matchit" "\
 Buffer-local minor mode to emulate matchit.vim.
 
-If called interactively, enable Evil-Matchit mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Evil-Matchit mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
 (autoload 'turn-on-evil-matchit-mode "evil-matchit" "\
-Enable evil-matchit-mode in the current buffer." nil nil)
+Enable `evil-matchit-mode' in the current buffer." nil nil)
 
 (autoload 'turn-off-evil-matchit-mode "evil-matchit" "\
-Disable evil-matchit-mode in the current buffer." nil nil)
+Disable `evil-matchit-mode' in the current buffer." nil nil)
+
+(put 'global-evil-matchit-mode 'globalized-minor-mode t)
 
 (defvar global-evil-matchit-mode nil "\
 Non-nil if Global Evil-Matchit mode is enabled.
@@ -156,12 +159,15 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-html.el
 
-(autoload 'evilmi-html-get-tag "evil-matchit-html" nil nil nil)
+(autoload 'evilmi-html-get-tag "evil-matchit-html" "\
+Get current tag." nil nil)
 
 (autoload 'evilmi-html-jump "evil-matchit-html" "\
+Use INFO from current tag to jump NUM times.
 
+\(fn INFO NUM)" nil nil)
 
-\(fn RLT NUM)" nil nil)
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-html" '("evilmi-html--open-tag-candidate")))
 
 ;;;***
 
@@ -355,9 +361,9 @@ If current font at POS is among FONTS.
 Get current tag in simple language." nil nil)
 
 (autoload 'evilmi-simple-jump "evil-matchit-simple" "\
-Jump from current tag to matching tag in simple language.
+Use INFO of current tag ot jump to matching tag.  NUM is ignored.
 
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-simple" '("evilmi--simple-find-open-brace")))
 

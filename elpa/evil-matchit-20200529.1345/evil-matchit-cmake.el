@@ -1,8 +1,8 @@
-;;; evil-matchit-sh.el ---sh (bash/zsh) plugin of evil-matchit
+;;; evil-matchit-cmake.el ---cmake (ruby/lua) plugin of evil-matchit
 
-;; Copyright (C) 2014-2017 Chen Bin <chenbin.sh@gmail.com>
+;; Copyright (C) 2014-2020 Chen Bin <chenbin DOT sh AT gmail DOT com>
 
-;; Author: Chen Bin <chenbin.sh@gmail.com>
+;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 
 ;; This file is not part of GNU Emacs.
 
@@ -27,27 +27,31 @@
 ;;; Code:
 
 ;; OPTIONAL, you don't need SDK to write a plugin for evil-matchit
-;; but SDK don make you write less code, isn't it?
+;; but SDK do make you write less code, isn't it?
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
 (require 'evil-matchit-sdk)
 
-;; ruby/bash/lua/vimrc
-(defvar evilmi-sh-match-tags
-  '((("if") ("elif" "else") ("fi") "MONOGAMY")
-    ("case" (";;") ("esac") "MONOGAMY")
-    (("for" "do" "while" "until") () ("done"))))
+(defvar evilmi-cmake-extract-keyword-howtos
+  '(("^[ \t]*\\([a-zA-Z]+ *\\) *(.*$" 1)
+    ))
 
-(defvar evilmi-sh-extract-keyword-howtos
-  '(("^[ \t]*\\([a-z]+\\)\\( .*\\| *\\)$" 1)
-    ("^.*\\(;;\\) *$" 1)
-    ("^\\(\} *\\)" 1)))
-
-;;;###autoload
-(defun evilmi-sh-get-tag ()
-  (evilmi-sdk-get-tag evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos))
+;; CMake (http://www.cmake.org) syntax
+(defvar evilmi-cmake-match-tags
+  '((("if") ("elseif" "else") ("endif") "MONOGAMY")
+    (("foreach") () ("endforeach") "MONOGAMY")
+    (("macro") () ("endmacro") "MONOGAMY")
+    (("while") () ("endwhile") "MONOGAMY")
+    (("function") () ("endfunction") "MONOGAMY")
+    ))
 
 ;;;###autoload
-(defun evilmi-sh-jump (rlt NUM)
-  (evilmi-sdk-jump rlt NUM evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos))
+(defun evilmi-cmake-get-tag ()
+  (evilmi-sdk-get-tag evilmi-cmake-match-tags evilmi-cmake-extract-keyword-howtos)
+  )
 
-(provide 'evil-matchit-sh)
+;;;###autoload
+(defun evilmi-cmake-jump (rlt NUM)
+  (evilmi-sdk-jump rlt NUM evilmi-cmake-match-tags evilmi-cmake-extract-keyword-howtos)
+  )
+
+(provide 'evil-matchit-cmake)

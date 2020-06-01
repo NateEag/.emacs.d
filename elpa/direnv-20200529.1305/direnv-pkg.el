@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/direnv-20200529.1305/direnv.el  -*- no-byte-compile: t -*-
+(define-package "direnv" "20200529.1305" "Support for direnv" '((emacs "25.1") (dash "2.12.0")) :commit "f5484b0fc33d4e5116612626294efb362ff9ecd4" :keywords '("direnv" "environment" "processes" "unix" "tools") :authors '(("wouter bolsterlee" . "wouter@bolsterl.ee")) :maintainer '("wouter bolsterlee" . "wouter@bolsterl.ee") :url "https://github.com/wbolster/emacs-direnv")

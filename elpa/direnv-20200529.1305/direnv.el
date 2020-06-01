@@ -2,8 +2,9 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.1.0
-;; Package-Version: 20200319.2357
-;; Package-Requires: ((emacs "25") (dash "2.12.0"))
+;; Package-Version: 20200529.1305
+;; Package-Commit: f5484b0fc33d4e5116612626294efb362ff9ecd4
+;; Package-Requires: ((emacs "25.1") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
 ;;
@@ -36,11 +37,14 @@
 (defvar direnv--output-buffer-name "*direnv*"
   "Name of the buffer filled with the last direnv output.")
 
-(defvar direnv--installed (direnv--detect)
-  "Whether direnv is installed.")
+(defvar direnv--executable (direnv--detect)
+  "Detected path of the direnv executable.")
 
 (defvar direnv--active-directory nil
   "Name of the directory for which direnv has most recently ran.")
+
+(defvar direnv--hooks '(post-command-hook before-hack-local-variables-hook)
+  "Hooks that ‘direnv-mode’ should hook into.")
 
 (defcustom direnv-always-show-summary t
   "Whether to show a summary message of environment changes on every change.
@@ -68,10 +72,8 @@ usually results in coloured output."
   '(comint-mode compilation-mode dired-mode eshell-mode magit-mode)
   "Major modes where direnv will update even if the buffer is not a file.
 
-In these modes, or modes derived from them, direnv will use
-  `default-directory'
-instead of
-  `(file-name-directory (buffer-file-name (current-buffer)))'."
+In buffers using these modes, or modes derived from them, direnv will
+use `default-directory', since there is no file name (or directory)."
   :group 'direnv
   :type '(repeat (symbol :tag "Major mode")))
 
@@ -80,18 +82,20 @@ instead of
 (defun direnv--directory ()
   "Return the relevant directory for the current buffer, or nil."
   (let* ((buffer (or (buffer-base-buffer) (current-buffer)))
-         (mode (with-current-buffer buffer major-mode))
-         (file-name (buffer-file-name buffer)))
-    (cond (file-name
-           (file-name-directory file-name))
-          ((apply #'direnv--provided-mode-derived-p mode direnv-non-file-modes)
-           default-directory))))
+         (mode (buffer-local-value 'major-mode buffer))
+         (file-name (buffer-file-name buffer))
+         (buffer-directory
+          (cond (file-name
+                 (file-name-directory file-name))
+                ((apply #'direnv--provided-mode-derived-p mode direnv-non-file-modes)
+                 default-directory))))
+    buffer-directory))
 
 (defun direnv--export (directory)
   "Call direnv for DIRECTORY and return the parsed result."
-  (unless direnv--installed
-    (setq direnv--installed (direnv--detect)))
-  (unless direnv--installed
+  (unless direnv--executable
+    (setq direnv--executable (direnv--detect)))
+  (unless direnv--executable
     (user-error "Could not find the direnv executable. Is exec-path correct?"))
   (let ((environment process-environment)
         (stderr-tempfile (make-temp-file "direnv-stderr"))) ;; call-process needs a file for stderr output
@@ -100,13 +104,16 @@ instead of
           (erase-buffer)
           (let* ((default-directory directory)
                  (process-environment environment)
-                 (exit-code (call-process "direnv" nil `(t ,stderr-tempfile) nil "export" "json"))
-                 (json-key-type 'string))
+                 (exit-code (call-process
+                             direnv--executable nil
+                             `(t ,stderr-tempfile) nil
+                             "export" "json")))
             (prog1
                 (unless (zerop (buffer-size))
                   (goto-char (point-max))
                   (re-search-backward "^{")
-                  (json-read-object))
+                  (let ((json-key-type 'string))
+                    (json-read-object)))
               (unless (zerop (direnv--file-size stderr-tempfile))
                 (goto-char (point-max))
                 (unless (zerop (buffer-size))
@@ -115,10 +122,11 @@ instead of
               (with-temp-buffer
                 (unless (zerop exit-code)
                   (insert-file-contents stderr-tempfile)
-                  (display-warning 'direnv
-                    (format-message
-                      "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
-                      exit-code (buffer-string) direnv--output-buffer-name)))))))
+                  (display-warning
+                   'direnv
+                   (format-message
+                    "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
+                    exit-code (buffer-string) direnv--output-buffer-name)))))))
       (delete-file stderr-tempfile))))
 
 (defun direnv--file-size (name)
@@ -129,12 +137,14 @@ instead of
 
 (defun direnv--enable ()
   "Enable direnv mode."
-  (add-hook 'post-command-hook #'direnv--maybe-update-environment)
+  (--each direnv--hooks
+    (add-hook it #'direnv--maybe-update-environment))
   (direnv--maybe-update-environment))
 
 (defun direnv--disable ()
   "Disable direnv mode."
-  (remove-hook 'post-command-hook #'direnv--maybe-update-environment))
+  (--each direnv--hooks
+    (remove-hook it #'direnv--maybe-update-environment)))
 
 (defun direnv--maybe-update-environment ()
   "Maybe update the environment."

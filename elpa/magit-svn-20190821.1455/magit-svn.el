@@ -5,6 +5,7 @@
 ;; Author: Phil Jackson <phil@shellarchive.co.uk>
 ;; Keywords: vc tools
 ;; Package-Version: 20190821.1455
+;; Package-Commit: 2cff1a30a30f2b3963342a7d185ec13fc12279c3
 ;; Package: magit-svn
 ;; Package-Requires: ((emacs "24.4") (magit "2.1.0"))
 

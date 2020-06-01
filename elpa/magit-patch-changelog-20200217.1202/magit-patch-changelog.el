@@ -5,6 +5,7 @@
 ;; Authors: dickmao <github id: dickmao>
 ;; Version: 0.1.0
 ;; Package-Version: 20200217.1202
+;; Package-Commit: 876c780bdb676b6ece64861704e199b94f33cf71
 ;; Keywords: git tools vc
 ;; URL: https://github.com/dickmao/magit-patch-changelog
 ;; Package-Requires: ((emacs "25.1") (magit "2.91.0"))

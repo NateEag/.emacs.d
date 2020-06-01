@@ -26,32 +26,32 @@ Do ag with in BASEDIR and with QUERY.
 \(fn &optional BASEDIR QUERY)" t nil)
 
 (autoload 'helm-do-ag-this-file "helm-ag" "\
-Not documented.
+Not documented, QUERY.
 
 \(fn &optional QUERY)" t nil)
 
 (autoload 'helm-do-ag "helm-ag" "\
-Not documented.
+Not documented, BASEDIR, TARGETS, DEFAULT-INPUT.
 
 \(fn &optional BASEDIR TARGETS DEFAULT-INPUT)" t nil)
 
 (autoload 'helm-ag-project-root "helm-ag" "\
-Not documented.
+Not documented, QUERY.
 
 \(fn &optional QUERY)" t nil)
 
 (autoload 'helm-do-ag-project-root "helm-ag" "\
-Not documented.
+Not documented, QUERY.
 
 \(fn &optional QUERY)" t nil)
 
 (autoload 'helm-ag-buffers "helm-ag" "\
-Not documented.
+Not documented, QUERY.
 
 \(fn &optional QUERY)" t nil)
 
 (autoload 'helm-do-ag-buffers "helm-ag" "\
-Not documented.
+Not documented, QUERY.
 
 \(fn &optional QUERY)" t nil)
 

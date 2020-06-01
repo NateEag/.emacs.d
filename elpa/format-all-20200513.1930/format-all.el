@@ -2,7 +2,8 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200422.1731
+;; Package-Version: 20200513.1930
+;; Package-Commit: 0227e1aadeb18db397f03368d54cbefe4afd6112
 ;; Version: 0.3.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.5.1"))
 ;; Keywords: languages util
@@ -621,8 +622,8 @@ Consult the existing formatters for examples of BODY."
       (list "--filename" (buffer-file-name))))))
 
 (define-format-all-formatter rustfmt
-  (:executable "rustfmt")
-  (:install "cargo install rustfmt")
+  (:executable "cargo-fmt")
+  (:install "rustup component add rustfmt")
   (:languages "Rust")
   (:format (format-all--buffer-easy executable)))
 

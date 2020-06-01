@@ -2740,7 +2740,7 @@ offered in a separate package: ‘dash-functional‘.
      1.  Iteration converges to the fixpoint, with equality being tested
      using EQUAL-TEST.  If EQUAL-TEST is not specified, ‘equal’ is used.
      For functions over the floating point numbers, it may be necessary
-     to provide an appropriate appoximate comparison test.
+     to provide an appropriate approximate comparison test.
 
      2.  HALT-TEST returns a non-nil value.  HALT-TEST defaults to a
      simple counter that returns t after ‘-fixfn-max-iterations’, to
@@ -3395,12 +3395,12 @@ Ref: -orfn91415
 Ref: -andfn91849
 Ref: -iteratefn92344
 Ref: -fixfn93047
-Ref: -prodfn94609
-Node: Development95677
-Node: Contribute96026
-Node: Changes96774
-Node: Contributors99772
-Node: Index101391
+Ref: -prodfn94610
+Node: Development95678
+Node: Contribute96027
+Node: Changes96775
+Node: Contributors99773
+Node: Index101392
 
 End Tag Table
 

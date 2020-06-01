@@ -1,14 +1,15 @@
 ;;; helm-projectile.el --- Helm integration for Projectile         -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2011-2016 Bozhidar Batsov
+;; Copyright (C) 2011-2020 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20190731.1538
+;; Package-Version: 20200520.1843
+;; Package-Commit: 2d430ea61d2f1cd90c4ed39ce2634b0f70eb1acd
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
-;; Version: 0.14.0
-;; Package-Requires: ((helm "1.9.9") (projectile "0.14.0") (cl-lib "0.3"))
+;; Version: 1.0.0
+;; Package-Requires: ((helm "1.9.9") (projectile "2.1.0") (cl-lib "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -51,7 +52,7 @@
 (require 'helm-files)
 
 (declare-function eshell "eshell")
-(declare-function helm-do-ag "helm-ag")
+(declare-function helm-do-ag "ext:helm-ag")
 (declare-function dired-get-filename "dired")
 (defvar helm-ag-base-command)
 
@@ -709,6 +710,23 @@ Meant to be added to `helm-cleanup-hook', from which it removes
   '(helm-source-projectile-dired-files-list
     helm-source-projectile-directories-list))
 
+(defcustom helm-projectile-git-grep-command
+  "git --no-pager grep --no-color -n%c -e %p -- %f"
+  "Command to execute when performing `helm-grep' inside a projectile git project.
+See documentation of `helm-grep-default-command' for the format."
+  :type 'string
+  :group 'helm-projectile
+  )
+
+(defcustom helm-projectile-grep-command
+  "grep -a -r %e -n%cH -e %p %f ."
+  "Command to execute when performing `helm-grep' outside a projectile git project.
+See documentation of `helm-grep-default-command' for the format."
+  :type 'string
+  :group 'helm-projectile
+  )
+
+
 (defcustom helm-projectile-sources-list
   '(helm-source-projectile-buffers-list
     helm-source-projectile-files-list
@@ -853,8 +871,8 @@ If it is nil, or ack/ack-grep not found then use default grep command."
          (helm-grep-default-command (if use-ack-p
                                         (concat ack-executable " -H --no-group --no-color " ack-ignored-pattern " %p %f")
                                       (if (and projectile-use-git-grep (eq (projectile-project-vcs) 'git))
-                                          "git --no-pager grep --no-color -n%c -e %p -- %f"
-                                        "grep -a -r %e -n%cH -e %p %f .")))
+                                          helm-projectile-git-grep-command
+                                        helm-projectile-grep-command)))
          (helm-grep-default-recurse-command helm-grep-default-command))
 
     (setq helm-source-grep
@@ -960,7 +978,7 @@ DIR is the project root, if not set then current directory is used"
 ;; Declare/define these to satisfy the byte compiler
 (defvar helm-rg-prepend-file-name-line-at-top-of-matches)
 (defvar helm-rg-include-file-on-every-match-line)
-(declare-function helm-rg "helm-rg")
+(declare-function helm-rg "ext:helm-rg")
 
 (defun helm-projectile-rg--region-selection ()
   (when helm-projectile-set-input-automatically

@@ -4,7 +4,8 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20200421.1149
+;; Package-Version: 20200512.1207
+;; Package-Commit: 12a64b4e5c1a1e124baa74336738b6ae1972607f
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -462,9 +463,9 @@ If BODY finishes, `while-no-input' returns whatever value BODY produced."
 
 (defun aggressive-indent--indent-if-changed (buffer)
   "Indent any region that changed in BUFFER in the last command loop."
-  (with-current-buffer buffer
-    (if (not (buffer-live-p (current-buffer)))
-        (cancel-timer aggressive-indent--idle-timer)
+  (if (not (buffer-live-p buffer))
+      (cancel-timer aggressive-indent--idle-timer)
+    (with-current-buffer buffer
       (when (and aggressive-indent-mode aggressive-indent--changed-list)
         (save-excursion
           (save-selected-window

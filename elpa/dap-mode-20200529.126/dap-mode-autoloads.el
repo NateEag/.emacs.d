@@ -95,6 +95,26 @@ enable the mode if ARG is omitted or nil, and toggle it if ARG is
 
 \(fn &optional ARG)" t nil)
 
+(defvar dap-auto-configure-mode nil "\
+Non-nil if Dap-Auto-Configure mode is enabled.
+See the `dap-auto-configure-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `dap-auto-configure-mode'.")
+
+(custom-autoload 'dap-auto-configure-mode "dap-mode" nil)
+
+(autoload 'dap-auto-configure-mode "dap-mode" "\
+Auto configure dap minor mode.
+
+If called interactively, enable Dap-Auto-Configure mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mode" '("dap-" "dash-expand:&dap-session")))
 
 ;;;***
@@ -218,6 +238,12 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 Show currently active sessions." t nil)
 
 (autoload 'dap-ui-locals "dap-ui" nil t nil)
+
+(autoload 'dap-ui-show-many-windows "dap-ui" "\
+Show auto configured feature windows." t nil)
+
+(autoload 'dap-ui-hide-many-windows "dap-ui" "\
+Hide all debug windows when sessions are dead." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui" '("dap-")))
 

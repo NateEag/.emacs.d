@@ -34,6 +34,7 @@
 (require 'compile)
 (require 'gdb-mi)
 (require 'lsp-treemacs)
+(require 'dap-ui-repl)
 
 (defcustom dap-ui-stack-frames-loaded nil
   "Stack frames loaded."
@@ -460,7 +461,7 @@ DEBUG-SESSION is the debug session triggering the event."
 
 
 ;; dap-ui posframe stuff
-(defvar dap-ui--control-images-root-dir (f-join (f-dirname (or load-file-name buffer-file-name)) "icons/vscode"))
+(defvar dap-ui--control-images-root-dir (f-join (f-dirname (file-truename (or load-file-name buffer-file-name))) "icons/vscode"))
 (defvar dap-ui--control-buffer " *dap-ui*")
 
 (defun dap-ui--create-command (image command hover-text)
@@ -471,10 +472,13 @@ DEBUG-SESSION is the debug session triggering the event."
                                :background ,(face-attribute 'fringe :background nil t))
               'local-map (--doto (make-sparse-keymap)
                            (define-key it [mouse-1] command))
+              'pointer 'hand
               'help-echo hover-text))
 
 (declare-function posframe-show "ext:posframe")
 (declare-function posframe-hide "ext:posframe")
+(declare-function posframe-poshandler-frame-top-center "ext:posframe")
+(defvar posframe-mouse-banish)
 
 (defun dap-ui--update-controls (&rest _)
   (let* ((session (dap--cur-session))
@@ -483,36 +487,43 @@ DEBUG-SESSION is the debug session triggering the event."
     (if running?
         (let ((content (s-concat
                         (dap-ui--create-command "continue.png" #'dap-continue "Continue")
+                        " "
                         (dap-ui--create-command (if stopped?
                                                     "step-over.png"
                                                   "step-over-disabled.png")
                                                 (when stopped? #'dap-next)
                                                 (if stopped? "Step over"
                                                   "Session not stopped?"))
+                        " "
                         (dap-ui--create-command (if stopped? "step-out.png"
                                                   "step-out-disabled.png")
                                                 (when stopped? #'dap-step-out)
                                                 (if stopped? "Step out"
                                                   "Session not stopped? "))
+                        " "
                         (dap-ui--create-command (if stopped? "step-into.png"
                                                   "step-into-disabled.png")
                                                 (when stopped? #'dap-step-in)
                                                 (if stopped? "Step in"
                                                   "Session not stopped?"))
+                        " "
                         (dap-ui--create-command "disconnect.png" #'dap-disconnect "Disconnect")
+                        " "
                         (dap-ui--create-command "restart.png" #'dap-debug-restart "Restart")))
-              (posframe-mouse-banish nil)
+              posframe-mouse-banish
               (pos-frame (-first
                           (lambda (frame)
                             (let ((buffer-info (frame-parameter frame 'posframe-buffer)))
                               (or (equal dap-ui--control-buffer (car buffer-info))
                                   (equal dap-ui--control-buffer (cdr buffer-info)))))
                           (frame-list))))
+          (ignore posframe-mouse-banish)
           (when (eq (selected-frame) pos-frame)
             (select-frame (frame-parent pos-frame)))
           (posframe-show dap-ui--control-buffer
                          :string content
-                         :poshandler #'posframe-poshandler-frame-top-center))
+                         :poshandler #'posframe-poshandler-frame-top-center
+                         :internal-border-width 8))
       (posframe-hide dap-ui--control-buffer))))
 
 ;;;###autoload
@@ -549,6 +560,7 @@ DEBUG-SESSION is the debug session triggering the event."
   `(defun ,name (&rest args)
      ,(format "Code action %s" name)
      (interactive)
+     (ignore args)
      (if-let (node (treemacs-node-at-point))
          (-let [,(cons '&plist keys) (button-get node :item)]
            ,@body)
@@ -746,7 +758,8 @@ DEBUG-SESSION is the debug session triggering the event."
                       (list :variablesReference variables-reference
                             :name name
                             :value (read-string (format "Enter value for %s: " name ) value)))
-   (-lambda (result))
+   ;; FIXME: create properly callback here
+   #'ignore
    session))
 
 (defun dap-ui-render-variables (debug-session variables-reference _node)
@@ -756,7 +769,7 @@ DEBUG-SESSION is the debug session triggering the event."
      (dap-request debug-session "variables" :variablesReference)
      (gethash "variables")
      (-map (-lambda ((&hash "value" "name"
-                            "indexedVariables" indexed-variables
+                            "indexedVariables" _indexed-variables
                             "variablesReference" variables-reference))
              `(:label ,(concat (propertize (format "%s" name)
                                            'face 'font-lock-variable-name-face)
@@ -842,7 +855,7 @@ DEBUG-SESSION is the debug session triggering the event."
                                            (region-end)))
                        (t (symbol-at-point))))))
   (when (-contains? dap-ui-expressions expression)
-    (user-error "\"%s\" is already watched." expression))
+    (user-error "\"%s\" is already watched" expression))
   (add-to-list 'dap-ui-expressions expression)
   (dap-ui-expressions)
   (dap-ui-expressions-refresh))
@@ -854,7 +867,7 @@ DEBUG-SESSION is the debug session triggering the event."
                       nil
                       t)))
   (unless (-contains? dap-ui-expressions expression)
-    (user-error "\"%s\" is not present." expression))
+    (user-error "\"%s\" is not present" expression))
   (setq dap-ui-expressions (remove expression dap-ui-expressions))
   (dap-ui-expressions-refresh))
 
@@ -1069,7 +1082,7 @@ DEBUG-SESSION is the debug session triggering the event."
     (define-key (kbd "C L") #'dap-ui-breakpoint-log-message)))
 
 (define-minor-mode dap-ui-breakpoints-mode
-  "UI Session list minor mode."
+  "UI Breakpoints list minor mode."
   :init-value nil
   :group dap-ui
   :keymap dap-ui-breakpoints-mode-map)
@@ -1101,6 +1114,45 @@ DEBUG-SESSION is the debug session triggering the event."
   (add-hook 'dap-stack-frame-changed-hook #'dap-ui-breakpoints--refresh)
   (add-hook 'dap-breakpoints-changed-hook #'dap-ui-breakpoints--refresh)
   (add-hook 'kill-buffer-hook 'dap-ui-breakpoints--cleanup-hooks nil t))
+
+(defun dap-ui--show-many-windows (_session)
+  "Show auto configured feature windows."
+  (seq-doseq (feature-start-stop dap-auto-configure-features)
+    (when-let (start-stop (alist-get feature-start-stop dap-features->windows))
+      (funcall (car start-stop)))))
+
+(defun dap-ui--hide-many-windows (_session)
+  "Hide all debug windows when sessions are dead."
+  (seq-doseq (feature-start-stop dap-auto-configure-features)
+    (when-let* ((feature-start-stop (alist-get feature-start-stop dap-features->windows))
+                (buffer-name (symbol-value (cdr feature-start-stop))))
+      (when-let (window (get-buffer-window buffer-name))
+        (delete-window window))
+      (and (get-buffer buffer-name)
+           (kill-buffer buffer-name)))))
+
+;;;###autoload
+(defun dap-ui-show-many-windows ()
+  "Show auto configured feature windows."
+  (interactive)
+  (dap-ui--show-many-windows nil))
+
+;;;###autoload
+(defun dap-ui-hide-many-windows ()
+  "Hide all debug windows when sessions are dead."
+  (interactive)
+  (dap-ui--hide-many-windows nil))
+
+(define-minor-mode dap-ui-many-windows-mode
+  "Shows/hide the windows from `dap-auto-configure-features`"
+  :global t
+  (cond
+   (dap-ui-many-windows-mode
+    (add-hook 'dap-stopped-hook #'dap-ui--show-many-windows)
+    (add-hook 'dap-terminated-hook #'dap-ui--hide-many-windows))
+   (t
+    (remove-hook 'dap-stopped-hook #'dap-ui--show-many-windows)
+    (remove-hook 'dap-terminated-hook #'dap-ui--hide-many-windows))))
 
 (provide 'dap-ui)
 ;;; dap-ui.el ends here

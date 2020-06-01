@@ -19,7 +19,7 @@
 ;; Keywords: languages, debug
 ;; URL: https://github.com/yyoncho/dap-mode
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1"))
-;; Version: 0.3
+;; Version: 0.4
 
 ;;; Commentary:
 ;; Debug Adapter Protocol client for Emacs.
@@ -137,10 +137,39 @@ The hook will be called with the session file and the new set of breakpoint loca
 (defcustom dap-debug-template-configurations nil
   "Plist Template configurations for DEBUG/RUN."
   :safe #'listp
+  :group 'dap-mode
   :type '(plist))
+
+(defcustom dap-auto-configure-features '(sessions locals breakpoints expressions controls tooltip)
+  "Windows to auto show on debugging when in dap-ui-auto-configure-mode."
+  :group 'dap-mode
+  :type '(set (const :tag "Show sessions popup window when debugging" sessions)
+              (const :tag "Show locals popup window when debugging" locals)
+              (const :tag "Show breakpoints popup window when debugging" breakpoints)
+              (const :tag "Show expressions popup window when debugging" expressions)
+              (const :tag "Show REPL popup window when debugging" repl)
+              (const :tag "Enable `dap-ui-controls-mode` with controls to manage the debug session when debugging" controls)
+              (const :tag "Enable `dap-tooltip-mode` that enables mouse hover support when debugging" tooltip)))
+
+(defconst dap-features->windows
+  '((sessions . (dap-ui-sessions . dap-ui--sessions-buffer))
+    (locals . (dap-ui-locals . dap-ui--locals-buffer))
+    (breakpoints . (dap-ui-breakpoints . dap-ui--breakpoints-buffer))
+    (expressions . (dap-ui-expressions . dap-ui--expressions-buffer))
+    (repl . (dap-ui-repl . dap-ui--repl-buffer))))
+
+(defconst dap-features->modes
+  '((controls . (dap-ui-controls-mode . posframe))
+    (tooltip . dap-tooltip-mode)))
 
 (defvar dap--debug-configuration nil
   "List of the previous configuration that have been executed.")
+
+(defvar dap-connect-retry-count 1000
+  "Retry count for dap connect.")
+
+(defvar dap-connect-retry-interval 0.02
+  "Retry interval for dap connect.")
 
 (defun dash-expand:&dap-session (key source)
   `(,(intern-soft (format "dap--debug-session-%s" (eval key) )) ,source))
@@ -505,7 +534,7 @@ thread exection but the server will log message."
 (defun dap--parser-read (p output)
   "Parser OUTPUT using parser P."
   (let* ((messages '())
-         (output (string-as-unibyte output))
+         (output (encode-coding-string output 'utf-8 'nocopy))
          (chunk (concat (dap--parser-leftovers p) output)))
     (while (not (string-empty-p chunk))
       (if (not (dap--parser-reading-body p))
@@ -584,7 +613,7 @@ thread exection but the server will log message."
   (interactive (list (dap--cur-active-session-or-die)))
   (dap--send-message (dap--make-request "disconnect"
                                         (list :restart :json-false))
-                     (lambda (result)
+                     (lambda (_result)
                        (when-let (proc (dap--debug-session-program-proc session))
                          (lsp--info "Killing process %s" proc)
                          (kill-process proc)))
@@ -867,7 +896,10 @@ PARAMS are the event params.")
                                                         debug-session
                                                         (gethash "command" parsed-msg)))
                                 (message "Unable to find handler for %s." (pp parsed-msg))))
-                  ("request" (-let* (((&hash "arguments" (&hash? "args" "cwd" "title") "command" "seq") parsed-msg)
+                  ("request" (-let* (((&hash "arguments"
+                                             (&hash? "args" "cwd")
+                                             "seq")
+                                      parsed-msg)
                                      (default-directory cwd))
                                (async-shell-command (s-join " " args))
                                (dap--send-message (dap--make-response seq)
@@ -890,8 +922,8 @@ PARAMS are the event params.")
     (list :command command
           :type "request")))
 
-(defun dap--make-response (id &optional args)
-  "Make request for COMMAND with arguments ARGS."
+(defun dap--make-response (id &optional _args)
+  "Make request with ID and arguments ARGS."
   (list :request_seq id
         :success t
         :type "response"))
@@ -1036,10 +1068,10 @@ DEBUG-SESSION is the active debug session."
 
 (defun dap--breakpoint-filter-enabled (filter type default)
   (alist-get filter
-             (alist-get type dap-exception-breakpoints nil nil #'string=)
+             (alist-get type dap-exception-breakpoints nil nil #'equal)
              default
              nil
-             #'string=))
+             #'equal))
 
 (defun dap--set-exception-breakpoints (debug-session callback)
   (-let [(&dap-session 'initialize-result 'launch-args (&plist :type)) debug-session]
@@ -1053,7 +1085,7 @@ DEBUG-SESSION is the active debug session."
                                              (when (dap--breakpoint-filter-enabled filter type default)
                                                filter))))
                                   [])))
-     (lambda (result)
+     (lambda (_result)
        (funcall callback))
      debug-session)))
 
@@ -1128,8 +1160,9 @@ RESULT to use for the callback."
                                                         stack-frames
                                                         (-lambda ((frame &as &hash "name"))
                                                           (if-let (frame-path (dap--get-path-for-frame frame))
-                                                              (format "%s: %s (in %s)" (incf index) name frame-path)
-                                                            (format "%s: %s" (incf index) name)))
+                                                              (format "%s: %s (in %s)"
+                                                                      (cl-incf index) name frame-path)
+                                                            (format "%s: %s" (cl-incf index) name)))
                                                         nil
                                                         t)))
             (dap--go-to-stack-frame (dap--cur-session) new-stack-frame))
@@ -1249,10 +1282,12 @@ before starting the debug process."
 (defun dap-mode-line ()
   "Calculate DAP modeline."
   (when lsp-mode
-    (-when-let (debug-session (dap--cur-session))
-      (format "%s - %s|"
-              (dap--debug-session-name debug-session)
-              (dap--debug-session-state debug-session)))))
+    (-when-let* ((debug-session (dap--cur-session))
+                 (state (dap--debug-session-state debug-session)))
+      (unless (member state '(failed terminated))
+        (format " %s - %s"
+                (dap--debug-session-name debug-session)
+                (dap--debug-session-state debug-session))))))
 
 (defun dap--thread-label (debug-session thread)
   "Calculate thread name for THREAD from DEBUG-SESSION."
@@ -1411,46 +1446,48 @@ after selecting configuration template."
                                                'cl-first nil t)
                          cl-rest
                          copy-tree)))
-  (dap-start-debugging (or (-some-> (plist-get debug-args :type)
-                             (gethash dap--debug-providers)
-                             (funcall debug-args))
-                           (user-error "Have you loaded the `%s' specific dap package?"
-                                       (or (plist-get debug-args :type)
-                                           (user-error "%s does not specify :type" debug-args))))))
+  (let ((launch-args (or (-some-> (plist-get debug-args :type)
+                           (gethash dap--debug-providers)
+                           (funcall debug-args))
+                         (user-error "Have you loaded the `%s' specific dap package?"
+                                     (or (plist-get debug-args :type)
+                                         (user-error "%s does not specify :type" debug-args))))))
+    (if (functionp launch-args)
+        (funcall launch-args #'dap-start-debugging)
+      (dap-start-debugging launch-args))))
 
-(defun dap-debug-edit-template (&optional parg debug-args)
+(defun dap-debug-edit-template (&optional debug-args)
   "Edit registered template DEBUG-ARGS.
 When being invoked with prefix argument, poping up the prepopulated version of the template.
-Otherwise, return its original version. After registration, the new template can be used
-normally with dap-debug"
-
-  (interactive "P")
-  (let ((debug-args (dap--select-template (not parg))))
-    (progn
-      (with-current-buffer (or (get-buffer "*DAP Templates*")
-                               (with-current-buffer (get-buffer-create "*DAP Templates*")
-                                 (emacs-lisp-mode)
-                                 (current-buffer)))
-        (goto-char (point-max))
-        (when (s-blank? (buffer-string))
-          (insert ";; Eval Buffer with `M-x eval-buffer' to register the newly created template."))
-        (insert
-         (format "\n\n(dap-register-debug-template\n  \"%s%s\"\n"
-                 (plist-get debug-args :name)
-                 (if parg " - Copy" "")))
-        (insert "  (list ")
-        (-let ((column (current-column))
-               ((fst snd . rst) debug-args))
-          (insert (format "%s %s" fst (prin1-to-string snd)))
-          (cl-loop for (k v) on rst by (function cddr)
-                   do (if (not (equal k :program-to-start))
-                          (progn
-                            (insert "\n")
-                            (--dotimes column (insert " "))
-                            (insert (format "%s %s" k (prin1-to-string v)))))))
-        (insert "))"))
-      (pop-to-buffer "*DAP Templates*")
-      (goto-char (point-max)))))
+Otherwise, return its original version.  After registration, the new template can be used
+normally with `dap-debug'"
+  (interactive)
+  (unless debug-args
+    (setq debug-args (dap--select-template (not current-prefix-arg))))
+  (with-current-buffer (or (get-buffer "*DAP Templates*")
+                           (with-current-buffer (get-buffer-create "*DAP Templates*")
+                             (emacs-lisp-mode)
+                             (current-buffer)))
+    (goto-char (point-max))
+    (when (s-blank? (buffer-string))
+      (insert ";; Eval Buffer with `M-x eval-buffer' to register the newly created template."))
+    (insert
+     (format "\n\n(dap-register-debug-template\n  \"%s%s\"\n"
+             (plist-get debug-args :name)
+             (if current-prefix-arg " - Copy" "")))
+    (insert "  (list ")
+    (-let ((column (current-column))
+           ((fst snd . rst) debug-args))
+      (insert (format "%s %s" fst (prin1-to-string snd)))
+      (cl-loop for (k v) on rst by (function cddr)
+         do (if (not (equal k :program-to-start))
+                (progn
+                  (insert "\n")
+                  (--dotimes column (insert " "))
+                  (insert (format "%s %s" k (prin1-to-string v)))))))
+    (insert "))"))
+  (pop-to-buffer "*DAP Templates*")
+  (goto-char (point-max)))
 
 (defun dap-debug-last ()
   "Debug last configuration."
@@ -1549,12 +1586,6 @@ If the current session it will be terminated."
          (dap--set-breakpoints-in-file buffer-file-name))
     (add-hook 'kill-buffer-hook 'dap--buffer-killed nil t)))
 
-(defvar dap-connect-retry-count 1000
-  "Retry count for dap connect.")
-
-(defvar dap-connect-retry-interval 0.02
-  "Retry interval for dap connect.")
-
 (defun dap-mode-mouse-set-clear-breakpoint (event)
   "Set or remove a breakpoint at the position represented by an
 `event' mouse click. If `dap-mode' is not enabled, then only the
@@ -1594,6 +1625,36 @@ point is set."
   "Turn on function `dap-mode'."
   (interactive)
   (dap-mode t))
+
+
+;; Auto configure
+
+;;;###autoload
+(define-minor-mode dap-auto-configure-mode
+  "Auto configure dap minor mode."
+  :init-value nil
+  :global t
+  :group 'dap-mode
+  (cond
+   (dap-auto-configure-mode
+    (dap-mode 1)
+    (dap-ui-mode 1)
+    (seq-doseq (feature dap-auto-configure-features)
+      (when-let (mode (alist-get feature dap-features->modes))
+        (if (consp mode)
+            (when (require (cdr mode) nil t)
+              (funcall (car mode) 1))
+            (funcall mode 1))))
+    (dap-ui-many-windows-mode 1))
+   (t
+    (dap-mode -1)
+    (dap-ui-mode -1)
+    (seq-doseq (feature dap-auto-configure-features)
+      (when-let (mode (alist-get feature dap-features->modes))
+        (if (consp mode)
+            (funcall (car mode) -1)
+            (funcall mode -1))))
+    (dap-ui-many-windows-mode -1))))
 
 (provide 'dap-mode)
 ;;; dap-mode.el ends here

@@ -6,7 +6,8 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20200113.2321
+;; Package-Version: 20200514.1946
+;; Package-Commit: f6bebfe6fe51b728ebd013b7084becad23cabad3
 
 ;; This file is not part of GNU Emacs.
 
@@ -85,10 +86,7 @@
 
 (defcustom moody-mode-line-height
   (let ((font (face-font 'mode-line)))
-    (if font
-        (ceiling (* (if (< emacs-major-version 27) 2 1.5)
-                    (aref (font-info font) 2)))
-      30))
+    (if font (* 2 (aref (font-info font) 2)) 30))
   "When using `moody', height of the mode line in pixels.
 This should be an even number."
   :type 'integer
@@ -215,7 +213,7 @@ not specified, then faces based on `default', `mode-line' and
                                     (if (eq direction 'down)
                                         (concat a b c)
                                       (concat c b a))))))
-                 'xpm t :ascent 'center)))
+                 'xpm t :scale 1 :ascent 'center)))
           (push (cons key image) moody--cache)
           image))))
 
@@ -324,8 +322,8 @@ is to make it easier to do so.
 This function is like `redisplay' with non-nil FORCE argument.
 It accepts an arbitrary number of arguments making it suitable
 as a `:before' advice for any function.  If the current buffer
-has no mode-line or this function has already been calle in it,
-then this function does nothing."
+has no mode-line or this function has already been called in
+it, then this function does nothing."
   (when (and mode-line-format (not moody--size-hacked-p))
     (setq moody--size-hacked-p t)
     (redisplay t)))

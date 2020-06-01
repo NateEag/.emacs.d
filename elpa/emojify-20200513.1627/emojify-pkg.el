@@ -1,8 +1,8 @@
-(define-package "emojify" "20200427.517" "Display emojis in Emacs"
+(define-package "emojify" "20200513.1627" "Display emojis in Emacs"
   '((seq "1.11")
     (ht "2.0")
     (emacs "24.3"))
-  :keywords
+  :commit "dfa3c6d060914c6082d6837da32df0c337330ee4" :keywords
   '("multimedia" "convenience")
   :authors
   '(("Iqbal Ansari" . "iqbalansari02@yahoo.com"))

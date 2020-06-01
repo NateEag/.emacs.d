@@ -367,7 +367,8 @@ Possible values are
     ert-results-mode
     compilation-mode
     proced-mode
-    mu4e-headers-mode)
+    mu4e-headers-mode
+    deft-mode)
   "Major modes where emojify mode should not be enabled."
   :type '(repeat symbol)
   :group 'emojify)
@@ -486,6 +487,11 @@ buffer where emojis are going to be displayed selected."
   :type 'hook
   :group 'emojify)
 
+(defcustom emojify-completing-read-function #'completing-read
+  "Require same argument with `completing-read'."
+  :type 'function
+  :group 'emojify)
+
 (defcustom emojify-composed-text-p t
   "Should composed text be emojified."
   :type 'boolean
@@ -510,7 +516,8 @@ way to guarantee that we run after font-lock"
        (save-excursion
          (save-match-data
            (goto-char beg)
-           (looking-at ":[^:]+:[\s-]*$")))))
+           ;; Regex for tag picked from https://code.orgmode.org/bzg/org-mode/src/master/lisp/org.el#L589-L590
+           (looking-at ":[[:alnum:]_@#%:]+:[\s-]*$")))))
 
 (defun emojify-in-org-list-p (text beg &rest ignored)
   "Determine whether the point is in `org-mode' list.
@@ -789,15 +796,14 @@ The candidates are calculated according to currently active
                  (equal styles (car emojify--completing-candidates-cache)))
       (setq emojify--completing-candidates-cache
             (cons styles
-                  (let ((emojis (ht-create #'equal)))
+                  (let ((emojis '()))
                     (emojify-emojis-each (lambda (key value)
                                            (when (seq-position styles (ht-get value "style"))
-                                             (ht-set! emojis
-                                                      (format "%s - %s (%s)"
-                                                              key
-                                                              (ht-get value "name")
-                                                              (ht-get value "style"))
-                                                      value))))
+                                             (push (format "%s - %s (%s)"
+                                                           key
+                                                           (ht-get value "name")
+                                                           (ht-get value "style"))
+                                                   emojis))))
                     emojis))))
     (cdr emojify--completing-candidates-cache)))
 
@@ -1815,8 +1821,8 @@ This ensures `emojify' is enabled in helm buffer displaying completion even when
 
 PROMPT is a string to prompt with, PREDICATE, REQUIRE-MATCH, INITIAL-INPUT,
 HIST, DEF, INHERIT-INPUT-METHOD correspond to the arguments for
-`completing-read' and are passed to ‘completing-read’ without any
-interpretation.
+`emojify-completing-read-function' and are passed to
+‘emojify-completing-read-function’ without any interpretation.
 
 For each possible emoji PREDICATE is called with emoji text and data about the
 emoji as a hash-table, the predate should return nil if it the emoji should
@@ -1846,14 +1852,15 @@ completion UI to display properly emojis."
                                       minibuffer-setup-hook))
          (helm-after-initialize-hook (cons #'emojify--completing-read-helm-hook
                                            (bound-and-true-p helm-after-initialize-hook))))
-    (car (split-string (completing-read prompt
-                                        candidates
-                                        predicate
-                                        require-match
-                                        initial-input
-                                        hist
-                                        def
-                                        inherit-input-method)
+    (car (split-string (funcall emojify-completing-read-function
+                                prompt
+                                candidates
+                                predicate
+                                require-match
+                                initial-input
+                                hist
+                                def
+                                inherit-input-method)
                        " "))))
 
 ;;;###autoload

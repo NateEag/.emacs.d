@@ -134,7 +134,13 @@ find a symbol if there isn't one at point."
           (setq str (or (ignore-errors (cider-sync-request:macroexpand "macroexpand-1" str)) "")))
         (unless (text-property-any 0 (length str) 'field 'cider-repl-prompt str)
           ;; Remove font-locking, prefix quotes, and trailing . from constructors like Record.
-          (string-remove-prefix "'" (string-remove-suffix "." (substring-no-properties str)))))
+          (thread-last (substring-no-properties str)
+            ;; constructors (Foo.)
+            (string-remove-suffix ".")
+            ;; quoted symbols ('sym)
+            (string-remove-prefix "'")
+            ;; var references (#'inc 2)
+            (string-remove-prefix "#'"))))
       (when look-back
         (save-excursion
           (ignore-errors
@@ -307,6 +313,9 @@ This buffer is not designed to display anything to the user.  For that, use
         (with-current-buffer (cider--make-buffer-for-mode mode)
           (erase-buffer)
           (insert string)
+          ;; don't try to font-lock unbalanced Clojure code
+          (when (eq mode 'clojure-mode)
+            (check-parens))
           (font-lock-fontify-region (point-min) (point-max))
           (buffer-string))
       string)))
@@ -323,7 +332,11 @@ Unless you specify a BUFFER it will default to the current one."
 
 (defun cider-font-lock-as-clojure (string)
   "Font-lock STRING as Clojure code."
-  (cider-font-lock-as 'clojure-mode string))
+  ;; If something goes wrong (e.g. the code is not balanced)
+  ;; we simply return the string.
+  (condition-case nil
+      (cider-font-lock-as 'clojure-mode string)
+    (error string)))
 
 ;; Button allowing use of `font-lock-face', ignoring any inherited `face'
 (define-button-type 'cider-plain-button

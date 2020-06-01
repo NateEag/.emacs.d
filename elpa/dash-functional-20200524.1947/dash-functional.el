@@ -5,7 +5,8 @@
 ;; Authors: Matus Goljer <matus.goljer@gmail.com>
 ;;          Magnar Sveen <magnars@gmail.com>
 ;; Version: 1.2.0
-;; Package-Version: 20191109.1327
+;; Package-Version: 20200524.1947
+;; Package-Commit: ea4a4cc7cce7c3b93862a22df8bca8b83052ccbf
 ;; Package-Requires: ((dash "2.0.0") (emacs "24"))
 ;; Keywords: lisp functions combinators
 
@@ -170,7 +171,7 @@ iteration halts when either of the following conditions is satisfied:
     tested using EQUAL-TEST. If EQUAL-TEST is not specified,
     `equal' is used. For functions over the floating point
     numbers, it may be necessary to provide an appropriate
-    appoximate comparison test.
+    approximate comparison test.
 
  2. HALT-TEST returns a non-nil value. HALT-TEST defaults to a
     simple counter that returns t after `-fixfn-max-iterations',

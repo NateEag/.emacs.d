@@ -16,14 +16,16 @@
   :commands s-replace s-trim)
 
 (use-package my-functions
-  :commands hit-servlet comment-or-uncomment-region-or-line wrap-args
-            move-current-buffer insert-date insert-time unfill-paragraph
-            add-auto-mode)
+  :commands
+  hit-servlet comment-or-uncomment-region-or-line wrap-args
+  move-current-buffer insert-date insert-time unfill-paragraph
+  add-auto-mode)
 
 (use-package daily-log
-  :commands daily-log-show-total-time
-            daily-log-show-current-week-time
-            daily-log-show-current-week-time-remaining)
+  :commands
+  daily-log-show-total-time
+  daily-log-show-current-week-time
+  daily-log-show-current-week-time-remaining)
 
 (use-package my-keybindings)
 
@@ -67,12 +69,13 @@
   ;; from open GitHub issue:
   ;;
   ;; https://github.com/kyagi/shell-pop-el/issues/51#issuecomment-297470855
-  :config (push (cons "\\*shell\\*" display-buffer--same-window-action) display-buffer-alist)
-          (setq shell-pop-full-span t
-                shell-pop-universal-key "C-'"
-                shell-pop-shell-type '("ansi-term" "*ansi-term*"
-                                       (lambda nil
-                                         (ansi-term shell-pop-term-shell)))))
+  :config
+  (push (cons "\\*shell\\*" display-buffer--same-window-action) display-buffer-alist)
+  (setq shell-pop-full-span t
+        shell-pop-universal-key "C-'"
+        shell-pop-shell-type '("ansi-term" "*ansi-term*"
+                               (lambda nil
+                                 (ansi-term shell-pop-term-shell)))))
 
 ;; I don't know that I'll ever use this, but why not?
 (use-package rfc-mode
@@ -158,7 +161,7 @@ found it."
         (interactive)
 
         (if (notmuch-show-advance)
-          (notmuch-show-next-thread t))))
+            (notmuch-show-next-thread t))))
 
     ;; Download an attachment locally.
     ;;
@@ -190,12 +193,12 @@ The shell command lives in my dotfiles repo."
 (use-package message-attachment-reminder)
 
 (use-package uniquify
-             :init
-             (setq
-              uniquify-buffer-name-style 'post-forward
-              uniquify-separator ":"
-              uniquify-after-kill-buffer-p t
-              uniquify-ignore-buffers-re "^\\*"))
+  :init
+  (setq
+   uniquify-buffer-name-style 'post-forward
+   uniquify-separator ":"
+   uniquify-after-kill-buffer-p t
+   uniquify-ignore-buffers-re "^\\*"))
 
 (use-package projectile
   :diminish projectile-mode
@@ -261,8 +264,9 @@ The shell command lives in my dotfiles repo."
   (global-auto-revert-mode))
 
 (use-package ne-yas-auto-insert
-  :commands ne-yas-auto-insert-activate
-            ne-yas-auto-insert-config)
+  :commands
+  ne-yas-auto-insert-activate
+  ne-yas-auto-insert-config)
 
 (use-package autoinsert
   :init
@@ -424,7 +428,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package git-commit
   :init (global-git-commit-mode 1)
-        (add-hook 'git-commit-mode-hook 'evil-insert-state))
+  (add-hook 'git-commit-mode-hook 'evil-insert-state))
 
 (use-package abbrev
   :defer t
@@ -461,7 +465,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package smart-dash
   :hook ((smart-dash-mode . (lambda () (when (equal major-mode 'sh-mode)
-                                        (ne-smart-dash-hacks-sh-mode-install))))))
+                                         (ne-smart-dash-hacks-sh-mode-install))))))
 
 (use-package sh-script
   :config (defun ne-sh-mode-maybe-insert-equals ()
@@ -483,21 +487,21 @@ The shell command lives in my dotfiles repo."
 (use-package tern
   :diminish tern-mode
   :config (add-hook 'tern-mode-hook '(lambda ()
-                                      (require 'tern-auto-complete)
-                                      (tern-ac-setup)
+                                       (require 'tern-auto-complete)
+                                       (tern-ac-setup)
 
-                                      ;; Keybinding to force Tern's
-                                      ;; autocompletion, for cases like
-                                      ;; discussing data structures and APIs in
-                                      ;; comments.
-                                      (define-key
-                                        tern-mode-keymap
-                                        (kbd "C-<tab>")
-                                        'tern-ac-complete)
+                                       ;; Keybinding to force Tern's
+                                       ;; autocompletion, for cases like
+                                       ;; discussing data structures and APIs in
+                                       ;; comments.
+                                       (define-key
+                                         tern-mode-keymap
+                                         (kbd "C-<tab>")
+                                         'tern-ac-complete)
 
-                                      (setq tern-ac-sync t)
-                                      (add-to-list 'ac-sources
-                                                   'ac-source-tern-completion))))
+                                       (setq tern-ac-sync t)
+                                       (add-to-list 'ac-sources
+                                                    'ac-source-tern-completion))))
 
 (use-package ac-ispell
   :commands ac-ispell-setup)
@@ -540,9 +544,9 @@ The shell command lives in my dotfiles repo."
   ;; jq-interactively command. It can be very handy when trying to figure out
   ;; how to transform some arbitrary JSON with jq.
   :config (add-hook 'json-mode-hook 'js-mode-init)
-          (add-hook 'json-mode-hook '(lambda ()
-                                       (setq-local js2-concat-multiline-strings
-                                                   nil))))
+  (add-hook 'json-mode-hook '(lambda ()
+                               (setq-local js2-concat-multiline-strings
+                                           nil))))
 
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)
@@ -561,7 +565,12 @@ The shell command lives in my dotfiles repo."
   :defer t
   :config
   (add-hook 'yaml-mode-hook
-            'my-prog-mode-init))
+            'my-prog-mode-init)
+  ;; yaml-mode constantly shifts indentation and breaks things with
+  ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there. Note
+  ;; the insanity of passing t *deactivating* the mode. No idea why it's
+  ;; written that way.
+  (add-hook 'yaml-mode-hook '(lambda () (aggressive-fill-paragraph-mode 'toggle)) 80))
 
 (use-package groovy-mode
   :defer t
@@ -631,13 +640,13 @@ The shell command lives in my dotfiles repo."
   ;; runs first time it's set. For a workaround, this is a pretty seamless one.
   (add-hook 'after-init-hook
             '(lambda ()
-              (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
+               (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
 
 (use-package slime
   :config
   (progn
     (defun mit-scheme-start-swank (file encoding)
-     (format "%S\n\n" `(start-swank ,file)))
+      (format "%S\n\n" `(start-swank ,file)))
 
     (defun mit-scheme-find-buffer-package ()
       (save-excursion
@@ -686,8 +695,8 @@ The shell command lives in my dotfiles repo."
   ;; php-mode, which I have filed an issue for:
   ;; https://github.com/ejmr/php-mode/issues/407
   :hook ((c-mode . (lambda ()
-                      (when (equal major-mode 'c-mode)
-                        (lsp-cquery-enable))))
+                     (when (equal major-mode 'c-mode)
+                       (lsp-cquery-enable))))
          (java-mode . lsp)))
 
 (use-package lsp-java
@@ -725,28 +734,28 @@ The shell command lives in my dotfiles repo."
 (use-package yasnippet
   :diminish yas-minor-mode
   :config
-      (progn
-        ;; Set up all snippet dirs to lazy-load.
-        (yas-reload-all)
+  (progn
+    ;; Set up all snippet dirs to lazy-load.
+    (yas-reload-all)
 
-        ;; Give keys_with_underscores priority over non-underscored-keys.
-        ;; This lets things like require_once in php-mode not be overridden by
-        ;; 'once' from cc-mode, php-mode's parent mode.
-        (setq yas-key-syntaxes (list "w_" "w" "w_." "w_.()" "^ "))
+    ;; Give keys_with_underscores priority over non-underscored-keys.
+    ;; This lets things like require_once in php-mode not be overridden by
+    ;; 'once' from cc-mode, php-mode's parent mode.
+    (setq yas-key-syntaxes (list "w_" "w" "w_." "w_.()" "^ "))
 
-        (defalias 'ne/yas-edit-snippet
-                  'yas-visit-snippet-file
-                  "I always forget this function's name.
+    (defalias 'ne/yas-edit-snippet
+      'yas-visit-snippet-file
+      "I always forget this function's name.
 
 With this alias I hope to not need to remember it.")
 
-        ;; GRIPE For reasons I don't understand, I need this invocation in
-        ;; order to avoid a never-ending recursion of defining keybindings. I
-        ;; think it's some interaction between yasnippet and auto-complete, but
-        ;; I'm not really sure.
-        (define-key yas-minor-mode-map (kbd "TAB") yas-maybe-expand)
-        (define-key yas-minor-mode-map (kbd "C-c y") yas-maybe-expand)
-        (define-key yas-minor-mode-map [(tab)] nil)))
+    ;; GRIPE For reasons I don't understand, I need this invocation in
+    ;; order to avoid a never-ending recursion of defining keybindings. I
+    ;; think it's some interaction between yasnippet and auto-complete, but
+    ;; I'm not really sure.
+    (define-key yas-minor-mode-map (kbd "TAB") yas-maybe-expand)
+    (define-key yas-minor-mode-map (kbd "C-c y") yas-maybe-expand)
+    (define-key yas-minor-mode-map [(tab)] nil)))
 
 (use-package glasses
   :commands glasses-mode
@@ -848,38 +857,38 @@ With this alias I hope to not need to remember it.")
   :demand
   :functions (atomic-chrome-start-server atomic-chrome-stop-server)
   :config (progn
-          ;; Don't start Atomic Chrome if another Emacs instance is already
-          ;; running it, and don't kill it if we didn't start the server.
-          ;;
-          ;; Since I do a fair bit of elisp hacking, I start a second Emacs
-          ;; pretty often as part of my workflow, to verify that my init code
-          ;; is doing what I expect, and vanilla Atomic Chrome causes startup
-          ;; failures.
-          ;;
-          ;; TODO Get this fixed upstream. A real pidfile could be an option.
+            ;; Don't start Atomic Chrome if another Emacs instance is already
+            ;; running it, and don't kill it if we didn't start the server.
+            ;;
+            ;; Since I do a fair bit of elisp hacking, I start a second Emacs
+            ;; pretty often as part of my workflow, to verify that my init code
+            ;; is doing what I expect, and vanilla Atomic Chrome causes startup
+            ;; failures.
+            ;;
+            ;; TODO Get this fixed upstream. A real pidfile could be an option.
 
-          (defvar ne/atomic-chrome-started-by-us nil
-            "Whether this Emacs instance started an Atomic Chrome server.")
+            (defvar ne/atomic-chrome-started-by-us nil
+              "Whether this Emacs instance started an Atomic Chrome server.")
 
-          (defun ne/atomic-chrome-mark-server-started ()
+            (defun ne/atomic-chrome-mark-server-started ()
+              (when (not (file-exists-p "~/.atomic-chrome-running"))
+                (setq ne/atomic-chrome-started-by-us t)
+                (write-region "" nil "~/.atomic-chrome-running")))
+
+            (defun ne/atomic-chrome-mark-server-stopped ()
+              (when ne/atomic-chrome-started-by-us
+                (delete-file "~/.atomic-chrome-running")))
+
+            (advice-add 'atomic-chrome-start-server :before
+                        #'ne/atomic-chrome-mark-server-started)
+
+            (advice-add 'atomic-chrome-stop-server :before
+                        #'ne/atomic-chrome-mark-server-stopped)
+
+            (add-hook 'kill-emacs-hook 'ne/atomic-chrome-mark-server-stopped)
+
             (when (not (file-exists-p "~/.atomic-chrome-running"))
-              (setq ne/atomic-chrome-started-by-us t)
-              (write-region "" nil "~/.atomic-chrome-running")))
-
-          (defun ne/atomic-chrome-mark-server-stopped ()
-            (when ne/atomic-chrome-started-by-us
-              (delete-file "~/.atomic-chrome-running")))
-
-          (advice-add 'atomic-chrome-start-server :before
-                      #'ne/atomic-chrome-mark-server-started)
-
-          (advice-add 'atomic-chrome-stop-server :before
-                      #'ne/atomic-chrome-mark-server-stopped)
-
-          (add-hook 'kill-emacs-hook 'ne/atomic-chrome-mark-server-stopped)
-
-          (when (not (file-exists-p "~/.atomic-chrome-running"))
-                (atomic-chrome-start-server)))
+              (atomic-chrome-start-server)))
   )
 
 (use-package conf-mode

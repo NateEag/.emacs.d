@@ -441,11 +441,33 @@ finding the executable with `exec-path'."
                   :priority -1
                   :server-id 'clangd))
 
+(cl-defmethod lsp-clients-extract-signature-on-hover (contents (_server-id (eql clangd)))
+  "Extract a representative line from clangd's CONTENTS, to show in the echo area.
+This function tries to extract the type signature from CONTENTS,
+or the first line if it cannot do so. A single line is always
+returned to avoid that the echo area grows uncomfortably."
+  (with-temp-buffer
+    (-let [(&hash "value") contents]
+      (insert value)
+      (goto-char (point-min))
+      (if (re-search-forward (rx (seq "```cpp\n"
+                                      (opt (group "//"
+                                                  (zero-or-more nonl)
+                                                  "\n"))
+                                      (group
+                                       (one-or-more
+                                        (not (any "`")))
+                                       "\n")
+                                      "```")) nil t nil)
+          (progn (narrow-to-region (match-beginning 2) (match-end 2))
+                 (lsp--render-element (lsp-join-region (point-min) (point-max))))
+        (car (s-lines (lsp--render-element contents)))))))
+
 ;; Elixir
 (defgroup lsp-elixir nil
   "LSP support for Elixir, using elixir-ls."
   :group 'lsp-mode
-  :link '(url-link "https://github.com/JakeBecker/elixir-ls"))
+  :link '(url-link "https://github.com/elixir-lsp/elixir-ls"))
 
 (defcustom lsp-clients-elixir-server-executable
   (if (equal system-type 'windows-nt)
@@ -508,11 +530,17 @@ finding the executable with `exec-path'."
   :group 'lsp-mode
   :link '(url-link "https://github.com/fwcd/KotlinLanguageServer"))
 
-(defcustom lsp-kotlin-language-server-path ""
-  "Optionally a custom path to the language server executable."
+(define-obsolete-variable-alias
+  'lsp-kotlin-language-server-path
+  'lsp-clients-kotlin-server-executable
+  "lsp-mode 6.4")
+
+(defcustom lsp-clients-kotlin-server-executable "kotlin-language-server"
+  "The kotlin-language-server executable to use.
+Leave as just the executable name to use the default behavior of finding the
+executable with `exec-path'."
   :type 'string
-  :group 'lsp-kotlin
-  :package-version '(lsp-mode . "6.1"))
+  :group 'lsp-kotlin)
 
 (defcustom lsp-kotlin-trace-server "off"
   "Traces the communication between VSCode and the Kotlin language server."
@@ -570,11 +598,11 @@ responsiveness at the cost of possible stability issues."
    ("kotlin.linting.debounceTime" lsp-kotlin-linting-debounce-time)
    ("kotlin.compiler.jvm.target" lsp-kotlin-compiler-jvm-target)
    ("kotlin.trace.server" lsp-kotlin-trace-server)
-   ("kotlin.languageServer.path" lsp-kotlin-language-server-path)))
+   ("kotlin.languageServer.path" lsp-clients-kotlin-server-executable)))
 
 (lsp-register-client
  (make-lsp-client
-  :new-connection (lsp-stdio-connection '("kotlin-language-server"))
+  :new-connection (lsp-stdio-connection lsp-clients-kotlin-server-executable)
   :major-modes '(kotlin-mode)
   :priority -1
   :server-id 'kotlin-ls
@@ -650,7 +678,7 @@ responsiveness at the cost of possible stability issues."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (lambda () lsp-clients-angular-language-server-command))
                   :activation-fn (lambda (&rest _args)
-                                   (and (string-match-p ".*\.html$" (buffer-file-name))
+                                   (and (string-match-p "\\.html\\'" (buffer-file-name))
                                         (lsp-workspace-root)
                                         (file-exists-p (f-join (lsp-workspace-root) "angular.json"))))
                   :priority -1

@@ -16,7 +16,7 @@
 ;;;### (autoloads nil "lsp-clojure" "lsp-clojure.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-clojure.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clojure" '("lsp-cl")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clojure" '("lsp-clojure-")))
 
 ;;;***
 
@@ -160,6 +160,13 @@ This avoids overloading the server with many files when starting Emacs." nil nil
 
 ;;;***
 
+;;;### (autoloads nil "lsp-protocol" "lsp-protocol.el" (0 0 0 0))
+;;; Generated autoloads from lsp-protocol.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-protocol" '("lsp")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-pwsh" "lsp-pwsh.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-pwsh.el
 
@@ -178,6 +185,13 @@ This avoids overloading the server with many files when starting Emacs." nil nil
 ;;; Generated autoloads from lsp-rust.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-rust" '("lsp-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-serenata" "lsp-serenata.el" (0 0 0 0))
+;;; Generated autoloads from lsp-serenata.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-serenata" '("lsp-serenata-server-")))
 
 ;;;***
 

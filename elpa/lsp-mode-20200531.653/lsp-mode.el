@@ -1,11 +1,11 @@
 ;;; lsp-mode.el --- LSP mode                              -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Vibhav Pant, Ivan Yonchovski
+;; Copyright (C) 2020 emacs-lsp maintainers
 
 ;; Author: Vibhav Pant, Fangrui Song, Ivan Yonchovski
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (dash-functional "2.14.1") (f "0.20.0") (ht "2.0") (spinner "1.7.3") (markdown-mode "2.3") (lv "0"))
-;; Version: 6.2.1
+;; Version: 6.3.1
 
 ;; URL: https://github.com/emacs-lsp/lsp-mode
 ;; This program is free software; you can redistribute it and/or modify
@@ -67,6 +67,8 @@
 
 (defvar company-backends)
 (defvar c-basic-offset)
+(defvar yas-inhibit-overlay-modification-protection)
+(defvar yas-indent-line)
 
 (defconst lsp--message-type-face
   `((1 . ,compilation-error-face)
@@ -121,7 +123,7 @@
 
 (defcustom lsp-log-io nil
   "If non-nil, log all messages to and from the language server to a *lsp-log* buffer."
-  :group 'lsp
+  :group 'lsp-mode
   :type 'boolean)
 
 (defcustom lsp-print-performance nil
@@ -147,11 +149,6 @@ the buffer when it becomes large."
                  (integer :tag "Messages"))
   :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-report-if-no-buffer t
-  "If non nil the errors will be reported even when the file is not open."
-  :type 'boolean
-  :group 'lsp-mode)
-
 (defcustom lsp-keep-workspace-alive t
   "If non nil keep workspace alive when the last workspace buffer is closed."
   :group 'lsp-mode
@@ -169,28 +166,37 @@ the buffer when it becomes large."
   :package-version '(lsp-mode . "6.1"))
 
 (defcustom lsp-semantic-highlighting nil
-  "When set to `:immediate' or `:deferred', this option enables
- semantic highlighting as proposed at
- https://github.com/microsoft/vscode-languageserver-node/pull/367.
+  "When set to `:semantic-tokens', this option enables support
+for semantic highlighting as defined by the Language Server
+Protocol 3.16.
 
- If `lsp-semantic-highlighting' is set to `:immediate', semantic
- highlighting information received from the language server is
- applied immediately, and in full. If `lsp-semantic-highlighting'
- is set to `:deferred', semantic highlighting will be performed
- after an idle timeout, and only within a limit region
- around `(point)' (see
- `lsp-semantic-highlighting-context-lines'). Compared to
- `:immediate', `:deferred' has a higher risk of producing stale
- highlights but may offer significantly better performance.
-
- Note that semantic highlighting is not yet part of the official
- LSP spec and may occasionally break as language servers are
- updated."
+Some older language servers may not conform to the semantic
+tokens protocol yet, but implement the theia semantic
+highlighting protocol, see
+https://github.com/microsoft/vscode-languageserver-node/pull/367.
+To use theia highlighting, set `lsp-semantic-highlighting' to
+`:immediate' or `:deferred', where `:deferred' should offer
+better performance than `:immediate' but has a higher risk of
+producing stale highlights."
   :group 'lsp-mode
   :type '(choice
           (const :tag "Disable" nil)
           (const :tag "Immediate" :immediate)
-          (const :tag "Deferred" :deferred)))
+          (const :tag "Deferred" :deferred)
+          (const :tag "SemanticTokens" :semantic-tokens)))
+
+(defcustom lsp-semantic-highlighting-warn-on-missing-face nil
+  "When non-nil, this option will emit a warning any time a token
+or modifier type returned by a language server has no face associated with it."
+  :group 'lsp-mode
+  :type 'boolean)
+
+(defcustom lsp-semantic-tokens-apply-modifiers nil
+  "Determines whether semantic highlighting should take token
+modifiers into account. Only applies if
+`lsp-semantic-highlighting' is set to `:semantic-tokens'."
+  :group 'lsp-mode
+  :type 'boolean)
 
 (defcustom lsp-semantic-highlighting-context-lines 15
   "How many lines to fontify above `(window-start)' and below `(window-end)'."
@@ -212,13 +218,18 @@ the buffer when it becomes large."
 
 (defcustom lsp-client-packages
   '(ccls cquery lsp-clients lsp-clojure lsp-csharp lsp-css lsp-dart lsp-elm
-    lsp-erlang lsp-eslint lsp-fsharp lsp-gdscript lsp-go lsp-haskell lsp-haxe
-    lsp-intelephense lsp-java lsp-json lsp-metals lsp-perl lsp-pwsh lsp-pyls
-    lsp-python-ms lsp-rust lsp-solargraph lsp-terraform lsp-verilog lsp-vetur
-    lsp-vhdl lsp-xml lsp-yaml)
+         lsp-erlang lsp-eslint lsp-fsharp lsp-gdscript lsp-go lsp-haskell lsp-haxe
+         lsp-intelephense lsp-java lsp-json lsp-metals lsp-perl lsp-pwsh lsp-pyls
+         lsp-python-ms lsp-rust lsp-serenata lsp-solargraph lsp-terraform lsp-verilog lsp-vetur
+         lsp-vhdl lsp-xml lsp-yaml)
   "List of the clients to be automatically required."
   :group 'lsp-mode
   :type '(repeat symbol))
+
+(defcustom lsp-progress-via-spinner t
+  "If non-nil, display LSP $/progress reports via a spinner in the modeline."
+  :group 'lsp-mode
+  :type 'boolean)
 
 (defvar-local lsp--cur-workspace nil)
 
@@ -486,6 +497,9 @@ diagnostics have changed."
   :type 'hook
   :group 'lsp-mode)
 
+(define-obsolete-variable-alias 'lsp-after-diagnostics-hook
+  'lsp-diagnostics-updated-hook  "lsp-mode 6.4")
+
 (defcustom lsp-diagnostics-updated-hook nil
   "Hooks to run after diagnostics are received."
   :type 'hook
@@ -549,7 +563,7 @@ are determined by the index of the element."
 (defconst lsp--imenu-compare-function-alist
   (list (cons 'name #'lsp--imenu-compare-name)
         (cons 'kind #'lsp--imenu-compare-kind)
-        (cons 'position #'lsp--imenu-compare-position))
+        (cons 'position #'lsp--imenu-compare-line-col))
   "An alist of (METHOD . FUNCTION).
 METHOD is one of the symbols accepted by
 `lsp-imenu-sort-methods'.
@@ -580,6 +594,30 @@ than the second parameter.")
   :group 'lsp-mode
   :package-version '(lsp-mode . "6.3"))
 
+(defcustom lsp-completion-enable-additional-text-edit t
+  "Whether or not to apply additional text edit when performing completion.
+
+If set to non-nil, `lsp-mode' will apply additional text edits
+from the server.  Otherwise, the additional text edits are
+ignored."
+  :type 'boolean
+  :group 'lsp-mode
+  :package-version '(lsp-mode . "6.3.2"))
+
+(defcustom lsp-completion-styles (if (version<= "27.0" emacs-version)
+                                     `(flex)
+                                   `(substring))
+  "List of completion styles to use for filtering completion items."
+  :type completion--styles-type
+  :group 'lsp-mode
+  :package-version '(lsp-mode . "6.3.2"))
+
+(defcustom lsp-completion-show-detail t
+  "Whether or not to show detail of completion candidates."
+  :type 'boolean
+  :group 'lsp-mode)
+
+
 (defcustom lsp-server-trace nil
   "Request tracing on the server side.
 The actual trace output at each level depends on the language server in use.
@@ -606,7 +644,6 @@ Changes take effect only when a new session is started."
                                         (sql-mode . "sql")
                                         (vimrc-mode . "vim")
                                         (sh-mode . "shellscript")
-                                        (sh-mode . "lua")
                                         (scala-mode . "scala")
                                         (julia-mode . "julia")
                                         (clojure-mode . "clojure")
@@ -655,6 +692,7 @@ Changes take effect only when a new session is started."
                                         (yaml-mode . "spring-boot-properties-yaml")
                                         (ruby-mode . "ruby")
                                         (enh-ruby-mode . "ruby")
+                                        (fortran-mode . "fortran")
                                         (f90-mode . "fortran")
                                         (elm-mode . "elm")
                                         (dart-mode . "dart")
@@ -666,6 +704,7 @@ Changes take effect only when a new session is started."
                                         (vhdl-mode . "vhdl")
                                         (verilog-mode . "verilog")
                                         (terraform-mode . "terraform")
+                                        (ess-julia-mode . "julia")
                                         (ess-r-mode . "r")
                                         (crystal-mode . "crystal")
                                         (nim-mode . "nim")
@@ -709,6 +748,7 @@ directory")
     ("textDocument/rangeFormatting" :capability "documentRangeFormattingProvider")
     ("textDocument/references" :capability "referencesProvider")
     ("textDocument/selectionRange" :capability "selectionRangeProvider")
+    ("textDocument/semanticTokens" :capability "semanticTokensProvider")
     ("textDocument/signatureHelp" :capability "signatureHelpProvider")
     ("textDocument/typeDefinition" :capability "typeDefinitionProvider")
     ("workspace/executeCommand" :capability "executeCommandProvider")
@@ -741,11 +781,6 @@ must be used for handling a particular message.")
   "Face used for highlighting symbols being written to."
   :group 'lsp-faces)
 
-(defcustom lsp-lens-check-interval 0.1
-  "The interval for checking for changes in the buffer state."
-  :group 'lsp-mode
-  :type 'number)
-
 (defcustom lsp-lens-auto-enable nil
   "Auto lenses if server there is server support."
   :group 'lsp-mode
@@ -768,13 +803,6 @@ Set to nil to disable the warning."
   :type 'number
   :group 'lsp-mode)
 ;;;###autoload(put 'lsp-file-watch-threshold 'safe-local-variable (lambda (i) (or (numberp i) (not i))))
-
-(defcustom lsp-completion-styles (if (version<= "27.0" emacs-version)
-                                     `(flex)
-                                   `(substring))
-  "List of completion styles to use for filtering completion items."
-  :group 'lsp-mode
-  :type completion--styles-type)
 
 (defvar lsp-custom-markup-modes
   '((rust-mode "no_run" "rust,no_run" "rust,ignore" "rust,should_panic"))
@@ -953,6 +981,28 @@ FORMAT and ARGS i the same as for `message'."
       "Return the local name component of FILE."
       (or (file-remote-p file 'localname) file))))
 
+(defun lsp-f-canonical (file-name)
+  "Return the canonical, without trailing slash FILE-NAME."
+  (directory-file-name (expand-file-name file-name)))
+
+(defalias 'lsp-canonical-file-name 'lsp-f-canonical)
+
+(defun lsp-f-same? (path-a path-b)
+  "Return t if PATH-A and PATH-B are references to same file.
+Symlinks are not followed."
+  (when (and (f-exists? path-a)
+             (f-exists? path-b))
+    (equal
+     (lsp-f-canonical (directory-file-name (f-expand path-a)))
+     (lsp-f-canonical (directory-file-name (f-expand path-b))))))
+
+(defun lsp-f-ancestor-of? (path-a path-b)
+  "Return t if PATH-A is ancestor of PATH-B.
+Symlinks are not followed."
+  (unless (lsp-f-same? path-a path-b)
+    (s-prefix? (lsp-f-canonical path-a)
+               (lsp-f-canonical path-b))))
+
 (defun lsp--merge-results (results method)
   "Merge RESULTS by filtering the empty hash-tables and merging the lists.
 METHOD is the executed method so the results could be merged
@@ -1020,11 +1070,11 @@ TRANSFORM-FN will be used to transform each of the items before displaying.
 
 PROMPT COLLECTION PREDICATE REQUIRE-MATCH INITIAL-INPUT HIST DEF
 INHERIT-INPUT-METHOD will be proxied to `completing-read' without changes."
-  (let* ((result (--map (cons (funcall transform-fn it) it) collection))
-         (completion (completing-read prompt (-map 'cl-first result)
+  (let* ((col (--map (cons (funcall transform-fn it) it) collection))
+         (completion (completing-read prompt col
                                       predicate require-match initial-input hist
                                       def inherit-input-method)))
-    (cdr (assoc completion result))))
+    (cdr (assoc completion col))))
 
 ;; A ‘lsp--client’ object describes the client-side behavior of a language
 ;; server.  It is used to start individual server processes, each of which is
@@ -1276,7 +1326,7 @@ On other systems, returns path without change."
          (type (url-type url))
          (encoding (or locale-coding-system 'utf-8))
          (file (decode-coding-string (url-filename url) encoding))
-         (file-name (if (and type (not (string= type "file")))
+         (file-name (if (and type (not (equal type "file")))
                         (if-let ((handler (lsp--get-uri-handler type)))
                             (funcall handler uri)
                           uri)
@@ -1468,10 +1518,6 @@ already have been created."
            (indent 1))
   `(when-let (lsp--cur-workspace ,workspace) ,@body))
 
-(defun lsp-canonical-file-name (file-name)
-  "Return the canonical, without trailing slash FILE-NAME."
-  (directory-file-name (expand-file-name file-name)))
-
 (defun lsp--window-show-message (_workspace params)
   "Send the server's messages to log.
 PARAMS - the data sent from _WORKSPACE."
@@ -1513,29 +1559,50 @@ interface ProgressParams<T> {
 }
 PARAMS contains the progress data.
 WORKSPACE is the workspace that contains the progress token."
-   (let* ((token (gethash "token" params))
-          (value (gethash "value" params))
-          (kind (gethash "kind" value)))
-     (pcase kind
+  (let* ((token (gethash "token" params))
+         (value (gethash "value" params))
+         (kind (gethash "kind" value)))
+    (pcase kind
 
-       ("begin"
-        (let* ((message (gethash "title" value))
-               (cur (gethash "percentage" value nil))
-               (reporter
-                (if cur
-                    (make-progress-reporter message 0 100 cur)
-                  ;; Spinner only
-                  (make-progress-reporter message nil nil))))
-          (lsp-workspace-set-work-done-token token reporter workspace)))
+      ("begin"
+       (let* ((message (gethash "title" value))
+              (cur (gethash "percentage" value nil))
+              (reporter
+               (if lsp-progress-via-spinner
+                   (let* ((spinner-strings (alist-get 'progress-bar spinner-types))
+                          ;; Set message as a tooltip for the spinner strings
+                          (propertized-strings
+                           (seq-map (lambda (string) (propertize string 'help-echo message))
+                                    spinner-strings))
+                          (spinner-type (vconcat propertized-strings)))
+                     ;; The progress relates to the server as a whole,
+                     ;; display it on all buffers.
+                     (mapcar (lambda (buffer)
+                               (with-current-buffer buffer
+                                 (spinner-start spinner-type))
+                               buffer)
+                             (lsp--workspace-buffers workspace)))
+                 (if cur
+                     (make-progress-reporter message 0 100 cur)
+                   ;; No percentage, just progress
+                   (make-progress-reporter message nil nil)))))
+         (lsp-workspace-set-work-done-token token reporter workspace)))
 
-       ("report"
-        (when-let ((reporter (lsp-workspace-get-work-done-token token workspace)))
-            (progress-reporter-update reporter (gethash "percentage" value nil))))
+      ("report"
+       (when-let ((reporter (lsp-workspace-get-work-done-token token workspace)))
+         (when (not lsp-progress-via-spinner)
+           (progress-reporter-update reporter (gethash "percentage" value nil)))))
 
-       ("end"
-        (when-let ((reporter (lsp-workspace-get-work-done-token token workspace)))
-            (progress-reporter-done reporter)
-            (lsp-workspace-rem-work-done-token token workspace))))))
+      ("end"
+       (when-let ((reporter (lsp-workspace-get-work-done-token token workspace)))
+         (if lsp-progress-via-spinner
+             (mapc (lambda (buffer)
+                     (when (buffer-live-p buffer)
+                       (with-current-buffer buffer
+                         (spinner-stop))))
+                   reporter)
+           (progress-reporter-done reporter))
+         (lsp-workspace-rem-work-done-token token workspace))))))
 
 (defun lsp-diagnostics (&optional current-workspace?)
   "Return the diagnostics from all workspaces."
@@ -1651,20 +1718,14 @@ PARAMS contains the diagnostics data.
 WORKSPACE is the workspace that contains the diagnostics."
   (let* ((file (lsp--uri-to-path (gethash "uri" params)))
          (diagnostics (gethash "diagnostics" params))
-         (buffer (lsp--buffer-for-file file))
          (workspace-diagnostics (lsp--workspace-diagnostics workspace)))
 
     (if (seq-empty-p diagnostics)
         (remhash file workspace-diagnostics)
-      (when (or lsp-report-if-no-buffer buffer)
-        (puthash file (seq-map #'lsp--make-diag diagnostics) workspace-diagnostics)))
+      (puthash file (seq-map #'lsp--make-diag diagnostics) workspace-diagnostics))
 
     (run-hooks 'lsp-diagnostics-updated-hook)
-
-    (when buffer
-      (save-mark-and-excursion
-        (with-current-buffer buffer
-          (run-hooks 'lsp-after-diagnostics-hook))))))
+    (lsp--idle-reschedule (current-buffer))))
 
 (with-no-warnings
   (unless (version< emacs-version "26")
@@ -1749,31 +1810,46 @@ WORKSPACE is the workspace that contains the diagnostics."
 
 (defun lsp--get-folding-ranges ()
   "Get the folding ranges for the current buffer."
-  (-let [(tick . ranges) lsp--cached-folding-ranges]
-    (if (eq tick (buffer-chars-modified-tick))
-        ranges
-      (setq ranges (lsp-request "textDocument/foldingRange"
+  (unless (eq (buffer-chars-modified-tick) (car lsp--cached-folding-ranges))
+    (let* ((ranges (lsp-request "textDocument/foldingRange"
                                 `(:textDocument ,(lsp--text-document-identifier))))
+           (sorted-line-col-pairs (->> ranges
+                                       (cl-mapcan (lambda (range)
+                                                    (-let [(&hash "startLine" start-line
+                                                                  "startCharacter" start-character
+                                                                  "endLine" end-line
+                                                                  "endCharacter" end-character)
+                                                           range]
+                                                      (list (cons start-line start-character)
+                                                            (cons end-line end-character)))))
+                                       (-sort #'lsp--line-col-comparator)))
+           (line-col-to-point-map (lsp--convert-line-col-to-points-batch
+                                   sorted-line-col-pairs)))
       (setq lsp--cached-folding-ranges
             (cons (buffer-chars-modified-tick)
-                  (-> (lambda (range)
-                        (-let [(&hash "startLine" start-line
-                                      "startCharacter" start-character
-                                      "endLine" end-line
-                                      "endCharacter" end-character
-                                      "kind" kind)
-                               range]
-                          (make-lsp--folding-range
-                           :beg (lsp--line-character-to-point
-                                 start-line start-character)
-                           :end (lsp--line-character-to-point
-                                 end-line end-character)
-                           :kind kind
-                           :orig-folding-range range)))
-                      (seq-map ranges)
-                      (seq-into 'list)
-                      (delete-dups))))
-      (cdr lsp--cached-folding-ranges))))
+                  (--> ranges
+                       (seq-map (lambda (range)
+                                  (-let [(&hash "startLine" start-line
+                                                "startCharacter" start-character
+                                                "endLine" end-line
+                                                "endCharacter" end-character
+                                                "kind" kind)
+                                         range]
+                                    (make-lsp--folding-range
+                                     :beg (ht-get line-col-to-point-map
+                                                  (cons start-line start-character))
+                                     :end (ht-get line-col-to-point-map
+                                                  (cons end-line end-character))
+                                     :kind kind
+                                     :orig-folding-range range)))
+                                it)
+                       (seq-filter (lambda (folding-range)
+                                     (< (lsp--folding-range-beg folding-range)
+                                        (lsp--folding-range-end folding-range)))
+                                   it)
+                       (seq-into it 'list)
+                       (delete-dups it))))))
+  (cdr lsp--cached-folding-ranges))
 
 (defun lsp--get-nested-folding-ranges ()
   "Get a list of nested folding ranges for the current buffer."
@@ -1784,23 +1860,18 @@ WORKSPACE is the workspace that contains the diagnostics."
       (setq lsp--cached-nested-folding-ranges
             (lsp--folding-range-build-trees (lsp--get-folding-ranges))))))
 
-(defun lsp--folding-range-insert-into-trees (trees range)
-  (unless
-      (cl-block top
-        (dolist (tree-node (reverse trees))
-          (when (lsp--range-inside-p range tree-node)
-            (-if-let (children (lsp--folding-range-children tree-node))
-                (lsp--folding-range-insert-into-trees children range)
-              (setf (lsp--folding-range-children tree-node) (list range)))
-            (cl-return-from top t))))
-    (nconc trees (list range))))
-
 (defun lsp--folding-range-build-trees (ranges)
   (setq ranges (seq-sort #'lsp--range-before-p ranges))
-  (let ((trees (list (lsp-seq-first ranges))))
-    (dolist (range (lsp-seq-rest ranges))
-      (lsp--folding-range-insert-into-trees trees range))
-    trees))
+  (let* ((dummy-node (make-lsp--folding-range
+                      :beg most-negative-fixnum
+                      :end most-positive-fixnum))
+         (stack (list dummy-node)))
+    (dolist (range ranges)
+      (while (not (lsp--range-inside-p range (car stack)))
+        (pop stack))
+      (push range (lsp--folding-range-children (car stack)))
+      (push range stack))
+    (lsp--folding-range-children dummy-node)))
 
 (defun lsp--range-inside-p (r1 r2)
   "Return non-nil if folding range R1 lies inside R2"
@@ -1854,7 +1925,7 @@ WORKSPACE is the workspace that contains the diagnostics."
           (cons (lsp--folding-range-beg range)
                 (lsp--folding-range-end range)))
     nil))
-(put 'lsp-folding-range 'bounds-of-thing-at-point
+(put 'lsp--folding-range 'bounds-of-thing-at-point
      #'lsp--folding-range-at-point-bounds)
 
 (defun lsp--get-nearest-folding-range (&optional backward)
@@ -2237,7 +2308,8 @@ BINDINGS is a list of (key def cond)."
                     ,(format "maybe-%s" def)
                     ,def
                     :filter (lambda (item)
-                              (when (with-current-buffer (or lsp--describe-buffer
+                              (when (with-current-buffer (or (when (buffer-live-p lsp--describe-buffer)
+                                                               lsp--describe-buffer)
                                                              (current-buffer))
                                       ,cond)
                                 item))))))
@@ -2537,11 +2609,16 @@ active `major-mode', or for all major modes when ALL-MODES is t."
   ;; ‘buffers’ is a list of buffers associated with this workspace.
   (buffers nil)
 
-  ;; ‘semantic-highlighting-faces' is a vector containing one face for each
-  ;; TextMate scope (or set of scopes) supported by the language server. Cf.
-  ;; ‘lsp-semantic-highlighting-faces' if you wish to change the default
-  ;; semantic highlighting faces
+  ;; If old-style (Theia) semantic highlighting is used (i.e., if 'lsp-semantic-highlighting‘
+  ;; is set to :immediate or :deferred), semantic-highlighting-faces' is a vector containing
+  ;; one face for each TextMate scope (or set of scopes) supported by the language server. If
+  ;; semanticTokens are used for highlighting, semantic-highlighting-faces contains one face
+  ;; (or nil) for each token type supported by the language server.
   (semantic-highlighting-faces nil)
+
+  ;; If semanticTokens are used for highlighting, semantic-highlighting-modifier-faces contains
+  ;; one face (or nil) for each modifier type supported by the language server
+  (semantic-highlighting-modifier-faces nil)
 
   ;; Extra client capabilities provided by third-party packages using
   ;; `lsp-register-client-capabilities'. It's value is an alist of (PACKAGE-NAME
@@ -2871,10 +2948,12 @@ MODE determines when the callback will be called depending on the
 condition of the original buffer. METHOD is the invoked method.
 If NO-MERGE is non-nil, don't merge the results but return alist workspace->result.
 ID is the request id. "
-  (let (results)
+  (let (results errors)
     (lambda (result)
-      (push (cons lsp--cur-workspace result) results)
-      (when (eq (length results) (length workspaces))
+      (push (cons lsp--cur-workspace result)
+            (if (eq result :error) errors results))
+      (when (and (not (eq (length errors) (length workspaces)))
+                 (eq (+ (length errors) (length results)) (length workspaces)))
         (funcall callback
                  (if no-merge
                      results
@@ -2968,6 +3047,7 @@ If NO-MERGE is non-nil, don't merge the results but return alist workspace->resu
                               nil
                               target-workspaces))
              (error-callback (lambda (error)
+                               (funcall callback :error)
                                (lsp--request-cleanup-hooks id)
                                (funcall error-callback error)))
              (body (plist-put body :id id)))
@@ -3057,8 +3137,14 @@ disappearing, unset all the variables related to it."
                                          (hierarchicalDocumentSymbolSupport . t)))
                       (formatting . ((dynamicRegistration . t)))
                       (rangeFormatting . ((dynamicRegistration . t)))
+                      ,@(pcase lsp-semantic-highlighting
+                          ((or :immediate :deferred) '((semanticHighlightingCapabilities . ((semanticHighlighting . t)))))
+                          (:semantic-tokens `((semanticTokens
+                                               . ((tokenModifiers . ,(if lsp-semantic-tokens-apply-modifiers
+                                                                         (apply 'vector (mapcar #'car lsp-semantic-token-modifier-faces)) []))
+                                                  (tokenTypes . ,(apply 'vector (mapcar #'car lsp-semantic-token-faces)))))))
+                          (_ '()))
                       (rename . ((dynamicRegistration . t) (prepareSupport . t)))
-                      (semanticHighlightingCapabilities . ((semanticHighlighting . ,(lsp-json-bool lsp-semantic-highlighting))))
                       (codeAction . ((dynamicRegistration . t)
                                      (isPreferredSupport . t)
                                      (codeActionLiteralSupport . ((codeActionKind . ((valueSet . [""
@@ -3124,8 +3210,8 @@ disappearing, unset all the variables related to it."
                       (-any?
                        (lambda (capability)
                          (and
-                          (string= (lsp--registered-capability-method capability)
-                                   "workspace/didChangeWatchedFiles")
+                          (equal (lsp--registered-capability-method capability)
+                                 "workspace/didChangeWatchedFiles")
                           (->>
                            capability
                            lsp--registered-capability-options
@@ -3146,7 +3232,7 @@ disappearing, unset all the variables related to it."
   (-let (((&hash "method" "id" "registerOptions") reg)
          (session (lsp-session)))
     (when (and lsp-enable-file-watchers
-               (string= method "workspace/didChangeWatchedFiles"))
+               (equal method "workspace/didChangeWatchedFiles"))
       (-let* ((created-watches (lsp-session-watches session))
               (root-folders (cl-set-difference
                              (lsp-find-roots-for-workspace lsp--cur-workspace session)
@@ -3184,7 +3270,7 @@ in that particular folder."
     (setf (lsp--workspace-registered-server-capabilities lsp--cur-workspace)
           (seq-remove (lambda (e) (equal (lsp--registered-capability-id e) id))
                       (lsp--workspace-registered-server-capabilities lsp--cur-workspace)))
-    (when (string= method "workspace/didChangeWatchedFiles")
+    (when (equal method "workspace/didChangeWatchedFiles")
       (lsp--cleanup-hanging-watches))))
 
 (defun lsp--server-capabilities ()
@@ -3203,8 +3289,7 @@ in that particular folder."
 (defun lsp--send-will-save-p ()
   "Return whether will save notifications should be sent to the server."
   (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
-    (or (memq sync '(1 2))
-        (and (hash-table-p sync) (gethash "willSave" sync)))))
+    (and (hash-table-p sync) (gethash "willSave" sync))))
 
 (defun lsp--send-will-save-wait-until-p ()
   "Return whether will save wait until notifications should be sent to the server."
@@ -3220,10 +3305,9 @@ in that particular folder."
 (defun lsp--save-include-text-p ()
   "Return whether save notifications should include the text document's contents."
   (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
-    (or (memq sync '(1 2))
-        (and (hash-table-p sync)
-             (hash-table-p (gethash "save" sync nil))
-             (gethash "includeText" (gethash "save" sync))))))
+    (and (hash-table-p sync)
+         (hash-table-p (gethash "save" sync nil))
+         (gethash "includeText" (gethash "save" sync)))))
 
 (defun lsp--suggest-project-root ()
   "Get project root."
@@ -3249,7 +3333,7 @@ in that particular folder."
   (interactive
    (list (read-directory-name "Select folder to add: "
                               (or (lsp--suggest-project-root) default-directory) nil t)))
-  (cl-pushnew (lsp-canonical-file-name project-root)
+  (cl-pushnew (lsp-f-canonical project-root)
               (lsp-session-folders (lsp-session)) :test 'equal)
   (lsp--persist-session (lsp-session))
 
@@ -3261,7 +3345,7 @@ in that particular folder."
                                       (lsp-session-folders (lsp-session)) nil t
                                       (lsp-find-session-folder (lsp-session) default-directory))))
 
-  (setq project-root (lsp-canonical-file-name project-root))
+  (setq project-root (lsp-f-canonical project-root))
 
   ;; send remove folder to each multiroot workspace associated with the folder
   (dolist (wks (->> (lsp-session)
@@ -3380,6 +3464,9 @@ in that particular folder."
       (lsp--update-on-type-formatting-hook)
       (lsp--update-signature-help-hook)
 
+      (when (and (eq lsp-semantic-highlighting :semantic-tokens)
+                 (lsp-feature? "textDocument/semanticTokens"))
+        (lsp--semantic-tokens-initialize-buffer))
       (add-hook 'post-command-hook #'lsp--post-command nil t)
       (when lsp-enable-xref
         (add-hook 'xref-backend-functions #'lsp--xref-backend nil t))
@@ -3420,6 +3507,10 @@ in that particular folder."
 
       (remove-hook 'lsp-on-idle-hook #'lsp--document-links t)
       (remove-hook 'lsp-on-idle-hook #'lsp--document-highlight t)
+
+      (when lsp--semantic-tokens-teardown
+        (funcall lsp--semantic-tokens-teardown)
+        (setq lsp--semantic-tokens-teardown nil))
 
       (lsp--remove-overlays 'lsp-sem-highlight)
       (lsp--remove-overlays 'lsp-highlight)
@@ -3544,11 +3635,11 @@ in that particular folder."
         (lsp--check-document-changes-version document-changes)
         (->> document-changes
              (seq-filter (-lambda ((&hash "kind"))
-                           (or (not kind) (string= kind "edit"))))
+                           (or (not kind) (equal kind "edit"))))
              (seq-do #'lsp--apply-text-document-edit))
         (->> document-changes
              (seq-filter (-lambda ((&hash "kind"))
-                           (not (or (not kind) (string= kind "edit")))))
+                           (not (or (not kind) (equal kind "edit")))))
              (seq-do #'lsp--apply-text-document-edit)))
     (when-let (changes (gethash "changes" edit))
       (maphash
@@ -4058,11 +4149,12 @@ Applies on type formatting."
 (defun lsp-workspace-root (&optional path)
   "Find the workspace root for the current file or PATH."
   (-when-let* ((file-name (or path (buffer-file-name)))
-               (file-name (lsp-canonical-file-name file-name)))
+               (file-name (lsp-f-canonical file-name)))
     (->> (lsp-session)
          (lsp-session-folders)
          (--first (and (lsp--files-same-host it file-name)
-                       (f-ancestor-of? it file-name))))))
+                       (or (lsp-f-ancestor-of? it file-name)
+                           (equal it file-name)))))))
 
 (defun lsp-on-revert ()
   "Executed when a file is reverted.
@@ -4159,28 +4251,32 @@ and the position respectively."
                  "sortText" sort-text
                  "_emacsStartPoint" start-point)
           item)
-         ((&plist :prefix-line) plist))
+         ((&plist :markers :prefix) plist))
     (propertize (or label insert-text)
                 'lsp-completion-item item
                 'lsp-sort-text sort-text
                 'lsp-completion-start-point start-point
-                'lsp-completion-prefix-line prefix-line)))
+                'lsp-completion-markers markers
+                'lsp-completion-prefix prefix)))
 
 (defun lsp--annotate (item)
   "Annotate ITEM detail."
   (-let (((&hash "detail" "kind") (plist-get (text-properties-at 0 item) 'lsp-completion-item)))
-    (concat (when detail (concat " " detail))
+    (concat (when (and lsp-completion-show-detail detail)
+              (concat " " (if lsp--filter-cr? (s-replace "\r" "" detail)
+                            detail)))
             (when-let (kind-name (and kind (aref lsp--completion-item-kind kind)))
               (format " (%s)" kind-name)))))
 
-(defun lsp--looking-back-trigger-characters-p (trigger-characters)
+(defun lsp--looking-back-trigger-characterp (trigger-characters)
   "Return trigger character if text before point matches any of the TRIGGER-CHARACTERS."
-  (seq-some
-   (lambda (trigger-char)
-     (and (equal (buffer-substring-no-properties (- (point) (length trigger-char)) (point))
-                 trigger-char)
-          trigger-char))
-   trigger-characters))
+  (unless (= (point) (point-at-bol))
+    (seq-some
+     (lambda (trigger-char)
+       (and (equal (buffer-substring-no-properties (- (point) (length trigger-char)) (point))
+                   trigger-char)
+            trigger-char))
+     trigger-characters)))
 
 (defvar lsp--capf-cache nil
   "Cached candidates for completion at point function.
@@ -4189,6 +4285,11 @@ When the completion is incomplete, cache contains value of `incomplete'.")
 
 (defun lsp--capf-clear-cache (&rest _)
   "Clear completion caches."
+  (-some-> (and (listp lsp--capf-cache) lsp--capf-cache)
+    (cddr)
+    (plist-get :markers)
+    (cadr)
+    (set-marker nil))
   (setq lsp--capf-cache nil))
 
 (defun lsp--capf-guess-prefix (item &optional default)
@@ -4223,17 +4324,18 @@ When the heuristic fails to find the prefix start point, return DEFAULT value."
        (-map (-lambda ((item &as &hash
                              "label"
                              "filterText" filter-text
-                             "_emacsStartPoint" start-point))
+                             "_emacsStartPoint" start-point
+                             "score"))
                (propertize (or filter-text label)
                            'lsp-completion-item item
-                           'lsp-completion-start-point start-point))
+                           'lsp-completion-start-point start-point
+                           'lsp-completion-score score))
              it)
        (seq-into it 'list)
        (-group-by (-partial #'get-text-property 0 'lsp-completion-start-point) it)
        (sort it (-on #'< (lambda (o) (or (car o) most-positive-fixnum))))))
 
 (cl-defun lsp--capf-filter-candidates (items
-                                       &optional
                                        &rest plist
                                        &key lsp-items
                                        &allow-other-keys)
@@ -4257,8 +4359,13 @@ Also, additional data to attached to each candidate can be passed via PLIST."
                                  it))))
                   (-flatten-n 1)
                   (-sort (-on #'> (lambda (o)
-                                    (or (get-text-property 0 'completion-score o)
-                                        0))))
+                                    (or (get-text-property 0 'sort-score o)
+                                        (let* ((score (* (or (get-text-property 0 'completion-score o)
+                                                             0.001)
+                                                         (or (get-text-property 0 'lsp-completion-score o)
+                                                             0.001))))
+                                          (put-text-property 0 1 'sort-score score o)
+                                          score)))))
                   ;; TODO: pass additional function to sort the candidates
                   (-map (-partial #'get-text-property 0 'lsp-completion-item)))
            lsp-items)))
@@ -4317,7 +4424,7 @@ Also, additional data to attached to each candidate can be passed via PLIST."
   "Get completion context with provided TRIGGER-CHARACTERS."
   (let* (trigger-char
          (trigger-kind (cond
-                        ((setq trigger-char (lsp--looking-back-trigger-characters-p
+                        ((setq trigger-char (lsp--looking-back-trigger-characterp
                                              trigger-characters))
                          'character)
                         ((equal lsp--capf-cache 'incomplete) 'incomplete)
@@ -4325,125 +4432,162 @@ Also, additional data to attached to each candidate can be passed via PLIST."
     (ht<-alist
      (append
       `(("triggerKind" . ,(alist-get trigger-kind lsp--completion-trigger-kinds)))
-       (when trigger-char `(("triggerCharacter" . ,trigger-char)))))))
+      (when trigger-char `(("triggerCharacter" . ,trigger-char)))))))
 
 (defun lsp-completion-at-point ()
   "Get lsp completions."
   (when (or (--some (lsp--client-completion-in-comments? (lsp--workspace-client it))
                     (lsp-workspaces))
             (not (nth 4 (syntax-ppss))))
-    (let* ((bounds-start (or (car (bounds-of-thing-at-point 'symbol)) (point)))
-           (trigger-chars (->> (lsp--server-capabilities)
+    (let* ((trigger-chars (->> (lsp--server-capabilities)
                                (gethash "completionProvider")
                                (gethash "triggerCharacters")))
-           result done?)
+           (bounds-start (or (-some--> (car (bounds-of-thing-at-point 'symbol))
+                               (save-excursion
+                                 (ignore-errors
+                                   (goto-char (+ it 1))
+                                   (while (lsp--looking-back-trigger-characterp trigger-chars)
+                                     (cl-incf it)
+                                     (forward-char))
+                                   it)))
+                             (point)))
+           result done?
+           (all-completions
+            (lambda ()
+              (cond
+               (done? result)
+               ((and lsp--capf-cache
+                     (listp lsp--capf-cache)
+                     (s-prefix? (car lsp--capf-cache)
+                                (buffer-substring-no-properties bounds-start (point)))
+                     (< (caar (cadr lsp--capf-cache)) (point)))
+                (apply #'lsp--capf-filter-candidates (cdr lsp--capf-cache)))
+               (t
+                (-let* ((resp (lsp-request-while-no-input
+                               "textDocument/completion"
+                               (plist-put (lsp--text-document-position-params)
+                                          :context (lsp--capf-get-context trigger-chars))))
+                        (completed (or (seqp resp)
+                                       (not (gethash "isIncomplete" resp))))
+                        (items (--> (cond
+                                     ((seqp resp) resp)
+                                     ((hash-table-p resp) (gethash "items" resp)))
+                                    (if (or completed
+                                            (seq-some (-rpartial #'lsp--ht-get "sortText") it))
+                                        (lsp--sort-completions it)
+                                      it)
+                                    (-map (lambda (item)
+                                            (puthash "_emacsStartPoint"
+                                                     (lsp--capf-guess-prefix item bounds-start)
+                                                     item)
+                                            item)
+                                          it)))
+                        (markers (list bounds-start (copy-marker (point) t)))
+                        (prefix (buffer-substring-no-properties bounds-start (point))))
+                  (setf done? completed
+                        lsp--capf-cache (cond
+                                         ((and done? (not (seq-empty-p items)))
+                                          (list (buffer-substring-no-properties bounds-start (point))
+                                                (lsp--capf-cached-items items)
+                                                :lsp-items nil
+                                                :markers markers
+                                                :prefix prefix))
+                                         ((not done?) 'incomplete))
+                        result (lsp--capf-filter-candidates (if done? (cadr lsp--capf-cache))
+                                                            :lsp-items items
+                                                            :markers markers
+                                                            :prefix prefix))))))))
       (list
        bounds-start
        (point)
-       (lambda (_probe _pred action)
+       (lambda (probe _pred action)
          (cond
-          ((eq action 'metadata)
+          ;; metadata
+          ((equal action 'metadata)
            `(metadata (category . lsp-capf)
                       (display-sort-function . identity)))
-          ((eq (car-safe action) 'boundaries) nil)
+          ;; boundaries
+          ((equal (car-safe action) 'boundaries) nil)
+          ;; try-completion
+          ((null action) (and (member probe (funcall all-completions)) t))
+          ;; test-completion
+          ((equal action 'lambda) (member probe (funcall all-completions)))
           ;; retrieve candidates
-          (done? result)
-          ((and lsp--capf-cache
-                (listp lsp--capf-cache)
-                (s-prefix? (car lsp--capf-cache)
-                           (buffer-substring-no-properties bounds-start (point)))
-                (< (caar (cadr lsp--capf-cache)) (point)))
-           (apply #'lsp--capf-filter-candidates (cdr lsp--capf-cache)))
-          (t
-           (-let* ((resp (lsp-request-while-no-input
-                          "textDocument/completion"
-                          (plist-put (lsp--text-document-position-params)
-                                     :context (lsp--capf-get-context trigger-chars))))
-                   (items (->> (lsp--sort-completions (cond
-                                                       ((seqp resp) resp)
-                                                       ((hash-table-p resp) (gethash "items" resp))))
-                               (-map (lambda (item)
-                                       (puthash "_emacsStartPoint"
-                                                (lsp--capf-guess-prefix item bounds-start)
-                                                item)
-                                       item))))
-                   (prefix-line (buffer-substring-no-properties (point-at-bol) (point))))
-             (setf done? (or (seqp resp)
-                             (not (gethash "isIncomplete" resp)))
-                   lsp--capf-cache (cond
-                                    ((and done? (not (seq-empty-p items)))
-                                     (list (buffer-substring-no-properties bounds-start (point))
-                                           (lsp--capf-cached-items items)
-                                           :lsp-items nil
-                                           :prefix-line prefix-line))
-                                    ((not done?) 'incomplete))
-                   result (lsp--capf-filter-candidates (if done? (cadr lsp--capf-cache))
-                                                       :lsp-items items
-                                                       :prefix-line prefix-line))))))
+          (t (funcall all-completions))))
        :annotation-function #'lsp--annotate
        :company-require-match 'never
        :company-prefix-length
        (save-excursion
          (goto-char bounds-start)
-         (and (lsp--looking-back-trigger-characters-p trigger-chars) t))
+         (and (lsp--looking-back-trigger-characterp trigger-chars) t))
        :company-match #'lsp--capf-company-match
        :company-doc-buffer (-compose #'company-doc-buffer
                                      #'lsp--capf-get-documentation)
        :exit-function
-       (lambda (candidate _status)
-         (-let* (((&plist 'lsp-completion-item item
-                          'lsp-completion-start-point start-point
-                          'lsp-completion-prefix-line prefix-line)
-                  (text-properties-at 0 candidate))
-                 ((&hash "label"
-                         "insertText" insert-text
-                         "textEdit" text-edit
-                         "insertTextFormat" insert-text-format
-                         "additionalTextEdits" additional-text-edits)
-                  item))
-           (cond
-            (text-edit
-             (delete-region (point-at-bol) (point))
-             (insert prefix-line)
-             (lsp--apply-text-edit text-edit))
-            ((or insert-text label)
-             (delete-region (point-at-bol) (point))
-             (insert prefix-line)
-             (delete-region start-point (point))
-             (insert (or insert-text label))))
+       (-rpartial #'lsp--capf-exit-fn trigger-chars)))))
 
-           (when (eq insert-text-format 2)
-             (yas-expand-snippet
-              (lsp--to-yasnippet-snippet (buffer-substring start-point (point)))
-              start-point
-              (point)))
-           (when additional-text-edits
-             (lsp--apply-text-edits additional-text-edits)))
-         (lsp--capf-clear-cache)
-         (when (and lsp-signature-auto-activate
-                    (lsp-feature? "textDocument/signatureHelp"))
-           (lsp-signature-activate))
+(defun lsp--capf-exit-fn (candidate _status &optional trigger-chars)
+  "Exit function of `completion-at-point'.
+CANDIDATE is the selected completion item.
+Others: TRIGGER-CHARS"
+  (-let* (((&plist 'lsp-completion-item item
+                   'lsp-completion-start-point start-point
+                   'lsp-completion-markers markers
+                   'lsp-completion-prefix prefix)
+           (text-properties-at 0 candidate))
+          ((&hash "label"
+                  "insertText" insert-text
+                  "textEdit" text-edit
+                  "insertTextFormat" insert-text-format
+                  "additionalTextEdits" additional-text-edits)
+           (or item lsp--empty-ht)))
+    (cond
+     (text-edit
+      (apply #'delete-region markers)
+      (insert prefix)
+      (lsp--apply-text-edit text-edit))
+     ((or insert-text label)
+      (apply #'delete-region markers)
+      (insert prefix)
+      (delete-region start-point (point))
+      (insert (or insert-text label))))
 
-         (setq-local lsp-inhibit-lsp-hooks nil)
+    (when (eq insert-text-format 2)
+      (let (yas-indent-line)
+        (yas-expand-snippet
+         (lsp--to-yasnippet-snippet (buffer-substring start-point (point)))
+         start-point
+         (point))))
 
-         (when (lsp--looking-back-trigger-characters-p trigger-chars)
-           (setq this-command 'self-insert-command)))))))
+    (when (and lsp-completion-enable-additional-text-edit additional-text-edits)
+      (lsp--apply-text-edits additional-text-edits)))
+
+  (lsp--capf-clear-cache)
+
+  (when (and lsp-signature-auto-activate
+             (lsp-feature? "textDocument/signatureHelp"))
+    (lsp-signature-activate))
+
+  (setq-local lsp-inhibit-lsp-hooks nil)
+
+  (when (lsp--looking-back-trigger-characterp trigger-chars)
+    (setq this-command 'self-insert-command)))
 
 (advice-add #'completion-at-point :before #'lsp--capf-clear-cache)
 
 (defun lsp--to-yasnippet-snippet (text)
   "Convert LSP snippet TEXT to yasnippet snippet."
   ;; LSP snippet doesn't escape "{", but yasnippet requires escaping it.
-  (s-replace-regexp (rx (or bos (not (any "$" "\\"))) (group "{"))
-                    (rx "\\" (backref 1))
-                    text
-                    nil nil 1))
+  (replace-regexp-in-string (rx (or bos (not (any "$" "\\"))) (group "{"))
+                            (rx "\\" (backref 1))
+                            text
+                            nil nil 1))
 
 (defun lsp--sort-completions (completions)
   "Sort COMPLETIONS."
   (--sort (let ((left (gethash "sortText" it))
                 (right (gethash "sortText" other)))
-            (if (string= left right)
+            (if (equal left right)
                 (string-lessp (gethash "label" it) (gethash "label" other))
               (string-lessp left right)))
           completions))
@@ -4680,18 +4824,17 @@ Cdr should be list of PROPERTY-LIST.
 
 Each PROPERTY-LIST should have properties:
 :regexp  Regexp which determines what string is relpaced to image.
-         You should also get infomation of image, by parenthesis constructs.
-         By deafult, all matched string is replaced to image, but you can change
-         index of replaced string by keyword :replaced-index.
+         You should also get information of image, by parenthesis constructs.
+         By default, all matched string is replaced to image, but you can
+         change index of replaced string by keyword :replaced-index.
 
-:sexp    Return image when evaluated. You can use infomation of regexp
+:sexp    Return image when evaluated. You can use information of regexp
          by using (match-beggining N), (match-end N) or (match-substring N).
 
 In addition, each can have property:
 :replaced-index  Determine index which is used to replace regexp to image.
-                 The value means first argument of `match-beggining' and `match-end'.
-                 If omitted, interpreted as index 0.
-")
+                 The value means first argument of `match-beginning' and
+                 `match-end'. If omitted, interpreted as index 0.")
 
 (defcustom lsp-display-inline-image t
   "Showing inline image or not."
@@ -4736,6 +4879,7 @@ In addition, each can have property:
 (defun lsp--render-string (str language)
   "Render STR using `major-mode' corresponding to LANGUAGE.
 When language is nil render as markup if `markdown-mode' is loaded."
+  (setq str (or str ""))
   (if-let (mode (-some (-lambda ((mode . lang))
                          (when (and (equal lang language) (functionp mode))
                            mode))
@@ -4771,11 +4915,40 @@ When language is nil render as markup if `markdown-mode' is loaded."
    ((seq-empty-p actions) (signal 'lsp-no-code-actions nil))
    ((and (eq (seq-length actions) 1) lsp-auto-execute-action)
     (lsp-seq-first actions))
-   (t (lsp--completing-read "Select code action: "
-                            (seq-into actions 'list)
-                            (-lambda ((&hash "title" "command"))
-                              (or title command))
-                            nil t))))
+   (t (let ((completion-ignore-case t))
+        (lsp--completing-read "Select code action: "
+                              (seq-into actions 'list)
+                              (-lambda ((&hash "title" "command"))
+                                (or title command))
+                              nil t)))))
+
+(defun lsp-join-region (beg end)
+  "Apply join-line from BEG to END.
+This function is useful when an indented function prototype needs
+to be shown in a single line."
+  (save-excursion
+    (let ((end (copy-marker end)))
+      (goto-char beg)
+      (while (< (point) end)
+        (join-line 1)))
+    (s-trim (buffer-string))))
+
+(defun lsp--workspace-server-id (workspace)
+  "Return the server ID of WORKSPACE."
+  (-> workspace lsp--workspace-client lsp--client-server-id))
+
+(defun lsp--handle-rendered-for-echo-area (contents)
+  "Return a single line from RENDERED, appropriate for display in the echo area."
+  (pcase (lsp-workspaces)
+    (`(,workspace)
+     (lsp-clients-extract-signature-on-hover contents (lsp--workspace-server-id workspace)))
+    ;; For projects with multiple active workspaces we also default to
+    ;; render the first line.
+    (_ (lsp-clients-extract-signature-on-hover contents nil))))
+
+(cl-defgeneric lsp-clients-extract-signature-on-hover (contents _server-id)
+  "Extract a representative line from CONTENTS, to show in the echo area."
+  (car (s-lines (lsp--render-element contents))))
 
 (defun lsp--render-on-hover-content (contents render-all)
   "Render the content received from 'document/onHover' request.
@@ -4786,8 +4959,9 @@ RENDER-ALL - nil if only the signature should be rendered."
     ;; MarkupContent.
     ;; It tends to be long and is not suitable to display fully in the echo area.
     ;; Just display the first line which is typically the signature.
-    (let ((rendered (lsp--render-element contents)))
-      (if render-all rendered (car (s-lines rendered)))))
+    (if render-all
+        (lsp--render-element contents)
+      (lsp--handle-rendered-for-echo-area contents)))
    ((and (stringp contents) (not (string-match-p "\n" contents)))
     ;; If the contents is a single string containing a single line,
     ;; render it always.
@@ -4808,7 +4982,9 @@ RENDER-ALL - nil if only the signature should be rendered."
          (-andfn 'hash-table-p
                  (-compose #'lsp-get-renderer (-partial 'gethash "language")))
          contents)))
-     "\n"))))
+     (if (bound-and-true-p page-break-lines-mode)
+         "\n\n"
+       "\n")))))
 
 
 
@@ -4940,7 +5116,9 @@ It will show up only if current point has signature help."
                             (length signatures)
                             (propertize "│ " 'face 'shadow)))
             (prefix-length (- (length prefix) 2))
-            (method-docs (when lsp-signature-render-documentation
+            (method-docs (when
+                             (and lsp-signature-render-documentation
+                                  (or (not (numberp lsp-signature-doc-lines)) (< 0 lsp-signature-doc-lines)))
                            (let ((docs (lsp--render-element
                                         (gethash "documentation" signature))))
                              (when (s-present? docs)
@@ -5382,8 +5560,145 @@ unless overridden by a more specific face association."
  Since the list is traversed in order, it should be sorted in order of decreasing
  specificity.")
 
+(defface lsp-face-semhl-comment
+  '((t (:inherit font-lock-comment-face)))
+  "Face used for comments."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-keyword
+  '((t (:inherit font-lock-keyword-face)))
+  "Face used for keywords."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-string
+  '((t (:inherit font-lock-string-face)))
+  "Face used for keywords."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-number
+  '((t (:inherit font-lock-constant-face)))
+  "Face used for numbers."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-regexp
+  '((t (:inherit font-lock-string-face :slant italic)))
+  "Face used for regexps."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-operator
+  '((t (:inherit font-lock-function-name-face)))
+  "Face used for operators."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-namespace
+  '((t (:inherit font-lock-keyword-face)))
+  "Face used for namespaces."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-type
+  '((t (:inherit font-lock-type-face)))
+  "Face used for types."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-type
+  '((t (:inherit font-lock-type-face)))
+  "Face used for types."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-struct
+  '((t (:inherit font-lock-type-face)))
+  "Face used for structs."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-class
+  '((t (:inherit font-lock-type-face)))
+  "Face used for classes."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-interface
+  '((t (:inherit font-lock-type-face)))
+  "Face used for interfaces."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-enum
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for enums."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-type-parameter
+  '((t (:inherit font-lock-type-face)))
+  "Face used for type parameters."
+  :group 'lsp-faces)
+
+;; function face already defined, move here when support
+;; for theia highlighting gets removed
+(defface lsp-face-semhl-member
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for members."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-property
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for properties."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-macro
+  '((t (:inherit font-lock-preprocessor-face)))
+  "Face used for macros."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-variable
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for variables."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-parameter
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face used for parameters."
+  :group 'lsp-faces)
+
+(defface lsp-face-semhl-label
+  '((t (:inherit font-lock-comment-face)))
+  "Face used for labels."
+  :group 'lsp-faces)
+
+(defvar lsp-semantic-token-faces
+  '(("comment" . lsp-face-semhl-comment)
+    ("keyword" . lsp-face-semhl-keyword)
+    ("string" . lsp-face-semhl-string)
+    ("number" . lsp-face-semhl-number)
+    ("regexp" . lsp-face-semhl-regexp)
+    ("operator" . lsp-face-semhl-operator)
+    ("namespace" . lsp-face-semhl-namespace)
+    ("type" . lsp-face-semhl-type)
+    ("struct" . lsp-face-semhl-struct)
+    ("class" . lsp-face-semhl-class)
+    ("interface" . lsp-face-semhl-interface)
+    ("enum" . lsp-face-semhl-enum)
+    ("typeParameter" . lsp-face-semhl-type-parameter)
+    ("function" . lsp-face-semhl-function)
+    ("member" . lsp-face-semhl-member)
+    ("property" . lsp-face-semhl-property)
+    ("macro" . lsp-face-semhl-macro)
+    ("variable" . lsp-face-semhl-variable)
+    ("parameter" . lsp-face-semhl-parameter)
+    ("label" . lsp-face-semhl-label)
+    ("enumConstant" . lsp-face-semhl-constant)
+    ("dependent" . lsp-face-semhl-type)
+    ("concept" . lsp-face-semhl-interface))
+  "Faces to use for semantic highlighting if
+`lsp-semantic-highlighting' is set to :semantic-tokens.")
+
+(defvar lsp-semantic-token-modifier-faces
+  ;; TODO: add default definitions
+  '(("declaration" . lsp-face-semhl-interface)
+    ("readonly" . lsp-face-semhl-constant))
+  "Faces to use for semantic token modifiers if
+`lsp-semantic-highlighting' is set to `:semantic-tokens' and
+`lsp-semantic-tokens-apply-modifiers' is non-nil.")
+
 (defvar-local lsp--semantic-highlighting-current-region nil
-"Denotes the region `(min . max)' most recently fontified via the
+  "Denotes the region `(min . max)' most recently fontified via the
  deferred semantic-highlighting mechanism.
 
 Further fontification calls will be skipped unless new semantic
@@ -5535,7 +5850,7 @@ or `(point)' lies outside `lsp--semantic-highlighting-region'.")
          (inhibit-field-text-motion t))
     (when buffer
       (with-current-buffer buffer
-        (if (eq lsp-semantic-highlighting 'immediate)
+        (if (eq lsp-semantic-highlighting :immediate)
             (save-mark-and-excursion
               (save-restriction
                 (widen)
@@ -5543,6 +5858,129 @@ or `(point)' lies outside `lsp--semantic-highlighting-region'.")
                   (lsp--apply-semantic-highlighting
                    (lsp--workspace-semantic-highlighting-faces workspace) lines))))
           (lsp--semantic-highlighting-add-to-cache lines))))))
+
+(defun lsp--build-face-map (identifiers faces category varname)
+  (apply 'vector
+         (mapcar (lambda (id)
+                   (let ((maybe-face (cdr (assoc id faces))))
+                     (when (and lsp-semantic-highlighting-warn-on-missing-face (not maybe-face))
+                       (lsp-warn "No face has been associated to the %s '%s': consider adding a corresponding definition to %s"
+                                 category id varname)) maybe-face)) identifiers)))
+
+(defun lsp--semantic-tokens-initialize-workspace (workspace)
+  (cl-assert workspace)
+  (let* ((token-capabilities (gethash
+                              "semanticTokensProvider"
+                              (lsp--workspace-server-capabilities workspace)))
+         (legend (gethash "legend" token-capabilities)))
+    (setf (lsp--workspace-semantic-highlighting-faces workspace)
+          (lsp--build-face-map (gethash "tokenTypes" legend)
+                               lsp-semantic-token-faces
+                               "semantic token"
+                               "lsp-semantic-token-faces"))
+    (setf (lsp--workspace-semantic-highlighting-modifier-faces workspace)
+          (lsp--build-face-map (gethash "tokenModifiers" legend)
+                               lsp-semantic-token-modifier-faces
+                               "semantic token modifier"
+                               "lsp-semantic-token-modifier-faces"))))
+
+(defvar-local lsp--semantic-tokens-cache nil)
+
+(defvar-local lsp--semantic-tokens-teardown nil)
+
+(defun lsp--semantic-tokens-initialize-buffer ()
+  (let* ((old-extend-region-functions font-lock-extend-region-functions)
+         ;; make sure font-lock always fontifies entire lines (TODO: do we also have
+         ;; to change some jit-lock-...-region functions/variables?)
+         (new-extend-region-functions
+          (if (memq 'font-lock-extend-region-wholelines old-extend-region-functions)
+              old-extend-region-functions
+            (cons 'font-lock-extend-region-wholelines old-extend-region-functions))))
+    (setq font-lock-extend-region-functions new-extend-region-functions)
+    (add-function :around (local 'font-lock-fontify-region-function) #'lsp--semantic-tokens-fontify)
+    (add-hook 'lsp-on-change-hook #'lsp--semantic-tokens-request nil t)
+    (lsp--semantic-tokens-request)
+    (setq lsp--semantic-tokens-teardown
+          (lambda ()
+            (setq font-lock-extend-region-functions old-extend-region-functions)
+            (remove-function (local 'font-lock-fontify-region-function)
+                             #'lsp--semantic-tokens-fontify)))))
+
+(defun lsp--semantic-tokens-fontify (old-fontify-region beg end &optional loudly)
+  ;; TODO: support multiple language servers per buffer?
+  (let ((faces (seq-some #'lsp--workspace-semantic-highlighting-faces lsp--buffer-workspaces))
+        (modifier-faces
+         (when lsp-semantic-tokens-apply-modifiers
+           (seq-some #'lsp--workspace-semantic-highlighting-modifier-faces lsp--buffer-workspaces))))
+    (if (or (eq nil lsp--semantic-tokens-cache)
+            (eq nil faces)
+            ;; delay fontification until we have fresh tokens
+            (not (= lsp--cur-version (gethash "documentVersion" lsp--semantic-tokens-cache))))
+        '(jit-lock-bounds 0 . 0)
+      (funcall old-fontify-region beg end loudly)
+      (let* ((inhibit-field-text-motion t)
+             (data (gethash "data" lsp--semantic-tokens-cache))
+             (i0 0)
+             (i-max (1- (length data)))
+             (current-line 1)
+             (line-delta)
+             (column 0)
+             (face)
+             (line-start-pos)
+             (line-min)
+             (line-max-inclusive)
+             (text-property-beg)
+             (text-property-end))
+        (save-mark-and-excursion
+          (save-restriction
+            (widen)
+            (goto-char beg)
+            (goto-char (line-beginning-position))
+            (setq line-min (line-number-at-pos))
+            (with-silent-modifications
+              (goto-char end)
+              (goto-char (line-end-position))
+              (setq line-max-inclusive (line-number-at-pos))
+              (forward-line (- line-min line-max-inclusive))
+              (let ((skip-lines (- line-min current-line)))
+                (while (and (<= i0 i-max) (< (aref data i0) skip-lines))
+                  (setq skip-lines (- skip-lines (aref data i0)))
+                  (setq i0 (+ i0 5)))
+                (setq current-line (- line-min skip-lines)))
+              (forward-line (- current-line line-min))
+              (setq line-start-pos (point))
+              (cl-loop
+               for i from i0 to i-max by 5 do
+               (setq line-delta (aref data i))
+               (unless (= line-delta 0)
+                 (forward-line line-delta)
+                 (setq line-start-pos (point))
+                 (setq column 0)
+                 (setq current-line (+ current-line line-delta)))
+               (setq column (+ column (aref data (1+ i))))
+               (setq face (aref faces (aref data (+ i 3))))
+               (setq text-property-beg (+ line-start-pos column))
+               (setq text-property-end (+ text-property-beg (aref data (+ i 2))))
+               (when face (put-text-property text-property-beg text-property-end 'face face))
+               (cl-loop for i from 0 to (1- (length modifier-faces)) do
+                        (when (and (aref modifier-faces i)
+                                   (> 0 (logand (aref data (+ i 4)) (lsh 1 i))))
+                          (add-face-text-property text-property-beg text-property-end
+                                                  (aref modifier-faces i))))
+               when (> current-line line-max-inclusive) return nil)))))
+      `(jit-lock-bounds ,beg . ,end))))
+
+(defun lsp--semantic-tokens-request ()
+  (let ((cur-version lsp--cur-version))
+    (lsp-request-async
+     "textDocument/semanticTokens"
+     `(:textDocument ,(lsp--text-document-identifier))
+     (lambda (response)
+       (setq lsp--semantic-tokens-cache response)
+       (puthash "documentVersion" cur-version lsp--semantic-tokens-cache)
+       (font-lock-flush))
+     :mode 'tick
+     :cancel-token (format "semantic-tokens-%s" (lsp--buffer-uri)))))
 
 (defconst lsp--symbol-kind
   '((1 . "File")
@@ -5848,7 +6286,7 @@ textDocument/didOpen for the new file."
 ;;   .    x     notification
 (defun lsp--get-message-type (json-data)
   "Get the message type from JSON-DATA."
-  (when (not (string= (gethash "jsonrpc" json-data "") "2.0"))
+  (when (not (equal (gethash "jsonrpc" json-data "") "2.0"))
     (signal 'lsp-unknown-json-rpc-version (list (gethash "jsonrpc" json-data))))
   (if (gethash "id" json-data nil)
       (if (gethash "error" json-data nil)
@@ -5923,27 +6361,27 @@ WORKSPACE is the active workspace."
                                (-partial #'lsp--send-request-response
                                          workspace recv-time request))
                       'delay-response)
-                     ((string= method "client/registerCapability")
+                     ((equal method "client/registerCapability")
                       (seq-doseq (reg (gethash "registrations" params))
                         (lsp--server-register-capability reg))
                       nil)
-                     ((string= method "window/showMessageRequest")
+                     ((equal method "window/showMessageRequest")
                       (let ((choice (lsp--window-log-message-request params)))
                         `(:title ,choice)))
-                     ((string= method "client/unregisterCapability")
+                     ((equal method "client/unregisterCapability")
                       (seq-doseq (unreg (gethash "unregisterations" params))
                         (lsp--server-unregister-capability unreg))
                       nil)
-                     ((string= method "workspace/applyEdit")
+                     ((equal method "workspace/applyEdit")
                       (list :applied (condition-case err
                                          (prog1 t
                                            (lsp--apply-workspace-edit (gethash "edit" params)))
                                        (error
                                         (lsp--error "Failed to apply edits with message %s" (error-message-string err))
                                         :json-false))))
-                     ((string= method "workspace/configuration")
+                     ((equal method "workspace/configuration")
                       (with-lsp-workspace workspace (lsp--build-workspace-configuration-response params)))
-                     ((string= method "workspace/workspaceFolders")
+                     ((equal method "workspace/workspaceFolders")
                       (let ((folders (or (-> workspace
                                              (lsp--workspace-client)
                                              (lsp--client-server-id)
@@ -5954,7 +6392,7 @@ WORKSPACE is the active workspace."
                              (-map (lambda (folder)
                                      (list :uri (lsp--path-to-uri folder))))
                              (apply #'vector))))
-                     ((string= method "window/workDoneProgress/create")
+                     ((equal method "window/workDoneProgress/create")
                       nil ;; no specific reply, no processing required
                       )
                      (t (lsp-warn "Unknown request method: %s" method) nil))))
@@ -5987,7 +6425,7 @@ WORKSPACE is the active workspace."
       (signal 'lsp-invalid-header-name (list s)))
     (setq key (substring s 0 pos)
           val (s-trim-left (substring s (+ 1 pos))))
-    (when (string-equal key "Content-Length")
+    (when (equal key "Content-Length")
       (cl-assert (cl-loop for c across val
                           when (or (> c ?9) (< c ?0)) return nil
                           finally return t)
@@ -6094,8 +6532,8 @@ WORKSPACE is the active workspace."
   (let ((body-received 0)
         leftovers body-length body chunk)
     (lambda (_proc input)
-      (setf chunk (concat leftovers (with-no-warnings (string-as-unibyte input))))
-      (while (not (string= chunk ""))
+      (setf chunk (concat leftovers (encode-coding-string input 'utf-8 'nocopy)))
+      (while (not (equal chunk ""))
         (if (not body-length)
             ;; Read headers
             (if-let (body-sep-pos (string-match-p "\r\n\r\n" chunk))
@@ -6144,13 +6582,17 @@ WORKSPACE is the active workspace."
                             err)))
                workspace))))))))
 
+(defvar-local lsp--line-col-to-point-hash-table nil
+  "Hash table with keys (line . col) and values that are either point positions or markers.")
+
 (defun lsp--symbol-to-imenu-elem (sym)
   "Convert SYM to imenu element.
 
 SYM is a SymbolInformation message.
 
 Return a cons cell (full-name . start-point)."
-  (let* ((start-point (lsp--symbol-get-start-point sym))
+  (let* ((start-point (ht-get lsp--line-col-to-point-hash-table
+                              (lsp--get-line-and-col sym)))
          (name (gethash "name" sym))
          (container (gethash "containerName" sym)))
     (cons (if (and lsp-imenu-show-container-name container)
@@ -6169,25 +6611,13 @@ an alist
 
   (\"symbol-name\" . ((\"(symbol-kind)\" . start-point)
                     cons-cells-from-children))"
-  (let* ((start-point (lsp--symbol-get-start-point sym))
+  (let* ((start-point (ht-get lsp--line-col-to-point-hash-table
+                              (lsp--get-line-and-col sym)))
          (name (gethash "name" sym)))
     (if (seq-empty-p (gethash "children" sym))
         (cons name start-point)
       (cons name
             (lsp--imenu-create-hierarchical-index (gethash "children" sym))))))
-
-(defun lsp--symbol-get-start-point (sym)
-  "Get the start point of the name of SYM.
-
-SYM can be either DocumentSymbol or SymbolInformation."
-  (let* ((location (gethash "location" sym))
-         (name-range (or (and location (gethash "range" location))
-                         (gethash "selectionRange" sym)))
-         (start-point (lsp--position-to-point
-                       (gethash "start" name-range))))
-    (if imenu-use-markers
-        (save-excursion (goto-char start-point) (point-marker))
-      start-point)))
 
 (defun lsp--symbol-filter (sym)
   "Determine if SYM is for the current document."
@@ -6207,15 +6637,63 @@ SYM can be either DocumentSymbol or SymbolInformation."
       (cdr)
       (or "Other")))
 
+(defun lsp--get-line-and-col (sym)
+  "Obtain the line and column corresponding to SYM."
+  (-let* ((location (gethash "location" sym))
+          (name-range (or (and location (gethash "range" location))
+                          (gethash "selectionRange" sym)))
+          (start (gethash "start" name-range))
+          ((&hash "line" "character") start))
+    (cons line character)))
+
+(defun lsp--collect-lines-and-cols (symbols)
+  "Return a sorted list ((line . col) ...) of the locations of SYMBOLS."
+  (let ((stack (lsp--imenu-filter-symbols symbols))
+        line-col-list)
+    (while stack
+      (let ((sym (pop stack)))
+        (push (lsp--get-line-and-col sym) line-col-list)
+        (unless (seq-empty-p (gethash "children" sym))
+          (setf stack (nconc (lsp--imenu-filter-symbols (gethash "children" sym)) stack)))))
+    (-sort #'lsp--line-col-comparator line-col-list)))
+
+(defun lsp--convert-line-col-to-points-batch (line-col-list)
+  "Convert a sorted list of positions from line-column
+representation to point representation."
+  (let ((line-col-to-point-map (ht-create))
+        (inhibit-field-text-motion t)
+        (curr-line 0))
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (cl-loop for (line . col) in line-col-list do
+                 (forward-line (- line curr-line))
+                 (setq curr-line line)
+                 (let ((line-end (line-end-position)))
+                   (if (or (not col) (> col (- line-end (point))))
+                       (goto-char line-end)
+                     (forward-char col)))
+                 (ht-set! line-col-to-point-map (cons line col) (if imenu-use-markers
+                                                                    (point-marker)
+                                                                  (point))))))
+    line-col-to-point-map))
+
+(cl-defun lsp--line-col-comparator ((l1 . c1) (l2 . c2))
+  (or (< l1 l2)
+      (and (= l1 l2)
+           (cond ((and c1 c2)
+                  (< c1 c2))
+                 (c1 t)))))
+
 (defun lsp--imenu-create-index ()
   "Create imenu index from document symbols."
-  (let ((symbols (lsp--get-document-symbols)))
-    (if (lsp--imenu-hierarchical-p symbols)
-        (lsp--imenu-create-hierarchical-index symbols)
-      (seq-map (lambda (nested-alist)
-                 (cons (car nested-alist)
-                       (seq-map #'lsp--symbol-to-imenu-elem (cdr nested-alist))))
-               (seq-group-by #'lsp--get-symbol-type (lsp--imenu-filter-symbols symbols))))))
+  (let* ((symbols (lsp--get-document-symbols))
+         (filtered-symbols (lsp--imenu-filter-symbols symbols))
+         (lsp--line-col-to-point-hash-table (lsp--convert-line-col-to-points-batch (lsp--collect-lines-and-cols filtered-symbols))))
+    (if (lsp--imenu-hierarchical-p filtered-symbols)
+        (lsp--imenu-create-hierarchical-index filtered-symbols)
+      (lsp--imenu-create-non-hierarchical-index filtered-symbols))))
 
 (defun lsp--imenu-filter-symbols (symbols)
   "Filter out unsupported symbols from SYMBOLS."
@@ -6224,6 +6702,24 @@ SYM can be either DocumentSymbol or SymbolInformation."
 (defun lsp--imenu-hierarchical-p (symbols)
   "Determine whether any element in SYMBOLS has children."
   (seq-some (-partial #'gethash "children") symbols))
+
+(defun lsp--imenu-create-non-hierarchical-index (symbols)
+  "Create imenu index for non-hierarchical SYMBOLS.
+
+SYMBOLS are a list of DocumentSymbol messages.
+
+Return a nested alist keyed by symbol names. e.g.
+
+   ((\"SomeClass\" (\"(Class)\" . 10)
+                 (\"someField (Field)\" . 20)
+                 (\"someFunction (Function)\" . 25)
+                 (\"SomeSubClass\" (\"(Class)\" . 30)
+                                  (\"someSubField (Field)\" . 35))
+    (\"someFunction (Function)\" . 40))"
+  (seq-map (lambda (nested-alist)
+             (cons (car nested-alist)
+                   (seq-map #'lsp--symbol-to-imenu-elem (cdr nested-alist))))
+           (seq-group-by #'lsp--get-symbol-type symbols)))
 
 (defun lsp--imenu-create-hierarchical-index (symbols)
   "Create imenu index for hierarchical SYMBOLS.
@@ -6260,11 +6756,12 @@ Return a nested alist keyed by symbol names. e.g.
         (kind2 (gethash "kind" sym2)))
     (- kind1 kind2)))
 
-(defun lsp--imenu-compare-position (sym1 sym2)
-  "Compare SYM1 and SYM2 by position."
-  (let ((position1 (lsp--symbol-get-start-point sym1))
-        (position2 (lsp--symbol-get-start-point sym2)))
-    (- position1 position2)))
+(defun lsp--imenu-compare-line-col (sym1 sym2)
+  (if (lsp--line-col-comparator
+       (lsp--get-line-and-col sym1)
+       (lsp--get-line-and-col sym2))
+      -1
+    1))
 
 (defun lsp--imenu-compare-name (sym1 sym2)
   "Compare SYM1 and SYM2 by name."
@@ -6521,13 +7018,7 @@ returns the command to execute."
               (setq-local lsp-inhibit-lsp-hooks t))
             nil
             t)
-  (add-hook 'company-completion-finished-hook
-            (lambda (&rest _)
-              (lsp--capf-clear-cache)
-              (setq-local lsp-inhibit-lsp-hooks nil))
-            nil
-            t)
-  (add-hook 'company-completion-cancelled-hook
+  (add-hook 'company-after-completion-hook
             (lambda (&rest _)
               (lsp--capf-clear-cache)
               (setq-local lsp-inhibit-lsp-hooks nil))
@@ -6570,7 +7061,10 @@ returns the command to execute."
 
    ((and (fboundp 'company-mode))
     (company-mode 1)
-    (add-to-list 'company-backends 'company-capf))))
+    (add-to-list 'company-backends 'company-capf)))
+
+  ;; yas-snippet config
+  (setq-local yas-inhibit-overlay-modification-protection t))
 
 (defvar-local lsp--buffer-deferred nil
   "Whether buffer was loaded via `lsp-deferred'.")
@@ -6702,6 +7196,9 @@ SESSION is the active session."
 
          (setf (lsp--workspace-server-capabilities workspace) (gethash "capabilities" response)
                (lsp--workspace-status workspace) 'initialized)
+
+         (mapc #'lsp--semantic-tokens-initialize-workspace
+               (lsp--find-workspaces-for "textDocument/semanticTokens"))
 
          (with-lsp-workspace workspace
            (lsp-notify "initialized" lsp--empty-ht))
@@ -7354,17 +7851,18 @@ Returns nil if the project should not be added to the current SESSION."
       (and (file-remote-p f1)
            (file-remote-p f2)
            (progn (require 'tramp)
-                  (string-equal (tramp-file-name-host (tramp-dissect-file-name f1))
-                                (tramp-file-name-host (tramp-dissect-file-name f2)))))))
+                  (equal (tramp-file-name-host (tramp-dissect-file-name f1))
+                         (tramp-file-name-host (tramp-dissect-file-name f2)))))))
 
 (defun lsp-find-session-folder (session file-name)
   "Look in the current SESSION for folder containing FILE-NAME."
-  (let ((file-name-canonical (lsp-canonical-file-name file-name)))
+  (let ((file-name-canonical (lsp-f-canonical file-name)))
     (->> session
          (lsp-session-folders)
          (--filter (and (lsp--files-same-host it file-name-canonical)
-                        (or (f-same? it file-name-canonical)
-                            (f-ancestor-of? it file-name-canonical))))
+                        (or (lsp-f-same? it file-name-canonical)
+                            (and (f-dir? it)
+                                 (lsp-f-ancestor-of? it file-name-canonical)))))
          (--max-by (> (length it)
                       (length other))))))
 
@@ -7384,7 +7882,7 @@ Returns nil if the project should not be added to the current SESSION."
    (->> session
         (lsp-session-folders-blacklist)
         (--first (and (lsp--files-same-host it file-name)
-                      (f-ancestor-of? it file-name)
+                      (lsp-f-ancestor-of? it file-name)
                       (prog1 t
                         (lsp--info "File %s is in blacklisted directory %s" file-name it))))
         not)
@@ -7411,7 +7909,7 @@ The library folders are defined by each client for each of the active workspace.
                                   (when-let (library-folders-fn
                                              (-> it lsp--workspace-client lsp--client-library-folders-fn))
                                     (-first (lambda (library-folder)
-                                              (f-ancestor-of? library-folder (buffer-file-name)))
+                                              (lsp-f-ancestor-of? library-folder (buffer-file-name)))
                                             (funcall library-folders-fn it)))))))
     (lsp--open-in-workspace workspace)
     (view-mode t)
@@ -7440,7 +7938,7 @@ such."
                         (lsp--find-clients)))
         (-if-let (project-root (-some-> session
                                  (lsp--calculate-root (buffer-file-name))
-                                 (lsp-canonical-file-name)))
+                                 (lsp-f-canonical)))
             (progn
               ;; update project roots if needed and persist the lsp session
               (unless (-contains? (lsp-session-folders session) project-root)
@@ -7523,8 +8021,9 @@ argument ask the user to select which language server to start. "
 
   (when (buffer-file-name)
     (let (clients
-          (matching-clients (lsp--filter-clients (-andfn #'lsp--matching-clients?
-                                                         #'lsp--server-binary-present?))))
+          (matching-clients (lsp--filter-clients
+                             (-andfn #'lsp--matching-clients?
+                                     #'lsp--server-binary-present?))))
       (cond
        (matching-clients
         (when (setq lsp--buffer-workspaces
@@ -7636,11 +8135,11 @@ This avoids overloading the server with many files when starting Emacs."
 (defvar flycheck-checker)
 (defvar flycheck-checkers)
 
-(defcustom lsp-flycheck-live-reporting t
-  "If non-nil, diagnostics in buffer will be reported as soon as possible.
-Typically, on every keystroke. If nil, diagnostics will be
-reported according to `flycheck-check-syntax-automatically'."
-  :type 'boolean
+(defcustom lsp-flycheck-default-level 'error
+  "Error level to use when the server does not report back a diagnostic level."
+  :type '(choice (const error)
+                 (const warning)
+                 (const info))
   :group 'lsp-mode)
 
 (defun lsp--get-buffer-diagnostics ()
@@ -7654,7 +8153,8 @@ reported according to `flycheck-check-syntax-automatically'."
                  (1 'error)
                  (2 'warning)
                  (3 'info)
-                 (4 'info)))
+                 (4 'info)
+                 (_ lsp-flycheck-default-level)))
         ;; materialize only first tag.
         (tags (->> diag
                    (lsp-diagnostic-original)
@@ -7671,6 +8171,9 @@ reported according to `flycheck-check-syntax-automatically'."
   "Start an LSP syntax check with CHECKER.
 
 CALLBACK is the status callback passed by Flycheck."
+  ;; avoid double diag check
+  (remove-hook 'lsp-on-idle-hook #'lsp--flycheck-buffer t)
+
   (->> (lsp--get-buffer-diagnostics)
        (-map (-lambda (diag)
                (flycheck-error-new
@@ -7705,19 +8208,17 @@ CALLBACK is the status callback passed by Flycheck."
 
 (defun lsp--flycheck-report ()
   "This callback is invoked when new diagnostics are received
-from the language server. Invoke flycheck-buffer to update the
-display of errors if flycheck-mode is on and we are live
-reporting or we are in save-mode and the buffer is not modified."
-  (cond
-   ;; do nothing
-   ((and (not lsp-flycheck-live-reporting)
-         (not (and (memq 'save flycheck-check-syntax-automatically)
-                   (not (buffer-modified-p))))))
-   ;; visible and not inhibit hooks - refresh right away
-   ((and (not lsp-inhibit-lsp-hooks) (lsp--buffer-visible?))
-    (flycheck-buffer))
-   ;; not visible or inhibit hooks - schedule refresh
-   (t (add-hook 'lsp-on-idle-hook #'lsp--flycheck-buffer nil t))))
+from the language server."
+  (when (and (memq 'idle-change flycheck-check-syntax-automatically)
+             lsp--cur-workspace)
+    ;; make sure diagnostics are published even if the diagnostics
+    ;; have been received after idle-change has been triggered
+    (-some->> lsp--cur-workspace
+      (lsp--workspace-buffers)
+      (mapc (lambda (buffer)
+              (when (buffer-live-p buffer)
+                (with-current-buffer buffer
+                  (add-hook 'lsp-on-idle-hook #'lsp--flycheck-buffer nil t))))))))
 
 (declare-function lsp-cpp-flycheck-clang-tidy-error-explainer "lsp-cpp")
 
@@ -7749,8 +8250,8 @@ g. `error', `warning') and list of LSP TAGS."
                            (setf (get it 'face) face
                                  (get it 'priority) 100)))
                (new-level (intern name))
-	       (bitmap (or (get flycheck-level 'flycheck-fringe-bitmaps)
-			   (get flycheck-level 'flycheck-fringe-bitmap-double-arrow))))
+               (bitmap (or (get flycheck-level 'flycheck-fringe-bitmaps)
+                           (get flycheck-level 'flycheck-fringe-bitmap-double-arrow))))
           (flycheck-define-error-level new-level
             :severity (get flycheck-level 'flycheck-error-severity)
             :compilation-level (get flycheck-level 'flycheck-compilation-level)
@@ -7781,8 +8282,6 @@ See https://github.com/emacs-lsp/lsp-mode."
 (defun lsp-flycheck-enable (&rest _)
   "Enable flycheck integration for the current buffer."
   (flycheck-mode 1)
-  (when lsp-flycheck-live-reporting
-    (setq-local flycheck-check-syntax-automatically nil))
   (setq-local flycheck-checker 'lsp)
   (lsp-flycheck-add-mode major-mode)
   (add-to-list 'flycheck-checkers 'lsp)
@@ -7835,6 +8334,40 @@ See https://github.com/emacs-lsp/lsp-mode."
                               lsp--lens-overlays))))))
       (funcall-interactively action))))
 
+
+;; lsp internal validation.
+
+(defmacro lsp--validate (&rest checks)
+  `(-let [buf (current-buffer)]
+     (with-current-buffer (get-buffer-create "*lsp-performance*")
+       (with-help-window (current-buffer)
+         ,@(-map (-lambda ((msg form))
+                   `(insert (format "%s: %s\n" ,msg
+                                    (if (with-current-buffer buf
+                                          ,form)
+                                        (propertize "OK" 'face 'success)
+                                      (propertize "ERROR" 'face 'error)))))
+                 (-partition 2 checks))))))
+
+(defun lsp-diagnose ()
+  "Validate performance settings."
+  (interactive)
+  (lsp--validate
+   "Checking for Native JSON support" (functionp 'json-serialize)
+   "Checking emacs version has `read-process-output-max'" (boundp 'read-process-output-max)
+   "Using company-capf: " (-contains? company-backends 'company-capf)
+   "Check emacs supports `read-process-output-max'" (boundp 'read-process-output-max)
+   "Check `read-process-output-max' default has been changed from 4k"
+   (and (boundp 'read-process-output-max)
+        (> read-process-output-max 4096))
+   "Byte compiled against native json (recompile emacs if failing.)"
+   (condition-case _err
+       (progn (lsp--make-message  (list "a" "b"))
+              nil)
+     (error t))
+   "`gc-cons-threshold' increased?" (> gc-cons-threshold 800000)))
+
+
 (provide 'lsp-mode)
 ;;; lsp-mode.el ends here
 

@@ -44,7 +44,7 @@ reading a new value in the minibuffer.
    Calling a suffix command usually causes the transient to be exited
 but suffix commands can also be configured to not exit the transient.
 
-This manual is for Transient version 0.2.0 (v0.2.0-1-gafa0c2f+1).
+This manual is for Transient version 0.2.0 (v0.2.0-8-gc94cff7+1).
 
      Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -169,7 +169,7 @@ Suffix commands can also be configured to not exit the transient.
    A suffix command can, but does not have to, use the infix arguments
 in much the same way it can choose to use or ignore the prefix
 arguments.  For a suffix command that was invoked from a transient the
-variable ‘current-transient-suffixes’ and the function ‘transient-args’
+variable ‘transient-current-suffixes’ and the function ‘transient-args’
 serve about the same purpose as the variables ‘prefix-arg’ and
 ‘current-prefix-arg’ do for any command that was called after the prefix
 arguments have been set using a command such as ‘universal-argument’.
@@ -764,13 +764,13 @@ transients can be further modified non-interactively.
    • PREFIX is a transient prefix command, a symbol.
 
    • SUFFIX is a transient infix or suffix specification in the same
-     form as expected by ‘define-transient-command’.  Note that an infix
+     form as expected by ‘transient-define-prefix’.  Note that an infix
      is a special kind of suffix.  Depending on context "suffixes" means
      "suffixes (including infixes)" or "non-infix suffixes".  Here it
      means the former.  See *note Suffix Specifications::.
 
      SUFFIX may also be a group in the same form as expected by
-     ‘define-transient-command’.  See *note Group Specifications::.
+     ‘transient-define-prefix’.  See *note Group Specifications::.
 
    • LOC is a command, a key vector, a key description (a string as
      returned by ‘key-description’), or a list specifying coordinates
@@ -855,7 +855,7 @@ binds the transient’s infix and suffix commands.  In other words, it
 defines the complete transient, not just the transient prefix command
 that is used to invoke that transient.
 
- -- Macro: define-transient-command name arglist [docstring] [keyword
+ -- Macro: transient-define-prefix name arglist [docstring] [keyword
           value]... group... [body...]
 
      This macro defines NAME as a transient prefix command and binds the
@@ -904,8 +904,8 @@ File: transient.info,  Node: Binding Suffix and Infix Commands,  Next: Defining 
 5.2 Binding Suffix and Infix Commands
 =====================================
 
-The macro ‘define-transient-command’ is used to define a transient.
-This defines the actual transient prefix command (see *note Defining
+The macro ‘transient-define-prefix’ is used to define a transient.  This
+defines the actual transient prefix command (see *note Defining
 Transients::) and adds the transient’s infix and suffix bindings, as
 described below.
 
@@ -913,7 +913,7 @@ described below.
 functions such as ‘transient-insert-suffix’ (See *note Modifying
 Existing Transients::).  These functions take a "suffix specification"
 as one of their arguments, which has the same form as the specifications
-used in ‘define-transient-command’.
+used in ‘transient-define-prefix’.
 
 * Menu:
 
@@ -935,7 +935,7 @@ of suffixes.
 subgroups.  In most cases the class does not have to be specified
 explicitly, but see *note Group Classes::.
 
-   Groups are specified in the call to ‘define-transient-command’, using
+   Groups are specified in the call to ‘transient-define-prefix’, using
 vectors.  Because groups are represented using vectors, we cannot use
 square brackets to indicate an optional element and instead use curly
 brackets to do the latter.
@@ -1004,7 +1004,7 @@ File: transient.info,  Node: Suffix Specifications,  Prev: Group Specifications,
 ---------------------------
 
 A transient’s suffix and infix commands are bound when the transient
-prefix command is defined using ‘define-transient-command’, see *note
+prefix command is defined using ‘transient-define-prefix’, see *note
 Defining Transients::.  The commands are organized into groups, see
 *note Group Specifications::.  Here we describe the form used to bind an
 individual suffix command.
@@ -1044,8 +1044,9 @@ only argument that is mandatory in all cases.
 
    • COMMAND is a symbol that is bound as a function, which has to be a
      command.  Any command will do; it does not need to have an object
-     associated with it (as would be the case if ‘define-suffix-command’
-     or ‘define-infix-command’ were used to define it).
+     associated with it (as would be the case if
+     ‘transient-define-suffix’ or ‘transient-define-infix’ were used to
+     define it).
 
      As mentioned above, the object that is associated with a command
      can be used to set the default for certain values that otherwise
@@ -1084,7 +1085,7 @@ File: transient.info,  Node: Defining Suffix and Infix Commands,  Next: Using In
 Note that an infix is a special kind of suffix.  Depending on context
 "suffixes" means "suffixes (including infixes)" or "non-infix suffixes".
 
- -- Macro: define-suffix-command name arglist [docstring] [keyword
+ -- Macro: transient-define-suffix name arglist [docstring] [keyword
           value]... body...
 
      This macro defines NAME as a transient suffix command.
@@ -1102,7 +1103,7 @@ Note that an infix is a special kind of suffix.  Depending on context
      ARGLIST.  The infix arguments are usually accessed by using
      ‘transient-args’ inside ‘interactive’.
 
- -- Macro: define-infix-command name arglist [docstring] [keyword
+ -- Macro: transient-define-infix name arglist [docstring] [keyword
           value]...
 
      This macro defines NAME as a transient infix command.
@@ -1138,15 +1139,15 @@ Note that an infix is a special kind of suffix.  Depending on context
      have to use ‘transient-suffix-command’ to define the infix command
      and use ‘t’ as the value of the ‘:transient’ keyword.
 
- -- Macro: define-infix-argument name arglist [docstring] [keyword
+ -- Macro: transient-define-argument name arglist [docstring] [keyword
           value]...
 
      This macro defines NAME as a transient infix command.
 
-     It is an alias for ‘define-infix-command’.  Only use this alias to
-     define an infix command that actually sets an infix argument.  To
-     define an infix command that, for example, sets a variable, use
-     ‘define-infix-command’ instead.
+     This is an alias for ‘transient-define-infix’.  Only use this alias
+     to define an infix command that actually sets an infix argument.
+     To define an infix command that, for example, sets a variable, use
+     ‘transient-define-infix’ instead.
 
 
 File: transient.info,  Node: Using Infix Arguments,  Next: Transient State,  Prev: Defining Suffix and Infix Commands,  Up: Defining New Commands
@@ -1180,7 +1181,7 @@ function, which for infix arguments serves about the same purpose as
      current command was not invoked from PREFIX, then it returns the
      set, saved or default value for PREFIX.
 
- -- Variable: current-transient-suffixes
+ -- Variable: transient-current-suffixes
 
      The suffixes of the transient from which this suffix command was
      invoked.  This is a list of objects.  Usually it is sufficient to
@@ -1189,13 +1190,13 @@ function, which for infix arguments serves about the same purpose as
      variable instead, i.e.  if you need access to information beside
      the value.
 
- -- Variable: current-transient-prefix
+ -- Variable: transient-current-prefix
 
      The transient from which this suffix command was invoked.  The
      returned value is a ‘transient-prefix’ object, which holds
      information associated with the transient prefix command.
 
- -- Variable: current-transient-command
+ -- Variable: transient-current-command
 
      The transient from which this suffix command was invoked.  The
      returned value is a symbol, the transient prefix command.
@@ -1412,7 +1413,7 @@ File: transient.info,  Node: Group Classes,  Next: Group Methods,  Up: Classes a
 
 The type of a group can be specified using the ‘:class’ property at the
 beginning of the class specification, e.g.  ‘[:class transient-columns
-...]’ in a call to ‘define-transient-command’.
+...]’ in a call to ‘transient-define-prefix’.
 
    • The abstract ‘transient-child’ class is the base class of both
      ‘transient-group’ (and therefore all groups) as well as of
@@ -1699,13 +1700,13 @@ File: transient.info,  Node: Prefix Slots,  Next: Suffix Slots,  Prev: Suffix Me
      causes the others to be disabled.
 
    • ‘scope’ For some transients it might be necessary to have a sort of
-     secondary value, called a "scope".  See ‘define-transient-command’.
+     secondary value, called a "scope".  See ‘transient-define-prefix’.
 
 6.6.1 Internal Prefix Slots
 ---------------------------
 
 These slots are mostly intended for internal use.  They should not be
-set in calls to ‘define-transient-command’.
+set in calls to ‘transient-define-prefix’.
 
    • ‘prototype’ When a transient prefix command is invoked, then a
      clone of that object is stored in the global variable
@@ -2116,7 +2117,7 @@ command dispatchers:
      focus and the interface is a bit more complicated.  A very basic
      example using the current interface:
 
-          (define-transient-command outline-navigate ()
+          (transient-define-prefix outline-navigate ()
             :transient-suffix     'transient--do-stay
             :transient-non-suffix 'transient--do-warn
             [("p" "previous visible heading" outline-previous-visible-heading)
@@ -2297,13 +2298,6 @@ Appendix D Function Index
  [index ]
 * Menu:
 
-* define-infix-argument:                 Defining Suffix and Infix Commands.
-                                                              (line  63)
-* define-infix-command:                  Defining Suffix and Infix Commands.
-                                                              (line  27)
-* define-suffix-command:                 Defining Suffix and Infix Commands.
-                                                              (line   9)
-* define-transient-command:              Defining Transients. (line  13)
 * transient--do-call:                    Transient State.     (line  98)
 * transient--do-exit:                    Transient State.     (line  94)
 * transient--do-noop:                    Transient State.     (line 125)
@@ -2319,6 +2313,13 @@ Appendix D Function Index
                                                               (line  47)
 * transient-args:                        Using Infix Arguments.
                                                               (line  22)
+* transient-define-argument:             Defining Suffix and Infix Commands.
+                                                              (line  63)
+* transient-define-infix:                Defining Suffix and Infix Commands.
+                                                              (line  27)
+* transient-define-prefix:               Defining Transients. (line  13)
+* transient-define-suffix:               Defining Suffix and Infix Commands.
+                                                              (line   9)
 * transient-format:                      Suffix Format Methods.
                                                               (line   6)
 * transient-format-description:          Suffix Format Methods.
@@ -2363,11 +2364,11 @@ Appendix E Variable Index
  [index ]
 * Menu:
 
-* current-transient-command:             Using Infix Arguments.
+* transient-current-command:             Using Infix Arguments.
                                                               (line  47)
-* current-transient-prefix:              Using Infix Arguments.
+* transient-current-prefix:              Using Infix Arguments.
                                                               (line  41)
-* current-transient-suffixes:            Using Infix Arguments.
+* transient-current-suffixes:            Using Infix Arguments.
                                                               (line  32)
 * transient-default-level:               Enabling and Disabling Suffixes.
                                                               (line  38)
@@ -2405,33 +2406,33 @@ Node: Enabling and Disabling Suffixes19701
 Node: Other Commands22991
 Node: Other Options23947
 Node: Modifying Existing Transients31071
-Node: Defining New Commands34475
-Node: Defining Transients34811
-Node: Binding Suffix and Infix Commands37243
-Node: Group Specifications38098
-Node: Suffix Specifications41431
-Node: Defining Suffix and Infix Commands44998
-Node: Using Infix Arguments48183
-Node: Transient State50403
-Node: Classes and Methods56276
-Node: Group Classes58490
-Node: Group Methods60407
-Node: Prefix Classes61053
-Node: Suffix Classes62145
-Node: Suffix Methods64389
-Node: Suffix Value Methods64710
-Node: Suffix Format Methods67470
-Node: Prefix Slots68922
-Node: Suffix Slots71399
-Node: Predicate Slots74250
-Node: Related Abstractions and Packages75498
-Node: Comparison With Prefix Keys and Prefix Arguments75785
-Node: Comparison With Other Packages86097
-Node: FAQ90288
-Node: Keystroke Index94022
-Node: Command Index95656
-Node: Function Index97443
-Node: Variable Index101600
+Node: Defining New Commands34473
+Node: Defining Transients34809
+Node: Binding Suffix and Infix Commands37240
+Node: Group Specifications38094
+Node: Suffix Specifications41426
+Node: Defining Suffix and Infix Commands45001
+Node: Using Infix Arguments48199
+Node: Transient State50419
+Node: Classes and Methods56292
+Node: Group Classes58506
+Node: Group Methods60422
+Node: Prefix Classes61068
+Node: Suffix Classes62160
+Node: Suffix Methods64404
+Node: Suffix Value Methods64725
+Node: Suffix Format Methods67485
+Node: Prefix Slots68937
+Node: Suffix Slots71412
+Node: Predicate Slots74263
+Node: Related Abstractions and Packages75511
+Node: Comparison With Prefix Keys and Prefix Arguments75798
+Node: Comparison With Other Packages86110
+Node: FAQ90300
+Node: Keystroke Index94034
+Node: Command Index95668
+Node: Function Index97455
+Node: Variable Index101612
 
 End Tag Table
 

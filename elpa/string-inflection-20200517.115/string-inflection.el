@@ -1,11 +1,12 @@
 ;;; string-inflection.el --- underscore -> UPCASE -> CamelCase -> lowerCamelCase conversion of names -*- lexical-binding: t -*-
 
-;; Copyright (C) 2004,2014,2016,2017,2018 Free Software Foundation, Inc.
+;; Copyright (C) 2004,2014,2016,2017,2018,2020 Free Software Foundation, Inc.
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20180827.1301
-;; Version: 1.0.10
+;; Package-Version: 20200517.115
+;; Package-Commit: 1937db7513db570606ea8798916180b7dd75d3b1
+;; Version: 1.0.11
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -185,20 +186,20 @@
 (defun string-inflection-get-current-word ()
   "Gets the symbol near the cursor"
   (interactive)
-  (let* ((start (if mark-active
+  (let* ((start (if (use-region-p)
                     (region-end)
                   (progn
                     (skip-chars-forward string-inflection-word-chars)
                     (point))))
-         (end (if mark-active
+         (end (if (use-region-p)
                   (region-beginning)
                 (progn
                   (skip-chars-backward string-inflection-word-chars)
                   (point))))
          (str (buffer-substring start end)))
     (prog1
-        (if mark-active
-            (replace-regexp-in-string "[[:space:].:]+" "_" str) ; 'aa::bb.cc dd' => 'aa_bb_cc_dd'
+        (if (use-region-p)
+            (replace-regexp-in-string "[[:space:].:/]+" "_" str) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc_dd_ee'
           str)
       (delete-region start end))))
 

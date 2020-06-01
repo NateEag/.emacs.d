@@ -12,6 +12,10 @@
 
 (require 'use-package)
 
+(use-package envrc
+  :init
+  (envrc-global-mode))
+
 (use-package s
   :commands s-replace s-trim)
 

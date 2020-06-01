@@ -1,10 +1,12 @@
 ;;; pyenv-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "pyenv-mode" "pyenv-mode.el" (23400 19308 0
-;;;;;;  0))
+;;;### (autoloads nil "pyenv-mode" "pyenv-mode.el" (0 0 0 0))
 ;;; Generated autoloads from pyenv-mode.el
 
 (autoload 'pyenv-mode-set "pyenv-mode" "\
@@ -13,9 +15,7 @@ Set python shell VERSION.
 \(fn VERSION)" t nil)
 
 (autoload 'pyenv-mode-unset "pyenv-mode" "\
-Unset python shell version.
-
-\(fn)" t nil)
+Unset python shell version." t nil)
 
 (defvar pyenv-mode nil "\
 Non-nil if Pyenv mode is enabled.
@@ -30,9 +30,16 @@ or call the function `pyenv-mode'.")
 (autoload 'pyenv-mode "pyenv-mode" "\
 Minor mode for pyenv interaction.
 
+If called interactively, enable Pyenv mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
+
 \\{pyenv-mode-map}
 
 \(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pyenv-mode" '("pyenv-mode-")))
 
 ;;;***
 
@@ -40,5 +47,6 @@ Minor mode for pyenv interaction.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; pyenv-mode-autoloads.el ends here

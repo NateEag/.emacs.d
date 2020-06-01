@@ -4,7 +4,7 @@
 
 ;; This file is not part of GNU Emacs.
 
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free
@@ -21,18 +21,12 @@
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 ;; MA 02110-1301 USA.
 
-
-
 ;;; Commentary:
 ;; Most of the general ledger-mode code is here.
 
 ;;; Code:
 
 (require 'ledger-regex)
-(require 'cus-edit)
-(require 'esh-util)
-(require 'esh-arg)
-(require 'easymenu)
 (require 'org)
 (require 'ledger-commodities)
 (require 'ledger-complete)
@@ -54,6 +48,8 @@
 (require 'ledger-schedule)
 (require 'ledger-check)
 
+(declare-function custom-group-members "cus-edit" (symbol groups-only))
+
 ;;; Code:
 
 (defgroup ledger nil
@@ -72,6 +68,7 @@
 
 (defun ledger-mode-dump-group (group)
   "Dump GROUP customizations to current buffer."
+  (require 'cus-edit)
   (let ((members (custom-group-members group nil)))
     (dolist (member members)
       (cond ((eq (cadr member) 'custom-group)

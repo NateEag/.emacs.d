@@ -1107,11 +1107,21 @@ File: ledger-mode.info,  Node: Ledger Post Customization Group,  Next: Ledger Ex
 
 Ledger Post:
 
-‘ledger-post-amount-alignment-column’
-     The column Ledger-mode uses to align amounts.
+‘ledger-post-account-alignment-column’
+     The column Ledger-mode attempts to align accounts to.
 
-‘ledger-default-acct-transaction-indent’
-     Default indentation for account transactions in an entry.
+‘ledger-post-amount-alignment-at’
+     Position at which the amount is aligned.
+
+     Can be ‘:end’ to align on the last number of the amount (can be
+     followed by unaligned commodity) or ‘:decimal’ to align at the
+     decimal separator.
+
+‘ledger-post-amount-alignment-column’
+     The column Ledger-mode attempts to align amounts to.
+
+‘ledger-post-auto-align’
+     When non-nil, realign post amounts when indenting or completing.
 
 
 File: ledger-mode.info,  Node: Ledger Exec Customization Group,  Next: Ledger Test Customization Group,  Prev: Ledger Post Customization Group,  Up: Customization Variables
@@ -1268,8 +1278,6 @@ Command & Variable Index
                                                                (line 13)
 * ledger-clear-whole-transactions:       Ledger Customization Group.
                                                                (line 10)
-* ledger-default-acct-transaction-indent: Ledger Post Customization Group.
-                                                               (line 11)
 * ledger-font-cleared-face:              Ledger Faces Customization Group.
                                                                (line 11)
 * ledger-font-comment-face:              Ledger Faces Customization Group.
@@ -1318,9 +1326,15 @@ Command & Variable Index
                                                                (line  6)
 * ledger-occur-xact-face:                Ledger Faces Customization Group.
                                                                (line 38)
+* ledger-post-account-alignment-column:  Ledger Post Customization Group.
+                                                               (line  8)
+* ledger-post-amount-alignment-at:       Ledger Post Customization Group.
+                                                               (line 11)
 * ledger-post-amount-alignment-column:   Adding Transactions.  (line  6)
 * ledger-post-amount-alignment-column <1>: Ledger Post Customization Group.
-                                                               (line  8)
+                                                               (line 18)
+* ledger-post-auto-align:                Ledger Post Customization Group.
+                                                               (line 21)
 * ledger-recon-buffer-name:              Ledger Reconcile Customization Group.
                                                                (line  6)
 * ledger-reconcile-buffer-account-max-chars: Ledger Reconcile Customization Group.
@@ -1494,15 +1508,15 @@ Node: Ledger Reconcile Customization Group39125
 Node: Ledger Report Customization Group42068
 Node: Ledger Faces Customization Group42787
 Node: Ledger Post Customization Group44534
-Node: Ledger Exec Customization Group45005
-Node: Ledger Test Customization Group45504
-Node: Ledger Texi Customization Group45906
-Node: Generating Ledger Regression Tests46398
-Node: Embedding Example results in Ledger Documentation46661
-Node: Hacking Ledger-mode46950
-Node: Concept Index47158
-Node: Command & Variable Index52071
-Node: Keystroke Index59888
+Node: Ledger Exec Customization Group45361
+Node: Ledger Test Customization Group45860
+Node: Ledger Texi Customization Group46262
+Node: Generating Ledger Regression Tests46754
+Node: Embedding Example results in Ledger Documentation47017
+Node: Hacking Ledger-mode47306
+Node: Concept Index47514
+Node: Command & Variable Index52427
+Node: Keystroke Index60537
 
 End Tag Table
 

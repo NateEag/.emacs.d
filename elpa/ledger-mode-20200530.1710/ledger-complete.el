@@ -23,6 +23,8 @@
 ;; Functions providing payee and account auto complete.
 
 (require 'cl-lib)
+(eval-when-compile
+  (require 'subr-x))
 
 ;; In-place completion support
 
@@ -128,12 +130,7 @@ Then one of the elements this function returns will be
                              (point))))
               data)
           (dolist (d (split-string lines "\n"))
-            (setq d
-                  ;; TODO: This is basically (string-trim d) but string-trim
-                  ;; doesn't exist in Emacs 24. Replace once we drop Emacs 24.
-                  (if (string-match "[[:space:]]+" d)
-                      (substring d (match-end 0))
-                    d))
+            (setq d (string-trim d))
             (unless (string= d "")
               (if (string-match " " d)
                   (push (cons (substring d 0 (match-beginning 0))
@@ -176,7 +173,6 @@ Looks in `ledger-accounts-file' if set, otherwise the current buffer."
     (ledger-accounts-list-in-buffer)))
 
 (defun ledger-find-accounts-in-buffer ()
-  (interactive)
   (let ((account-tree (list t))
         (account-elements nil)
         (prefix ""))
@@ -315,7 +311,7 @@ Looks in `ledger-accounts-file' if set, otherwise the current buffer."
       (let ((prefix (buffer-substring-no-properties start end)))
         (list start end
               (if (functionp collection)
-                  (completion-table-dynamic
+                  (completion-table-with-cache
                    (lambda (_)
                      (cl-remove-if (apply-partially 'string= prefix) (funcall collection))))
                 collection)

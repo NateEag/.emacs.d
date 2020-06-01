@@ -38,6 +38,7 @@
 (require 'ledger-state)
 (declare-function ledger-insert-effective-date "ledger-mode" (&optional date))
 (declare-function ledger-read-account-with-prompt "ledger-mode" (prompt))
+(declare-function ledger-read-date "ledger-mode" (prompt))
 
 (defvar ledger-buf nil)
 (defvar ledger-bufs nil)
@@ -283,7 +284,9 @@ Return the number of uncleared xacts found."
   "Use ledger xact to add a new transaction."
   (interactive)
   (with-current-buffer ledger-buf
-    (call-interactively #'ledger-add-transaction))
+    (let ((date (ledger-read-date "Date: "))
+          (text (read-string "Transaction: ")))
+      (ledger-add-transaction (concat date " " text))))
   (ledger-reconcile-refresh))
 
 (defun ledger-reconcile-delete ()

@@ -35,7 +35,8 @@
 (require 'ansi-color)
 (require 'font-lock)
 (eval-when-compile
-  (require 'rx))
+  (require 'rx)
+  (require 'subr-x))
 
 (defvar ledger-buf)
 
@@ -190,7 +191,6 @@ See documentation for the function `ledger-master-file'")
     (define-key map [?e] #'ledger-report-edit-report)
     (define-key map [( shift ?e)] #'ledger-report-edit-reports)
     (define-key map [?q] #'ledger-report-quit)
-    (define-key map [?g] #'ledger-report-redo)
     (define-key map [(control ?c) (control ?l) (control ?r)]
       #'ledger-report-redo)
     (define-key map [(control ?c) (control ?l) (control ?S)]
@@ -224,6 +224,7 @@ See documentation for the function `ledger-master-file'")
 
 (define-derived-mode ledger-report-mode special-mode "Ledger-Report"
   "A mode for viewing ledger reports."
+  (setq-local revert-buffer-function #'ledger-report-redo)
   (hack-dir-local-variables-non-file-buffer))
 
 (defconst ledger-report--extra-args-marker "[[ledger-mode-flags]]")
@@ -294,7 +295,11 @@ used to generate the buffer, navigating the buffer, etc."
         (ledger-do-report (ledger-report-cmd report-name edit)))
       (ledger-report-maybe-shrink-window)
       (run-hooks 'ledger-report-after-report-hook)
-      (message "q to quit; r to redo; e to edit; s to save; SPC and DEL to scroll"))))
+      (message (substitute-command-keys (concat "\\[ledger-report-quit] to quit; "
+                                                "\\[ledger-report-redo] to redo; "
+                                                "\\[ledger-report-edit-report] to edit; "
+                                                "\\[ledger-report-save] to save; "
+                                                "\\[scroll-up-command] and \\[scroll-down-command] to scroll"))))))
 
 (defun ledger-report--header-function ()
   "Compute the string to be used as the header in the `ledger-report' buffer."
@@ -360,7 +365,9 @@ used to generate the buffer, navigating the buffer, etc."
   ;; It is intended completion should be available on existing
   ;; payees, but the list of possible completions needs to be
   ;; developed to allow this.
-  (ledger-read-string-with-default "Payee" (regexp-quote (ledger-xact-payee))))
+  (if-let ((payee (ledger-xact-payee)))
+      (ledger-read-string-with-default "Payee" (regexp-quote payee))
+    (ledger-read-string-with-default "Payee" nil)))
 
 (defun ledger-report-account-format-specifier ()
   "Substitute an account name.
@@ -555,8 +562,10 @@ arguments returned by `ledger-report--compute-extra-args'."
     (pop-to-buffer rbuf)
     (ledger-report-maybe-shrink-window)))
 
-(defun ledger-report-redo ()
-  "Redo the report in the current ledger report buffer."
+(defun ledger-report-redo (&optional _ignore-auto _noconfirm)
+  "Redo the report in the current ledger report buffer.
+IGNORE-AUTO and NOCONFIRM are for compatibility with
+`revert-buffer-function' and are currently ignored."
   (interactive)
   (unless (or (derived-mode-p 'ledger-mode)
               (derived-mode-p 'ledger-report-mode))

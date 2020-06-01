@@ -45,7 +45,7 @@
   "Customization for Geiser's Gambit flavour."
   :group 'geiser)
 
-;; define the interpretor for geiser.
+;; define the interpreter for geiser.
 ;; the geiser-costum--defcustom is a macro that will
 ;; call a declaration into the documentation of the
 ;; structure of the method and then define the method

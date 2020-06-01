@@ -1,6 +1,6 @@
 ;;; xref.scm -- cross-referencing utilities
 
-;; Copyright (C) 2009, 2010 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2020 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -23,10 +23,10 @@
   #:use-module (system vm program))
 
 (define (symbol-location sym)
-  (cond ((symbol-module sym) => module-location)
-        (else (let ((obj (symbol->object sym)))
-                (or (and (program? obj) (program-location obj))
-                    '())))))
+  (let ((obj (symbol->object sym)))
+    (cond ((program? obj) (program-location obj))
+          ((symbol-module sym) => module-location)
+          (else '()))))
 
 (define (generic-methods sym)
   (let* ((gen (symbol->object sym))

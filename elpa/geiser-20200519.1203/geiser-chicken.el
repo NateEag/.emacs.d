@@ -260,14 +260,17 @@ This function uses `geiser-chicken-init-file' if it exists."
 (defconst geiser-chicken-minimum-version "4.8.0.0")
 
 (defun geiser-chicken--version (binary)
-  (shell-command-to-string
-   (format "%s -e '(display \
+  (cl-destructuring-bind (program . args)
+      (append (if (listp binary) binary (list binary))
+              '("-e" "(display \
                      (or (handle-exceptions exn \
                            #f \
                            (eval `(begin (import chicken.platform) \
                                          (chicken-version)))) \
-                         (chicken-version)))'"
-           (if (listp binary) (car binary) binary))))
+                         (chicken-version)))"))
+    (with-temp-buffer
+      (apply #'call-process program nil '(t t) t args)
+      (buffer-string))))
 
 (defun connect-to-chicken ()
   "Start a Chicken REPL connected to a remote process."

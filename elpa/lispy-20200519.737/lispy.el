@@ -3523,48 +3523,53 @@ Instead keep them, with a newline after each comment."
   "Squeeze current sexp into one line.
 Comments will be moved ahead of sexp."
   (interactive)
-  (if (lispy--in-comment-p)
-      (let* ((bnd (lispy--bounds-comment))
-             (str (lispy--string-dwim bnd)))
-        (delete-region (car bnd) (cdr bnd))
-        (insert (lispy-comment-char 2 " ")
-                (mapconcat #'identity
-                           (split-string str "[ \n]*;;[ \n]*" t)
-                           " "))
-        (beginning-of-line)
-        (back-to-indentation))
-    (unless (or (lispy-left-p)
-                (lispy-right-p))
-      (lispy--out-backward 1))
-    (let* ((bnd (lispy--bounds-dwim))
-           (str (lispy--string-dwim bnd))
-           (from-left (lispy-left-p))
-           expr)
-      (delete-region (car bnd) (cdr bnd))
-      (when (region-active-p)
-        (deactivate-mark))
-      (setq lispy--oneline-comments nil)
-      (if (setq expr (ignore-errors
-                       (lispy--oneline
-                        (lispy--read str))))
-          (progn
-            (mapc (lambda (x)
-                    (lispy--insert x)
-                    (newline))
-                  lispy--oneline-comments)
-            (lispy--insert expr))
-        (let ((no-comment "")
-              comments)
-          (cl-loop for s in (split-string str "\n" t)
-             do (if (string-match "^ *\\(;\\)" s)
-                    (push (substring s (match-beginning 1)) comments)
-                  (setq no-comment (concat no-comment "\n" s))))
-          (when comments
-            (insert (mapconcat #'identity comments "\n") "\n"))
-          (insert (substring
-                   (replace-regexp-in-string "\n *" " " no-comment) 1))))
-      (when from-left
-        (backward-list)))))
+  (cond ((lispy--in-comment-p)
+         (let* ((bnd (lispy--bounds-comment))
+                (str (lispy--string-dwim bnd)))
+           (delete-region (car bnd) (cdr bnd))
+           (insert (lispy-comment-char 2 " ")
+                   (mapconcat #'identity
+                              (split-string str "[ \n]*;;[ \n]*" t)
+                              " "))
+           (beginning-of-line)
+           (back-to-indentation)))
+        ((and (region-active-p)
+              (= (char-after (region-beginning)) ?\")
+              (= (char-before (region-end)) ?\"))
+         (lispy-string-oneline))
+        (t
+         (unless (or (lispy-left-p)
+                     (lispy-right-p))
+           (lispy--out-backward 1))
+         (let* ((bnd (lispy--bounds-dwim))
+                (str (lispy--string-dwim bnd))
+                (from-left (lispy-left-p))
+                expr)
+           (delete-region (car bnd) (cdr bnd))
+           (when (region-active-p)
+             (deactivate-mark))
+           (setq lispy--oneline-comments nil)
+           (if (setq expr (ignore-errors
+                            (lispy--oneline
+                             (lispy--read str))))
+               (progn
+                 (mapc (lambda (x)
+                         (lispy--insert x)
+                         (newline))
+                       lispy--oneline-comments)
+                 (lispy--insert expr))
+             (let ((no-comment "")
+                   comments)
+               (cl-loop for s in (split-string str "\n" t)
+                        do (if (string-match "^ *\\(;\\)" s)
+                               (push (substring s (match-beginning 1)) comments)
+                             (setq no-comment (concat no-comment "\n" s))))
+               (when comments
+                 (insert (mapconcat #'identity comments "\n") "\n"))
+               (insert (substring
+                        (replace-regexp-in-string "\n *" " " no-comment) 1))))
+           (when from-left
+             (backward-list))))))
 
 (defun lispy-multiline (&optional arg)
   "Spread current sexp over multiple lines.
@@ -3839,7 +3844,8 @@ When SILENT is non-nil, don't issue messages."
          (expr (lispy--read str))
          (expr-o (lispy--oneline expr t))
          (expr-m (lispy--multiline-1 expr-o))
-         (leftp (lispy--leftp)))
+         (leftp (lispy--leftp))
+         (print-circle nil))
     (cond ((equal expr expr-m)
            (unless silent
              (message "No change")))
@@ -7266,14 +7272,14 @@ Ignore the matches in strings and comments."
     table)
   "Syntax table for paired braces.")
 
-(defvar scheme-mode-hook)
-
 (defvar lispy--insert-replace-alist-clojure
   '(("#object[" "clojure-object")
     ("#?@(" "clojure-reader-conditional-splice")
     ("@(" "clojure-deref-list")
     ("#(" "clojure-lambda")
     ("#{" "clojure-set")
+    ("@{" "clojure-deref-map")
+    ("@[" "clojure-deref-vector")
     ("{" "clojure-map")
     ("#?(" "clojure-reader-conditional")))
 
@@ -8243,6 +8249,14 @@ The outer delimiters are stripped."
             (lispy--splice-to-str (car (nthcdr 4 sxp)))
             (nth 3 sxp))
            (goto-char beg))
+          (clojure-deref-map
+           (delete-region beg (point))
+           (insert (format "@{%s}" (lispy--splice-to-str (cl-caddr sxp))))
+           (goto-char beg))
+          (clojure-deref-vector
+           (delete-region beg (point))
+           (insert (format "@[%s]" (lispy--splice-to-str (cl-caddr sxp))))
+           (goto-char beg))
           (clojure-deref-list
            (delete-region beg (point))
            (insert (format "@(%s)" (lispy--splice-to-str (cl-caddr sxp))))
@@ -8586,6 +8600,7 @@ Use only the part bounded by BND."
 (defun lispy--edebug-commandp ()
   "Return true if `this-command-keys' should be forwarded to edebug."
   (when (and (bound-and-true-p edebug-active)
+             (not (minibufferp))
              (= 1 (length (this-command-keys))))
     (let ((char (aref (this-command-keys) 0)))
       (setq lispy--edebug-command
@@ -9651,7 +9666,6 @@ When ARG is non-nil, unquote the current string."
     (define-key map (kbd "<M-return>") 'lispy-meta-return)
     (define-key map (kbd "M-k") 'lispy-move-up)
     (define-key map (kbd "M-j") 'lispy-move-down)
-    (define-key map (kbd "M-O") 'lispy-string-oneline)
     (define-key map (kbd "M-p") 'lispy-clone)
     (define-key map (kbd "M-\"") 'paredit-meta-doublequote)
     map))
@@ -9699,7 +9713,6 @@ When ARG is non-nil, unquote the current string."
     (define-key map (kbd "<M-return>") 'lispy-meta-return)
     (define-key map (kbd "M-RET") 'lispy-meta-return)
     ;; misc
-    (define-key map (kbd "M-O") 'lispy-string-oneline)
     (define-key map (kbd "M-i") 'lispy-iedit)
     (define-key map (kbd "<backtab>") 'lispy-shifttab)
     ;; outline

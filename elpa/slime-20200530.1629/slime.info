@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.24.  (Last updated April 28, 2020)
+manual for version 2.24.  (Last updated June 1, 2020)
 
    Written by Luke Gorrie and others.
 
@@ -3608,112 +3608,112 @@ Variable and Concept Index
 
 Tag Table:
 Node: Top285
-Node: Introduction2525
-Node: Getting started3806
-Node: Platforms4080
-Node: Downloading5278
-Node: Git5779
-Node: Git Incantations6797
-Node: Installation7327
-Node: Running8593
-Node: Setup Tuning9136
-Node: Basic customization9667
-Node: Multiple Lisps10640
-Node: Loading Swank faster13134
-Ref: init-example14227
-Node: SLIME mode14516
-Node: User-interface conventions15114
-Node: Temporary buffers15523
-Node: Inferior-lisp16976
-Node: Multithreading17801
-Node: Key bindings19046
-Ref: describe-key20512
-Ref: describe-bindings20655
-Ref: describe-mode20798
-Ref: view-lossage20982
-Node: Evaluation22177
-Node: Compilation24082
-Node: Completion26841
-Node: Finding definitions27472
-Node: Documentation28612
-Node: Cross-reference30779
-Node: Xref buffer commands32516
-Node: Macro-expansion33075
-Node: Disassembly34096
-Node: Recovery34641
-Node: Inspector35410
-Node: Profiling37648
-Node: Other38445
-Node: Semantic indentation38698
-Ref: Semantic indentation-Footnote-140829
-Node: Reader conditionals40924
-Node: Debugger41275
-Node: Examining frames41915
-Node: Restarts43047
-Ref: sldb-quit43261
-Node: Frame Navigation43688
-Node: Stepping44388
-Node: Miscellaneous45060
-Node: Misc45999
-Node: slime-selector46186
-Node: slime-macroexpansion-minor-mode47568
-Node: Multiple connections48423
-Node: Customization51483
-Node: Emacs-side customization51658
-Ref: slime-completion-at-point-functions52351
-Ref: slime-net-coding-system53242
-Node: Hooks53915
-Ref: slime-connected-hook54280
-Node: Lisp-side54764
-Node: Communication style55174
-Node: Other configurables57736
-Ref: *SLDB-QUIT-RESTART*59134
-Node: Tips and Tricks61725
-Node: Connecting to a remote lisp61950
-Node: Setting up the lisp image62655
-Ref: Setting up the lisp image-Footnote-164543
-Ref: Setting up the lisp image-Footnote-264623
-Node: Setting up Emacs64799
-Ref: Setting up Emacs-Footnote-165635
-Node: Setting up pathname translations65815
-Node: Global IO Redirection67456
-Node: Auto-SLIME68389
-Node: Contributed Packages68810
-Node: Loading Contribs69559
-Node: REPL71519
-Node: REPL commands72934
-Node: Input Navigation74095
-Node: Shortcuts75619
-Node: slime-mrepl77115
-Node: inferior-slime-mode77623
-Node: Compound Completion78328
-Ref: slime-complete-symbol*78505
-Ref: Compound Completion-Footnote-181757
-Node: Fuzzy Completion81881
-Ref: slime-fuzzy-complete-symbol82134
-Node: slime-autodoc-mode85426
-Node: ASDF86844
-Node: Banner88802
-Node: Editing Commands89248
-Node: Fancy Inspector90875
-Node: Presentations91606
-Ref: Presentations-Footnote-198162
-Node: Typeout frames98403
-Node: TRAMP99527
-Node: Documentation Links99803
-Node: Xref and Class Browser100228
-Node: Highlight Edits100820
-Node: Scratch Buffer101292
-Ref: slime-scratch101454
-Node: SLIME Trace Dialog102109
-Node: slime-sprof106097
-Node: SLIME Enhanced M-.107085
-Node: slime-fancy107467
-Node: Quicklisp107823
-Node: Credits108351
-Node: Key Index113955
-Node: Command Index125745
-Node: Variable Index140987
+Node: Introduction2523
+Node: Getting started3804
+Node: Platforms4078
+Node: Downloading5276
+Node: Git5777
+Node: Git Incantations6795
+Node: Installation7325
+Node: Running8591
+Node: Setup Tuning9134
+Node: Basic customization9665
+Node: Multiple Lisps10638
+Node: Loading Swank faster13132
+Ref: init-example14225
+Node: SLIME mode14514
+Node: User-interface conventions15112
+Node: Temporary buffers15521
+Node: Inferior-lisp16974
+Node: Multithreading17799
+Node: Key bindings19044
+Ref: describe-key20510
+Ref: describe-bindings20653
+Ref: describe-mode20796
+Ref: view-lossage20980
+Node: Evaluation22175
+Node: Compilation24080
+Node: Completion26839
+Node: Finding definitions27470
+Node: Documentation28610
+Node: Cross-reference30777
+Node: Xref buffer commands32514
+Node: Macro-expansion33073
+Node: Disassembly34094
+Node: Recovery34639
+Node: Inspector35408
+Node: Profiling37646
+Node: Other38443
+Node: Semantic indentation38696
+Ref: Semantic indentation-Footnote-140827
+Node: Reader conditionals40922
+Node: Debugger41273
+Node: Examining frames41913
+Node: Restarts43045
+Ref: sldb-quit43259
+Node: Frame Navigation43686
+Node: Stepping44386
+Node: Miscellaneous45058
+Node: Misc45997
+Node: slime-selector46184
+Node: slime-macroexpansion-minor-mode47566
+Node: Multiple connections48421
+Node: Customization51481
+Node: Emacs-side customization51656
+Ref: slime-completion-at-point-functions52349
+Ref: slime-net-coding-system53240
+Node: Hooks53913
+Ref: slime-connected-hook54278
+Node: Lisp-side54762
+Node: Communication style55172
+Node: Other configurables57734
+Ref: *SLDB-QUIT-RESTART*59132
+Node: Tips and Tricks61723
+Node: Connecting to a remote lisp61948
+Node: Setting up the lisp image62653
+Ref: Setting up the lisp image-Footnote-164541
+Ref: Setting up the lisp image-Footnote-264621
+Node: Setting up Emacs64797
+Ref: Setting up Emacs-Footnote-165633
+Node: Setting up pathname translations65813
+Node: Global IO Redirection67454
+Node: Auto-SLIME68387
+Node: Contributed Packages68808
+Node: Loading Contribs69557
+Node: REPL71517
+Node: REPL commands72932
+Node: Input Navigation74093
+Node: Shortcuts75617
+Node: slime-mrepl77113
+Node: inferior-slime-mode77621
+Node: Compound Completion78326
+Ref: slime-complete-symbol*78503
+Ref: Compound Completion-Footnote-181755
+Node: Fuzzy Completion81879
+Ref: slime-fuzzy-complete-symbol82132
+Node: slime-autodoc-mode85424
+Node: ASDF86842
+Node: Banner88800
+Node: Editing Commands89246
+Node: Fancy Inspector90873
+Node: Presentations91604
+Ref: Presentations-Footnote-198160
+Node: Typeout frames98401
+Node: TRAMP99525
+Node: Documentation Links99801
+Node: Xref and Class Browser100226
+Node: Highlight Edits100818
+Node: Scratch Buffer101290
+Ref: slime-scratch101452
+Node: SLIME Trace Dialog102107
+Node: slime-sprof106095
+Node: SLIME Enhanced M-.107083
+Node: slime-fancy107465
+Node: Quicklisp107821
+Node: Credits108349
+Node: Key Index113953
+Node: Command Index125743
+Node: Variable Index140985
 
 End Tag Table
 

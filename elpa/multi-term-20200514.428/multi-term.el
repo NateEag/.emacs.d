@@ -6,8 +6,9 @@
 ;; Copyright (C) 2010, ahei, all rights reserved.
 ;; Created: <2008-09-19 23:02:42>
 ;; Version: 1.5
-;; Package-Version: 20200112.533
-;; Last-Updated: Sat Jan 11 16:19:02 2020 (-0500)
+;; Package-Version: 20200514.428
+;; Package-Commit: 017c77c550115936860e2ea71b88e585371475d5
+;; Last-Updated: Mon May 11 10:46:18 2020 (-0400)
 ;; URL: http://www.emacswiki.org/emacs/download/multi-term.el
 ;; Keywords: term, terminal, multiple buffer
 ;; Compatibility: GNU Emacs 23.2.1, GNU Emacs 24.4 (and prereleases)
@@ -638,7 +639,7 @@ Similar to how `quoted-insert' works in a regular buffer."
     (with-parsed-tramp-file-name default-dir path
       (let ((method (cadr (assoc `tramp-login-program (assoc path-method tramp-methods)))))
         (term-send-raw-string (concat method " " (when path-user (concat path-user "@")) path-host "\C-m"))
-        (term-send-raw-string (concat "cd " path-localname "\C-m"))))))
+        (term-send-raw-string (concat "cd '" path-localname "'\C-m"))))))
 
 (defun multi-term-get-buffer (&optional special-shell dedicated-window)
   "Get term buffer.

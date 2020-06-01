@@ -536,7 +536,8 @@ version of the regular commands that enables applying multiple actions.
      Recalls the state of the completion session just before its last
      exit.
 
-     Useful after an accidental ‘C-m’ (‘ivy-done’).
+     Useful after an accidental ‘C-m’ (‘ivy-done’).  Use it with
+     ‘universal-argument’ to resume any previous session.
 
 
 File: ivy.info,  Node: Key bindings that alter the minibuffer input,  Next: Other key bindings,  Prev: Key bindings for multiple selections and actions keep minibuffer open,  Up: Minibuffer key bindings
@@ -1270,6 +1271,12 @@ that work here:
      If the current input matches an existing directory name exactly,
      switch the completion to that directory.
 
+‘C-M-y’ (‘ivy-insert-current-full’)
+...................................
+
+     Insert the current full path, in case you want to edit a part of
+     it.
+
 ‘M-r’ (‘ivy-toggle-regexp-quote’)
 .................................
 
@@ -1733,13 +1740,14 @@ Variable Index
 * ivy-display-style:                     Defcustoms.           (line 24)
 * ivy-done:                              Key bindings for single selection action then exit minibuffer.
                                                                (line 19)
-* ivy-extra-directories:                 File Name Completion. (line 45)
+* ivy-extra-directories:                 File Name Completion. (line 51)
 * ivy-height:                            Key bindings for navigation.
                                                                (line 21)
 * ivy-immediate-done:                    Key bindings for single selection action then exit minibuffer.
                                                                (line 53)
 * ivy-insert-current:                    Key bindings that alter the minibuffer input.
                                                                (line 23)
+* ivy-insert-current-full:               File Name Completion. (line 41)
 * ivy-kill-ring-save:                    Other key bindings.   (line  9)
 * ivy-match-required-face:               Faces.                (line 53)
 * ivy-minibuffer-grow:                   Hydra in the minibuffer.
@@ -1795,7 +1803,7 @@ Variable Index
                                                                (line 34)
 * ivy-toggle-case-fold:                  Hydra in the minibuffer.
                                                                (line 70)
-* ivy-toggle-regexp-quote:               File Name Completion. (line 41)
+* ivy-toggle-regexp-quote:               File Name Completion. (line 47)
 * ivy-use-virtual-buffers:               Buffer Name Completion.
                                                                (line  6)
 * ivy-virtual:                           Faces.                (line 76)
@@ -1851,6 +1859,7 @@ Keystroke Index
                                                                (line 26)
 * C-M-p:                                 Key bindings for multiple selections and actions keep minibuffer open.
                                                                (line 47)
+* C-M-y:                                 File Name Completion. (line 41)
 * C-o:                                   Hydra in the minibuffer.
                                                                (line  9)
 * C-r:                                   Key bindings that alter the minibuffer input.
@@ -1874,7 +1883,7 @@ Keystroke Index
                                                                (line 24)
 * M-p:                                   Key bindings that alter the minibuffer input.
                                                                (line 18)
-* M-r:                                   File Name Completion. (line 41)
+* M-r:                                   File Name Completion. (line 47)
 * M-w:                                   Other key bindings.   (line  9)
 * mouse-1:                               Saving the current completion session to a buffer.
                                                                (line 21)
@@ -1911,40 +1920,40 @@ Node: Minibuffer key bindings11575
 Node: Key bindings for navigation12807
 Node: Key bindings for single selection action then exit minibuffer14014
 Node: Key bindings for multiple selections and actions keep minibuffer open16661
-Node: Key bindings that alter the minibuffer input19053
-Node: Other key bindings20998
-Node: Hydra in the minibuffer21376
-Node: Saving the current completion session to a buffer23794
-Node: Completion Styles25206
-Node: ivy--regex-plus26957
-Node: ivy--regex-ignore-order28443
-Node: ivy--regex-fuzzy28811
-Node: Customization29308
-Node: Faces29494
-Node: Defcustoms31923
-Node: Actions33217
-Node: What are actions?33543
-Node: How can different actions be called?34361
-Node: How to modify the actions list?34932
-Node: Example - add two actions to each command35592
-Node: How to undo adding the two actions36551
-Node: How to add actions to a specific command37003
-Node: Example - define a new command with several actions37419
-Node: Test the above function with ivy-occur38307
-Node: Packages39149
-Node: Commands40114
-Node: File Name Completion40299
-Node: Using TRAMP42095
-Node: Buffer Name Completion43597
-Node: Counsel commands44212
-Node: API44859
-Node: Required arguments for ivy-read45457
-Node: Optional arguments for ivy-read45976
-Node: Example - counsel-describe-function49402
-Node: Example - counsel-locate52260
-Node: Example - ivy-read-with-extra-properties56010
-Node: Variable Index57218
-Node: Keystroke Index64265
+Node: Key bindings that alter the minibuffer input19128
+Node: Other key bindings21073
+Node: Hydra in the minibuffer21451
+Node: Saving the current completion session to a buffer23869
+Node: Completion Styles25281
+Node: ivy--regex-plus27032
+Node: ivy--regex-ignore-order28518
+Node: ivy--regex-fuzzy28886
+Node: Customization29383
+Node: Faces29569
+Node: Defcustoms31998
+Node: Actions33292
+Node: What are actions?33618
+Node: How can different actions be called?34436
+Node: How to modify the actions list?35007
+Node: Example - add two actions to each command35667
+Node: How to undo adding the two actions36626
+Node: How to add actions to a specific command37078
+Node: Example - define a new command with several actions37494
+Node: Test the above function with ivy-occur38382
+Node: Packages39224
+Node: Commands40189
+Node: File Name Completion40374
+Node: Using TRAMP42331
+Node: Buffer Name Completion43833
+Node: Counsel commands44448
+Node: API45095
+Node: Required arguments for ivy-read45693
+Node: Optional arguments for ivy-read46212
+Node: Example - counsel-describe-function49638
+Node: Example - counsel-locate52496
+Node: Example - ivy-read-with-extra-properties56246
+Node: Variable Index57454
+Node: Keystroke Index64574
 
 End Tag Table
 

@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/puppet-mode-20200419.1236/puppet-mode.el  -*- no-byte-compile: t -*-
-(define-package "puppet-mode" "20200419.1236" "Major mode for Puppet manifests" '((emacs "24.1") (pkg-info "0.4")) :commit "0197b405c79a5d0718979f31df760bb3bfca38de" :keywords '("languages") :authors '(("Bozhidar Batsov" . "bozhidar@batsov.com") ("Sebastian Wiesner" . "swiesner@lunaryorn.com") ("Russ Allbery" . "rra@stanford.edu")) :maintainer '("Tim Meusel" . "tim@bastelfreak.de") :url "https://github.com/voxpupuli/puppet-mode")

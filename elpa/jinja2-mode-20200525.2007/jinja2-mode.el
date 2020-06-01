@@ -4,7 +4,8 @@
 
 ;; Author: Florian Mounier aka paradoxxxzero
 ;; Version: 0.2
-;; Package-Version: 20141128.1007
+;; Package-Version: 20200525.2007
+;; Package-Commit: 5ac022d6889a04332b9dbfa390cbb02db3ca57b0
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -264,7 +265,7 @@
 
 (defun jinja2-calculate-indent ()
   "Return indent column"
-  (if (bobp)  ; Check begining of buffer
+  (if (bobp)  ; Check beginning of buffer
       0
     (let ((indent-width sgml-basic-offset) (default (sgml-indent-line-num)))
       (if (looking-at "^[ \t]*{%-? *e\\(nd\\|lse\\|lif\\)") ; Check close tag
@@ -292,6 +293,10 @@
           (goto-char (+ (- indent old_indent) old_point)))
       indent)))
 
+(defun jinja2-indent-buffer()
+  (interactive)
+  (save-excursion
+    (indent-region (point-min) (point-max))))
 
 ;;;###autoload
 (define-derived-mode jinja2-mode html-mode  "Jinja2"
@@ -320,9 +325,12 @@
 (define-key jinja2-mode-map (kbd "C-c t") 'jinja2-insert-tag)
 (define-key jinja2-mode-map (kbd "C-c v") 'jinja2-insert-var)
 (define-key jinja2-mode-map (kbd "C-c #") 'jinja2-insert-comment)
+(add-hook 'after-save-hook 'jinja2-indent-buffer)
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . jinja2-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.j2\\'" . jinja2-mode))
 
 (provide 'jinja2-mode)
 

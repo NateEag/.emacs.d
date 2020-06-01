@@ -16,6 +16,8 @@ Major mode for editing jinja2 files
 
 (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . jinja2-mode))
 
+(add-to-list 'auto-mode-alist '("\\.j2\\'" . jinja2-mode))
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "jinja2-mode" '("jinja2-" "sgml-indent-line-num")))
 
 ;;;***

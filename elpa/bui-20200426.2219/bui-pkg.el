@@ -1,7 +1,7 @@
-(define-package "bui" "20181218.1830" "Buffer interface library"
+(define-package "bui" "20200426.2219" "Buffer interface library"
   '((emacs "24.3")
     (dash "2.11.0"))
-  :keywords
+  :commit "28a9b0a36cb69b931cf32db7546ad5c6589752cf" :keywords
   '("tools")
   :authors
   '(("Alex Kost" . "alezost@gmail.com"))

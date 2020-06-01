@@ -408,6 +408,9 @@ The shell command lives in my dotfiles repo."
   (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
   (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook))
 
+(use-package magit-delta
+  :diminish)
+
 (use-package magit
   :defer t
   :hook ((magit-mode . magit-svn-mode)

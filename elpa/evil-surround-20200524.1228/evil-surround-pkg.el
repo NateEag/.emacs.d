@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/evil-surround-20200524.1228/evil-surround.el  -*- no-byte-compile: t -*-
+(define-package "evil-surround" "20200524.1228" "emulate surround.vim from Vim" '((evil "1.2.12")) :commit "1c34944d8c98da4a2385d24ee89eef9cdf569a12" :keywords '("emulation" "vi" "evil") :authors '(("Tim Harper <timcharper at gmail dot com>") ("Vegard Øye <vegard_oye at hotmail dot com>")) :maintainer '("Tim Harper <timcharper at gmail dot com>"))

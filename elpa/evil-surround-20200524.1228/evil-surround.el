@@ -1,17 +1,18 @@
 ;;; evil-surround.el --- emulate surround.vim from Vim
 
 ;; Copyright (C) 2010 - 2017 Tim Harper
-;; Copyright (C) 2018 - 2019 The evil-surround.el Contributors
+;; Copyright (C) 2018 - 2020 The evil-surround.el Contributors
 
 ;; Licensed under the same terms as Emacs (GPLv3)
 
 ;;
 ;; Author: Tim Harper <timcharper at gmail dot com>
-;;         Vegard Øye <vegard_oye at hotmail dot com>           
+;;         Vegard Øye <vegard_oye at hotmail dot com>
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20191217.1131
+;; Package-Version: 20200524.1228
+;; Package-Commit: 1c34944d8c98da4a2385d24ee89eef9cdf569a12
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -181,11 +182,22 @@ This is a cons cell (LEFT . RIGHT), both strings."
      (t
       (cons (format "%c" char) (format "%c" char))))))
 
+(defvar-local evil-surround-local-outer-text-object-map-list nil
+  "Buffer-local list of outer text object keymaps that are added to
+  evil-surround")
+
+(defvar-local evil-surround-local-inner-text-object-map-list nil
+  "Buffer-local list of inner text object keymaps that are added to
+  evil-surround")
+
 (defun evil-surround-outer-overlay (char)
   "Return outer overlay for the delimited range represented by CHAR.
 This overlay includes the delimiters.
 See also `evil-surround-inner-overlay'."
-  (let ((outer (lookup-key evil-outer-text-objects-map (string char))))
+  (let ((outer (lookup-key
+                 (make-composed-keymap
+                   evil-surround-local-outer-text-object-map-list
+                   evil-outer-text-objects-map) (string char))))
     (when (functionp outer)
       (setq outer (funcall outer))
       (when (evil-range-p outer)
@@ -210,7 +222,10 @@ See also `evil-surround-inner-overlay'."
   "Return inner overlay for the delimited range represented by CHAR.
 This overlay excludes the delimiters.
 See also `evil-surround-outer-overlay'."
-  (let ((inner (lookup-key evil-inner-text-objects-map (string char))))
+  (let ((inner (lookup-key
+                 (make-composed-keymap
+                   evil-surround-local-inner-text-object-map-list
+                   evil-inner-text-objects-map) (string char))))
     (when (functionp inner)
       (setq inner (funcall inner))
       (when (evil-range-p inner)
@@ -280,8 +295,8 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
 
 (defun evil-surround-interactive-setup ()
   (setq evil-inhibit-operator t)
-     (list (assoc-default evil-this-operator
-                          evil-surround-operator-alist)))
+  (list (assoc-default evil-this-operator
+                       evil-surround-operator-alist)))
 
 (defun evil-surround-setup-surround-line-operators ()
   (define-key evil-operator-shortcut-map "s" 'evil-surround-line)

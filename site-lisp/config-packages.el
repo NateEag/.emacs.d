@@ -394,6 +394,10 @@ The shell command lives in my dotfiles repo."
                                                             "*scratch*")))
                                 (evil-insert-state)))))))
 
+(use-package scratch-comment
+  :bind (:map lisp-interaction-mode-map
+              ("C-j" . scratch-comment-eval-sexp)))
+
 (use-package git-gutter
   :diminish
   :config

@@ -6,7 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20200219.2257
+;; Package-Version: 20200517.1305
+;; Package-Commit: 912525c772984c6af0fd84acd6699ee43d91037a
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.2
 
@@ -780,7 +781,7 @@ associated process is exited."
          (url-request-method type)
          (url-request-data data)
          (buffer (url-retrieve url #'request--url-retrieve-callback
-                               (nconc (list :response response) settings)))
+                               (nconc (list :response response) settings) t))
          (proc (get-buffer-process buffer)))
     (request--install-timeout timeout response)
     (setf (request-response--buffer response) buffer)
@@ -835,8 +836,8 @@ associated process is exited."
                                 'timeout)
                           (setf (request-response-done-p response) t)
                           nil)
-                       (url-retrieve-synchronously url))
-                   (url-retrieve-synchronously url))))
+                       (url-retrieve-synchronously url t))
+                   (url-retrieve-synchronously url t))))
     (setf (request-response--buffer response) buffer)
     ;; It seems there is no way to get redirects and URL here...
     (when buffer
@@ -1233,7 +1234,10 @@ START-URL is the URL requested."
     (prog1 (apply #'request--curl url
                   :semaphore (lambda (&rest _) (setq finished t))
                   settings)
-      (let ((proc (get-buffer-process (request-response--buffer response))))
+      (let* ((proc (get-buffer-process (request-response--buffer response)))
+	     (interval 0.05)
+	     (timeout 5)
+	     (maxiter (truncate (/ timeout interval))))
         (auto-revert-set-timer)
         (when auto-revert-use-notify
           (dolist (buf (buffer-list))
@@ -1241,12 +1245,12 @@ START-URL is the URL requested."
               (request-auto-revert-notify-rm-watch))))
         (with-local-quit
           (cl-loop with iter = 0
-                   until (or (>= iter 10) finished)
-                   do (accept-process-output nil 0.3)
+                   until (or (>= iter maxiter) finished)
+                   do (accept-process-output nil interval)
                    unless (request--process-live-p proc)
                      do (cl-incf iter)
                    end
-                   finally (when (>= iter 10)
+                   finally (when (>= iter maxiter)
                              (let ((m "request--curl-sync: semaphore never called"))
                                (princ (format "%s\n" m) #'external-debugging-output)
                                (request-log 'error m)))))))))

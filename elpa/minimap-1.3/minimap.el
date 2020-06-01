@@ -1,10 +1,10 @@
 ;;; minimap.el --- Sidebar showing a "mini-map" of a buffer
 
-;; Copyright (C) 2009-2014 Free Software Foundation, Inc.
+;; Copyright (C) 2009-2020 Free Software Foundation, Inc.
 
 ;; Author: David Engster <deng@randomsample.de>
 ;; Keywords:
-;; Version: 1.2
+;; Version: 1.3
 
 ;; This file is part of GNU Emacs.
 
@@ -50,6 +50,16 @@
 
 ;;; News:
 ;;
+;;;; Changes since v1.2:
+;;
+;; - New option: minimap-hide-cursor (active by default)
+;; - New option: minimap-disable-mode-line (active by default)
+;; - Make current line highlighting face configurable, change to dark gray.
+;; - New default behavior for minimap-automatically-delete-window:
+;;   keep minimap window as long as buffer is visible. Change variable
+;;   to 't' to get old behavior.
+;; - Bug fixes
+;;
 ;;;; Changes since v1.1:
 ;;
 ;; - Change some defaults: better colors, reduced update delay.
@@ -77,6 +87,13 @@
 ;; - Semantic overlays will be automatically updated during editing.
 ;; - Lots of bug fixes.
 
+;; Silence byte compiler
+(declare-function semantic-active-p "semantic/fw")
+(declare-function semantic-fetch-tags "semantic")
+(declare-function semantic-tag-class "semantic/tag")
+(declare-function semantic-tag-overlay "semantic/tag")
+(declare-function semantic-tag-name "semantic/tag")
+
 (defgroup minimap nil
   "A minimap sidebar for Emacs."
   :group 'convenience)
@@ -89,9 +106,16 @@ TrueType font for this.  After changing this, you should
 recreate the minimap to avoid problems with recentering."
   :group 'minimap)
 
+(defface minimap-current-line-face
+  '((((background dark)) (:background "dark gray"))
+    (t (:background "dark gray")))
+  "Face for the current line in the minimap.
+By default, both foreground and background are yellow."
+  :group 'minimap)
+
 (defface minimap-active-region-background
-  '((((background dark)) (:background "#700000"))
-    (t (:background "#C847D8FEFFFF")))
+  '((((background dark)) (:background "#700000" :extend t))
+    (t (:background "#C847D8FEFFFF" :extend t)))
   "Face for the active region in the minimap.
 By default, this is only a different background color."
   :group 'minimap)
@@ -234,8 +258,8 @@ enabled.  This variable can have the following values:
   (see: `minimap-display-semantic-overlays').
 'always -- Always active.
 nil -- Inactive."
-  :type '(choice (const :tag "Fallback if CEDET unavailable." 'as-fallback)
-		 (const :tag "Always active." 'always)
+  :type '(choice (const :tag "Fallback if CEDET unavailable." as-fallback)
+		 (const :tag "Always active." always)
 		 (const :tag "Inactive." nil))
   :group 'minimap)
 
@@ -273,12 +297,18 @@ automatically re-created as soon as you kill it."
   :type 'boolean
   :group 'minimap)
 
-(defcustom minimap-automatically-delete-window t
+(defcustom minimap-automatically-delete-window 'visible
   "Whether the minimap window should be automatically deleted.
-Setting this to non-nil will delete the minibuffer side window
-when you enter a buffer which is not derived from
-`minimap-major-modes' (excluding the minibuffer)."
-  :type 'boolean
+You can choose between three different behaviors here: If this is
+`nil', the minimap window will never be automatically deleted. If
+this is set to symbol 'visible, the minimap stays active as long
+as the minimap's buffer is visible somewhere in the frame,
+whether it is active or not. Any other value will delete the
+minimap window as soon as you enter a buffer which is not derived
+from `minimap-major-modes' (excluding the minibuffer)."
+  :type '(choice (const :tag "Never delete automatically" nil)
+		 (const :tag "Keep as long as buffer visible" visible)
+		 (const :tag "Delete when entering unsupported buffer" t))
   :group 'minimap)
 
 (defcustom minimap-tag-only nil
@@ -289,6 +319,16 @@ when you enter a buffer which is not derived from
 (defcustom minimap-highlight-line t
   "Whether the minimap should highlight the current line."
   :type 'boolean
+  :group 'minimap)
+
+(defcustom minimap-disable-mode-line t
+  "Whether to disable the mode-line in the minimap window."
+  :type 'boolen
+  :group 'minimap)
+
+(defcustom minimap-hide-cursor t
+  "Whether to hide the cursor in the minimap window."
+  :type 'boolen
   :group 'minimap)
 
 ;;; Internal variables
@@ -332,22 +372,26 @@ when you enter a buffer which is not derived from
 
 (defun minimap-create-window ()
   (let ((width (round (* (window-width)
-			 minimap-width-fraction))))
+			 minimap-width-fraction)))
+	buffer-window)
     (when (< width minimap-minimum-width)
       (setq width minimap-minimum-width))
     (if (eq minimap-window-location 'left)
-	(split-window-horizontally width)
-      (split-window-horizontally
-       (* -1 width))
-      (other-window 1))
+	;; The existing window becomes the minimap
+	(progn
+	  (setq buffer-window (split-window-horizontally width))
+	  ;; Restore prev/next buffers in the new window
+	  (set-window-next-buffers buffer-window
+				   (window-next-buffers))
+	  (set-window-prev-buffers buffer-window
+				   (window-prev-buffers)))
+      ;; The new window is the minimap
+      (setq buffer-window (selected-window))
+      (select-window (split-window-horizontally
+		      (* -1 width))))
     ;; Set up the minimap window:
     ;; You should not be able to enter the minimap window.
     (set-window-parameter nil 'no-other-window t)
-    ;; Hide things.
-    (when minimap-hide-scroll-bar
-      (setq vertical-scroll-bar nil))
-    (when minimap-hide-fringes
-      (set-window-fringes nil 0 0))
     ;; Switch to buffer.
     (switch-to-buffer
      (get-buffer-create minimap-buffer-name) t t)
@@ -356,9 +400,11 @@ when you enter a buffer which is not derived from
     ;; Make it dedicated.
     (when minimap-dedicated-window
       (set-window-dedicated-p nil t))
+    ;; Return minimap window, but make sure we select the window where
+    ;; the buffer is in.
     (prog1
 	(selected-window)
-      (other-window 1))))
+      (select-window buffer-window))))
 
 (defun minimap-setup-hooks (&optional remove)
   "Hook minimap into other modes.
@@ -367,12 +413,14 @@ If REMOVE is non-nil, remove minimap from other modes."
       (progn
 	(remove-hook 'outline-view-change-hook 'minimap-sync-overlays)
 	(remove-hook 'hs-hide-hook 'minimap-sync-overlays)
-	(remove-hook 'hs-show-hook 'minimap-sync-overlays))
+	(remove-hook 'hs-show-hook 'minimap-sync-overlays)
+	(remove-hook 'flycheck-after-syntax-check-hook 'minimap-sync-overlays))
     ;; outline-(minor-)mode
     (add-hook 'outline-view-change-hook 'minimap-sync-overlays)
     ;; hideshow
     (add-hook 'hs-hide-hook 'minimap-sync-overlays)
-    (add-hook 'hs-show-hook 'minimap-sync-overlays)))
+    (add-hook 'hs-show-hook 'minimap-sync-overlays)
+    (add-hook 'flycheck-after-syntax-check-hook 'minimap-sync-overlays)))
 
 ;;; Minimap creation / killing
 
@@ -436,6 +484,10 @@ Re-use already existing minimap window if possible."
       (setq minimap-base-overlay (make-overlay (point-min) (point-max) nil t t))
       (overlay-put minimap-base-overlay 'face 'minimap-font-face)
       (overlay-put minimap-base-overlay 'priority 1)
+      ;; Add the hand mouse pointer to visible text. It doesn’t seem
+      ;; possible to set the mouse cursor when there’s no text. See
+      ;; `void-text-area-pointer'.
+      (overlay-put minimap-base-overlay 'pointer 'hand)
       (when minimap-tag-only
 	(overlay-put minimap-base-overlay 'face
       		     `(:inherit minimap-font-face
@@ -453,6 +505,15 @@ Re-use already existing minimap window if possible."
 			       :foreground ,(face-background 'minimap-active-region-background))))
       (overlay-put minimap-active-overlay 'priority 5)
       (minimap-sb-mode 1)
+      (when minimap-disable-mode-line
+	(setq mode-line-format nil))
+      (when minimap-hide-cursor
+	(setq cursor-type nil))
+      (when minimap-hide-scroll-bar
+	(setq vertical-scroll-bar nil)
+	(set-window-buffer nil (current-buffer)))
+      (when minimap-hide-fringes
+	(set-window-fringes nil 0 0))
       (when (and (boundp 'linum-mode)
 		 linum-mode)
 	(linum-mode 0))
@@ -483,48 +544,7 @@ When FORCE, enforce update of the active region."
   (unless (active-minibuffer-window)
     (if (minimap-active-current-buffer-p)
 	;; We are still in the same buffer, so just update the minimap.
-	(let ((win (minimap-get-window))
-	      (start (window-start))
-	      (end (window-end))
-	      (pt (point)))
-	  (when (and (null win)
-		     minimap-recreate-window)
-	    ;; The minimap window is no longer visible, so create it again...
-	    (setq win (minimap-create-window))
-	    ;; ...and switch to existing minimap buffer.
-	    (with-selected-window win
-	      (when (window-dedicated-p)
-		(set-window-dedicated-p nil nil))
-	      (switch-to-buffer minimap-buffer-name t t)
-	      (when minimap-dedicated-window
-		(set-window-dedicated-p nil t))))
-	  (with-selected-window win
-	    ;; Make sure the base overlay spans the whole buffer.
-	    (unless (and (= (overlay-start minimap-base-overlay) (point-min))
-			 (= (overlay-end minimap-base-overlay) (point-max)))
-	      (move-overlay minimap-base-overlay (point-min) (point-max)))
-	    (unless (and (not force)
-			 (= minimap-start start)
-			 (= minimap-end end))
-	      ;; Update the overlay.
-	      (move-overlay minimap-active-overlay start end)
-	      (setq minimap-start start
-		    minimap-end end)
-	      (minimap-recenter (line-number-at-pos (/ (+ end start) 2))
-				(/ (- (line-number-at-pos end)
-				      (line-number-at-pos start))
-				   2)))
-	    (goto-char pt)
-	    (beginning-of-line)
-	    (unless minimap-line-overlay
-	      (setq minimap-line-overlay (make-overlay (point) (1+ (point)) nil t))
-	      (overlay-put minimap-line-overlay 'face '(:background "yellow" :foreground "yellow"))
-	      (overlay-put minimap-line-overlay 'priority 6))
-	    (move-overlay minimap-line-overlay (point) (line-beginning-position 2))
-	    (when minimap-always-recenter
-	      (recenter (round (/ (window-height) 2)))))
-	  ;; Redisplay
-	  (sit-for 0))
+	(minimap-update-current-buffer force)
       ;; The buffer was switched, check if the minimap should switch, too.
       (if (and minimap-major-modes
 	       (apply 'derived-mode-p minimap-major-modes))
@@ -538,9 +558,10 @@ When FORCE, enforce update of the active region."
 	    (sit-for 0)
 	    ;; ...and call update again.
 	    (minimap-update t))
-	;; Otherwise, delete window if the user so wishes.
+	;; We have entered a buffer for which no minimap should be
+	;; displayed. Check if we should de
 	(when (and (minimap-get-window)
-		   minimap-automatically-delete-window)
+		   (minimap-need-to-delete-window))
 	  ;; We wait a tiny bit before deleting the window, since we
 	  ;; might only be temporarily in another buffer.
 	  (run-with-timer 0.3 nil
@@ -549,12 +570,71 @@ When FORCE, enforce update of the active region."
 				       (minimap-get-window))
 			      (delete-window (minimap-get-window))))))))))
 
+(defun minimap-need-to-delete-window ()
+  "Check if we should delete the minimap window.
+This depends on `minimap-automatically-delete-window'."
+  (if (eq minimap-automatically-delete-window 'visible)
+      (null (get-buffer-window minimap-active-buffer))
+    (null minimap-automatically-delete-window)))
+
+(defun minimap-update-current-buffer (force)
+  "Update minimap for the current buffer."
+  (let ((win (minimap-get-window))
+	(start (window-start))
+	(end (window-end))
+	(pt (point)))
+    (when (and (null win)
+	       minimap-recreate-window)
+      ;; The minimap window is no longer visible, so create it again...
+      (setq win (minimap-create-window))
+      ;; ...and switch to existing minimap buffer.
+      (with-selected-window win
+	(when (window-dedicated-p)
+	  (set-window-dedicated-p nil nil))
+	(switch-to-buffer minimap-buffer-name t t)
+	(when minimap-hide-fringes
+	  (set-window-fringes nil 0 0))
+	(when minimap-dedicated-window
+	  (set-window-dedicated-p nil t))))
+    (with-selected-window win
+      ;; Make sure the base overlay spans the whole buffer.
+      (unless (and (= (overlay-start minimap-base-overlay) (point-min))
+		   (= (overlay-end minimap-base-overlay) (point-max)))
+	(move-overlay minimap-base-overlay (point-min) (point-max)))
+      (unless (and (not force)
+		   (= minimap-start start)
+		   (= minimap-end end))
+	;; Update the overlay.
+	(move-overlay minimap-active-overlay start end)
+	(setq minimap-start start
+	      minimap-end end)
+	(minimap-recenter (line-number-at-pos (/ (+ end start) 2))
+			  (/ (- (line-number-at-pos end)
+				(line-number-at-pos start))
+			     2)))
+      (goto-char pt)
+      (beginning-of-line)
+      (when minimap-highlight-line
+	(minimap-highlight-line))
+      (when minimap-always-recenter
+	(recenter (round (/ (window-height) 2)))))))
+
+(defun minimap-highlight-line ()
+  "Highlight current line in the minimap."
+  (unless minimap-line-overlay
+    (setq minimap-line-overlay (make-overlay (point) (1+ (point)) nil t))
+    (overlay-put minimap-line-overlay 'priority 6))
+  (overlay-put
+   minimap-line-overlay 'face
+   `(:background ,(face-background 'minimap-current-line-face)
+		 :foreground ,(face-foreground 'minimap-current-line-face)))
+  (move-overlay minimap-line-overlay (point) (line-beginning-position 2)))
+
 ;;; Overlay movement
 
 (defun minimap-move-overlay-mouse (start-event)
   "Move overlay by tracking mouse movement."
   (interactive "e")
-  (mouse-set-point start-event)
   (when (get-buffer-window (buffer-base-buffer (current-buffer)))
     (let* ((echo-keystrokes 0)
 	   (end-posn (event-end start-event))
@@ -575,10 +655,10 @@ When FORCE, enforce update of the active region."
 		(eq (car ev) 'mouse-movement))
 	  (setq pt (posn-point (event-start ev)))
 	  (when (numberp pt)
-	    (goto-char pt)
-	    (beginning-of-line)
-	    (minimap-set-overlay (point)))))
-      (select-window (get-buffer-window (buffer-base-buffer)))
+	    (with-selected-window (get-buffer-window minimap-buffer-name)
+	      (goto-char pt)
+	      (beginning-of-line)
+	      (minimap-set-overlay (point))))))
       (minimap-update)
       (when (and pcselmode (fboundp 'pc-selection-mode))
 	(pc-selection-mode 1)))))
@@ -734,7 +814,9 @@ Apply semantic overlays or face enlargement if necessary."
 			    (or (not minimap-display-semantic-overlays)
 				(not semantic)))))
 	  (when (eq font-lock-support-mode 'jit-lock-mode)
-	    (jit-lock-fontify-now))
+	    (condition-case nil
+		(jit-lock-fontify-now)
+	      (error nil)))
 	  (minimap-enlarge-faces))
 	;; Semantic overlays
 	(when (and semantic
@@ -851,6 +933,33 @@ TAGS is the list of tags.  If it is t, fetch tags from buffer."
 
 ;;;; ChangeLog:
 
+;; 2020-05-09  David Engster  <deng@randomsample.de>
+;; 
+;; 	[minimap] Upgrade to version 1.3
+;; 
+;; 	- New option: minimap-hide-cursor (active by default)
+;; 	- New option: minimap-disable-mode-line (active by default)
+;; 	- Make current line highlighting face configurable, change to dark gray.
+;; 	- New default behavior for minimap-automatically-delete-window:
+;; 	  keep minimap window as long as buffer is visible. Change variable
+;; 	  to 't' to get old behavior.
+;; 	- Bug fixes
+;; 
+;; 2019-07-15  Lars Ingebrigtsen  <larsi@gnus.org>
+;; 
+;; 	Fix problem with overlay extending to the end of the buffer
+;; 
+;; 	* packages/minimap/minimap.el (minimap-enlarge-faces): The overlay may
+;; 	extend to the end of the buffer (bug#28634).
+;; 
+;; 2016-07-11  Paul Eggert	 <eggert@cs.ucla.edu>
+;; 
+;; 	Fix some quoting problems in doc strings
+;; 
+;; 	Most of these are minor issues involving, e.g., quoting `like this' 
+;; 	instead of 'like this'.	 A few involve escaping ` and ' with a preceding
+;; 	\= when the characters should not be turned into curved single quotes.
+;; 
 ;; 2014-03-11  David Engster  <deng@randomsample.de>
 ;; 
 ;; 	Update Minimap to version 1.2.

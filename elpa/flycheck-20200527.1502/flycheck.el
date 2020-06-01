@@ -86,6 +86,9 @@
 ;; Declare a bunch of dynamic variables that we need from other modes
 (defvar sh-shell)                       ; For shell script checker predicates
 (defvar ess-language)                   ; For r-lintr predicate
+(defvar markdown-hide-markup)                     ;
+(defvar markdown-fontify-code-block-default-mode) ; For rust-error-explainer
+(defvar markdown-fontify-code-blocks-natively)    ;
 
 ;; Tell the byte compiler about autoloaded functions from packages
 (declare-function pkg-info-version-info "pkg-info" (package))
@@ -103,6 +106,9 @@ attention to case differences."
         (and (>= start-pos 0)
              (eq t (compare-strings suffix nil nil
                                     string start-pos nil ignore-case))))))
+
+  (defalias 'flycheck--format-message
+    (if (fboundp 'format-message) #'format-message #'format))
 
   ;; TODO: Remove when dropping support for Emacs 24.3 and earlier
   (unless (featurep 'subr-x)
@@ -516,19 +522,23 @@ path and tries invoking `executable-find' again."
      (executable-find (expand-file-name executable)))))
 
 (defcustom flycheck-indication-mode 'left-fringe
-  "The indication mode for Flycheck errors and warnings.
+  "The indication mode for Flycheck errors.
 
 This variable controls how Flycheck indicates errors in buffers.
-May either be `left-fringe', `right-fringe', or nil.
+May be `left-fringe', `right-fringe', `left-margin',
+`right-margin', or nil.
 
-If set to `left-fringe' or `right-fringe', indicate errors and
-warnings via icons in the left and right fringe respectively.
+If set to `left-fringe' or `right-fringe', indicate errors via
+icons in the left and right fringe respectively.  If set to
+`left-margin' or `right-margin', use the margins instead.
 
 If set to nil, do not indicate errors and warnings, but just
 highlight them according to `flycheck-highlighting-mode'."
   :group 'flycheck
   :type '(choice (const :tag "Indicate in the left fringe" left-fringe)
                  (const :tag "Indicate in the right fringe" right-fringe)
+                 (const :tag "Indicate in the left margin" left-margin)
+                 (const :tag "Indicate in the right margin" right-margin)
                  (const :tag "Do not indicate" nil))
   :safe #'symbolp)
 
@@ -566,6 +576,109 @@ nil
                  (const :tag "Do not highlight errors" nil))
   :package-version '(flycheck . "0.14")
   :safe #'symbolp)
+
+(defvar flycheck-current-errors)
+(defun flycheck-refresh-fringes-and-margins ()
+  "Refresh fringes and margins of all windows displaying the current buffer.
+
+If any errors are currently shown, launch a new check, to adjust
+to a potential new indication mode."
+  (dolist (win (get-buffer-window-list))
+    (set-window-margins win left-margin-width right-margin-width)
+    (set-window-fringes win left-fringe-width right-fringe-width))
+  (when flycheck-current-errors
+    (flycheck-buffer)))
+
+(defun flycheck-set-indication-mode (&optional mode)
+  "Set `flycheck-indication-mode' to MODE and adjust margins and fringes.
+
+When MODE is nil, adjust window parameters without changing the
+mode.  This function can be useful as a `flycheck-mode-hook',
+especially if you use margins only in Flycheck buffers.
+
+When MODE is `left-margin', the left fringe is reduced to 1 pixel
+to save space."
+  (interactive (list (intern (completing-read
+                              "Mode: " '("left-fringe" "right-fringe"
+                                         "left-margin" "right-margin")
+                              nil t nil nil
+                              (prin1-to-string flycheck-indication-mode)))))
+  (setq mode (or mode flycheck-indication-mode))
+  (pcase mode
+    ((or `left-fringe `right-fringe)
+     (setq left-fringe-width 8 right-fringe-width 8
+           left-margin-width 0 right-margin-width 0))
+    (`left-margin
+     (setq left-fringe-width 1 right-fringe-width 8
+           left-margin-width 1 right-margin-width 0))
+    (`right-margin
+     (setq left-fringe-width 8 right-fringe-width 8
+           left-margin-width 0 right-margin-width 1))
+    (_ (user-error "Invalid indication mode")))
+  (setq-local flycheck-indication-mode mode)
+  (flycheck-refresh-fringes-and-margins))
+
+(define-widget 'flycheck-highlighting-style 'lazy
+  "A value for `flycheck-highlighting-style'."
+  :offset 2
+  :format "%t: Use %v"
+  :type '(choice
+          :format "%[Value Menu%] %v"
+          (const :tag "no highlighting" nil)
+          (const :tag "a face indicating the error level" level-face)
+          (list :tag "a pair of delimiters"
+                (const :format "" delimiters)
+                (string :tag "Before")
+                (string :tag "After"))
+          (list :tag "a conditional mix of styles"
+                (const :format "" conditional)
+                (integer :tag "Up to this many lines")
+                (flycheck-highlighting-style :format "Use %v")
+                (flycheck-highlighting-style :format "Otherwise, use %v"))))
+
+(defun flycheck--make-highlighting-delimiter (char)
+  "Make a highlighting bracket symbol by repeating CHAR twice."
+  (compose-chars ?\s
+                 ;; '(Bl . Br) ?\s
+                 '(Bc Br 30 0) char
+                 '(Bc Bl -30 0) char))
+
+(defcustom flycheck-highlighting-style
+  `(conditional 4 level-face (delimiters "" ""))
+  "The highlighting style for Flycheck errors and warnings.
+
+The highlighting style controls how Flycheck highlights error
+regions in buffers.  The following styles are supported:
+
+nil
+     Do not highlight errors.  Same as setting
+     `flycheck-highlighting-mode' to nil.
+
+`level-face'
+     Chose a face depending on the severity of the error, and
+     apply it to the whole error text.  See also the
+     `flycheck-define-error-level' and `flycheck-error',
+     `flycheck-warning', and `flycheck-info' faces.
+
+\(`delimiters' BEFORE AFTER)
+     Draw delimiters on each side of the error.  BEFORE and AFTER
+     indicate which delimiters to use.  If they are strings, they
+     are used as-is.  If they are characters, they are repeated
+     twice and composed into a single character.  Delimiters use
+     the fringe face corresponding to the severity of each error,
+     as well as the `flycheck-error-delimiter' face.  Delimited
+     text has the `flycheck-delimited-error' face.
+
+\(`conditional' NLINES S1 S2)
+     Use style S1 for errors spanning up to NLINES lines, and
+     style S2 otherwise.
+
+See also `flycheck-highlighting-mode' and
+`flycheck-indication-mode'."
+  :group 'flycheck
+  :type 'flycheck-highlighting-style
+  :package-version '(flycheck . "32")
+  :safe t)
 
 (defcustom flycheck-check-syntax-automatically '(save
                                                  idle-change
@@ -837,6 +950,24 @@ This variable is a normal hook.  See Info node `(elisp)Hooks'."
   :risky t
   :package-version '(flycheck . "0.21"))
 
+(defface flycheck-error-delimiter
+  `((t))
+  "Flycheck face for errors spanning multiple lines.
+
+See `flycheck-highlighting-style' for details on when this face
+is used."
+  :package-version '(flycheck . "32")
+  :group 'flycheck-faces)
+
+(defface flycheck-delimited-error
+  `((t))
+  "Flycheck face for errors spanning multiple lines.
+
+See `flycheck-highlighting-style' for details on when this face
+is used."
+  :package-version '(flycheck . "32")
+  :group 'flycheck-faces)
+
 (defface flycheck-error
   '((((supports :underline (:style wave)))
      :underline (:style wave :color "Red1"))
@@ -902,21 +1033,20 @@ This variable is a normal hook.  See Info node `(elisp)Hooks'."
   :package-version '(flycheck . "0.16")
   :group 'flycheck-faces)
 
-;; The base faces for the following two faces are inspired by Compilation Mode
 (defface flycheck-error-list-line-number
-  '((t :inherit font-lock-constant-face))
+  '((t))
   "Face for line numbers in the error list."
   :group 'flycheck-faces
   :package-version '(flycheck . "0.16"))
 
 (defface flycheck-error-list-column-number
-  '((t :inherit font-lock-constant-face))
+  '((t))
   "Face for line numbers in the error list."
   :group 'flycheck-faces
   :package-version '(flycheck . "0.16"))
 
 (defface flycheck-error-list-filename
-  '((t :inherit font-lock-variable-name-face))
+  '((t :inherit mode-line-buffer-id :bold nil))
   "Face for filenames in the error list."
   :group 'flycheck-faces
   :package-version '(flycheck . "32"))
@@ -940,8 +1070,14 @@ This variable is a normal hook.  See Info node `(elisp)Hooks'."
   :group 'flycheck-faces
   :package-version '(flycheck . "0.21"))
 
+(defface flycheck-error-list-error-message
+  '((t))
+  "Face for the error message in the error list."
+  :group 'flycheck-faces
+  :package-version '(flycheck . "33"))
+
 (defface flycheck-error-list-highlight
-  '((t :inherit highlight))
+  '((t :bold t))
   "Flycheck face to highlight errors in the error list."
   :package-version '(flycheck . "0.15")
   :group 'flycheck-faces)
@@ -1167,7 +1303,7 @@ just return nil."
   (browse-url "http://www.flycheck.org"))
 
 (define-obsolete-function-alias 'flycheck-info
-  'flycheck-manual "26" "Open the Flycheck manual.")
+  'flycheck-manual "Flycheck 26" "Open the Flycheck manual.")
 
 
 ;;; Utility functions
@@ -1527,10 +1663,35 @@ FILE-NAME is nil, return `default-directory'."
           (file-name-directory file-name)
         (expand-file-name default-directory)))))
 
+(cl-defstruct (flycheck-line-cache
+               (:constructor flycheck-line-cache-new))
+  "Cache structure used to speed up `flycheck-goto-line'."
+  tick point line)
+
+(defvar-local flycheck--line-cache nil
+  "Cache used to speed ip `flycheck-goto-line'.")
+
+(defsubst flycheck--init-line-cache ()
+  "Initialize or reinitialize `flycheck--line-cache'."
+  (let ((tick (buffer-modified-tick)))
+    (if flycheck--line-cache
+        (unless (= (flycheck-line-cache-tick flycheck--line-cache) tick)
+          (setf (flycheck-line-cache-tick flycheck--line-cache) tick
+                (flycheck-line-cache-point flycheck--line-cache) 1
+                (flycheck-line-cache-line flycheck--line-cache) 1))
+      (setq-local flycheck--line-cache
+                  (flycheck-line-cache-new :tick tick :point 1 :line 1)))))
+
 (defun flycheck-goto-line (line)
-  "Move point to beginning of line number LINE."
-  (goto-char (point-min))
-  (forward-line (- line 1)))
+  "Move point to beginning of line number LINE.
+
+This function assumes that the current buffer is not narrowed."
+  (flycheck--init-line-cache)
+  (goto-char (flycheck-line-cache-point flycheck--line-cache))
+  (let ((delta (- line (flycheck-line-cache-line flycheck--line-cache))))
+    (when (= 0 (forward-line delta))
+      (setf (flycheck-line-cache-point flycheck--line-cache) (point))
+      (setf (flycheck-line-cache-line flycheck--line-cache) line))))
 
 (defun flycheck-line-column-to-position (line column)
   "Return the point closest to LINE, COLUMN on line LINE.
@@ -1647,12 +1808,16 @@ A checker is registered if it is contained in
        (memq checker flycheck-checkers)))
 
 (defun flycheck-disabled-checker-p (checker)
-  "Determine whether CHECKER is disabled.
-
-A checker is disabled if it is contained in
-`flycheck-disabled-checkers'."
-  (or (memq checker flycheck-disabled-checkers)
+  "Determine whether CHECKER is disabled, manually or automatically."
+  (or (flycheck-manually-disabled-checker-p checker)
       (flycheck-automatically-disabled-checker-p checker)))
+
+(defun flycheck-manually-disabled-checker-p (checker)
+  "Determine whether CHECKER has been manually disabled.
+
+A checker has been manually disabled if it is contained in
+`flycheck-disabled-checkers'."
+  (memq checker flycheck-disabled-checkers))
 
 (defun flycheck-automatically-disabled-checker-p (checker)
   "Determine whether CHECKER has been automatically disabled.
@@ -1660,7 +1825,6 @@ A checker is disabled if it is contained in
 A checker has been automatically disabled if it is contained in
 `flycheck--automatically-disabled-checkers'."
   (memq checker flycheck--automatically-disabled-checkers))
-
 
 
 ;;; Generic syntax checkers
@@ -1767,7 +1931,7 @@ are mandatory.
      syntax check in the buffer.
 
      This property is optional.  If omitted, Flycheck won't
-     attempt to interrupt syntax checks wit this syntax checker,
+     attempt to interrupt syntax checks with this syntax checker,
      and simply ignore their results.
 
 `:print-doc FUNCTION'
@@ -1875,8 +2039,15 @@ are mandatory.
      generated by this checker.
 
      FUNCTION is called with a `flycheck-error' object and shall
-     return an explanation message for this error as a string, or
-     nil if there is no explanation for this error.
+     return an explanation message for this error.
+
+     The message can take any of the following forms:
+     - A string, which will be displayed to the user
+     - A function (likely a closure), which will be called in a
+       `flycheck-explain-error-mode' buffer.
+     - A cons `(url . ,URL), indicating that the explanation can
+       be found online at URL.
+     - nil if there is no explanation for this error.
 
      This property is optional.
 
@@ -2045,34 +2216,37 @@ selection for the current buffer.")
   "Whether a generic CHECKER may be enabled for current buffer.
 
 Return non-nil if CHECKER may be used for the current buffer, and
-nil otherwise."
-  (let* ((enabled (flycheck-checker-get checker 'enabled))
-         (shall-enable
-          (and (not (flycheck-disabled-checker-p checker))
-               (or (memq checker flycheck--automatically-enabled-checkers)
-                   (null enabled)
-                   (funcall enabled)))))
-    (if shall-enable
-        (cl-pushnew checker flycheck--automatically-enabled-checkers)
-      (cl-pushnew checker flycheck--automatically-disabled-checkers))
-    shall-enable))
+nil otherwise.  The result of the `:enabled' check, if any, is
+cached."
+  (and
+   ;; Don't run the :enabled check if the checker is already disabled…
+   (not (flycheck-disabled-checker-p checker))
+   (or
+    ;; …or if we've already cached the result
+    (memq checker flycheck--automatically-enabled-checkers)
+    (let* ((enabled (flycheck-checker-get checker 'enabled))
+           (may-enable (or (null enabled) (funcall enabled))))
+      ;; Cache the result
+      (if may-enable
+          (cl-pushnew checker flycheck--automatically-enabled-checkers)
+        (cl-pushnew checker flycheck--automatically-disabled-checkers))
+      may-enable))))
 
 (defun flycheck-reset-enabled-checker (checker)
   "Reset the `:enabled' test of CHECKER.
 
 Forget that CHECKER has been enabled or automatically disabled
-from a previous `:enabled' test.  Once a checker has been enabled
-or automatically disabled, `flycheck-may-enable-checker' will
-always be constant (t or nil respectively).
-
-If you wish to test the `:enabled' predicate again, you must
-first reset its state using this function."
+from a previous `:enabled' test.  The result of the `:enabled'
+test is cached in `flycheck-may-enable-checker': if you wish to
+test the `:enabled' predicate again, you must first reset its
+state using this function."
   (when (memq checker flycheck--automatically-disabled-checkers)
     (setq flycheck--automatically-disabled-checkers
           (remq checker flycheck--automatically-disabled-checkers)))
   (when (memq checker flycheck--automatically-enabled-checkers)
     (setq flycheck--automatically-enabled-checkers
-          (remq checker flycheck--automatically-enabled-checkers))))
+          (remq checker flycheck--automatically-enabled-checkers)))
+  (flycheck-buffer))
 
 (defun flycheck-may-use-checker (checker)
   "Whether a generic CHECKER may be used.
@@ -2150,15 +2324,20 @@ Pop up a help buffer with the documentation of CHECKER."
      (list (flycheck-read-checker prompt default))))
   (unless (flycheck-valid-checker-p checker)
     (user-error "You didn't specify a Flycheck syntax checker"))
-  (help-setup-xref (list #'flycheck-describe-checker checker)
-                   (called-interactively-p 'interactive))
-  (save-excursion
-    (with-help-window (help-buffer)
-      (let ((filename (flycheck-checker-get checker 'file))
-            (modes (flycheck-checker-get checker 'modes))
-            (predicate (flycheck-checker-get checker 'predicate))
-            (print-doc (flycheck-checker-get checker 'print-doc))
-            (next-checkers (flycheck-checker-get checker 'next-checkers)))
+  (let ((filename (flycheck-checker-get checker 'file))
+        (modes (flycheck-checker-get checker 'modes))
+        (predicate (flycheck-checker-get checker 'predicate))
+        (print-doc (flycheck-checker-get checker 'print-doc))
+        (next-checkers (flycheck-checker-get checker 'next-checkers))
+        (help-xref-following
+         ;; Ensure that we don't reuse buffers like `flycheck-verify-checker',
+         ;; and that we don't error out if a `help-flycheck-checker-doc' button
+         ;; is added outside of a documentation window.
+         (and help-xref-following (eq major-mode 'help-mode))))
+    (help-setup-xref (list #'flycheck-describe-checker checker)
+                     (called-interactively-p 'interactive))
+    (save-excursion
+      (with-help-window (help-buffer)
         (princ (format "%s is a Flycheck syntax checker" checker))
         (when filename
           (princ (format " in `%s'" (file-name-nondirectory filename)))
@@ -2241,16 +2420,16 @@ Return a list of `flycheck-verification-result' objects."
         (enabled (flycheck-checker-get checker 'enabled))
         (verify (flycheck-checker-get checker 'verify)))
     (when enabled
-      (let ((result (flycheck-may-enable-checker checker)))
+      (let ((result (funcall enabled)))
         (push (flycheck-verification-result-new
-               :label "may enable"
-               :message (if result "yes" "Automatically disabled!")
+               :label (propertize "may enable" 'help-echo ":enable")
+               :message (if result "yes" "no")
                :face (if result 'success '(bold warning)))
               results)))
     (when predicate
       (let ((result (funcall predicate)))
         (push (flycheck-verification-result-new
-               :label "predicate"
+               :label (propertize "may run" 'help-echo ":predicate")
                :message (prin1-to-string (not (null result)))
                :face (if result 'success '(bold warning)))
               results)))
@@ -2262,15 +2441,35 @@ Return a list of `flycheck-verification-result' objects."
   'help-function #'flycheck-describe-checker
   'help-echo "mouse-1, RET: describe Flycheck checker")
 
-(define-button-type 'flycheck-checker-select
-  :supertype 'help-xref
-  'help-function (lambda (buffer checker)
-                   (with-current-buffer buffer
-                     (flycheck-select-checker checker))
-                   ;; Revert the verify-setup buffer since it is now stale
-                   (revert-buffer))
-  'help-echo "mouse-1, RET: select Flycheck checker"
+(define-button-type 'flycheck-button
+  'follow-link t
+  'action (lambda (pos)
+            (apply (get-text-property pos 'flycheck-action)
+                   (get-text-property pos 'flycheck-data))
+            ;; Revert the verify-setup buffer since it is now stale
+            (revert-buffer))
   'face 'flycheck-verify-select-checker)
+
+(define-button-type 'flycheck-checker-select
+  :supertype 'flycheck-button
+  'flycheck-action (lambda (buffer checker)
+                     (with-current-buffer buffer
+                       (flycheck-select-checker checker)))
+  'help-echo "mouse-1, RET: select this checker")
+
+(define-button-type 'flycheck-checker-enable
+  :supertype 'flycheck-button
+  'flycheck-action (lambda (buffer checker)
+                     (with-current-buffer buffer
+                       (flycheck-disable-checker checker t)))
+  'help-echo "mouse-1, RET: re-enable this checker in this buffer")
+
+(define-button-type 'flycheck-checker-reset-enabled
+  :supertype 'flycheck-button
+  'flycheck-action (lambda (buffer checker)
+                     (with-current-buffer buffer
+                       (flycheck-reset-enabled-checker checker)))
+  'help-echo "mouse-1, RET: try to re-enable this checker")
 
 (defun flycheck--verify-princ-checker (checker buffer
                                                &optional with-mm with-select)
@@ -2284,15 +2483,26 @@ When WITH-SELECT is non-nil, add a button to select this checker."
   (insert-button (symbol-name checker)
                  'type 'help-flycheck-checker-doc
                  'help-args (list checker))
-  (when (with-current-buffer buffer (flycheck-disabled-checker-p checker))
-    (insert (propertize " (disabled)" 'face '(bold error))))
+  (cond
+   ((with-current-buffer buffer
+      (flycheck-manually-disabled-checker-p checker))
+    (insert (propertize " (manually disabled) " 'face '(bold error)))
+    (insert-text-button "enable"
+                        'type 'flycheck-checker-enable
+                        'flycheck-data (list buffer checker)))
+   ((with-current-buffer buffer
+      (flycheck-automatically-disabled-checker-p checker))
+    (insert (propertize " (automatically disabled) " 'face '(bold error)))
+    (insert-text-button "reset"
+                        'type 'flycheck-checker-reset-enabled
+                        'flycheck-data (list buffer checker))))
   (when (eq checker (buffer-local-value 'flycheck-checker buffer))
     (insert (propertize " (explicitly selected)" 'face 'bold)))
   (when with-select
     (princ "  ")
     (insert-text-button "select"
                         'type 'flycheck-checker-select
-                        'help-args (list buffer checker)))
+                        'flycheck-data (list buffer checker)))
   (princ "\n")
   (let ((results (with-current-buffer buffer
                    (append (flycheck-verify-generic-checker checker)
@@ -2419,6 +2629,12 @@ to enable disabled checkers.")))
   (princ (format "System:           %s\n" system-configuration))
   (princ (format "Window system:    %S\n" window-system)))
 
+(define-derived-mode flycheck-verify-mode help-mode
+  "Flycheck verification"
+  "Major mode to display Flycheck verification results."
+  ;; `help-mode-finish' will restore `buffer-read-only'
+  (setq buffer-read-only nil))
+
 (defun flycheck-verify-checker (checker)
   "Check whether a CHECKER can be used in this buffer.
 
@@ -2438,8 +2654,9 @@ is applicable from Emacs Lisp code.  Use
     (save-buffer))
 
   (let ((buffer (current-buffer)))
-    (with-help-window (get-buffer-create " *Flycheck checker*")
+    (with-help-window "*Flycheck checker*"
       (with-current-buffer standard-output
+        (flycheck-verify-mode)
         (flycheck--verify-print-header "Syntax checker in buffer " buffer)
         (flycheck--verify-princ-checker checker buffer 'with-mm)
         (if (with-current-buffer buffer (flycheck-may-use-checker checker))
@@ -2477,12 +2694,13 @@ possible problems are shown."
          (other-checkers
           (seq-difference (seq-filter #'flycheck-checker-supports-major-mode-p
                                       flycheck-checkers)
-                          (cons first-checker valid-checkers)))
-         (help-buffer (get-buffer-create " *Flycheck checkers*")))
+                          (cons first-checker valid-checkers))))
 
     ;; Print all applicable checkers for this buffer
-    (with-help-window help-buffer
+    (with-help-window "*Flycheck checkers*"
       (with-current-buffer standard-output
+        (flycheck-verify-mode)
+
         (flycheck--verify-print-header "Syntax checkers for buffer " buffer)
 
         (if first-checker
@@ -2521,21 +2739,20 @@ but will not run until properly configured:\n\n")
                (seq-difference (flycheck-defined-checkers) flycheck-checkers)))
           (when unregistered-checkers
             (insert (propertize
-                     "\nThe following syntax checkers are not registered:\n\n"
+                     "The following syntax checkers are not registered:\n"
                      'face '(bold warning)))
             (dolist (checker unregistered-checkers)
               (princ "  - ")
               (princ checker)
               (princ "\n"))
             (princ
-             "\nTry adding these syntax checkers to `flycheck-checkers'.\n")))
+             "Try adding these syntax checkers to `flycheck-checkers'.\n\n")))
 
-        (flycheck--verify-print-footer buffer)))
+        (flycheck--verify-print-footer buffer)
 
-    (with-current-buffer help-buffer
-      (setq-local revert-buffer-function
-                  (lambda (_ignore-auto _noconfirm)
-                    (with-current-buffer buffer (flycheck-verify-setup)))))))
+        (setq-local revert-buffer-function
+                    (lambda (_ignore-auto _noconfirm)
+                      (with-current-buffer buffer (flycheck-verify-setup))))))))
 
 
 ;;; Predicates for generic syntax checkers
@@ -2701,22 +2918,46 @@ enabled and disabled respectively.")
 
 ;;;###autoload
 (define-minor-mode flycheck-mode
-  "Minor mode for on-the-fly syntax checking.
-
-When called interactively, toggle `flycheck-mode'.  With prefix
-ARG, enable `flycheck-mode' if ARG is positive, otherwise disable
-it.
-
-When called from Lisp, enable `flycheck-mode' if ARG is omitted,
-nil or positive.  If ARG is `toggle', toggle `flycheck-mode'.
-Otherwise behave as if called interactively.
+  "Flycheck is a minor mode for on-the-fly syntax checking.
 
 In `flycheck-mode' the buffer is automatically syntax-checked
 using the first suitable syntax checker from `flycheck-checkers'.
 Use `flycheck-select-checker' to select a checker for the current
 buffer manually.
 
-\\{flycheck-mode-map}"
+If you run into issues, use `\\[flycheck-verify-setup]' to get help.
+
+Flycheck supports many languages out of the box, and many
+additional ones are available on MELPA.  Adding new ones is very
+easy.  Complete documentation is available online at URL
+`https://www.flycheck.org/en/latest/'.  Please report issues and
+request features at URL `https://github.com/flycheck/flycheck'.
+
+Flycheck displays its status in the mode line.  In the default
+configuration, it looks like this:
+
+`FlyC'     This buffer has not been checked yet.
+`FlyC-'    Flycheck doesn't have a checker for this buffer.
+`FlyC*'    Flycheck is running.  Expect results soon!
+`FlyC:3|2' This buffer contains three warnings and two errors.
+           Use `\\[flycheck-list-errors]' to see the list.
+
+You may also see the following icons:
+`FlyC!'    The checker crashed.
+`FlyC.'    The last syntax check was manually interrupted.
+`FlyC?'    The checker did something unexpected, like exiting with 1
+           but returning no errors.
+
+The following keybindings are available in `flycheck-mode':
+
+\\{flycheck-mode-map}
+\(you can change the prefix by customizing
+`flycheck-keymap-prefix')
+
+If called interactively, enable Flycheck mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is ‘toggle’; disable the mode otherwise."
   :init-value nil
   :keymap flycheck-mode-map
   :lighter flycheck-mode-line
@@ -3473,18 +3714,25 @@ If the buffer of ERR is not live, FORMS are not evaluated."
      (with-current-buffer (flycheck-error-buffer ,err)
        ,@forms)))
 
-(defun flycheck--exact-region (line col end-line end-col)
-  "Get the region of range LINE, COL, END-LINE, END-COL.
+(defun flycheck--exact-region (err)
+  "Get the region of ERR, if ERR specifies a range.
 
 Return a cons cell `(BEG . END)'.  If the input range is empty,
 it is expanded to cover at least one character so that END is
-always greater than BEG."
-  (let ((beg (flycheck-line-column-to-position line col))
-        (end (flycheck-line-column-to-position end-line end-col)))
-    (cond
-     ((< beg end) (cons beg end))
-     ((= end (point-max)) (cons (1- end) end))
-     (t (cons end (1+ end))))))
+always greater than BEG.  If ERR doesn't specify an end-column
+return nil."
+  (-if-let* ((line (flycheck-error-line err))
+             (column (flycheck-error-column err))
+             (end-line (or (flycheck-error-end-line err) line))
+             (end-column (flycheck-error-end-column err)))
+      ;; Ignoring fields speeds up calls to `line-end-position'.
+      (let* ((inhibit-field-text-motion t)
+             (beg (flycheck-line-column-to-position line column))
+             (end (flycheck-line-column-to-position end-line end-column)))
+        (cond
+         ((< beg end) (cons beg end))
+         ((= end (point-max)) (cons (1- end) end))
+         (t (cons end (1+ end)))))))
 
 (defun flycheck--line-region (pos)
   "Get the line region of position POS.
@@ -3530,9 +3778,13 @@ the THING at the column, and END the end of the THING."
     (goto-char pos)
     (bounds-of-thing-at-point thing)))
 
-(defun flycheck--approximate-region (line column mode)
-  "Compute the region of LINE, COLUMN based on MODE."
-  (let* ((beg (flycheck-line-column-to-position line (or column 1))))
+(defun flycheck--approximate-region (err mode)
+  "Compute the region of ERR based on MODE and ERR's line and column."
+  ;; Ignoring fields speeds up calls to `line-end-position'.
+  (let* ((inhibit-field-text-motion t)
+         (line (flycheck-error-line err))
+         (column (flycheck-error-column err))
+         (beg (flycheck-line-column-to-position line (or column 1))))
     (if (or (null column)
             (eq mode 'lines))
         (flycheck--line-region beg)
@@ -3554,18 +3806,10 @@ ERR is a Flycheck error.  If its position is fully specified, use
 that to compute a region; otherwise, use MODE, as documented in
 `flycheck-highlighting-mode'.  If MODE is nil, signal an error."
   (flycheck-error-with-buffer err
-    (save-excursion
-      (save-restriction
-        (widen)
-        ;; Ignoring fields speeds up calls to `line-end-position'.
-        (let* ((inhibit-field-text-motion t)
-               (line (flycheck-error-line err))
-               (column (flycheck-error-column err))
-               (end-line (or (flycheck-error-end-line err) line))
-               (end-column (flycheck-error-end-column err)))
-          (if (and line column end-line end-column)
-              (flycheck--exact-region line column end-line end-column)
-            (flycheck--approximate-region line column mode)))))))
+    (save-restriction
+      (widen)
+      (or (flycheck--exact-region err)
+          (flycheck--approximate-region err mode)))))
 
 (defun flycheck-error-pos (err)
   "Get the buffer position of ERR.
@@ -3576,16 +3820,41 @@ The error position is the error column, or the first
 non-whitespace character of the error line, if ERR has no error column."
   (car (flycheck-error-region-for-mode err 'columns)))
 
-(defun flycheck-error-format-message-and-id (err)
-  "Format the message and id of ERR as human-readable string."
-  (let ((id (flycheck-error-id err))
-        (filename (flycheck-error-filename err)))
-    (concat (when (and filename (not (equal filename (buffer-file-name))))
-              (format "In \"%s\":\n"
-                      (file-relative-name filename default-directory)))
-            (flycheck-error-message err)
-            (when id
-              (format " [%s]" id)))))
+(defun flycheck-error-format-snippet (err &optional max-length)
+  "Extract the text that ERR refers to from the buffer.
+
+Newlines and blanks are replaced by single spaces.  If ERR
+doesn't include an end-position, return nil.
+
+MAX-LENGTH is how many characters to read from the buffer, at
+most.  It defaults to 20."
+  (flycheck-error-with-buffer err
+    (save-restriction
+      (widen)
+      (pcase (flycheck--exact-region err)
+        (`(,beg . ,end)
+         (truncate-string-to-width
+          (replace-regexp-in-string
+           "\\s-+" " " (buffer-substring beg (min end (point-max))))
+          (or max-length 20) nil nil t))))))
+
+(defun flycheck-error-format-message-and-id (err &optional include-snippet)
+  "Format the message and id of ERR as human-readable string.
+
+If INCLUDE-SNIPPET is non-nil, prepend the message with a snippet
+of the text that the error applies to (such text can only be
+determined if the error contains a full span, not just a
+beginning position)."
+  (let* ((id (flycheck-error-id err))
+         (fname (flycheck-error-filename err))
+         (other-file-p (and fname (not (equal fname (buffer-file-name))))))
+    (concat (and other-file-p (format "In %S:\n" (file-relative-name fname)))
+            (and include-snippet
+                 (-when-let* ((snippet (flycheck-error-format-snippet err)))
+                   (flycheck--format-message "`%s': " snippet)))
+            (or (flycheck-error-message err)
+                (format "Unknown %S" (flycheck-error-level err)))
+            (and id (format " [%s]" id)))))
 
 (defun flycheck-error-format-position (err)
   "Format the position of ERR as a human-readable string."
@@ -3676,13 +3945,17 @@ again."
 
 Add ERRORS to `flycheck-current-errors' and process each error
 with `flycheck-process-error-functions'."
-  (setq flycheck-current-errors (sort (append errors flycheck-current-errors)
-                                      #'flycheck-error-<))
+  (setq flycheck-current-errors (append errors flycheck-current-errors))
   (overlay-recenter (point-max))
+  ;; We can't use `seq-sort-by' because it's not in Emacs 25's built-in `seq',
+  ;; and installing an updated version doesn't help (this is a package.el bug;
+  ;; see https://lists.gnu.org/archive/html/emacs-devel/2020-04/msg01974.html).
   (seq-do (lambda (err)
             (run-hook-with-args-until-success 'flycheck-process-error-functions
                                               err))
-          errors))
+          (seq-sort (lambda (e1 e2)
+                      (< (flycheck-error-line e1) (flycheck-error-line e2)))
+                    errors)))
 
 (defun flycheck-clear-errors ()
   "Remove all error information from the current buffer."
@@ -3829,7 +4102,7 @@ nil."
                 (`finished
                  (let-alist (flycheck-count-errors flycheck-current-errors)
                    (if (or .error .warning)
-                       (format ":%s/%s" (or .error 0) (or .warning 0))
+                       (format ":%s|%s" (or .error 0) (or .warning 0))
                      "")))
                 (`interrupted ".")
                 (`suspicious "?"))))
@@ -3837,6 +4110,18 @@ nil."
 
 
 ;;; Error levels
+(defun flycheck-make-margin-spec (margin-str face)
+  "Make a display spec to indicate errors in the margins.
+
+Returns MARGIN-STR with FACE applied."
+  (propertize margin-str 'face `(,face default)))
+
+(defconst flycheck-default-margin-str "»"
+  "String used to indicate errors in the margins.")
+
+(defconst flycheck-default-margin-continuation-str "⋮"
+  "String used to indicate continuation lines in the margins.")
+
 ;;;###autoload
 (defun flycheck-define-error-level (level &rest properties)
   "Define a new error LEVEL with PROPERTIES.
@@ -3846,7 +4131,8 @@ The following PROPERTIES constitute an error level:
 `:severity SEVERITY'
      A number denoting the severity of this level.  The higher
      the number, the more severe is this level compared to other
-     levels.  Defaults to 0.
+     levels.  Defaults to 0; info is -10, warning is 10, and
+     error is 100.
 
      The severity is used by `flycheck-error-level-<' to
      determine the ordering of errors according to their levels.
@@ -3883,6 +4169,13 @@ The following PROPERTIES constitute an error level:
      A face symbol denoting the face to use for fringe indicators
      for this level.
 
+`:margin-spec SPEC'
+     A display specification indicating what to display in the
+     margin when `flycheck-indication-mode' is `left-margin' or
+     `right-margin'.  See Info node `(elisp)Displaying in the
+     Margins'.  If omitted, Flycheck generates an image spec from
+     the fringe bitmap.
+
 `:error-list-face FACE'
      A face symbol denoting the face to use for messages of this
      level in the error list.  See `flycheck-list-errors'."
@@ -3902,6 +4195,15 @@ The following PROPERTIES constitute an error level:
         (car (get level 'flycheck-fringe-bitmaps)))
   (setf (get level 'flycheck-fringe-face)
         (plist-get properties :fringe-face))
+  (setf (get level 'flycheck-margin-spec)
+        (or (plist-get properties :margin-spec)
+            (flycheck-make-margin-spec
+             flycheck-default-margin-str
+             (or (get level 'flycheck-fringe-face) 'default))))
+  (setf (get level 'flycheck-margin-continuation)
+        (flycheck-make-margin-spec
+         flycheck-default-margin-continuation-str
+         (or (get level 'flycheck-fringe-face) 'default)))
   (setf (get level 'flycheck-error-list-face)
         (plist-get properties :error-list-face)))
 
@@ -3921,6 +4223,14 @@ The following PROPERTIES constitute an error level:
   "Get the overlay category for LEVEL."
   (get level 'flycheck-overlay-category))
 
+(defun flycheck-error-level-margin-spec (level)
+  "Get the margin spec for LEVEL."
+  (get level 'flycheck-margin-spec))
+
+(defun flycheck-error-level-margin-continuation-spec (level)
+  "Get the margin continuation spec for LEVEL."
+  (get level 'flycheck-margin-continuation))
+
 (defun flycheck-error-level-fringe-bitmap (level &optional hi-res)
   "Get the fringe bitmap for LEVEL.
 
@@ -3937,97 +4247,150 @@ will be the high resolution version."
   "Get the error list face for LEVEL."
   (get level 'flycheck-error-list-face))
 
-(defun flycheck-error-level-make-fringe-icon (level side)
-  "Create the fringe icon for LEVEL at SIDE.
+(defun flycheck-error-level-make-indicator (level side &optional continuation)
+  "Create the fringe or margin icon for LEVEL at SIDE.
 
-Return a propertized string that shows a fringe bitmap according
-to LEVEL and the given fringe SIDE.
+Return a propertized string that shows an indicator according
+to LEVEL and the given fringe or margin SIDE.
 
 LEVEL is a Flycheck error level defined with
-`flycheck-define-error-level', and SIDE is either `left-fringe'
-or `right-fringe'.
+`flycheck-define-error-level', and SIDE is either `left-fringe',
+`right-fringe', `left-margin', or `right-margin'.
+
+CONTINUATION indicates which fringe bitmap or margin spec to use:
+either the `:fringe-bitmap' and `:margin-spec' properties of
+LEVEL when CONTINUATION is nil or omitted, or bitmaps and specs
+indicating an error spanning more than one line.
 
 Return a propertized string representing the fringe icon,
 intended for use as `before-string' of an overlay to actually
-show the icon."
-  (unless (memq side '(left-fringe right-fringe))
-    (error "Invalid fringe side: %S" side))
-  (let* ((fringe-width (pcase side
-                         (`left-fringe (car (window-fringes)))
-                         (`right-fringe (cadr (window-fringes)))))
-         (high-res (= 16 fringe-width)))
-    (propertize "!" 'display
-                (list side
-                      (flycheck-error-level-fringe-bitmap level high-res)
-                      (flycheck-error-level-fringe-face level)))))
+show the indicator."
+  (propertize
+   "!" 'display
+   (pcase side
+     ((or `left-fringe `right-fringe)
+      (list side
+            (if continuation 'flycheck-fringe-bitmap-continuation
+              (let* ((fringe-width
+                      (pcase side
+                        (`left-fringe (car (window-fringes)))
+                        (`right-fringe (cadr (window-fringes)))))
+                     (high-res (>= fringe-width 16)))
+                (flycheck-error-level-fringe-bitmap level high-res)))
+            (flycheck-error-level-fringe-face level)))
+     ((or `left-margin `right-margin)
+      `((margin ,side)
+        ,(or (if continuation
+                 (flycheck-error-level-margin-continuation-spec level)
+               (flycheck-error-level-margin-spec level))
+             "")))
+     (_ (error "Invalid fringe side: %S" side)))))
+
+(define-obsolete-function-alias
+  'flycheck-error-level-make-fringe-icon
+  'flycheck-error-level-make-indicator
+  "33")
 
 
 ;;; Built-in error levels
-(when (fboundp 'define-fringe-bitmap)
-  (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow
-    [#b11011000
-     #b01101100
-     #b00110110
-     #b00011011
-     #b00110110
-     #b01101100
-     #b11011000
-     #b00000000])
-  (define-fringe-bitmap 'flycheck-fringe-bitmap-double-arrow-hi-res
-    [#b0000000000000000
-     #b0000000000000000
-     #b1111001111000000
-     #b0111100111100000
-     #b0011110011110000
-     #b0001111001111000
-     #b0000111100111100
-     #b0000011110011110
-     #b0000011110011110
-     #b0000111100111100
-     #b0001111001111000
-     #b0011110011110000
-     #b0111100111100000
-     #b1111001111000000
-     #b0000000000000000
-     #b0000000000000000]
-    nil 16))
+(defconst flycheck-fringe-bitmap-double-arrow
+  [#b11011000
+   #b01101100
+   #b00110110
+   #b00011011
+   #b00110110
+   #b01101100
+   #b11011000]
+  "Bitmaps used to indicate errors in the fringes.")
 
-(defconst flycheck-default-fringe-bitmaps
-  (cons 'flycheck-fringe-bitmap-double-arrow
-        'flycheck-fringe-bitmap-double-arrow-hi-res))
+(defconst flycheck-fringe-bitmap-double-arrow-hi-res
+  [#b1111001111000000
+   #b0111100111100000
+   #b0011110011110000
+   #b0001111001111000
+   #b0000111100111100
+   #b0000011110011110
+   #b0000011110011110
+   #b0000111100111100
+   #b0001111001111000
+   #b0011110011110000
+   #b0111100111100000
+   #b1111001111000000]
+  "High-resolution bitmap used to indicate errors in the fringes.")
 
-(setf (get 'flycheck-error-overlay 'face) 'flycheck-error)
-(setf (get 'flycheck-error-overlay 'priority) 110)
+(defconst flycheck-fringe-bitmap-continuation
+  [#b1000000010000000
+   #b0010000000100000
+   #b0000100000001000
+   #b0000001000000010]
+  "Bitmap used to indicate continuation lines in the fringes.")
 
-(flycheck-define-error-level 'error
-  :severity 100
-  :compilation-level 2
-  :overlay-category 'flycheck-error-overlay
-  :fringe-bitmap flycheck-default-fringe-bitmaps
-  :fringe-face 'flycheck-fringe-error
-  :error-list-face 'flycheck-error-list-error)
+(when (fboundp 'define-fringe-bitmap) ;; #ifdef HAVE_WINDOW_SYSTEM
+  (define-fringe-bitmap
+    'flycheck-fringe-bitmap-double-arrow
+    flycheck-fringe-bitmap-double-arrow)
+  (define-fringe-bitmap
+    'flycheck-fringe-bitmap-double-arrow-hi-res
+    flycheck-fringe-bitmap-double-arrow-hi-res
+    nil 16)
+  (define-fringe-bitmap
+    'flycheck-fringe-bitmap-continuation
+    flycheck-fringe-bitmap-continuation
+    nil 16 '(top repeat)))
 
-(setf (get 'flycheck-warning-overlay 'face) 'flycheck-warning)
-(setf (get 'flycheck-warning-overlay 'priority) 100)
+(defun flycheck-redefine-standard-error-levels
+    (&optional margin-str fringe-bitmap)
+  "Redefine Flycheck's standard error levels.
 
-(flycheck-define-error-level 'warning
-  :severity 10
-  :compilation-level 1
-  :overlay-category 'flycheck-warning-overlay
-  :fringe-bitmap flycheck-default-fringe-bitmaps
-  :fringe-face 'flycheck-fringe-warning
-  :error-list-face 'flycheck-error-list-warning)
+This is useful to change the character drawn in the
+margins (MARGIN-STR, a string) or the bitmap drawn in the
+fringes (FRINGE-BITMAP, a fringe bitmap symbol or a cons of such
+symbols, as in `flycheck-define-error-level')."
+  (unless margin-str
+    (setq margin-str flycheck-default-margin-str))
 
-(setf (get 'flycheck-info-overlay 'face) 'flycheck-info)
-(setf (get 'flycheck-info-overlay 'priority) 90)
+  (unless fringe-bitmap
+    (setq fringe-bitmap
+          (cons 'flycheck-fringe-bitmap-double-arrow
+                'flycheck-fringe-bitmap-double-arrow-hi-res)))
 
-(flycheck-define-error-level 'info
-  :severity -10
-  :compilation-level 0
-  :overlay-category 'flycheck-info-overlay
-  :fringe-bitmap flycheck-default-fringe-bitmaps
-  :fringe-face 'flycheck-fringe-info
-  :error-list-face 'flycheck-error-list-info)
+  (setf (get 'flycheck-error-overlay 'face) 'flycheck-error)
+  (setf (get 'flycheck-error-overlay 'priority) 110)
+
+  (flycheck-define-error-level 'error
+    :severity 100
+    :compilation-level 2
+    :overlay-category 'flycheck-error-overlay
+    :margin-spec (flycheck-make-margin-spec margin-str 'flycheck-fringe-error)
+    :fringe-bitmap fringe-bitmap
+    :fringe-face 'flycheck-fringe-error
+    :error-list-face 'flycheck-error-list-error)
+
+  (setf (get 'flycheck-warning-overlay 'face) 'flycheck-warning)
+  (setf (get 'flycheck-warning-overlay 'priority) 100)
+
+  (flycheck-define-error-level 'warning
+    :severity 10
+    :compilation-level 1
+    :overlay-category 'flycheck-warning-overlay
+    :margin-spec (flycheck-make-margin-spec margin-str 'flycheck-fringe-warning)
+    :fringe-bitmap fringe-bitmap
+    :fringe-face 'flycheck-fringe-warning
+    :error-list-face 'flycheck-error-list-warning)
+
+  (setf (get 'flycheck-info-overlay 'face) 'flycheck-info)
+  (setf (get 'flycheck-info-overlay 'priority) 90)
+
+  (flycheck-define-error-level 'info
+    :severity -10
+    :compilation-level 0
+    :overlay-category 'flycheck-info-overlay
+    :margin-spec (flycheck-make-margin-spec margin-str 'flycheck-fringe-info)
+    :fringe-bitmap fringe-bitmap
+    :fringe-face 'flycheck-fringe-info
+    :error-list-face 'flycheck-error-list-info))
+
+(flycheck-redefine-standard-error-levels)
 
 
 ;;; Error filtering
@@ -4286,6 +4649,57 @@ preserve overlay order when calling `overlays-at').")
   "Compute the index to assign to a new Flycheck overlay."
   (cl-incf flycheck--last-overlay-index))
 
+(defun flycheck--highlighting-style (err)
+  "Determine the highlighting style to apply to ERR.
+
+Styles are documented in `flycheck-highlighting-style'; this
+functions resolves `conditional' style specifications."
+  (let* ((style flycheck-highlighting-style)
+         (first-line (flycheck-error-line err))
+         (end-line (or (flycheck-error-end-line err) first-line))
+         (nlines (- end-line first-line)))
+    (while (eq (car-safe style) 'conditional)
+      (pcase-let ((`(,threshold ,s1 ,s2) (cdr style)))
+        (setq style (if (< nlines threshold) s1 s2))))
+    (pcase style
+      (`(delimiters ,before ,after)
+       (when (characterp before)
+         (setq before (flycheck--make-highlighting-delimiter before)))
+       (when (characterp after)
+         (setq after (flycheck--make-highlighting-delimiter after)))
+       (setq style `(delimiters ,before ,after))))
+    style))
+
+(defun flycheck--setup-highlighting (err overlay)
+  "Apply properties to OVERLAY to highlight ERR."
+  (let ((level (flycheck-error-level err)))
+    (unless flycheck-highlighting-mode
+      ;; Erase the highlighting from the overlay if requested by the user
+      (setf (overlay-get overlay 'face) nil))
+    (when flycheck-indication-mode
+      (setf (overlay-get overlay 'before-string)
+            (flycheck-error-level-make-indicator
+             level flycheck-indication-mode))
+      (setf (overlay-get overlay 'line-prefix)
+            (flycheck-error-level-make-indicator
+             level flycheck-indication-mode t)))
+    (pcase (flycheck--highlighting-style err)
+      ((or `nil (guard (null flycheck-highlighting-mode)))
+       ;; Erase the highlighting
+       (setf (overlay-get overlay 'face) nil))
+      (`level-face)
+      (`(delimiters ,before ,after)
+       ;; Replace the highlighting with delimiters
+       (let* ((fringe-face (flycheck-error-level-fringe-face level))
+              (delim-face `(flycheck-error-delimiter ,fringe-face)))
+         (setf (overlay-get overlay 'face) 'flycheck-delimited-error)
+         (setf (overlay-get overlay 'before-string)
+               (concat (propertize before 'face delim-face)
+                       (or (overlay-get overlay 'before-string) "")))
+         (setf (overlay-get overlay 'after-string)
+               (propertize after 'face delim-face))))
+      (other (error "Unsupported highlighting style: %S" other)))))
+
 (defun flycheck-add-overlay (err)
   "Add overlay for ERR.
 
@@ -4311,14 +4725,8 @@ Return the created overlay."
     (setf (overlay-get overlay 'flycheck-overlay) t)
     (setf (overlay-get overlay 'flycheck-error) err)
     (setf (overlay-get overlay 'category) category)
-    (unless flycheck-highlighting-mode
-      ;; Erase the highlighting from the overlay if requested by the user
-      (setf (overlay-get overlay 'face) nil))
-    (when flycheck-indication-mode
-      (setf (overlay-get overlay 'before-string)
-            (flycheck-error-level-make-fringe-icon
-             level flycheck-indication-mode)))
     (setf (overlay-get overlay 'help-echo) #'flycheck-help-echo)
+    (flycheck--setup-highlighting err overlay)
     overlay))
 
 (defun flycheck-help-echo (_window object pos)
@@ -4339,13 +4747,14 @@ overlays."
 
 (defun flycheck-help-echo-all-error-messages (errs)
   "Concatenate error messages and ids from ERRS."
-  (mapconcat
-   (lambda (err)
-     (when err
-       (if (flycheck-error-message err)
-           (flycheck-error-format-message-and-id err)
-         (format "Unknown %s" (flycheck-error-level err)))))
-   errs "\n\n"))
+  (pcase (delq nil errs) ;; FIXME why would errors be nil here?
+    (`(,err) ;; A single error
+     (flycheck-error-format-message-and-id err))
+    (_ ;; Zero or multiple errors
+     (mapconcat
+      (lambda (err)
+        (flycheck-error-format-message-and-id err 'include-snippet))
+      errs "\n"))))
 
 (defun flycheck-filter-overlays (overlays)
   "Get all Flycheck overlays from OVERLAYS, in original order."
@@ -4353,6 +4762,7 @@ overlays."
   ;; them again using the internal index to guarantee errors are always
   ;; displayed in the same order.
   (seq-sort
+   ;; We can't use `seq-sort-by' here; see above
    (lambda (o1 o2) (< (overlay-get o1 'flycheck-error-index)
                       (overlay-get o2 'flycheck-error-index)))
    (seq-filter (lambda (o) (overlay-get o 'flycheck-overlay)) overlays)))
@@ -4514,6 +4924,13 @@ the beginning of the buffer."
 (defconst flycheck-error-list-buffer "*Flycheck errors*"
   "The name of the buffer to show error lists.")
 
+(defmacro flycheck-error-list-with-buffer (&rest body)
+  "Evaluate BODY in flycheck-error-list-buffer, if it exists."
+  (declare (indent 0) (debug t))
+  `(when (get-buffer flycheck-error-list-buffer)
+     (with-current-buffer flycheck-error-list-buffer
+       ,@body)))
+
 (defvar flycheck-error-list-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "f") #'flycheck-error-list-set-filter)
@@ -4532,7 +4949,9 @@ the beginning of the buffer."
 MESSAGE and CHECKER are displayed in a single column to allow the
 message to stretch arbitrarily far."
   (let ((checker-name (propertize (symbol-name checker)
-                                  'face 'flycheck-error-list-checker-name)))
+                                  'face 'flycheck-error-list-checker-name))
+        (message (propertize message
+                             'face 'flycheck-error-list-error-message)))
     (format "%s (%s)" message checker-name)))
 
 (defconst flycheck-error-list-format
@@ -4585,18 +5004,19 @@ message to stretch arbitrarily far."
 
 (defun flycheck-error-list-set-source (buffer)
   "Set BUFFER as the source buffer of the error list."
-  (when (get-buffer flycheck-error-list-buffer)
-    (with-current-buffer flycheck-error-list-buffer
-      ;; Only update the source when required
-      (unless (eq buffer flycheck-error-list-source-buffer)
-        (setq flycheck-error-list-source-buffer buffer)
-        (flycheck-error-list-refresh)))))
+  (flycheck-error-list-with-buffer
+    (setq flycheck-error-list-source-buffer buffer)
+    (flycheck-error-list-refresh)))
 
 (defun flycheck-error-list-update-source ()
-  "Update the source buffer of the error list."
-  (unless (eq (current-buffer) (get-buffer flycheck-error-list-buffer))
-    ;; We must not update the source buffer, if the current buffer is the error
-    ;; list itself.
+  "Make the error list display errors from the current buffer.
+
+The update is skipped if the current buffer is the error list or
+if the error list is already pointing to the current buffer."
+  (unless (memq (current-buffer)
+                (list (get-buffer flycheck-error-list-buffer)
+                      (flycheck-error-list-with-buffer
+                        flycheck-error-list-source-buffer)))
     (flycheck-error-list-set-source (current-buffer))))
 
 (defun flycheck-error-list-check-source ()
@@ -4608,21 +5028,13 @@ message to stretch arbitrarily far."
         (flycheck-buffer)))))
 
 (define-button-type 'flycheck-error-list
-  'action #'flycheck-error-list-button-goto-error
+  'action #'flycheck-error-list-goto-error
   'help-echo "mouse-1, RET: goto error"
   'face nil)
 
-(defun flycheck-error-list-button-goto-error (button)
-  "Go to the error at BUTTON."
-  (flycheck-error-list-goto-error (button-start button)))
-
 (define-button-type 'flycheck-error-list-explain-error
-  'action #'flycheck-error-list-button-explain-error
+  'action #'flycheck-error-list-explain-error
   'help-echo "mouse-1, RET: explain error")
-
-(defun flycheck-error-list-button-explain-error (button)
-  "Explain the error at BUTTON."
-  (flycheck-error-list-explain-error (button-start button)))
 
 (defsubst flycheck-error-list-make-cell (text &optional face help-echo type)
   "Make an error list cell with TEXT and FACE.
@@ -4663,7 +5075,7 @@ Return a list with the contents of the table cell."
          (line (flycheck-error-line error))
          (column (flycheck-error-column error))
          (message (or (flycheck-error-message error)
-                      (format "Unknown %s" (symbol-name level))))
+                      (format "Unknown %S" level)))
          (flushed-msg (flycheck-flush-multiline-message message))
          (id (flycheck-error-id error))
          (id-str (if id (format "%s" id) ""))
@@ -4815,9 +5227,9 @@ LEVEL is either an error level symbol, or nil, to remove the filter."
           "Minimum error level (errors at lower levels will be hidden): ")))
   (when (and level (not (flycheck-error-level-p level)))
     (user-error "Invalid level: %s" level))
-  (-when-let (buf (get-buffer flycheck-error-list-buffer))
-    (with-current-buffer buf
-      (setq-local flycheck-error-list-minimum-level level))
+  (flycheck-error-list-with-buffer
+    (setq-local flycheck-error-list-minimum-level level)
+    (force-mode-line-update)
     (flycheck-error-list-refresh)
     (flycheck-error-list-recenter-at (point-min))))
 
@@ -4826,10 +5238,12 @@ LEVEL is either an error level symbol, or nil, to remove the filter."
 
 Interactively, or with non-nil REFRESH, refresh the error list."
   (interactive '(t))
-  (kill-local-variable 'flycheck-error-list-minimum-level)
-  (when refresh
-    (flycheck-error-list-refresh)
-    (flycheck-error-list-recenter-at (point-min))))
+  (flycheck-error-list-with-buffer
+    (kill-local-variable 'flycheck-error-list-minimum-level)
+    (when refresh
+      (flycheck-error-list-refresh)
+      (flycheck-error-list-recenter-at (point-min))
+      (force-mode-line-update))))
 
 (defun flycheck-error-list-apply-filter (errors)
   "Filter ERRORS according to `flycheck-error-list-minimum-level'."
@@ -4950,7 +5364,7 @@ nil, if there is no next error."
 (defun flycheck-error-list-highlight-errors (&optional preserve-pos)
   "Highlight errors in the error list.
 
-Highlight all errors in the error lists that are at point in the
+Highlight all errors in the error list that are at point in the
 source buffer, and on the same line as point.  Then recenter the
 error list to the highlighted error, unless PRESERVE-POS is
 non-nil."
@@ -5004,13 +5418,12 @@ non-nil."
   (unless (get-buffer flycheck-error-list-buffer)
     (with-current-buffer (get-buffer-create flycheck-error-list-buffer)
       (flycheck-error-list-mode)))
-  (flycheck-error-list-set-source (current-buffer))
   ;; Reset the error filter
   (flycheck-error-list-reset-filter)
   ;; Show the error list in a window, and re-select the old window
   (display-buffer flycheck-error-list-buffer)
-  ;; Finally, refresh the error list to show the most recent errors
-  (flycheck-error-list-refresh))
+  ;; Adjust the source, causing a refresh
+  (flycheck-error-list-set-source (current-buffer)))
 
 (defalias 'list-flycheck-errors 'flycheck-list-errors)
 
@@ -5091,19 +5504,19 @@ and if the echo area is not occupied by minibuffer input."
 (defun flycheck-display-error-messages (errors)
   "Display the messages of ERRORS.
 
-Concatenate all non-nil messages of ERRORS separated by empty
-lines, and display them with `display-message-or-buffer', which
-shows the messages either in the echo area or in a separate
-buffer, depending on the number of lines.  See Info
-node `(elisp)Displaying Messages' for more information.
+Concatenate all non-nil messages of ERRORS as with
+`flycheck-help-echo-all-error-messages', and display them with
+`display-message-or-buffer', which shows the messages either in
+the echo area or in a separate buffer, depending on the number of
+lines.  See Info node `(elisp)Displaying Messages' for more
+information.
 
 In the latter case, show messages in the buffer denoted by
 variable `flycheck-error-message-buffer'."
   (when (and errors (flycheck-may-use-echo-area-p))
-    (let ((messages (seq-map #'flycheck-error-format-message-and-id errors)))
-      (display-message-or-buffer (string-join messages "\n\n")
-                                 flycheck-error-message-buffer
-                                 'not-this-window)
+    (let ((message (flycheck-help-echo-all-error-messages errors)))
+      (display-message-or-buffer
+       message flycheck-error-message-buffer 'not-this-window)
       ;; We cannot rely on `display-message-or-buffer' returning the right
       ;; window. See URL `https://github.com/flycheck/flycheck/issues/1643'.
       (-when-let ((buf (get-buffer flycheck-error-message-buffer)))
@@ -5178,10 +5591,26 @@ this error to produce the explanation to display."
 (defconst flycheck-explain-error-buffer "*Flycheck error explanation*"
   "The name of the buffer to show error explanations.")
 
+(define-derived-mode flycheck-explain-error-mode help-mode
+  "Error explanation"
+  "Major mode for displaying error explanations."
+  (setq buffer-read-only t))
+
 (defun flycheck-display-error-explanation (explanation)
-  "Display the EXPLANATION string in a help buffer."
-  (with-help-window (get-buffer-create flycheck-explain-error-buffer)
-    (princ explanation)))
+  "Display the EXPLANATION for an error."
+  (pcase explanation
+    (`nil)
+    (`(url . ,url) (browse-url url))
+    (_ (with-current-buffer (temp-buffer-window-setup
+                             flycheck-explain-error-buffer)
+         (let ((inhibit-read-only t))
+           (flycheck-explain-error-mode)
+           (cond
+            ((functionp explanation) (funcall explanation))
+            ((stringp explanation) (insert explanation))
+            (t (error "Unsupported error explanation: %S" explanation)))
+           (display-message-or-buffer
+            (current-buffer) nil 'not-this-window))))))
 
 
 ;;; Syntax checkers using external commands
@@ -5413,6 +5842,48 @@ the syntax checker definition, if the variable is nil."
 Return the full absolute path to the executable of CHECKER, or
 nil if the executable does not exist."
   (funcall flycheck-executable-find (flycheck-checker-executable checker)))
+
+(defun flycheck-call-checker-process
+    (checker infile destination error &rest args)
+  "Call CHECKER's executable with ARGS.
+
+Return nil (or raise an error if ERROR is non-nil) when CHECKER's
+executable cannot be found, and return a numeric exit status or a
+signal description string otherwise.  CHECKER's input is taken
+from INFILE, and its output is sent to DESTINATION, as in
+`call-process'."
+  (-if-let (executable (flycheck-find-checker-executable checker))
+      (condition-case err
+          (apply #'call-process executable infile destination nil args)
+        (error (when error (signal (car err) (cdr err)))))
+    (when error
+      (user-error "Cannot find `%s' using `flycheck-executable-find'"
+                  (flycheck-checker-executable checker)))))
+
+(defun flycheck-call-checker-process-for-output
+    (checker infile error &rest args)
+  "Call CHECKER's executable with ARGS and return its output.
+
+Call `flycheck-call-checker-process' with INFILE, ERROR, and
+ARGS.  If it returns 0, return the process' output.  Otherwise,
+return nil or throw an error.
+
+This function is similar to `flycheck-call-checker-process'
+called in a `with-output-to-string' block, but it takes care of
+the error checking automatically."
+  (let ((temp (generate-new-buffer " *temp*")))
+    (unwind-protect
+        ;; We need to call the checker process in the right buffer, so that it
+        ;; uses the right exec-path, checker executable, etc.  See URL
+        ;; `https://github.com/flycheck/flycheck/issues/1770'.
+        (let ((exit-code (apply #'flycheck-call-checker-process
+                                checker infile temp error args))
+              (output (with-current-buffer temp (buffer-string))))
+          (if (eql 0 exit-code) output
+            (when error
+              (error "Process %s failed with %S (%s)"
+                     checker exit-code output))))
+      (kill-buffer temp))))
 
 (defun flycheck-checker-arguments (checker)
   "Get the command arguments of CHECKER."
@@ -8234,7 +8705,7 @@ The checker runs `checkdoc-current-buffer'."
             "--eval" (eval flycheck-emacs-lisp-checkdoc-form)
             "--" source)
   :error-patterns
-  ((warning line-start (file-name) ":" line ": " (message) line-end))
+  ((info line-start (file-name) ":" line ": " (message) line-end))
   :modes (emacs-lisp-mode)
   :enabled flycheck--emacs-lisp-enabled-p)
 
@@ -8603,7 +9074,7 @@ See URL `https://golang.org/cmd/go/' and URL
   :command ("go" "vet"
             (option "-printf.funcs=" flycheck-go-vet-print-functions concat
                     flycheck-option-comma-separated-list)
-            source)
+            (source ".go"))
   :error-patterns
   ((warning line-start (file-name) ":" line ": " (message) line-end))
   :modes go-mode
@@ -9099,17 +9570,17 @@ See URL `https://github.com/ndmitchell/hlint'."
             source-inplace)
   :error-patterns
   ((info line-start
-         (file-name) ":" line ":" column
+         (file-name) ":" line ":" column (optional "-" end-column)
          ": Suggestion: "
          (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
          line-end)
    (warning line-start
-            (file-name) ":" line ":" column
+            (file-name) ":" line ":" column (optional "-" end-column)
             ": Warning: "
             (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
             line-end)
    (error line-start
-          (file-name) ":" line ":" column
+          (file-name) ":" line ":" column (optional "-" end-column)
           ": Error: "
           (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
           line-end))
@@ -9193,12 +9664,9 @@ for more information about the custom directories."
 
 (defun flycheck-eslint-config-exists-p ()
   "Whether there is a valid eslint config for the current buffer."
-  (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-         (exitcode (and executable
-                        (call-process executable nil nil nil
-                                      "--print-config" (or buffer-file-name
-                                                           "index.js")))))
-    (eq exitcode 0)))
+  (eql 0 (flycheck-call-checker-process
+          'javascript-eslint nil nil nil
+          "--print-config" (or buffer-file-name "index.js"))))
 
 (defun flycheck-parse-eslint (output checker buffer)
   "Parse ESLint errors/warnings from JSON OUTPUT.
@@ -9266,7 +9734,16 @@ See URL `https://eslint.org/'."
        (flycheck-verification-result-new
         :label "config file"
         :message (if have-config "found" "missing or incorrect")
-        :face (if have-config 'success '(bold error)))))))
+        :face (if have-config 'success '(bold error))))))
+  :error-explainer
+  (lambda (err)
+    (let ((error-code (flycheck-error-id err))
+          (url "https://eslint.org/docs/rules/%s"))
+      (and error-code
+           ;; skip non-builtin rules
+           (not ;; `seq-contains-p' is only in seq >= 2.21
+            (with-no-warnings (seq-contains error-code ?/)))
+           `(url . ,(format url error-code))))))
 
 (flycheck-define-checker javascript-standard
   "A Javascript code and style checker for the (Semi-)Standard Style.
@@ -9873,39 +10350,53 @@ See URL `http://puppet-lint.com/'."
   ;; the buffer is actually linked to a file, and if it is not modified.
   :predicate flycheck-buffer-saved-p)
 
-(defun flycheck-python-find-module (checker module)
-  "Check if a Python MODULE is available.
+(defun flycheck-python-run-snippet (checker snippet)
+  "Run a python SNIPPET and return the output.
+
 CHECKER's executable is assumed to be a Python REPL."
-  (-when-let* ((py (flycheck-find-checker-executable checker))
-               (script (concat "import sys; sys.path.pop(0);"
-                               (format "import %s; print(%s.__file__)"
-                                       module module))))
-    (with-temp-buffer
-      (and (eq (ignore-errors (call-process py nil t nil "-c" script)) 0)
-           (string-trim (buffer-string))))))
+  (-when-let (output (flycheck-call-checker-process-for-output
+                      checker nil nil "-c" snippet))
+    (string-trim output)))
+
+(defun flycheck-python-get-path (checker)
+  "Compute the current Python path (CHECKER is a Python REPL) ."
+  (flycheck-python-run-snippet checker "import sys; print(sys.path[1:])"))
+
+(defun flycheck-python-find-module (checker module)
+  "Check if a Python MODULE is available (CHECKER is a Python REPL)."
+  (flycheck-python-run-snippet
+   checker (concat "import sys; sys.path.pop(0);"
+                   (format "import %s; print(%s.__file__)" module module))))
 
 (defun flycheck-python-needs-module-p (checker)
   "Determines whether CHECKER needs to be invoked through Python.
-Previous versions of Flycheck called pylint and flake8 directly;
-this check ensures that we don't break existing code."
-  (not (string-match-p (rx (or "pylint" "flake8")
+
+Previous versions of Flycheck called pylint and flake8 directly,
+while new version call them through `python -c'.  This check
+ensures that we don't break existing code; it also allows people
+who use virtualenvs to run globally-installed checkers."
+  (not (string-match-p (rx (or "pylint" "pylint3" "flake8")
                            (or "-script.pyw" ".exe" ".bat" "")
                            eos)
                        (flycheck-checker-executable checker))))
 
 (defun flycheck-python-verify-module (checker module)
   "Verify that a Python MODULE is available.
+
 Return nil if CHECKER's executable is not a Python REPL.  This
 function's is suitable for a checker's :verify."
   (when (flycheck-python-needs-module-p checker)
     (let ((mod-path (flycheck-python-find-module checker module)))
       (list (flycheck-verification-result-new
              :label (format "`%s' module" module)
-             :message (if mod-path (format "Found at %S" mod-path) "Missing")
+             :message (if mod-path (format "Found at %S" mod-path)
+                        (format "Missing; sys.path is %s"
+                                (flycheck-python-get-path checker)))
              :face (if mod-path 'success '(bold error)))))))
 
 (defun flycheck-python-module-args (checker module-name)
   "Compute arguments to pass to CHECKER's executable to run MODULE-NAME.
+
 Return nil if CHECKER's executable is not a Python REPL.
 Otherwise, return a list starting with -c (-m is not enough
 because it adds the current directory to Python's path)."
@@ -10084,6 +10575,14 @@ See URL `https://www.pylint.org/'."
              (or (not (flycheck-python-needs-module-p 'python-pylint))
                  (flycheck-python-find-module 'python-pylint "pylint")))
   :verify (lambda (_) (flycheck-python-verify-module 'python-pylint "pylint"))
+  :error-explainer (lambda (err)
+                     (-when-let (id (flycheck-error-id err))
+                       (apply
+                        #'flycheck-call-checker-process-for-output
+                        'python-pylint nil t
+                        (append
+                         (flycheck-python-module-args 'python-pylint "pylint")
+                         (list (format "--help-msg=%s" id))))))
   :modes python-mode
   :next-checkers ((warning . python-mypy)))
 
@@ -10162,16 +10661,12 @@ expression, which selects linters for lintr."
   :risky t
   :package-version '(flycheck . "0.23"))
 
-(defun flycheck-r-has-lintr (R)
-  "Whether R has installed the `lintr' library."
-  (with-temp-buffer
-    (let ((process-environment (append '("LC_ALL=C") process-environment)))
-      (call-process R nil t nil
-                    "--slave" "--restore" "--no-save" "-e"
-                    "library('lintr')")
-      (goto-char (point-min))
-      (not (re-search-forward "there is no package called 'lintr'"
-                              nil 'no-error)))))
+(defun flycheck-r-has-lintr (checker)
+  "Whether CHECKER (R) has installed the `lintr' library."
+  (eql 0 (flycheck-call-checker-process
+          checker nil nil nil
+          "--slave" "--restore" "--no-save" "-e"
+          "library('lintr')")))
 
 (flycheck-define-checker r-lintr
   "An R style and syntax checker using the lintr package.
@@ -10198,10 +10693,9 @@ See URL `https://github.com/jimhester/lintr'."
   ;; actually available
   (lambda ()
     (and (equal ess-language "S")
-         (flycheck-r-has-lintr (flycheck-checker-executable 'r-lintr))))
+         (flycheck-r-has-lintr 'r-lintr)))
   :verify (lambda (checker)
-            (let ((has-lintr (flycheck-r-has-lintr
-                              (flycheck-checker-executable checker))))
+            (let ((has-lintr (flycheck-r-has-lintr checker)))
               (list
                (flycheck-verification-result-new
                 :label "lintr library"
@@ -10210,14 +10704,7 @@ See URL `https://github.com/jimhester/lintr'."
 
 (defun flycheck-racket-has-expand-p (checker)
   "Whether the executable of CHECKER provides the `expand' command."
-  (let ((raco (flycheck-find-checker-executable checker)))
-    (when raco
-      (with-temp-buffer
-        (call-process raco nil t nil "expand")
-        (goto-char (point-min))
-        (not (looking-at-p (rx bol (1+ not-newline)
-                               "Unrecognized command: expand"
-                               eol)))))))
+  (eql 0 (flycheck-call-checker-process checker nil t nil "expand")))
 
 (flycheck-define-checker racket
   "A Racket syntax checker with `raco expand'.
@@ -10295,8 +10782,8 @@ See URL `https://sourceforge.net/projects/rpmlint/'."
                  (message-id (save-match-data
                                (string-match "\\([^ ]+\\)" error-message)
                                (match-string 1 error-message))))
-      (with-output-to-string
-        (call-process "rpmlint" nil standard-output nil "-I" message-id))))
+      (flycheck-call-checker-process-for-output
+       'rpm-rpmlint nil t "-I" message-id)))
   :modes (sh-mode rpm-spec-mode)
   :predicate (lambda () (or (not (eq major-mode 'sh-mode))
                             ;; In `sh-mode', we need the proper shell
@@ -10425,9 +10912,8 @@ See URL `https://github.com/Synthetica9/nix-linter'."
   :error-explainer
   (lambda (error)
     (-when-let (error-code (flycheck-error-id error))
-      (with-output-to-string
-        (call-process "nix-linter" nil standard-output nil "--help-for"
-                      error-code))))
+      (flycheck-call-checker-process-for-output
+       'nix-linter nil t "--help-for" error-code)))
   :modes nix-mode)
 
 (defun flycheck-locate-sphinx-source-directory ()
@@ -10750,11 +11236,23 @@ Relative paths are relative to the file being checked."
   :safe #'flycheck-string-list-p
   :package-version '(flycheck . "0.18"))
 
+(defun flycheck--fontify-as-markdown ()
+  "Place current buffer in `markdown-view-mode' and fontify it."
+  (when (fboundp 'markdown-view-mode)
+    (let ((markdown-fontify-code-block-default-mode 'rust-mode)
+          (markdown-fontify-code-blocks-natively t)
+          (markdown-hide-markup t))
+      (markdown-view-mode)
+      (font-lock-flush)
+      (font-lock-ensure))))
+
 (defun flycheck-rust-error-explainer (error)
-  "Return an explanation text for the given `flycheck-error' ERROR."
+  "Return an explanation for the given `flycheck-error' ERROR."
   (-when-let (error-code (flycheck-error-id error))
-    (with-output-to-string
-      (call-process "rustc" nil standard-output nil "--explain" error-code))))
+    (lambda ()
+      (flycheck-call-checker-process
+       'rust nil standard-output t "--explain" error-code)
+      (flycheck--fontify-as-markdown))))
 
 (defun flycheck-rust-error-filter (errors)
   "Filter ERRORS from rustc output that have no explanatory value."
@@ -10789,9 +11287,9 @@ or if the current buffer has no file name."
 (defun flycheck-rust-cargo-metadata ()
   "Run 'cargo metadata' and return the result as parsed JSON object."
   (car (flycheck-parse-json
-        (with-output-to-string
-          (call-process "cargo" nil standard-output nil
-                        "metadata" "--no-deps" "--format-version" "1")))))
+        (flycheck-call-checker-process-for-output
+         'rust-cargo nil t
+         "metadata" "--no-deps" "--format-version" "1"))))
 
 (defun flycheck-rust-cargo-workspace-root ()
   "Return the path to the workspace root of a Rust Cargo project.
@@ -11179,22 +11677,16 @@ See URL `https://github.com/brigade/scss-lint'."
   :modes scss-mode
   :verify
   (lambda (checker)
-    (let* ((executable (flycheck-find-checker-executable checker))
-           (reporter-missing
-            (and executable
-                 (with-temp-buffer
-                   (call-process executable nil t nil
-                                 "--require=scss_lint_reporter_checkstyle")
-                   (goto-char (point-min))
-                   (re-search-forward
-                    flycheck-scss-lint-checkstyle-re
-                    nil 'no-error)))))
-      (when executable
+    (-when-let
+        (output (flycheck-call-checker-process-for-output
+                 checker nil nil "--require=scss_lint_reporter_checkstyle"))
+      (let ((reporter-missing
+             (string-match-p flycheck-scss-lint-checkstyle-re output)))
         (list
          (flycheck-verification-result-new
           :label "checkstyle reporter"
           :message (if reporter-missing
-                       "scss_lint_reporter_checkstyle missing"
+                       "scss_lint_reporter_checkstyle plugin missing"
                      "present")
           :face (if reporter-missing
                     '(bold error)
@@ -11370,7 +11862,12 @@ See URL `https://github.com/koalaman/shellcheck/'."
                (flycheck-verification-result-new
                 :label (format "Shell %s supported" sh-shell)
                 :message (if supports-shell "yes" "no")
-                :face (if supports-shell 'success '(bold warning)))))))
+                :face (if supports-shell 'success '(bold warning))))))
+  :error-explainer
+  (lambda (err)
+    (let ((error-code (flycheck-error-id err))
+          (url "https://github.com/koalaman/shellcheck/wiki/%S"))
+      (and error-code `(url . ,(format url error-code))))))
 
 (flycheck-define-checker slim
   "A Slim syntax checker using the Slim compiler.
@@ -11478,18 +11975,20 @@ information about tflint."
   (mapcar (lambda (err)
             (let-alist err
               (flycheck-error-new-at
-               .line
-               nil
-               (pcase .type
-                 ("ERROR"   'error)
-                 ("WARNING" 'warning)
+               .range.start.line
+               .range.start.column
+               (pcase .rule.severity
+                 ("error"   'error)
+                 ("warning" 'warning)
                  (_         'error))
                .message
-               :id .detector
+               :end-line .range.end.line
+               :end-column .range.end.column
+               :id .rule.name
                :checker checker
                :buffer buffer
                :filename (buffer-file-name buffer))))
-          (car (flycheck-parse-json output))))
+          (cdr (assq 'issues (car (flycheck-parse-json output))))))
 
 (flycheck-define-checker terraform-tflint
   "A Terraform checker using tflint.

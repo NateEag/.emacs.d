@@ -13,22 +13,46 @@
 Open the Flycheck manual." t nil)
 
 (autoload 'flycheck-mode "flycheck" "\
-Minor mode for on-the-fly syntax checking.
-
-When called interactively, toggle `flycheck-mode'.  With prefix
-ARG, enable `flycheck-mode' if ARG is positive, otherwise disable
-it.
-
-When called from Lisp, enable `flycheck-mode' if ARG is omitted,
-nil or positive.  If ARG is `toggle', toggle `flycheck-mode'.
-Otherwise behave as if called interactively.
+Flycheck is a minor mode for on-the-fly syntax checking.
 
 In `flycheck-mode' the buffer is automatically syntax-checked
 using the first suitable syntax checker from `flycheck-checkers'.
 Use `flycheck-select-checker' to select a checker for the current
 buffer manually.
 
+If you run into issues, use `\\[flycheck-verify-setup]' to get help.
+
+Flycheck supports many languages out of the box, and many
+additional ones are available on MELPA.  Adding new ones is very
+easy.  Complete documentation is available online at URL
+`https://www.flycheck.org/en/latest/'.  Please report issues and
+request features at URL `https://github.com/flycheck/flycheck'.
+
+Flycheck displays its status in the mode line.  In the default
+configuration, it looks like this:
+
+`FlyC'     This buffer has not been checked yet.
+`FlyC-'    Flycheck doesn't have a checker for this buffer.
+`FlyC*'    Flycheck is running.  Expect results soon!
+`FlyC:3|2' This buffer contains three warnings and two errors.
+           Use `\\[flycheck-list-errors]' to see the list.
+
+You may also see the following icons:
+`FlyC!'    The checker crashed.
+`FlyC.'    The last syntax check was manually interrupted.
+`FlyC?'    The checker did something unexpected, like exiting with 1
+           but returning no errors.
+
+The following keybindings are available in `flycheck-mode':
+
 \\{flycheck-mode-map}
+\(you can change the prefix by customizing
+`flycheck-keymap-prefix')
+
+If called interactively, enable Flycheck mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is ‘toggle’; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -64,7 +88,8 @@ The following PROPERTIES constitute an error level:
 `:severity SEVERITY'
      A number denoting the severity of this level.  The higher
      the number, the more severe is this level compared to other
-     levels.  Defaults to 0.
+     levels.  Defaults to 0; info is -10, warning is 10, and
+     error is 100.
 
      The severity is used by `flycheck-error-level-<' to
      determine the ordering of errors according to their levels.
@@ -100,6 +125,13 @@ The following PROPERTIES constitute an error level:
 `:fringe-face FACE'
      A face symbol denoting the face to use for fringe indicators
      for this level.
+
+`:margin-spec SPEC'
+     A display specification indicating what to display in the
+     margin when `flycheck-indication-mode' is `left-margin' or
+     `right-margin'.  See Info node `(elisp)Displaying in the
+     Margins'.  If omitted, Flycheck generates an image spec from
+     the fringe bitmap.
 
 `:error-list-face FACE'
      A face symbol denoting the face to use for messages of this

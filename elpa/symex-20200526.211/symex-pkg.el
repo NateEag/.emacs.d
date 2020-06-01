@@ -1,4 +1,4 @@
-(define-package "symex" "20200425.1911" "An evil way to edit Lisp symbolic expressions as trees"
+(define-package "symex" "20200526.211" "An evil way to edit Lisp symbolic expressions as trees"
   '((emacs "24.4")
     (cl-lib "0.6.1")
     (lispy "0.26.0")
@@ -13,7 +13,7 @@
     (hydra "0.15.0")
     (cider "0.21.0")
     (slime "2.24"))
-  :keywords
+  :commit "b35e3622601ca5b27bb8e1b7ab301cc6dd674a62" :keywords
   '("lisp" "evil")
   :authors
   '(("Siddhartha Kasivajhula" . "sid@countvajhula.com"))

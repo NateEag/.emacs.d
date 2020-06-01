@@ -182,17 +182,16 @@ If BACKWARDS is true, then joins current symex to previous one, otherwise,
 by default, joins next symex to current one."
   (interactive)
   (let ((original-column (current-column)))
-    (save-excursion
-      (if backwards
-          (progn (evil-previous-line)
-                 (if (symex--current-line-empty-p)
-                     (evil-join (line-beginning-position)
-                                (1+ (line-beginning-position)))
+    (if backwards
+        (progn (evil-previous-line)
+               (if (symex--current-line-empty-p)
                    (evil-join (line-beginning-position)
-                              (line-end-position))))
-        (forward-sexp)
-        (evil-join (line-beginning-position)
-                   (line-end-position))))
+                              (1+ (line-beginning-position)))
+                 (evil-join (line-beginning-position)
+                            (line-end-position))))
+      (save-excursion (forward-sexp)
+                      (evil-join (line-beginning-position)
+                                 (line-end-position))))
     (unless (= (current-column)
                original-column)
       (forward-char))))
@@ -326,6 +325,18 @@ in the parent symex."
   (symex-go-forward)
   (paredit-splice-sexp-killing-backward))
 
+(defun symex-swallow-tail ()
+  "Swallow-tail symex.
+
+This consumes the tail of the symex, putting the head
+in the parent symex."
+  (interactive)
+  (symex-go-up)
+  (symex-go-forward)
+  (paredit-splice-sexp-killing-forward)
+  (symex-go-backward)
+  (symex-tidy))
+
 (defun symex-splice ()
   "Splice or 'clip' symex.
 
@@ -333,10 +344,9 @@ If the symex is a nested list, this operation eliminates the symex,
 putting its contents in the parent symex.  If the symex is an atom,
 then no action is taken."
   (interactive)
-  (let ((symex-at-point (car (read-from-string (thing-at-point 'sexp 'no-properties)))))
-    (when (not (atom symex-at-point))
-      (symex-go-up)
-      (paredit-splice-sexp-killing-backward))))
+  (when (lispy-left-p)
+    (symex-go-up)
+    (paredit-splice-sexp-killing-backward)))
 
 (defun symex-wrap-round ()
   "Wrap with ()."

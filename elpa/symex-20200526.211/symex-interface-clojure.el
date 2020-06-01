@@ -1,4 +1,4 @@
-;;; symex-interface-scheme.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-clojure.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,47 +21,52 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Scheme language
+;; Interface for the Clojure language
 ;;
 
 ;;; Code:
 
+(require 'cider)
 
-(require 'geiser-mode)
+(defun symex-eval-clojure ()
+  "Eval last sexp.
 
-
-(defun symex-eval-scheme ()
-  "Eval Scheme symex."
+Accounts for different point location in evil vs Emacs mode."
   (interactive)
-  (geiser-eval-last-sexp nil))
+  (cider-eval-last-sexp))
 
-(defun symex-eval-definition-scheme ()
+(defun symex-eval-definition-clojure ()
   "Eval entire containing definition."
-  (geiser-eval-definition nil))
+  (cider-eval-defun-at-point nil))
 
-(defun symex-eval-pretty-scheme ()
+(defun symex-eval-pretty-clojure ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-scheme))
+  (symex-eval-clojure))
 
-(defun symex-eval-print-scheme ()
+(defun symex-eval-thunk-clojure ()
+  "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
+  (interactive)
+  (message "eval as thunk currently not supported for Clojure"))
+
+(defun symex-eval-print-clojure ()
   "Eval symex and print result in buffer."
   (interactive)
-  nil)
+  (cider-eval-print-last-sexp))
 
-(defun symex-describe-symbol-scheme ()
+(defun symex-describe-symbol-clojure ()
   "Describe symbol at point."
   (interactive)
-  (geiser-doc-symbol-at-point))
+  (cider-doc nil))
 
-(defun symex-repl-scheme ()
+(defun symex-repl-clojure ()
   "Go to REPL."
-  (geiser-mode-switch-to-repl nil))
+  (cider-switch-to-repl-buffer))
 
-(defun symex-run-scheme ()
+(defun symex-run-clojure ()
   "Evaluate buffer."
-  (geiser-eval-buffer nil))
+  (cider-eval-buffer))
 
 
-(provide 'symex-interface-scheme)
-;;; symex-interface-scheme.el ends here
+(provide 'symex-interface-clojure)
+;;; symex-interface-clojure.el ends here

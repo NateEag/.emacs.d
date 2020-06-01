@@ -172,18 +172,22 @@ of symex mode (use the public `symex-go-backward` instead)."
       (symex-make-move (- result) 0))))
 
 (defun symex--enter-one ()
-  "Enter one lower symex level."
+  "Enter one level."
   (let ((result 1))
     (cond ((symex-comment-line-p)
            (lispy-flow 1))
           ((and (lispy-left-p)
                 (not (symex-empty-list-p)))
            (forward-char))
+          ;; one-off - better to recognize #( as a delimiter
+          ;; at the AST level
+          ((looking-at (concat "[#'`]" lispy-left))
+           (forward-char 2))
           (t (setq result 0)))
     result))
 
 (defun symex--enter (&optional count)
-  "Enter lower symex level.
+  "Enter higher symex level.
 
 Enter COUNT times, defaulting to one.
 
@@ -205,11 +209,15 @@ of symex mode (use the public `symex-go-up` instead)."
   "Exit one level."
   (condition-case nil
       (progn (paredit-backward-up 1)
+             (when (looking-back "[#'`]" (line-beginning-position))
+               ;; one-off - better to recognize #( as a delimiter
+               ;; at the AST level
+               (backward-char))
              1)
     (error 0)))
 
 (defun symex--exit (&optional count)
-  "Exit to higher symex level.
+  "Exit to lower symex level.
 
 Exit COUNT times, defaulting to one.
 

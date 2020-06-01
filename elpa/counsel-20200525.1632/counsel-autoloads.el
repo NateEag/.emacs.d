@@ -9,18 +9,6 @@
 ;;;### (autoloads nil "counsel" "counsel.el" (0 0 0 0))
 ;;; Generated autoloads from counsel.el
 
-(autoload 'counsel-el "counsel" "\
-Elisp completion at point." t nil)
-
-(autoload 'counsel-cl "counsel" "\
-Common Lisp completion at point." t nil)
-
-(autoload 'counsel-jedi "counsel" "\
-Python completion at point." t nil)
-
-(autoload 'counsel-clj "counsel" "\
-Clojure completion at point." t nil)
-
 (autoload 'counsel-company "counsel" "\
 Complete using `company-candidates'." t nil)
 
@@ -38,6 +26,9 @@ Forward to `describe-function'.
 
 Interactive functions (i.e., commands) are highlighted according
 to `ivy-highlight-face'." t nil)
+
+(autoload 'counsel-describe-symbol "counsel" "\
+Forward to `describe-symbol'." t nil)
 
 (autoload 'counsel-set-variable "counsel" "\
 Set a variable SYM, with completion.

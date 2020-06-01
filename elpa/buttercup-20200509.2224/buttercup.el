@@ -795,6 +795,12 @@ Return CHILD."
   "Convert the elapsed time for SUITE-OR-SPEC to a short string."
   (seconds-to-string (float-time (buttercup-elapsed-time suite-or-spec))))
 
+(defun buttercup--indented-description (suite-or-spec)
+  "Return the description of SUITE-OR-SPEC indented according to level.
+The indentaion is two spaces per parent."
+  (let ((level (length (buttercup-suite-or-spec-parents suite-or-spec))))
+    (concat (make-string (* 2 level) ?\s) (buttercup-suite-or-spec-description suite-or-spec))))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Suites: describe
 
@@ -1498,8 +1504,18 @@ Do not change the global value.")
         (with-current-buffer buttercup-warning-buffer-name
           (when (string-match-p "[^[:space:]\n\r]" (buffer-string))
             (buttercup--print
+             "%s\n"
              (buttercup-colorize
-              (buffer-string)
+              ;; Any terminating newline in the buffer should not be
+              ;; colorized. It would mess up color handling in Emacs
+              ;; compilation buffers using
+              ;; `ansi-color-apply-on-region' in
+              ;; `compilation-filter-hook'.
+              (buffer-substring (point-min)
+                                (save-excursion
+                                  (goto-char (1- (point-max)))
+                                  (if (looking-at-p "\n")
+                                      (point) (point-max))))
               'yellow)))))
     (when (get-buffer buttercup-warning-buffer-name)
       (kill-buffer buttercup-warning-buffer-name))
@@ -1572,17 +1588,9 @@ EVENT and ARG are described in `buttercup-reporter'."
            (buttercup--print "Running %s specs.\n\n" defined))))
 
       (`suite-started
-       (let ((level (length (buttercup-suite-or-spec-parents arg))))
-         (buttercup--print "%s%s\n"
-                           (make-string (* 2 level) ?\s)
-                           (buttercup-suite-description arg))))
-
+         (buttercup--print "%s\n" (buttercup--indented-description arg)))
       (`spec-started
-       (let ((level (length (buttercup-suite-or-spec-parents arg))))
-         (buttercup--print "%s%s"
-                           (make-string (* 2 level) ?\s)
-                           (buttercup-spec-description arg))))
-
+         (buttercup--print "%s" (buttercup--indented-description arg)))
       (`spec-done
        (cond
         ((eq (buttercup-spec-status arg) 'passed)) ; do nothing
@@ -1655,29 +1663,32 @@ EVENT and ARG are described in `buttercup-reporter'."
      (unless (string-match-p "[\n\v\f]" (buttercup-spec-description arg))
        (buttercup-reporter-batch event arg)))
     (`spec-done
-     (let ((level (length (buttercup-suite-or-spec-parents arg))))
-       (cond
-        ((eq (buttercup-spec-status arg) 'passed)
-         (buttercup--print (buttercup-colorize "\r%s%s" 'green)
-                           (make-string (* 2 level) ?\s)
-                           (buttercup-spec-description arg)))
-        ((eq (buttercup-spec-status arg) 'failed)
-         (buttercup--print (buttercup-colorize "\r%s%s  FAILED" 'red)
-                           (make-string (* 2 level) ?\s)
-                           (buttercup-spec-description arg))
-         (setq buttercup-reporter-batch--failures
-               (append buttercup-reporter-batch--failures
-                       (list arg))))
-        ((eq (buttercup-spec-status arg) 'pending)
-         (if (equal (buttercup-spec-failure-description arg) "SKIPPED")
-             (buttercup--print "  %s" (buttercup-spec-failure-description arg))
-           (buttercup--print (buttercup-colorize "\r%s%s  %s" 'yellow)
-                             (make-string (* 2 level) ?\s)
-                             (buttercup-spec-description arg)
-                             (buttercup-spec-failure-description arg))))
-        (t
-         (error "Unknown spec status %s" (buttercup-spec-status arg))))
-       (buttercup--print " (%s)\n" (buttercup-elapsed-time-string arg))))
+     ;; Carriage returns (\r) should not be colorized. It would mess
+     ;; up color handling in Emacs compilation buffers using
+     ;; `ansi-color-apply-on-region' in `compilation-filter-hook'.
+     (pcase (buttercup-spec-status arg)
+       (`passed
+        (buttercup--print
+         "\r%s" (buttercup-colorize (buttercup--indented-description arg) 'green)))
+       (`failed
+        (buttercup--print
+          "\r%s" (buttercup-colorize
+                  (concat (buttercup--indented-description arg) "  FAILED")
+                  'red))
+        (setq buttercup-reporter-batch--failures
+              (append buttercup-reporter-batch--failures
+                      (list arg))))
+       (`pending
+        (if (equal (buttercup-spec-failure-description arg) "SKIPPED")
+            (buttercup--print "  %s" (buttercup-spec-failure-description arg))
+          (buttercup--print
+           "\r%s" (buttercup-colorize
+                   (concat (buttercup--indented-description arg) "  "
+                           (buttercup-spec-failure-description arg))
+                   'yellow))))
+       (_
+        (error "Unknown spec status %s" (buttercup-spec-status arg))))
+     (buttercup--print " (%s)\n" (buttercup-elapsed-time-string arg)))
 
     (`buttercup-done
      (dolist (failed buttercup-reporter-batch--failures)
@@ -1786,7 +1797,7 @@ the capturing behavior."
 (defun buttercup-colorize (string color)
   "Format STRING with COLOR."
   (let ((color-code (cdr (assoc color buttercup-colors))))
-    (format "\u001b[%sm%s\u001b[0m" color-code string)))
+    (format "\e[%sm%s\e[0m" color-code string)))
 
 (defun buttercup-reporter-interactive (event arg)
   "Reporter for interactive sessions.

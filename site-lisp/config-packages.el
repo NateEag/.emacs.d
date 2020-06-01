@@ -409,16 +409,18 @@ The shell command lives in my dotfiles repo."
   :hook ((magit-mode . magit-svn-mode)
          (magit-status-mode . evil-local-mode)
          (magit-rebase-mode . evil-local-mode))
-  :config (require 'evil-magit)
-          ;; I never use magit's gitignore editing and because evil-magit
-          ;; doesn't have support for everything I want to do from
-          ;; evil-normal-state, I change to evil-insert-state sometimes.
-          ;;
-          ;; Specifically I can't jump to end-of-line/start-of-line in
-          ;; normal-state because magit binds '$', '^' and '0'. I also can't
-          ;; trigger magit-svn with its default binding of 'N', because evil
-          ;; rightfully binds 'N' to evil-search-previous.
-          (define-key magit-status-mode-map (kbd "i") nil))
+  :config
+  (require 'evil-magit)
+  (magit-delta-mode)
+  ;; I never use magit's gitignore editing and because evil-magit
+  ;; doesn't have support for everything I want to do from
+  ;; evil-normal-state, I change to evil-insert-state sometimes.
+  ;;
+  ;; Specifically I can't jump to end-of-line/start-of-line in
+  ;; normal-state because magit binds '$', '^' and '0'. I also can't
+  ;; trigger magit-svn with its default binding of 'N', because evil
+  ;; rightfully binds 'N' to evil-search-previous.
+  (define-key magit-status-mode-map (kbd "i") nil))
 
 (use-package git-commit
   :init (global-git-commit-mode 1)

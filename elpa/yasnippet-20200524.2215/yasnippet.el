@@ -6,7 +6,8 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.14.0
-;; Package-Version: 20200413.2221
+;; Package-Version: 20200524.2215
+;; Package-Commit: d3d6d70b1cd4818d271752468e0fdb0788db750d
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -4189,7 +4190,7 @@ Returns the newly created snippet."
             (yas--snippet-parse-create snippet))
           (run-hook-with-args 'after-change-functions
                               (point-min) (point-max)
-                              (- (point-max) (point-min))))
+                              (- end begin)))
         (when (listp buffer-undo-list)
           (push (cons (point-min) (point-max))
                 buffer-undo-list))

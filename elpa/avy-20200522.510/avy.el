@@ -1,10 +1,11 @@
 ;;; avy.el --- Jump to arbitrary positions in visible text and select text quickly. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2020  Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20200422.1153
+;; Package-Version: 20200522.510
+;; Package-Commit: 2dde8b71a0feb366c8ee5e2a1400a0d3a0f06424
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -256,6 +257,10 @@ character read.  The default represents `C-h' and `DEL'.  See
 `event-convert-list'."
   :type 'list)
 
+(defcustom avy-escape-chars '(?\e ?\C-g)
+  "List of characters that quit avy during `read-char'."
+  :type 'list)
+
 (defvar avy-ring (make-ring 20)
   "Hold the window and point history.")
 
@@ -456,7 +461,7 @@ KEYS is the path from the root of `avy-tree' to LEAF."
            (unless (eq avy-style 'words)
              (setq avy-action (cdr dispatch)))
            (throw 'done 'restart))
-          ((memq char '(?\e ?\C-g))
+          ((memq char avy-escape-chars)
            ;; exit silently
            (throw 'done 'abort))
           ((eq char ??)
@@ -853,6 +858,7 @@ Set `avy-style' according to COMMAND as well."
      (when (< pos (1- (length lst)))
        (goto-char (caar (nth (1+ pos) lst)))))))
 
+;;;###autoload
 (defun avy-process (candidates &optional overlay-fn cleanup-fn)
   "Select one of CANDIDATES using `avy-read'.
 Use OVERLAY-FN to visualize the decision overlay.
@@ -1069,19 +1075,22 @@ Do this even when the char is terminating."
   "Create an overlay with PATH at LEAF.
 PATH is a list of keys from tree root to LEAF.
 LEAF is normally ((BEG . END) . WND)."
-  (let* ((path (mapcar #'avy--key-to-char path))
-         (str (propertize (apply #'string (reverse path))
-                          'face 'avy-lead-face)))
-    (when (or avy-highlight-first (> (length str) 1))
-      (set-text-properties 0 1 '(face avy-lead-face-0) str))
-    (setq str (concat
-               (propertize avy-current-path
-                           'face 'avy-lead-face-1)
-               str))
-    (avy--overlay
-     str
-     (avy-candidate-beg leaf) nil
-     (avy-candidate-wnd leaf))))
+  (if (with-selected-window (cdr leaf)
+        (bound-and-true-p visual-line-mode))
+      (avy--overlay-at-full path leaf)
+    (let* ((path (mapcar #'avy--key-to-char path))
+           (str (propertize (apply #'string (reverse path))
+                            'face 'avy-lead-face)))
+      (when (or avy-highlight-first (> (length str) 1))
+        (set-text-properties 0 1 '(face avy-lead-face-0) str))
+      (setq str (concat
+                 (propertize avy-current-path
+                             'face 'avy-lead-face-1)
+                 str))
+      (avy--overlay
+       str
+       (avy-candidate-beg leaf) nil
+       (avy-candidate-wnd leaf)))))
 
 (defun avy--overlay-at (path leaf)
   "Create an overlay with PATH at LEAF.
@@ -1306,8 +1315,18 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
 BEG and END narrow the scope where candidates are searched."
-  (interactive (list (read-char "char 1: " t)
-                     (read-char "char 2: " t)
+  (interactive (list (let ((c1 (read-char "char 1: " t)))
+                       (if (memq c1 '(? ?\b))
+                           (keyboard-quit)
+                         c1))
+                     (let ((c2 (read-char "char 2: " t)))
+                       (cond ((eq c2 ?)
+                              (keyboard-quit))
+                             ((memq c2 avy-del-last-char-by)
+                              (keyboard-escape-quit)
+                              (call-interactively 'avy-goto-char-2))
+                             (t
+                              c2)))
                      current-prefix-arg
                      nil nil))
   (when (eq char1 ?)

@@ -2,8 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20200409.607
-;; Version: 0.5.1
+;; Package-Version: 20200520.1001
+;; Package-Commit: 5024ebc9adc8f5ea82803bf76fffb6eee5829b0a
+;; Version: 0.5.2
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -41,6 +42,10 @@
     ("JSON"
      json-mode
      (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
+
+    ;; PHP needs to come before C because php-mode is derived from
+    ;; c-mode.
+    ("PHP" php-mode)
 
     ;; TypeScript/TSX need to come before JavaScript/JSX because in
     ;; web-mode we can tell them apart by file name extension only.
@@ -110,7 +115,6 @@
     ("Objective-C" objc-mode)
     ("OCaml" caml-mode tuareg-mode)
     ("Perl" cperl-mode perl-mode)
-    ("PHP" php-mode)
     ("Protocol Buffer" protobuf-mode)
     ("PureScript" purescript-mode)
     ("Python" python-mode)

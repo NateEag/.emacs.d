@@ -1,13 +1,13 @@
-;;; lsp-ui.el --- UI modules for lsp-mode            -*- lexical-binding: t; -*-
+;;; lsp-ui.el --- UI modules for lsp-mode -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 Tobias Pisani
 ;; Copyright (C) 2018 Sebastien Chapuis, Fangrui Song
 
 ;; Author: Sebastien Chapuis <sebastien@chapu.is>, Fangrui Song <i@maskray.me>
-;; Keywords: lsp
+;; Keywords: languages, tools
 ;; URL: https://github.com/emacs-lsp/lsp-ui
-;; Package-Requires: ((emacs "25.1") (dash "2.14") (dash-functional "1.2.0") (lsp-mode "6.0") (markdown-mode "2.3"))
-;; Version: 6.2
+;; Package-Requires: ((emacs "26.1") (dash "2.14") (dash-functional "1.2.0") (lsp-mode "6.0") (markdown-mode "2.3"))
+;; Version: 6.3
 
 ;;; License
 ;;

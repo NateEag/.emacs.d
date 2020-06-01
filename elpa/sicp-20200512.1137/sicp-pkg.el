@@ -1,4 +1,4 @@
-(define-package "sicp" "20200421.242" "Structure and Interpretation of Computer Programs in info format" 'nil :authors
+(define-package "sicp" "20200512.1137" "Structure and Interpretation of Computer Programs in info format" 'nil :commit "4002d83083d520c6b5ede2df36cc2cee885d450a" :authors
   '(("Hal Abelson")
     ("Jerry Sussman")
     ("Julie Sussman"))

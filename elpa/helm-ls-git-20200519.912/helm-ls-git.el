@@ -3,7 +3,8 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20191127.510
+;; Package-Version: 20200519.912
+;; Package-Commit: 4da1a53f2f0a078ee2e896a914a1b19c0bf1d5ed
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -67,7 +68,7 @@ Valid values are symbol 'absolute or 'relative (default)."
 (defcustom helm-ls-git-status-command 'vc-dir
   "Favorite git-status command for emacs.
 
-If you want to use magit use `magit-status-internal' and not
+If you want to use magit use `magit-status-setup-buffer' and not
 `magit-status' which is working only interactively."
   :group 'helm-ls-git
   :type 'symbol)
@@ -369,7 +370,6 @@ See docstring of `helm-ls-git-ls-switches'.
       (helm-basename candidate)
       candidate))
 
-;;;###autoload
 (defclass helm-ls-git-source (helm-source-in-buffer)
   ((header-name :initform 'helm-ls-git-header-name)
    (init :initform 'helm-ls-git-init)
@@ -387,7 +387,6 @@ See docstring of `helm-ls-git-ls-switches'.
    (action-transformer :initform 'helm-transform-file-load-el)
    (action :initform (helm-ls-git-actions-list helm-type-file-actions))))
 
-;;;###autoload
 (defclass helm-ls-git-status-source (helm-source-in-buffer)
   ((header-name :initform 'helm-ls-git-header-name)
    (init :initform
@@ -439,8 +438,7 @@ See docstring of `helm-ls-git-ls-switches'.
       (apply #'process-file "git" nil (list t nil) nil coms)))
   (pop-to-buffer "*helm ls log*")
   (goto-char (point-min))
-  (diff-mode)
-  (set (make-local-variable 'buffer-read-only) t))
+  (diff-mode))
 
 
 (defun helm-ls-git-status ()

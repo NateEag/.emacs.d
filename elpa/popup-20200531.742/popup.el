@@ -4,9 +4,10 @@
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20160709.1429
-;; Version: 0.5.3
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Version: 20200531.742
+;; Package-Commit: c76d516629c6f063e68742b94b376fc9506536c8
+;; Version: 0.5.7
+;; Package-Requires: ((emacs "26.1") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,7 +24,7 @@
 
 ;;; Commentary:
 
-;; popup.el is a visual popup user interface library for Emacs. This
+;; popup.el is a visual popup user interface library for Emacs.  This
 ;; provides a basic API and common UI widgets such as popup tooltips
 ;; and popup menus.
 ;; See README.markdown for more information.
@@ -31,16 +32,17 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'display-line-numbers)
 
-(defconst popup-version "0.5.3")
+(defconst popup-version "0.5.7")
 
 
 
 ;;; Utilities
 
 (defun popup-calculate-max-width (max-width)
-  "Determines whether the width desired is
-character or window proportion based, And returns the result."
+  "Determines whether the width with MAX-WIDTH desired is character or window \
+proportion based, And return the result."
   (cl-typecase max-width
     (integer max-width)
     (float (* (ceiling (/ (round (* max-width (window-width))) 10.0)) 10))))
@@ -62,7 +64,7 @@ If there is a problem, please set it nil.")
      (when it ,@body)))
 
 (defun popup-x-to-string (x)
-  "Convert any object to string effeciently.
+  "Convert any object to string efficiently.
 This is faster than `prin1-to-string' in many cases."
   (cl-typecase x
     (string x)
@@ -151,6 +153,8 @@ untouched."
 
 (defun popup-vertical-motion (column direction)
   "A portable version of `vertical-motion'."
+  (when display-line-numbers-mode
+    (setq column (- column (line-number-display-width 'columns))))
   (if (>= emacs-major-version 23)
       (vertical-motion (cons column direction))
     (vertical-motion direction)
@@ -437,7 +441,7 @@ usual."
   "Return a proper direction when displaying a popup on this
 window. HEIGHT is the a height of the popup, and ROW is a line
 number at the point."
-  (let* ((remaining-rows (- (max 1 (- (window-height)
+  (let* ((remaining-rows (- (max 1 (- (window-text-height)
                                       (if mode-line-format 1 0)
                                       (if header-line-format 1 0)))
                             (count-lines (window-start) (point))))
@@ -877,7 +881,7 @@ Pages up through POPUP."
 
 (defvar popup-isearch-keymap
   (let ((map (make-sparse-keymap)))
-    ;(define-key map "\r"        'popup-isearch-done)
+    ;;(define-key map "\r"        'popup-isearch-done)
     (define-key map "\C-g"      'popup-isearch-cancel)
     (define-key map "\C-b"      'popup-isearch-close)
     (define-key map [left]      'popup-isearch-close)

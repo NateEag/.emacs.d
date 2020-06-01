@@ -5,7 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20200103.1237
+;; Package-Version: 20200513.1221
+;; Package-Commit: 295636818abf37848157f37ce7182a47099e6f97
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -59,7 +60,6 @@
 (require 'hideshow)
 (require 'outline)
 
-(defvar-local outline-top-level nil)
 (defvar-local outline-code-level 1000)
 
 ;;; Options
@@ -152,7 +152,7 @@ visibility of that subtree through these four states:
 2. CHILDREN: Show the current heading and recursively those
              of all subsections, without treating top-level
              code blocks as sections.
-3. BRANCHES: Show the current heading and recursivley those
+3. BRANCHES: Show the current heading and recursively those
              of all subsections, treating top-level code
              block as sections (i.e. their first line is
              treated as a heading).
@@ -188,7 +188,8 @@ has no subsections but it contains code, then skip BRANCHES."
              (progn
                (hs-show-block)
                (outline-show-entry))
-           (hs-hide-block)))
+           (hs-hide-block)
+           (outline-hide-entry)))
         (backward-char))))
      ((save-excursion
         (beginning-of-line 1)
@@ -282,15 +283,17 @@ those mentioned in `outline-level's doc-string."
 Ideally this would always be 1, then we would not have to
 guess and risk that the guess was wrong, but sadly this
 number depends on the regexp used to identify headings."
-  (or outline-top-level
-      (setq outline-top-level
-            (save-excursion
-              (goto-char (point-min))
-              (bicycle--level)))))
+  (save-excursion
+    (goto-char (point-min))
+    (let ((min outline-code-level))
+      (while (outline-next-heading)
+        (setq min (min min (bicycle--level))))
+      min)))
 
 (defun bicycle--top-level-p ()
   "Return t if inside the heading of a top-level section."
-  (= (bicycle--level) (bicycle--top-level)))
+  (= (bicycle--level)
+     (bicycle--top-level)))
 
 (defun bicycle--code-level-p ()
   "Return t if inside a code block.

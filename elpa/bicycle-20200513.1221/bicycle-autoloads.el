@@ -30,7 +30,7 @@ Cycle visibility of all sections.
              collapsed individually (using a `hideshow' command
              or function)." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bicycle" '("bicycle-" "outline-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bicycle" '("bicycle-" "outline-code-level")))
 
 ;;;***
 

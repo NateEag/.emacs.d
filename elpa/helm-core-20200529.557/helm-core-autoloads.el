@@ -215,9 +215,9 @@ Cycle in `helm-buffers' list and resume when waiting more than 1.2s." t nil)
 
 (autoload 'helm-other-buffer "helm" "\
 Simplified `helm' interface with other `helm-buffer'.
-Call `helm' only with ANY-SOURCES and ANY-BUFFER as args.
+Call `helm' only with SOURCES and BUFFER as args.
 
-\(fn ANY-SOURCES ANY-BUFFER)" nil nil)
+\(fn SOURCES BUFFER)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm" '("helm-" "with-helm-")))
 

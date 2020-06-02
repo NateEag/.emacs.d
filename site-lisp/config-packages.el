@@ -413,7 +413,9 @@ The shell command lives in my dotfiles repo."
   (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook))
 
 (use-package magit-delta
-  :diminish)
+  :diminish
+  :config
+  (setq magit-delta-default-dark-theme "Solarized (dark)"))
 
 (use-package magit
   :defer t

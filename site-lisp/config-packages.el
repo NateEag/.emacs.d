@@ -13,6 +13,7 @@
 (require 'use-package)
 
 (use-package envrc
+  :diminish
   :init
   (envrc-global-mode))
 

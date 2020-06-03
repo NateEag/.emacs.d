@@ -866,6 +866,10 @@ With this alias I hope to not need to remember it.")
 (use-package atomic-chrome
   :demand
   :functions (atomic-chrome-start-server atomic-chrome-stop-server)
+  :hook ((atomic-chrome-edit-mode . (lambda
+                                      ()
+                                      (aggressive-fill-paragraph-mode -1)
+                                      (auto-fill-mode -1))))
   :config (progn
             ;; Don't start Atomic Chrome if another Emacs instance is already
             ;; running it, and don't kill it if we didn't start the server.

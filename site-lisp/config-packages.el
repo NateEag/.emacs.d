@@ -577,10 +577,8 @@ The shell command lives in my dotfiles repo."
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init)
   ;; yaml-mode constantly shifts indentation and breaks things with
-  ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there. Note
-  ;; the insanity of passing t *deactivating* the mode. No idea why it's
-  ;; written that way.
-  (add-hook 'yaml-mode-hook '(lambda () (aggressive-fill-paragraph-mode 'toggle)) 80))
+  ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there.
+  (add-hook 'yaml-mode-hook '(lambda () (aggressive-fill-paragraph-mode -1)) 80))
 
 (use-package groovy-mode
   :defer t

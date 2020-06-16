@@ -4,12 +4,12 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20200520.1843
-;; Package-Commit: 2d430ea61d2f1cd90c4ed39ce2634b0f70eb1acd
+;; Package-Version: 20200615.527
+;; Package-Commit: 08ea35825cf26e3a7d4abaddf01b49b50cffd38d
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
-;; Version: 1.0.0
-;; Package-Requires: ((helm "1.9.9") (projectile "2.1.0") (cl-lib "0.3"))
+;; Version: 1.1.0-snapshot
+;; Package-Requires: ((helm "1.9.9") (projectile "2.2.0") (cl-lib "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 

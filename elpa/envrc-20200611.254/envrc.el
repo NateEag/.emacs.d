@@ -4,10 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
-;; Package-Commit: 5b3cd24c85719de23ba96f6a3dccdda20ad57898
+;; Package-Commit: aae15dd8c4736ceb515b09b1db9eef3db3bd65d9
 ;; Homepage: https://github.com/purcell/envrc
 ;; Package-Requires: ((seq "2") (emacs "24.4"))
-;; Package-Version: 20200527.2119
+;; Package-Version: 20200611.254
 ;; Package-X-Original-Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -37,6 +37,12 @@
 ;; interaction with this functionality, see `envrc-mode-map', and the
 ;; commands `envrc-reload', `envrc-allow' and `envrc-deny'.
 
+;; In particular, you can enable keybindings for the above commands by
+;; binding your preferred prefix to `envrc-command-map' in
+;; `envrc-mode-map', e.g.
+
+;;    (with-eval-after-load 'envrc
+;;      (define-key envrc-mode-map (kbd "C-c e") 'envrc-command-map))
 
 ;;; Code:
 
@@ -76,14 +82,21 @@ You can set this to nil to disable the lighter."
 
 (put 'envrc--lighter 'risky-local-variable t)
 
-(defcustom envrc-mode-map
+(defcustom envrc-command-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-e a") 'envrc-allow)
-    (define-key map (kbd "C-c C-e d") 'envrc-deny)
-    (define-key map (kbd "C-c C-e r") 'envrc-reload)
-    (define-key map (kbd "C-c C-e C-e") 'envrc-reload)
+    (define-key map (kbd "a") 'envrc-allow)
+    (define-key map (kbd "d") 'envrc-deny)
+    (define-key map (kbd "r") 'envrc-reload)
     map)
-  "Keymap for `envrc-mode'."
+  "Keymap for commands in `envrc-mode'.
+See `envrc-mode-map' for how to assign a prefix binding to these."
+  :type 'keymap)
+(fset 'envrc-command-map envrc-command-map)
+
+(defcustom envrc-mode-map (make-sparse-keymap)
+  "Keymap for `envrc-mode'.
+To access `envrc-command-map' from this map, give it a prefix keybinding,
+e.g. (define-key envrc-mode-map (kbd \"C-c e\") 'envrc-command-map)"
   :type 'keymap)
 
 ;;;###autoload
@@ -139,7 +152,9 @@ One of '(none on error).")
 This is based on a file scan.  In most cases we prefer to use the
 cached list of known dirs.
 
-Regardless of buffer file name, we always use `default-directory': the two should always match, unless the user called `cd'"
+Regardless of buffer file name, we always use
+`default-directory': the two should always match, unless the user
+called `cd'"
   (let ((env-dir (locate-dominating-file default-directory ".envrc")))
     (when env-dir
       ;; `locate-dominating-file' appears to sometimes return abbreviated paths, e.g. with ~
@@ -272,14 +287,21 @@ also appear in PAIRS."
                 (setq-local eshell-path-env path))))
         (envrc--debug "[%s] reset environment to default" buf)))))
 
+(defun envrc--mode-buffers ()
+  "Return a list of all live buffers in which `envrc-mode' is enabled."
+  (seq-filter (lambda (b) (and (buffer-live-p b)
+                          (with-current-buffer b
+                            envrc-mode)))
+              (buffer-list)))
+
 (defun envrc--apply-all (env-dir)
   "Update all direnv-managed buffers for ENV-DIR from `envrc--envs'."
   (envrc--debug "Updating all buffers in env %s" env-dir)
   (let ((env-dirs-deepest-paths-first (envrc--deepest-paths-first (hash-table-keys envrc--envs))))
     (envrc--debug "Env dirs deepest first: %S" env-dirs-deepest-paths-first)
-    (dolist (buf (seq-filter 'buffer-live-p (buffer-list)))
+    (dolist (buf (envrc--mode-buffers))
       (with-current-buffer buf
-        (when envrc-mode
+        (let ((default-directory (expand-file-name default-directory))) ;; Guard against abbreviation
           ;; Quickly check this buffer is at least "inside" this env
           (when (envrc--directory-path-deeper-p env-dir default-directory)
             ;; Then check that there is no nested env which is "closer"
@@ -334,6 +356,15 @@ ARGS is as for `call-process'."
             (puthash env-dir 'error envrc--envs)
             (envrc--apply-all env-dir))
         (display-buffer "*envrc-deny*")))))
+
+(defun envrc-reload-all ()
+  "Reload direnvs for all buffers.
+This can be useful if a .envrc has been deleted."
+  (interactive)
+  (clrhash envrc--envs)
+  (dolist (buf (envrc--mode-buffers))
+    (with-current-buffer buf
+      (envrc--register))))
 
 
 (provide 'envrc)

@@ -4,10 +4,10 @@
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20200531.742
-;; Package-Commit: c76d516629c6f063e68742b94b376fc9506536c8
-;; Version: 0.5.7
-;; Package-Requires: ((emacs "26.1") (cl-lib "0.5"))
+;; Package-Version: 20200610.317
+;; Package-Commit: 9d104d4bbbcb37bbc9d9ce762e74d41174683f86
+;; Version: 0.5.8
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -32,9 +32,8 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'display-line-numbers)
 
-(defconst popup-version "0.5.7")
+(defconst popup-version "0.5.8")
 
 
 
@@ -153,7 +152,7 @@ untouched."
 
 (defun popup-vertical-motion (column direction)
   "A portable version of `vertical-motion'."
-  (when display-line-numbers-mode
+  (when (bound-and-true-p display-line-numbers-mode)
     (setq column (- column (line-number-display-width 'columns))))
   (if (>= emacs-major-version 23)
       (vertical-motion (cons column direction))

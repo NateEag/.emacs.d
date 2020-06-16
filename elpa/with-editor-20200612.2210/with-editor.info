@@ -39,7 +39,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.9.2.
+This manual is for With-Editor version 2.9.3.
 
      Copyright (C) 2015-2020 Jonas Bernoulli <jonas@bernoul.li>
 

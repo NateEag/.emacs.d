@@ -1,6 +1,6 @@
-(define-package "aio" "20200410.1409" "async/await for Emacs Lisp"
+(define-package "aio" "20200610.1904" "async/await for Emacs Lisp"
   '((emacs "26.1"))
-  :authors
+  :commit "da93523e235529fa97d6f251319d9e1d6fc24a41" :authors
   '(("Christopher Wellons" . "wellons@nullprogram.com"))
   :maintainer
   '("Christopher Wellons" . "wellons@nullprogram.com")

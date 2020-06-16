@@ -32,6 +32,10 @@
 
 (require 'evil-matchit-sdk)
 
+(defvar evilmi-always-simple-jump nil
+  "`major-mode' like `python-mode' use optimized algorithm by default.
+If it's t, use simple jump.")
+
 (defun evilmi--simple-find-open-brace (cur-line)
   "Find open brace from CUR-LINE."
   (if evilmi-debug (message "evilmi--simple-find-open-brace called => cur-line=%s (point)=%d" cur-line (point)))
@@ -61,16 +65,33 @@
 
     rlt))
 
+(defun evilmi--char-is-simple (ch)
+  "Special handling of character CH for `python-mode'."
+  (cond
+   ((and (not evilmi-always-simple-jump)
+         (memq major-mode '(python-mode))
+         ;; in evil-visual-state, (point) could equal to (line-end-position)
+         (>= (point) (1- (line-end-position))))
+    ;; handle follow python code,
+    ;;
+    ;; if true:
+    ;;     a = "hello world"
+    ;;
+    ;; If current cursor is at end of line, rlt should be nil!
+    ;; or else, matching algorithm can't work in above python sample
+    nil)
+   (t
+    (or (memq ch evilmi-forward-chars)
+        (memq ch evilmi-backward-chars)
+        ;; sorry we could not jump between ends of string in python-mode
+        (memq ch evilmi-quote-chars)))))
+
 ;;;###autoload
 (defun evilmi-simple-get-tag ()
   "Get current tag in simple language."
   (let* (forward-line-num
-         ;; Only handle open tag
-         (tmp (evilmi--get-char-under-cursor))
-         (ch (if tmp (car tmp)))
+         (ch (following-char))
          rlt)
-
-    (if evilmi-debug (message "evilmi-simple-get-tag called => ch=%s (point)=%d" ch (point)))
 
     (cond
      ;; In evil-visual-state, the (preceding-char) is actually the character under cursor
@@ -82,16 +103,23 @@
         (forward-line (1- forward-line-num))
         (search-forward "{" nil nil)
         (backward-char)))
+     ((and (memq ch evilmi-quote-chars)
+           (eq ch ?/)
+           (not (eq ?* (evilmi-sdk-get-char (1- (point)))))
+           (not (eq ?* (evilmi-sdk-get-char (1+ (point))))))
+      ;; character at point is not "/*" or "*/"
+      (setq rlt nil))
      (t
-      ;; use evil's own evilmi--simple-jump
+      ;; use evil's own evilmi-sdk-simple-jump
       (setq rlt (list (point)))))
 
-    (if (and evilmi-debug rlt) (message "evilmi-simple-get-tag called rlt=%s" rlt))
+    (if (and evilmi-debug rlt) (message "evilmi-simple-get-tag called char=%s => %s" ch rlt))
     rlt))
 
 ;;;###autoload
 (defun evilmi-simple-jump (info num)
-  "Use INFO of current tag ot jump to matching tag.  NUM is ignored."
+  "Use INFO of current tag to jump to matching tag.  NUM is ignored."
+  (ignore num)
   (when info
     (if evilmi-debug (message "evilmi-simple-jump called (point)=%d" (point)))
 
@@ -101,7 +129,7 @@
      ((memq major-mode '(latex-mode))
       (evil-jump-item))
      (t
-      (evilmi--simple-jump)))
+      (evilmi-sdk-simple-jump)))
 
     ;; hack for javascript
     (cond

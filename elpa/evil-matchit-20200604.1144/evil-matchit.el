@@ -14,7 +14,7 @@
 
 ;; This file is part of evil-matchit
 ;;
-;; evil-matchit is free software: you can redistribute it and/or
+;; This program is free software: you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as published
 ;; by the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
@@ -43,12 +43,11 @@
 ;;
 ;; See https://github.com/redguardtoo/evil-matchit/ for help.
 ;;
-;; This program requires EVIL (http://gitorious.org/evil)
+;; This program requires EVIL (https://github.com/emacs-evil/evil)
 ;;
 
 ;;; Code:
 
-(require 'evil)
 (require 'evil-matchit-sdk)
 
 (defvar evilmi-plugins '(emacs-lisp-mode ((evilmi-simple-get-tag evilmi-simple-jump)))
@@ -62,184 +61,6 @@ If nil, `50%' jumps 50 times.")
 (defvar evilmi-shortcut "%"
   "The keybinding of `evilmi-jump-items' and then text object shortcut.
 Some people prefer using \"m\" instead.")
-
-(defvar evilmi-always-simple-jump nil
-  "`major-mode' like `python-mode' use optimized algorithm by default.
-If it's t, use simple jump.")
-
-(defvar evilmi-forward-chars (string-to-list "[{("))
-(defvar evilmi-backward-chars (string-to-list "]})"))
-(defvar evilmi-quote-chars (string-to-list "'\"/"))
-
-(defun evilmi--char-is-simple (ch)
-  "Special handling of character CH for `python-mode'."
-  (let* (rlt)
-    (cond
-     ((and (not evilmi-always-simple-jump)
-           (memq major-mode '(python-mode))
-           ;; in evil-visual-state, (point) could equal to (line-end-position)
-           (>= (point) (1- (line-end-position))))
-      ;; handle follow python code,
-      ;;
-      ;; if true:
-      ;;     a = "hello world"
-      ;;
-      ;; If current cursor is at end of line, rlt should be nil!
-      ;; or else, matching algorithm can't work in above python sample
-      (setq rlt nil))
-     (t
-      (setq rlt (or (memq ch evilmi-forward-chars)
-                    (memq ch evilmi-backward-chars)
-                    ;; sorry we could not jump between ends of string in python-mode
-                    (memq ch evilmi-quote-chars)))))
-    rlt))
-
-(defun evilmi--get-char-at-position (pos)
-  "Get character at POS."
-  (let* ((ch (char-after pos)))
-    (if evilmi-debug (message "evilmi--get-char-at-position called. Return: %s" (string ch)))
-    ch))
-
-(defun evilmi--get-char-under-cursor ()
-  "Return: (character position)."
-  (let* ((ch (following-char))
-         (p (point)))
-    (if evilmi-debug (message "evilmi--get-char-under-cursor called. Return: (%d %s)" ch p))
-    (list ch p)))
-
-(defun evilmi--is-jump-forward ()
-  "Return: (forward-direction font-face-under-cursor character-under-cursor).
-If font-face-under-cursor is NOT nil, the quoted string is being processed."
-  (if evilmi-debug (message "evilmi--is-jump-forward called"))
-  (let* ((tmp (evilmi--get-char-under-cursor))
-         (ch (car tmp))
-         (p (cadr tmp))
-         ff
-         (rlt t))
-    (cond
-     ((memq ch evilmi-backward-chars)
-      (setq rlt nil))
-     ((memq ch evilmi-quote-chars)
-      (setq rlt (eq (setq ff (get-text-property p 'face))
-                    (get-text-property (+ 1 p) 'face)))))
-
-    (if evilmi-debug (message "evilmi--is-jump-forward return (%s %s %s)" rlt ff (string ch)))
-    (list rlt ff ch)))
-
-(defun evilmi-in-comment-p (pos)
-  "Check character at POS is comment by comparing font face."
-  (cond
-   ;; @see https://github.com/redguardtoo/evil-matchit/issues/92
-   ((eq major-mode 'tuareg-mode)
-    (evilmi-among-fonts-p pos '(font-lock-comment-face
-                                             font-lock-comment-delimiter-face
-                                             font-lock-doc-face)))
-   (t
-    (evilmi-among-fonts-p pos '(font-lock-comment-face
-                                             font-lock-comment-delimiter-face)))))
-
-(defun evilmi--scan-sexps (is-forward)
-  "Get the position of matching tag.
-If IS-FORWARD is t, jump forward; or else jump backward."
-  (if evilmi-debug (message "evilmi--scan-sexps called => %s" is-forward))
-  (let* ((start-pos (if is-forward (point) (+ 1 (point))))
-         (arg (if is-forward 1 -1))
-         (limit (if is-forward (point-max) (point-min)))
-         (lvl 1)
-         (b (following-char))
-         (e (cond
-             ;; {}
-             ((= b 123) 125)
-             ((= b 125) 123)
-             ;; ()
-             ((= b 40) 41)
-             ((= b 41) 40)
-             ;; []
-             ((= b 91) 93)
-             ((= b 93) 91)))
-         (rlt start-pos))
-    (cond
-     ((evilmi-in-comment-p (point))
-      ;; Matching tag in comment.
-      ;; Use own algorithm instead of `scan-sexps'
-      ;; because `scan-sexps' not work in some major-mode
-      (save-excursion
-        (setq start-pos (point))
-        (while (and (not (= start-pos limit))
-                    (> lvl 0))
-          (goto-char (setq start-pos (+ start-pos arg)))
-          (when (evilmi-in-comment-p start-pos)
-            (cond
-             ((= (following-char) b)
-              (setq lvl (1+ lvl)))
-             ((= (following-char) e)
-              (setq lvl (1- lvl))))))
-        (when (= lvl 0)
-          (setq rlt (+ start-pos (if is-forward 1 0))))))
-     (t
-      ;; not comment
-      ;; search but ignore comments
-      (let* ((parse-sexp-ignore-comments t))
-        (setq rlt (scan-sexps start-pos arg)))))
-
-    (if evilmi-debug (message "evilmi--scan-sexps called => rlt=%s lvl=%s" rlt lvl))
-    rlt))
-
-(defun evilmi--find-the-other-quote-char (font-face is-forward char)
-  "The end character under cursor has different font from FONT-FACE."
-  (let* (rlt
-         got
-         (delta (if is-forward 1 -1))
-         (pos (+ delta (point)))
-         (end (if is-forward (point-max) (point-min))))
-    (while (not got)
-      (cond
-       ((or (= pos end)
-            (and (= char (evilmi--get-char-at-position (- pos delta)))
-                 (not (eq font-face (get-text-property pos 'face)))))
-        (setq rlt (if is-forward pos (+ 1 pos)))
-        (setq got t))
-       (t
-        (setq pos (+ delta pos)))))
-    (if evilmi-debug (message "evilmi--find-the-other-quote-char called Return: %s" rlt))
-    rlt))
-
-(defun evilmi--adjust-jumpto (is-forward rlt)
-  ;; normal-state hack!
-  (unless (eq evil-state 'visual)
-    (if is-forward (setq rlt (- rlt 1))))
-  (if evilmi-debug (message "evilmi--adjust-jumpto called. Return: %s" rlt))
-  rlt)
-
-;; @see http://emacs.stackexchange.com/questions/13222/a-elisp-function-to-jump-between-matched-pair
-(defun evilmi--find-position-to-jump (ff is-forward ch)
-  (if evilmi-debug (message "evilmi--find-position-to-jump called => %s %s %s %d" ff is-forward ch (point)))
-  "Non-nil ff means jumping between quotes"
-  (let* ((rlt (if ff (evilmi--find-the-other-quote-char ff is-forward ch)
-                (evilmi--scan-sexps is-forward))))
-    (if evilmi-debug (message "evilmi--find-position-to-jump return %s" (evilmi--adjust-jumpto is-forward rlt)))
-    (evilmi--adjust-jumpto is-forward rlt)))
-
-(defun evilmi--tweak-selected-region (font-face jump-forward)
-  "Tweak selected region using FONT-FACE and JUMP-FORWARD."
-  ;; visual-state hack!
-  (when (and jump-forward (eq evil-state 'visual) (not font-face))
-    ;; if font-face is non-nil, I control the jump flow from character level,
-    ;; so hack to workaround scan-sexps is NOT necessary
-    (evil-backward-char)))
-
-(defun evilmi--simple-jump ()
-  "Alternative for `evil-jump-item'."
-  (interactive)
-  (if evilmi-debug (message "evilmi--simple-jump called (point)=%d" (point)))
-  (let* ((tmp (evilmi--is-jump-forward))
-         (jump-forward (car tmp))
-         ;; if ff is not nil, it's jump between quotes
-         ;; so we should not use (scan-sexps)
-         (ff (nth 1 tmp))
-         (ch (nth 2 tmp)))
-    (goto-char (evilmi--find-position-to-jump ff jump-forward ch))
-    (evilmi--tweak-selected-region ff jump-forward)))
 
 (defun evilmi--operate-on-item (num &optional func)
   "Jump NUM times and apply function FUNC."
@@ -266,36 +87,46 @@ If IS-FORWARD is t, jump forward; or else jump backward."
           ;; jump only once if the jump is successful
           (setq jumped t))
         (when evilmi-debug
-          (message "rlt=%s rule=%s p=%s jumped=%s" rlt rule (point) jumped))))
+          (message "rlt=%s rule=%s p=%s jumped=%s idea-dest=%s"
+                   rlt
+                   rule
+                   (point)
+                   jumped
+                   ideal-dest))))
 
-    ;; give `evilmi--simple-jump' a second chance
+    ;; give `evilmi-sdk-simple-jump' a second chance
     (unless jumped
       (if func (funcall func (list (point))))
-      (evilmi--simple-jump)
+      (evilmi-sdk-simple-jump)
       (setq ideal-dest (point)))
 
     (if evilmi-debug (message "evilmi--operate-on-item called. Return: %s" ideal-dest))
     ideal-dest))
 
-(defun evilmi--push-mark (rlt)
-    (push-mark (nth 0 rlt) t t))
+(defun evilmi--push-mark (position)
+  "Pus POSITION as marker."
+  (push-mark (nth 0 position) t t))
+
+(defun evilmi--convert-rules (rules)
+  "Convert RULES to function pairs list."
+  (let* (rlt)
+    (dolist (rule rules)
+      (let* ((rule-filename (concat "evil-matchit-" (symbol-name rule)))
+             (fn-prefix (concat "evilmi-" (symbol-name rule)))
+             (get-tag-function (intern (concat fn-prefix "-get-tag")))
+             (jump-function (intern (concat fn-prefix "-jump"))))
+        (autoload get-tag-function rule-filename nil)
+        (autoload jump-function rule-filename nil)
+        (push (list get-tag-function jump-function) rlt)))
+    (nreverse rlt)))
 
 ;;;###autoload
 (defun evilmi-load-plugin-rules(modes rules)
   "Load MODES's plugin RULES."
   (dolist (mode modes)
-    (setq evilmi-plugins
-          (plist-put evilmi-plugins
-                     mode
-                     (mapcar (lambda (rule)
-                               (let* ((rule-filename (concat "evil-matchit-" (symbol-name rule)))
-                                      (fn-prefix (concat "evilmi-" (symbol-name rule)))
-                                      (get-tag-function (intern (concat fn-prefix "-get-tag")))
-                                      (jump-function (intern (concat fn-prefix "-jump"))))
-                                 (autoload get-tag-function rule-filename nil)
-                                 (autoload jump-function rule-filename nil)
-                                 (list get-tag-function jump-function)))
-                             rules)))))
+    (setq evilmi-plugins (plist-put evilmi-plugins
+                                    mode
+                                    (evilmi--convert-rules rules)))))
 
 ;;;###autoload
 (defun evilmi-init-plugins ()
@@ -380,9 +211,11 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 
 
 (defun evilmi--region-to-select-or-delete (num &optional is-inner)
+  "Get NUM region(s) to select or delete.
+If IS-INNER is t, the region is inner text object."
   (let* (ideal-dest b e)
     (save-excursion
-      (setq ideal-dest (evilmi--operate-on-item num 'evilmi--push-mark))
+      (setq ideal-dest (evilmi--operate-on-item num #'evilmi--push-mark))
       (if ideal-dest (goto-char ideal-dest))
       (setq b (region-beginning))
       (setq e (region-end))
@@ -441,7 +274,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 
 ;;;###autoload
 (defun evilmi-jump-to-percentage (num)
-  "Like Vim %."
+  "Like Vim %, NUM is the percentage of location."
   (interactive "P")
   (let* (dst)
     (when (and num (> num 0))
@@ -476,6 +309,9 @@ If IS-FORWARD is t, jump forward; or else jump backward."
   (interactive)
   (message "2.3.5"))
 
+(defvar evil-matchit-mode-map (make-sparse-keymap)
+  "Keymap used by the minor mode.")
+
 ;;;###autoload
 (define-minor-mode evil-matchit-mode
   "Buffer-local minor mode to emulate matchit.vim."
@@ -494,12 +330,12 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 
 ;;;###autoload
 (defun turn-on-evil-matchit-mode ()
-  "Enable `evil-matchit-mode' in the current buffer."
+  "Enable the minor mode in the current buffer."
   (evil-matchit-mode 1))
 
 ;;;###autoload
 (defun turn-off-evil-matchit-mode ()
-  "Disable `evil-matchit-mode' in the current buffer."
+  "Disable the minor mode in the current buffer."
   (evil-matchit-mode -1))
 
 ;;;###autoload

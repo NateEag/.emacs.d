@@ -28,7 +28,7 @@ Delete NUM items/tags and the region between them.
 \(fn &optional NUM)" t nil)
 
 (autoload 'evilmi-jump-to-percentage "evil-matchit" "\
-Like Vim %.
+Like Vim %, NUM is the percentage of location.
 
 \(fn NUM)" t nil)
  (autoload 'evilmi-jump-items "evil-matchit" nil t)
@@ -47,10 +47,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 \(fn &optional ARG)" t nil)
 
 (autoload 'turn-on-evil-matchit-mode "evil-matchit" "\
-Enable `evil-matchit-mode' in the current buffer." nil nil)
+Enable the minor mode in the current buffer." nil nil)
 
 (autoload 'turn-off-evil-matchit-mode "evil-matchit" "\
-Disable `evil-matchit-mode' in the current buffer." nil nil)
+Disable the minor mode in the current buffer." nil nil)
 
 (put 'global-evil-matchit-mode 'globalized-minor-mode t)
 
@@ -76,7 +76,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit" '("evilmi-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit" '("evil")))
 
 ;;;***
 
@@ -84,12 +84,13 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  0))
 ;;; Generated autoloads from evil-matchit-c.el
 
-(autoload 'evilmi-c-get-tag "evil-matchit-c" nil nil nil)
+(autoload 'evilmi-c-get-tag "evil-matchit-c" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-c-jump "evil-matchit-c" "\
+Use INFO to jump NUM times.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-c" '("evilmi-c-")))
 
@@ -104,7 +105,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 (autoload 'evilmi-cmake-jump "evil-matchit-cmake" "\
 
 
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-cmake" '("evilmi-cmake-")))
 
@@ -167,7 +168,7 @@ Use INFO from current tag to jump NUM times.
 
 \(fn INFO NUM)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-html" '("evilmi-html--open-tag-candidate")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-html" '("evilmi-html--")))
 
 ;;;***
 
@@ -307,7 +308,7 @@ Check if KEYWORD exist in KEYWORD-LIST.
 
 (autoload 'evilmi-sdk-get-tag-info "evil-matchit-sdk" "\
 Return (row column is-function-exit-point keyword).
-The row and column mark the position in evilmi-mylang-match-tags
+The row and column mark the position in `evilmi-mylang-match-tags'
 is-function-exit-point could be unknown status
 
 \(fn KEYWORD MATCH-TAGS)" nil nil)
@@ -328,11 +329,6 @@ after calling this function.
 If current font at POS is among FONTS.
 
 \(fn POS FONTS)" nil nil)
-
-(autoload 'evilmi-evenp "evil-matchit-sdk" "\
-
-
-\(fn NUM)" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-sdk" '("evilmi-")))
 
@@ -361,11 +357,11 @@ If current font at POS is among FONTS.
 Get current tag in simple language." nil nil)
 
 (autoload 'evilmi-simple-jump "evil-matchit-simple" "\
-Use INFO of current tag ot jump to matching tag.  NUM is ignored.
+Use INFO of current tag to jump to matching tag.  NUM is ignored.
 
 \(fn INFO NUM)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-simple" '("evilmi--simple-find-open-brace")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-simple" '("evilmi-")))
 
 ;;;***
 

@@ -995,13 +995,18 @@ Return nil if can't move."
   (lispy--ensure-visible))
 
 (defvar lispy-pos-ring (make-ring 100)
-  "Ring for point and mark position history.")
+  "Ring for point/mark position and restriction history.")
 
 (defun lispy--remember ()
   "Store the current point and mark in history."
   (let* ((emptyp (zerop (ring-length lispy-pos-ring)))
          (top (unless emptyp
-                (ring-ref lispy-pos-ring 0))))
+                (ring-ref lispy-pos-ring 0)))
+         (restriction (when (buffer-narrowed-p)
+                        (cons (set-marker (make-marker)
+                                          (point-min))
+                              (set-marker (make-marker)
+                                          (point-max))))))
     (if (region-active-p)
         (let* ((bnd (lispy--bounds-dwim))
                (bnd (cons
@@ -1009,29 +1014,44 @@ Return nil if can't move."
                      (move-marker (make-marker) (cdr bnd)))))
           (when (or emptyp
                     (not (equal bnd top)))
-            (ring-insert lispy-pos-ring bnd)))
+            (ring-insert lispy-pos-ring (list bnd restriction))))
       (when (or emptyp
                 (not (equal (point-marker) top)))
-        (ring-insert lispy-pos-ring (point-marker))))))
+        (ring-insert lispy-pos-ring (list (point-marker) restriction))))))
+
+(defvar lispy-back-restore-restriction t
+  "When non-nil, restore buffer restriction on `lispy-back'.")
 
 (defun lispy-back (arg)
   "Move point to ARGth previous position.
 If position isn't special, move to previous or error."
   (interactive "p")
+  (when (buffer-narrowed-p)
+    (widen))
   (lispy-dotimes arg
     (if (zerop (ring-length lispy-pos-ring))
         (lispy-complain "At beginning of point history")
-      (let ((pt (ring-remove lispy-pos-ring 0)))
+      (let* ((data (ring-remove lispy-pos-ring 0))
+             (marker (pop data))
+             (restriction (pop data))
+             (beg (car restriction))
+             (end (cdr restriction)))
         ;; After deleting some text, markers that point to it converge
         ;; to one point
         (while (and (not (zerop (ring-length lispy-pos-ring)))
                     (equal (ring-ref lispy-pos-ring 0)
-                           pt))
+                           marker))
           (ring-remove lispy-pos-ring 0))
-        (if (consp pt)
-            (lispy--mark pt)
+        (if (consp marker)
+            (lispy--mark marker)
           (deactivate-mark)
-          (goto-char pt))))))
+          (switch-to-buffer (marker-buffer marker))
+          (goto-char marker))
+        (when (and lispy-back-restore-restriction
+                   restriction)
+          (narrow-to-region beg end)
+          (set-marker beg nil)
+          (set-marker end nil))))))
 
 (defun lispy-knight-down ()
   "Make a knight-like move: down and right."
@@ -4263,18 +4283,25 @@ When LIB is non-nil, `require' it prior to calling FUNC.")
 SYMBOL is a string."
   (interactive (list (or (thing-at-point 'symbol t)
                          (lispy--current-function))))
+  (lispy--remember)
   (deactivate-mark)
   (with-no-warnings
     (ring-insert find-tag-marker-ring (point-marker)))
-  (if (memq major-mode lispy-elisp-modes)
-      (lispy-goto-symbol-elisp symbol)
-    (let ((handler (cdr (assoc major-mode lispy-goto-symbol-alist)))
-          lib)
-      (if (null handler)
-          (error "no handler for %S in `lispy-goto-symbol-alist'" major-mode)
-        (when (setq lib (cadr handler))
-          (require lib))
-        (funcall (car handler) symbol))))
+  (let ((narrowedp (buffer-narrowed-p)))
+    (when narrowedp
+      (widen))
+    (cond ((memq major-mode lispy-elisp-modes)
+           (lispy-goto-symbol-elisp symbol)
+           (when narrowedp
+             (lispy-narrow 1)))
+          (t
+           (let ((handler (cdr (assoc major-mode lispy-goto-symbol-alist)))
+                 lib)
+             (if (null handler)
+                 (error "no handler for %S in `lispy-goto-symbol-alist'" major-mode)
+               (when (setq lib (cadr handler))
+                 (require lib))
+               (funcall (car handler) symbol))))))
   ;; in case it's hidden in an outline
   (lispy--ensure-visible))
 

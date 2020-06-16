@@ -352,7 +352,7 @@ particular FILE-NAME and MODE."
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-php--create-connection)
                   :major-modes '(php-mode)
-                  :priority -2
+                  :priority -3
                   :server-id 'php-ls))
 
 
@@ -447,7 +447,7 @@ This function tries to extract the type signature from CONTENTS,
 or the first line if it cannot do so. A single line is always
 returned to avoid that the echo area grows uncomfortably."
   (with-temp-buffer
-    (-let [(&hash "value") contents]
+    (-let [value (lsp:markup-content-value contents)]
       (insert value)
       (goto-char (point-min))
       (if (re-search-forward (rx (seq "```cpp\n"

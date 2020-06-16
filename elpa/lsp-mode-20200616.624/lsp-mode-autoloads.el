@@ -42,7 +42,7 @@ Explain a clang-tidy ERROR by scraping documentation from llvm.org.
 ;;;### (autoloads nil "lsp-css" "lsp-css.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-css.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-css" '("lsp-c")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-css" '("lsp-css-")))
 
 ;;;***
 
@@ -122,13 +122,6 @@ Load all of the provided PROJECTS.
 
 ;;;***
 
-;;;### (autoloads nil "lsp-metals" "lsp-metals.el" (0 0 0 0))
-;;; Generated autoloads from lsp-metals.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-metals" '("lsp-metals-")))
-
-;;;***
-
 ;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-mode.el
 (put 'lsp-enable-file-watchers 'safe-local-variable #'booleanp)
@@ -149,7 +142,7 @@ Entry point that defers server startup until buffer is visible.
 `lsp-deferred' will wait until the buffer is visible before invoking `lsp'.
 This avoids overloading the server with many files when starting Emacs." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("dash-expand:&lsp-" "lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
 
 ;;;***
 
@@ -163,7 +156,7 @@ This avoids overloading the server with many files when starting Emacs." nil nil
 ;;;### (autoloads nil "lsp-protocol" "lsp-protocol.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-protocol.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-protocol" '("lsp")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-protocol" '("dash-expand:&RangeToPoint" "lsp")))
 
 ;;;***
 

@@ -137,8 +137,8 @@ Examples of properties include associated `:cleanup' functions.")
     (t . nil))
   "An alist for customizing where to display the candidates.
 
-Each key is a caller symbol. When the value is nil (the default),
-the candidates are shown in the minibuffer. Otherwise, the value
+Each key is a caller symbol.  When the value is nil (the default),
+the candidates are shown in the minibuffer.  Otherwise, the value
 is a function which takes a string argument comprising the
 current matching candidates and displays it somewhere.
 
@@ -229,9 +229,9 @@ ACTIONS that have the same key."
              ("o" identity "default")
              ,@extra-actions))
           (t
-           `(1
-             ,@(cl-delete-duplicates (cdr (append action extra-actions))
-                                     :key #'car :test #'equal :from-end t))))))
+           (cons (car action)
+                 (cl-delete-duplicates (cdr (append action extra-actions))
+                                       :key #'car :test #'equal :from-end t))))))
 
 (defvar ivy--prompts-list nil)
 
@@ -300,58 +300,64 @@ action functions.")
 
 ;;* Keymap
 (require 'delsel)
+(defun ivy-define-key (keymap key def)
+  "Forward to (`define-key' KEYMAP KEY DEF).
+Remove DEF from `counsel-M-x' list."
+  (put def 'no-counsel-M-x t)
+  (define-key keymap key def))
+
 (defvar ivy-minibuffer-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-m") 'ivy-done)
+    (ivy-define-key map (kbd "C-m") 'ivy-done)
     (define-key map [down-mouse-1] 'ignore)
-    (define-key map [mouse-1] 'ivy-mouse-done)
-    (define-key map [mouse-3] 'ivy-mouse-dispatching-done)
-    (define-key map (kbd "C-M-m") 'ivy-call)
-    (define-key map (kbd "C-j") 'ivy-alt-done)
-    (define-key map (kbd "C-M-j") 'ivy-immediate-done)
-    (define-key map (kbd "TAB") 'ivy-partial-or-done)
-    (define-key map [remap next-line] 'ivy-next-line)
-    (define-key map [remap previous-line] 'ivy-previous-line)
-    (define-key map (kbd "C-r") 'ivy-reverse-i-search)
+    (ivy-define-key map [mouse-1] 'ivy-mouse-done)
+    (ivy-define-key map [mouse-3] 'ivy-mouse-dispatching-done)
+    (ivy-define-key map (kbd "C-M-m") 'ivy-call)
+    (ivy-define-key map (kbd "C-j") 'ivy-alt-done)
+    (ivy-define-key map (kbd "C-M-j") 'ivy-immediate-done)
+    (ivy-define-key map (kbd "TAB") 'ivy-partial-or-done)
+    (ivy-define-key map [remap next-line] 'ivy-next-line)
+    (ivy-define-key map [remap previous-line] 'ivy-previous-line)
+    (ivy-define-key map (kbd "C-r") 'ivy-reverse-i-search)
     (define-key map (kbd "SPC") 'self-insert-command)
-    (define-key map [remap delete-backward-char] 'ivy-backward-delete-char)
-    (define-key map [remap backward-delete-char-untabify] 'ivy-backward-delete-char)
-    (define-key map [remap backward-kill-word] 'ivy-backward-kill-word)
-    (define-key map [remap delete-char] 'ivy-delete-char)
-    (define-key map [remap forward-char] 'ivy-forward-char)
-    (define-key map (kbd "<right>") 'ivy-forward-char)
-    (define-key map [remap kill-word] 'ivy-kill-word)
-    (define-key map [remap beginning-of-buffer] 'ivy-beginning-of-buffer)
-    (define-key map [remap end-of-buffer] 'ivy-end-of-buffer)
-    (define-key map (kbd "M-n") 'ivy-next-history-element)
-    (define-key map (kbd "M-p") 'ivy-previous-history-element)
+    (ivy-define-key map [remap delete-backward-char] 'ivy-backward-delete-char)
+    (ivy-define-key map [remap backward-delete-char-untabify] 'ivy-backward-delete-char)
+    (ivy-define-key map [remap backward-kill-word] 'ivy-backward-kill-word)
+    (ivy-define-key map [remap delete-char] 'ivy-delete-char)
+    (ivy-define-key map [remap forward-char] 'ivy-forward-char)
+    (ivy-define-key map (kbd "<right>") 'ivy-forward-char)
+    (ivy-define-key map [remap kill-word] 'ivy-kill-word)
+    (ivy-define-key map [remap beginning-of-buffer] 'ivy-beginning-of-buffer)
+    (ivy-define-key map [remap end-of-buffer] 'ivy-end-of-buffer)
+    (ivy-define-key map (kbd "M-n") 'ivy-next-history-element)
+    (ivy-define-key map (kbd "M-p") 'ivy-previous-history-element)
     (define-key map (kbd "C-g") 'minibuffer-keyboard-quit)
-    (define-key map [remap scroll-up-command] 'ivy-scroll-up-command)
-    (define-key map [remap scroll-down-command] 'ivy-scroll-down-command)
-    (define-key map (kbd "<next>") 'ivy-scroll-up-command)
-    (define-key map (kbd "<prior>") 'ivy-scroll-down-command)
-    (define-key map (kbd "C-v") 'ivy-scroll-up-command)
-    (define-key map (kbd "M-v") 'ivy-scroll-down-command)
-    (define-key map (kbd "C-M-n") 'ivy-next-line-and-call)
-    (define-key map (kbd "C-M-p") 'ivy-previous-line-and-call)
-    (define-key map (kbd "M-a") 'ivy-toggle-marks)
-    (define-key map (kbd "M-r") 'ivy-toggle-regexp-quote)
-    (define-key map (kbd "M-j") 'ivy-yank-word)
-    (define-key map (kbd "M-i") 'ivy-insert-current)
-    (define-key map (kbd "C-M-y") 'ivy-insert-current-full)
-    (define-key map (kbd "C-o") 'hydra-ivy/body)
-    (define-key map (kbd "M-o") 'ivy-dispatching-done)
-    (define-key map (kbd "C-M-o") 'ivy-dispatching-call)
-    (define-key map [remap kill-line] 'ivy-kill-line)
-    (define-key map [remap kill-whole-line] 'ivy-kill-whole-line)
-    (define-key map (kbd "S-SPC") 'ivy-restrict-to-matches)
-    (define-key map [remap kill-ring-save] 'ivy-kill-ring-save)
-    (define-key map (kbd "C-M-a") 'ivy-read-action)
-    (define-key map (kbd "C-c C-o") 'ivy-occur)
-    (define-key map (kbd "C-c C-a") 'ivy-toggle-ignore)
-    (define-key map (kbd "C-c C-s") 'ivy-rotate-sort)
-    (define-key map [remap describe-mode] 'ivy-help)
-    (define-key map "$" 'ivy-magic-read-file-env)
+    (ivy-define-key map [remap scroll-up-command] 'ivy-scroll-up-command)
+    (ivy-define-key map [remap scroll-down-command] 'ivy-scroll-down-command)
+    (ivy-define-key map (kbd "<next>") 'ivy-scroll-up-command)
+    (ivy-define-key map (kbd "<prior>") 'ivy-scroll-down-command)
+    (ivy-define-key map (kbd "C-v") 'ivy-scroll-up-command)
+    (ivy-define-key map (kbd "M-v") 'ivy-scroll-down-command)
+    (ivy-define-key map (kbd "C-M-n") 'ivy-next-line-and-call)
+    (ivy-define-key map (kbd "C-M-p") 'ivy-previous-line-and-call)
+    (ivy-define-key map (kbd "M-a") 'ivy-toggle-marks)
+    (ivy-define-key map (kbd "M-r") 'ivy-toggle-regexp-quote)
+    (ivy-define-key map (kbd "M-j") 'ivy-yank-word)
+    (ivy-define-key map (kbd "M-i") 'ivy-insert-current)
+    (ivy-define-key map (kbd "C-M-y") 'ivy-insert-current-full)
+    (ivy-define-key map (kbd "C-o") 'hydra-ivy/body)
+    (ivy-define-key map (kbd "M-o") 'ivy-dispatching-done)
+    (ivy-define-key map (kbd "C-M-o") 'ivy-dispatching-call)
+    (ivy-define-key map [remap kill-line] 'ivy-kill-line)
+    (ivy-define-key map [remap kill-whole-line] 'ivy-kill-whole-line)
+    (ivy-define-key map (kbd "S-SPC") 'ivy-restrict-to-matches)
+    (ivy-define-key map [remap kill-ring-save] 'ivy-kill-ring-save)
+    (ivy-define-key map (kbd "C-M-a") 'ivy-read-action)
+    (ivy-define-key map (kbd "C-c C-o") 'ivy-occur)
+    (ivy-define-key map (kbd "C-c C-a") 'ivy-toggle-ignore)
+    (ivy-define-key map (kbd "C-c C-s") 'ivy-rotate-sort)
+    (ivy-define-key map [remap describe-mode] 'ivy-help)
+    (ivy-define-key map "$" 'ivy-magic-read-file-env)
     map)
   "Keymap used in the minibuffer.")
 (autoload 'hydra-ivy/body "ivy-hydra" "" t)
@@ -359,10 +365,8 @@ action functions.")
 
 (defvar ivy-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [remap switch-to-buffer]
-      'ivy-switch-buffer)
-    (define-key map [remap switch-to-buffer-other-window]
-      'ivy-switch-buffer-other-window)
+    (ivy-define-key map [remap switch-to-buffer] 'ivy-switch-buffer)
+    (ivy-define-key map [remap switch-to-buffer-other-window] 'ivy-switch-buffer-other-window)
     map)
   "Keymap for `ivy-mode'.")
 
@@ -716,10 +720,10 @@ candidate, not the prompt."
 
 (defvar ivy-mouse-1-tooltip
   "Exit the minibuffer with the selected candidate."
-  "The doc visible in the tooltip for mouse-1 binding in the minibuffer")
+  "The doc visible in the tooltip for mouse-1 binding in the minibuffer.")
 (defvar ivy-mouse-3-tooltip
   "Display alternative actions."
-  "The doc visible in the tooltip for mouse-3 binding in the minibuffer")
+  "The doc visible in the tooltip for mouse-3 binding in the minibuffer.")
 
 (defun ivy-mouse-offset (event)
   "Compute the offset between the candidate at point and the selected one."
@@ -885,7 +889,8 @@ will be called for each element of this list.")
 
 (defun ivy-shrink-after-dispatching ()
   "Shrink the window after dispatching when action list is too large."
-  (window-resize nil (- ivy-height (window-height))))
+  (when (window-minibuffer-p)
+    (window-resize nil (- ivy-height (window-height)))))
 
 (defun ivy-dispatching-done ()
   "Select one of the available actions and call `ivy-done'."
@@ -1095,7 +1100,10 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
   (when (and
          (eq (ivy-state-collection ivy-last) #'read-file-name-internal)
          (= 1 (length
-               (ivy--re-filter ivy-regex ivy--all-candidates)))
+               (ivy--re-filter
+                (funcall ivy--regex-function
+                         (concat "^" (string-remove-prefix "^" ivy-text)))
+                ivy--all-candidates)))
          (let ((default-directory ivy--directory))
            (file-directory-p (ivy-state-current ivy-last))))
     (ivy--directory-done)))
@@ -1329,7 +1337,8 @@ If the input is empty, select the previous history element instead."
                (nth 3 (nth (car action) action)))))
     (if multi-action
         multi-action
-      (ivy-state-multi-action state))))
+      (when (eq (car action) 1)
+        (ivy-state-multi-action state)))))
 
 (defun ivy--get-window (state)
   "Get the window from STATE."
@@ -1461,16 +1470,12 @@ See variable `ivy-recursive-restore' for further information."
           (cond
            ((null action)
             current)
-           ((eq action #'identity)
-            (prog1 x
-              (ivy-recursive-restore)))
            (t
             (select-window (ivy--get-window ivy-last))
             (set-buffer (ivy-state-buffer ivy-last))
             (prog1 (unwind-protect
                        (if ivy-marked-candidates
                            (ivy--call-marked action)
-                         (setq default-directory (ivy-state-directory ivy-last))
                          (funcall action x))
                      (ivy-recursive-restore))
               (unless (or (eq ivy-exit 'done)
@@ -1586,6 +1591,7 @@ If so, move to that directory, while keeping only the file name."
   "When completing file names, move to directory DIR."
   (if (null ivy--directory)
       (error "Unexpected")
+    (push dir ivy--directory-hist)
     (setq ivy--old-cands nil)
     (setq ivy--old-re nil)
     (ivy-set-index 0)
@@ -1600,15 +1606,7 @@ If so, move to that directory, while keeping only the file name."
               #'string<))))
     (ivy-set-text "")
     (setf (ivy-state-directory ivy-last) dir)
-    (delete-minibuffer-contents)
-    (when (equal dir (car ivy--directory-hist))
-      (pop ivy--directory-hist)
-      (setf (ivy-state-preselect ivy-last)
-            (if ivy--directory-hist
-                (file-name-nondirectory
-                 (directory-file-name
-                  (car ivy--directory-hist)))
-              nil)))))
+    (delete-minibuffer-contents)))
 
 (defun ivy--parent-dir (filename)
   "Return parent directory of absolute FILENAME."
@@ -1622,11 +1620,8 @@ minibuffer."
   (interactive)
   (if (and ivy--directory (= (minibuffer-prompt-end) (point)))
       (progn
-        (push ivy--directory ivy--directory-hist)
-        (if (fboundp 'counsel-up-directory)
-            (counsel-up-directory)
-          (ivy--cd (ivy--parent-dir (expand-file-name ivy--directory)))
-          (ivy--exhibit)))
+        (ivy--cd (ivy--parent-dir (expand-file-name ivy--directory)))
+        (ivy--exhibit))
     (setq prefix-arg current-prefix-arg)
     (condition-case nil
         (call-interactively #'delete-backward-char)
@@ -2221,7 +2216,7 @@ This is useful for recursive `ivy-read'."
       (setq preselect nil))
     (setq ivy--extra-candidates (ivy--compute-extra-candidates caller))
     (setq ivy--directory nil)
-    (setq ivy--directory-hist nil)
+    (setq ivy--directory-hist (list default-directory))
     (setq ivy-case-fold-search ivy-case-fold-search-default)
     (setf (ivy-state-re-builder ivy-last)
           (setq ivy--regex-function
@@ -4404,7 +4399,7 @@ BUFFER may be a string or nil."
 
 (defvar ivy-switch-buffer-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-k") 'ivy-switch-buffer-kill)
+    (ivy-define-key map (kbd "C-k") 'ivy-switch-buffer-kill)
     map))
 
 (defun ivy-switch-buffer-kill ()
@@ -4741,7 +4736,7 @@ This list can be rotated with `ivy-rotate-preferred-builders'."
 
 (defvar ivy-reverse-i-search-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-k") 'ivy-reverse-i-search-kill)
+    (ivy-define-key map (kbd "C-k") 'ivy-reverse-i-search-kill)
     map))
 
 (defun ivy-history-contents (history)
@@ -4809,20 +4804,20 @@ buffer would modify `ivy-last'.")
 
 (defvar ivy-occur-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] 'ivy-occur-click)
-    (define-key map (kbd "RET") 'ivy-occur-press-and-switch)
-    (define-key map (kbd "j") 'ivy-occur-next-line)
-    (define-key map (kbd "k") 'ivy-occur-previous-line)
+    (ivy-define-key map [mouse-1] 'ivy-occur-click)
+    (ivy-define-key map (kbd "RET") 'ivy-occur-press-and-switch)
+    (ivy-define-key map (kbd "j") 'ivy-occur-next-line)
+    (ivy-define-key map (kbd "k") 'ivy-occur-previous-line)
     (define-key map (kbd "h") 'backward-char)
     (define-key map (kbd "l") 'forward-char)
-    (define-key map (kbd "f") 'ivy-occur-press)
-    (define-key map (kbd "g") 'ivy-occur-revert-buffer)
-    (define-key map (kbd "a") 'ivy-occur-read-action)
-    (define-key map (kbd "o") 'ivy-occur-dispatch)
-    (define-key map (kbd "c") 'ivy-occur-toggle-calling)
+    (ivy-define-key map (kbd "f") 'ivy-occur-press)
+    (ivy-define-key map (kbd "g") 'ivy-occur-revert-buffer)
+    (ivy-define-key map (kbd "a") 'ivy-occur-read-action)
+    (ivy-define-key map (kbd "o") 'ivy-occur-dispatch)
+    (ivy-define-key map (kbd "c") 'ivy-occur-toggle-calling)
     (define-key map (kbd "q") 'quit-window)
     (define-key map (kbd "R") 'read-only-mode)
-    (define-key map (kbd "C-d") 'ivy-occur-delete-candidate)
+    (ivy-define-key map (kbd "C-d") 'ivy-occur-delete-candidate)
     map)
   "Keymap for Ivy Occur mode.")
 
@@ -4913,8 +4908,8 @@ When `ivy-calling' isn't nil, call `ivy-occur-press'."
 
 (defvar ivy-occur-grep-mode-map
   (let ((map (copy-keymap ivy-occur-mode-map)))
-    (define-key map (kbd "C-x C-q") 'ivy-wgrep-change-to-wgrep-mode)
-    (define-key map "w" 'ivy-wgrep-change-to-wgrep-mode)
+    (ivy-define-key map (kbd "C-x C-q") 'ivy-wgrep-change-to-wgrep-mode)
+    (ivy-define-key map "w" 'ivy-wgrep-change-to-wgrep-mode)
     map)
   "Keymap for Ivy Occur Grep mode.")
 

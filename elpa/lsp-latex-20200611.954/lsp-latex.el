@@ -4,9 +4,10 @@
 
 ;; Author: ROCKTAKEY <rocktakey@gmail.com>
 ;; Keywords: languages, tex
-;; Package-Version: 20200425.920
+;; Package-Version: 20200611.954
+;; Package-Commit: 846fffc543bae04a5eabff2d9041145a0df7a488
 
-;; Version: 1.0.6
+;; Version: 1.2.3
 
 ;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0"))
 ;; URL: https://github.com/ROCKTAKEY/lsp-latex
@@ -49,15 +50,35 @@
 ;;   (with-eval-after-load "yatex"
 ;;    (add-hook 'yatex-mode-hook 'lsp))
 
+;;; Functions
+;;;; ~lsp-latex-build~
+;;    Build .tex files with texlab.
+;;    It use latexmk internally, so add .latexmkrc if you want to customize
+;;    build commands or options.
+
+;;    This command build asynchronously by default, while it build synchronously
+;;    with prefix argument(C-u).
 ;;; Note
 ;;   In this package, you can use even texlab v0.4.2 or older, written with Java,
-;;   though it is not recommended.
+;;   though it is not recommended. If you want to use them, you can write like:
+
+;;   ;; Path to Java executable. If it is added to environmental PATH,
+;;   ;; you don't have to write this.
+;;   (setq lsp-latex-java-executable "/path/to/java")
+
+;;   ;; "texlab.jar" must be located at a directory contained in `exec-path'
+;;   ;; "texlab" must be located at a directory contained in `exec-path'.
+;;   (setq lsp-latex-texlab-jar-file 'search-from-exec-path)
+;;   ;; If you want to put "texlab.jar" somewhere else,
+;;   ;; you can specify the path to "texlab.jar" as follows:
+;;   ;; (setq lsp-latex-texlab-jar-file "/path/to/texlab.jar")
 
 ;;; License
 ;;   This package is licensed by GPLv3. See the file "LICENSE".
 
 ;;; Code:
 (require 'lsp-mode)
+(require 'cl-lib)
 
 (defgroup lsp-latex nil
   "Language Server Protocol client for LaTeX."
@@ -137,6 +158,94 @@ Called with the arguments in `lsp-latex-texlab-executable-argument-list'."
 
 
 
+(defcustom lsp-latex-root-directory "."
+  "Root directory of each buffer."
+  :group 'lsp-latex
+  :risky t
+  :type 'string)
+
+(defcustom lsp-latex-build-executable "latexmk"
+  "Build command used on `lsp-latex-build'."
+  :group 'lsp-latex
+  :risky t
+  :type 'string)
+
+(defcustom lsp-latex-build-args
+  '("-pdf" "-interaction=nonstopmode" "-synctex=1" "%f")
+  "Arguments passed to `lsp-latex-build-executable', which used on `lsp-latex-build'.
+\"%f\" can be used as the path of the TeX file to compile."
+  :group 'lsp-latex
+  :risky t
+  :type '(repeat string))
+
+(defcustom lsp-latex-build-on-save nil
+  "Build after saving a file or not."
+  :group 'lsp-latex
+  :type 'boolean)
+
+(defcustom lsp-latex-build-output-directory "."
+  "Directory to which built file is put.
+Note that you should change `lsp-latex-build-args' to change output directory.
+If you use latexmk, use \"-outdir\" flag."
+  :group 'lsp-latex
+  :type 'string
+  :risky t)
+
+(defcustom lsp-latex-forward-search-after nil
+  "Execute forward-research after building."
+  :group 'lsp-latex
+  :type 'boolean)
+
+(defcustom lsp-latex-forward-search-executable nil
+  "Executable command used to search in preview.
+It is passed server as \"latex.forwardSearch.executable\"."
+  :group 'lsp-latex
+  :type 'string
+  :risky t)
+
+(defcustom lsp-latex-forward-search-args nil
+  "List of arguments passed with `lsp-latex-forward-search-executable.'
+ It is passed server as \"latex.forwardSearch.executable\"."
+  :group 'lsp-latex
+  :type '(repeat string)
+  :risky t)
+
+(defcustom lsp-latex-lint-on-change nil
+  "Lint using chktex after changing a file."
+  :group 'lsp-latex
+  :type 'boolean)
+
+(defcustom lsp-latex-lint-on-save nil
+  "Lint using chktex after saving a file."
+  :group 'lsp-latex
+  :type 'boolean)
+
+(defcustom lsp-latex-bibtex-formatting-line-length 120
+  "Maximum amount of line on formatting BibTeX files.
+0 means disable."
+  :group 'lsp-latex
+  :type 'integerp)
+
+(defcustom lsp-latex-bibtex-formatting-formatter "texlab"
+  "Formatter used to format BibTeX file.
+You can choose \"texlab\" or \"latexindent\". "
+  :group 'lsp-latex
+  :type '(choice (const "texlab") (const "latexindent")))
+
+(lsp-register-custom-settings
+ `(("latex.rootDirectory"            lsp-latex-root-directory)
+   ("latex.build.executable"         lsp-latex-build-executable)
+   ("latex.build.args"               lsp-latex-build-args)
+   ("latex.build.onSave"             lsp-latex-build-on-save t)
+   ("latex.build.outputDirectory"    lsp-latex-build-output-directory)
+   ("latex.build.forwardSearchAfter" lsp-latex-forward-search-after t)
+   ("latex.forwardSearch.executable" lsp-latex-forward-search-executable)
+   ("latex.forwardSearch.args"       lsp-latex-forward-search-args)
+   ("latex.lint.onChange"            lsp-latex-lint-on-change t)
+   ("latex.lint.onSave"              lsp-latex-lint-on-save t)
+   ("bibtex.formatting.lineLength"   lsp-latex-bibtex-formatting-line-length)
+   ("bibtex.formatting.formatter"    lsp-latex-bibtex-formatting-formatter)))
+
 (add-to-list 'lsp-language-id-configuration '(".*\\.tex$" . "latex"))
 
 (defun lsp-latex-new-connection ()
@@ -169,11 +278,67 @@ PARAMS progress report notification data."
                   (lsp-stdio-connection
                    #'lsp-latex-new-connection)
                   :major-modes '(tex-mode yatex-mode latex-mode)
-                  :server-id 'texlab
+                  :server-id 'texlab2
+                  :priority 2
+                  :initialized-fn
+                  (lambda (workspace)
+                    (with-lsp-workspace workspace
+                      (lsp--set-configuration
+                       (lsp-configuration-section "latex"))
+                      (lsp--set-configuration
+                       (lsp-configuration-section "bibtex"))))
                   :notification-handlers
                   (lsp-ht
                    ("window/progress"
                     'lsp-latex-window-progress))))
+
+
+
+(defun lsp-latex--message-result-build (result)
+  "Message RESULT means success or not."
+  (message
+   (cl-case (gethash "status" result)
+     ((0)                             ;Success
+      "Build was succeeded.")
+     ((1)                             ;Error
+      "Build do not succeeded.")
+     ((2)                             ;Failure
+      "Build failed.")
+     ((3)                             ;Cancelled
+      "Build cancelled."))))
+
+(defun lsp-latex-build (&optional sync)
+  "texlab build current tex file with latexmk."
+  (interactive "P")
+  (if sync
+      (lsp-latex--message-result-build
+       (lsp-request
+       "textDocument/build"
+       (list :textDocument (lsp--text-document-identifier))))
+    (lsp-request-async
+     "textDocument/build"
+     (list :textDocument (lsp--text-document-identifier))
+     #'lsp-latex--message-result-build)))
+
+(defun lsp-latex--message-forward-search (result)
+  "Message unless RESULT means success."
+  (message
+   (cl-case (plist-get result :status)
+     ((1)                             ;Error
+      "Forward search do not succeeded.")
+     ((2)                             ;Failure
+      "Forward search failed.")
+     ((3)                             ;Unconfigured
+      "Forward search has not been configured."))))
+
+(defun lsp-latex-forward-search ()
+  "Forward search on preview."
+  (interactive)
+  (lsp-request-async
+   "textDocument/forwardSearch"
+   (lsp--text-document-position-params)
+   #'lsp-latex--message-forward-search))
+
 
 (provide 'lsp-latex)
 ;;; lsp-latex.el ends here

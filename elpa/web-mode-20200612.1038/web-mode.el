@@ -4,8 +4,8 @@
 ;; Copyright 2011-2020 François-Xavier Bois
 
 ;; Version: 17.0.0
-;; Package-Version: 20200501.1939
-;; Package-Commit: 186a7c21049c50ecfd4109eb06c91196404f8bc5
+;; Package-Version: 20200612.1038
+;; Package-Commit: 60ffd878c4371644bd964f00fea38054645e3e47
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -49,25 +49,25 @@
   "Multi-line block (php, ruby, java, python, asp, etc.) left padding.
    -1 to have to code aligned on the column 0."
   :type '(choice (integer :tags "Number of spaces")
-		         (const :tags "No indent" nil))
+                 (const :tags "No indent" nil))
   :group 'web-mode)
 
 (defcustom web-mode-part-padding 1
   "Part elements (script, style) left padding."
   :type '(choice (integer :tags "Number of spaces")
-		         (const :tags "No indent" nil))
+                 (const :tags "No indent" nil))
   :group 'web-mode)
 
 (defcustom web-mode-script-padding web-mode-part-padding
   "Script element left padding."
   :type '(choice (integer :tags "Number of spaces")
-		         (const :tags "No indent" nil))
+                 (const :tags "No indent" nil))
   :group 'web-mode)
 
 (defcustom web-mode-style-padding web-mode-part-padding
   "Style element left padding."
   :type '(choice (integer :tags "Number of spaces")
-		         (const :tags "No indent" nil))
+                 (const :tags "No indent" nil))
   :group 'web-mode)
 
 (defcustom web-mode-attr-indent-offset nil
@@ -1409,6 +1409,19 @@ shouldn't be moved back.)")
     (cdr (assoc "python" web-mode-extra-constants))
     '("True" "False" "None" "__debug__" "NotImplemented" "Ellipsis"))))
 
+(defvar web-mode-elixir-keywords
+  (regexp-opt
+   (append
+    (cdr (assoc "elixir" web-mode-extra-keywords))
+    '("do" "end" "case" "bc" "lc" "for" "if" "cond" "with" "unless" "try" "receive" "fn" "defmodule" "defprotocol" "defimpl" "defrecord" "defrecordp" "defstruct" "defdelegate" "defcallback" "defexception" "defoverridable" "defguard" "defgaurdp" "exit" "after" "rescue" "catch" "else" "raise" "throw" "quote" "unquote" "super" "when" "and" "or" "not" "in"))))
+
+
+(defvar web-mode-elixir-constants
+  (regexp-opt
+   (append
+    (cdr (assoc "elixir" web-mode-extra-constants))
+    '("nil" "true" "false"))))
+
 (defvar web-mode-erlang-constants
   (regexp-opt
    (append
@@ -2253,6 +2266,15 @@ shouldn't be moved back.)")
    (cons (concat "\\_<\\(" web-mode-python-keywords "\\)\\_>") '(0 'web-mode-keyword-face))
    ))
 
+(defvar web-mode-elixir-font-lock-keywords
+  (list
+   (cons (concat "\\_<\\(" web-mode-elixir-keywords "\\)\\_>") '(0 'web-mode-builtin-face))
+   (cons (concat "\\_<\\(" web-mode-elixir-constants "\\)\\_>") '(0 'web-mode-constant-face))
+   '("def[ ]+\\([[:alnum:]_]+\\)" 1 'web-mode-function-name-face)
+   '("@\\([[:alnum:]_]+\\)" 0 'web-mode-variable-name-face)
+   '("[ ]\\(:[[:alnum:]-_]+\\)" 1 'web-mode-symbol-face)
+   ))
+
 (defvar web-mode-erlang-font-lock-keywords
   (list
    (cons (concat "\\_<\\(" web-mode-erlang-keywords "\\)\\_>") '(0 'web-mode-keyword-face))
@@ -2357,7 +2379,7 @@ shouldn't be moved back.)")
     ("closure"          . web-mode-closure-font-lock-keywords)
     ("ctemplate"        . web-mode-ctemplate-font-lock-keywords)
     ("dust"             . web-mode-dust-font-lock-keywords)
-    ("elixir"           . web-mode-erlang-font-lock-keywords)
+    ("elixir"           . web-mode-elixir-font-lock-keywords)
     ("ejs"              . web-mode-ejs-font-lock-keywords)
     ("erb"              . web-mode-erb-font-lock-keywords)
     ("expressionengine" . web-mode-expressionengine-font-lock-keywords)
@@ -6779,11 +6801,11 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
 (defun web-mode-colorize-foreground (color)
   (let* ((values (x-color-values color))
-	 (r (car values))
-	 (g (cadr values))
-	 (b (car (cdr (cdr values)))))
+         (r (car values))
+         (g (cadr values))
+         (b (car (cdr (cdr values)))))
     (if (> 128.0 (floor (+ (* .3 r) (* .59 g) (* .11 b)) 256))
-	"white" "black")))
+        "white" "black")))
 
 (defun web-mode-colorize (beg end)
   (let (str plist len)

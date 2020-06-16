@@ -6,21 +6,6 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
-;;;### (autoloads nil "lsp-metals-treeview" "lsp-metals-treeview.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from lsp-metals-treeview.el
-
-(autoload 'lsp-metals-treeview-enable "lsp-metals-treeview" "\
-Enable Metals treeview extension - send capability
-to Metals to indicate we want treeview messages and wire up notification
-handlers.
-
-\(fn ENABLE)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-metals-treeview" '("lsp-metals-tree")))
-
-;;;***
-
 ;;;### (autoloads nil "lsp-treemacs" "lsp-treemacs.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-treemacs.el
 

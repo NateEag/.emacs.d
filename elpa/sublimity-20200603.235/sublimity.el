@@ -173,9 +173,9 @@
       (when handle-scroll
         (let (deactivate-mark)
           ;; do vscroll
-          (when (or (< (point) (window-start))
-                    (>= (point) (window-end)))
-            (recenter))
+          (with-selected-window sublimity--prev-wnd
+            (when (not (pos-visible-in-window-p))
+              (recenter)))
           ;; do hscroll
           (when (and sublimity-auto-hscroll-mode
                      (or truncate-lines

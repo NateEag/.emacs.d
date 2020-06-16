@@ -4,8 +4,8 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20200409.1909
-;; Package-Commit: 253c644807013fe92429acdef418748794b8f254
+;; Package-Version: 20200604.110
+;; Package-Commit: 88dc26ce59dbf4acb4e2891c79c4bd329553ba56
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -322,7 +322,7 @@ moment.")
        (,states magit-mode-map "S-SPC" magit-diff-show-or-scroll-up   "SPC")
        (,states magit-mode-map "S-DEL" magit-diff-show-or-scroll-down "DEL")
 
-       ((,evil-magit-state) magit-mode-map "C-z"      evil-emacs-state)
+       ((,evil-magit-state) magit-mode-map ,evil-toggle-key evil-emacs-state)
        ((,evil-magit-state) magit-mode-map "<escape>" magit-mode-bury-buffer))
 
      (if (eq evil-search-module 'evil-search)

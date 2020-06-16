@@ -4,8 +4,8 @@
 
 ;; Author: Florian Mounier aka paradoxxxzero
 ;; Version: 0.2
-;; Package-Version: 20200525.2007
-;; Package-Commit: 5ac022d6889a04332b9dbfa390cbb02db3ca57b0
+;; Package-Version: 20200602.859
+;; Package-Commit: 4540f99a3e363403a633587e05a9707605c16473
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -325,7 +325,9 @@
 (define-key jinja2-mode-map (kbd "C-c t") 'jinja2-insert-tag)
 (define-key jinja2-mode-map (kbd "C-c v") 'jinja2-insert-var)
 (define-key jinja2-mode-map (kbd "C-c #") 'jinja2-insert-comment)
-(add-hook 'after-save-hook 'jinja2-indent-buffer)
+(add-hook 'jinja2-mode-hook
+          (lambda ()
+            (add-hook 'after-save-hook 'jinja2-indent-buffer nil 'make-it-local)))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . jinja2-mode))

@@ -5,7 +5,8 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20200311.1025
+;; Package-Version: 20200606.1259
+;; Package-Commit: c7cb315c14e36fded5ac4096e158497ae974bec9
 ;; Version: 0.10.0
 ;; Package-Requires: ((avy "0.5.0"))
 ;; Keywords: window, location
@@ -817,10 +818,14 @@ Switch the current window to the previous buffer."
     (switch-to-buffer buffer)))
 
 (defun aw-copy-window (window)
-  "Copy the current buffer to WINDOW."
-  (let ((buffer (current-buffer)))
+  "Copy the current buffer to WINDOW - including window-start and point."
+  (let ((buffer (current-buffer))
+        (window-start (window-start))
+        (point (point)))
     (aw-switch-to-window window)
-    (switch-to-buffer buffer)))
+    (switch-to-buffer buffer)
+    (set-window-start (frame-selected-window) window-start)
+    (goto-char point)))
 
 (defun aw-split-window-vert (window)
   "Split WINDOW vertically."

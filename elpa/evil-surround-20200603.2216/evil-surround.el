@@ -11,8 +11,8 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20200524.1228
-;; Package-Commit: 1c34944d8c98da4a2385d24ee89eef9cdf569a12
+;; Package-Version: 20200603.2216
+;; Package-Commit: 346d4d85fcf1f9517e9c4991c1efe68b4130f93a
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -379,6 +379,9 @@ Becomes this:
    }"
 
   (interactive (evil-surround-input-region-char))
+  (if evil-this-motion-count
+    (evil-repeat-record (int-to-string evil-this-motion-count)))
+
   (when (evil-surround-valid-char-p char)
     (let* ((overlay (make-overlay beg end nil nil t))
            (pair (or (and (boundp 'pair) pair) (evil-surround-pair char)))

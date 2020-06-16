@@ -4,10 +4,10 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200517.1330
-;; Package-Commit: 7e552b6d876014ca5b4609318ca8a202b2a89014
+;; Package-Version: 20200615.2101
+;; Package-Commit: 2715a732cbeeb8a21460aabc6532fb6602f28504
 ;; Keywords: project, convenience
-;; Version: 2.2.0-snapshot
+;; Version: 2.3.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -176,6 +176,12 @@ A value of nil means the cache never expires."
   :group 'projectile
   :type '(choice (const :tag "Disabled" nil)
                  (integer :tag "Seconds")))
+
+(defcustom projectile-auto-discover t
+  "Whether to discover projects when `projectile-mode' is activated."
+  :group 'projectile
+  :type 'boolean
+  :package-version '(projectile . "2.3.0"))
 
 (defcustom projectile-auto-update-cache t
   "Whether the cache should automatically be updated when files are opened or deleted."
@@ -2672,7 +2678,8 @@ test/impl/other files as below:
 (projectile-register-project-type 'angular '("angular.json" ".angular-cli.json")
                                   :compile "ng build"
                                   :run "ng serve"
-                                  :test "ng test")
+                                  :test "ng test"
+                                  :test-suffix ".spec")
 ;; Python
 (projectile-register-project-type 'django '("manage.py")
                                   :compile "python manage.py runserver"
@@ -2781,6 +2788,11 @@ test/impl/other files as below:
                                   :compile "cask install"
                                   :test-prefix "test-"
                                   :test-suffix "-test")
+(projectile-register-project-type 'emacs-eldev (lambda () (or (projectile-verify-file "Eldev")
+                                                              (projectile-verify-file "Eldev-local")))
+                                  :compile "eldev package"
+                                  :test "eldev test"
+                                  :run "eldev emacs")
 
 ;; R
 (projectile-register-project-type 'r '("DESCRIPTION")
@@ -2817,9 +2829,9 @@ Fallsback to a generic project type when the type can't be determined."
                    (lambda (project-type-record)
                      (let ((project-type (car project-type-record))
                            (marker (plist-get (cdr project-type-record) 'marker-files)))
-                       (if (listp marker)
-                           (and (projectile-verify-files marker) project-type)
-                         (and (funcall marker) project-type))))
+                       (if (functionp marker)
+                           (and (funcall marker) project-type)
+                         (and (projectile-verify-files marker) project-type))))
                    projectile-project-types))
              'generic)))
     (puthash (projectile-project-root) project-type projectile-project-type-cache)
@@ -4818,7 +4830,8 @@ Otherwise behave as if called interactively.
     (projectile-load-known-projects)
     ;; update the list of known projects
     (projectile--cleanup-known-projects)
-    (projectile-discover-projects-in-search-path)
+    (when projectile-auto-discover
+      (projectile-discover-projects-in-search-path))
     (add-hook 'find-file-hook 'projectile-find-file-hook-function)
     (add-hook 'projectile-find-dir-hook #'projectile-track-known-projects-find-file-hook t)
     (add-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook t t)

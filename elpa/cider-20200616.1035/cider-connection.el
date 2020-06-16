@@ -1,6 +1,6 @@
 ;;; cider-connection.el --- Connection and session life-cycle management for CIDER -*- lexical-binding: t -*-
 ;;
-;; Copyright © 2019 Artur Malabarba, Bozhidar Batsov, Vitalie Spinu and CIDER contributors
+;; Copyright © 2019-2020 Artur Malabarba, Bozhidar Batsov, Vitalie Spinu and CIDER contributors
 ;;
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;;         Bozhidar Batsov <bozhidar@batsov.com>
@@ -182,33 +182,27 @@ SECTION-ID is the section to link to.  The link is added on the last line.
 FORMAT is a format string to compile with ARGS and display on the REPL."
   (let ((message (apply #'format format args)))
     (cider-repl-emit-interactive-stderr
-     (concat "WARNING: " message "\n         "
+     (concat "WARNING: " message " ("
              (cider--manual-button "More information" section-id)
-             "."))))
+             ")\n"))))
 
 (defvar cider-version)
 (defun cider--check-required-nrepl-version ()
   "Check whether we're using a compatible nREPL version."
   (if-let* ((nrepl-version (cider--nrepl-version)))
       (when (version< nrepl-version cider-required-nrepl-version)
-        (cider-emit-manual-warning "troubleshooting.html#_warning_saying_you_have_to_use_newer_nrepl"
+        (cider-emit-manual-warning "troubleshooting.html#warning-saying-you-have-to-use-newer-nrepl"
                                    "CIDER requires nREPL %s (or newer) to work properly"
-                                   cider-required-nrepl-version))
-    (cider-emit-manual-warning "troubleshooting.html#_warning_saying_you_have_to_use_newer_nrepl"
-                               "Can't determine nREPL's version.\nPlease, update nREPL to %s (or newer)."
-                               cider-required-nrepl-version)))
+                                   cider-required-nrepl-version))))
 
 (defvar cider-minimum-clojure-version)
 (defun cider--check-clojure-version-supported ()
   "Ensure that we are meeting the minimum supported version of Clojure."
   (if-let* ((clojure-version (cider--clojure-version)))
       (when (version< clojure-version cider-minimum-clojure-version)
-        (cider-emit-manual-warning "installation.html#_prerequisites"
+        (cider-emit-manual-warning "basics/installation.html#prerequisites"
                                    "Clojure version (%s) is not supported (minimum %s). CIDER will not work."
-                                   clojure-version cider-minimum-clojure-version))
-    (cider-emit-manual-warning "installation.html#_prerequisites"
-                               "Can't determine Clojure's version. CIDER requires Clojure %s (or newer)."
-                               cider-minimum-clojure-version)))
+                                   clojure-version cider-minimum-clojure-version))))
 
 (defun cider--strip-version-patch (v)
   "Strips everything but major.minor from the version, returning a version list.
@@ -241,10 +235,10 @@ message in the REPL area."
          (middleware-version  (nrepl-dict-get version-dict "version-string")))
     (cond
      ((null middleware-version)
-      (cider-emit-manual-warning "troubleshooting.html#_cider_complains_of_the_cider_nrepl_version"
+      (cider-emit-manual-warning "troubleshooting.html#cider-complains-of-the-cider-nrepl-version"
                                  "CIDER requires cider-nrepl to be fully functional. Some features will not be available without it!"))
      ((not (cider--compatible-middleware-version-p cider-required-middleware-version middleware-version))
-      (cider-emit-manual-warning "troubleshooting.html#_cider_complains_of_the_cider_nrepl_version"
+      (cider-emit-manual-warning "troubleshooting.html#cider-complains-of-the-cider-nrepl-version"
                                  "CIDER %s requires cider-nrepl %s, but you're currently using cider-nrepl %s. The version mismatch might break some functionality!"
                                  cider-version cider-required-middleware-version middleware-version)))))
 
@@ -292,23 +286,27 @@ buffer."
     (cider-repl-init
      (current-buffer)
      (lambda ()
-       (cider--check-required-nrepl-version)
-       (cider--check-clojure-version-supported)
-       (cider--check-middleware-compatibility)
-       ;; Redirect the nREPL's terminal output to a REPL buffer.
-       ;; If we don't do this the server's output will end up
-       ;; in the *nrepl-server* buffer.
-       (when (and cider-redirect-server-output-to-repl
-                  (cider-nrepl-op-supported-p "out-subscribe"))
-         (cider--subscribe-repl-to-server-out))
-       (when cider-auto-mode
-         (cider-enable-on-existing-clojure-buffers))
-       ;; Middleware on cider-nrepl's side is deferred until first usage, but
-       ;; loading middleware concurrently can lead to occasional "require" issues
-       ;; (likely a Clojure bug). Thus, we load the heavy debug middleware towards
-       ;; the end, allowing for the faster "server-out" middleware to load
-       ;; first.
-       (cider--debug-init-connection)
+       (when (cider-runtime-clojure-p)
+         (cider--check-required-nrepl-version)
+         (cider--check-clojure-version-supported)
+         (cider--check-middleware-compatibility)
+
+         ;; Redirect the nREPL's terminal output to a REPL buffer.
+         ;; If we don't do this the server's output will end up
+         ;; in the *nrepl-server* buffer.
+         (when (and cider-redirect-server-output-to-repl
+                    (cider-nrepl-op-supported-p "out-subscribe"))
+           (cider--subscribe-repl-to-server-out))
+
+         (when cider-auto-mode
+           (cider-enable-on-existing-clojure-buffers))
+
+         ;; Middleware on cider-nrepl's side is deferred until first usage, but
+         ;; loading middleware concurrently can lead to occasional "require" issues
+         ;; (likely a Clojure bug). Thus, we load the heavy debug middleware towards
+         ;; the end, allowing for the faster "server-out" middleware to load
+         ;; first.
+         (cider--debug-init-connection))
        (when cider-repl-init-function
          (funcall cider-repl-init-function))
        (run-hooks 'cider-connected-hook)))))
@@ -347,6 +345,29 @@ process buffer."
       (thread-first nrepl-versions
         (nrepl-dict-get "nrepl")
         (nrepl-dict-get "version-string")))))
+
+(defun cider--babashka-version ()
+  "Retrieve the underlying connection's Babashka version."
+  (with-current-buffer (cider-current-repl)
+    (when nrepl-versions
+      (nrepl-dict-get nrepl-versions "babashka"))))
+
+(defun cider--babashka-nrepl-version ()
+  "Retrieve the underlying connection's babashka.nrepl version."
+  (with-current-buffer (cider-current-repl)
+    (when nrepl-versions
+      (nrepl-dict-get nrepl-versions "babashka.nrepl"))))
+
+(defun cider-runtime ()
+  "Return the runtime of the nREPl server."
+  (cond
+   ((cider--clojure-version) 'clojure)
+   ((cider--babashka-version) 'babashka)
+   (t 'generic)))
+
+(defun cider-runtime-clojure-p ()
+  "Check if the current runtime is Clojure."
+  (eq (cider-runtime) 'clojure))
 
 (defun cider--connection-info (connection-buffer &optional genericp)
   "Return info about CONNECTION-BUFFER.

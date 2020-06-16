@@ -5,8 +5,8 @@
 
 ;; Modified: 2020-05-10
 ;; Version: 2.0
-;; Package-Version: 20200526.2119
-;; Package-Commit: a3b0483fe922ac7ba4fe136c2a2dfff8de2673c5
+;; Package-Version: 20200605.2017
+;; Package-Commit: b9b1f84fb10fff5261702e38bf15b3ae75a4b6bb
 ;; Author: xristos <xristos@sdf.org>
 ;; URL: https://github.com/atomontage/xterm-color
 ;; Package-Requires: ((emacs "24.4"))
@@ -285,7 +285,7 @@ going down SGR-LIST one element at a time."
           (set-b! (bg-color) `(setq xterm-color--current-bg ,bg-color))
 
           (set-truecolor! (r g b current-color)
-                          ;; We want a single integer to be able to
+                          ;; A single integer must be able to
                           ;; hold and distinguish between:
                           ;;
                           ;; - 24bit truecolor values

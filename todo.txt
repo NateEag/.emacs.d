@@ -129,6 +129,11 @@
   https://alphapapa.github.io/emacs-package-dev-handbook/ and adopt any that
   seem useful.
 
+- Consider replacing Cask in my elisp package writing with Keg? Not sure I
+  actually will prefer Keg, or that it will get a big enough community to stick
+  around, but in principle I like reducing the number of languages I depend on.
+  https://github.com/conao3/keg.el
+
 - Try out evil-smartparens, once I'm a little more used to smartparens itself.
   Looks like it might do some neat stuff.
   https://github.com/jschaf/evil-smartparens/

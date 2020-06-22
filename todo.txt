@@ -10,6 +10,10 @@
   indent and is perhaps getting invoked somehow, with php-mode being an
   extension of cc-mode.
 
+- Try smerge and/or ediff for git conflict resolution UI. Also take a look at
+  Apple's opendiff tool (https://emacs.stackexchange.com/q/16469), but pretty
+  sure that's closed source and thus unsustainable
+
 - Try `ac-capf.el` to get auto-complete to show language server completions in
   lsp-mode. It should Just Work, as they say. Probably wouldn't get popup docs
   of any kind, but should be a pretty easy improvement.
@@ -814,6 +818,8 @@
   packages with a bit of elisp and .dir-locals.el would do the job.
 
 - Fix M-<backspace> deleting past underscores in python-mode.
+
+- Test lsp-jedi.el to see if I'd rather use it than baseline jedi.el.
 
 - Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
   a bit more intelligence, or something? Popped up in list-packages today.

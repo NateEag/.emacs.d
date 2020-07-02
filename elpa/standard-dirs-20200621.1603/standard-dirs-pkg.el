@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/standard-dirs-20200621.1603/standard-dirs.el  -*- no-byte-compile: t -*-
+(define-package "standard-dirs" "20200621.1603" "Platform-specific paths for config, cache, and other data" '((emacs "26.1") (f "0.20.0") (s "1.7.0")) :commit "e37b7e1c714c7798cd8e3a6569e4d71b96718a60" :keywords '("files") :authors '(("Joseph M LaFreniere" . "joseph@lafreniere.xyz")) :maintainer '("Joseph M LaFreniere" . "joseph@lafreniere.xyz") :url "https://github.com/lafrenierejm/standard-dirs.el")

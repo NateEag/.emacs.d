@@ -95,6 +95,11 @@
     ("g d" . git-gutter:popup-hunk)
     ("g r" . git-gutter:revert-hunk)
     ("g b" . magit-blame)
+
+    ;; TODO Hack up a DWIM version of these functions.
+    ("g h f" . git-link)
+    ("g h c" . git-link-commit)
+
     ("g l" . magit-log-buffer-file)
 
     ;; Dates and times are handy to be able to insert.

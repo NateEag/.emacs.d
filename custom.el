@@ -38,6 +38,7 @@
  '(exec-path-from-shell-variables '("PATH" "MANPATH" "EMAIL") nil nil "Since I use notmuch and mbsync at work and home, it's convenient to have Emacs pick up my EMAIL var.")
  '(fill-column 79 nil nil "Code should generally be under 80 columns wide for readability.")
  '(flyspell-issue-message-flag nil)
+ '(git-link-use-commit t nil nil "I like my hyperlinks to not change their destinations just because someone makes a new commit, in most cases. When I actually want to point to a branch, I can edit it by hand.")
  '(glasses-face 'bold nil nil "Bold isn't quite strong enough - I'll have to look into this further.")
  '(glasses-original-separator "" nil nil "Don't change existing separators.")
  '(glasses-separate-parentheses-p nil nil nil "spaces before parens are ugly.")

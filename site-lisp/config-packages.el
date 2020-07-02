@@ -436,6 +436,9 @@ The shell command lives in my dotfiles repo."
   ;; rightfully binds 'N' to evil-search-previous.
   (define-key magit-status-mode-map (kbd "i") nil))
 
+(use-package forge
+  :after magit)
+
 (use-package git-commit
   :init (global-git-commit-mode 1)
   (add-hook 'git-commit-mode-hook 'evil-insert-state))

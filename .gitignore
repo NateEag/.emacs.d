@@ -36,3 +36,9 @@ epdfinfo
 # While backups of edited files are lovely to have, I don't want to commit them
 # to this repo.
 autosaves/
+
+# emacsqlite compile a binary on-demand. Checking that in seems
+# unwise, because not all computers are the same architecture.
+elpa/emacsql-sqlite-20190727.1710/sqlite/emacsql-sqlite
+
+forge-database.sqlite

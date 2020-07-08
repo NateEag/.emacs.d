@@ -10,6 +10,10 @@
 ;;;;;;  0 0))
 ;;; Generated autoloads from scratch-comment.el
 
+(autoload 'scratch-comment-eval-sexp "scratch-comment" "\
+Eval sexp before point and print result as comment.
+see `eval-print-last-sexp'." t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "scratch-comment" '("scratch-comment-")))
 
 ;;;***

@@ -3,9 +3,9 @@
 ;; Copyright (C) 2020  Naoya Yamashita
 
 ;; Author: Naoya Yamashita <conao3@gmail.com>
-;; Version: 0.0.1
-;; Package-Version: 20200505.904
-;; Package-Commit: 43902ae49a3215cee192d3683f4e46c764a32407
+;; Version: 1.0.0
+;; Package-Version: 20200620.2105
+;; Package-Commit: d62665ecbeb05d1f92761af185736609278ffba2
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "26.1"))
 ;; URL: https://github.com/conao3/scratch-comment.el
@@ -125,6 +125,7 @@ see `eval-last-sexp'."
 
 ;;; Main
 
+;;;###autoload
 (defun scratch-comment-eval-sexp ()
   "Eval sexp before point and print result as comment.
 see `eval-print-last-sexp'."

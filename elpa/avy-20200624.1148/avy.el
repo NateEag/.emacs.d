@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20200522.510
-;; Package-Commit: 2dde8b71a0feb366c8ee5e2a1400a0d3a0f06424
+;; Package-Version: 20200624.1148
+;; Package-Commit: bbf1e7339eba06784dfe86643bb0fbddf5bb0342
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -390,7 +390,10 @@ SEQ-LEN is how many elements of KEYS it takes to identify a match."
     (nreverse path-alist)))
 
 (defun avy-order-closest (x)
-  (abs (- (caar x) (point))))
+  (abs (- (if (numberp (car x))
+              (car x)
+            (caar x))
+          (point))))
 
 (defvar avy-command nil
   "Store the current command symbol.

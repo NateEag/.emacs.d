@@ -34,6 +34,9 @@
 (require 'format-spec)
 (require 'sesman)
 (require 'sesman-browser)
+(require 'spinner)
+(require 'cider-popup)
+(require 'cider-util)
 
 (defcustom cider-session-name-template "%J:%h:%p"
   "Format string to use for session names.
@@ -243,6 +246,7 @@ message in the REPL area."
                                  cider-version cider-required-middleware-version middleware-version)))))
 
 (declare-function cider-interactive-eval-handler "cider-eval")
+(declare-function cider-nrepl-send-request "cider-client")
 ;; TODO: Use some null handler here
 (defun cider--subscribe-repl-to-server-out ()
   "Subscribe to the nREPL server's *out*."
@@ -259,11 +263,13 @@ See command `cider-mode'."
     (with-current-buffer buffer
       (cider-mode +1))))
 
+(declare-function cider--debug-mode "cider-debug")
 (defun cider-disable-on-existing-clojure-buffers ()
-  "Disable command `cider-mode' on existing Clojure buffers."
+  "Disable command `cider-mode' and related commands on existing Clojure buffers."
   (interactive)
   (dolist (buffer (cider-util--clojure-buffers))
     (with-current-buffer buffer
+      (cider--debug-mode -1)
       (cider-mode -1))))
 
 (defun cider-possibly-disable-on-existing-clojure-buffers ()
@@ -273,6 +279,7 @@ See command `cider-mode'."
 
 (declare-function cider--debug-init-connection "cider-debug")
 (declare-function cider-repl-init "cider-repl")
+(declare-function cider-nrepl-op-supported-p "cider-client")
 (defun cider--connected-handler ()
   "Handle CIDER initialization after nREPL connection has been established.
 This function is appended to `nrepl-connected-hook' in the client process
@@ -438,6 +445,8 @@ REPL defaults to the current REPL."
 
 (defconst cider-nrepl-session-buffer "*cider-nrepl-session*")
 
+(declare-function cider-nrepl-eval-session "cider-client")
+(declare-function cider-nrepl-tooling-session "cider-client")
 (defun cider-describe-nrepl-session ()
   "Describe an nREPL session."
   (interactive)
@@ -469,6 +478,7 @@ REPL defaults to the current REPL."
 (cl-defmethod sesman-more-relevant-p ((_system (eql CIDER)) session1 session2)
   (sesman-more-recent-p (cdr session1) (cdr session2)))
 
+(declare-function cider-classpath-entries "cider-client")
 (cl-defmethod sesman-friendly-session-p ((_system (eql CIDER)) session)
   (setcdr session (seq-filter #'buffer-live-p (cdr session)))
   (when-let* ((repl (cadr session))
@@ -487,7 +497,8 @@ REPL defaults to the current REPL."
              (classpath-roots (or (process-get proc :cached-classpath-roots)
                                   (let ((cp (thread-last classpath
                                               (seq-filter (lambda (path) (not (string-match-p "\\.jar$" path))))
-                                              (mapcar #'file-name-directory))))
+                                              (mapcar #'file-name-directory)
+                                              (seq-remove  #'null))))
                                     (process-put proc :cached-classpath-roots cp)
                                     cp))))
         (or (seq-find (lambda (path) (string-prefix-p path file))

@@ -52,6 +52,8 @@
 (require 'cider-util)
 (require 'cider-resolve)
 
+(declare-function cider-inspect "cider-inspector")
+
 (eval-when-compile
   (defvar paredit-version)
   (defvar paredit-space-for-delimiter-predicates))
@@ -109,7 +111,7 @@ focused.  Otherwise the buffer is displayed and focused."
 
 (defcustom cider-repl-use-pretty-printing t
   "Control whether results in the REPL are pretty-printed or not.
-The REPL will use the printer specified in `cider-pprint-fn'.
+The REPL will use the printer specified in `cider-print-fn'.
 The `cider-toggle-pretty-printing' command can be used to interactively
 change the setting's value."
   :type 'boolean
@@ -700,6 +702,43 @@ namespaces.  STRING is REPL's output."
 Each functions takes a string and must return a modified string.  Also see
 `cider-run-chained-hook'.")
 
+(defcustom cider-repl-buffer-size-limit nil
+  "The max size of the REPL buffer.
+Setting this to nil removes the limit."
+  :group 'cider
+  :type 'integer
+  :package-version '(cider . "0.26.0"))
+
+(defun cider-start-of-next-prompt (point)
+  "Return the position of the first char of the next prompt from POINT."
+  (let ((next-prompt-or-input (next-single-char-property-change point 'field)))
+    (if (eq (get-char-property next-prompt-or-input 'field) 'cider-repl-prompt)
+        next-prompt-or-input
+      (next-single-char-property-change next-prompt-or-input 'field))))
+
+(defun cider-repl-trim-top-of-buffer (buffer)
+  "Trims REPL output from beginning of BUFFER.
+Trims by one fifth of `cider-repl-buffer-size-limit'.
+Also clears remaining partial input or results."
+  (with-current-buffer buffer
+    (let* ((to-trim (ceiling (* cider-repl-buffer-size-limit 0.2)))
+           (start-of-next-prompt (cider-start-of-next-prompt to-trim))
+           (inhibit-read-only t))
+      (cider-repl--clear-region (point-min) start-of-next-prompt))))
+
+(defun cider-repl-trim-buffer ()
+  "Trim the currently visited REPL buffer partially from the top.
+See also `cider-repl-clear-buffer'."
+  (interactive)
+  (if cider-repl-buffer-size-limit
+      (cider-repl-trim-top-of-buffer (current-buffer))
+    (user-error "The variable `cider-repl-buffer-size-limit' is not set")))
+
+(defun cider-repl-maybe-trim-buffer (buffer)
+  "Clears portion of printed output in BUFFER when `cider-repl-buffer-size-limit' is exceeded."
+  (when (> (buffer-size) cider-repl-buffer-size-limit)
+    (cider-repl-trim-top-of-buffer buffer)))
+
 (defun cider-repl--emit-output (buffer string face)
   "Using BUFFER, emit STRING as output font-locked using FACE.
 Before inserting, run `cider-repl-preoutput-hook' on STRING."
@@ -911,7 +950,9 @@ nREPL ops, it may be convenient to prevent inserting a prompt.")
        (cider-repl-emit-stderr buffer err))
      (lambda (buffer)
        (when show-prompt
-         (cider-repl-emit-prompt buffer)))
+         (cider-repl-emit-prompt buffer))
+       (when cider-repl-buffer-size-limit
+         (cider-repl-maybe-trim-buffer buffer)))
      nrepl-err-handler
      (lambda (buffer value content-type)
        (if-let* ((content-attrs (cadr content-type))
@@ -1522,10 +1563,12 @@ constructs."
 (declare-function cider-version "cider")
 (declare-function cider-test-run-loaded-tests "cider-test")
 (declare-function cider-test-run-project-tests "cider-test")
+(declare-function cider-sideloader-start "cider-eval")
 (cider-repl-add-shortcut "clear-output" #'cider-repl-clear-output)
 (cider-repl-add-shortcut "clear" #'cider-repl-clear-buffer)
 (cider-repl-add-shortcut "clear-banners" #'cider-repl-clear-banners)
 (cider-repl-add-shortcut "clear-help-banner" #'cider-repl-clear-help-banner)
+(cider-repl-add-shortcut "trim" #'cider-repl-trim-buffer)
 (cider-repl-add-shortcut "ns" #'cider-repl-set-ns)
 (cider-repl-add-shortcut "toggle-pprint" #'cider-repl-toggle-pretty-printing)
 (cider-repl-add-shortcut "toggle-font-lock" #'cider-repl-toggle-clojure-font-lock)
@@ -1534,6 +1577,7 @@ constructs."
 (cider-repl-add-shortcut "classpath" #'cider-classpath)
 (cider-repl-add-shortcut "history" #'cider-repl-history)
 (cider-repl-add-shortcut "trace-ns" #'cider-toggle-trace-ns)
+(cider-repl-add-shortcut "sideloader-start" #'cider-sideloader-start)
 (cider-repl-add-shortcut "undef" #'cider-undef)
 (cider-repl-add-shortcut "refresh" #'cider-ns-refresh)
 (cider-repl-add-shortcut "reload" #'cider-ns-reload)
@@ -1714,6 +1758,7 @@ constructs."
         ["Previous prompt" cider-repl-previous-prompt]
         ["Clear output" cider-repl-clear-output]
         ["Clear buffer" cider-repl-clear-buffer]
+        ["Trim buffer" cider-repl-trim-buffer]
         ["Clear banners" cider-repl-clear-banners]
         ["Clear help banner" cider-repl-clear-help-banner]
         ["Kill input" cider-repl-kill-input]

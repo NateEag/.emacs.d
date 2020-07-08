@@ -27,7 +27,10 @@
 
 (defvar forge--db-table-schemata)
 
-(declare-function forge-reset-database "forge")
+;; For `forge--db-maybe-update':
+(declare-function forge-get-issue "forge-core")
+(declare-function forge-get-pullreq "forge-core")
+(declare-function forge--object-id "forge-core")
 
 ;;; Options
 
@@ -43,7 +46,7 @@
 (defclass forge-database (closql-database)
   ((object-class :initform forge-repository)))
 
-(defconst forge--db-version 6)
+(defconst forge--db-version 7)
 (defconst forge--sqlite-available-p
   (with-demoted-errors "Forge initialization: %S"
     (emacsql-sqlite-ensure-binary)
@@ -58,7 +61,7 @@
     (closql-db 'forge-database 'forge--db-connection
                forge-database-file t)
     (let* ((db forge--db-connection)
-           (version (caar (emacsql db "PRAGMA user_version")))
+           (version (closql--db-get-version db))
            (version (forge--db-maybe-update forge--db-connection version)))
       (cond
        ((> version forge--db-version)
@@ -116,7 +119,8 @@
       (revnotes  :default eieio-unbound)
       (pullreqs  :default eieio-unbound)
       selective-p
-      worktree])
+      worktree
+      (milestones :default eieio-unbound)])
 
     (assignee
      [(repository :not-null)
@@ -160,7 +164,8 @@
       (posts        :default eieio-unbound)
       (reactions    :default eieio-unbound)
       (timeline     :default eieio-unbound)
-      (marks        :default eieio-unbound)]
+      (marks        :default eieio-unbound)
+      note]
      (:foreign-key
       [repository] :references repository [id]
       :on-delete :cascade))
@@ -228,6 +233,20 @@
       face
       description])
 
+    (milestone
+     [(repository :not-null)
+      (id :not-null :primary-key)
+      number
+      title
+      created
+      updated
+      due
+      closed
+      description]
+     (:foreign-key
+      [repository] :references repository [id]
+      :on-delete :cascade))
+
     (notification
      [(class :not-null)
       (id :not-null :primary-key)
@@ -280,7 +299,8 @@
       (review-requests :default eieio-unbound)
       (reviews         :default eieio-unbound)
       (timeline        :default eieio-unbound)
-      (marks           :default eieio-unbound)]
+      (marks           :default eieio-unbound)
+      note]
      (:foreign-key
       [repository] :references repository [id]
       :on-delete :cascade))
@@ -351,7 +371,7 @@
   (emacsql-with-transaction db
     (pcase-dolist (`(,table . ,schema) forge--db-table-schemata)
       (emacsql db [:create-table $i1 $S2] table schema))
-    (emacsql db (format "PRAGMA user_version = %s" forge--db-version))))
+    (closql--db-set-version db forge--db-version)))
 
 (defun forge--db-maybe-update (db version)
   (emacsql-with-transaction db
@@ -359,8 +379,7 @@
       (message "Upgrading Forge database from version 2 to 3...")
       (emacsql db [:create-table pullreq-review-request $S1]
                (cdr (assq 'pullreq-review-request forge--db-table-schemata)))
-      (emacsql db "PRAGMA user_version = 3")
-      (setq version 3)
+      (closql--db-set-version db (setq version 3))
       (message "Upgrading Forge database from version 2 to 3...done"))
     (when (= version 3)
       (message "Upgrading Forge database from version 3 to 4...")
@@ -369,23 +388,44 @@
         (when (memq table '(notification
                             mark issue-mark pullreq-mark))
           (emacsql db [:create-table $i1 $S2] table schema)))
-      (emacsql db [:alter-table issue   :add-column mark :default $i1] eieio-unbound)
-      (emacsql db [:alter-table pullreq :add-column mark :default $i1] eieio-unbound)
-      (emacsql db "PRAGMA user_version = 4")
-      (setq version 4)
+      (emacsql db [:alter-table issue   :add-column marks :default $s1] 'eieio-unbound)
+      (emacsql db [:alter-table pullreq :add-column marks :default $s1] 'eieio-unbound)
+      (closql--db-set-version db (setq version 4))
       (message "Upgrading Forge database from version 3 to 4...done"))
     (when (= version 4)
       (message "Upgrading Forge database from version 4 to 5...")
       (emacsql db [:alter-table repository :add-column selective-p :default nil])
-      (emacsql db "PRAGMA user_version = 5")
-      (setq version 5)
+      (closql--db-set-version db (setq version 5))
       (message "Upgrading Forge database from version 4 to 5...done"))
     (when (= version 5)
       (message "Upgrading Forge database from version 5 to 6...")
       (emacsql db [:alter-table repository :add-column worktree :default nil])
-      (emacsql db "PRAGMA user_version = 6")
-      (setq version 6)
+      (closql--db-set-version db (setq version 6))
       (message "Upgrading Forge database from version 5 to 6...done"))
+    (when (= version 6)
+      (message "Upgrading Forge database from version 6 to 7...")
+      (emacsql db [:alter-table issue   :add-column note :default nil])
+      (emacsql db [:alter-table pullreq :add-column note :default nil])
+      (emacsql db [:create-table milestone $S1]
+               (cdr (assq 'milestone forge--db-table-schemata)))
+      (emacsql db [:alter-table repository :add-column milestones :default $s1]
+               'eieio-unbound)
+      (pcase-dolist (`(,repo-id ,issue-id ,milestone)
+                     (emacsql db [:select [repository id milestone]
+                                  :from issue
+                                  :where (notnull milestone)]))
+        (unless (stringp milestone)
+          (oset (forge-get-issue issue-id) milestone
+                (forge--object-id repo-id (cdar milestone)))))
+      (pcase-dolist (`(,repo-id ,pullreq-id ,milestone)
+                     (emacsql db [:select [repository id milestone]
+                                  :from pullreq
+                                  :where (notnull milestone)]))
+        (unless (stringp milestone)
+          (oset (forge-get-pullreq pullreq-id) milestone
+                (forge--object-id repo-id (cdar milestone)))))
+      (closql--db-set-version db (setq version 7))
+      (message "Upgrading Forge database from version 6 to 7...done"))
     version))
 
 ;;; _

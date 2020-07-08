@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-313-g8beace11+1).
+This manual is for Forge version 0.1.0 (v0.1.0-318-g274c3461+1).
 
      Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -58,6 +58,7 @@ Getting Started
 
 * Initial Pull::
 * Token Creation::
+* Repository Detection::
 
 Usage
 
@@ -146,9 +147,6 @@ also see *note Getting Started::.
    • Gitlab
 
      Gitlab Caveats
-
-        • Forge cannot use Ghub’s setup wizard to create the API token
-          because the Gitlab API does not support doing that.
 
         • Forge cannot provide notifications because the Gitlab API does
           not expose those.
@@ -276,12 +274,8 @@ File: forge.info,  Node: Getting Started,  Next: Usage,  Prev: Supported Forges 
 Getting started using Forge should be fairly easy, but there are a few
 caveats you should be aware of:
 
-   • Forge uses the Ghub package to access forge APIs.  That package
-     comes with a setup wizard that should make it easy to create and
-     store a Github API token.  Unfortunately the same cannot be done
-     for other forges and in the past it has failed for some users for
-     Github too, in particular when using two-factor authentication.
-     See *note Token Creation:: for more information.
+   • Forge uses the Ghub package to access forge APIs.  For this purpose
+     you have to create a token as described in *note Token Creation::.
 
    • Fetched information is stored in a database.  The table schemata of
      that database have not been finalized yet.  Until that has happened
@@ -316,6 +310,7 @@ something like this to your init file takes care of this:
 
 * Initial Pull::
 * Token Creation::
+* Repository Detection::
 
 
 File: forge.info,  Node: Initial Pull,  Next: Token Creation,  Up: Getting Started
@@ -353,25 +348,47 @@ forges because making a handful of GraphQL requests is much faster than
 making hundreds of REST requests.
 
 
-File: forge.info,  Node: Token Creation,  Prev: Initial Pull,  Up: Getting Started
+File: forge.info,  Node: Token Creation,  Next: Repository Detection,  Prev: Initial Pull,  Up: Getting Started
 
 3.2 Token Creation
 ==================
 
 Forge uses the Ghub package to access the APIs of supported Git forges.
-Ghub comes with a setup wizard that guides the user through the process
-of creating an API token for Github.com.  When accessing a Github
-Enterprise instance, then some manual setup is required before the
-wizard can be used.  Other forges don’t support creating tokens using
-the API at all.  Before accessing such a forge you have to create a
-token using the respective web interface.
+How this works an how to create and store a token is documented in *note
+(ghub)Getting Started::.
 
-   Please consult Ghub’s manual to learn more about token creation.  See
-*note (ghub)Getting Started:: in particular.
+   Ghub used to provide a setup wizard, but that had to be removed for
+reasons given in the manual just mentioned.  Nowadays there is no way
+around reading the documentation and doing this manually I am afraid.
 
-   Ghub does *not* associate a given local repository with a repository
-on a forge.  The Forge package itself takes care of this.  In doing so
-it ignores the Git variable ‘ghub.host’ and other ‘FORGE.host’ variables
+   Forge requires the following token scopes.
+
+   • For Github these scopes are required.
+
+        • ‘repo’ grants full read/write access to private and public
+          repositories.
+
+        • ‘user’ grants access to profile information.
+
+        • ‘read:org’ grants read-only access to organization membership.
+
+     More infomation about these and other scopes can be found at
+     <https://docs.github.com/en/developers/apps/scopes-for-oauth-apps>.
+
+   • For Gitlab instances ‘api’ is the only required scope.  It gives
+     read and write access to everything.  The Gitlab API provides more
+     fine-grained scopes for read-only access, but when any write access
+     at all is required, then it is all or nothing.
+
+
+File: forge.info,  Node: Repository Detection,  Prev: Token Creation,  Up: Getting Started
+
+3.3 Repository Detection
+========================
+
+Ghub does *not* associate a given local repository with a repository on
+a forge.  The Forge package itself takes care of this.  In doing so it
+ignores the Git variable ‘ghub.host’ and other ‘FORGE.host’ variables
 used by Ghub.  (But ‘github.user’ and other variables used to specify
 the user are honored).  Forge associates the local repository with a
 forge repository by first determining which remote is associated with
@@ -887,6 +904,11 @@ a post visits that post in a browser.
      This command reads a list of people who you would like to review an
      existing topic in the minibuffer.
 
+‘C-c C-e [on "Note" section]’     (‘forge-edit-topic-note’)
+‘M-x forge-edit-topic-note’     (‘forge-edit-topic-note’)
+
+     This lets you edit your private note about a topic.
+
 ‘C-c C-k [on a comment section]’     (‘forge-delete-comment’)
 
      This command deletes the comment at point.
@@ -1018,13 +1040,15 @@ Appendix B Keystroke Index
 * b Y:                                   Branching.           (line  12)
 * b y:                                   Branching.           (line 106)
 * C-c C-c:                               Editing Topics and Posts.
-                                                              (line  79)
+                                                              (line  84)
 * C-c C-e [on "Assignees" section]:      Editing Topics and Posts.
                                                               (line  58)
 * C-c C-e [on "Labels" section]:         Editing Topics and Posts.
                                                               (line  43)
 * C-c C-e [on "Marks" section]:          Editing Topics and Posts.
                                                               (line  48)
+* C-c C-e [on "Note" section]:           Editing Topics and Posts.
+                                                              (line  68)
 * C-c C-e [on "Review-Requests" section]: Editing Topics and Posts.
                                                               (line  63)
 * C-c C-e [on "State" section]:          Editing Topics and Posts.
@@ -1034,9 +1058,9 @@ Appendix B Keystroke Index
 * C-c C-e [on a post section]:           Editing Topics and Posts.
                                                               (line  27)
 * C-c C-k:                               Editing Topics and Posts.
-                                                              (line  84)
+                                                              (line  89)
 * C-c C-k [on a comment section]:        Editing Topics and Posts.
-                                                              (line  68)
+                                                              (line  73)
 * C-c C-n:                               Editing Topics and Posts.
                                                               (line  15)
 * C-c C-n [on "Issues" section]:         Creating Topics.     (line  12)
@@ -1048,6 +1072,8 @@ Appendix B Keystroke Index
 * C-c C-w <1>:                           Visiting Topics.     (line  15)
 * f y:                                   Pulling.             (line  11)
 * f Y:                                   Pulling.             (line  23)
+* M-x forge-edit-topic-note:             Editing Topics and Posts.
+                                                              (line  69)
 * M-x forge-pull-pullreq:                Pulling.             (line  46)
 * RET:                                   Visiting Topics.     (line  26)
 
@@ -1077,7 +1103,7 @@ Appendix C Command Index
 * forge-create-pullreq <1>:              Creating Topics.     (line   7)
 * forge-create-pullreq <2>:              Creating Topics.     (line  12)
 * forge-delete-comment:                  Editing Topics and Posts.
-                                                              (line  68)
+                                                              (line  73)
 * forge-dispatch:                        Usage.               (line  23)
 * forge-edit-post:                       Editing Topics and Posts.
                                                               (line  27)
@@ -1087,6 +1113,10 @@ Appendix C Command Index
                                                               (line  43)
 * forge-edit-topic-marks:                Editing Topics and Posts.
                                                               (line  48)
+* forge-edit-topic-note:                 Editing Topics and Posts.
+                                                              (line  68)
+* forge-edit-topic-note <1>:             Editing Topics and Posts.
+                                                              (line  69)
 * forge-edit-topic-review-requests:      Editing Topics and Posts.
                                                               (line  63)
 * forge-edit-topic-state:                Editing Topics and Posts.
@@ -1112,9 +1142,9 @@ Appendix C Command Index
 * forge-list-requested-reviews:          Listing Topics and Notifications.
                                                               (line  89)
 * forge-post-cancel:                     Editing Topics and Posts.
-                                                              (line  84)
+                                                              (line  89)
 * forge-post-submit:                     Editing Topics and Posts.
-                                                              (line  79)
+                                                              (line  84)
 * forge-pull:                            Pulling.             (line  11)
 * forge-pull-notifications:              Pulling.             (line  23)
 * forge-pull-pullreq:                    Pulling.             (line  46)
@@ -1181,26 +1211,27 @@ Appendix E Variable Index
 
 Tag Table:
 Node: Top751
-Node: Introduction2180
-Node: Supported Forges and Hosts2743
-Node: Getting Started8431
-Node: Initial Pull10391
-Node: Token Creation11971
-Node: Usage14293
-Node: Pulling15569
-Node: Branching18437
-Node: Working with Topics24558
-Node: Visiting Topics24931
-Node: Listing Topics and Notifications26659
-Node: Creating Topics30619
-Node: Editing Topics and Posts31184
-Node: Miscellaneous34548
-Node: FAQ36877
-Node: Is it possible to create a single pull-request without pulling everything?37077
-Node: Keystroke Index37482
-Node: Command Index41088
-Node: Function Index45953
-Node: Variable Index48119
+Node: Introduction2205
+Node: Supported Forges and Hosts2768
+Node: Getting Started8318
+Node: Initial Pull10045
+Node: Token Creation11625
+Node: Repository Detection12911
+Node: Usage14669
+Node: Pulling15945
+Node: Branching18813
+Node: Working with Topics24934
+Node: Visiting Topics25307
+Node: Listing Topics and Notifications27035
+Node: Creating Topics30995
+Node: Editing Topics and Posts31560
+Node: Miscellaneous35117
+Node: FAQ37446
+Node: Is it possible to create a single pull-request without pulling everything?37646
+Node: Keystroke Index38051
+Node: Command Index41937
+Node: Function Index47082
+Node: Variable Index49248
 
 End Tag Table
 

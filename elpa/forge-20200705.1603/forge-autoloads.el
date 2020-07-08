@@ -228,7 +228,7 @@ heavy development." t nil)
 ;;;### (autoloads nil "forge-gitlab" "forge-gitlab.el" (0 0 0 0))
 ;;; Generated autoloads from forge-gitlab.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge-gitlab" '("forge-gitlab-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge-gitlab" '("forge-gitlab-repository")))
 
 ;;;***
 

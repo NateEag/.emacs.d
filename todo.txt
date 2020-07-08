@@ -309,6 +309,9 @@
   probably 'Are lines other than the last one and the one before / after point
   less than three-quarters of fill-column?'
 
+- Use prettier.el to format JS files on save (if I ever start using Prettier
+  everywhere, which I probably should)
+
 - Set up a 'Stale questions' saved search in notmuch that shows me all
   non-response emails I sent including a question mark in the body or subject
   line that have received no replies and are more than a week old. The goal is

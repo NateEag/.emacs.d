@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/closql
 ;; Package-Requires: ((emacs "25.1") (emacsql-sqlite "3.0.0"))
-;; Package-Version: 20200619.2247
-;; Package-Commit: 9371635bc3e259b73a075985ebbfc58b45fa5e9d
+;; Package-Version: 20200704.2124
+;; Package-Commit: e074a6ddb17a2109c15ca6a2d84e4bc3071a1147
 ;; Keywords: extensions
 
 ;; This file is not part of GNU Emacs.
@@ -390,7 +390,7 @@
   (mapcar (if prefixed
               (lambda (col) (intern (format "%s:%s" table (cadr col))))
             #'cadr)
-          (emacsql db (format "PRAGMA table_info(%s)" table))))
+          (emacsql db [:pragma (funcall table-info $i1)] table)))
 
 (defun closql--db-get-version (db)
   (caar (emacsql db [:pragma user-version])))

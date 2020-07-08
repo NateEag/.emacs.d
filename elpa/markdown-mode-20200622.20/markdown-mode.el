@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.5-dev
-;; Package-Version: 20200602.1433
-;; Package-Commit: 78b22914854f90e9a049d8de59b48fb6fe4db825
+;; Package-Version: 20200622.20
+;; Package-Commit: 399df42755ccf31cecb61c9f5d8ad72bc30d7e4b
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -6588,12 +6588,13 @@ Stop at the first and last headings of a superior heading."
             (setq arg (1- arg)))
         (user-error "No previous same-level heading")))))
 
-(defun markdown-up-heading (arg)
+(defun markdown-up-heading (arg &optional interactive)
   "Move to the visible heading line of which the present line is a subheading.
-With argument, move up ARG levels."
-  (interactive "p")
-  (and (called-interactively-p 'any)
-       (not (eq last-command 'markdown-up-heading)) (push-mark))
+With argument, move up ARG levels.  When called interactively (or
+INTERACTIVE is non-nil), also push the mark."
+  (interactive "p\np")
+  (and interactive (not (eq last-command 'markdown-up-heading))
+       (push-mark))
   (markdown-move-heading-common #'outline-up-heading arg 'adjust))
 
 (defun markdown-back-to-heading (&optional invisible-ok)

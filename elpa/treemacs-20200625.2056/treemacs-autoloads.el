@@ -109,7 +109,7 @@ treemacs node is pointing to a valid buffer position." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from treemacs-compatibility.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-compatibility" '("treemacs--split-window-advice")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-compatibility" '("persp-after-load" "treemacs--split-window-advice")))
 
 ;;;***
 

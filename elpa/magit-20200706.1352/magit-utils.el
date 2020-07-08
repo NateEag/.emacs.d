@@ -100,10 +100,12 @@ alphabetical order, depending on your version of Ivy."
     (forge-browse-pullreq     nil t)
     (forge-edit-topic-title   nil t)
     (forge-edit-topic-state   nil t)
+    (forge-edit-topic-milestone nil t)
     (forge-edit-topic-labels  nil t)
     (forge-edit-topic-marks   nil t)
     (forge-edit-topic-assignees nil t)
     (forge-edit-topic-review-requests nil t)
+    (forge-edit-topic-note    nil t)
     (forge-pull-pullreq       nil t)
     (forge-visit-issue        nil t)
     (forge-visit-pullreq      nil t))
@@ -1204,7 +1206,7 @@ Like `message', except that `message-log-max' is bound to nil."
      (save-excursion
        (save-restriction
          (widen)
-         (goto-char ,pos)
+         (goto-char (or ,pos 1))
          ,@body))))
 
 ;;; _

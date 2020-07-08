@@ -401,8 +401,6 @@ recommended value."
     (define-key map (kbd "C-c C-e") 'magit-edit-thing)
     (define-key map (kbd "C-c C-o") 'magit-browse-thing)
     (define-key map (kbd "C-c C-w") 'magit-browse-thing)
-    (define-key map (kbd "C-x a")   'magit-add-change-log-entry)
-    (define-key map (kbd "C-x 4 a") 'magit-add-change-log-entry-other-window)
     (define-key map (kbd "C-w")     'magit-copy-section-value)
     (define-key map (kbd "M-w")     'magit-copy-buffer-revision)
     (define-key map [remap previous-line]      'magit-previous-line)
@@ -1263,7 +1261,8 @@ Later, when the buffer is buried, it may be restored by
 
 (defun magit-insert-xref-buttons ()
   "Insert xref buttons."
-  (when (or help-xref-stack help-xref-forward-stack)
+  (when (and (not magit-buffer-locked-p)
+             (or help-xref-stack help-xref-forward-stack))
     (when help-xref-stack
       (magit-xref-insert-button help-back-label 'magit-xref-backward))
     (when help-xref-forward-stack

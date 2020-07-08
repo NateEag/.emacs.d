@@ -24,7 +24,8 @@
   :group 'helm)
 
 (defface helm-helper
-  '((t :inherit helm-header))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :inherit helm-header))
   "Face for Helm help string in minibuffer."
   :group 'helm-help)
 
@@ -709,6 +710,18 @@ You can customize `helm-dwim-target' to behave differently depending on the
 windows open in the current frame.  Default is to provide completion on all
 directories associated to each window.
 
+*** Copying/Renaming from or to remote directories
+
+Never use ssh tramp method to copy/rename large files, use
+instead its scp method if you want to avoid out of memory
+problems and crash Emacs or the whole system.  Moreover when using
+scp method, you will hit a bug when copying more than 3 files at
+the time, see [[https://github.com/emacs-helm/helm/issues/1945][bug#1945]].
+The best way actually is using Rsync to copy files from or to
+remote, see [[Use Rsync to copy files][Use Rsync to copy files]].
+Also if you often work on remote you may consider using SSHFS
+instead of relying on tramp.
+
 *** Copying and renaming asynchronously
 
 If you have the async library installed (if you got Helm from MELPA you do), you
@@ -722,7 +735,7 @@ When `dired-async-mode' is enabled, an additional action named \"Backup files\"
 will be available. (Such command is not natively available in Emacs).
 See [[Use the wildcard to select multiple files]] for details.
 
-**** Use Rsync to copy files
+*** Use Rsync to copy files
 
 If Rsync is available, you can use it to copy/sync files or directories
 with some restrictions though:
@@ -741,11 +754,18 @@ trailing slashes are added to directory names, which mean that
 directory is created on destination if it doesn't already exists,
 see rsync documentation for more infos on rsync behavior.  To
 synchronize a directory, mark all in the directory and rsync all
-marked to the destination directory.
+marked to the destination directory or rsync the directory itself
+to its parent, e.g. remote:/home/you/music => /home/you.
 
 The options are configurable through `helm-rsync-switches', but
 you can modify them on the fly when needed by using a prefix arg,
 in this case you will be prompted for modifications.
+
+NOTE: When selecting a remote file, if you use the tramp syntax
+for specifying a port, i.e. host#2222, helm will add
+automatically \"-e 'ssh -p 2222'\" to the rsync command line
+unless you have specified yourself the \"-e\" option by editing
+rsync command line with a prefix arg (see above).
 
 *** Bookmark the `helm-find-files' session
 
@@ -783,6 +803,11 @@ To toggle suspend-update, use `\\<helm-map>\\[helm-toggle-suspend-update]'.
 *** Execute Eshell commands on files
 
 Setting up aliases in Eshell allows you to set up powerful customized commands.
+
+Your aliases for using eshell command on file should allow
+specifying one or more files, use e.g. \"alias foo $1\" or
+\"alias foo $*\", if you want your command to be asynchronous add
+at end \"&\", e.g. \"alias foo $* &\".
 
 Adding Eshell aliases to your `eshell-aliases-file' or using the
 `alias' command from Eshell allows you to create personalized
@@ -1017,6 +1042,22 @@ Helm-find-files can ignore files matching
 `helm-boring-file-regexp-list' or files that are git ignored, you
 can set this with `helm-ff-skip-boring-files' or
 `helm-ff-skip-git-ignored-files'.
+NOTE: This will slow down helm, be warned.
+
+*** Helm is using a cache
+
+Helm is caching each directory files list in a hash table for
+faster search.  By default the cache is cleared after each HFF
+session, but you can keep the cache across your HFF sessions by
+customizing `helm-ff-keep-cached-candidates' (see its docstring),
+however this may cause surprises if files have changed (renamed,
+deleted etc...) in these cases you can refresh a directory by
+hitting `\\<helm-map>\\[helm-refresh]'.  An other way is to use
+`helm-ff-cache-mode' which will lazily update HFF cache while
+Emacs is idle, it will show a red or green light depending helm
+is updating or not, to enable it add to your init file
+=(helm-ff-cache-mode 1)=
+or manually with M-x helm-ff-cache-mode.
 
 ** Commands
 \\<helm-find-files-map>
@@ -1033,6 +1074,7 @@ can set this with `helm-ff-skip-boring-files' or
 \\[helm-ff-run-rename-file]\t\tRename Files (`\\[universal-argument]' to follow).
 \\[helm-ff-run-query-replace-fnames-on-marked]\t\tQuery replace on marked files.
 \\[helm-ff-run-copy-file]\t\tCopy Files (`\\[universal-argument]' to follow).
+\\[helm-ff-run-rsync-file]\t\tRsync Files (`\\[universal-argument]' to edit command).
 \\[helm-ff-run-byte-compile-file]\t\tByte Compile Files (`\\[universal-argument]' to load).
 \\[helm-ff-run-load-file]\t\tLoad Files.
 \\[helm-ff-run-symlink-file]\t\tSymlink Files.
@@ -1265,21 +1307,42 @@ than 1 megabyte:
 
 ** Tips
 
-*** Use a prefix argument to grep recursively
+With Helm supporting Git-grep and AG/RG, you are better off using
+one of them for recursive searches, keeping grep or ack-grep to
+grep individual or marked files.  See [[Helm AG][Helm AG]].
 
-With Helm supporting git-grep and AG however, you are better off using one of
-them for recursive searches.
+*** Meaning of the prefix argument
+**** With grep or ack-grep
+
+Grep recursively, in this case you are
+prompted for types (ack-grep) or for wild cards (grep).
+
+**** With AG or RG
+
+the prefix arg allows you to specify a type of file to search in.
 
 *** You can use wild cards when selecting files (e.g. \"*.el\")
 
-*** You can grep in many different directories by marking files or using wild cards
+Note that a way to grep specific files recursively is to use
+e.g. \"**.el\" to select files, the variable `helm-file-globstar'
+controls this (it is non nil by default), however it is much
+slower than using grep recusively (see helm-find-files
+documentation about this feature).
+
+*** Grep hidden files
+
+You may want to customize your command line for grepping hidden
+files, for AG/RG use \"--hidden\", see man page
+of your backend for more infos.
+
+*** You can grep in different directories by marking files or using wild cards
 
 *** You can save the result in a `helm-grep-mode' buffer
 
 See [[Commands][commands]] below.
 
-Once in that buffer you can use \"emacs-wgrep\" (external package not bundled with Helm)
-to edit your changes.
+Once in that buffer you can use [[https://github.com/mhayashi1120/Emacs-wgrep][emacs-wgrep]] (external package not bundled with Helm)
+to edit your changes, for Helm the package name is `wgrep-helm', it is hightly recommended.
 
 *** Helm-grep supports multi-matching
 
@@ -1287,10 +1350,15 @@ to edit your changes.
 
 Simply add a space between each pattern as for most Helm commands.
 
+NOTE: Depending the regexp you use it may match as well the
+filename, this because we pipe the first grep command which send
+the filename in output.
+
 *** See full path of selected candidate
 
-Add (helm-popup-tip-mode 1) in your init file or enable it interactively with
-M-x helm-popup-tip-mode.
+Add (helm-popup-tip-mode 1) in your init file or enable it
+interactively with M-x helm-popup-tip-mode, however it is
+generally enough to just put your mouse cursor over candidate.
 
 *** Open file in other window
 
@@ -1312,6 +1380,9 @@ Another solution is to not use TRAMP at all and mount your remote file system vi
 SSHFS.
 
 * Helm GID
+
+Still supported, but mostly deprecated, using AG/RG or Git-grep
+is much more efficient, also `id-utils' seems no more maintained.
 
 ** Tips
 
@@ -1356,7 +1427,7 @@ last mark will be used.
 
 * Helm git-grep
 
-Helm-git-grep searches the current directory, i.e the default directory or the
+Helm-git-grep searches the current directory, i.e. the default directory or the
 directory in Helm-find-files.  If this current directory is a subdirectory of a
 project and you want to also match parent directories (i.e the whole project),
 use a prefix argument.
@@ -1497,6 +1568,16 @@ the command is called once for each file like this:
     <command> file1
     <command> file2
     ...
+
+*** Run eshell commands asynchronously
+
+You can run your commands asynchronously by adding \"&\" at end
+of any commands, e.g. \"foo %s &\".  You can also directly setup
+your alias in the eshell alias file with e.g. \"alias foo $1 &\".
+
+NOTE: If you use \"&\" in a command with marked files and your
+command accept many files as argument don't forget to pass the
+prefix arg to ensure you run only one command on all marked async.
 
 ** Commands
 \\<helm-esh-on-file-map>")
@@ -1695,7 +1776,12 @@ command you want to execute before specifying prefix arg.
 *** Completion styles in helm-M-x
 
 By default helm-M-x use 'helm completion style, if you want to enable fuzzy matching aka flex,
-see [[Completion-styles][Completion-styles]].")
+see [[Completion-styles][Completion-styles]].
+
+*** Duplicate entries in helm-M-x history
+
+helm-M-x history obey to history variables, if you have
+duplicates in your helm-M-x history set `history-delete-duplicates' to non nil.")
 
 ;;; Helm imenu
 ;;

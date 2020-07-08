@@ -239,10 +239,11 @@ doing."
   :group 'helm-grep
   :type '(repeat string))
 
-(defcustom helm-grep-input-idle-delay 0.6
-  "Same as `helm-input-idle-delay' but for grep commands.
-It have a higher value than `helm-input-idle-delay' to avoid
-flickering when updating."
+(defcustom helm-grep-input-idle-delay 0.1
+  "Idle time before updating, specified in seconds.
+A lower value (default) means Helm will display the results
+faster. Increasing it to a higher value (e.g. 0.6) prevents the
+buffer from flickering when updating."
   :group 'helm-grep
   :type 'float)
 
@@ -256,30 +257,38 @@ flickering when updating."
   :group 'helm-faces)
 
 (defface helm-grep-match
-  '((((background light)) :foreground "#b00000")
-    (((background dark))  :foreground "gold1"))
+  `((((background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "#b00000")
+    (((background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "gold1"))
   "Face used to highlight grep matches.
 Have no effect when grep backend use \"--color=\"."
   :group 'helm-grep-faces)
 
 (defface helm-grep-file
-    '((t (:foreground "BlueViolet"
-          :underline t)))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :foreground "BlueViolet"
+       :underline t))
   "Face used to highlight grep results filenames."
   :group 'helm-grep-faces)
 
 (defface helm-grep-lineno
-    '((t (:foreground "Darkorange1")))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :foreground "Darkorange1"))
   "Face used to highlight grep number lines."
   :group 'helm-grep-faces)
 
 (defface helm-grep-finish
-    '((t (:foreground "Green")))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :foreground "Green"))
   "Face used in mode line when grep is finish."
   :group 'helm-grep-faces)
 
 (defface helm-grep-cmd-line
-    '((t (:inherit font-lock-type-face)))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :inherit font-lock-type-face))
   "Face used to highlight grep command line when no results."
   :group 'helm-grep-faces)
 
@@ -1428,7 +1437,7 @@ non-file buffers."
 ;;  https://github.com/BurntSushi/ripgrep
 
 (defcustom helm-grep-ag-command
-  "ag --line-numbers -S --hidden --color --nogroup %s %s %s"
+  "ag --line-numbers -S --color --nogroup %s %s %s"
   "The default command for AG, PT or RG.
 
 Takes three format specs, the first for type(s), the second for
@@ -1451,9 +1460,11 @@ And to customize colors (always for ripgrep) use something like this:
 \--smart-case --no-heading --line-number %s %s %s
 
 This will change color for matched items from foreground red (the
-default) to a yellow background with a black foreground.  For more
-enhanced settings of ansi colors see
-https://github.com/emacs-helm/helm/issues/2313.
+default) to a yellow background with a black foreground.  Note
+that your color settings for RG will not work properly with
+multiples pattern if you have configured colors in rg config file
+instead of command line. For more enhanced settings of ansi
+colors see https://github.com/emacs-helm/helm/issues/2313
 
 You must use an output format that fit with helm grep, that is:
 
@@ -1469,7 +1480,10 @@ When modifying the default colors of matches with e.g.
 \"--color-match\" option of AG or \"--colors\" option of ripgrep
 you may want to modify as well `helm-grep-ag-pipe-cmd-switches'
 to have all matches colorized with the same color in multi
-match."
+match.
+
+Of course you can use several other options, see the man page of the
+backend you are using."
   :group 'helm-grep
   :type 'string)
 
@@ -1504,8 +1518,11 @@ returns if available with current AG version."
          (pipe-cmd (helm-acase (helm-grep--ag-command)
                      (("ag" "pt")
                       (format "%s -S --color%s" it (concat " " pipe-switches)))
-                     ("rg" (format "rg -N -S --color=always%s"
-                                    (concat " " pipe-switches)))))
+                     ("rg" (format "rg -N -S --color=%s%s"
+                                   (when (string-match "--color=\\([a-z]+\\) "
+                                                       helm-grep-ag-command)
+                                     (match-string 1 helm-grep-ag-command))
+                                   (concat " " pipe-switches)))))
          (cmd (format helm-grep-ag-command
                       (mapconcat 'identity type " ")
                       (shell-quote-argument (car patterns))

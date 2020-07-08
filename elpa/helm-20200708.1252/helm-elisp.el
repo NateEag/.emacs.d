@@ -119,12 +119,14 @@ display."
   :group 'helm-faces)
 
 (defface helm-lisp-show-completion
-    '((t (:background "DarkSlateGray")))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :background "DarkSlateGray"))
   "Face used for showing candidates in `helm-lisp-completion'."
   :group 'helm-elisp-faces)
 
 (defface helm-lisp-completion-info
-    '((t (:foreground "red")))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :foreground "red"))
   "Face used for showing info in `helm-lisp-completion'."
   :group 'helm-elisp-faces)
 
@@ -746,6 +748,14 @@ a string, i.e. the `symbol-name' of any existing symbol."
 ;;; Advices
 ;;
 ;;
+(defvar ad-advised-functions)
+(defvar ad-advice-classes)
+(declare-function ad-make-single-advice-docstring "advice")
+(declare-function ad-get-advice-info-field "advice")
+(declare-function ad-advice-set-enabled "advice")
+(declare-function ad-advice-set-enabled "advice")
+(declare-function ad-advice-enabled "advice")
+
 (defvar helm-source-advice
   (helm-build-sync-source "Function Advice"
     :init (lambda () (require 'advice))

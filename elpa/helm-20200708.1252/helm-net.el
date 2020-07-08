@@ -157,7 +157,7 @@ Can be \"-new-tab\" (default) or \"-new-window\"."
 ;;
 ;;
 ;; Internal
-
+(defvar helm-net-curl-log-file (expand-file-name "helm-curl.log" user-emacs-directory))
 (defun helm-search-suggest-perform-additional-action (url query)
   "Perform the search via URL using QUERY as input."
   (browse-url (format url (url-hexify-string query))))
@@ -166,7 +166,7 @@ Can be \"-new-tab\" (default) or \"-new-window\"."
   (if helm-net-prefer-curl
       (with-temp-buffer
         (apply #'call-process "curl"
-               nil t nil request helm-net-curl-switches)
+               nil `(t ,helm-net-curl-log-file) nil request helm-net-curl-switches)
         (funcall parser))
       (with-current-buffer (url-retrieve-synchronously request)
         (funcall parser))))
@@ -257,6 +257,7 @@ Can be \"-new-tab\" (default) or \"-new-window\"."
 
 (defvar helm-browse-url-chromium-program "chromium-browser")
 (defvar helm-browse-url-uzbl-program "uzbl-browser")
+(defvar helm-browse-url-next-program "next")
 (defvar helm-browse-url-conkeror-program "conkeror")
 (defvar helm-browse-url-opera-program "opera")
 (defvar helm-browse-url-default-browser-alist
@@ -341,6 +342,12 @@ NOTE: Probably not supported on some systems (e.g., Windows)."
   "Browse URL with conkeror browser."
   (interactive "sURL: ")
   (helm-generic-browser url helm-browse-url-conkeror-program))
+
+;;;###autoload
+(defun helm-browse-url-next (url &optional _ignore)
+  "Browse URL with next browser."
+  (interactive "sURL: ")
+  (helm-generic-browser url helm-browse-url-next-program))
 
 (defun helm-browse-url-default-browser (url &rest args)
   "Find the first available browser and ask it to load URL."

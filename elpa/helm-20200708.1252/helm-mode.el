@@ -189,7 +189,8 @@ and all functions belonging in this list from `minibuffer-setup-hook'.
 This is mainly needed to prevent \"*Completions*\" buffers to popup.")
 
 (defface helm-mode-prefix
-    '((t (:background "red" :foreground "black")))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       (:background "red" :foreground "black")))
   "Face used for prefix completion."
   :group 'helm-mode)
 
@@ -1261,19 +1262,26 @@ Keys description:
              :nohighlight t
              :candidates
              (lambda ()
-               (append (and (not (file-exists-p helm-pattern))
-                            (not (helm-ff--invalid-tramp-name-p helm-pattern))
-                            (list helm-pattern))
-                       (if test
+               (if test
+                   (append (and (not (file-exists-p helm-pattern))
+                                (not (helm-ff--invalid-tramp-name-p helm-pattern))
+                                (list (helm-ff-filter-candidate-one-by-one
+                                       helm-pattern nil t)))
                            (cl-loop with hn = (helm-ff--tramp-hostnames)
-                                    for i in (helm-find-files-get-candidates
-                                              must-match)
-                                    when (or (member i hn) ; A tramp host
-                                             (funcall test i)) ; Test ok
-                                    collect i)
-                           (helm-find-files-get-candidates must-match))))
-             :filtered-candidate-transformer 'helm-ff-sort-candidates
-             :filter-one-by-one 'helm-ff-filter-candidate-one-by-one
+                                    ;; helm-find-files-get-candidates is
+                                    ;; returning a list of cons cells.
+                                    for (d . r) in (helm-find-files-get-candidates
+                                                    must-match)
+                                    when (or (member r hn) ; A tramp host
+                                             (funcall test r)) ; Test ok
+                                    collect (cons d r)))
+                 (helm-find-files-get-candidates must-match)))
+             :update (lambda ()
+                       (remhash helm-ff-default-directory
+                                helm-ff--list-directory-cache))
+             :match-on-real t
+             :filtered-candidate-transformer '(helm-ff-fct
+                                               helm-ff-sort-candidates)
              :persistent-action-if persistent-action-if
              :persistent-help persistent-help
              :volatile t

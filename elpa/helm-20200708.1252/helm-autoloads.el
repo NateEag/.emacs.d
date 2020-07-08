@@ -252,6 +252,30 @@ You can set your own list of commands with
 ;;;### (autoloads nil "helm-files" "helm-files.el" (0 0 0 0))
 ;;; Generated autoloads from helm-files.el
 
+(defvar helm-ff-cache-mode nil "\
+Non-nil if Helm-Ff-Cache mode is enabled.
+See the `helm-ff-cache-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-ff-cache-mode'.")
+
+(custom-autoload 'helm-ff-cache-mode "helm-files" nil)
+
+(autoload 'helm-ff-cache-mode "helm-files" "\
+Refresh `helm-ff--list-directory-cache' when emacs is idle.
+
+If called interactively, enable Helm-Ff-Cache mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+When Emacs is idle, refresh the cache all the
+`helm-ff-refresh-cache-delay' seconds then stop after
+`helm-ff-cache-mode-max-idle-time' if emacs is still idle.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'helm-projects-history "helm-files" "\
 
 
@@ -762,6 +786,11 @@ Browse URL with uzbl browser.
 
 (autoload 'helm-browse-url-conkeror "helm-net" "\
 Browse URL with conkeror browser.
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-next "helm-net" "\
+Browse URL with next browser.
 
 \(fn URL &optional IGNORE)" t nil)
 

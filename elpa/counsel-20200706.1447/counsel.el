@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200615.1226
-;; Package-Commit: a007ba637d6c6e232fb894e10a40cfc1142a24ae
+;; Package-Version: 20200706.1447
+;; Package-Commit: c6b60d34ac37bf4d91a25f16d22e528f85e06938
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -2966,24 +2966,33 @@ NEEDLE is the search string."
 ;;;###autoload
 (cl-defun counsel-ag (&optional initial-input initial-directory extra-ag-args ag-prompt
                       &key caller)
-  "Grep for a string in the current directory using ag.
+  "Grep for a string in a root directory using ag.
+
+By default, the root directory is the first directory containing a .git subdirectory.
+
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
-EXTRA-AG-ARGS string, if non-nil, is appended to `counsel-ag-base-command'.
+EXTRA-AG-ARGS, if non-nil, is appended to `counsel-ag-base-command'.
 AG-PROMPT, if non-nil, is passed as `ivy-read' prompt argument.
-CALLER is passed to `ivy-read'."
+CALLER is passed to `ivy-read'.
+
+With a `\\[universal-argument]' prefix argument, prompt for INITIAL-DIRECTORY.
+With a `\\[universal-argument] \\[universal-argument]' prefix argument, \
+prompt additionally for EXTRA-AG-ARGS."
   (interactive)
   (setq counsel-ag-command counsel-ag-base-command)
   (setq counsel--regex-look-around counsel--grep-tool-look-around)
   (counsel-require-program counsel-ag-command)
   (let ((prog-name (car (if (listp counsel-ag-command) counsel-ag-command
-                          (split-string counsel-ag-command)))))
-    (when current-prefix-arg
+                          (split-string counsel-ag-command))))
+        (arg (prefix-numeric-value current-prefix-arg)))
+    (when (>= arg 4)
       (setq initial-directory
             (or initial-directory
                 (counsel-read-directory-name (concat
                                               prog-name
-                                              " in directory: "))))
+                                              " in directory: ")))))
+    (when (>= arg 16)
       (setq extra-ag-args
             (or extra-ag-args
                 (read-from-minibuffer (format "%s args: " prog-name)))))
@@ -4982,11 +4991,12 @@ Intended as a value for the `:outline-title' setting in
   "Return title of current outline heading.
 Like `counsel-outline-title' (which see), but for `org-mode'
 buffers."
-  (let ((statistics-re "\\[[0-9]*\\(?:%\\|/[0-9]*\\)\\]")
+  (let ((statistics-re "\\[[0-9]*\\(?:%\\|/[0-9]*\\)]")
         (heading (apply #'org-get-heading (counsel--org-get-heading-args))))
-    (if counsel-org-headline-display-statistics
-        heading
-      (org-trim (replace-regexp-in-string statistics-re " " heading)))))
+    (cond (counsel-org-headline-display-statistics
+           heading)
+          (heading
+           (org-trim (replace-regexp-in-string statistics-re " " heading))))))
 
 (defun counsel-outline-title-markdown ()
   "Return title of current outline heading.

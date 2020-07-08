@@ -5,8 +5,8 @@
 ;; Authors: Matus Goljer <matus.goljer@gmail.com>
 ;;          Magnar Sveen <magnars@gmail.com>
 ;; Version: 1.2.0
-;; Package-Version: 20200524.1947
-;; Package-Commit: ea4a4cc7cce7c3b93862a22df8bca8b83052ccbf
+;; Package-Version: 20200617.702
+;; Package-Commit: 732d92eac56023a4fb4a5dc3d9d4e274ebf44bf9
 ;; Package-Requires: ((dash "2.0.0") (emacs "24"))
 ;; Keywords: lisp functions combinators
 
@@ -32,13 +32,6 @@
 ;;; Code:
 
 (require 'dash)
-
-(defun -partial (fn &rest args)
-  "Takes a function FN and fewer than the normal arguments to FN,
-and returns a fn that takes a variable number of additional ARGS.
-When called, the returned function calls FN with ARGS first and
-then additional args."
-  (apply 'apply-partially fn args))
 
 (defun -rpartial (fn &rest args)
   "Takes a function FN and fewer than the normal arguments to FN,

@@ -45,6 +45,17 @@ symbol (e.g., `guile', `chicken', etc.)."
                  (function :tag "Other function"))
   :group 'geiser-repl)
 
+(geiser-custom--defcustom geiser-repl-current-project-function
+    'ignore
+  "Function used to determine the current project.
+The function is called from both source and REPL buffers, and
+should return a value which uniquely identifies the project."
+  :type '(choice (function-item :tag "Ignore projects" ignore)
+                 (function-item :tag "Use Project.el" project-current)
+                 (function-item :tag "Use Projectile" projectile-project-root)
+                 (function :tag "Other function"))
+  :group 'geiser-repl)
+
 (geiser-custom--defcustom geiser-repl-use-other-window t
   "Whether to Use a window other than the current buffer's when
 switching to the Geiser REPL buffer."
@@ -261,20 +272,36 @@ module command as a string")
 (make-variable-buffer-local
  (defvar geiser-repl--repl nil))
 
+(make-variable-buffer-local
+ (defvar geiser-repl--project nil))
+
 (defsubst geiser-repl--set-this-buffer-repl (r)
   (setq geiser-repl--repl r))
+
+(defsubst geiser-repl--set-this-buffer-project (p)
+  (setq geiser-repl--project p))
+
+(defsubst geiser-repl--current-project ()
+  (or (funcall geiser-repl-current-project-function)
+      'no-project))
 
 (defun geiser-repl--live-p ()
   (and geiser-repl--repl
        (get-buffer-process geiser-repl--repl)))
 
-(defun geiser-repl--repl/impl (impl &optional repls)
-  (catch 'repl
-    (dolist (repl (or repls geiser-repl--repls))
-      (when (buffer-live-p repl)
-        (with-current-buffer repl
-          (when (eq geiser-impl--implementation impl)
-            (throw 'repl repl)))))))
+(defun geiser-repl--repl/impl (impl &optional proj repls)
+  (let ((proj (or proj
+                  geiser-repl--project
+                  (geiser-repl--current-project)))
+        (repls (or repls
+                   geiser-repl--repls)))
+    (catch 'repl
+      (dolist (repl repls)
+        (when (buffer-live-p repl)
+          (with-current-buffer repl
+            (when (and (eq geiser-impl--implementation impl)
+                       (equal geiser-repl--project proj))
+              (throw 'repl repl))))))))
 
 (defun geiser-repl--set-up-repl (impl)
   (or (and (not impl) geiser-repl--repl)
@@ -311,7 +338,8 @@ module command as a string")
   (unless (and (eq major-mode 'geiser-repl-mode)
                (eq geiser-impl--implementation impl)
                (not (get-buffer-process (current-buffer))))
-    (let* ((old (geiser-repl--repl/impl impl geiser-repl--closed-repls))
+    (let* ((proj (geiser-repl--current-project))
+           (old (geiser-repl--repl/impl impl proj geiser-repl--closed-repls))
            (old (and (buffer-live-p old)
                      (not (get-buffer-process old))
                      old)))
@@ -320,6 +348,7 @@ module command as a string")
       (unless old
         (geiser-repl-mode)
         (geiser-impl--set-buffer-implementation impl)
+        (geiser-repl--set-this-buffer-project proj)
         (geiser-syntax--add-kws t)))))
 
 (defun geiser-repl--read-impl (prompt &optional active)
@@ -850,7 +879,7 @@ buffer."
   ("Previous input" "\C-c\M-p" comint-previous-input)
   ("Next input" "\C-c\M-n" comint-next-input)
   --
-  ("Interrupt evaluation" ("\C-c\C-k" "\C-c\C-c" "\C-ck")
+  ("Interrupt evaluation" ("\C-c\C-k" "\C-c\C-c")
    geiser-repl-interrupt)
   --
   (mode "Autodoc mode" ("\C-c\C-da" "\C-c\C-d\C-a") geiser-autodoc-mode)

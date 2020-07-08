@@ -141,14 +141,14 @@ This function uses `geiser-chicken-init-file' if it exists."
     ((eval compile)
      (let ((form (mapconcat 'identity (cdr args) " "))
            (module (if (car args) (concat "'" (car args)) "#f")))
-       (format "(geiser-eval %s '%s)" module form)))
+       (format "(geiser#geiser-eval %s '%s)" module form)))
     ((load-file compile-file)
-     (format "(geiser-load-file %s)" (car args)))
+     (format "(geiser#geiser-load-file %s)" (car args)))
     ((no-values)
-     "(geiser-no-values)")
+     "(geiser#geiser-no-values)")
     (t
      (let ((form (mapconcat 'identity args " ")))
-       (format "(geiser-%s %s)" proc form)))))
+       (format "(geiser#geiser-%s %s)" proc form)))))
 
 (defconst geiser-chicken--module-re
   "( *module +\\(([^)]+)\\|[^ ]+\\)\\|( *define-library +\\(([^)]+)\\|[^ ]+\\)")
@@ -304,7 +304,7 @@ This function uses `geiser-chicken-init-file' if it exists."
                                   geiser-scheme-dir)))
     (geiser-eval--send/wait
      (format
-      "(display '((result . t) (output . f))) (load \"%s\") (import geiser)"
+      "(display '((result . t) (output . f))) (load \"%s\")"
       source))))
 
 (defun geiser-chicken--startup (remote)

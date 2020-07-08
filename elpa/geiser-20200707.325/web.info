@@ -1013,6 +1013,26 @@ this new rule will take precedence over the default ones.
 if it notices that there's no one active when it enters geiser-mode, you
 can customize 'geiser-mode-start-repl-p' to 't'.
 
+Managing multiple scheme projects
+.................................
+
+By default, Geiser will re-use a single REPL for all buffers sharing the
+same scheme implementation.  This works well enough in many cases, but
+may become problematic (or at least annoying) when working on multiple
+projects with separate dependencies and include paths.
+
+   Geiser provides optional support for using separate REPLs for each
+project, which can be enabled by customizing
+'geiser-repl-current-project-function' and selecting your Emacs
+project-management library of choice (eg.  'project.el' or
+'projectile').  With this configured, new REPLs will automatically
+associate themselves with the current project, and all Geiser commands
+will ignore REPLs that are not associated with the project.
+
+   This can be very convenient when used with a '.dir-locals.el' in the
+project root to set include paths, ensuring that Geiser REPLs will
+always know where to find your project's modules or dependencies.
+
 Switching between source files and the REPL
 ...........................................
 
@@ -1207,11 +1227,11 @@ limitation imposed by Geiser, but a consequence of how macros work in
 Scheme (and other Lisps).  There's also the risk that you lose track of
 what's actually defined and what's not during a given session.  But, in
 my opinion
-(http://jaortega.wordpress.com/2009/03/29/from-my-cold-prying-hands/index.html),
+(https://jaortega.wordpress.com/2009/03/29/from-my-cold-prying-hands),
 those are limitations we lispers are aware of, and they don't force us
 to throw the baby with the bathwater and ditch incremental evaluation.
 Some people disagree; if you happen to find their arguments
-(http://blog.racket-lang.org/2009/03/drscheme-repl-isnt-lisp-the-one-in-emacs.html)
+(https://blog.racket-lang.org/2009/03/the-drscheme-repl-isnt-the-one-in-emacs.html)
 convincing, you don't have to throw away Geiser together with the baby:
 'M-x geiser-restart-repl' will let you restart the REPL as many times as
 you see fit.  Moreover, you can invoke 'geiser-compile-current-buffer'
@@ -1670,6 +1690,8 @@ Index
 * current module, change:                Switching context.   (line  21)
 * current module, in REPL:               Switching context.   (line   6)
 * derailment:                            Top.                 (line   9)
+* dir-locals:                            The source and the REPL.
+                                                              (line  87)
 * disabling autodoc:                     Documentation helpers.
                                                               (line  22)
 * docstrings, maybe:                     Documentation helpers.
@@ -1742,6 +1764,10 @@ Index
                                                               (line  58)
 * port, default:                         Customization and tips.
                                                               (line 120)
+* project.el:                            The source and the REPL.
+                                                              (line  87)
+* projectile:                            The source and the REPL.
+                                                              (line  87)
 * quack:                                 Friends.             (line   9)
 * quick install:                         The easy and quick way.
                                                               (line   6)
@@ -1776,13 +1802,13 @@ Index
 * supported versions:                    Must needs.          (line   6)
 * swanking:                              Showing off.         (line   6)
 * switching schemes:                     The source and the REPL.
-                                                              (line 103)
+                                                              (line 123)
 * switching to module:                   The source and the REPL.
-                                                              (line  91)
+                                                              (line 111)
 * switching to REPL:                     The source and the REPL.
-                                                              (line  87)
+                                                              (line 107)
 * switching to source:                   The source and the REPL.
-                                                              (line  87)
+                                                              (line 107)
 * thanks:                                No hacker is an island.
                                                               (line   6)
 * timeout:                               Customization and tips.
@@ -1830,18 +1856,19 @@ Node: Between the parens37104
 Node: Activating Geiser38163
 Node: The source and the REPL40770
 Ref: repl-association41811
-Ref: switching-repl-buff45079
-Node: Documentation helpers46764
-Ref: doc-browser51029
-Node: To eval or not to eval53756
-Node: To err perchance to debug57902
-Node: Jumping around60261
-Node: Geiser writes for you61535
-Node: Cheat sheet64036
-Node: Scheme buffers64417
-Node: REPL68739
-Node: Documentation browser71329
-Node: No hacker is an island72394
-Node: Index75710
+Ref: repl-per-project45059
+Ref: switching-repl-buff46062
+Node: Documentation helpers47747
+Ref: doc-browser52012
+Node: To eval or not to eval54739
+Node: To err perchance to debug58875
+Node: Jumping around61234
+Node: Geiser writes for you62508
+Node: Cheat sheet65009
+Node: Scheme buffers65390
+Node: REPL69712
+Node: Documentation browser72302
+Node: No hacker is an island73367
+Node: Index76683
 
 End Tag Table

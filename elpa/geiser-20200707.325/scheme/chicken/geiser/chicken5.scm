@@ -219,8 +219,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
   (define (geiser-eval module form . rest)
-    (when (and module (not (symbol? module)))
-      (error "Module should be a symbol"))
+    (when (and module
+               (not (symbol? module))
+               (not (list? module)))
+      (error "Module should be either a symbol or a list of symbols and integers"))
 
     ;; All calls start at toplevel
     (let* ((thunk (lambda () (eval form))))

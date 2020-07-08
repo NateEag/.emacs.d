@@ -154,7 +154,8 @@ Example usage with `dash`.
                 (funcall fn (lsp-keyword->string k) v))
               (-partition 2 value )))
       (defalias 'lsp-merge 'append)
-      (defalias 'lsp-empty? 'null))
+      (defalias 'lsp-empty? 'null)
+      (defalias 'lsp-copy 'copy-sequence))
   (defun lsp-get (from key)
     (when from
       (gethash (lsp-keyword->string key) from)))
@@ -165,7 +166,8 @@ Example usage with `dash`.
     (when value
       (maphash fn value)))
   (defalias 'lsp-merge 'ht-merge)
-  (defalias 'lsp-empty? 'ht-empty?))
+  (defalias 'lsp-empty? 'ht-empty?)
+  (defalias 'lsp-copy 'ht-copy))
 
 (defmacro lsp-defun (name match-form &rest body)
   "Define a function named NAME.
@@ -315,6 +317,7 @@ See `-let' for a description of the destructuring mechanism."
 (defconst lsp/diagnostic-severity-warning 2)
 (defconst lsp/diagnostic-severity-information 3)
 (defconst lsp/diagnostic-severity-hint 4)
+(defconst lsp/diagnostic-severity-max 5)
 (defconst lsp/diagnostic-tag-unnecessary 1)
 (defconst lsp/diagnostic-tag-deprecated 2)
 (defconst lsp/document-highlight-kind-text 1)

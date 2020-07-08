@@ -2,10 +2,10 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200513.1930
-;; Package-Commit: 0227e1aadeb18db397f03368d54cbefe4afd6112
+;; Package-Version: 20200706.710
+;; Package-Commit: c335cc8ba3adc3e7eff707a9a10de1bd7116d8c1
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.5.1"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.6"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 ;;
@@ -396,7 +396,7 @@ Consult the existing formatters for examples of BODY."
   (:install
    (macos "brew install clang-format")
    (windows "scoop install llvm"))
-  (:languages "C" "C++" "Java" "Objective-C" "Protocol Buffer")
+  (:languages "C" "C++" "GLSL" "Java" "Objective-C" "Protocol Buffer")
   (:format
    (format-all--buffer-easy
     executable
@@ -405,6 +405,7 @@ Consult the existing formatters for examples of BODY."
                 (cdr (assoc language
                             '(("C"               . ".c")
                               ("C++"             . ".cpp")
+                              ("GLSL"            . ".glsl")
                               ("Java"            . ".java")
                               ("Objective-C"     . ".m")
                               ("Protocol Buffer" . ".proto")))))))))
@@ -625,7 +626,7 @@ Consult the existing formatters for examples of BODY."
   (:executable "cargo-fmt")
   (:install "rustup component add rustfmt")
   (:languages "Rust")
-  (:format (format-all--buffer-easy executable)))
+  (:format (format-all--buffer-easy executable "--" "--quiet" "--emit" "stdout")))
 
 (define-format-all-formatter scalafmt
   (:executable "scalafmt")

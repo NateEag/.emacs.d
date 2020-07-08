@@ -18,8 +18,8 @@
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
 ;; URL: https://github.com/yyoncho/dap-mode
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1"))
-;; Version: 0.4
+;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0"))
+;; Version: 0.5
 
 ;;; Commentary:
 ;; Debug Adapter Protocol client for Emacs.
@@ -33,6 +33,7 @@
 (require 'dap-overlays)
 (require 'cl-lib)
 (require 'ansi-color)
+(require 'posframe)
 
 (defcustom dap-breakpoints-file (expand-file-name (locate-user-emacs-file ".dap-breakpoints"))
   "Where to persist breakpoints"
@@ -910,6 +911,7 @@ PARAMS are the event params.")
 (defun dap--create-output-buffer (session-name)
   "Creates an output buffer with with name SESSION-NAME."
   (with-current-buffer (get-buffer-create (concat "*" session-name " out*"))
+    (special-mode)
     (set (make-local-variable 'window-point-insertion-type) t)
     (current-buffer)))
 

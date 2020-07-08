@@ -89,15 +89,19 @@ If the port is taken, DAP will try the next port."
   :group 'dap-java
   :type 'number)
 
+(eval-and-compile
+  (lsp-interface
+   (java:MainClass (:mainClass :projectName))))
+
 (defun dap-java-test-class ()
   "Get class FDQN."
   (-if-let* ((symbols (lsp--get-document-symbols))
              (package-name (-some->> symbols
-                             (-first (-lambda ((&hash "kind")) (= kind 4)))
-                             (gethash "name")))
+                             (-first (-lambda ((&DocumentSymbol :kind)) (= kind lsp/symbol-kind-package)))
+                             lsp:document-symbol-name))
              (class-name (->> symbols
-                              (--first (= (gethash "kind" it) 5))
-                              (gethash "name"))))
+                              (--first (= (lsp:document-symbol-kind it) lsp/symbol-kind-class))
+                              lsp:document-symbol-name)))
       (concat package-name "." class-name)
     (user-error "No class found")))
 
@@ -105,18 +109,18 @@ If the port is taken, DAP will try the next port."
   "Get method at point."
   (-let* ((symbols (lsp--get-document-symbols))
           (package-name (-some->> symbols
-                          (-first (-lambda ((&hash "kind")) (= kind 4)))
-                          (gethash "name"))))
+                          (-first (-lambda ((&DocumentSymbol :kind)) (= kind lsp/symbol-kind-package)))
+                          lsp:document-symbol-name)))
     (or (->> symbols
-             (-keep (-lambda ((&hash "children" "kind" "name" class-name))
-                      (and (= kind 5)
+             (-keep (-lambda ((&DocumentSymbol :children? :kind :name class-name))
+                      (and (= kind lsp/symbol-kind-class)
                            (seq-some
-                            (-lambda ((&hash "kind" "range" "selectionRange" selection-range))
+                            (-lambda ((&DocumentSymbol :kind :range :selection-range))
                               (-let (((beg . end) (lsp--range-to-region range)))
-                                (and (= 6 kind ) (<= beg (point) end)
+                                (and (= lsp/symbol-kind-method kind) (<= beg (point) end)
                                      (concat package-name "." class-name "#"
                                              (lsp-region-text selection-range)))))
-                            children))))
+                            children?))))
              (cl-first))
         (user-error "No method at point"))))
 
@@ -130,23 +134,22 @@ If the port is taken, DAP will try the next port."
      ((= main-classes-count 0) (error "Unable to find main class.
 Please check whether the server is configured propertly"))
      ((= main-classes-count 1) (cl-first main-classes))
-     ((setq current-class (--first (string= buffer-file-name (gethash "filePath" it))
+     ((setq current-class (--first (string= buffer-file-name (lsp-get it :filePath))
                                    main-classes))
       current-class)
      (t (dap--completing-read "Select main class to run: "
                               main-classes
                               (lambda (it)
                                 (format "%s(%s)"
-                                        (gethash "mainClass" it)
-                                        (gethash "projectName" it)))
+                                        (lsp-get it :mainClass)
+                                        (lsp-get it :projectName)))
                               nil
                               t)))))
-
 (defun dap-java--populate-launch-args (conf)
   "Populate CONF with launch related configurations."
   (when (not (and (plist-get conf :mainClass)
                   (plist-get conf :projectName)))
-    (-let [(&hash "mainClass" main-class "projectName" project-name) (dap-java--select-main-class)]
+    (-let [(&java:MainClass :main-class :project-name) (dap-java--select-main-class)]
       (setq conf (plist-put conf :mainClass main-class))
       (plist-put conf :projectName project-name)))
 
@@ -312,6 +315,7 @@ attaching to the test."
             nil))))
 
 (cl-defmethod dap-handle-event ((_event (eql hotcodereplace)) session _params)
+  "Handle DAP events for SESSION."
   (when (eq dap-java-hot-reload 'always)
     (-let [(&hash "changedClasses" classes) (dap-request session "redefineClasses")]
       (if classes

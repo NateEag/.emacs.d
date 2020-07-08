@@ -4,8 +4,8 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20200615.527
-;; Package-Commit: 08ea35825cf26e3a7d4abaddf01b49b50cffd38d
+;; Package-Version: 20200625.443
+;; Package-Commit: 2f3a2a03d6cb9419c25b432637aa11c8d2f9f3b7
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
 ;; Version: 1.1.0-snapshot
@@ -994,9 +994,9 @@ DIR is the project root, if not set then current directory is used"
       (if (projectile-project-p)
           (let ((helm-rg-prepend-file-name-line-at-top-of-matches nil)
                 (helm-rg-include-file-on-every-match-line t))
-            (helm-rg (helm-projectile-rg--region-selection)
-                     nil
-                     (list (projectile-project-root))))
+            (let ((default-directory (projectile-project-root)))
+              (helm-rg (helm-projectile-rg--region-selection)
+                       nil)))
         (error "You're not in a project"))
     (when (yes-or-no-p "`helm-rg' is not installed. Install? ")
       (condition-case nil

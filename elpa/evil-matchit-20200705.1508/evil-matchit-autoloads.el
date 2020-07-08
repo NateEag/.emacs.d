@@ -115,14 +115,15 @@ Use INFO to jump NUM times.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-diff.el
 
-(autoload 'evilmi-diff-get-tag "evil-matchit-diff" nil nil nil)
+(autoload 'evilmi-diff-get-tag "evil-matchit-diff" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-diff-jump "evil-matchit-diff" "\
+Jump to the matching tag using INFO and NUM.
 
+\(fn INFO NUM)" nil nil)
 
-\(fn RLT NUM)" nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-diff" '("evilmi-diff-guess-final-pos")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-diff" '("evilmi-diff-")))
 
 ;;;***
 
@@ -150,7 +151,7 @@ Use INFO to jump NUM times.
 (autoload 'evilmi-fortran-jump "evil-matchit-fortran" "\
 
 
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-fortran" '("evilmi-fortran-")))
 
@@ -254,12 +255,12 @@ Get current tag in org file." nil nil)
 ;;; Generated autoloads from evil-matchit-python.el
 
 (autoload 'evilmi-python-get-tag "evil-matchit-python" "\
-Reutrn '(start-position tag-type keyword)." nil nil)
+Return '(start-position tag-type keyword)." nil nil)
 
 (autoload 'evilmi-python-jump "evil-matchit-python" "\
+Use INFO returned by `evilmi-python-get-tag' and NUM to jump to matched tag.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-python" '("evilmi--python-")))
 
@@ -284,12 +285,13 @@ Reutrn '(start-position tag-type keyword)." nil nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-script.el
 
-(autoload 'evilmi-script-get-tag "evil-matchit-script" nil nil nil)
+(autoload 'evilmi-script-get-tag "evil-matchit-script" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-script-jump "evil-matchit-script" "\
+Use INFO returned by `evilmi-script-get-tag' and NUM to jump to matched tag.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-script" '("evilmi-script-")))
 
@@ -343,7 +345,7 @@ If current font at POS is among FONTS.
 (autoload 'evilmi-sh-jump "evil-matchit-sh" "\
 
 
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-sh" '("evilmi-sh-")))
 
@@ -369,12 +371,13 @@ Use INFO of current tag to jump to matching tag.  NUM is ignored.
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-sql.el
 
-(autoload 'evilmi-sql-get-tag "evil-matchit-sql" nil nil nil)
+(autoload 'evilmi-sql-get-tag "evil-matchit-sql" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-sql-jump "evil-matchit-sql" "\
+Use INFO returned by `evilmi-sql-get-tag' and NUM to jump to matched tag.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-sql" '("evilmi-sql-")))
 
@@ -384,12 +387,13 @@ Use INFO of current tag to jump to matching tag.  NUM is ignored.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-template.el
 
-(autoload 'evilmi-template-get-tag "evil-matchit-template" nil nil nil)
+(autoload 'evilmi-template-get-tag "evil-matchit-template" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-template-jump "evil-matchit-template" "\
+Jump to the matching tag using INFO and NUM.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-template" '("evilmi-template-")))
 
@@ -399,12 +403,13 @@ Use INFO of current tag to jump to matching tag.  NUM is ignored.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-verilog.el
 
-(autoload 'evilmi-verilog-get-tag "evil-matchit-verilog" nil nil nil)
+(autoload 'evilmi-verilog-get-tag "evil-matchit-verilog" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-verilog-jump "evil-matchit-verilog" "\
+Use INFO returned by `evilmi-verlog-get-tag' and NUM to jump to matched tag.
 
-
-\(fn ORIG-INFO NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-verilog" '("evilmi-verilog-")))
 

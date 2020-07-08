@@ -1,4 +1,4 @@
-;;; evil-matchit-script.el ---script (ruby/lua) plugin of evil-matchit
+;;; evil-matchit-ruby.el --- ruby plugin of evil-matchit
 
 ;; Copyright (C) 2014-2020 Chen Bin <chenbin DOT sh AT gmail DOT com>
 
@@ -24,36 +24,39 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-;;; Code:
+;;; Commentary:
 
 ;; OPTIONAL, you don't need SDK to write a plugin for evil-matchit
 ;; but SDK do make you write less code, isn't it?
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
+;;
+;;; Commentary:
+;;
+;;; Code:
+
 (require 'evil-matchit-sdk)
 
-;; ruby/bash/lua/vimrc
-(defvar evilmi-script-match-tags
-  '((("unless" "if") ("elif" "elsif" "elseif" "else") ("end" "fi" "endif"))
+(defvar evilmi-ruby-extract-keyword-howtos
+  '(("^[ \t]*[^ \t=]+[ \t]*=[ \t]*\\([a-z]+\\)\\([ \t].*\\|(.*\\|[ \t]*\\)$" 1)
+    ("^[ \t]*\\([a-z]+\\)\\([ \t].*\\|(.*\\|[ \t]*\\)$" 1)
+    ("^.* \\(do\\)[ \t]|[a-z0-9A-Z_, *]+|[ \t]*$" 1)
+    ("^.* \\(do\\)[ \t]*$" 1)
+    ("^.* \\(begin\\)[ \t]*$" 1)
+    ("^.* \\(end\\)\\..*$" 1)))
+
+(defvar evilmi-ruby-match-tags
+  '((("unless" "if") ("elsif" "else") "end")
     ("begin" ("rescue" "ensure") "end")
-    ("case" ("when" "else") ("esac" "end"))
-    ("for" () "end")
-    (("fun!" "function!" "class" "def" "while" "function" "do") () ("end" "endfun" "endfunction"))
-    ("repeat" ()  "until")
-    ))
-
-(defvar evilmi-script-extract-keyword-howtos
-  '(("^.*\\(=\\|local\s\\)\s*\\(function\\)\s*.*$" 2)
-    ("^\s*\\([a-z]+\!?\\)\\(\s.*\\| *\\)$" 1)
-    ("^.*\s\\(do\\)\s|[a-z0-9A-Z,|]+|$" 1)))
+    ("case" ("when" "else") "end")
+    (("class" "def" "while" "do" "module" "for" "until") () "end")))
 
 ;;;###autoload
-(defun evilmi-script-get-tag ()
-  (evilmi-sdk-get-tag evilmi-script-match-tags evilmi-script-extract-keyword-howtos)
-  )
+(defun evilmi-ruby-get-tag ()
+  (evilmi-sdk-get-tag evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
 
 ;;;###autoload
-(defun evilmi-script-jump (rlt NUM)
-  (evilmi-sdk-jump rlt NUM evilmi-script-match-tags evilmi-script-extract-keyword-howtos)
-  )
+(defun evilmi-ruby-jump (rlt num)
+  (evilmi-sdk-jump rlt num evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
 
-(provide 'evil-matchit-script)
+(provide 'evil-matchit-ruby)
+;;; evil-matchit-ruby.el ends here

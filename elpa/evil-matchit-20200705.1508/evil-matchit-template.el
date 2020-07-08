@@ -1,4 +1,4 @@
-;;; evil-matchit-ruby.el ---ruby plugin of evil-matchit
+;;; evil-matchit-template.el --- web template plugin of evil-matchit
 
 ;; Copyright (C) 2014-2020 Chen Bin <chenbin DOT sh AT gmail DOT com>
 
@@ -22,38 +22,42 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-
+;;
 ;;; Commentary:
+;;
+;;; Code:
 
 ;; OPTIONAL, you don't need SDK to write a plugin for evil-matchit
 ;; but SDK do make you write less code, isn't it?
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
-
-;;; Code:
-
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-ruby-extract-keyword-howtos
-  '(("^[ \t]*[^ \t=]+[ \t]*=[ \t]*\\([a-z]+\\)\\([ \t].*\\|(.*\\|[ \t]*\\)$" 1)
-    ("^[ \t]*\\([a-z]+\\)\\([ \t].*\\|(.*\\|[ \t]*\\)$" 1)
-    ("^.* \\(do\\)[ \t]|[a-z0-9A-Z_, *]+|[ \t]*$" 1)
-    ("^.* \\(do\\)[ \t]*$" 1)
-    ("^.* \\(begin\\)[ \t]*$" 1)
-    ("^.* \\(end\\)\\..*$" 1)))
+(defvar evilmi-template-extract-keyword-howtos
+  '(("^[ \t]*<\\?php +\\([a-z]+\\).*$" 1)
+    ("^[ \t]*\\([@a-z]+\\).*$" 1)))
 
-(defvar evilmi-ruby-match-tags
-  '((("unless" "if") ("elsif" "else") "end")
-    ("begin" ("rescue" "ensure") "end")
-    ("case" ("when" "else") "end")
-    (("class" "def" "while" "do" "module" "for" "until") () "end")))
+(defvar evilmi-template-match-tags
+  '(("if" ("elseif" "else") "endif" "MONOGAMY")
+    ("foreach" () "endforeach" "MONOGAMY")
+    ("for" () "endfor" "MONOGAMY")
+    ("while" () "endwhile" "MONOGAMY")
+    ("@section" () ("@show" "@stop" "@overwrite") "MONOGAMY")
+    ("@if" ("@elseif" "@else") "@endif" "MONOGAMY")
+    ("@unless" () "@endunless")
+    ("@for" () "@endfor" "MONOGAMY")
+    ("@foreach" () "@endforeach" "MONOGAMY")
+    ("@forelse" "@empty" "@endforelse" "MONOGAMY")
+    ("@while" () "@endwhile" "MONOGAMY")))
 
 ;;;###autoload
-(defun evilmi-ruby-get-tag ()
-  (evilmi-sdk-get-tag evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
+(defun evilmi-template-get-tag ()
+  "Get tag at point."
+  (evilmi-sdk-get-tag evilmi-template-match-tags evilmi-template-extract-keyword-howtos))
 
 ;;;###autoload
-(defun evilmi-ruby-jump (rlt num)
-  (evilmi-sdk-jump rlt num evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
+(defun evilmi-template-jump (info num)
+  "Jump to the matching tag using INFO and NUM."
+  (evilmi-sdk-jump info num evilmi-template-match-tags evilmi-template-extract-keyword-howtos))
 
-(provide 'evil-matchit-ruby)
+(provide 'evil-matchit-template)
+;;; evil-matchit-template.el ends here

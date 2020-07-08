@@ -57,6 +57,7 @@ Commands
 * Other::
 * Showing information::
 * Associating edit buffers with REPL buffers::
+* Browsing file URLs with anchors::
 
 Edit
 
@@ -141,6 +142,10 @@ Associating edit buffers with REPL buffers
 * racket-repl-buffer-name-shared::
 * racket-repl-buffer-name-unique::
 * racket-repl-buffer-name-project::
+
+Browsing file URLs with anchors
+
+* racket-browse-url-using-temporary-file::
 Variables
 
 * General variables::
@@ -158,6 +163,7 @@ General variables
 * racket-user-command-line-arguments::
 * racket-path-from-emacs-to-racket-function::
 * racket-path-from-racket-to-emacs-function::
+* racket-browse-url-function::
 * racket-xp-after-change-refresh-delay::
 * racket-xp-highlight-unused-regexp::
 
@@ -621,6 +627,7 @@ File: racket-mode.info,  Node: Commands,  Next: Variables,  Prev: Reference,  Up
 * Other::
 * Showing information::
 * Associating edit buffers with REPL buffers::
+* Browsing file URLs with anchors::
 
 
 File: racket-mode.info,  Node: Edit,  Next: Explore,  Up: Commands
@@ -1242,9 +1249,9 @@ File: racket-mode.info,  Node: racket-xp-documentation,  Prev: racket-xp-describ
 
    Show documentation for the identifier at point.
 
-   This gives a “file:” URL to ‘browse-url’, which typically opens an
-external web browser, but see that and the variable
-‘browse-url-browser-function’.
+   This gives a “file:” URL to ‘racket-browse-url’, which typically
+opens an external web browser, but see that and the variable *note
+racket-browse-url-function::.
 
    With a prefix, prompts you, but in this case beware it assumes
 definitions in or imported by the file module – not locals or
@@ -2003,7 +2010,7 @@ Show things using ‘pos-tip-show’ if available.
    A value for the variable *note racket-show-functions::.
 
 
-File: racket-mode.info,  Node: Associating edit buffers with REPL buffers,  Prev: Showing information,  Up: Commands
+File: racket-mode.info,  Node: Associating edit buffers with REPL buffers,  Next: Browsing file URLs with anchors,  Prev: Showing information,  Up: Commands
 
 5.10 Associating edit buffers with REPL buffers
 ===============================================
@@ -2059,6 +2066,47 @@ buffer.
    • ‘file-name-directory’
 
 
+File: racket-mode.info,  Node: Browsing file URLs with anchors,  Prev: Associating edit buffers with REPL buffers,  Up: Commands
+
+5.11 Browsing file URLs with anchors
+====================================
+
+* Menu:
+
+* racket-browse-url-using-temporary-file::
+
+
+File: racket-mode.info,  Node: racket-browse-url-using-temporary-file,  Up: Browsing file URLs with anchors
+
+5.11.1 racket-browse-url-using-temporary-file
+---------------------------------------------
+
+Browse a URL via a temporary HTML file using a meta redirect.
+
+   A suitable value for the variable *note racket-browse-url-function::.
+
+   On some operating systems, the default handling for file URLs will
+ignore anchors – the portion of the URL after the # character.  But
+Racket documentation URLs depend on these to jump to a location within a
+page.  This function attempts to work around that problem by using a
+temporary HTML file with a meta redirect as a “trampoline”.
+
+   You might think that Emacs’ ‘browse-url’ would handle this portably,
+but as of Emacs 26 it does not.  Although a user may customize the
+variable ‘browse-url-browser-function’ to a specific technique that
+works, the default doesn’t necessarily work for anchors on for instance
+macOS or Windows.
+
+   For Racket Mode, we do want Racket documentation to “just work” – and
+because it does not do so on 2/3 operating systems, we reluctantly
+handle this.  Note that a user can customize the variable *note
+racket-browse-url-function:: to ‘browse-url’ – which indeed is our
+default on *nix – or to ‘browse-url-browser-function’ in case they have
+customized that, or indeed to whatever they want.  So this is an attempt
+to work better by default, while still supporting users who want to
+customize.
+
+
 File: racket-mode.info,  Node: Variables,  Next: Faces,  Prev: Commands,  Up: Top
 
 6 Variables
@@ -2087,6 +2135,7 @@ File: racket-mode.info,  Node: General variables,  Next: REPL variables,  Up: Va
 * racket-user-command-line-arguments::
 * racket-path-from-emacs-to-racket-function::
 * racket-path-from-racket-to-emacs-function::
+* racket-browse-url-function::
 * racket-xp-after-change-refresh-delay::
 * racket-xp-highlight-unused-regexp::
 
@@ -2196,7 +2245,7 @@ want to customize the “reverse”: *note
 racket-path-from-racket-to-emacs-function::.
 
 
-File: racket-mode.info,  Node: racket-path-from-racket-to-emacs-function,  Next: racket-xp-after-change-refresh-delay,  Prev: racket-path-from-emacs-to-racket-function,  Up: General variables
+File: racket-mode.info,  Node: racket-path-from-racket-to-emacs-function,  Next: racket-browse-url-function,  Prev: racket-path-from-emacs-to-racket-function,  Up: General variables
 
 6.1.7 racket-path-from-racket-to-emacs-function
 -----------------------------------------------
@@ -2214,9 +2263,20 @@ want to customize the “reverse”: *note
 racket-path-from-emacs-to-racket-function::.
 
 
-File: racket-mode.info,  Node: racket-xp-after-change-refresh-delay,  Next: racket-xp-highlight-unused-regexp,  Prev: racket-path-from-racket-to-emacs-function,  Up: General variables
+File: racket-mode.info,  Node: racket-browse-url-function,  Next: racket-xp-after-change-refresh-delay,  Prev: racket-path-from-racket-to-emacs-function,  Up: General variables
 
-6.1.8 racket-xp-after-change-refresh-delay
+6.1.8 racket-browse-url-function
+--------------------------------
+
+Function to call to browse a URL.
+
+   On Linux this defaults to ‘browse-url’, otherwise it defaults to
+*note racket-browse-url-using-temporary-file::.
+
+
+File: racket-mode.info,  Node: racket-xp-after-change-refresh-delay,  Next: racket-xp-highlight-unused-regexp,  Prev: racket-browse-url-function,  Up: General variables
+
+6.1.9 racket-xp-after-change-refresh-delay
 ------------------------------------------
 
 Seconds to wait before refreshing *note racket-xp-mode:: annotations.
@@ -2227,8 +2287,8 @@ Seconds to wait before refreshing *note racket-xp-mode:: annotations.
 
 File: racket-mode.info,  Node: racket-xp-highlight-unused-regexp,  Prev: racket-xp-after-change-refresh-delay,  Up: General variables
 
-6.1.9 racket-xp-highlight-unused-regexp
----------------------------------------
+6.1.10 racket-xp-highlight-unused-regexp
+----------------------------------------
 
 Only give *note racket-xp-unused-face:: to unused bindings that match
 this regexp.
@@ -2300,13 +2360,15 @@ File: racket-mode.info,  Node: racket-imagemagick-props,  Next: racket-images-ke
 6.2.4 racket-imagemagick-props
 ------------------------------
 
-ImageMagick property list given to ‘create-image’.
+Use ImageMagick with these properties for REPL images.
+
+   When this property list is not empty – and the variable *note
+racket-images-inline:: is true, and Emacs is built with with ImageMagick
+support – then ‘create-image’ is called with “imagemagick” as the type
+and with this property list.
 
    For example, to scale images whose width is larger than 500 pixels,
 supply (:max-width 500).
-
-   This is ignored unless *note racket-images-inline:: is t and Emacs is
-built with with ImageMagick support.
 
 
 File: racket-mode.info,  Node: racket-images-keep-last,  Next: racket-images-system-viewer,  Prev: racket-imagemagick-props,  Up: REPL variables
@@ -2626,135 +2688,138 @@ Face for *note racket-logger-mode:: debug level.
 
 Tag Table:
 Node: Top220
-Node: Introduction3849
-Ref: Introduction-Footnote-15008
-Node: Install5403
-Node: Configure Emacs to use MELPA5724
-Node: Install Racket Mode6197
-Node: Minimal Racket6486
-Node: Uninstall7050
-Node: Update7338
-Node: Configure7785
-Node: Key bindings8941
-Node: Font-lock (syntax highlighting)9558
-Node: Completion10842
-Node: Indent12682
-Node: paredit12903
-Node: smartparens13896
-Node: Edit buffers and REPL buffers14271
-Node: eldoc15165
-Node: Start faster16424
-Node: Unicode input method16649
-Node: Reference17347
-Node: Commands17836
-Node: Edit18119
-Node: racket-insert-lambda18618
-Node: racket-fold-all-tests18886
-Node: racket-unfold-all-tests19123
-Node: racket-tidy-requires19366
-Node: racket-trim-requires20423
-Node: racket-base-requires21143
-Node: racket-indent-line22403
-Node: racket-smart-open-bracket-mode24388
-Node: racket-insert-closing26043
-Node: racket-cycle-paren-shapes26534
-Node: racket-backward-up-list26785
-Node: racket-unicode-input-method-enable27345
-Node: racket-align29355
-Node: racket-unalign31333
-Node: racket-complete-at-point31676
-Node: Explore32098
-Node: racket-xp-mode32316
-Node: racket-xp-visit-definition37716
-Node: racket-xp-describe38170
-Node: racket-xp-documentation39523
-Node: Run40110
-Node: racket-run40527
-Node: racket-run-and-switch-to-repl42294
-Node: racket-run-module-at-point42584
-Node: racket-repl43003
-Node: racket-repl-describe43971
-Node: racket-repl-documentation45240
-Node: racket-repl-visit-definition46033
-Node: racket-racket46809
-Node: racket-profile47030
-Node: racket-profile-mode47745
-Node: racket-logger48806
-Node: racket-logger-mode49027
-Node: racket-debug-mode50160
-Node: Test53635
-Node: racket-test53780
-Node: racket-raco-test54401
-Node: Eval54658
-Node: racket-send-region54850
-Node: racket-send-definition55068
-Node: racket-send-last-sexp55317
-Node: Collections55627
-Node: racket-visit-module55845
-Node: racket-open-require-path56278
-Node: racket-find-collection56948
-Node: Macro expand57905
-Node: racket-stepper-mode58175
-Node: racket-expand-file59223
-Node: racket-expand-region59947
-Node: racket-expand-definition60313
-Node: racket-expand-last-sexp60702
-Node: Other61054
-Node: racket-unvisit61237
-Node: racket-mode-start-faster61472
-Node: Showing information62663
-Node: racket-show-pseudo-tooltip62965
-Node: racket-show-echo-area63590
-Node: racket-show-header-line63887
-Node: racket-show-pos-tip64407
-Node: Associating edit buffers with REPL buffers64684
-Node: racket-repl-buffer-name-shared65017
-Node: racket-repl-buffer-name-unique65456
-Node: racket-repl-buffer-name-project65938
-Node: Variables66540
-Node: General variables66802
-Node: racket-program67253
-Node: racket-command-timeout67436
-Node: racket-memory-limit67906
-Node: racket-error-context68512
-Node: racket-user-command-line-arguments69543
-Node: racket-path-from-emacs-to-racket-function70402
-Node: racket-path-from-racket-to-emacs-function71089
-Node: racket-xp-after-change-refresh-delay71891
-Node: racket-xp-highlight-unused-regexp72323
-Node: REPL variables72736
-Node: racket-repl-buffer-name-function73108
-Node: racket-history-filter-regexp74124
-Node: racket-images-inline74477
-Node: racket-imagemagick-props74725
-Node: racket-images-keep-last75193
-Node: racket-images-system-viewer75447
-Node: racket-pretty-print75743
-Node: Other variables75951
-Node: racket-indent-curly-as-sequence76287
-Node: racket-indent-sequence-depth76670
-Node: racket-pretty-lambda77360
-Node: racket-smart-open-bracket-enable77767
-Node: racket-logger-config78223
-Node: Experimental debugger variables79018
-Node: racket-debuggable-files79264
-Node: Showing informationx79958
-Node: racket-show-functions80154
-Node: Faces81161
-Node: All81264
-Node: racket-keyword-argument-face81704
-Node: racket-selfeval-face81914
-Node: racket-here-string-face82173
-Node: racket-xp-def-face82382
-Node: racket-xp-use-face82615
-Node: racket-xp-unused-face82839
-Node: racket-logger-config-face83102
-Node: racket-logger-topic-face83352
-Node: racket-logger-fatal-face83596
-Node: racket-logger-error-face83844
-Node: racket-logger-warning-face84096
-Node: racket-logger-info-face84353
-Node: racket-logger-debug-face84601
+Node: Introduction3993
+Ref: Introduction-Footnote-15152
+Node: Install5547
+Node: Configure Emacs to use MELPA5868
+Node: Install Racket Mode6341
+Node: Minimal Racket6630
+Node: Uninstall7194
+Node: Update7482
+Node: Configure7929
+Node: Key bindings9085
+Node: Font-lock (syntax highlighting)9702
+Node: Completion10986
+Node: Indent12826
+Node: paredit13047
+Node: smartparens14040
+Node: Edit buffers and REPL buffers14415
+Node: eldoc15309
+Node: Start faster16568
+Node: Unicode input method16793
+Node: Reference17491
+Node: Commands17980
+Node: Edit18299
+Node: racket-insert-lambda18798
+Node: racket-fold-all-tests19066
+Node: racket-unfold-all-tests19303
+Node: racket-tidy-requires19546
+Node: racket-trim-requires20603
+Node: racket-base-requires21323
+Node: racket-indent-line22583
+Node: racket-smart-open-bracket-mode24568
+Node: racket-insert-closing26223
+Node: racket-cycle-paren-shapes26714
+Node: racket-backward-up-list26965
+Node: racket-unicode-input-method-enable27525
+Node: racket-align29535
+Node: racket-unalign31513
+Node: racket-complete-at-point31856
+Node: Explore32278
+Node: racket-xp-mode32496
+Node: racket-xp-visit-definition37896
+Node: racket-xp-describe38350
+Node: racket-xp-documentation39703
+Node: Run40298
+Node: racket-run40715
+Node: racket-run-and-switch-to-repl42482
+Node: racket-run-module-at-point42772
+Node: racket-repl43191
+Node: racket-repl-describe44159
+Node: racket-repl-documentation45428
+Node: racket-repl-visit-definition46221
+Node: racket-racket46997
+Node: racket-profile47218
+Node: racket-profile-mode47933
+Node: racket-logger48994
+Node: racket-logger-mode49215
+Node: racket-debug-mode50348
+Node: Test53823
+Node: racket-test53968
+Node: racket-raco-test54589
+Node: Eval54846
+Node: racket-send-region55038
+Node: racket-send-definition55256
+Node: racket-send-last-sexp55505
+Node: Collections55815
+Node: racket-visit-module56033
+Node: racket-open-require-path56466
+Node: racket-find-collection57136
+Node: Macro expand58093
+Node: racket-stepper-mode58363
+Node: racket-expand-file59411
+Node: racket-expand-region60135
+Node: racket-expand-definition60501
+Node: racket-expand-last-sexp60890
+Node: Other61242
+Node: racket-unvisit61425
+Node: racket-mode-start-faster61660
+Node: Showing information62851
+Node: racket-show-pseudo-tooltip63153
+Node: racket-show-echo-area63778
+Node: racket-show-header-line64075
+Node: racket-show-pos-tip64595
+Node: Associating edit buffers with REPL buffers64872
+Node: racket-repl-buffer-name-shared65245
+Node: racket-repl-buffer-name-unique65684
+Node: racket-repl-buffer-name-project66166
+Node: Browsing file URLs with anchors66768
+Node: racket-browse-url-using-temporary-file67028
+Node: Variables68540
+Node: General variables68802
+Node: racket-program69284
+Node: racket-command-timeout69467
+Node: racket-memory-limit69937
+Node: racket-error-context70543
+Node: racket-user-command-line-arguments71574
+Node: racket-path-from-emacs-to-racket-function72433
+Node: racket-path-from-racket-to-emacs-function73120
+Node: racket-browse-url-function73912
+Node: racket-xp-after-change-refresh-delay74315
+Node: racket-xp-highlight-unused-regexp74732
+Node: REPL variables75147
+Node: racket-repl-buffer-name-function75519
+Node: racket-history-filter-regexp76535
+Node: racket-images-inline76888
+Node: racket-imagemagick-props77136
+Node: racket-images-keep-last77744
+Node: racket-images-system-viewer77998
+Node: racket-pretty-print78294
+Node: Other variables78502
+Node: racket-indent-curly-as-sequence78838
+Node: racket-indent-sequence-depth79221
+Node: racket-pretty-lambda79911
+Node: racket-smart-open-bracket-enable80318
+Node: racket-logger-config80774
+Node: Experimental debugger variables81569
+Node: racket-debuggable-files81815
+Node: Showing informationx82509
+Node: racket-show-functions82705
+Node: Faces83712
+Node: All83815
+Node: racket-keyword-argument-face84255
+Node: racket-selfeval-face84465
+Node: racket-here-string-face84724
+Node: racket-xp-def-face84933
+Node: racket-xp-use-face85166
+Node: racket-xp-unused-face85390
+Node: racket-logger-config-face85653
+Node: racket-logger-topic-face85903
+Node: racket-logger-fatal-face86147
+Node: racket-logger-error-face86395
+Node: racket-logger-warning-face86647
+Node: racket-logger-info-face86904
+Node: racket-logger-debug-face87152
 
 End Tag Table
 

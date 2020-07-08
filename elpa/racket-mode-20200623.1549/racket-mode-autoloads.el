@@ -6,6 +6,14 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
+;;;### (autoloads nil "racket-browse-url" "racket-browse-url.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from racket-browse-url.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-url")))
+
+;;;***
+
 ;;;### (autoloads nil "racket-bug-report" "racket-bug-report.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from racket-bug-report.el

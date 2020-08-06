@@ -5,7 +5,8 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.5.0
-;; Package-Version: 20200411.531
+;; Package-Version: 20200803.811
+;; Package-Commit: 91e0e0e7a89be1465accdaefc1a31955d16bcd02
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3") (php-mode "1.22.3"))
@@ -259,6 +260,11 @@ it returns the value of `SOURCE' as it is."
    ((integerp phpstan-level) (int-to-string phpstan-level))
    ((symbolp phpstan-level) (symbol-name phpstan-level))
    (t phpstan-level)))
+
+(defun phpstan-analyze-file (file)
+  "Analyze a PHPScript FILE using PHPStan."
+  (interactive "fChoose a PHP script: ")
+  (compile (mapconcat #'shell-quote-argument (append (phpstan-get-command-args) (list file)) " ")))
 
 (defun phpstan-get-executable ()
   "Return PHPStan excutable file and arguments."

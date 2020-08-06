@@ -34,7 +34,7 @@
   :link '(url-link "https://github.com/rust-lang/rls")
   :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-rust-server 'rls
+(defcustom lsp-rust-server 'rust-analyzer
   "Choose LSP server."
   :type '(choice (const :tag "rls" rls)
                  (const :tag "rust-analyzer" rust-analyzer))
@@ -564,8 +564,12 @@ The command should include `--message=format=json` or similar option."
   :notification-handlers (ht<-alist lsp-rust-notification-handlers)
   :action-handlers (ht<-alist lsp-rust-action-handlers)
   :library-folders-fn (lambda (_workspace) lsp-rust-library-directories)
+  :after-open-fn (lambda ()
+                   (when lsp-rust-analyzer-server-display-inlay-hints
+                     (lsp-rust-analyzer-inlay-hints-mode)))
   :ignore-messages nil
-  :server-id 'rust-analyzer))
+  :server-id 'rust-analyzer
+  :custom-capabilities `((experimental . ((snippetTextEdit . ,lsp-enable-snippet ))))))
 
 (defun lsp-rust-switch-server (&optional lsp-server)
   "Switch priorities of lsp servers, unless LSP-SERVER is already active."
@@ -632,12 +636,6 @@ The command should include `--message=format=json` or similar option."
     (remove-overlays (point-min) (point-max) 'lsp-rust-analyzer-inlay-hint t)
     (remove-hook 'lsp-on-change-hook #'lsp-rust-analyzer-inlay-hints-change-handler t))))
 
-;; activate `lsp-rust-analyzer-inlay-hints-mode'
-(when lsp-rust-analyzer-server-display-inlay-hints
-  (add-hook 'lsp-after-open-hook (lambda ()
-                                   (when (lsp-find-workspace 'rust-analyzer nil)
-                                     (lsp-rust-analyzer-inlay-hints-mode)))))
-
 (defun lsp-rust-analyzer-expand-macro ()
   "Expands the macro call at point recursively."
   (interactive)
@@ -670,7 +668,7 @@ The command should include `--message=format=json` or similar option."
 
 (defun lsp-rust-analyzer--runnables ()
   (lsp-send-request (lsp-make-request
-                     "rust-analyzer/runnables"
+                     "experimental/runnables"
                      (lsp-make-rust-analyzer-runnables-params
                       :text-document (lsp--text-document-identifier)
                       :position? (lsp--cur-position)))))
@@ -679,20 +677,27 @@ The command should include `--message=format=json` or similar option."
   (lsp--completing-read
    "Select runnable:"
    (if lsp-rust-analyzer--last-runnable
-       (cons lsp-rust-analyzer--last-runnable (lsp-rust-analyzer--runnables))
+       (cons lsp-rust-analyzer--last-runnable
+             (-remove (-lambda ((&rust-analyzer:Runnable :label))
+                        (equal label (lsp-get lsp-rust-analyzer--last-runnable :label)))
+                      (lsp-rust-analyzer--runnables)))
      (lsp-rust-analyzer--runnables))
    (-lambda ((&rust-analyzer:Runnable :label)) label)))
 
 (defun lsp-rust-analyzer-run (runnable)
+  "Select and run a runnable action."
   (interactive (list (lsp-rust-analyzer--select-runnable)))
-  (-let* (((&rust-analyzer:Runnable :env? :bin? :args :extra-args? :label) runnable)
-          (compilation-environment (lsp-map (lambda (k v) (concat k "=" v)) env?)))
-    (compilation-start
-     (string-join (append (list bin?) args (when extra-args? '("--")) extra-args? '()) " ")
-     ;; cargo-process-mode is nice, but try to work without it...
-     (if (functionp 'cargo-process-mode) 'cargo-process-mode nil)
-     (lambda (_) (concat "*" label "*")))
-    (setq lsp-rust-analyzer--last-runnable runnable)))
+  (-let* (((&rust-analyzer:Runnable :kind :label :args) runnable)
+          ((&rust-analyzer:RunnableArgs :cargo-args :executable-args :workspace-root?) args)
+          (default-directory (or workspace-root? default-directory)))
+    (if (not (string-equal kind "cargo"))
+        (lsp--error "'%s' runnable is not supported" kind)
+      (compilation-start
+       (string-join (append (list "cargo") cargo-args (when executable-args '("--")) executable-args '()) " ")
+       ;; cargo-process-mode is nice, but try to work without it...
+       (if (functionp 'cargo-process-mode) 'cargo-process-mode nil)
+       (lambda (_) (concat "*" label "*")))
+      (setq lsp-rust-analyzer--last-runnable runnable))))
 
 (defun lsp-rust-analyzer-rerun (&optional runnable)
   (interactive (list (or lsp-rust-analyzer--last-runnable
@@ -707,7 +712,3 @@ The command should include `--message=format=json` or similar option."
 
 (provide 'lsp-rust)
 ;;; lsp-rust.el ends here
-
-;; Local Variables:
-;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
-;; End:

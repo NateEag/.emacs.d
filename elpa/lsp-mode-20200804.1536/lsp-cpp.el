@@ -73,11 +73,8 @@ with class 'section', and also removes 'headerlinks'."
   (lsp-cpp-flycheck-clang-tidy--remove-crlf)
   (let* ((dom (libxml-parse-html-region (point-min) (point-max)))
          (section (dom-by-class dom "section")))
-    ;; `dom-remove-node' was added in 2016. Some Emacs version may not
-    ;; have it.
-    (when (fboundp 'dom-remove-node)
-      (dolist (headerlink (dom-by-class section "headerlink"))
-        (dom-remove-node section headerlink)))
+    (dolist (headerlink (dom-by-class section "headerlink"))
+      (dom-remove-node section headerlink))
     section))
 
 (defun lsp-cpp-flycheck-clang-tidy--explain-error (explanation &rest args)
@@ -138,7 +135,7 @@ Information comes from the clang.llvm.org website."
   "Explain a clang-tidy ERROR by scraping documentation from llvm.org."
   (unless (fboundp 'libxml-parse-html-region)
     (error "This function requires Emacs to be compiled with libxml2"))
-  (if-let (clang-tidy-error-id (flycheck-error-id error))
+  (if-let ((clang-tidy-error-id (flycheck-error-id error)))
       (condition-case err
           (lsp-cpp-flycheck-clang-tidy--show-documentation clang-tidy-error-id)
         (error

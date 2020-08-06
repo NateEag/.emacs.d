@@ -32,15 +32,16 @@
 (require 'ht)
 (require 's)
 
-(defun lsp-keyword->symbol (keyword)
-  "Convert a KEYWORD to symbol."
-  (intern (substring (symbol-name keyword) 1)))
+(eval-and-compile
+  (defun lsp-keyword->symbol (keyword)
+    "Convert a KEYWORD to symbol."
+    (intern (substring (symbol-name keyword) 1)))
 
-(defun lsp-keyword->string (keyword)
-  "Convert a KEYWORD to string."
-  (substring (symbol-name keyword) 1))
+  (defun lsp-keyword->string (keyword)
+    "Convert a KEYWORD to string."
+    (substring (symbol-name keyword) 1))
 
-(defvar lsp-use-plists nil)
+  (defvar lsp-use-plists nil))
 
 (defmacro lsp-interface (&rest interfaces)
   "Generate LSP bindings from INTERFACES triplet.
@@ -107,21 +108,24 @@ Example usage with `dash`.
                                                (plist-member object prop))
                                              ',required))))
                   `(cl-defun ,(intern (format "lsp-make-%s" (s-dashed-words (symbol-name interface))))
-                       (&key ,@(-map (-lambda ((key))
+                       (&rest plist &key ,@(-map (-lambda ((key))
+                                                   (intern (substring (symbol-name key) 1))) params)
+                              &allow-other-keys)
+                     (ignore ,@(-map (-lambda ((key))
                                        (intern (substring (symbol-name key) 1))) params))
-
+                     ,(format "Constructs %s from `plist.'
+Allowed params: %s" interface (reverse (-map #'cl-first params)))
                      ,(if lsp-use-plists
-                          `(let ($$result)
-                             ,@(-map (-lambda ((name . key))
-                                       `(when ,(lsp-keyword->symbol name)
-                                          (setq $$result (plist-put $$result ,key ,(lsp-keyword->symbol name)))))
-                                     params)
-                             $$result)
+                          `(-mapcat (-lambda ((key value))
+                                      (list (or (cl-rest (assoc key ',params)) key) value))
+                                    (-partition 2 plist))
                         `(let (($$result (ht)))
-                           ,@(-map (-lambda ((name . key))
-                                     `(when ,(lsp-keyword->symbol name)
-                                        (puthash ,(lsp-keyword->string key) ,(lsp-keyword->symbol name) $$result)))
-                                   params)
+                           (mapc (-lambda ((key value))
+                                   (puthash (lsp-keyword->string (or (cl-rest (assoc key ',params))
+                                                                     key))
+                                            value
+                                            $$result))
+                                 (-partition 2 plist))
                            $$result)))
                   (-mapcat (-lambda ((label . name))
                              (list
@@ -136,9 +140,10 @@ Example usage with `dash`.
                                                        (s-dashed-words (symbol-name interface))
                                                        (substring (symbol-name label) 1)))
                                    (object value)
-                                 ,(if lsp-use-plists
-                                      `(plist-put object ,name value)
-                                    `(puthash ,(lsp-keyword->string name) value object)))))
+                                 ,@(if lsp-use-plists
+                                       `((plist-put object ,name value))
+                                     `((puthash ,(lsp-keyword->string name) value object)
+                                       object)))))
                            params)))))
        (apply #'append)
        (cl-list* 'progn)))
@@ -274,7 +279,7 @@ See `-let' for a description of the destructuring mechanism."
                (rust-analyzer:ResovedCodeActionParams (:id :codeActionParams) nil)
                (rust-analyzer:JoinLinesParams (:textDocument :ranges) nil)
                (rust-analyzer:RunnablesParams (:textDocument) (:position))
-               (rust-analyzer:Runnable (:label :kind :args) (:location :env :bin :extraArgs))
+               (rust-analyzer:Runnable (:label :kind :args) (:location))
                (rust-analyzer:RunnableArgs (:cargoArgs :executableArgs) (:workspaceRoot))
                (rust-analyzer:InlayHint (:range :label :kind) nil)
                (rust-analyzer:InlayHintsParams (:textDocument) nil)
@@ -364,9 +369,9 @@ See `-let' for a description of the destructuring mechanism."
 (defconst lsp/text-document-save-reason-manual 1)
 (defconst lsp/text-document-save-reason-after-delay 2)
 (defconst lsp/text-document-save-reason-focus-out 3)
-(defconst lsp/text-document-sync-kind-none 1)
-(defconst lsp/text-document-sync-kind-full 2)
-(defconst lsp/text-document-sync-kind-incremental 3)
+(defconst lsp/text-document-sync-kind-none 0)
+(defconst lsp/text-document-sync-kind-full 1)
+(defconst lsp/text-document-sync-kind-incremental 2)
 (defconst lsp/type-hierarchy-direction-children 1)
 (defconst lsp/type-hierarchy-direction-parents 2)
 (defconst lsp/type-hierarchy-direction-both 3)
@@ -399,7 +404,7 @@ See `-let' for a description of the destructuring mechanism."
  (Command (:title :command) (:arguments))
  (CompletionCapabilities nil (:completionItem :completionItemKind :contextSupport :dynamicRegistration))
  (CompletionContext (:triggerKind) (:triggerCharacter))
- (CompletionItem (:label) (:additionalTextEdits :command :commitCharacters :data :deprecated :detail :documentation :filterText :insertText :insertTextFormat :kind :preselect :sortText :tags :textEdit :score))
+ (CompletionItem (:label) (:additionalTextEdits :command :commitCharacters :data :deprecated :detail :documentation :filterText :insertText :insertTextFormat :kind :preselect :sortText :tags :textEdit :score :keepWhitespace))
  (CompletionItemCapabilities nil (:commitCharactersSupport :deprecatedSupport :documentationFormat :preselectSupport :snippetSupport :tagSupport))
  (CompletionItemKindCapabilities nil (:valueSet))
  (CompletionItemTagSupportCapabilities (:valueSet) nil)
@@ -428,7 +433,7 @@ See `-let' for a description of the destructuring mechanism."
  (FoldingRangeCapabilities nil (:dynamicRegistration :lineFoldingOnly :rangeLimit))
  (FoldingRangeProviderOptions nil (:documentSelector :id))
  (FormattingCapabilities nil (:dynamicRegistration))
- (FormattingOptions (:loadFactor :threshold :accessOrder) nil)
+ (FormattingOptions (:tabSize :insertSpaces) (:trimTrailingWhitespace :insertFinalNewline :trimFinalNewlines))
  (HoverCapabilities nil (:contentFormat :dynamicRegistration))
  (ImplementationCapabilities nil (:dynamicRegistration :linkSupport))
  (Location (:range :uri) nil)
@@ -475,6 +480,7 @@ See `-let' for a description of the destructuring mechanism."
  (TextDocumentItem (:languageId :text :uri :version) nil)
  (TextDocumentSyncOptions nil (:change :openClose :save :willSave :willSaveWaitUntil))
  (TextEdit (:newText :range) nil)
+ (SnippetTextEdit (:newText :range) (:insertTextFormat))
  (TypeDefinitionCapabilities nil (:dynamicRegistration :linkSupport))
  (TypeHierarchyCapabilities nil (:dynamicRegistration))
  (TypeHierarchyItem (:kind :name :range :selectionRange :uri) (:children :data :deprecated :detail :parents))

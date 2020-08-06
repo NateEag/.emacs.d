@@ -312,14 +312,6 @@ Must not nil.")
                       (lsp:set-server-capabilities-document-formatting-provider? caps t)))
   :download-server-fn #'lsp-pwsh-setup))
 
-;; Compatibility
-(with-eval-after-load 'company-lsp
-  (advice-add 'company-tng--supress-post-completion
-              :after-while
-              (lambda (&rest _)
-                (not (memq major-mode lsp-pwsh--major-modes)))
-              '((name . --force-post-completion-for-pwsh))))
-
 (defcustom lsp-pwsh-github-asset-url
   "https://github.com/%s/%s/releases/latest/download/%s"
   "GitHub latest asset template url."
@@ -329,7 +321,7 @@ Must not nil.")
 
 (defun lsp-pwsh-setup (_client callback error-callback update)
   "Downloads PowerShellEditorServices to `lsp-pwsh-dir'.
-CALLBACK is called when the download finish succesfully otherwise
+CALLBACK is called when the download finish successfully otherwise
 ERROR-CALLBACK is called.
 UPDATE is non-nil if it is already downloaded.
 FORCED if specified with prefix argument."

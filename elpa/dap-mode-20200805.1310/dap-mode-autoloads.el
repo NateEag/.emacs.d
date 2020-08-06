@@ -58,13 +58,6 @@ Run `dap-hydra/body'." t nil)
 
 ;;;***
 
-;;;### (autoloads nil "dap-java" "dap-java.el" (0 0 0 0))
-;;; Generated autoloads from dap-java.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-java" '("dap-java-")))
-
-;;;***
-
 ;;;### (autoloads nil "dap-lldb" "dap-lldb.el" (0 0 0 0))
 ;;; Generated autoloads from dap-lldb.el
 
@@ -142,7 +135,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mouse" '("dap-tooltip-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mouse" '("dap-")))
 
 ;;;***
 

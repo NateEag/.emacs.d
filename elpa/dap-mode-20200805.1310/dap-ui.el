@@ -26,6 +26,9 @@
 ;; DAP Windows/overlays
 
 ;;; Code:
+
+(require 'lsp-lens)
+
 (require 'dap-mode)
 (require 'wid-edit)
 (require 'dash)
@@ -37,14 +40,29 @@
 (require 'dap-ui-repl)
 (require 'posframe)
 
-(defcustom dap-ui-stack-frames-loaded nil
-  "Stack frames loaded."
-  :type 'hook
-  :group 'dap-ui)
-
 (defcustom dap-ui-breakpoints-ui-list-displayed-hook nil
   "List of functions to run when breakpoints list is displayed."
   :type 'hook
+  :group 'dap-ui)
+
+(defcustom dap-ui-locals-expand-depth 1
+  "Locals expand strategy.
+When nil - do not expand.
+t - expand recursively
+number - expand N levels."
+  :type '(choice (const :tag "Do not expand" nil)
+                 (const :tag "Expand recursively" t)
+                 (number :tag "Expand level"))
+  :group 'dap-ui)
+
+(defcustom dap-ui-expressiosn-expand-depth nil
+  "Expressions expand strategy.
+When nil - do not expand.
+t - expand recursively
+number - expand N levels."
+  :type '(choice (const :tag "Do not expand" nil)
+                 (const :tag "Expand recursively" t)
+                 (number :tag "Expand level"))
   :group 'dap-ui)
 
 (defface dap-ui-compile-errline
@@ -147,9 +165,6 @@
     (,dap-ui--breakpoints-buffer . ((side . left) (slot . 2) (window-width . ,treemacs-width)))
     (,dap-ui--debug-window-buffer . ((side . bottom) (slot . 3) (window-width . 0.20)))))
 
-(defvar-local dap-ui--locals-request-id 0
-  "The locals request id that is currently active.")
-
 (defun dap-ui-session--calculate-face (debug-session)
   "Calculate the face of DEBUG-SESSION based on its state."
   (cond
@@ -159,14 +174,13 @@
    ((not (dap--session-running debug-session)) 'dap-ui-sessions-terminated-face)
    (t 'dap-ui-sessions-running-face)))
 
-(defun dap-ui--make-overlay (beg end tooltip-text visuals &optional mouse-face buf)
+(defun dap-ui--make-overlay (beg end visuals &optional mouse-face buf)
   "Allocate a DAP UI overlay in range BEG and END.
 TOOLTIP-TEXT, VISUALS, MOUSE-FACE will be used for the overlay.
 BUF is the active buffer."
   (let ((ov (make-overlay beg end buf t t)))
     (overlay-put ov 'face           (plist-get visuals :face))
     (overlay-put ov 'mouse-face     mouse-face)
-    (overlay-put ov 'help-echo      tooltip-text)
     (overlay-put ov 'dap-ui-overlay  t)
     (overlay-put ov 'priority (plist-get visuals :priority))
     (let ((char (plist-get visuals :char)))
@@ -180,7 +194,7 @@ BUF is the active buffer."
                                            (plist-get visuals :fringe)))))))
     ov))
 
-(defun dap-ui--make-overlay-at (file point msg visuals)
+(defun dap-ui--make-overlay-at (file point visuals)
   "Create an overlay highlighting the given POINT in FILE.
 VISUALS and MSG will be used for the overlay."
   (-when-let (buf (find-buffer-visiting file))
@@ -189,7 +203,7 @@ VISUALS and MSG will be used for the overlay."
       (when (integer-or-marker-p point)
         (save-excursion
           (goto-char point)
-          (dap-ui--make-overlay (point-at-bol) (point-at-eol) msg visuals nil buf))))))
+          (dap-ui--make-overlay (point-at-bol) (point-at-eol) visuals nil buf))))))
 
 (defvar-local dap-ui--breakpoint-overlays nil)
 
@@ -224,7 +238,6 @@ DEBUG-SESSION the new breakpoints for FILE-NAME."
   (-map (-lambda ((bp . remote-bp))
           (push (dap-ui--make-overlay-at buffer-file-name
                                          (dap-breakpoint-get-point bp)
-                                         "Breakpoint"
                                          (dap-ui--breakpoint-visuals bp remote-bp))
                 dap-ui--breakpoint-overlays))
         (-zip-fill
@@ -249,7 +262,6 @@ DEBUG-SESSION the new breakpoints for FILE-NAME."
   (setq-local dap-ui--cursor-overlay
               (dap-ui--make-overlay-at
                file point
-               "Debug Marker"
                (list :face 'dap-ui-marker-face
                      :char ">"
                      :bitmap 'right-triangle
@@ -282,32 +294,36 @@ DEBUG-SESSION is the debug session triggering the event."
     (when (string= buffer-file-name path)
       (dap-ui--stack-frame-changed debug-session))))
 
+(defvar dap-ui-menu-items
+  `("Debug"
+    :visible (bound-and-true-p dap-ui-mode)
+    ["Start" dap-debug]
+    ["Create Debug Template" dap-debug-edit-template]
+    ["Debug last session" dap-debug-last]
+    ("Recent Sessions"
+     :filter ,(lambda (_)
+                (-map (-lambda ((name . debug-args))
+                        (vector name (lambda ()
+                                       (interactive)
+                                       (dap-debug debug-args))))
+                      dap--debug-configuration))
+     :active dap--debug-configuration)
+    "--"
+    ["Sessions" dap-ui-sessions]
+    ["Locals" dap-ui-locals]
+    ["Expressions" dap-ui-expressions]
+    ["Sources" dapui-loaded-sources]
+    ["Output" dap-go-to-output-buffer]
+    ["Breakpoints" dap-ui-breakpoints]
+    "---"
+    ["Toggle Controls" dap-ui-controls-mode]
+    ["Toggle Mouse Hover" dap-tooltip-mode]))
+
 (defvar dap-ui-mode-map
   (let ((map (make-sparse-keymap)))
     (easy-menu-define dap-ui-mode-menu map
       "Menu for DAP"
-      `("DAP Debug"
-        ["Debug" dap-debug]
-        ["Create Debug Template" dap-debug-edit-template]
-        ["Debug last session" dap-debug-last]
-        ("Recent Sessions"
-         :filter ,(lambda (_)
-                    (-map (-lambda ((name . debug-args))
-                            (vector name (lambda ()
-                                           (interactive)
-                                           (dap-debug debug-args))))
-                          dap--debug-configuration))
-         :active dap--debug-configuration)
-        "--"
-        ["Sessions" dap-ui-sessions]
-        ["Locals" dap-ui-locals]
-        ["Expressions" dap-ui-expressions]
-        ["Sources" dapui-loaded-sources]
-        ["Output" dap-go-to-output-buffer]
-        ["Breakpoints" dap-ui-breakpoints]
-        "---"
-        ["Toggle Controls" dap-ui-controls-mode]
-        ["Toggle Mouse Hover" dap-tooltip-mode]))
+      dap-ui-menu-items)
     map)
   "Keymap for DAP mode.")
 
@@ -769,7 +785,7 @@ DEBUG-SESSION is the debug session triggering the event."
                                            'face 'font-lock-variable-name-face)
                                ": "
                                value)
-                      :icon variable
+                      :icon dap-variable
                       :value ,value
                       :session ,debug-session
                       :variables-reference ,variables-reference
@@ -795,12 +811,12 @@ DEBUG-SESSION is the debug session triggering the event."
             (-map (-lambda ((&hash "name" "variablesReference" variables-reference))
                     (list :key name
                           :label name
-                          :icon 'scope
+                          :icon 'dap-scope
                           :children (-partial #'dap-ui-render-variables
                                               (dap--cur-session)
                                               variables-reference)))
                   it)
-            (lsp-treemacs-render it " Locals " nil dap-ui--locals-buffer)
+            (lsp-treemacs-render it " Locals " dap-ui-locals-expand-depth  dap-ui--locals-buffer)
             (or it t))
           (lsp-treemacs-render
            '((:label "Nothing to display..."
@@ -919,7 +935,7 @@ DEBUG-SESSION is the debug session triggering the event."
                                ["Refresh" dap-ui-expressions-refresh]))))
           dap-ui-expressions))
        " Expressions "
-       nil
+       dap-ui-expressiosn-expand-depth
        dap-ui--expressions-buffer
        '(["Add" dap-ui-expressions-add]
          ["Refresh" dap-ui-expressions-refresh])))))
@@ -1049,7 +1065,7 @@ DEBUG-SESSION is the debug session triggering the event."
                                                    (s-join "\n"))
                                             "Breakpoint"))))
                    (list :key label
-                         :icon 'breakpoint
+                         :icon 'dap-breakpoint
                          :icon-literal (propertize
                                         "⬤ "
                                         'face (if (and remote-bp (gethash "verified" remote-bp))

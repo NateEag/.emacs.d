@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.5-dev
-;; Package-Version: 20200622.20
-;; Package-Commit: 399df42755ccf31cecb61c9f5d8ad72bc30d7e4b
+;; Package-Version: 20200804.538
+;; Package-Commit: 0b5386b67118767b01e69019c16ae7f1ef30bde7
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -643,7 +643,7 @@ This variant of `rx' supports common Markdown named REGEXPS."
   "Regular expression matches HTML comment closing.")
 
 (defconst markdown-regex-link-inline
-  "\\(?1:!\\)?\\(?2:\\[\\)\\(?3:\\^?\\(?:\\\\\\]\\|[^]]\\)*\\|\\)\\(?4:\\]\\)\\(?5:(\\)\\(?6:[^)]*?\\)\\(?:\\s-+\\(?7:\"[^\"]*\"\\)\\)?\\(?8:)\\)"
+  "\\(?1:!\\)?\\(?2:\\[\\)\\(?3:\\^?\\(?:\\\\\\]\\|[^]]\\)*\\|\\)\\(?4:\\]\\)\\(?5:(\\)\\s-*\\(?6:[^)]*?\\)\\(?:\\s-+\\(?7:\"[^\"]*\"\\)\\)?\\s-*\\(?8:)\\)"
   "Regular expression for a [text](file) or an image link ![text](file).
 Group 1 matches the leading exclamation point (optional).
 Group 2 matches the opening square bracket.
@@ -907,7 +907,7 @@ Group 5 matches the closing brace (optional) and any surrounding whitespace.
 Groups need to agree with `markdown-regex-gfm-code-block-open'.")
 
 (defconst markdown-regex-declarative-metadata
-  "^\\([[:alpha:]][[:alpha:] _-]*?\\)\\([:=][ \t]*\\)\\(.*\\)$"
+  "^[ \t]*\\(?:-[ \t]*\\)?\\([[:alpha:]][[:alpha:] _-]*?\\)\\([:=][ \t]*\\)\\(.*\\)$"
   "Regular expression for matching declarative metadata statements.
 This matches MultiMarkdown metadata as well as YAML and TOML
 assignments such as the following:
@@ -8363,8 +8363,11 @@ or \\[markdown-toggle-inline-images]."
                      (valid-url (ignore-errors
                                   (member (downcase (url-type (url-generic-parse-url download-file)))
                                           markdown-remote-image-protocols))))
-                (when (and markdown-display-remote-images valid-url)
-                  (setq file (markdown--get-remote-image download-file)))))
+                (if (and markdown-display-remote-images valid-url)
+                    (setq file (markdown--get-remote-image download-file))
+                  (when (not valid-url)
+                    ;; strip query parameter
+                    (setq file (replace-regexp-in-string "?.+\\'" "" file))))))
             (when (file-exists-p file)
               (let* ((abspath (if (file-name-absolute-p file)
                                   file
@@ -9391,6 +9394,8 @@ rows and columns and the column alignment."
   (setq-local comment-column 0)
   (setq-local comment-auto-fill-only-comments nil)
   (setq-local comment-use-syntax t)
+  ;; Sentence
+  (setq-local sentence-end-base "[.?!…‽][]\"'”’)}»›*_`~]*")
   ;; Syntax
   (add-hook 'syntax-propertize-extend-region-functions
             #'markdown-syntax-propertize-extend-region)

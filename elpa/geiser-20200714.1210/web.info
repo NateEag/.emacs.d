@@ -19,8 +19,8 @@ shims orchestrates the dialog between the Scheme interpreter, Emacs and,
 ultimately, the schemer, giving her access to live metadata.  Here's
 how.
 
-   Version 0.11.2 (February 2020) for Guile 2.2 Chicken 4.8.0 GNU/MIT
-9.1 Chez 9.4 Chibi 0.7 Gambit 4.9 and Racket 6.0
+   Version 0.12 (February 2020) for Guile 2.2 Chicken 4.8.0 GNU/MIT 9.1
+Chez 9.4 Chibi 0.7 Gambit 4.9 and Racket 6.0
 (https://gitlab.com/jaor/geiser/-/releases)
 
 * Menu:
@@ -1826,49 +1826,49 @@ Index
 
 Tag Table:
 Node: Top67
-Node: Introduction1346
-Node: Modus operandi1677
-Ref: current-module2329
-Node: Showing off3802
-Node: Installation5077
-Node: Must needs5336
-Node: The easy and quick way6440
-Node: Chicken installation7896
-Node: Gambit installation8665
-Node: From the source's mouth10322
-Node: Friends13846
-Ref: paredit14117
-Node: The REPL15060
-Ref: quick-start15176
-Node: Starting the REPL15567
-Node: First aids19951
-Node: Switching context21781
-Node: Completion and error handling23703
-Ref: completion-caveat25408
-Node: Autodoc and friends27322
-Ref: repl-mod29389
-Node: Seeing is believing30395
-Node: Customization and tips31404
-Ref: choosing-impl32130
-Ref: active-implementations32365
-Ref: impl-binary32747
-Node: Between the parens37104
-Node: Activating Geiser38163
-Node: The source and the REPL40770
-Ref: repl-association41811
-Ref: repl-per-project45059
-Ref: switching-repl-buff46062
-Node: Documentation helpers47747
-Ref: doc-browser52012
-Node: To eval or not to eval54739
-Node: To err perchance to debug58875
-Node: Jumping around61234
-Node: Geiser writes for you62508
-Node: Cheat sheet65009
-Node: Scheme buffers65390
-Node: REPL69712
-Node: Documentation browser72302
-Node: No hacker is an island73367
-Node: Index76683
+Node: Introduction1344
+Node: Modus operandi1675
+Ref: current-module2327
+Node: Showing off3800
+Node: Installation5075
+Node: Must needs5334
+Node: The easy and quick way6438
+Node: Chicken installation7894
+Node: Gambit installation8663
+Node: From the source's mouth10320
+Node: Friends13844
+Ref: paredit14115
+Node: The REPL15058
+Ref: quick-start15174
+Node: Starting the REPL15565
+Node: First aids19949
+Node: Switching context21779
+Node: Completion and error handling23701
+Ref: completion-caveat25406
+Node: Autodoc and friends27320
+Ref: repl-mod29387
+Node: Seeing is believing30393
+Node: Customization and tips31402
+Ref: choosing-impl32128
+Ref: active-implementations32363
+Ref: impl-binary32745
+Node: Between the parens37102
+Node: Activating Geiser38161
+Node: The source and the REPL40768
+Ref: repl-association41809
+Ref: repl-per-project45057
+Ref: switching-repl-buff46060
+Node: Documentation helpers47745
+Ref: doc-browser52010
+Node: To eval or not to eval54737
+Node: To err perchance to debug58873
+Node: Jumping around61232
+Node: Geiser writes for you62506
+Node: Cheat sheet65007
+Node: Scheme buffers65388
+Node: REPL69710
+Node: Documentation browser72300
+Node: No hacker is an island73365
+Node: Index76681
 
 End Tag Table

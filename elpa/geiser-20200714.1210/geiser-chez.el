@@ -120,7 +120,13 @@ This function uses `geiser-chez-init-file' if it exists."
     (geiser-eval--send/wait "(begin (import (geiser)) (write `((result ) (output . \"\"))) (newline))")))
 
 (defun geiser-chez--display-error (module key msg)
-  (and key (message msg) nil))
+  (when (stringp msg)
+    (save-excursion (insert msg))
+    (geiser-edit--buttonize-files))
+  (and (or (eq key 'chez-error-message)
+           (not key))
+       (not (zerop (length msg)))
+       msg))
 
 ;;; Implementation definition:
 

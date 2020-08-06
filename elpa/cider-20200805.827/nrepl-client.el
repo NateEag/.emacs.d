@@ -421,7 +421,7 @@ should take a single argument, a dict representing the message.  See
 `nrepl--dispatch-response' for an example.
 
 These functions are called before the message's own callbacks, so that they
-can affect the behaviour of the callbacks.  Errors signaled by these
+can affect the behavior of the callbacks.  Errors signaled by these
 functions are demoted to messages, so that they don't prevent the
 callbacks from running.")
 
@@ -966,6 +966,10 @@ Optional argument TOOLING Tooling is set to t if wanting the tooling session fro
   "Perform :ls-sessions request for CONNECTION."
   (nrepl-send-sync-request '("op" "ls-sessions") connection))
 
+(defun nrepl-sync-request:ls-middleware (connection)
+  "Perform :ls-middleware request for CONNECTION."
+  (nrepl-send-sync-request '("op" "ls-middleware") connection))
+
 (defun nrepl-sync-request:eval (input connection &optional ns tooling)
   "Send the INPUT to the nREPL server synchronously.
 The request is dispatched via CONNECTION.
@@ -981,6 +985,10 @@ session."
 (defun nrepl-sessions (connection)
   "Get a list of active sessions on the nREPL server using CONNECTION."
   (nrepl-dict-get (nrepl-sync-request:ls-sessions connection) "sessions"))
+
+(defun nrepl-middleware (connection)
+  "Get a list of middleware on the nREPL server using CONNECTION."
+  (nrepl-dict-get (nrepl-sync-request:ls-middleware connection) "middleware"))
 
 
 ;;; Server

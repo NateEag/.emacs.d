@@ -330,7 +330,8 @@ If invoked with a prefix ARG eval the expression after inserting it."
     ["Close ancillary buffers" cider-close-ancillary-buffers
      :active (seq-remove #'null cider-ancillary-buffers)]
     ("nREPL" :active (cider-connected-p)
-     ["Describe nrepl session" cider-describe-nrepl-session]
+     ["List nREPL middleware" cider-list-nrepl-middleware]
+     ["Describe nREPL session" cider-describe-nrepl-session]
      ["Toggle message logging" nrepl-toggle-message-logging]))
   "Menu for CIDER mode.")
 
@@ -341,6 +342,7 @@ If invoked with a prefix ARG eval the expression after inserting it."
     ["Eval top-level sexp to comment" cider-eval-defun-to-comment]
     ["Eval top-level sexp and pretty-print to comment" cider-pprint-eval-defun-to-comment]
     "--"
+    ["Eval current list" cider-eval-list-at-point]
     ["Eval current sexp" cider-eval-sexp-at-point]
     ["Eval current sexp to point" cider-eval-sexp-up-to-point]
     ["Eval current sexp in context" cider-eval-sexp-at-point-in-context]

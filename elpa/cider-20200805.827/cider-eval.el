@@ -77,7 +77,7 @@ navigate to this buffer."
   :group 'cider)
 
 (defcustom cider-auto-jump-to-error t
-  "Control the cursor jump behaviour in compilation error buffer.
+  "Control the cursor jump behavior in compilation error buffer.
 When non-nil automatically jump to error location during interactive
 compilation.  When set to 'errors-only, don't jump to warnings.
 When set to nil, don't jump at all."
@@ -806,6 +806,14 @@ buffer."
                             nil
                             (cider--nrepl-pr-request-map))))
 
+(defun cider-eval-list-at-point (&optional output-to-current-buffer)
+  "Evaluate the list (eg. a function call, surrounded by parens) around point.
+If invoked with OUTPUT-TO-CURRENT-BUFFER, output the result to current buffer."
+  (interactive "P")
+  (save-excursion
+    (goto-char (cadr (cider-list-at-point 'bounds)))
+    (cider-eval-last-sexp output-to-current-buffer)))
+
 (defun cider-eval-sexp-at-point (&optional output-to-current-buffer)
   "Evaluate the expression around point.
 If invoked with OUTPUT-TO-CURRENT-BUFFER, output the result to current buffer."
@@ -1165,6 +1173,7 @@ passing arguments."
     (define-key map (kbd "n") #'cider-eval-ns-form)
     (define-key map (kbd "d") #'cider-eval-defun-at-point)
     (define-key map (kbd "e") #'cider-eval-last-sexp)
+    (define-key map (kbd "l") #'cider-eval-list-at-point)
     (define-key map (kbd "v") #'cider-eval-sexp-at-point)
     (define-key map (kbd "o") #'cider-eval-sexp-up-to-point)
     (define-key map (kbd ".") #'cider-read-and-eval-defun-at-point)
@@ -1179,6 +1188,7 @@ passing arguments."
     (define-key map (kbd "C-n") #'cider-eval-ns-form)
     (define-key map (kbd "C-d") #'cider-eval-defun-at-point)
     (define-key map (kbd "C-f") #'cider-eval-last-sexp)
+    (define-key map (kbd "C-l") #'cider-eval-list-at-point)
     (define-key map (kbd "C-v") #'cider-eval-sexp-at-point)
     (define-key map (kbd "C-o") #'cider-eval-sexp-up-to-point)
     (define-key map (kbd "C-.") #'cider-read-and-eval-defun-at-point)

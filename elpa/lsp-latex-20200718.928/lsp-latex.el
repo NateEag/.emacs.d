@@ -4,10 +4,10 @@
 
 ;; Author: ROCKTAKEY <rocktakey@gmail.com>
 ;; Keywords: languages, tex
-;; Package-Version: 20200701.931
-;; Package-Commit: 233e3cfdf7928d6744834446b7c9cbd5acb056cc
+;; Package-Version: 20200718.928
+;; Package-Commit: a9a26a21bf16b9444021563d844719ace0c5c3b6
 
-;; Version: 1.2.5
+;; Version: 1.2.6
 
 ;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0"))
 ;; URL: https://github.com/ROCKTAKEY/lsp-latex
@@ -265,7 +265,7 @@ should be vector."
    ("bibtex.formatting.formatter"    lsp-latex-bibtex-formatting-formatter)))
 
 (add-to-list 'lsp-language-id-configuration '(".*\\.tex$" . "latex"))
-
+(add-to-list 'lsp-language-id-configuration '(".*\\.bib$" . "bibtex"))
 (defun lsp-latex-new-connection ()
   "Create new connection of lsp-latex."
   (let (jar-file)
@@ -295,7 +295,10 @@ PARAMS progress report notification data."
  (make-lsp-client :new-connection
                   (lsp-stdio-connection
                    #'lsp-latex-new-connection)
-                  :major-modes '(tex-mode yatex-mode latex-mode)
+                  :major-modes '(tex-mode
+                                 yatex-mode
+                                 latex-mode
+                                 bibtex-mode)
                   :server-id 'texlab2
                   :priority 2
                   :initialized-fn

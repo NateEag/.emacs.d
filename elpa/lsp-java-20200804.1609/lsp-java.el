@@ -2,7 +2,7 @@
 
 ;; Version: 3.0
 
-;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.14.1") (f "0.20.0") (ht "2.0") (dash-functional "1.2.0") (request "0.3.0") (treemacs "2.5"))
+;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.14.1") (f "0.20.0") (ht "2.0") (dash-functional "1.2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
 ;; Keywords: languague, tools
 ;; URL: https://github.com/emacs-lsp/lsp-java
 
@@ -408,12 +408,121 @@ example 'java.awt.*' will hide all types from the awt packages."
    ("java.configuration.checkProjectSettingsExclusions" lsp-java-configuration-check-project-settings-exclusions t)
    ("java.errors.incompleteClasspath.severity" lsp-java-errors-incomplete-classpath-severity)
    ("java.dependency.packagePresentation" lsp-java-dependency-package-representation)
-   ("java.completion.filteredTypes" lsp-java-completion-filtered-types)))
+   ("java.completion.filteredTypes" lsp-java-completion-filtered-types)
+   ("java.project.importHint" lsp-java-project-import-hint t)
+   ("java.project.importOnFirstTimeStartup" lsp-java-project-import-on-first-time-startup)
+   ("java.imports.gradle.wrapper.checksums" lsp-java-imports-gradle-wrapper-checksums)
+   ("java.sources.organizeImports.staticStarThreshold" lsp-java-sources-organize-imports-static-star-threshold)
+   ("java.sources.organizeImports.starThreshold" lsp-java-sources-organize-imports-star-threshold)
+   ("java.server.launchMode" lsp-java-server-launch-mode)
+   ("java.configuration.runtimes" lsp-java-configuration-runtimes)
+   ("java.showBuildStatusOnStart.enabled" lsp-java-show-build-status-on-start-enabled t)
+   ("java.selectionRange.enabled" lsp-java-selection-range-enabled t)
+   ("java.completion.maxResults" lsp-java-completion-max-results)
+   ("java.project.referencedLibraries" lsp-java-project-referenced-libraries)
+   ("java.maven.updateSnapshots" lsp-java-maven-update-snapshots t)
+   ("java.import.gradle.user.home" lsp-java-import-gradle-user-home)
+   ("java.import.gradle.arguments" lsp-java-import-gradle-arguments)
+   ("java.import.gradle.offline.enabled" lsp-java-import-gradle-offline-enabled t)
+   ("java.import.gradle.java.home" lsp-java-import-gradle-java-home)
+   ("java.import.gradle.home" lsp-java-import-gradle-home)))
 
 (defcustom lsp-java-inhibit-message t
   "If non-nil, inhibit java messages echo via `inhibit-message'."
   :type 'boolean
   :group 'lsp-mode)
+
+(defcustom lsp-java-import-gradle-home nil
+  "Use Gradle from the specified local installation directory or GRADLE_HOME if the Gradle wrapper is missing or disabled and no 'java.import.gradle.version' is specified."
+  :type 'string)
+
+(defcustom lsp-java-import-gradle-java-home nil
+  "The location to the JVM used to run the Gradle daemon."
+  :type 'string)
+
+(defcustom lsp-java-import-gradle-offline-enabled nil
+  "Enable/disable the Gradle offline mode."
+  :type 'boolean)
+
+(defcustom lsp-java-import-gradle-arguments nil
+  "Arguments to pass to Gradle."
+  :type 'string)
+
+(defcustom lsp-java-import-gradle-user-home nil
+  "Setting for GRADLE_USER_HOME."
+  :type 'string)
+
+(defcustom lsp-java-maven-update-snapshots nil
+  "Force update of Snapshots/Releases."
+  :type 'boolean)
+
+(defcustom lsp-java-project-referenced-libraries ["lib/**/*.jar"]
+  "Configure glob patterns for referencing local libraries to a
+Java project."
+  :type
+  '(repeat lsp-string-vector))
+
+(defcustom lsp-java-completion-max-results 0
+  "Maximum number of completion results (not including
+snippets).`0' (the default value) disables the limit, all results
+are returned. In case of performance problems, consider setting a
+sensible limit."
+  :type 'number)
+
+(defcustom lsp-java-selection-range-enabled t
+  "Enable/disable Smart Selection support for Java. Disabling
+this option will not affect the VS Code built-in word-based and
+bracket-based smart selection."
+  :type 'boolean)
+
+(defcustom lsp-java-show-build-status-on-start-enabled nil
+  "Automatically show build status on startup."
+  :type 'boolean)
+
+(defcustom lsp-java-configuration-runtimes nil
+  "Map Java Execution Environments to local JDKs."
+  :type 'lsp-string-vector)
+
+(defcustom lsp-java-server-launch-mode "Hybrid"
+  "The launch mode for the Java extension"
+  :type '(choice (:tag "Standard" "LightWeight" "Hybrid")))
+
+(defcustom lsp-java-sources-organize-imports-star-threshold 99
+  "Specifies the number of imports added before a star-import declaration is used."
+  :type 'number)
+
+(defcustom lsp-java-sources-organize-imports-static-star-threshold 99
+  "Specifies the number of static imports added before a star-import declaration is used."
+  :type 'number)
+
+(defun lsp-java--checksum? (candidate)
+  "Returns true if CANDIDATE is a vector data structure and
+every element of it is of type list, else nil."
+  (and
+   (vectorp candidate)
+   (seq-every-p #'consp candidate)))
+
+(define-widget 'lsp-java-checksum-vector 'lazy
+  "A vector of zero or more elements, every element of which is a checksum object."
+  :offset 4
+  :tag "Checksum Vector"
+  :type '(restricted-sexp
+          :match-alternatives (lsp-java--checksum?)))
+
+(defcustom lsp-java-imports-gradle-wrapper-checksums []
+  "Defines allowed/disallowed SHA-256 checksums of Gradle Wrappers.
+
+Sample value: [(:sha256 \"504b..\" :allowed t)]"
+  :type 'lsp-java-checksum-vector)
+
+(defcustom lsp-java-project-import-on-first-time-startup "automatic"
+  "Specifies whether to import the Java projects, when opening the folder in Hybrid mode for the first time."
+  :type '(choice (:tag "disabled" "interactive" "automatic")))
+
+(defcustom lsp-java-project-import-hint t
+  "Enable/disable the server-mode switch information, when Java
+projects import is skipped on startup."
+  :type 'boolean)
 
 (defvar lsp-java--download-root "https://raw.githubusercontent.com/emacs-lsp/lsp-java/master/install/")
 
@@ -833,6 +942,11 @@ current symbol."
   (interactive)
   (lsp-java-execute-matching-action "Extract to method"))
 
+(defun lsp-java-inline ()
+  "Inline."
+  (interactive)
+  (lsp-java-execute-matching-action "Inline"))
+
 (defun lsp-java-assign-to-field ()
   "Assign to new field."
   (interactive)
@@ -1015,8 +1129,9 @@ current symbol."
       (lsp-request-async
        "java/organizeImports" context
        (lambda (result)
-         (ht-amap (with-current-buffer (find-file-noselect (lsp--uri-to-path key))
-                    (lsp--apply-text-edits value))
+         (lsp-map (lambda (key value)
+                    (with-current-buffer (find-file-noselect (lsp--uri-to-path key))
+                      (lsp--apply-text-edits value)))
                   (lsp:workspace-edit-changes? result)))
        :mode 'detached))))
 
@@ -1265,7 +1380,8 @@ current symbol."
   :notification-handlers (ht ("language/status" #'lsp-java--language-status-callback)
                              ("language/actionableNotification" #'lsp-java--actionable-notification-callback)
                              ("language/progressReport" #'lsp-java--progress-report)
-                             ("workspace/notify" #'lsp-java--workspace-notify))
+                             ("workspace/notify" #'lsp-java--workspace-notify)
+                             ("language/eventNotification" #'ignore))
   :request-handlers (ht ("workspace/executeClientCommand" 'lsp-java-boot--workspace-execute-client-command))
   :action-handlers (ht ("java.apply.workspaceEdit" #'lsp-java--apply-workspace-edit)
                        ("java.action.generateToStringPrompt" #'lsp-java--action-generate-to-string)
@@ -1276,8 +1392,7 @@ current symbol."
                        ("java.action.generateConstructorsPrompt" #'lsp-java--generate-constructors-prompt)
                        ("java.action.applyRefactoringCommand" #'lsp-java--apply-refactoring-command)
                        ("java.action.rename" 'lsp-java--action-rename))
-  :uri-handlers (ht ("jdt" #'lsp-java--resolve-uri)
-                    ("chelib" #'lsp-java--resolve-uri))
+  :uri-handlers (ht ("jdt" #'lsp-java--resolve-uri))
   :initialization-options (lambda ()
                             (list :settings (lsp-configuration-section "java")
                                   :extendedClientCapabilities
@@ -1291,7 +1406,8 @@ current symbol."
                                         :generateToStringPromptSupport t
                                         :advancedGenerateAccessorsSupport t
                                         :advancedExtractRefactoringSupport t
-                                        :moveRefactoringSupport t)
+                                        :moveRefactoringSupport t
+                                        :resolveAdditionalTextEditsSupport t)
                                   :bundles (lsp-java--bundles)
                                   :workspaceFolders (->> (lsp-session)
                                                          lsp-session-server-id->folders
@@ -1436,8 +1552,6 @@ current symbol."
      :mode 'tick)))
 
 
-
-;;;###autoload(with-eval-after-load 'lsp-mode (require 'lsp-java))
 
 (provide 'lsp-java)
 ;;; lsp-java.el ends here

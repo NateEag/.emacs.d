@@ -6,6 +6,14 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
+;;;### (autoloads nil "dap-java" "dap-java.el" (0 0 0 0))
+;;; Generated autoloads from dap-java.el
+(with-eval-after-load 'lsp-java (require 'dap-java))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-java" '("dap-java-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-java" "lsp-java.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-java.el
 
@@ -18,7 +26,6 @@ from Lisp, also enable the mode if ARG is omitted or nil, and
 toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
-(with-eval-after-load 'lsp-mode (require 'lsp-java))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-java" '("lsp-java-")))
 

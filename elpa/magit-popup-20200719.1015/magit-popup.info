@@ -33,7 +33,7 @@ with the specified arguments.
 (transient)Top::).  No new features will be added but bugs will be
 fixed.
 
-This manual is for Magit-Popup version 2.13.2 (v2.13.2+1).
+This manual is for Magit-Popup version 2.13.3.
 
      Copyright (C) 2015-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -728,13 +728,13 @@ directly.
 
 Tag Table:
 Node: Top770
-Node: Introduction2151
-Node: Usage4490
-Node: Customizing Existing Popups9187
-Node: Other Options15328
-Node: Defining Prefix and Suffix Commands16871
-Node: Defining Prefix Commands19023
-Node: Defining Suffix Commands27718
+Node: Introduction2139
+Node: Usage4478
+Node: Customizing Existing Popups9175
+Node: Other Options15316
+Node: Defining Prefix and Suffix Commands16859
+Node: Defining Prefix Commands19011
+Node: Defining Suffix Commands27706
 
 End Tag Table
 

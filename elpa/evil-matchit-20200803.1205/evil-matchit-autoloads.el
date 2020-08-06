@@ -177,12 +177,13 @@ Use INFO from current tag to jump NUM times.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-javascript.el
 
-(autoload 'evilmi-javascript-get-tag "evil-matchit-javascript" nil nil nil)
+(autoload 'evilmi-javascript-get-tag "evil-matchit-javascript" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-javascript-jump "evil-matchit-javascript" "\
-Jump to the matching tag using RLT and NUM.
+Jump to the matching tag using INFO and NUM.
 
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-javascript" '("evilmi-")))
 
@@ -208,11 +209,10 @@ Jump to the matching tag using RLT and NUM.
 ;;; Generated autoloads from evil-matchit-markdown.el
 
 (autoload 'evilmi-markdown-get-tag "evil-matchit-markdown" "\
-Get current tag.
-Return (list start-position tag)." nil nil)
+Get current tag.  Return (list start-position tag)." nil nil)
 
 (autoload 'evilmi-markdown-jump "evil-matchit-markdown" "\
-Jump to the next tag.
+Jump to the next tag using INFO and NUM.
 
 \(fn INFO NUM)" nil nil)
 
@@ -270,12 +270,13 @@ Use INFO returned by `evilmi-python-get-tag' and NUM to jump to matched tag.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-ruby.el
 
-(autoload 'evilmi-ruby-get-tag "evil-matchit-ruby" nil nil nil)
+(autoload 'evilmi-ruby-get-tag "evil-matchit-ruby" "\
+Get tag at point." nil nil)
 
 (autoload 'evilmi-ruby-jump "evil-matchit-ruby" "\
+Use INFO to jump NUM times.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-ruby" '("evilmi-ruby-")))
 
@@ -301,7 +302,8 @@ Use INFO returned by `evilmi-script-get-tag' and NUM to jump to matched tag.
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-sdk.el
 
-(autoload 'evilmi-sdk-curline "evil-matchit-sdk" nil nil nil)
+(autoload 'evilmi-sdk-curline "evil-matchit-sdk" "\
+Get current line text." nil nil)
 
 (autoload 'evilmi-sdk-member "evil-matchit-sdk" "\
 Check if KEYWORD exist in KEYWORD-LIST.
@@ -396,6 +398,22 @@ Jump to the matching tag using INFO and NUM.
 \(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-template" '("evilmi-template-")))
+
+;;;***
+
+;;;### (autoloads nil "evil-matchit-terminal" "evil-matchit-terminal.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from evil-matchit-terminal.el
+
+(autoload 'evilmi-terminal-get-tag "evil-matchit-terminal" "\
+Get tag at point." nil nil)
+
+(autoload 'evilmi-terminal-jump "evil-matchit-terminal" "\
+Use INFO to jump NUM times.
+
+\(fn INFO NUM)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-terminal" '("evilmi-terminal-p")))
 
 ;;;***
 

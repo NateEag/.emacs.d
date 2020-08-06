@@ -12,10 +12,13 @@
 (autoload 'git-link "git-link" "\
 Create a URL representing the current buffer's location in its
 GitHub/Bitbucket/GitLab/... repository at the current line number
-or active region. The URL will be added to the kill ring. If
-`git-link-open-in-browser' is non-`nil' also call `browse-url'.
+or active region. The URL will be added to the kill ring.  If
+`git-link-open-in-browser' is non-nil also call `browse-url'.
 
-With a prefix argument prompt for the remote's name.
+With a prefix argument of - generate a link without line number(s).
+Also see `git-link-use-single-line-number'.
+
+With any other prefix argument prompt for the remote's name.
 Defaults to \"origin\".
 
 \(fn REMOTE START END)" t nil)

@@ -1,10 +1,10 @@
 ;;; git-link.el --- Get the GitHub/Bitbucket/GitLab URL for a buffer location -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2019 Skye Shaw and others
+;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.7.6
-;; Package-Version: 20200331.2329
-;; Package-Commit: 7142ec898f0cb97aa5d1a68da7957b4710bbfa87
+;; Version: 0.8.0
+;; Package-Version: 20200721.2250
+;; Package-Commit: cbaf7033edad8d4712b6e7dc11cad979c6a002de
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -37,6 +37,11 @@
 
 ;;; Change Log:
 
+;; 2020-07-21 - v0.8.0
+;; * Add `-' prefix argument to git-link to generate links without line numbers
+;; * Add git-link-use-single-line-number
+;; * Fix sourcehut's git-link handler
+;;
 ;; 2020-03-31 - v0.7.6
 ;; * Adapt to changes in Azure interface (Issue #65, thanks Roey Darwish Dror)
 ;;
@@ -169,8 +174,18 @@
   :type 'boolean
   :group 'git-link)
 
+(defcustom git-link-use-single-line-number t
+  "If t a link to a single line will always contain the line number.
+If nil line numbers will only be added when a selection contains
+more than 1 line.
+
+Note that `git-link' can exclude line numbers on a per invocation basis.
+See its docs."
+  :type 'boolean
+  :group 'git-link)
+
 (defcustom git-link-remote-alist
-  '(("git.sr.ht" git-link-sourcehut)
+  '(("git.sr.ht" git-link-github)
     ("github" git-link-github)
     ("bitbucket" git-link-bitbucket)
     ("gitorious" git-link-gitorious)
@@ -442,8 +457,8 @@ return (FILENAME . REVISION) otherwise nil."
 	  dirname
       filename
       (concat "G" (if branch "B" "C") (or branch commit))
-      start
-      (or end start)))
+      (or start "")
+      (or end start "")))
 
 (defun git-link-commit-github (hostname dirname commit)
   (format "https://%s/%s/commit/%s"
@@ -505,15 +520,25 @@ return (FILENAME . REVISION) otherwise nil."
 (defun git-link (remote start end)
   "Create a URL representing the current buffer's location in its
 GitHub/Bitbucket/GitLab/... repository at the current line number
-or active region. The URL will be added to the kill ring. If
-`git-link-open-in-browser' is non-`nil' also call `browse-url'.
+or active region. The URL will be added to the kill ring.  If
+`git-link-open-in-browser' is non-nil also call `browse-url'.
 
-With a prefix argument prompt for the remote's name.
+With a prefix argument of - generate a link without line number(s).
+Also see `git-link-use-single-line-number'.
+
+With any other prefix argument prompt for the remote's name.
 Defaults to \"origin\"."
-  (interactive (let* ((remote (git-link--select-remote))
-                      (region (when (or buffer-file-name (git-link--using-magit-blob-mode))
-                                (git-link--get-region))))
-                 (list remote (car region) (cadr region))))
+  (interactive
+   (if (equal '- current-prefix-arg)
+       (list (git-link--remote) nil nil)
+     (let* ((remote (git-link--select-remote))
+            (region (when (or buffer-file-name (git-link--using-magit-blob-mode))
+                      (git-link--get-region))))
+
+       (if (and (null git-link-use-single-line-number) (null (cadr region)))
+           (list remote nil nil)
+         (list remote (car region) (cadr region))))))
+
   (let (filename branch commit handler remote-info (remote-url (git-link--remote-url remote)))
     (if (null remote-url)
         (message "Remote `%s' not found" remote)

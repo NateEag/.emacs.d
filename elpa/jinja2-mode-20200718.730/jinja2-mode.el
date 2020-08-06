@@ -4,8 +4,8 @@
 
 ;; Author: Florian Mounier aka paradoxxxzero
 ;; Version: 0.2
-;; Package-Version: 20200602.859
-;; Package-Commit: 4540f99a3e363403a633587e05a9707605c16473
+;; Package-Version: 20200718.730
+;; Package-Commit: ecd19a40b7832bb00f0a2244e3b0713d0bf3850d
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -232,6 +232,8 @@
 (defvar jinja2-font-lock-keywords
   jinja2-font-lock-keywords-1)
 
+(defvar jinja2-enable-indent-on-save nil)
+
 (defun sgml-indent-line-num ()
   "Indent the current line as SGML."
   (let* ((savep (point))
@@ -325,9 +327,11 @@
 (define-key jinja2-mode-map (kbd "C-c t") 'jinja2-insert-tag)
 (define-key jinja2-mode-map (kbd "C-c v") 'jinja2-insert-var)
 (define-key jinja2-mode-map (kbd "C-c #") 'jinja2-insert-comment)
-(add-hook 'jinja2-mode-hook
-          (lambda ()
-            (add-hook 'after-save-hook 'jinja2-indent-buffer nil 'make-it-local)))
+
+(when jinja2-enable-indent-on-save
+  (add-hook 'jinja2-mode-hook
+    (lambda ()
+      (add-hook 'after-save-hook 'jinja2-indent-buffer nil 'make-it-local))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . jinja2-mode))

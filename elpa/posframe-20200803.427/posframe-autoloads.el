@@ -68,6 +68,7 @@ The builtin poshandler functions are listed below:
 14. `posframe-poshandler-window-bottom-right-corner'
 15. `posframe-poshandler-point-top-left-corner'
 16. `posframe-poshandler-point-bottom-left-corner'
+17. `posframe-poshandler-point-bottom-left-corner-upward'
 
 This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
 or a name of a (possibly nonexistent) buffer.
@@ -118,9 +119,12 @@ will auto-hide.
 If REFRESH is a number, posframe's frame-size will be re-adjusted
 every REFRESH seconds.
 
+When ACCEPT-FOCUS is non-nil, posframe will accept focus.
+be careful, you may face some bugs when set it to non-nil.
+
 You can use `posframe-delete-all' to delete all posframes.
 
-\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE RESPECT-TAB-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH &allow-other-keys)" nil nil)
+\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE RESPECT-TAB-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS &allow-other-keys)" nil nil)
 
 (autoload 'posframe-hide-all "posframe" "\
 Hide all posframe frames." t nil)

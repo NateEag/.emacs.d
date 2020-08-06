@@ -2,8 +2,9 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20200215.1357
-;; Version: 1.2.0
+;; Package-Version: 20200719.1241
+;; Package-Commit: 02546beecf4c495940885e7b7b911d84b12646ef
+;; Version: 1.3.0
 ;; Package-Requires: ((emacs "25.1") (helm "3.2"))
 
 ;; Copyright 2019 Nicolas Martyanoff <khaelin@gmail.com>
@@ -75,25 +76,46 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   :type 'string)
 
 (defcustom rfc-mode-use-original-buffer-names nil
-  "Whether RFC document buffers should keep their original name or not."
+  "Whether RFC document buffers should have the name of the document file (e.g. rfc21.txt vs *rfc21*)."
   :type 'boolean)
 
 (defcustom rfc-mode-browser-entry-title-width 60
   "The width of the column containing RFC titles in the browser."
   :type 'integer)
 
+(defcustom rfc-mode-imenu-title "RFC Contents"
+  "The title to use if `rfc-mode' adds a RFC Contents menu to the menubar."
+  :type 'string
+  :group 'rfc-mode-group)
+
 ;;; Misc variables:
 
 (defvar rfc-mode-index-entries nil
   "The list of entries in the RFC index.")
 
+(defconst rfc-mode-title-regexp "^\\(?:[0-9]+\\.\\)+\\(?:[0-9]+\\)? .*$"
+  "Regular expression to model section titles in RFC documents.")
+
+(defvar rfc-mode--titles nil
+  "Buffer-local variable that keeps a list of section titles in this RFC.")
+(make-variable-buffer-local 'rfc-mode--titles)
+
+(defvar rfc-mode--last-title nil
+  "Last section title that the user visited.")
+
 ;;; Keys:
 
 (defvar rfc-mode-map
   (let ((map (make-keymap)))
+    (set-keymap-parent map special-mode-map)
     (define-key map (kbd "q") 'rfc-mode-quit)
+    (define-key map (kbd "<tab>") 'forward-button)
+    (define-key map (kbd "<backtab>") 'backward-button)
     (define-key map (kbd "<prior>") 'rfc-mode-backward-page)
     (define-key map (kbd "<next>") 'rfc-mode-forward-page)
+    (define-key map (kbd "g") 'rfc-mode-goto-section)
+    (define-key map (kbd "n") 'rfc-mode-next-section)
+    (define-key map (kbd "p") 'rfc-mode-previous-section)
     map)
   "The keymap for `rfc-mode'.")
 
@@ -101,9 +123,10 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
 
 (defun rfc-mode-init ()
   "Initialize the current buffer for `rfc-mode'."
-  (setq-local buffer-read-only t)
   (setq-local page-delimiter "^.*?\n")
-  (rfc-mode-highlight))
+  (rfc-mode-highlight)
+  (setq imenu-generic-expression (list (list nil rfc-mode-title-regexp 0)))
+  (imenu-add-to-menubar rfc-mode-imenu-title))
 
 (defun rfc-mode-quit ()
   "Quit the current window and bury its buffer."
@@ -124,11 +147,62 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   (rfc-mode-previous-header)
   (recenter 0))
 
+(defun rfc-mode-goto-section (section)
+  "Move point to SECTION."
+  (interactive
+   (let* ((default (if (member rfc-mode--last-title rfc-mode--titles)
+                       rfc-mode--last-title
+                     (car rfc-mode--titles)))
+          (completion-ignore-case t)
+          (prompt (concat "Go to section (default " default "): "))
+          (chosen (completing-read prompt rfc-mode--titles
+                                   nil nil nil nil default)))
+     (list chosen)))
+  (setq rfc-mode--last-title section)
+  (unless (rfc-mode--goto-section section)
+    (error "Section %s not found" section)))
+
+(defun rfc-mode--goto-section (section)
+  "Move point to SECTION if it exists, otherwise don't move point.
+Returns t if section is found, nil otherwise."
+  (let ((curpos (point))
+	(case-fold-search nil))
+    (goto-char (point-min))
+    (if (re-search-forward (concat "^" section) (point-max) t)
+	(progn (beginning-of-line) t)
+      (goto-char curpos)
+      nil)))
+
+(defun rfc-mode-next-section (n)
+  "Move point to Nth next section (default 1)."
+  (interactive "p")
+  (let ((case-fold-search nil)
+        (start (point)))
+    (if (looking-at rfc-mode-title-regexp)
+	(forward-line 1))
+    (if (re-search-forward rfc-mode-title-regexp (point-max) t n)
+	(beginning-of-line)
+      (goto-char (point-max))
+      ;; The last line doesn't belong to any section.
+      (forward-line -1))
+    ;; Ensure we never move back from the starting point.
+    (if (< (point) start) (goto-char start))))
+
+(defun rfc-mode-previous-section (n)
+  "Move point to Nth previous section (default 1)."
+  (interactive "p")
+  (let ((case-fold-search nil))
+    (if (looking-at rfc-mode-title-regexp)
+	(forward-line -1))
+    (if (re-search-backward rfc-mode-title-regexp (point-min) t n)
+	(beginning-of-line)
+      (goto-char (point-min)))))
+
 ;;;###autoload
 (defun rfc-mode-read (number)
   "Read the RFC document NUMBER."
   (interactive "nRFC number: ")
-  (switch-to-buffer (rfc-mode--document-buffer number)))
+  (display-buffer (rfc-mode--document-buffer number)))
 
 (defun rfc-mode-reload-index ()
   "Reload the RFC document index from its original file."
@@ -147,7 +221,7 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
         :sources (rfc-mode-browser-helm-sources rfc-mode-index-entries)))
 
 ;;;###autoload
-(define-derived-mode rfc-mode text-mode "rfc-mode"
+(define-derived-mode rfc-mode special-mode "rfc-mode"
   "Major mode to browse and read RFC documents."
   (rfc-mode-init))
 
@@ -158,6 +232,7 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
 
 (defun rfc-mode-highlight ()
   "Highlight the current buffer."
+  (setq rfc-mode--titles nil)
   (with-silent-modifications
     (let ((inhibit-read-only t))
       ;; Headers
@@ -174,12 +249,15 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
       ;; Section titles
       (save-excursion
         (goto-char (point-min))
-        (while (search-forward-regexp "^\\(?:[0-9]+\\.\\)+\\(?:[0-9]+\\)? .*$" nil t)
+        (while (search-forward-regexp rfc-mode-title-regexp nil t)
           (let ((start (match-beginning 0))
                 (end (match-end 0)))
             (put-text-property start end
                                'face 'rfc-mode-document-section-title-face)
+            (push (match-string 0) rfc-mode--titles)
             (goto-char end))))
+      ;; Keep titles in expected top to bottom order.
+      (setq rfc-mode--titles (nreverse rfc-mode--titles))
       ;; RFC references
       (save-excursion
         (goto-char (point-min))
@@ -190,7 +268,8 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
             (make-text-button start end
                               'action `(lambda (button)
                                          (rfc-mode-read ,number))
-                              'help-echo (format "Read RFC %d" number))
+                              'help-echo (format "Read RFC %d" number)
+                              'follow-link t)
             (goto-char end)))))))
 
 (defun rfc-mode-header-start ()
@@ -335,11 +414,11 @@ The buffer is created if it does not exist."
   (let* ((buffer-name (rfc-mode--document-buffer-name number))
          (document-path (rfc-mode--document-path number)))
     (rfc-mode--fetch-document number document-path)
-    (find-file document-path)
-    (unless rfc-mode-use-original-buffer-names
-      (rename-buffer buffer-name))
-    (rfc-mode)
-    (current-buffer)))
+    (with-current-buffer (find-file-noselect document-path)
+      (unless rfc-mode-use-original-buffer-names
+        (rename-buffer buffer-name))
+      (rfc-mode)
+      (current-buffer))))
 
 ;;; Misc utils:
 

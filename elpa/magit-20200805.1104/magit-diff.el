@@ -939,7 +939,7 @@ and `:slant'."
   :description "Context lines"
   :class 'transient-option
   :argument "-U"
-  :reader 'transient-read-number-N+)
+  :reader 'transient-read-number-N0)
 
 (transient-define-argument magit-diff:-M ()
   :description "Detect renames"
@@ -1331,9 +1331,6 @@ for a revision."
         (setq section (oref section parent))))
     (magit-section-update-highlight)
     t))
-
-(cl-defmethod magit-buffer-value (&context (major-mode magit-revision-mode))
-  (cons magit-buffer-range magit-buffer-diff-files))
 
 ;;;; Setting Commands
 

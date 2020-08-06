@@ -9,6 +9,9 @@
 ;;;### (autoloads nil "helm" "helm.el" (0 0 0 0))
 ;;; Generated autoloads from helm.el
 
+(autoload 'helm-configuration "helm" "\
+Customize Helm." t nil)
+
 (autoload 'helm-define-multi-key "helm" "\
 In KEYMAP, define key sequence KEY for function list FUNCTIONS.
 Each function runs sequentially for each KEY press.
@@ -170,9 +173,9 @@ the list items, starting with the first.
 
 If nil, `thing-at-point' is used.
 
-If `helm--maybe-use-default-as-input' is non-nil, display is
-updated using this value, unless :input is specified, in which
-case that value is used instead.
+If `helm-maybe-use-default-as-input' is non-nil, display is
+updated using this value if this value matches, otherwise it is
+ignored. If :input is specified, it takes precedence on :default.
 
 *** :history
 

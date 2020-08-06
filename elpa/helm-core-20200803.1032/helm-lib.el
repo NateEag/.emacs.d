@@ -25,30 +25,37 @@
 
 (require 'cl-lib)
 
-(declare-function wdired-change-to-dired-mode "wdired.el")
-(declare-function wdired-do-symlink-changes "wdired.el")
-(declare-function wdired-do-perm-changes "wdired.el")
-(declare-function wdired-get-filename "wdired.el")
-(declare-function wdired-do-renames "wdired.el")
-(declare-function wdired-flag-for-deletion "wdired.el")
-(declare-function wdired-normalize-filename "wdired.el")
-(declare-function dired-mark-remembered "dired.el")
-(declare-function dired-log-summary "dired.el")
-(declare-function dired-current-directory "dired.el")
 (declare-function ansi-color--find-face "ansi-color.el")
 (declare-function ansi-color-apply-sequence "ansi-color.el")
-(declare-function helm-get-sources "helm.el")
-(declare-function helm-marked-candidates "helm.el")
-(declare-function helm-follow-mode-p "helm.el")
+(declare-function dired-current-directory "dired.el")
+(declare-function dired-log-summary "dired.el")
+(declare-function dired-mark-remembered "dired.el")
+(declare-function ffap-file-remote-p "ffap.el")
+(declare-function ffap-url-p "ffap.el")
 (declare-function helm-attr "helm.el")
 (declare-function helm-attrset "helm.el")
-(declare-function org-open-at-point "org.el")
+(declare-function helm-follow-mode-p "helm.el")
+(declare-function helm-get-current-source "helm.el")
+(declare-function helm-get-selection "helm.el")
+(declare-function helm-get-sources "helm.el")
+(declare-function helm-interpret-value "helm.el")
+(declare-function helm-log-run-hook "helm.el")
+(declare-function helm-marked-candidates "helm.el")
+(declare-function helm-set-case-fold-search "helm.el")
+(declare-function helm-source--cl--print-table "helm-source.el")
+(declare-function helm-update "helm.el")
 (declare-function org-content "org.el")
 (declare-function org-mark-ring-goto "org.el")
 (declare-function org-mark-ring-push "org.el")
-(declare-function helm-interpret-value "helm.el")
-(declare-function helm-get-current-source "helm.el")
-(declare-function helm-source--cl--print-table "helm-source.el")
+(declare-function org-open-at-point "org.el")
+(declare-function wdired-change-to-dired-mode "wdired.el")
+(declare-function wdired-do-perm-changes "wdired.el")
+(declare-function wdired-do-renames "wdired.el")
+(declare-function wdired-do-symlink-changes "wdired.el")
+(declare-function wdired-flag-for-deletion "wdired.el")
+(declare-function wdired-get-filename "wdired.el")
+(declare-function wdired-normalize-filename "wdired.el")
+
 (defvar helm-sources)
 (defvar helm-initial-frame)
 (defvar helm-current-position)
@@ -57,6 +64,10 @@
 (defvar wdired-allow-to-change-permissions)
 (defvar wdired-allow-to-redirect-links)
 (defvar helm-persistent-action-display-window)
+(defvar helm--buffer-in-new-frame-p)
+(defvar helm-completion-style)
+(defvar helm-completion-styles-alist)
+(defvar helm-persistent-action-window-buffer)
 (defvar completion-flex-nospace)
 
 ;;; User vars.
@@ -544,10 +555,69 @@ E.g.: helm.el$
 
 ;;; Help routines.
 ;;
+(defvar helm-help--iter-org-state nil)
+
 (defvar helm-help-mode-before-hook nil
   "A hook that runs before helm-help starts.")
+
 (defvar helm-help-mode-after-hook nil
   "A hook that runs when helm-help exits.")
+
+(defcustom helm-help-default-prompt
+  "[SPC,C-v,next:ScrollUp  b,M-v,prior:ScrollDown TAB:Cycle M-TAB:All C-s/r:Isearch q:Quit]"
+  "The prompt used in `helm-help'."
+  :type 'string
+  :group 'helm)
+
+(defcustom helm-help-hkmap
+  '(("C-v" . helm-help-scroll-up)
+    ("SPC" . helm-help-scroll-up)
+    ("<next>" . helm-help-scroll-up)
+    ("M-v" . helm-help-scroll-down)
+    ("b" . helm-help-scroll-down)
+    ("<prior>" . helm-help-scroll-down)
+    ("C-s" . isearch-forward)
+    ("C-r" . isearch-backward)
+    ("C-a" . move-beginning-of-line)
+    ("C-e" . move-end-of-line)
+    ("C-f" . forward-char)
+    ("<right>" . forward-char)
+    ("C-b" . backward-char)
+    ("<left>" . backward-char)
+    ("C-n" . helm-help-next-line)
+    ("C-p" . helm-help-previous-line)
+    ("<down>" . helm-help-next-line)
+    ("<up>" . helm-help-previous-line)
+    ("M-a" . backward-sentence)
+    ("M-e" . forward-sentence)
+    ("M-f" . forward-word)
+    ("M-b" . backward-word)
+    ("M->" . end-of-buffer)
+    ("M-<" . beginning-of-buffer)
+    ("C-SPC" . helm-help-toggle-mark)
+    ("C-M-SPC" . mark-sexp)
+    ("TAB"   . org-cycle)
+    ("C-m" . helm-help-org-open-at-point)
+    ("C-&" . helm-help-org-mark-ring-goto)
+    ("C-%" . org-mark-ring-push)
+    ("M-TAB" . helm-help-org-cycle)
+    ("M-w" . helm-help-copy-region-as-kill)
+    ("q" . helm-help-quit))
+  "Alist of (KEY . FUNCTION) for `helm-help'.
+
+This is not a standard keymap, just an alist where it is possible to
+define a simple KEY (a string with no spaces) associated with a
+FUNCTION. More complex key like \"C-x C-x\" are not supported.
+Interactive functions will be called interactively whereas other
+functions will be called with funcall except commands that are in
+`helm-help-not-interactive-command'.
+For convenience you can add bindings here with `helm-help-define-key'."
+  :type '(alist :key-type string :key-value symbol)
+  :group 'helm)
+
+(defvar helm-help-not-interactive-command '(isearch-forward isearch-backward)
+  "Commands that we don't want to call interactively in `helm-help'.")
+
 (defun helm-help-internal (bufname insert-content-fn)
   "Show long message during Helm session in BUFNAME.
 INSERT-CONTENT-FN is the function that inserts text to be
@@ -575,75 +645,99 @@ displayed in BUFNAME."
         (setq helm-suspend-update-flag nil)
         (set-frame-configuration winconf)))))
 
-(defun helm-help-scroll-up (amount)
+(cl-defun helm-help-scroll-up (&optional (amount helm-scroll-amount))
+  "Scroll up in `helm-help'."
   (condition-case _err
       (scroll-up-command amount)
     (beginning-of-buffer nil)
     (end-of-buffer nil)))
 
-(defun helm-help-scroll-down (amount)
+(cl-defun helm-help-scroll-down (&optional (amount helm-scroll-amount))
+  "Scroll down in `helm-help'."
   (condition-case _err
       (scroll-down-command amount)
     (beginning-of-buffer nil)
     (end-of-buffer nil)))
 
 (defun helm-help-next-line ()
+  "Next line function for `helm-help'."
   (condition-case _err
       (call-interactively #'next-line)
     (beginning-of-buffer nil)
     (end-of-buffer nil)))
 
 (defun helm-help-previous-line ()
+  "Previous line function for `helm-help'."
   (condition-case _err
       (call-interactively #'previous-line)
     (beginning-of-buffer nil)
     (end-of-buffer nil)))
 
 (defun helm-help-toggle-mark ()
+  "Toggle mark in `helm-help'."
   (if (region-active-p)
       (deactivate-mark)
       (push-mark nil nil t)))
 
-;; For movement of cursor in help buffer we need to call interactively
-;; commands for impaired people using a synthetizer (#1347).
+(defun helm-help-org-cycle ()
+  "Runs `org-cycle' in `helm-help'."
+  (pcase (helm-iter-next helm-help--iter-org-state)
+    ((pred numberp) (org-content))
+    ((and state) (org-cycle state))))
+
+(defun helm-help-copy-region-as-kill ()
+  "Copy region function for `helm-help'"
+  (copy-region-as-kill
+   (region-beginning) (region-end))
+  (deactivate-mark))
+
+(defun helm-help-quit ()
+  "Quit `helm-help'."
+  (throw 'helm-help-quit nil))
+
+(defun helm-help-org-open-at-point ()
+  "Calls `org-open-at-point' ignoring errors."
+  (ignore-errors
+    (org-open-at-point)))
+
+(defun helm-help-org-mark-ring-goto ()
+  "Calls `org-mark-ring-goto' ignoring errors."
+  (ignore-errors
+    (org-mark-ring-goto)))
+
 (defun helm-help-event-loop ()
+  "The loop in charge of scanning keybindings in `helm-help'."
   (let ((prompt (propertize
-                 "[SPC,C-v,next:ScrollUp  b,M-v,prior:ScrollDown TAB:Cycle M-TAB:All C-s/r:Isearch q:Quit]"
+                 helm-help-default-prompt
                  'face 'helm-helper))
         scroll-error-top-bottom
-        (iter-org-state (helm-iter-circular '(1 (16) (64)))))
-    (helm-awhile (read-key prompt)
-      (cl-case it
-        ((?\C-v ? next) (helm-help-scroll-up helm-scroll-amount))
-        ((?\M-v ?b prior) (helm-help-scroll-down helm-scroll-amount))
-        (?\C-s (isearch-forward))
-        (?\C-r (isearch-backward))
-        (?\C-a (call-interactively #'move-beginning-of-line))
-        (?\C-e (call-interactively #'move-end-of-line))
-        ((?\C-f right) (call-interactively #'forward-char))
-        ((?\C-b left) (call-interactively #'backward-char))
-        ((?\C-n down) (helm-help-next-line))
-        ((?\C-p up) (helm-help-previous-line))
-        (?\M-a (call-interactively #'backward-sentence))
-        (?\M-e (call-interactively #'forward-sentence))
-        (?\M-f (call-interactively #'forward-word))
-        (?\M-b (call-interactively #'backward-word))
-        (?\M-> (call-interactively #'end-of-buffer))
-        (?\M-< (call-interactively #'beginning-of-buffer))
-        (?\C-  (helm-help-toggle-mark))
-        (?\t   (org-cycle))
-        (?\C-m (ignore-errors (call-interactively #'org-open-at-point)))
-        (?\C-& (ignore-errors (call-interactively #'org-mark-ring-goto)))
-        (?\C-% (call-interactively #'org-mark-ring-push))
-        (?\M-\t (pcase (helm-iter-next iter-org-state)
-                  ((pred numberp) (org-content))
-                  ((and state) (org-cycle state))))
-        (?\M-w (copy-region-as-kill
-                (region-beginning) (region-end))
-               (deactivate-mark))
-        (?q    (cl-return))
-        (t     (ignore))))))
+        (helm-help--iter-org-state (helm-iter-circular '(1 (16) (64)))))
+    (catch 'helm-help-quit
+      (helm-awhile (read-key prompt)
+        (let ((fun (cl-loop for (k . v) in helm-help-hkmap
+                            when (eql (aref (kbd k) 0) it)
+                            return v)))
+          (when fun
+            (if (and (commandp fun)
+                     (not (memq fun helm-help-not-interactive-command)))
+                ;; For movement of cursor in help buffer we need to
+                ;; call interactively commands for impaired people
+                ;; using a synthetizer (#1347).
+                (call-interactively fun)
+              (funcall fun))))))))
 
+(defun helm-help-define-key (key function &optional override)
+  "Add KEY bound to fUNCTION in `helm-help-hkmap'.
+
+If OVERRIDE is non nil, all bindings associated with FUNCTION are
+removed and only (KEY . FUNCTION) is kept.
+See `helm-help-hkmap' for supported keys and functions."
+  (cl-assert (not (cdr (split-string key))) nil
+             (format "Error: Unsuported key `%s'" key))
+  (when override
+    (helm-awhile (rassoc function helm-help-hkmap)
+      (setq helm-help-hkmap (delete it helm-help-hkmap))))
+  (add-to-list 'helm-help-hkmap `(,key . ,function)))
 
 ;;; Multiline transformer
 ;;
@@ -1075,7 +1169,7 @@ See `helm-elisp-show-help'."
               (helm-attrset 'help-running-p nil))
             ;; Force running update hook to may be delete
             ;; helm-persistent-action-display-window, this is done in
-            ;; helm-persistent-action-display-window (the function). 
+            ;; helm-persistent-action-display-window (the function).
             (unless helm--buffer-in-new-frame-p
               (helm-update (regexp-quote (helm-get-selection)))))
            (t
@@ -1306,9 +1400,19 @@ Directories expansion is not supported."
                                      ((basename nil) 'basename)
                                      (t 'full))
                              :directories nil
-                             :match (wildcard-to-regexp bn)
+                             :match (or (helm-wildcard-to-regexp bn)
+                                        (wildcard-to-regexp bn))
                              :skip-subdirs t)
-        (file-expand-wildcards pattern full))))
+      (helm-aif (helm-wildcard-to-regexp bn)
+          (directory-files (helm-basedir pattern) full it)
+        (file-expand-wildcards pattern full)))))
+
+(defun helm-wildcard-to-regexp (wc)
+  "Transform wilcard WC like \"**.{jpg,jpeg}\" in REGEXP."
+  (when (string-match ".*\\(\\*\\{1,2\\}\\)\\.[{]\\(.*\\)[}]\\'" wc)
+    (format ".*\\.\\(%s\\)$"
+            (replace-regexp-in-string
+             "," "\\\\|" (match-string 2 wc)))))
 
 ;;; helm internals
 ;;
@@ -1394,7 +1498,7 @@ When `helm-completion-style' is not `emacs' the Emacs vanilla
 default `completion-styles' is used except for
 `helm-dynamic-completion' which uses inconditionally `emacs' as
 value for `helm-completion-style'.
- 
+
 If styles are specified in `helm-completion-styles-alist' for a
 particular mode, use these styles unless NOMODE is non nil.
 If STYLES is specified as a list of styles suitable for
@@ -1596,6 +1700,29 @@ broken."
         (push (substring string start (match-beginning 0)) result)
         (push (substring string start) result))
     (apply 'concat (nreverse result))))
+
+
+;;; Fontlock
+(cl-dolist (mode '(emacs-lisp-mode lisp-interaction-mode))
+  (font-lock-add-keywords
+   mode
+   '(("(\\<\\(with-helm-after-update-hook\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-temp-hook\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-window\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-quittable\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-current-buffer\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-buffer\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-show-completion\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-default-directory\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(with-helm-restore-variables\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-multi-key-defun\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-while-no-input\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-aif\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-awhile\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-acond\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-aand\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-with-gensyms\\)\\>" 1 font-lock-keyword-face)
+     ("(\\<\\(helm-read-answer\\)\\>" 1 font-lock-keyword-face))))
 
 (provide 'helm-lib)
 

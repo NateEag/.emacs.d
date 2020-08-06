@@ -36,12 +36,29 @@
 (require 'helm-lib)
 (require 'helm-multi-match)
 (require 'helm-source)
+;; Soft require this as it is not bundled with helm-core package.
+(require 'helm-global-bindings nil t)
+
+;; Ensure async-bytecomp is used even with helm-core package.
+(declare-function async-bytecomp-package-mode "ext:async-bytecomp.el")
+(when (require 'async-bytecomp nil t)
+  (and (fboundp 'async-bytecomp-package-mode)
+       (async-bytecomp-package-mode 1)))
 
 ;; Setup completion styles for helm-mode
 (helm--setup-completion-styles-alist)
 
 (declare-function helm-comp-read "helm-mode.el")
 (declare-function custom-unlispify-tag-name "cus-edit.el")
+
+(defvar helm-marked-buffer-name)
+
+;; Easy access to customize
+;;;###autoload
+(defun helm-configuration ()
+  "Customize Helm."
+  (interactive)
+  (customize-group "helm"))
 
 ;;; Multi keys
 ;;
@@ -501,9 +518,9 @@ handle this."
 
 (defcustom helm-split-window-other-side-when-one-window 'below
   "The default side to display `helm-buffer' when (1)
-`helm-split-window-default-side' is 'other and (2) 
-the current frame only has one window. Possible values 
-are acceptable args for `split-window' SIDE, that is `below', 
+`helm-split-window-default-side' is 'other and (2)
+the current frame only has one window. Possible values
+are acceptable args for `split-window' SIDE, that is `below',
 `above', `left' or `right'.
 
 If `helm-full-frame' is non-nil, it takes precedence over this
@@ -610,7 +627,7 @@ Note that window-height and window-width have to be configured in
                                                  helm-source-grep-ag
                                                  helm-source-grep-git
                                                  helm-source-grep)
-  "List of Helm sources that need to use `helm--maybe-use-default-as-input'.
+  "List of Helm sources that need to use `helm-maybe-use-default-as-input'.
 When a source is a member of this list, default `thing-at-point'
 will be used as input."
   :group 'helm
@@ -680,14 +697,12 @@ This applies when using `helm-next/previous-line'."
   :type 'function)
 
 (defcustom helm-fuzzy-sort-fn 'helm-fuzzy-matching-default-sort-fn
-  "The sort transformer function used in fuzzy matching.
-When nil, sorting is not done."
+  "The sort transformer function used in fuzzy matching."
   :group 'helm
   :type 'function)
 
 (defcustom helm-fuzzy-matching-highlight-fn 'helm-fuzzy-default-highlight-match
-  "The function to highlight fuzzy matches.
-When nil, no highlighting is done."
+  "The function to highlight fuzzy matches."
   :group 'helm
   :type 'function)
 
@@ -1358,9 +1373,14 @@ While in the help buffer, most of the Emacs regular key bindings
 are available; the most important ones are shown in minibuffer.
 However, due to implementation restrictions, no regular Emacs
 keymap is used (it runs in a loop when reading the help buffer).
-They are hardcoded and not modifiable.
+Only simple bindings are available and they are defined in
+`helm-help-hkmap', which is a simple alist of (key . function).
+You can define or redefine bindings in help with
+`helm-help-define-key' or by adding/removing entries directly in
+`helm-help-hkmap'.
+See `helm-help-hkmap' for restrictions on bindings and functions.
 
-The hard-coded documentation bindings are:
+The documentation of default bindings are:
 
 | Key       | Alternative keys | Command             |
 |-----------+------------------+---------------------|
@@ -1381,6 +1401,7 @@ The hard-coded documentation bindings are:
 | M->       |                  | End of buffer       |
 | M-<       |                  | Beginning of buffer |
 | C-<SPACE> |                  | Toggle mark         |
+| C-M-SPACE |                  | Mark sexp           |
 | RET       |                  | Follow org link     |
 | C-%       |                  | Push org mark       |
 | C-&       |                  | Goto org mark-ring  |
@@ -1779,7 +1800,7 @@ Helm aborts in some special circumstances.  See
 (defvar helm--reading-passwd-or-string nil)
 (defvar helm--in-update nil)
 (defvar helm--in-fuzzy nil)
-(defvar helm--maybe-use-default-as-input nil
+(defvar helm-maybe-use-default-as-input nil
   "Flag to notify the use of use-default-as-input.
 Use only in let-bindings.
 Use :default arg of `helm' as input to update display.
@@ -2660,9 +2681,9 @@ the list items, starting with the first.
 
 If nil, `thing-at-point' is used.
 
-If `helm--maybe-use-default-as-input' is non-nil, display is
-updated using this value, unless :input is specified, in which
-case that value is used instead.
+If `helm-maybe-use-default-as-input' is non-nil, display is
+updated using this value if this value matches, otherwise it is
+ignored. If :input is specified, it takes precedence on :default.
 
 *** :history
 
@@ -2805,9 +2826,9 @@ HISTORY args see `helm'."
         mode-line-in-non-selected-windows
         minibuffer-completion-confirm
         (input-method-verbose-flag helm-input-method-verbose-flag)
-        (helm--maybe-use-default-as-input
+        (helm-maybe-use-default-as-input
          (and (null input)
-              (or helm--maybe-use-default-as-input ; it is let-bounded so use it.
+              (or helm-maybe-use-default-as-input ; it is let-bounded so use it.
                   (cl-loop for s in (helm-normalize-sources sources)
                            thereis (memq s helm-sources-using-default-as-input))))))
     (unwind-protect
@@ -2937,7 +2958,7 @@ buffers (sessions).  When calling from Lisp, specify a
   "Resume previous Helm session within a running Helm."
   (interactive)
   (with-helm-alive-p
-    (let ((arg (if (null (member helm-buffer helm-buffers)) 0 1))) 
+    (let ((arg (if (null (member helm-buffer helm-buffers)) 0 1)))
       (if (> (length helm-buffers) arg)
           (helm-run-after-exit (lambda () (helm-resume (nth arg helm-buffers))))
         (message "No previous helm sessions available for resuming!")))))
@@ -3570,7 +3591,7 @@ See :after-init-hook and :before-init-hook in `helm-source'."
           (or helm-split-window-default-side 'below)))
   ;; Call the init function for sources where appropriate
   (helm-compute-attr-in-sources 'init sources)
-  (setq helm-pattern (or (and helm--maybe-use-default-as-input
+  (setq helm-pattern (or (and helm-maybe-use-default-as-input
                               (or (if (listp default)
                                       (car default) default)
                                   (with-helm-current-buffer
@@ -3638,7 +3659,7 @@ please don't use it outside of Helm.
 
 (defun helm--reset-default-pattern ()
   (setq helm-pattern "")
-  (setq helm--maybe-use-default-as-input nil))
+  (setq helm-maybe-use-default-as-input nil))
 
 (defun helm-read-pattern-maybe (prompt
                                 input preselect resume
@@ -3675,9 +3696,9 @@ For PRESELECT RESUME KEYMAP DEFAULT HISTORY, see `helm'."
       ;; display if no result found with precedent value of `helm-pattern'
       ;; unless `helm-quit-if-no-candidate' is non-`nil', in this case
       ;; Don't force update with an empty pattern.
-      ;; Reset also `helm--maybe-use-default-as-input' as this checking
+      ;; Reset also `helm-maybe-use-default-as-input' as this checking
       ;; happen only on startup.
-      (when helm--maybe-use-default-as-input
+      (when helm-maybe-use-default-as-input
         ;; Store value of `default' temporarily here waiting next update
         ;; to allow actions like helm-moccur-action matching pattern
         ;; at the place it jump to.
@@ -3692,7 +3713,7 @@ For PRESELECT RESUME KEYMAP DEFAULT HISTORY, see `helm'."
         ;; when we start with an empty pattern.
         (and (helm-empty-buffer-p)
              (null helm-quit-if-no-candidate)
-             (helm-force-update)))
+             (helm-force-update preselect)))
       ;; Handle `helm-execute-action-at-once-if-one' and
       ;; `helm-quit-if-no-candidate' now.
       (cond ((and (if (functionp helm-execute-action-at-once-if-one)
@@ -4398,6 +4419,7 @@ to the matching method in use."
 (defun helm-fuzzy-highlight-matches (candidates _source)
   "The filtered-candidate-transformer function to highlight fuzzy matches.
 See `helm-fuzzy-default-highlight-match'."
+  (cl-assert helm-fuzzy-matching-highlight-fn nil "Wrong type argument functionp: nil")
   (cl-loop for c in candidates
            collect (funcall helm-fuzzy-matching-highlight-fn c)))
 
@@ -4411,7 +4433,7 @@ See `helm-fuzzy-default-highlight-match'."
 
 REGEXP should be generated from a pattern which is a list like
 \'(point \"f\" any \"o\" any \"b\" any) for \"fob\" as pattern.
-Such pattern is build with 
+Such pattern is build with
 `helm-completion--flex-transform-pattern' function.
 
 Function extracted from `completion-pcm--hilit-commonality' in
@@ -5842,7 +5864,7 @@ message 'no match'."
               ;; When require-match is strict (i.e. `t'), buffer
               ;; should be either empty or in read-file-name have an
               ;; unknown candidate ([?] prefix), if it's not the case
-              ;; fix it in helm-mode but not here. 
+              ;; fix it in helm-mode but not here.
               ((and (or empty-buffer-p unknown)
                     (eq minibuffer-completion-confirm t))
                (minibuffer-message " [No match]"))
@@ -7004,7 +7026,7 @@ starting it is not needed."
                             ;; Non existing files in HFF and
                             ;; RFN. Display may be an image. See
                             ;; https://github.com/yyoncho/helm-treemacs-icons/issues/5
-                            ;; and also issue #2296. 
+                            ;; and also issue #2296.
                             (equal prefix "[?]")
                             (and filecomp-p
                                  (or

@@ -794,13 +794,25 @@ With a prefix ARG select project to remove by name."
      (treemacs-pulse-on-success "Workspace %s was deleted."
        (propertize (treemacs-workspace->name deleted) 'face 'font-lock-type-face)))))
 
-(defun treemacs-switch-workspace ()
-  "Select a different workspace for treemacs."
-  (interactive)
+(defun treemacs-switch-workspace (arg)
+  "Select a different workspace for treemacs.
+
+With a prefix ARG clean up buffers after the switch.  A single prefix argument
+will delete all file visiting buffers, 2 prefix arguments will clean up all open
+buffers (except for treemacs itself and the scratch and messages buffers).
+
+Without a prefix argument `treemacs-workspace-switch-cleanup' will
+be followed instead."
+  (interactive "P")
   (pcase (treemacs-do-switch-workspace)
     ('only-one-workspace
      (treemacs-pulse-on-failure "There are no other workspaces to select."))
     (`(success ,workspace)
+     (treemacs--maybe-clean-buffers-on-workspace-switch
+      (pcase arg
+        (`(4) 'files)
+        (`(16) 'all)
+        (_ treemacs-workspace-switch-cleanup)))
      (treemacs-pulse-on-success "Selected workspace %s."
        (propertize (treemacs-workspace->name workspace))))))
 
@@ -1199,7 +1211,7 @@ To programmatically set the scope type see `treemacs-set-scope-type'."
   (interactive)
   (switch-to-buffer (get-buffer-create "*Treemacs Icons*"))
   (erase-buffer)
-  (dolist (theme treemacs--themes)
+  (dolist (theme (nreverse treemacs--themes))
     (insert (format "* Theme %s\n\n" (treemacs-theme->name theme)))
     (insert " |------+------------|\n")
     (insert " | Icon | Extensions |\n")
@@ -1223,8 +1235,8 @@ To programmatically set the scope type see `treemacs-set-scope-type'."
       (insert (apply #'concat (nreverse txt)))
       (with-no-warnings
         (org-mode)
-        (org-table-align))
-      (goto-char 0))))
+        (org-table-align))))
+  (goto-char 0))
 
 (provide 'treemacs-interface)
 

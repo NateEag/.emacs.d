@@ -894,8 +894,26 @@ If nil treemacs will look for default value provided by `spaceline', `moody'
 or `doom-modeline' in that order.  Finally, if none of these packages is
 available \"Treemacs\" text will be displayed.
 
+Setting this to `none' will disable the modeline.
+
 For more specific information about formatting mode line check `mode-line-format'."
   :type 'sexp
+  :group 'treemacs)
+
+(defcustom treemacs-workspace-switch-cleanup nil
+  "Indicates which, if any, buffers should be deleted on a workspace switch.
+Only applies when interactively calling `treemacs-switch-workspace'.
+
+Valid values are
+ - nil to do nothing
+ - `files' to delete buffers visiting files
+ - `all' to delete all buffers other than treemacs and the scratch buffer
+
+In any case treemacs itself and the scratch and messages buffer will be
+unaffected."
+  :type '(choice (const :tag "All Buffers" all)
+                 (const :tag "Only File Buffers" files)
+                 (const :tag "None" nil))
   :group 'treemacs)
 
 (provide 'treemacs-customization)

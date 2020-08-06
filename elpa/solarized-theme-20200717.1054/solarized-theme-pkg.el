@@ -1,7 +1,7 @@
-(define-package "solarized-theme" "20200411.1026" "The Solarized color theme"
+(define-package "solarized-theme" "20200717.1054" "The Solarized color theme"
   '((emacs "24.1")
     (dash "2.16"))
-  :keywords
+  :commit "63eb59a7ef32abc6780883e27df69a6e42a8a6e4" :keywords
   '("convenience" "themes" "solarized")
   :authors
   '(("Bozhidar Batsov" . "bozhidar@batsov.com"))

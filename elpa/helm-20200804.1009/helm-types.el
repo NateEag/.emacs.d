@@ -24,6 +24,13 @@
 (require 'cl-lib)
 (require 'eieio)
 
+(defvar helm-map)
+(defvar helm-mode-line-string)
+(defvar helm-bookmark-map)
+(declare-function helm-make-actions "helm-lib")
+(declare-function helm-ediff-marked-buffers "helm-buffers")
+(declare-function helm-make-type "helm-source")
+
 
 ;;  Files
 (defclass helm-type-file (helm-source) ()

@@ -26,6 +26,7 @@
 (declare-function LaTeX-math-mode "ext:latex.el")
 (declare-function jabber-chat-with "ext:jabber.el")
 (declare-function jabber-read-account "ext:jabber.el")
+(declare-function helm-comp-read "helm-mode")
 
 
 (defgroup helm-misc nil
@@ -300,7 +301,7 @@ Default action change TZ environment variable locally to emacs."
          (elm (helm-comp-read "Next element matching (regexp): "
                               (cl-loop for i in
                                        (symbol-value minibuffer-history-variable)
-                                       unless (string= "" i) collect i into history
+                                       unless (equal "" i) collect i into history
                                        finally return
                                        (if (consp (car history))
                                            (mapcar 'prin1-to-string history)

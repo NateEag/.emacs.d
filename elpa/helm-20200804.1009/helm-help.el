@@ -475,8 +475,6 @@ you want to go to \"/home/you/foo/bar/baz/somewhere/else\", simply type
 the final \"/\".  Helm will then list all possible directories under \"foo\"
 matching \"else\".
 
-Entering two spaces before \"else\" instead of two dots also works.
-
 Note: Completion on subdirectories uses \"locate\" as backend, you can configure
 the command with `helm-locate-recursive-dirs-command'.  Because this completion
 uses an index, the directory tree displayed may be out-of-date and not reflect
@@ -540,6 +538,19 @@ is different from the Bash \"shopt globstar\" feature in that to list files with
 a named extension recursively you would write \"**.el\" whereas in Bash it would
 be \"**/*.el\".  Directory selection with \"**/\" like Bash \"shopt globstar\"
 option is not supported yet.
+
+Helm supports different styles of wildcards:
+
+- `sh' style, the ones supported by `file-expand-wildcards'.
+e.g. \"*.el\", \"*.[ch]\" which match respectively all \".el\"
+files or all \".c\" and \".h\" files.
+
+- `bash' style (partially) In addition to what allowed in `sh'
+style you can specify file extensions that have more than one
+character like this: \"*.{sh,py}\" which match \".sh\" and
+\".py\" files.
+
+Of course in both styles you can specify one or two \"*\".
 
 *** Query replace regexp on filenames
 
@@ -1044,20 +1055,19 @@ can set this with `helm-ff-skip-boring-files' or
 `helm-ff-skip-git-ignored-files'.
 NOTE: This will slow down helm, be warned.
 
-*** Helm is using a cache
+*** Helm-find-files is using a cache
 
 Helm is caching each directory files list in a hash table for
-faster search.  By default the cache is cleared after each HFF
-session, but you can keep the cache across your HFF sessions by
-customizing `helm-ff-keep-cached-candidates' (see its docstring),
-however this may cause surprises if files have changed (renamed,
-deleted etc...) in these cases you can refresh a directory by
-hitting `\\<helm-map>\\[helm-refresh]'.  An other way is to use
-`helm-ff-cache-mode' which will lazily update HFF cache while
-Emacs is idle, it will show a red or green light depending helm
-is updating or not, to enable it add to your init file
-=(helm-ff-cache-mode 1)=
-or manually with M-x helm-ff-cache-mode.
+faster search.  What is kept in the cache is defined by
+`helm-ff-keep-cached-candidates' variable.  By default HFF keep
+all in the cache between its sessions but you can customize
+`helm-ff-keep-cached-candidates', do not use setq for this.  When
+`helm-ff-keep-cached-candidates' is non nil HFF refreshes the
+cache automatically between its sessions when Emacs is idle, you
+should see a little icon brievly changing form when the cache is
+refreshed if you have set `helm-ff-cache-mode-lighter-updating'
+and `helm-ff-cache-mode-lighter-sleep' . You can also refresh a
+directory at anytime during your HFF sessions by hitting \\<helm-map>\\[helm-refresh].
 
 ** Commands
 \\<helm-find-files-map>

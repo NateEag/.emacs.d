@@ -25,8 +25,13 @@
 (defvar crm-separator)
 (defvar ido-everywhere)
 (defvar completion-flex-nospace)
+(defvar helm-completion--sorting-done)
+(defvar helm-mode)
 
 (declare-function ido-mode "ido.el")
+(declare-function helm-apropos-init "helm-elisp")
+(declare-function helm-lisp-completion-persistent-action "helm-elisp")
+(declare-function helm-lisp-completion-persistent-help "helm-elisp")
 
 (defgroup helm-mode nil
   "Enable helm completion."
@@ -1589,7 +1594,8 @@ Actually does nothing."
          (bounds (completion-boundaries beforepoint table pred afterpoint))
          (prefix (substring beforepoint 0 (car bounds)))
          (suffix (substring afterpoint (cdr bounds)))
-         (all (helm-completion--multi-all-completions-1 string table pred)))
+         (all (helm-completion--multi-all-completions-1
+               (regexp-quote string) table pred)))
     (list all string prefix suffix point)))
 
 ;; The adjust-metadata functions run only in emacs-27, they are NOT
@@ -1634,7 +1640,7 @@ Actually does nothing."
                          (length prefix)))))))
 
 (defun helm-flex-add-score-as-prop (candidates regexp)
-  (cl-loop with case-fold-search = (helm-set-case-fold-search) 
+  (cl-loop with case-fold-search = (helm-set-case-fold-search)
            for cand in candidates
            collect (helm-flex--style-score cand regexp)))
 
@@ -1849,6 +1855,16 @@ Can be used for `completion-in-region-function' by advicing it with an
         (advice-remove 'lisp--local-variables
                        #'helm-mode--advice-lisp--local-variables)))))
 
+(defvar helm-crm-default-separator ","
+  "Default separator for `completing-read-multiple'.
+
+`crm-separator' will take precedence on this when it is a string composed
+of a single character.
+If used globally, it is a string composed of a single character,
+if let-bounded, it can be also nil or a symbol which mean no
+separator.  Don't set this to a string composed of more than one
+character.
+Be sure to know what you are doing when modifying this.")
 (defun helm-completion-in-region--insert-result (result start point end base-size)
   (cond ((stringp result)
          (choose-completion-string
@@ -1858,7 +1874,7 @@ Can be used for `completion-in-region-function' by advicing it with an
          (when helm-completion-mark-suffix
            (run-with-idle-timer 0.01 nil
                                 (lambda ()
-                                  (helm-aand 
+                                  (helm-aand
                                    (+ (- (point) point) end)
                                    (and (> it (point)) it)
                                    (push-mark  it t t))))))
@@ -1871,13 +1887,19 @@ Can be used for `completion-in-region-function' by advicing it with an
                          ;; it matches or default to "," if no match.
                          (eq (length crm-separator) 1)
                          crm-separator)
-                        ",")))
+                        helm-crm-default-separator)))
            ;; Try to find a default separator. If `crm-separator' is a
            ;; regexp use the string the regexp is matching.
-           (save-excursion
-             (goto-char beg)
-             (when (looking-back crm-separator (1- (point)))
-               (setq sep (match-string 0))))
+           ;; If SEP is not a string, it have been probably bound to a
+           ;; symbol or nil through `helm-crm-default-separator' that serve
+           ;; as a flag to say "Please no separator" (Issue #2353 with
+           ;; `magit-completing-read-multiple').
+           (if (stringp sep)
+               (save-excursion
+                 (goto-char beg)
+                 (when (looking-back crm-separator (1- (point)))
+                   (setq sep (match-string 0))))
+             (setq sep nil))
            (funcall completion-list-insert-choice-function
                     beg end (mapconcat 'identity (append result '("")) sep))))
         (t nil)))
@@ -1949,7 +1971,7 @@ Note: This mode is incompatible with Emacs23."
         (when (fboundp 'ffap-read-file-or-url-internal)
           ;; `ffap-read-file-or-url-internal' have been removed in
           ;; emacs-27 and `ffap-read-file-or-url' is fixed, so no need
-          ;; to advice it. 
+          ;; to advice it.
           (advice-add 'ffap-read-file-or-url :override #'helm-advice--ffap-read-file-or-url)))
     (progn
       (remove-function completing-read-function #'helm--completing-read-default)

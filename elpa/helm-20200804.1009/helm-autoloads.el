@@ -114,16 +114,6 @@ You can get help on each command by persistent action.
 
 ;;;***
 
-;;;### (autoloads nil "helm-config" "helm-config.el" (0 0 0 0))
-;;; Generated autoloads from helm-config.el
-
-(autoload 'helm-configuration "helm-config" "\
-Customize Helm." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-config" '("helm-")))
-
-;;;***
-
 ;;;### (autoloads nil "helm-dabbrev" "helm-dabbrev.el" (0 0 0 0))
 ;;; Generated autoloads from helm-dabbrev.el
 
@@ -263,15 +253,21 @@ or call the function `helm-ff-cache-mode'.")
 (custom-autoload 'helm-ff-cache-mode "helm-files" nil)
 
 (autoload 'helm-ff-cache-mode "helm-files" "\
-Refresh `helm-ff--list-directory-cache' when emacs is idle.
+Auto refresh `helm-find-files' cache when emacs is idle.
 
 If called interactively, enable Helm-Ff-Cache mode if ARG is
 positive, and disable it if ARG is zero or negative.  If called
 from Lisp, also enable the mode if ARG is omitted or nil, and
 toggle it if ARG is `toggle'; disable the mode otherwise.
 
+You will probably don't want to start this mode directly but instead
+customize `helm-ff-keep-cached-candidates' to a non nil value to
+enable it.
+With `helm-ff-keep-cached-candidates' set to a nil value the mode will
+disable itself.
+
 When Emacs is idle, refresh the cache all the
-`helm-ff-refresh-cache-delay' seconds then stop after
+`helm-ff-refresh-cache-delay' seconds then stop when done or after
 `helm-ff-cache-mode-max-idle-time' if emacs is still idle.
 
 \(fn &optional ARG)" t nil)
@@ -387,6 +383,14 @@ searching for is already found." t nil)
 Preconfigured `helm' for `recentf'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-for-files" '("helm-")))
+
+;;;***
+
+;;;### (autoloads nil "helm-global-bindings" "helm-global-bindings.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from helm-global-bindings.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-global-bindings" '("helm-")))
 
 ;;;***
 
@@ -1021,8 +1025,8 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
-;;;### (autoloads nil nil ("helm-easymenu.el" "helm-pkg.el") (0 0
-;;;;;;  0 0))
+;;;### (autoloads nil nil ("helm-config.el" "helm-easymenu.el" "helm-pkg.el")
+;;;;;;  (0 0 0 0))
 
 ;;;***
 

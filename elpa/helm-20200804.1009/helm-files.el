@@ -26,12 +26,12 @@
 (require 'helm-locate)
 (require 'helm-tags)
 (require 'helm-buffers)
+(require 'tramp)
 (eval-when-compile
   (require 'thingatpt)
   (require 'ffap)
   (require 'dired-aux)
   (require 'dired-x)
-  (require 'tramp)
   (require 'image-dired))
 
 (declare-function find-library-name "find-func.el" (library))
@@ -53,21 +53,48 @@
 (declare-function helm-find-1 "helm-find")
 (declare-function helm-get-default-program-for-file "helm-external")
 (declare-function helm-open-file-externally "helm-external")
+(declare-function helm-comp-read "helm-mode")
+(declare-function helm-read-file-name "helm-mode")
 (declare-function term-line-mode "term")
 (declare-function term-char-mode "term")
 (declare-function term-send-input "term")
 (declare-function term-next-prompt "term")
 (declare-function term-process-mark "term")
+(declare-function bookmark-prop-get "bookmark")
+(declare-function comint-next-prompt "comint")
+(declare-function comint-delete-input "comint")
+(declare-function comint-send-input "comint")
+(declare-function comint-goto-process-mark "comint")
+(declare-function tramp-dissect-file-name "tramp")
+(declare-function tramp-get-completion-function "tramp")
+(declare-function seconds-to-time "time-date")
+(declare-function ffap-fixup-url "ffap")
+(declare-function ffap-url-at-point "ffap")
+(declare-function ffap-file-at-point "ffap")
+(declare-function dired-create-files "dired-aux")
+(declare-function dired-goto-file "dired")
+(declare-function dired-move-to-filename "dired")
+(declare-function dired-move-to-end-of-filename "dired")
+(declare-function dired-get-filename "dired")
+(declare-function dired-get-marked-files "dired")
+(declare-function tramp-list-connections "tramp-cache")
+(declare-function tramp-get-connection-process "tramp")
+(declare-function tramp-buffer-name "tramp")
+(declare-function tramp-make-tramp-file-name "tramp")
+(declare-function tramp-cleanup-connection "tramp-cmds")
 
 (defvar term-char-mode-point-at-process-mark)
 (defvar term-char-mode-buffer-read-only)
 (defvar recentf-list)
 (defvar helm-mm-matching-method)
+(defvar helm-ff-cache-mode)
+(defvar helm-ff-keep-cached-candidates)
 (defvar dired-async-mode)
 (defvar org-directory)
 (defvar eshell-current-command)
 (defvar eshell-debug-command)
 (defvar eshell-current-command)
+
 
 
 (defgroup helm-files nil
@@ -459,20 +486,6 @@ currently transfered in an help-echo in mode-line, if you use
 (defcustom helm-rsync-percent-sign "％"
   "Percentage unicode sign to use in Rsync reporter."
   :type 'string
-  :group 'helm-files)
-
-(defcustom helm-ff-keep-cached-candidates nil
-  "When non nil do not delete the HFF cache after each session.
-Possible values are:
-- `all' or `t' : Keep all
-- `remote': Keep only remote
-- `local': Keep only locals
-- `nil' (default) : Delete all"
-  :type '(choice
-          (const :tag "Keep all"         'all)
-          (const :tag "Keep only remote" 'remote)
-          (const :tag "Keep only locals" 'local)
-          (const :tag "Delete all"       nil))
   :group 'helm-files)
 
 ;;; Faces
@@ -1549,7 +1562,9 @@ prefix arg shell buffer doesn't exists, create it and switch to it."
                        (helm-comp-read "Switch to shell buffer: " bufs
                                        :must-match t)
                      (car bufs)))
-        (switch-to-buffer it)
+        ;; Display in same window by default to preserve the
+        ;; historical behaviour
+        (pop-to-buffer it '(display-buffer-same-window))
       (cl-case helm-ff-preferred-shell-mode
         (eshell-mode
          (eshell helm-current-prefix-arg))
@@ -2014,12 +2029,17 @@ If MUST-MATCH is specified exit with
         ;; Ensure `file-directory-p' works on remote files.
         non-essential)
     (cl-assert sel nil "Trying to exit with no candidates")
-    (if (and (file-directory-p sel)
+    (if (and (or (file-directory-p sel)
+                 (helm-ff--invalid-tramp-name-p sel))
              ;; Allows exiting with default action when a prefix arg
              ;; is specified.
              (null current-prefix-arg)
              (null helm-ff--RET-disabled)
-             (not (string= "." (helm-basename sel))))
+             (or (and (file-remote-p sel)
+                      (string= "." (helm-basename sel))
+                      (string-match-p "\\`[/].*:.*:\\'"
+                                      helm-pattern))
+                 (not (string= "." (helm-basename sel)))))
         (helm-execute-persistent-action)
       (if must-match
           (helm-confirm-and-exit-minibuffer)
@@ -2651,31 +2671,38 @@ when `helm-pattern' is equal to \"~/\"."
             (run-at-time helm-input-idle-delay nil #'undo-boundary)
             (helm-check-minibuffer-input)))))))
 
-(defun helm-ff-auto-expand-to-home-or-root ()
-  "Allow expanding to home/user directory or root or text yanked after pattern."
-  (when (and (helm-file-completion-source-p)
-             (with-current-buffer (window-buffer (minibuffer-window)) (eolp))
-             (not (string-match helm-ff-url-regexp helm-pattern)))
-    (cond ((and (not (file-remote-p helm-pattern))
-                (null (file-exists-p helm-pattern))
+(cl-defun helm-ff-auto-expand-to-home-or-root (&optional (pattern helm-pattern spattern))
+  "Allow expanding to $HOME or \"/\" or text yanked after pattern.
+
+Argument PATTERN default to `helm-pattern' and should _not_ be used for
+other purpose than debugging the second cond clause of this function.
+When PATTERN is specified, specific helm functions are not called to
+avoid errors when called outside helm for debugging purpose."
+  (when (or spattern
+            (and (helm-file-completion-source-p)
+                 (with-current-buffer (window-buffer (minibuffer-window)) (eolp))
+                 (not (string-match helm-ff-url-regexp pattern))))
+    (cond ((and (not (file-remote-p pattern))
+                (null (file-exists-p pattern))
                 (string-match-p
-                 "\\`\\([.]\\|\\s-\\)\\{2\\}[^/]+"
-                 (helm-basename helm-pattern))
-                (string-match-p "/\\'" helm-pattern))
-           (helm-ff-recursive-dirs helm-pattern)
+                 "\\`\\([.]\\)\\{2\\}[^/]+"
+                 (helm-basename pattern))
+                (string-match-p "/\\'" pattern)
+                (null spattern))
+           (helm-ff-recursive-dirs pattern)
            (helm-ff--maybe-set-pattern-and-update))
           ((string-match
-            "\\(?:\\`~/\\)\\|/?\\$.*/\\|/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\|\\s\\+\\)"
-            helm-pattern)
-           (let* ((match (match-string 0 helm-pattern))
+            "\\(?:\\`~/\\)\\|/?\\$.*/\\|/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\)"
+            pattern)
+           (let* ((match (match-string 0 pattern))
                   (input (cond ((string= match "/./")
                                 (expand-file-name default-directory))
-                               ((string= helm-pattern "/../") "/")
+                               ((string= pattern "/../") "/")
                                ((string-match-p "\\`/\\$" match)
                                 (let ((sub (substitute-in-file-name match)))
                                   (if (file-directory-p sub)
                                       sub (replace-regexp-in-string "/\\'" "" sub))))
-                               (t (helm-ff--expand-substitued-pattern helm-pattern)))))
+                               (t (helm-ff--expand-substitued-pattern pattern)))))
              ;; `file-directory-p' returns t on "/home/me/." (issue #1844).
              (if (and (file-directory-p input)
                       (not (string-match-p "[^.]\\.\\'" input)))
@@ -2683,10 +2710,10 @@ when `helm-pattern' is equal to \"~/\"."
                        (setq input (file-name-as-directory input)))
                  (setq helm-ff-default-directory (file-name-as-directory
                                                   (file-name-directory input))))
-             (helm-ff--maybe-set-pattern-and-update input)))
-          ((string-match "\\`/\\(-\\):.*" helm-pattern)
+             (if spattern input (helm-ff--maybe-set-pattern-and-update input))))
+          ((and (string-match "\\`/\\(-\\):.*" pattern) (null spattern))
            (helm-ff--maybe-set-pattern-and-update
-            (replace-match tramp-default-method t t helm-pattern 1))))))
+            (replace-match tramp-default-method t t pattern 1))))))
 
 (defun helm-ff--maybe-set-pattern-and-update (&optional str)
   (with-helm-window
@@ -2860,7 +2887,10 @@ debugging purpose."
                                                     (concat (or (car mh-method) "/")
                                                             method ":" host))))))
       (helm-fast-remove-dups
-       (delq nil (cons current-mh-host comps))
+       (append (and current-mh-host
+                    (list (helm-ff-filter-candidate-one-by-one
+                           current-mh-host)))
+               comps)
        :test 'equal))))
 
 (defun helm-ff-before-action-hook-fn ()
@@ -2877,7 +2907,7 @@ debugging purpose."
 (cl-defun helm-ff--invalid-tramp-name-p (&optional (pattern helm-pattern))
   "Return non-nil when PATTERN is an invalid tramp filename."
   (string= (helm-ff-set-pattern pattern)
-           "Invalid tramp file name"))
+           "@@TRAMP@@"))
 
 (defun helm-ff--tramp-postfixed-p (str)
   (let ((methods (helm-ff--get-tramp-methods))
@@ -2953,7 +2983,8 @@ debugging purpose."
           ((and (null postfixed)
                 (string-match helm-tramp-file-name-regexp pattern)
                 (member (match-string 1 pattern) methods))
-           "Invalid tramp file name")   ; Write in helm-buffer.
+           ;; A flag to notify tramp name is incomplete.
+           "@@TRAMP@@")
           ;; Return PATTERN unchanged.
           (t pattern))))
 
@@ -2972,7 +3003,7 @@ debugging purpose."
     ;; Issue #118 allow creation of newdir+newfile.
     (unless (or
              ;; A tramp file name not completed.
-             (string= path "Invalid tramp file name")
+             (string= path "@@TRAMP@@")
              ;; An empty pattern
              (string= path "")
              (and (string-match-p ":\\'" path)
@@ -2986,10 +3017,10 @@ debugging purpose."
       ;; to write a non--existing path in minibuffer
       ;; probably to create a 'new_dir' or a 'new_dir+new_file'.
       (setq invalid-basedir t))
-    ;; Don't set now `helm-pattern' if `path' == "Invalid tramp file name"
+    ;; Don't set now `helm-pattern' if `path' == "@@TRAMP@@"
     ;; like that the actual value (e.g /ssh:) is passed to
     ;; `helm-ff--tramp-hostnames'.
-    (unless (or (string= path "Invalid tramp file name")
+    (unless (or (string= path "@@TRAMP@@")
                 invalid-basedir)      ; Leave  helm-pattern unchanged.
       (setq helm-ff-auto-update-flag  ; [1]
             ;; Unless auto update is disabled start auto updating only
@@ -3025,18 +3056,8 @@ debugging purpose."
     (when (and (string-match ":\\'" path)
                (file-remote-p basedir nil t))
       (setq helm-pattern basedir))
-    (cond ((string= path "Invalid tramp file name")
-           (or (helm-ff--tramp-hostnames) ; Hostnames completion.
-               (prog2
-                   ;; `helm-pattern' have not been modified yet.
-                   ;; Set it here to the value of `path' that should be now
-                   ;; "Invalid tramp file name" and set the candidates list
-                   ;; to ("Invalid tramp file name") to make `helm-pattern'
-                   ;; match single candidate "Invalid tramp file name".
-                   (setq helm-pattern path)
-                   ;; "Invalid tramp file name" is now printed
-                   ;; in `helm-buffer'.
-                   (list path))))
+    (cond ((string= path "@@TRAMP@@")
+           (helm-ff--tramp-hostnames)) ; Hostnames completion.
           ((or (and (file-regular-p path)
                     (eq last-repeatable-command 'helm-execute-persistent-action))
                ;; `ffap-url-regexp' don't match until url is complete.
@@ -3049,7 +3070,8 @@ debugging purpose."
           ((string= path "") (helm-ff-directory-files "/"))
           ;; Check here if directory is accessible (not working on Windows).
           ((and (file-directory-p path) (not (file-readable-p path)))
-           (list (format "file-error: Opening directory permission denied `%s'" path)))
+           (list (cons (format "file-error: Opening directory permission denied `%s'" path)
+                       path)))
           ;; A fast expansion of PATH is made only if `helm-ff-auto-update-flag'
           ;; is enabled.
           ((and dir-p helm-ff-auto-update-flag)
@@ -3219,86 +3241,65 @@ in cache."
                (helm-ff-directory-files k t)))
            helm-ff--list-directory-cache))
 
-;;; [EXPERIMENTAL] helm-ff-cache-mode
-;;
+;;; `helm-ff-cache-mode'
+;;  A mode to auto refresh helm-find-files cache.
 ;;
 (defvar helm-ff--refresh-cache-timer nil)
 (defvar helm-ff--cache-mode-lighter-face 'helm-ff-cache-stopped)
+(defvar helm-ff--refresh-cache-done nil)
 
 (defcustom helm-ff-cache-mode-post-delay 0.5
   "Wait this delay seconds before restarting when emacs stops beeing idle.
 
-Minimum value accepted is 0.5s."
+Minimum value accepted is 0.3s."
   :type 'float
   :group 'helm-files)
 
-(defcustom helm-ff-refresh-cache-delay 1.0
+(defcustom helm-ff-refresh-cache-delay 0.5
   "`helm-ff-cache-mode' timer starts after this many seconds.
 
-Minimum value accepted is 0.5s."
+Minimum value accepted is 0.3s."
   :type 'float
   :group 'helm-files)
 
-(defcustom helm-ff-cache-mode-max-idle-time 15
+(defcustom helm-ff-cache-mode-max-idle-time 6
   "`helm-ff-cache-mode' timer stops updating after this many seconds."
   :type 'integer
   :group 'helm-files)
 
-(defcustom helm-ff-cache-mode-lighter " 💡"
-  "A string for `helm-ff-cache-mode' lighter."
+(defcustom helm-ff-cache-mode-lighter-sleep nil
+  "String used when `helm-ff-cache-mode' is inactive.
+When this is set to a valid string, it is used as lighter in `helm-ff-cache-mode'."
   :type 'string
   :group 'helm-files)
 
-(defface helm-ff-cache-updating
-  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
-       :inherit font-lock-type-face))
-  "Face used for `helm-ff-cache-mode' lighter."
-  :group 'helm-files-faces)
+(defcustom helm-ff-cache-mode-lighter-updating nil
+  "String used when `helm-ff-cache-mode' is updating cache.
+When this is set to a valid string, it is used as lighter in `helm-ff-cache-mode'."
+  :type 'string
+  :group 'helm-files)
 
-(defface helm-ff-cache-stopped
-  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
-       :inherit font-lock-variable-name-face))
-  "Face used for `helm-ff-cache-mode' lighter."
-  :group 'helm-files-faces)
-
-;;;###autoload
-(define-minor-mode helm-ff-cache-mode
-  "Refresh `helm-ff--list-directory-cache' when emacs is idle.
-
-When Emacs is idle, refresh the cache all the
-`helm-ff-refresh-cache-delay' seconds then stop after
-`helm-ff-cache-mode-max-idle-time' if emacs is still idle."
-  :group 'helm-files
-  :global t
-  :lighter (:eval (propertize helm-ff-cache-mode-lighter
-                              'face helm-ff--cache-mode-lighter-face))
-  (condition-case err
-      (progn
-        (cl-assert helm-ff-keep-cached-candidates
-                   nil "Please set first `helm-ff-keep-cached-candidates' to a non nil value")
-        (if helm-ff-cache-mode
-            (helm-ff-cache-mode-add-hooks)
-          (helm-ff-cache-mode-remove-hooks)
-          (cancel-timer helm-ff--refresh-cache-timer)
-          (setq helm-ff--refresh-cache-timer nil)))
-    (error (progn
-             (setq helm-ff-cache-mode nil)
-             (user-error "%s" (cadr err))))))
+(defvar helm-ff-cache-mode-lighter helm-ff-cache-mode-lighter-sleep
+  "Default string for `helm-ff-cache-mode' lighter.")
 
 (defun helm-ff--cache-mode-refresh (&optional no-update delay)
   (when helm-ff--refresh-cache-timer
     (cancel-timer helm-ff--refresh-cache-timer))
   (if (or helm-alive-p (input-pending-p) no-update)
-      (setq helm-ff--cache-mode-lighter-face 'helm-ff-cache-stopped)
+      (setq helm-ff-cache-mode-lighter helm-ff-cache-mode-lighter-sleep)
     (helm-ff--cache-mode-refresh-1))
-  (setq helm-ff--refresh-cache-timer
-        (run-with-idle-timer
-         (helm-aif (current-idle-time)
-             (time-add
-              it (seconds-to-time (helm-ff--refresh-cache-delay)))
-           (or delay helm-ff-refresh-cache-delay))
-         nil
-         #'helm-ff--cache-mode-refresh)))
+  ;; When `helm-ff-keep-cached-candidates' becomes nil don't restart
+  ;; timer and set mode to nil to disable it.
+  (if helm-ff-keep-cached-candidates
+      (setq helm-ff--refresh-cache-timer
+            (run-with-idle-timer
+             (helm-aif (current-idle-time)
+                 (time-add
+                  it (seconds-to-time (helm-ff--refresh-cache-delay)))
+               (or delay helm-ff-refresh-cache-delay))
+             nil
+             #'helm-ff--cache-mode-refresh))
+    (setq helm-ff-cache-mode nil)))
 
 (defun helm-ff--cache-mode-refresh-1 ()
   (if (and helm-ff-keep-cached-candidates
@@ -3306,12 +3307,14 @@ When Emacs is idle, refresh the cache all the
            ;; Stop updating when Emacs is idle more than
            ;; helm-ff-cache-mode-max-idle-time.
            (time-less-p (current-idle-time)
-                        (seconds-to-time helm-ff-cache-mode-max-idle-time)))
+                        (seconds-to-time (helm-ff--cache-mode-max-idle-time)))
+           (null helm-ff--refresh-cache-done))
       (progn
-        (setq helm-ff--cache-mode-lighter-face 'helm-ff-cache-updating)
+        (setq helm-ff-cache-mode-lighter helm-ff-cache-mode-lighter-updating)
         (while-no-input
-          (helm-ff-refresh-cache)))
-    (setq helm-ff--cache-mode-lighter-face 'helm-ff-cache-stopped))
+          (helm-ff-refresh-cache)
+          (setq helm-ff--refresh-cache-done t)))
+    (setq helm-ff-cache-mode-lighter helm-ff-cache-mode-lighter-sleep))
   (force-mode-line-update))
 
 (defun helm-ff--cache-mode-reset-timer ()
@@ -3330,15 +3333,23 @@ When Emacs is idle, refresh the cache all the
   ;; and an explicit delay in post-command-hook and in focus-in-hook.
   (helm-ff--cache-mode-refresh
    'no-update (+ (helm-ff--refresh-cache-delay)
-                 (helm-ff--cache-mode-post-delay))))
+                 (helm-ff--cache-mode-post-delay)))
+  (setq helm-ff--refresh-cache-done nil))
 
 (defun helm-ff--refresh-cache-delay ()
   "Prevent user using less than 0.5s for `helm-ff-refresh-cache-delay'."
-  (max 0.5 helm-ff-refresh-cache-delay))
+  (max 0.3 helm-ff-refresh-cache-delay))
 
 (defun helm-ff--cache-mode-post-delay ()
   "Prevent user using less than 0.5s for `helm-ff-cache-mode-post-delay'."
-  (max 0.5 helm-ff-cache-mode-post-delay))
+  (max 0.3 helm-ff-cache-mode-post-delay))
+
+(defun helm-ff--cache-mode-max-idle-time ()
+  "Prevent user using too small value for `helm-ff-cache-mode-max-idle-time'."
+  (max (+ helm-ff-cache-mode-post-delay
+          helm-ff-refresh-cache-delay
+          1)
+       helm-ff-cache-mode-max-idle-time))
 
 (defun helm-ff-cache-mode-add-hooks ()
   (add-hook 'post-command-hook 'helm-ff--cache-mode-reset-timer)
@@ -3347,6 +3358,63 @@ When Emacs is idle, refresh the cache all the
 (defun helm-ff-cache-mode-remove-hooks ()
   (remove-hook 'post-command-hook 'helm-ff--cache-mode-reset-timer)
   (remove-hook 'focus-in-hook 'helm-ff--cache-mode-reset-timer))
+
+;;;###autoload
+(define-minor-mode helm-ff-cache-mode
+  "Auto refresh `helm-find-files' cache when emacs is idle.
+
+You will probably don't want to start this mode directly but instead
+customize `helm-ff-keep-cached-candidates' to a non nil value to
+enable it.
+With `helm-ff-keep-cached-candidates' set to a nil value the mode will
+disable itself.
+
+When Emacs is idle, refresh the cache all the
+`helm-ff-refresh-cache-delay' seconds then stop when done or after
+`helm-ff-cache-mode-max-idle-time' if emacs is still idle."
+  :group 'helm-files
+  :global t
+  :lighter (:eval helm-ff-cache-mode-lighter)
+  (unless (or helm-ff-keep-cached-candidates
+              (null helm-ff-cache-mode))
+    ;; When helm-ff-keep-cached-candidates have been set to nil with
+    ;; setq, the mode will start but with no effect and die by itself
+    ;; i.e. the timer will not restart on itself and mode will be set
+    ;; to nil.
+    (display-warning
+     '(helm-ff-cached-mode)
+     "`helm-ff-keep-cached-candidates' should be set to a non nil value"))
+  (if helm-ff-cache-mode
+      (helm-ff-cache-mode-add-hooks)
+    (helm-ff-cache-mode-remove-hooks)
+    (and helm-ff--refresh-cache-timer
+         (cancel-timer helm-ff--refresh-cache-timer))
+    (setq helm-ff--refresh-cache-timer nil)))
+
+(defcustom helm-ff-keep-cached-candidates 'all
+  "When non nil do not delete the HFF cache after each session.
+
+Possible values are:
+- `all' or `t' (default): Keep all.
+- `remote': Keep only remote.
+- `local': Keep only locals.
+- `nil': Delete all.
+
+Starts `helm-ff-cache-mode' when non nil.
+
+Please use customize interface or `customize-set-variable' to
+configure this i.e. NOT `setq'."
+  :type '(choice
+          (const :tag "Keep all"         'all)
+          (const :tag "Keep only remote" 'remote)
+          (const :tag "Keep only locals" 'local)
+          (const :tag "Delete all"       nil))
+  :group 'helm-files
+  :set (lambda (var val)
+         (set var val)
+         (if val
+             (helm-ff-cache-mode 1)
+           (helm-ff-cache-mode -1))))
 
 (defun helm-ff-handle-backslash (fname)
   ;; Allow creation of filenames containing a backslash.
@@ -3498,7 +3566,7 @@ Note that only existing directories are saved here."
               (format "Type: %s: %s\n" type mode-type)
               (when (string= type "symlink")
                 (format "True name: '%s'\n"
-                        (cond ((string-match "^\.#" (helm-basename candidate))
+                        (cond ((string-match "^\\.#" (helm-basename candidate))
                                "Autosave symlink")
                               ((helm-ff-valid-symlink-p candidate)
                                (file-truename candidate))
@@ -3507,6 +3575,9 @@ Note that only existing directories are saved here."
               (format "Group: %s: %s\n" group group-right)
               (format "Others: %s\n" other-right)
               (format "Size: %s\n" size)
+              (when (string= type "directory")
+                (format "Size used in directory: %s\n"
+                        (helm-directory-size candidate nil t)))
               (format "Modified: %s\n" modif)
               (format "Accessed: %s\n" access)
               (and (stringp trash)
@@ -3685,6 +3756,13 @@ return directly CANDIDATES."
                when fc collect fc)
     candidates))
 
+(defsubst helm-ff-file-extension (file)
+  "Returns FILE extension if it is not a number."
+  (helm-aif (file-name-extension file)
+      (and (not (string-match "\\`0+\\'" it))
+           (zerop (string-to-number it))
+           it)))
+
 (defun helm-ff-filter-candidate-one-by-one (file &optional reverse skip-boring-check)
   "Transform file in a cons cell like (DISPLAY . REAL).
 DISPLAY is shown as basename of FILE and REAL as full path of FILE.
@@ -3692,28 +3770,30 @@ If REVERSE is non nil DISPLAY is shown as full path.
 If SKIP-BORING-CHECK is non nil don't filter boring files."
   (let* ((basename (helm-basename file))
          (dot (helm-ff-dot-file-p file))
+         (urlp (string-match-p helm-ff-url-regexp file))
          ;; Filename with cntrl chars e.g. foo^J
          (disp (or (helm-ff--get-host-from-tramp-invalid-fname file)
                    (replace-regexp-in-string
                     "[[:cntrl:]]" "?"
-                    (if reverse file basename))))
+                    (if (or reverse urlp) file basename))))
          (len (length disp))
          (backup (backup-file-name-p disp)))
-    ;; Highlight extensions.
-    (helm-aif (and (not backup)
-                   (file-name-extension disp))
-        (when (and (zerop (string-to-number it))
-                   (string-match (format "\\.\\(%s\\)\\'" it) disp))
-          (add-face-text-property
-           (match-beginning 1) (match-end 1)
-           'helm-ff-file-extension t disp)))
-    ;; We don't want to filter boring files only on the files coming
+    ;; We want to filter boring files only on the files coming
     ;; from the output of helm-ff-directory-files not on single
     ;; candidate (issue #2330).
     (unless (and (not skip-boring-check)
                  (or (helm-ff-boring-file-p basename)
                      (helm-ff-git-ignored-p file)))
-
+      ;; Highlight extensions.
+      (helm-aif (and (not backup)
+                     (not urlp)
+                     (helm-ff-file-extension disp))
+          (when (condition-case _err
+                    (string-match (format "\\.\\(%s\\)\\'" it) disp)
+                  (invalid-regexp nil))
+            (add-face-text-property
+             (match-beginning 1) (match-end 1)
+             'helm-ff-file-extension t disp)))
       ;; Handle tramp files with minimal highlighting.
       (if (and (or (string-match-p helm-tramp-file-name-regexp helm-pattern)
                    (helm-file-on-mounted-network-p helm-pattern)))
@@ -3726,7 +3806,7 @@ If SKIP-BORING-CHECK is non nil don't filter boring files."
                    (cons (propertize disp 'face 'helm-ff-directory) file))
                   ;; Backup files.
                   (backup
-                   (cons (propertize disp 'face '((:foreground "DimGray"))) file))
+                   (cons (propertize disp 'face 'helm-ff-backup-file) file))
                   ;; Executable files.
                   ((get-text-property 1 'helm-ff-exe file)
                    (add-face-text-property 0 len 'helm-ff-executable t disp)
@@ -3772,7 +3852,7 @@ If SKIP-BORING-CHECK is non nil don't filter boring files."
                 ((stringp type)
                  (let* ((abbrev (abbreviate-file-name type))
                         (len-abbrev (length abbrev)))
-                   (helm-aif (file-name-extension abbrev)
+                   (helm-aif (helm-ff-file-extension abbrev)
                        (when (string-match (format "\\.\\(%s\\)\\'" it) abbrev)
                          (add-face-text-property
                           (match-beginning 1) (match-end 1)
@@ -4238,7 +4318,7 @@ file."
 ;;; Recursive dirs completion
 ;;
 (defun helm-find-files-recursive-dirs (directory &optional input)
-  (when (string-match "\\(\\s-+\\|[.]\\)\\{2\\}" input)
+  (when (string-match "\\([.]\\)\\{2\\}" input)
     (setq input (replace-match "" nil t input)))
   (message "Recursively searching %s from %s ..."
            input (abbreviate-file-name directory))
@@ -4473,16 +4553,29 @@ source is `helm-source-find-files'."
 (defun helm-ff--cleanup-cache ()
   "Remove entries from cache according to `helm-ff-keep-cached-candidates'."
   (cl-ecase helm-ff-keep-cached-candidates
-    ((all t) (ignore))
-    (local (maphash (lambda (k _v)
-                      (when (file-remote-p k)
-                        (remhash k helm-ff--list-directory-cache)))
-                    helm-ff--list-directory-cache))
-    (remote (maphash (lambda (k _v)
-                       (unless (file-remote-p k)
-                         (remhash k helm-ff--list-directory-cache)))
-                     helm-ff--list-directory-cache))
-    ((nil) (clrhash helm-ff--list-directory-cache))))
+    ((all t)
+     (maphash (lambda (k _v)
+                ;; Keep all but non existing files but don't call
+                ;; `file-exists-p' on remote files to avoid triggering
+                ;; a tramp connection [1].
+                (when (and (not (file-remote-p k))
+                           (not (file-exists-p k)))
+                  (remhash k helm-ff--list-directory-cache)))
+              helm-ff--list-directory-cache))
+    (local
+     (maphash (lambda (k _v)
+                ;; Same comment as [1].
+                (when (or (file-remote-p k)
+                          (not (file-exists-p k)))
+                  (remhash k helm-ff--list-directory-cache)))
+              helm-ff--list-directory-cache))
+    (remote
+     (maphash (lambda (k _v)
+                (unless (file-remote-p k)
+                  (remhash k helm-ff--list-directory-cache)))
+              helm-ff--list-directory-cache))
+    ((nil)
+     (clrhash helm-ff--list-directory-cache))))
 
 (defun helm-find-files-cleanup ()
   (helm-ff--cleanup-cache)
@@ -5075,25 +5168,38 @@ selecting them."
     (helm-exit-and-execute-action 'find-file-other-tab)))
 (put 'helm-ff-find-file-other-tab 'helm-only t)
 
+(defun helm-ff--new-dirs-to-update (path)
+  "Collect directories to update when creating new directory PATH."
+  (let ((result (list path)))
+    (helm-awhile (helm-reduce-file-name path 1)
+      (if (not (file-directory-p it))
+          (progn (push it result) (setq path it))
+        (push it result)
+        (cl-return)))
+    result))
+
 (defun helm-ff--mkdir (dir &optional helm-ff)
   (when (or (not confirm-nonexistent-file-or-buffer)
             (y-or-n-p (format "Create directory `%s'? "
                               (abbreviate-file-name
                                (expand-file-name dir)))))
-    (let ((dirfname (directory-file-name dir)))
+    (let ((dirfname (directory-file-name dir))
+          (to-update (and helm-ff (helm-ff--new-dirs-to-update dir))))
       (if (file-exists-p dirfname)
           (error
            "Mkdir: Unable to create directory `%s': file exists."
            (helm-basename dirfname))
-        (make-directory dir 'parent)))
-    (when helm-ff
-      ;; Allow having this new dir in history
-      ;; to be able to retrieve it immediately
-      ;; if we want to e.g copy a file from somewhere in it.
-      (setq helm-ff-default-directory
-            (file-name-as-directory (expand-file-name dir)))
-      (push helm-ff-default-directory helm-ff-history))
-    (or (and helm-ff (helm-find-files-1 dir)) t)))
+        (make-directory dir 'parent))
+      (when helm-ff
+        ;; Refresh cache.
+        (mapc (lambda (x) (helm-ff-directory-files x t)) to-update)
+        ;; Allow having this new dir in history
+        ;; to be able to retrieve it immediately
+        ;; if we want to e.g copy a file from somewhere in it.
+        (setq helm-ff-default-directory
+              (file-name-as-directory (expand-file-name dir)))
+        (push helm-ff-default-directory helm-ff-history))
+      (or (and helm-ff (helm-find-files-1 dir)) t))))
 
 (defun helm-transform-file-load-el (actions candidate)
   "Add action to load the file CANDIDATE if it is an Emacs Lisp

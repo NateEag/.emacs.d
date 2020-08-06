@@ -142,6 +142,14 @@ buffer at the end.  See `helm-buffers-reorder-buffer-list'."
   :group 'helm-buffers
   :type 'function)
 
+(defcustom helm-buffers-sort-fn helm-fuzzy-sort-fn
+  "The sort function to use in `helm-buffers-list'.
+
+Default to `helm-fuzzy-sort-fn' you can use
+`helm-fuzzy-matching-sort-fn-preserve-ties-order' as alternative if
+you want to keep the recentest order when narrowing candidates."
+  :type 'function
+  :group 'helm-buffers)
 
 ;;; Faces
 ;;
@@ -505,6 +513,7 @@ The list is reordered with `helm-buffer-list-reorder-fn'."
   "Transformer function to highlight BUFFERS list.
 Should be called after others transformers i.e. (boring
 buffers)."
+  (cl-assert helm-fuzzy-matching-highlight-fn nil "Wrong type argument functionp: nil")
   (cl-loop for i in buffers
            for (name size mode meta) = (if helm-buffer-details-flag
                                            (helm-buffer--details i 'details)
@@ -583,10 +592,11 @@ buffers)."
            finally return (mapconcat 'identity lst (or separator " "))))
 
 (defun helm-buffers-sort-transformer (candidates source)
+  (cl-assert helm-buffers-sort-fn nil "Wrong type argument functionp: nil")
   (if (string= helm-pattern "")
       candidates
     (let ((helm-pattern (helm-buffers--pattern-sans-filters)))
-      (funcall helm-fuzzy-sort-fn candidates source))))
+      (funcall helm-buffers-sort-fn candidates source))))
 
 (defun helm-buffers-mark-similar-buffers-1 (&optional type)
   (with-helm-window

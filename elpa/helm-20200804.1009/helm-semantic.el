@@ -173,7 +173,8 @@ If ARG is supplied, pre-select symbol at point instead of current."
                        (format "\\_<%s\\_>" curtag)
                      (cons (format "\\_<%s\\_>" it)
                            (format "\\_<%s\\_>" curtag))))
-               (format "\\_<%s\\_>" (car (semantic-current-tag))))))
+               (format "\\_<%s\\_>" (car (semantic-current-tag)))))
+        (helm-highlight-matches-around-point-max-lines 'never))
     (unless helm-source-semantic
       (setq helm-source-semantic
             (helm-make-source "Semantic Tags" 'helm-semantic-source
@@ -206,6 +207,7 @@ Fill in the symbol at point by default."
   (let* ((source (if (semantic-active-p)
                      'helm-source-semantic
                      'helm-source-imenu))
+         (helm-highlight-matches-around-point-max-lines 'never)
          (imenu-p (eq source 'helm-source-imenu))
          (imenu-auto-rescan imenu-p)
          (str (thing-at-point 'symbol))

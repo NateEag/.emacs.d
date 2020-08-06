@@ -179,6 +179,10 @@ string."
               (save-excursion
                 (goto-char (point-at-bol))
                  (point-marker)))))
+    ;; Happen when cursor is on the line where a definition is. This
+    ;; prevent jumping to the definition where we are already, instead
+    ;; display helm with all definitions and preselection to the place
+    ;; we already are.
     (if (equal (cdr cur) mb)
         (prog1 nil
           (helm-set-pattern "")
@@ -320,6 +324,7 @@ string."
           (helm-make-source "Imenu" 'helm-imenu-source
             :fuzzy-match helm-imenu-fuzzy-match)))
   (let* ((imenu-auto-rescan t)
+         (helm-highlight-matches-around-point-max-lines 'never)
          (str (thing-at-point 'symbol))
          (init-reg (and str (concat "\\_<" (regexp-quote str) "\\_>")))
          (helm-execute-action-at-once-if-one
@@ -352,11 +357,12 @@ i.e. `derived-mode-p' or it have an association in
               :candidates 'helm-imenu--in-all-buffers-cache
               :fuzzy-match helm-imenu-fuzzy-match))))
   (let* ((imenu-auto-rescan t)
+         (helm-highlight-matches-around-point-max-lines 'never)
          (str (thing-at-point 'symbol))
          (init-reg (and str (concat "\\_<" (regexp-quote str) "\\_>")))
          (helm-execute-action-at-once-if-one
           helm-imenu-execute-action-at-once-if-one)
-         (helm--maybe-use-default-as-input
+         (helm-maybe-use-default-as-input
           (not (null (memq 'helm-source-imenu-all
                            helm-sources-using-default-as-input))))
          (sources (if helm-imenu-in-all-buffers-separate-sources

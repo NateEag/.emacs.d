@@ -22,16 +22,26 @@
 (require 'helm-help)
 (eval-when-compile (require 'dired))
 
-(declare-function helm-find-files-1 "helm-files.el" (fname &optional preselect))
+(declare-function helm-find-files-1 "helm-files" (fname &optional preselect))
+(declare-function helm-grep-split-line "helm-grep" (line))
 (declare-function popup-tip "ext:popup")
-(declare-function markdown-show-subtree "outline.el")
-(declare-function outline-show-subtree "outline.el")
-(declare-function org-reveal "org.el")
-(declare-function tab-bar-tabs "tab-bar.el")
-(declare-function tab-bar-select-tab "tab-bar.el")
+(declare-function markdown-show-subtree "outline")
+(declare-function outline-show-subtree "outline")
+(declare-function org-reveal "org")
+(declare-function tab-bar-tabs "tab-bar")
+(declare-function tab-bar-select-tab "tab-bar")
+(declare-function dired-goto-file "dired")
+(declare-function bookmark-get-filename "bookmark")
+(declare-function package-installed-p "package")
+(declare-function package-desc-dir "package")
+
 (defvar org-directory)
 (defvar winner-boring-buffers)
+(defvar bookmark-alist)
 (defvar helm-show-completion-overlay)
+(defvar helm-buffers-maybe-switch-to-tab)
+(defvar helm-ff-transformer-show-only-basename)
+(defvar helm-popup-tip-mode)
 
 
 (defgroup helm-utils nil
@@ -54,10 +64,24 @@ It is a float, usually 1024.0 but could be 1000.0 on some systems."
   'helm-highlight-matches-around-point-max-lines
   "20160119")
 
-(defcustom helm-highlight-matches-around-point-max-lines 15
-  "Number of lines around point where matched items are highlighted."
+(defcustom helm-highlight-matches-around-point-max-lines '(15 . 15)
+  "Number of lines around point where matched items are highlighted.
+
+Possible value are:
+- A cons cell (x . y)
+  Match x lines before point and y lines after point.
+- An integer
+  Positive means this number lines after point.
+  Negative means this number lines before point.
+  A zero value means highlight only inside matched lines.
+- The symbol never
+  Means do not highlight matched items. "
   :group 'helm-utils
-  :type 'integer)
+  :type '(choice (cons (integer :tag "Match before")
+                       (integer :tag "Match after"))
+                 (const :tag "Match in line only" 0)
+                 (integer :tag "Match after or before (+/-)")
+                 (const  :tag "Never match" 'never)))
 
 (defcustom helm-buffers-to-resize-on-pa nil
   "A list of helm buffers where the helm-window should be reduced on persistent actions."
@@ -676,6 +700,24 @@ KBSIZE is a floating point number, defaulting to `helm-default-kbsize'."
              ("B" (format "%s" size))
              (t (format "%.1f%s" (cdr result) it)))))
 
+(defun helm-directory-size (directory &optional recursive human)
+  "Return the resulting size of the sum of all files in DIRECTORY.
+
+If RECURSIVE is non nil return the size of all files in DIRECTORY and
+its subdirectories.  With arg HUMAN format the size in a human
+readable format,see `helm-file-human-size'."
+  (cl-loop with files = (if recursive
+                            (helm-walk-directory
+                             directory
+                             :path 'full
+                             :directories t)
+                          (directory-files directory t))
+           for file in files
+           sum (nth 7 (file-attributes file)) into total
+           finally return (if human
+                              (helm-file-human-size total)
+                            total)))
+
 (cl-defun helm-file-attributes
     (file &key type links uid gid access-time modif-time
             status size mode gid-change inode device-num dired human-size
@@ -822,7 +864,7 @@ Inlined here for compatibility."
 (defvar helm-match-line-overlay nil)
 (defvar helm--match-item-overlays nil)
 
-(defun helm-highlight-current-line (&optional start end buf face)
+(cl-defun helm-highlight-current-line (&optional start end buf face)
   "Highlight and underline current position"
   (let* ((start (or start (line-beginning-position)))
          (end (or end (1+ (line-end-position))))
@@ -840,20 +882,40 @@ Inlined here for compatibility."
     ;; Now highlight matches only if we are in helm session, we are
     ;; maybe coming from helm-grep-mode or helm-moccur-mode buffers.
     (when helm-alive-p
-      (if (or (null helm-highlight-matches-around-point-max-lines)
-              (zerop helm-highlight-matches-around-point-max-lines))
-          (setq start-match start
-                end-match   end)
-          (setq start-match
-                (save-excursion
-                  (forward-line
-                   (- helm-highlight-matches-around-point-max-lines))
-                  (point-at-bol))
-                  end-match
-                  (save-excursion
-                    (forward-line
-                     helm-highlight-matches-around-point-max-lines)
-                    (point-at-bol))))
+      (cond (;; These 2 clauses have to be the first otherwise
+             ;; `helm-highlight-matches-around-point-max-lines' is
+             ;; compared as a number by other clauses and return an error.
+             (eq helm-highlight-matches-around-point-max-lines 'never)
+             (cl-return-from helm-highlight-current-line))
+            ((consp helm-highlight-matches-around-point-max-lines)
+             (setq start-match
+                   (save-excursion
+                     (forward-line
+                      (- (car helm-highlight-matches-around-point-max-lines)))
+                     (point-at-bol))
+                   end-match
+                   (save-excursion
+                     (forward-line
+                      (cdr helm-highlight-matches-around-point-max-lines))
+                     (point-at-bol))))
+            ((or (null helm-highlight-matches-around-point-max-lines)
+                 (zerop helm-highlight-matches-around-point-max-lines))
+             (setq start-match start
+                   end-match   end))
+            ((< helm-highlight-matches-around-point-max-lines 0)
+             (setq start-match
+                   (save-excursion
+                     (forward-line
+                      helm-highlight-matches-around-point-max-lines)
+                     (point-at-bol))
+                   end-match start))
+            ((> helm-highlight-matches-around-point-max-lines 0)
+             (setq start-match start
+                   end-match
+                   (save-excursion
+                     (forward-line
+                      helm-highlight-matches-around-point-max-lines)
+                     (point-at-bol)))))
       (catch 'empty-line
         (cl-loop with ov
                  for r in (helm-remove-if-match
@@ -866,9 +928,10 @@ Inlined here for compatibility."
                  do (save-excursion
                       (goto-char start-match)
                       (while (condition-case _err
-                                 (if helm-migemo-mode
-                                     (helm-mm-migemo-forward r end-match t)
-                                     (re-search-forward r end-match t))
+                                 (and (not (= start-match end-match))
+                                      (if helm-migemo-mode
+                                          (helm-mm-migemo-forward r end-match t)
+                                        (re-search-forward r end-match t)))
                                (invalid-regexp nil))
                         (let ((s (match-beginning 0))
                               (e (match-end 0)))
@@ -912,6 +975,8 @@ Assume regexp is a pcre based regexp."
     (helm-match-line-cleanup)))
 
 (defun helm-match-line-update ()
+  (when helm--match-item-overlays
+    (mapc 'delete-overlay helm--match-item-overlays))
   (when helm-match-line-overlay
     (delete-overlay helm-match-line-overlay)
     (helm-highlight-current-line)))

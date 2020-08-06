@@ -1,4 +1,4 @@
-;;; helm-config.el --- Applications library for `helm.el' -*- lexical-binding: t -*-
+;;; helm-global-bindings.el --- Bind global helm commands -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2012 ~ 2019 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
@@ -17,38 +17,10 @@
 
 ;;; Code:
 
-
-;;; Require
-;;
-;;
-(declare-function async-bytecomp-package-mode "ext:async-bytecomp.el")
-(when (require 'async-bytecomp nil t)
-  (and (fboundp 'async-bytecomp-package-mode)
-       (async-bytecomp-package-mode 1)))
-
-
-(defgroup helm-config nil
-  "Various configurations for Helm."
-  :group 'helm)
-
-(defcustom helm-command-prefix-key "C-x c"
-  "The key `helm-command-prefix' is bound to in the global map."
-  :type '(choice (string :tag "Key") (const :tag "no binding"))
-  :group 'helm-config
-  :set
-  (lambda (var key)
-    (when (and (boundp var) (symbol-value var))
-      (define-key (current-global-map)
-          (read-kbd-macro (symbol-value var)) nil))
-    (when key
-      (define-key (current-global-map)
-          (read-kbd-macro key) 'helm-command-prefix))
-    (set var key)))
-
 (defcustom helm-minibuffer-history-key "C-r"
   "The key `helm-minibuffer-history' is bound to in minibuffer local maps."
   :type '(choice (string :tag "Key") (const :tag "no binding"))
-  :group 'helm-config
+  :group 'helm-misc
   :set
   (lambda (var key)
     (cl-dolist (map '(minibuffer-local-completion-map
@@ -75,6 +47,20 @@
 ;;; Command Keymap
 ;;
 ;;
+(defcustom helm-command-prefix-key "C-x c"
+  "The key `helm-command-prefix' is bound to in the global map."
+  :type '(choice (string :tag "Key") (const :tag "no binding"))
+  :group 'helm-config
+  :set
+  (lambda (var key)
+    (when (and (boundp var) (symbol-value var))
+      (define-key (current-global-map)
+          (read-kbd-macro (symbol-value var)) nil))
+    (when key
+      (define-key (current-global-map)
+          (read-kbd-macro key) 'helm-command-prefix))
+    (set var key)))
+
 (defvar helm-command-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "a")         'helm-apropos)
@@ -85,7 +71,7 @@
     (define-key map (kbd "m")         'helm-man-woman)
     (define-key map (kbd "t")         'helm-top)
     (define-key map (kbd "/")         'helm-find)
-    (define-key map (kbd "i")         'helm-semantic-or-imenu)
+    (define-key map (kbd "i")         'helm-imenu)
     (define-key map (kbd "I")         'helm-imenu-in-all-buffers)
     (define-key map (kbd "<tab>")     'helm-lisp-completion-at-point)
     (define-key map (kbd "p")         'helm-list-emacs-process)
@@ -128,44 +114,10 @@
 
 (require 'helm-easymenu)
 
-
-;;;###autoload
-(defun helm-configuration ()
-  "Customize Helm."
-  (interactive)
-  (customize-group "helm"))
 
-
-;;; Fontlock
-(cl-dolist (mode '(emacs-lisp-mode lisp-interaction-mode))
-  (font-lock-add-keywords
-   mode
-   '(("(\\<\\(with-helm-after-update-hook\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-temp-hook\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-window\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-quittable\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-current-buffer\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-buffer\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-show-completion\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-default-directory\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(with-helm-restore-variables\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-multi-key-defun\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-while-no-input\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-aif\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-awhile\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-acond\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-aand\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-with-gensyms\\)\\>" 1 font-lock-keyword-face)
-     ("(\\<\\(helm-read-answer\\)\\>" 1 font-lock-keyword-face))))
+;;; Provide
 
-
-;;; Load the autoload file
-;;  It should have been generated either by
-;;  package.el or the make file.
-
-(load "helm-autoloads" nil t)
-
-(provide 'helm-config)
+(provide 'helm-global-bindings)
 
 ;; Local Variables:
 ;; byte-compile-warnings: (not obsolete)
@@ -173,4 +125,4 @@
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; helm-config.el ends here
+;;; helm-global-bindings.el ends here

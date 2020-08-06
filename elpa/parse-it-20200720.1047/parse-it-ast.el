@@ -27,10 +27,10 @@
 (require 'parse-it-util)
 (require 'parse-it-lex)
 
-
 (defconst parse-it-ast-magic-root "ROOT"
   "Magic string represent the root of the tree.")
 
+;;; Core
 
 (defun parse-it-ast--form-node (type val pos &optional child)
   "Form a node for AST with TYPE, VAL, POS and CHILD."
@@ -131,7 +131,6 @@ PATH is for getting the source code to identify the indentation level of each li
                (parse-it-ast--add-node parent-node new-node)))
         (setq last-node new-node)))
     ast-tree))
-
 
 (provide 'parse-it-ast)
 ;;; parse-it-ast.el ends here

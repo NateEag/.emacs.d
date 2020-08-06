@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-r--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
@@ -60,7 +59,6 @@
     ("LG_OP" . "\\([!]\\)[^=]"))     ; !
   "R logical operators token type.")
 
-
 (defun parse-it-r--make-token-type ()
   "Make up the token type."
   (append parse-it-r--token-type
@@ -79,7 +77,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-r)
 ;;; parse-it-r.el ends here

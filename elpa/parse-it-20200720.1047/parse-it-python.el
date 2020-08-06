@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-python--token-type
   '(("COMMENT" . "[#]")
     ("COMMENT_BEG" . "[\"][\"][\"]")
@@ -54,7 +53,6 @@
     ("PAREN_CLS" . "[)]"))
   "Python bracket token type.")
 
-
 (defun parse-it-python--make-token-type ()
   "Make up the token type."
   (append parse-it-python--token-type
@@ -73,7 +71,6 @@
                                token-list
                                parse-it-c--into-level-symbols
                                parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-python)
 ;;; parse-it-python.el ends here

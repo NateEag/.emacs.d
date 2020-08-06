@@ -1,4 +1,4 @@
-;;; parse-it-html.el --- Core parser for HTML  -*- lexical-binding: t; -*-
+;;; parse-it-xml.el --- Core parser for XML  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,44 +19,41 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for html.
+;; Core parser for XML.
 ;;
 
 ;;; Code:
 
 (require 'parse-it)
 
-
-(defconst parse-it-html--token-type
+(defconst parse-it-xml--token-type
   '(("COMMENT_BEG" . "[<][!][-][-]")
     ("COMMENT_END" . "[-][-][>]")
     ("TAG_BEG" . "\\([<]\\)[^!][^-][^-]")
     ("TAG_BEG" . "\\([<]\\)[!][^-]")
     ("TAG_END" . "[^-][^-]\\([>]\\)"))
-  "HTML token type.")
+  "XML token type.")
 
-(defconst parse-it-html--into-level-symbols
+(defconst parse-it-xml--into-level-symbols
   '("TAG_BEG")
   "All symbols that goes into one nested level.")
 
-(defconst parse-it-html--back-level-symbols
+(defconst parse-it-xml--back-level-symbols
   '("TAG_END")
   "All symbols that goes back up one nested level.")
 
-
-(defun parse-it-html--make-token-type ()
+(defun parse-it-xml--make-token-type ()
   "Make up the token type."
-  (append parse-it-html--token-type
+  (append parse-it-xml--token-type
           parse-it-lex--token-type))
 
-(defun parse-it-html (path)
-  "Parse the PATH HTML."
-  (let* ((parse-it-lex--token-type (parse-it-html--make-token-type))
+(defun parse-it-xml (path)
+  "Parse the PATH XML."
+  (let* ((parse-it-lex--token-type (parse-it-xml--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
-                        parse-it-html--into-level-symbols
-                        parse-it-html--back-level-symbols)))
+                        parse-it-xml--into-level-symbols
+                        parse-it-xml--back-level-symbols)))
 
-
-(provide 'parse-it-html)
-;;; parse-it-html.el ends here
+(provide 'parse-it-xml)
+;;; parse-it-xml.el ends here

@@ -26,7 +26,6 @@
 
 (require 'rect)
 
-
 (defun parse-it-util--get-string-from-file (path)
   "Return PATH file content."
   (with-temp-buffer
@@ -75,7 +74,6 @@
               (setq st-ind (- st-ind ind))
               (message "%s)" (spaces-string st-ind))))
         (message "%s%s" (spaces-string st-ind) node)))))
-
 
 (provide 'parse-it-util)
 ;;; parse-it-util.el ends here

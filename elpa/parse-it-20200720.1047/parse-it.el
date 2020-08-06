@@ -6,9 +6,9 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Basic Parser in Emacs Lisp.
 ;; Keyword: parse parser lex lexer ast
-;; Version: 0.1.7
-;; Package-Requires: ((emacs "25.1") (cl-lib "0.6") (s "1.12.0"))
-;; URL: https://github.com/jcs090218/parse-it
+;; Version: 0.1.8
+;; Package-Requires: ((emacs "25.1") (s "1.12.0"))
+;; URL: https://github.com/jcs-elpa/parse-it
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -41,13 +41,11 @@
 (require 'parse-it-ast)
 (require 'parse-it-lex)
 
-
 (defgroup parse-it nil
   "Basic Parser in Emacs Lisp."
   :prefix "parse-it-"
   :group 'tools
-  :link '(url-link :tag "Repository" "https://github.com/jcs090218/parse-it"))
-
+  :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/parse-it"))
 
 ;;;###autoload
 (defun parse-it (lan &optional path)
@@ -57,7 +55,6 @@
              (functionp mod-name))
         (funcall mod-name path)
       (user-error "Language '%s' is not supported" lan))))
-
 
 (provide 'parse-it)
 ;;; parse-it.el ends here

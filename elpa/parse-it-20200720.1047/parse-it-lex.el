@@ -26,7 +26,6 @@
 
 (require 'parse-it-util)
 
-
 (defvar parse-it-lex--token-type
   '(("URL" . "http[s]*://")
     ("NUMBER" . "\\`[0-9]+\\'")
@@ -48,6 +47,7 @@
 (defvar parse-it-lex--ignore-newline t
   "Ignore newline when tokenizing.")
 
+;;; Core
 
 (defun parse-it-lex--get-inner-regex (regex)
   "Return a inner group REGEX."
@@ -164,7 +164,6 @@ MUL-COMMENT is the flag to check if is multiline commenting."
                      res-lst
                      (parse-it-lex--form-node "\n" parse-it-lex--magic-newline ln pos)))))))))
     res-lst))
-
 
 (provide 'parse-it-lex)
 ;;; parse-it-lex.el ends here

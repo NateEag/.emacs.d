@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-css--token-type
   '(("COMMENT_BEG" . "/[*]+")
     ("COMMENT_END" . "[*]/")
@@ -50,7 +49,6 @@
     ("KEYWORD" . "\\<\\(unicode-bidi\\|user-select\\|vertical-align\\visibility\\|white-space\\|windows\\|width\\|word-break\\|word-break\\|word-spacing\\|word-wrap\\|writing-mode\\|z-index\\)"))
   "CSS token type.")
 
-
 (defun parse-it-css--make-token-type ()
   "Make up the token type."
   (append parse-it-css--token-type
@@ -65,7 +63,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-css)
 ;;; parse-it-css.el ends here

@@ -1,4 +1,4 @@
-;;; parse-it-actionscript.el --- Core parser for ActionScript  -*- lexical-binding: t; -*-
+;;; parse-it-csharp.el --- Core parser for CSharp  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,30 +19,30 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for ActionScript.
+;; Core parser for CSharp.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-
-(defconst parse-it-actionscript--token-type
+(defconst parse-it-csharp--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(break\\|case\\|continue\\|default\\|do\\|while\\|else\\|for\\|in\\|each\\|if\\|label\\|return\\|super\\|switch\\|throw\\|try\\|catch\\|finally\\|while\\|with\\|dynamic\\|final\\|internal\\|native\\|override\\|private\\|protected\\|public\\|static\\|class\\|cont\\|extends\\|function\\|get\\|implements\\|interface\\|namespace\\|package\\|set\\|var\\|import\\|include\\|false\\|null\\|this\\|true\\)"))
-  "ActionScript token type.")
+    ("ARROW" . "[=][>]")
+    ("KEYWORD" . "\\<\\(abstract\\|as\\|base\\|bool\\|break\\|byte\\|case\\|catch\\|char\\|checked\\|class\\|const\\|continue\\|decimal\\|default\\|delegate\\|do\\|double\\|else\\|enum\\|event\\|explicit\\|extern\\|false\\|finally\\|fixed\\|float\\|foreach\\|for\\|goto\\|if\\|implicit\\|interface\\|internal\\|int\\|in\\|is\\|lock\\|long\\|namespace\\|new\\|null\\|object\\|operator\\|out\\|override\\|params\\|private\\|protected\\|public\\|readonly\\|ref\\|return\\|sbyte\\|sealed\\|short\\|sizeof\\|stackalloc\\|static\\|string\\|struct\\|switch\\|this\\|throw\\|true\\|try\\|typeof\\|uint\\|ulong\\|unchecked\\|unsafe\\|ushort\\|using\\|virtual\\|void\\|volatile\\|while\\)"))
+  "CSharp token type.")
 
-
-(defun parse-it-actionscript--make-token-type ()
+(defun parse-it-csharp--make-token-type ()
   "Make up the token type."
-  (append parse-it-actionscript--token-type
+  (append parse-it-csharp--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
@@ -51,14 +51,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-actionscript (path)
-  "Parse the PATH ActionScript."
-  (let* ((parse-it-lex--token-type (parse-it-actionscript--make-token-type))
+(defun parse-it-csharp (path)
+  "Parse the PATH CSharp."
+  (let* ((parse-it-lex--token-type (parse-it-csharp--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-actionscript)
-;;; parse-it-actionscript.el ends here
+(provide 'parse-it-csharp)
+;;; parse-it-csharp.el ends here

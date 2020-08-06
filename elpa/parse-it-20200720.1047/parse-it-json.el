@@ -1,4 +1,4 @@
-;;; parse-it-lua.el --- Core parser for Lua  -*- lexical-binding: t; -*-
+;;; parse-it-json.el --- Core parser for JSON  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,45 +19,35 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Lua.
+;; Core parser for JSON.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-
-(defconst parse-it-lua--token-type
-  '(("COMMENT" . "[-][-]")
-    ("COMMENT_BEG" . "[-][-][[][[]")
-    ("COMMENT_END" . "[]][]][-][-]")
-    ("COLON" . "[:]")
+(defconst parse-it-json--token-type
+  '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
-    ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(break\\|case\\|catch\\|continue\\|debugger\\|default\\|delete\\|do\\|else\\|finally\\|for\\|function\\|if\\|instanceof\\|in\\|new\\|return\\|switch\\|this\\|throw\\|try\\|typeof\\|var\\|void\\|while\\|with\\|null\\|true\\|false\\|NaN\\|Infinity\\|undefined\\)"))
-  "Lua token type.")
+    ("QT_D" . "[\"]"))
+  "JSON token type.")
 
-
-(defun parse-it-lua--make-token-type ()
+(defun parse-it-json--make-token-type ()
   "Make up the token type."
-  (append parse-it-lua--token-type
-          parse-it-c--c-type-arithmetic-operators-token-type
-          parse-it-c--c-type-inc-dec-operators-token-type
-          parse-it-c--c-type-assignment-operators-token-type
-          parse-it-c--c-type-relational-operators-token-type
+  (append parse-it-json--token-type
+          parse-it-c--bracket-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-lua (path)
-  "Parse the PATH Lua."
-  (let* ((parse-it-lex--token-type (parse-it-lua--make-token-type))
+(defun parse-it-json (path)
+  "Parse the PATH JSON."
+  (let* ((parse-it-lex--token-type (parse-it-json--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-lua)
-;;; parse-it-lua.el ends here
+(provide 'parse-it-json)
+;;; parse-it-json.el ends here

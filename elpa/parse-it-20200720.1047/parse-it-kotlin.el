@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-kotlin--token-type
   '(("COLON" . "[^:]\\([:]\\)[^:]")
     ("SEMICOLON" . "[;]")
@@ -62,7 +61,6 @@
     ("SS_OP" . "[_]"))
   "Kotlin special symbols token type.")
 
-
 (defun parse-it-kotlin--make-token-type ()
   "Make up the token type."
   (append parse-it-kotlin--token-type
@@ -86,7 +84,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-kotlin)
 ;;; parse-it-kotlin.el ends here

@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-sql--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
@@ -47,7 +46,6 @@
     ("COMMENT_END" . "[*]/"))  ; */
   "SQL comment token type.")
 
-
 (defun parse-it-sql--make-token-type ()
   "Make up the token type."
   (append parse-it-sql--token-type
@@ -60,7 +58,6 @@
           parse-it-c--c-type-logical-operators-token-type
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
-
 (defun parse-it-sql (path)
   "Parse the PATH SQL."
   (let* ((parse-it-lex--token-type (parse-it-sql--make-token-type))
@@ -68,7 +65,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-sql)
 ;;; parse-it-sql.el ends here

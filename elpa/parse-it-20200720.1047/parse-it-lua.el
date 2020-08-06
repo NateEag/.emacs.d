@@ -1,4 +1,4 @@
-;;; parse-it-markdown.el --- Core parser for Markdown  -*- lexical-binding: t; -*-
+;;; parse-it-lua.el --- Core parser for Lua  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,44 +19,42 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Markdown.
+;; Core parser for Lua.
 ;;
 
 ;;; Code:
 
-(require 'parse-it)
+(require 'parse-it-c)
 
-
-(defconst parse-it-markdown--token-type
-  '(("COMMENT_BEG" . "[<][!][-][-]")
-    ("COMMENT_END" . "[-][-][>]")
-    ("TAG_BEG" . "\\([<]\\)[^!][^-][^-]")
-    ("TAG_BEG" . "\\([<]\\)[!][^-]")
-    ("TAG_END" . "[^-][^-]\\([>]\\)")
+(defconst parse-it-lua--token-type
+  '(("COMMENT" . "[-][-]")
+    ("COMMENT_BEG" . "[-][-][[][[]")
+    ("COMMENT_END" . "[]][]][-][-]")
     ("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
-    ("TRI_BACK_QT" . "[`][`][`]")
-    ("BACK_QT" . "[^`]\\([`]\\)[^`]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
-    ("QT_D" . "[\"]"))
-  "Markdown token type.")
+    ("QT_D" . "[\"]")
+    ("KEYWORD" . "\\<\\(break\\|case\\|catch\\|continue\\|debugger\\|default\\|delete\\|do\\|else\\|finally\\|for\\|function\\|if\\|instanceof\\|in\\|new\\|return\\|switch\\|this\\|throw\\|try\\|typeof\\|var\\|void\\|while\\|with\\|null\\|true\\|false\\|NaN\\|Infinity\\|undefined\\)"))
+  "Lua token type.")
 
-
-(defun parse-it-markdown--make-token-type ()
+(defun parse-it-lua--make-token-type ()
   "Make up the token type."
-  (append parse-it-markdown--token-type
+  (append parse-it-lua--token-type
+          parse-it-c--c-type-arithmetic-operators-token-type
+          parse-it-c--c-type-inc-dec-operators-token-type
+          parse-it-c--c-type-assignment-operators-token-type
+          parse-it-c--c-type-relational-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-markdown (path)
-  "Parse the PATH Markdown."
-  (let* ((parse-it-lex--token-type (parse-it-markdown--make-token-type))
+(defun parse-it-lua (path)
+  "Parse the PATH Lua."
+  (let* ((parse-it-lex--token-type (parse-it-lua--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-markdown)
-;;; parse-it-markdown.el ends here
+(provide 'parse-it-lua)
+;;; parse-it-lua.el ends here

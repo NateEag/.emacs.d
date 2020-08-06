@@ -26,7 +26,6 @@
 
 (require 'parse-it-c)
 
-
 (defconst parse-it-asm--token-type
   '(("COLON" . "[:]")
     ("COMMA" . "[,]")
@@ -88,7 +87,6 @@
   '(("COMMENT" . "[;]"))     ; ;
   "Assembly Language comment token type.")
 
-
 (defun parse-it-asm--make-token-type ()
   "Make up the token type."
   (append parse-it-asm--token-type
@@ -109,7 +107,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-asm)
 ;;; parse-it-asm.el ends here

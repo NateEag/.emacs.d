@@ -1,4 +1,4 @@
-;;; parse-it-json.el --- Core parser for JSON  -*- lexical-binding: t; -*-
+;;; parse-it-go.el --- Core parser for Go  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,38 +19,44 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for JSON.
+;; Core parser for Go.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-
-(defconst parse-it-json--token-type
+(defconst parse-it-go--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
-    ("QT_D" . "[\"]"))
-  "JSON token type.")
+    ("QT_D" . "[\"]")
+    ("KEYWORD" . "\\<\\(break\\|default\\|func\\|interface\\|select\\|case\\|defer\\|goto\\|map\\|struct\\|chan\\|else\\|go\\|package\\|switch\\|const\\|fallthrough\\|if\\|range\\|type\\|continue\\|for\\|import\\|return\\|var\\)"))
+  "Go token type.")
 
-
-(defun parse-it-json--make-token-type ()
+(defun parse-it-go--make-token-type ()
   "Make up the token type."
-  (append parse-it-json--token-type
+  (append parse-it-go--token-type
+          parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
+          parse-it-c--c-type-arithmetic-operators-token-type
+          parse-it-c--c-type-inc-dec-operators-token-type
+          parse-it-c--c-type-assignment-operators-token-type
+          parse-it-c--c-type-relational-operators-token-type
+          parse-it-c--c-type-logical-operators-token-type
+          parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-json (path)
-  "Parse the PATH JSON."
-  (let* ((parse-it-lex--token-type (parse-it-json--make-token-type))
+(defun parse-it-go (path)
+  "Parse the PATH Go."
+  (let* ((parse-it-lex--token-type (parse-it-go--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-json)
-;;; parse-it-json.el ends here
+(provide 'parse-it-go)
+;;; parse-it-go.el ends here

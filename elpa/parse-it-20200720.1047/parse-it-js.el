@@ -1,4 +1,4 @@
-;;; parse-it-php.el --- Core parser for PHP  -*- lexical-binding: t; -*-
+;;; parse-it-js.el --- Core parser for JavaScript  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,50 +19,50 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for PHP.
+;; Core parser for JavaScript.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-
-(defconst parse-it-php--token-type
-  '(("COMMENT" . "[#]")
-    ("COLON" . "[:]")
+(defconst parse-it-js--token-type
+  '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
     ("ARROW" . "[=][>]")
-    ("VARIABLE" . "[$][^ \t\n]*")
-    ("CONSTANT" . "\\<\\(__CLASS__\\|__DIR__\\|__FILE__\\|__FUNCTION__\\|__LINE__\\|__METHOD__\\|__NAMESPACE__\\|__TRAIT__\\)")
-    ("KEYWORD" . "\\<\\(abstract\\|and\\|as\\|break\\|callable\\|case\\|catch\\|class\\|clone\\|const\\|continue\\|declare\\|default\\|do\\|echo\\|else\\|elseif\\|enddeclare\\|endfor\\|endforeach\\|endif\\|endswitch\\|endwhile\\|extends\\|final\\|finally\\|foreach\\|for\\|function\\|global\\|goto\\|if\\|implements\\|include\\|include_once\\|instanceof\\|insteadof\\|interface\\|namespace\\|new\\|or\\|print\\|private\\|protected\\|public\\|require\\|require_once\\|return\\|static\\|switch\\|throw\\|trait\\|try\\|use\\|var\\|while\\|xor\\|yield from\\|yield\\)"))
-  "PHP token type.")
+    ("KEYWORD" . "\\<\\(abstract\\|any\\|as\\|async\\|await\\|boolean\\|bigint\\|break\\|case\\|catch\\|class\\|const\\|constructor\\|continue\\|declare\\|default\\|delete\\|do\\|else\\|enum\\|export\\|extends\\|extern\\|false\\|finaly\\|for\\|function\\|from\\|get\\|goto\\|if\\|implements\\|import\\|in\\|instanceof\\|interface\\|keyof\\|let\\|module\\|namespace\\|never\\|new\\|null\\|number\\|object\\|of\\|private\\|protected\\|public\\|readonly\\|return\\|set\\|static\\|string\\|super\\|switch\\|this\\|throw\\|true\\|try\\|type\\|typeof\\|var\\|void\\|while\\)"))
+  "JavaScript token type.")
 
+(defconst parse-it-js--relational-operators-token-type
+  '(("RE_OP" . "[=][=][=]")
+    ("RE_OP" . "[!][=][=]"))
+  "JavaScript relational operators token type.")
 
-(defun parse-it-php--make-token-type ()
+(defun parse-it-js--make-token-type ()
   "Make up the token type."
-  (append parse-it-php--token-type
+  (append parse-it-js--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
+          parse-it-js--relational-operators-token-type
           parse-it-c--c-type-relational-operators-token-type
           parse-it-c--c-type-logical-operators-token-type
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-php (path)
-  "Parse the PATH PHP."
-  (let* ((parse-it-lex--token-type (parse-it-php--make-token-type))
+(defun parse-it-js (path)
+  "Parse the PATH in JavaScript."
+  (let* ((parse-it-lex--token-type (parse-it-js--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-php)
-;;; parse-it-php.el ends here
+(provide 'parse-it-js)
+;;; parse-it-js.el ends here

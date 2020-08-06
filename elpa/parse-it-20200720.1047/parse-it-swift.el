@@ -1,4 +1,4 @@
-;;; parse-it-typescript.el --- Core parser for TypeScript  -*- lexical-binding: t; -*-
+;;; parse-it-swift.el --- Core parser for Swift  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
 
@@ -19,31 +19,31 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for TypeScript.
+;; Core parser for Swift.
 ;;
 
 ;;; Code:
 
-(require 'parse-it-c)
+(require 'parse-it-objc)
 
-
-(defconst parse-it-typescript--token-type
+(defconst parse-it-swift--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("ARROW" . "[=][>]")
-    ("KEYWORD" . "\\<\\(abstract\\|any\\|async\\|as\\|await\\|boolean\\|bigint\\|break\\|case\\|catch\\|class\\|constructor\\|const\\|continue\\|declare\\|default\\|delete\\|do\\|else\\|enum\\|export\\|extends\\|extern\\|false\\|finaly\\|for\\|function\\|from\\|get\\|goto\\|if\\|implements\\|import\\|in\\|instanceof\\|interface\\|keyof\\|let\\|module\\|namespace\\|never\\|new\\|null\\|number\\|object\\|of\\|private\\|protected\\|public\\|readonly\\|return\\|set\\|static\\|string\\|super\\|switch\\|this\\|throw\\|true\\|try\\|typeof\\|type\\|var\\|void\\|while\\)"))
-  "TypeScript token type.")
+    ("KEYWORD" . "\\B\\(@interface\\|@implementation\\|@protocol\\|@end\\|@private\\|@protected\\|@public\\|@try\\|@throw\\|@catch\\|@finally\\|@class\\|@selector\\|@protocol\\|@encode\\|@synchronized\\|#import\\)\\b")
+    ("KEYWORD" . "\\<\\(alloc\\|retain\\|release\\|autorelease\\)"))
+  "Swift token type.")
 
-
-(defun parse-it-typescript--make-token-type ()
+(defun parse-it-swift--make-token-type ()
   "Make up the token type."
-  (append parse-it-typescript--token-type
+  (append parse-it-objc--token-type
+          parse-it-c--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
@@ -52,14 +52,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-typescript (path)
-  "Parse the PATH TypeScript."
-  (let* ((parse-it-lex--token-type (parse-it-typescript--make-token-type))
+(defun parse-it-swift (path)
+  "Parse the PATH Swift."
+  (let* ((parse-it-lex--token-type (parse-it-swift--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-
-(provide 'parse-it-typescript)
-;;; parse-it-typescript.el ends here
+(provide 'parse-it-swift)
+;;; parse-it-swift.el ends here

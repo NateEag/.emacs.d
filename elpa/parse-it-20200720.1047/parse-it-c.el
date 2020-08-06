@@ -26,7 +26,6 @@
 
 (require 'parse-it)
 
-
 (defconst parse-it-c--token-type
   '(("ASK" . "[^/*]\\([*]\\)[^/*]")
     ("AMP" . "[^&]\\([&]\\)[^&]")
@@ -104,7 +103,6 @@
   '("BRKT_CR_CLS" "BRKT_SQ_CLS" "PAREN_CLS")
   "All symbols that goes back up one nested level.")
 
-
 (defun parse-it-c--make-token-type ()
   "Make up the token type."
   (append parse-it-c--token-type
@@ -126,7 +124,6 @@
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
-
 
 (provide 'parse-it-c)
 ;;; parse-it-c.el ends here

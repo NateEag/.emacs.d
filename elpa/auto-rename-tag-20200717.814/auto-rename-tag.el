@@ -6,10 +6,10 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Automatically rename paired HTML/XML tag.
 ;; Keyword: auto-complete html rename tag xml
-;; Version: 0.2.8
-;; Package-Version: 20200520.1053
-;; Package-Commit: fb346e171bce42867731faafc301a74849e21d96
-;; Package-Requires: ((emacs "24.4") (cl-lib "0.6"))
+;; Version: 0.2.9
+;; Package-Version: 20200717.814
+;; Package-Commit: 7227c93e58a2c1837aa35ca35b6325c6f734d0f9
+;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs090218/auto-rename-tag
 
 ;; This file is NOT part of GNU Emacs.
@@ -42,7 +42,6 @@
   :group 'tool
   :link '(url-link :tag "Repository" "https://github.com/jcs090218/auto-rename-tag"))
 
-
 (defconst auto-rename-tag--tag-regexp "<[^>]*"
   "Tag regular expression to find tag position.")
 
@@ -52,12 +51,7 @@
 (defvar-local auto-rename-tag--record-prev-word ""
   "Record down the word in `pre-command-hook'.")
 
-
-(defun auto-rename-tag--delete-tag-name ()
-  "Delete the current tag name."
-  (let ((tag-start (auto-rename-tag--tag-name-start-pt))
-        (tag-end (auto-rename-tag--tag-name-end-pt)))
-    (delete-region tag-start tag-end)))
+;; Util
 
 (defun auto-rename-tag--is-beginning-of-buffer-p ()
   "Is at the beginning of buffer?"
@@ -74,6 +68,14 @@
       nil
     (let ((current-char-string (string (char-before))))
       (string= current-char-string c))))
+
+;; Core
+
+(defun auto-rename-tag--delete-tag-name ()
+  "Delete the current tag name."
+  (let ((tag-start (auto-rename-tag--tag-name-start-pt))
+        (tag-end (auto-rename-tag--tag-name-end-pt)))
+    (delete-region tag-start tag-end)))
 
 (defun auto-rename-tag--is-closing-tag-p ()
   "Check if current tag a closing tag."

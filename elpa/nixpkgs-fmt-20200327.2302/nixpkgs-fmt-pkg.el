@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/nixpkgs-fmt-20200327.2302/nixpkgs-fmt.el  -*- no-byte-compile: t -*-
+(define-package "nixpkgs-fmt" "20200327.2302" "Reformat Nix using nixpkgs-fmt" '((emacs "24") (reformatter "0.3")) :commit "cc8ee143d4ef45a8c540901852326ccdf6ff8482" :keywords '("languages") :authors '(("Steve Purcell" . "steve@sanityinc.com")) :maintainer '("Steve Purcell" . "steve@sanityinc.com") :url "https://github.com/purcell/emacs-nixpkgs-fmt")

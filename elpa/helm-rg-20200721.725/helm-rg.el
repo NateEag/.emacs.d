@@ -2,7 +2,8 @@
 
 ;; Author: Danny McClanahan
 ;; Version: 0.1
-;; Package-Version: 20190130.1734
+;; Package-Version: 20200721.725
+;; Package-Commit: ee0a3c09da0c843715344919400ab0a0190cc9dc
 ;; URL: https://github.com/cosmicexplorer/helm-rg
 ;; Package-Requires: ((emacs "25") (cl-lib "0.5") (dash "2.13.0") (helm "2.8.8"))
 ;; Keywords: find, file, files, helm, fast, rg, ripgrep, grep, search, match
@@ -2355,13 +2356,12 @@ will be split!"
 
 ;; Helm sources
 (defconst helm-rg-process-source
-  ;; `helm-grep-ag-class' is provided by `helm' -- I don't know if that identifier is stable but if
-  ;; it's not it will error out very quickly (because `helm-make-source' will fail if that symbol
-  ;; is removed).
-  (helm-make-source "ripgrep" 'helm-grep-ag-class
+  (helm-make-source "ripgrep" 'helm-source-async
     ;; FIXME: we don't want the header to be hydrated by helm, it's huge and blue and
     ;; unnecessary. Do it ourselves, then we don't have to delete the header in
     ;; `helm-rg--freeze-header-for-bounce'.
+    :nohighlight t
+    :nomark t
     :header-name #'helm-rg--header-name
     :keymap 'helm-rg-map
     :history 'helm-rg--input-history

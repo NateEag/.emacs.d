@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20200513.1221
-;; Package-Commit: 295636818abf37848157f37ce7182a47099e6f97
+;; Package-Version: 20200723.2222
+;; Package-Commit: 799969a66192b27c6464fc2e0025f4089d70493b
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -285,7 +285,7 @@ guess and risk that the guess was wrong, but sadly this
 number depends on the regexp used to identify headings."
   (save-excursion
     (goto-char (point-min))
-    (let ((min outline-code-level))
+    (let ((min (or (bicycle--level) outline-code-level)))
       (while (outline-next-heading)
         (setq min (min min (bicycle--level))))
       min)))

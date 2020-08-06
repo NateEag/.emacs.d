@@ -18,7 +18,7 @@
 (setq package-user-dir (concat user-emacs-directory "elpa/"))
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" .
-                                 "http://melpa.milkbox.net/packages/"))
+                                 "http://melpa.org/packages/"))
 (package-initialize)
 
 (provide 'ne-package-init)

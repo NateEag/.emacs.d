@@ -32,7 +32,8 @@
   "All nix-shell options."
   :group 'nix)
 
-(defcustom nix-shell-inputs '(depsBuildBuild
+(defcustom nix-shell-inputs '(buildInputs
+			      depsBuildBuild
 			      depsBuildBuildPropagated
 			      nativeBuildInputs
 			      propagatedNativeBuildInputs
@@ -196,6 +197,7 @@ PKGS-FILE package set to pull from."
       (insert "} \"\"\n"))
     nix-file))
 
+;;;###autoload
 (defun nix-eshell-with-packages (packages &optional pkgs-file)
   "Create an Eshell buffer that has the shell environment in it.
 PACKAGES a list of packages to pull in.
@@ -205,14 +207,17 @@ PKGS-FILE a file to use to get the packages."
 
     (setq-local nix-shell-clear-environment t)
 
+    ;; We must start this before the callback otherwise the path is cleared
+    (eshell-mode)
+
     (nix-shell--callback
      (current-buffer)
      (nix-instantiate
       (nix-shell--with-packages-file packages pkgs-file) nil t))
 
-    (eshell-mode)
     buffer))
 
+;;;###autoload
 (defun nix-eshell (file &optional attr)
   "Create an Eshell buffer that has the shell environment in it.
 FILE the .nix expression to create a shell for.
@@ -225,11 +230,13 @@ ATTR attribute to instantiate in NIX-FILE."
 
     (setq-local nix-shell-clear-environment t)
 
+    ;; We must start this before the callback otherwise the path is cleared
+    (eshell-mode)
+
     (nix-shell--callback
      (current-buffer)
      (nix-instantiate file attr t))
 
-    (eshell-mode)
     buffer))
 
 ;;;###autoload

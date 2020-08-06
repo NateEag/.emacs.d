@@ -228,6 +228,20 @@ ATTR is the attribute to build.
 
 \(fn FILE ATTR)" t nil)
 
+(autoload 'nix-eshell-with-packages "nix-shell" "\
+Create an Eshell buffer that has the shell environment in it.
+PACKAGES a list of packages to pull in.
+PKGS-FILE a file to use to get the packages.
+
+\(fn PACKAGES &optional PKGS-FILE)" nil nil)
+
+(autoload 'nix-eshell "nix-shell" "\
+Create an Eshell buffer that has the shell environment in it.
+FILE the .nix expression to create a shell for.
+ATTR attribute to instantiate in NIX-FILE.
+
+\(fn FILE &optional ATTR)" t nil)
+
 (autoload 'nix-shell-with-string "nix-shell" "\
 A nix-shell emulator in Emacs from a string.
 STRING the nix expression to use.

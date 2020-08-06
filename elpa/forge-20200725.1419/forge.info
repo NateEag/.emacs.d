@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-318-g274c3461+1).
+This manual is for Forge version 0.1.0 (v0.1.0-320-g639ce512+1).
 
      Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -372,7 +372,7 @@ around reading the documentation and doing this manually I am afraid.
 
         • ‘read:org’ grants read-only access to organization membership.
 
-     More infomation about these and other scopes can be found at
+     More information about these and other scopes can be found at
      <https://docs.github.com/en/developers/apps/scopes-for-oauth-apps>.
 
    • For Gitlab instances ‘api’ is the only required scope.  It gives
@@ -1216,22 +1216,22 @@ Node: Supported Forges and Hosts2768
 Node: Getting Started8318
 Node: Initial Pull10045
 Node: Token Creation11625
-Node: Repository Detection12911
-Node: Usage14669
-Node: Pulling15945
-Node: Branching18813
-Node: Working with Topics24934
-Node: Visiting Topics25307
-Node: Listing Topics and Notifications27035
-Node: Creating Topics30995
-Node: Editing Topics and Posts31560
-Node: Miscellaneous35117
-Node: FAQ37446
-Node: Is it possible to create a single pull-request without pulling everything?37646
-Node: Keystroke Index38051
-Node: Command Index41937
-Node: Function Index47082
-Node: Variable Index49248
+Node: Repository Detection12912
+Node: Usage14670
+Node: Pulling15946
+Node: Branching18814
+Node: Working with Topics24935
+Node: Visiting Topics25308
+Node: Listing Topics and Notifications27036
+Node: Creating Topics30996
+Node: Editing Topics and Posts31561
+Node: Miscellaneous35118
+Node: FAQ37447
+Node: Is it possible to create a single pull-request without pulling everything?37647
+Node: Keystroke Index38052
+Node: Command Index41938
+Node: Function Index47083
+Node: Variable Index49249
 
 End Tag Table
 

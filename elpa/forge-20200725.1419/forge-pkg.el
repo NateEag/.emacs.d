@@ -1,4 +1,4 @@
-(define-package "forge" "20200705.1603" "Access Git forges from Magit."
+(define-package "forge" "20200725.1419" "Access Git forges from Magit."
   '((emacs "25.1")
     (closql "1.0.0")
     (dash "2.14.1")
@@ -8,7 +8,7 @@
     (magit "20190408")
     (markdown-mode "2.3")
     (transient "0.1.0"))
-  :commit "d1346f4df60c07ab2a8c0ead203e25d1ae65968d")
+  :commit "2c487465d0b78ffe34252b47fcc06e27039330c4")
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

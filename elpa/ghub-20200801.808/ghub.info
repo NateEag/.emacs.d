@@ -26,7 +26,7 @@ Ghub User and Developer Manual
 Ghub is an Emacs library that is used by various packages to access the
 APIs of various instances of various Git forge implementation.
 
-This manual is for Ghub version 3.3.0 (v3.3.0-11-g3da5d88+1).
+This manual is for Ghub version 3.4.0 (v3.4.0+1).
 
      Copyright (C) 2017-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -300,7 +300,7 @@ To inform Ghub about your username on HOST (a FORGE instance) do this:
 
    FORGE can be one of ‘bitbucket’, ‘gitea’ or ‘gogs’.  It can also be
 ‘github’ or ‘gitlab’; but if that is the case, then you should look at
-the preceeding sections instead, which discuss these cases specifically.
+the preceding sections instead, which discuss these cases specifically.
 
    HOST identifies the instance.  This actually points at the top-level
 endpoint of the API and may contain path components, e.g.:
@@ -341,7 +341,7 @@ hosts:
 contain unknown values such as your name.  Just go to the general
 settings page of the respective host and then go from there.
 
-   Except on ‘gitea’ and ‘gogs’ each token can be limitted to certain
+   Except on ‘gitea’ and ‘gogs’ each token can be limited to certain
 "scopes", i.e.  it is possible to limit for which purposes any given
 token can be used.
 
@@ -1044,7 +1044,7 @@ argument.
 
      (ghub-request "GET" "/user" nil :auth 'PACKAGE)
 
-   Keep in mind that the users of your pacakge will have to manually
+   Keep in mind that the users of your package will have to manually
 create a suitable token.  To make that easier, you should not only link
 to this manual but also prominently mention the scopes the token needs;
 and explain what they are needed for.
@@ -1181,26 +1181,26 @@ Appendix B Variable Index
 
 Tag Table:
 Node: Top764
-Node: Introduction2310
-Node: Getting Started2714
-Node: Basic Concepts Arguments and Variables4398
-Node: Setting the Username8268
-Node: Creating and Storing a Token11161
-Node: Creating a Token11425
-Node: Storing a Token12444
-Node: Github Configuration Variables14219
-Node: API15933
-Node: Their APIs16171
-Node: Making REST Requests16902
-Node: Making GraphQL Requests26334
-Node: Github Convenience Wrappers32968
-Node: Non-Github Convenience Wrappers36675
-Node: Notes42181
-Node: Using Ghub in Personal Scripts42388
-Node: Using Ghub in Your Own Package43279
-Node: Forge Limitations and Notes44214
-Node: Function Index45187
-Node: Variable Index50836
+Node: Introduction2298
+Node: Getting Started2702
+Node: Basic Concepts Arguments and Variables4386
+Node: Setting the Username8256
+Node: Creating and Storing a Token11148
+Node: Creating a Token11412
+Node: Storing a Token12430
+Node: Github Configuration Variables14205
+Node: API15919
+Node: Their APIs16157
+Node: Making REST Requests16888
+Node: Making GraphQL Requests26320
+Node: Github Convenience Wrappers32954
+Node: Non-Github Convenience Wrappers36661
+Node: Notes42167
+Node: Using Ghub in Personal Scripts42374
+Node: Using Ghub in Your Own Package43265
+Node: Forge Limitations and Notes44200
+Node: Function Index45173
+Node: Variable Index50822
 
 End Tag Table
 

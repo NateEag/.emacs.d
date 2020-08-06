@@ -2,9 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20200706.705
-;; Package-Commit: 9bf7b6c4b7dfd23eee981befe23ff12774758ad4
-;; Version: 0.6
+;; Package-Version: 20200726.1813
+;; Package-Commit: aa541a4461a07add17374fd56aef6e2fd1a61c60
+;; Version: 0.7.1
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -47,6 +47,10 @@
     ;; c-mode.
     ("PHP" php-mode)
 
+    ;; Terraform needs to come before HCL because terraform-mode is
+    ;; derived from hcl-mode.
+    ("Terraform" terraform-mode)
+
     ;; TypeScript/TSX need to come before JavaScript/JSX because in
     ;; web-mode we can tell them apart by file name extension only.
     ;; This implies that unsaved temp buffers using TypeScript/TSX in
@@ -71,6 +75,7 @@
     ("BibTeX" bibtex-mode)
     ("C" c-mode)
     ("C++" c++-mode)
+    ("Cabal Config" haskell-cabal-mode)
     ("Clojure" clojure-mode clojurec-mode clojurescript-mode)
     ("CMake" cmake-mode)
     ("Crystal" crystal-mode)
@@ -128,7 +133,6 @@
     ("Solidity" solidity-mode)
     ("SQL" sql-mode)
     ("Swift" swift-mode swift3-mode)
-    ("Terraform" terraform-mode)
     ("TOML" toml-mode conf-toml-mode)
     ("Verilog" verilog-mode)
     ("Vue"

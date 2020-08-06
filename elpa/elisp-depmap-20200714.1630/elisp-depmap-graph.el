@@ -27,6 +27,7 @@
 ;;; Code:
 (require 'elisp-depmap-parse)
 (require 'subr-x)
+(require 'seq)
 
 (defcustom elisp-depmap-graph-stripprojectname t
   "Strip the project name from the graph."

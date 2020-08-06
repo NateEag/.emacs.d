@@ -3,14 +3,14 @@
 ;; Copyright (C) 2019  Emacsorphanage Community
 ;; Copyright (C) 2013-2018  Shingo Fukuyama
 
-;; Version: 2.0.0
-;; Package-Version: 20200515.417
-;; Package-Commit: 2efc552591102ab8b4408ad60a3c4be991bb8e93
+;; Version: 3.0.0
+;; Package-Version: 20200805.1943
+;; Package-Commit: a38d0b7a47918b2777ed9976e103f8c763a2a457
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
 ;; Keywords: convenience, helm, swoop, inner, buffer, search
-;; Package-Requires: ((emacs "24.4") (helm "3.2"))
+;; Package-Requires: ((emacs "25.1") (helm "3.6"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

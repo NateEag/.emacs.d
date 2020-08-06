@@ -1,11 +1,11 @@
-;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 40 other languages -*- lexical-binding: t -*-
+;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 50 other languages -*- lexical-binding: t -*-
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200706.710
-;; Package-Commit: c335cc8ba3adc3e7eff707a9a10de1bd7116d8c1
+;; Package-Version: 20200804.1822
+;; Package-Commit: ccfff41a200e16e3644c2531e984959392e3341a
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.6"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.7.1"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 ;;
@@ -29,6 +29,7 @@
 ;; - Bazel Starlark (buildifier)
 ;; - BibTeX (emacs)
 ;; - C/C++/Objective-C (clang-format)
+;; - Cabal (cabal-fmt)
 ;; - Clojure/ClojureScript (node-cljfmt)
 ;; - CMake (cmake-format)
 ;; - Crystal (crystal tool format)
@@ -42,6 +43,7 @@
 ;; - Emacs Lisp (emacs)
 ;; - Fish Shell (fish_indent)
 ;; - Fortran 90 (fprettify)
+;; - Gleam (gleam format)
 ;; - Go (gofmt)
 ;; - GraphQL (prettier)
 ;; - Haskell (brittany)
@@ -391,6 +393,12 @@ Consult the existing formatters for examples of BODY."
   (:languages "Bazel")
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter cabal-fmt
+  (:executable "cabal-fmt")
+  (:install "cabal install cabal-fmt")
+  (:languages "Cabal Config")
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter clang-format
   (:executable "clang-format")
   (:install
@@ -488,6 +496,12 @@ Consult the existing formatters for examples of BODY."
   (:install "pip install fprettify")
   (:languages "_Fortran 90")
   (:format (format-all--buffer-easy executable "--silent")))
+
+(define-format-all-formatter gleam
+  (:executable "gleam")
+  (:install (macos "brew install gleam"))
+  (:languages "_Gleam")
+  (:format (format-all--buffer-easy executable "format" "--stdin")))
 
 (define-format-all-formatter gofmt
   (:executable "gofmt")
@@ -623,10 +637,10 @@ Consult the existing formatters for examples of BODY."
       (list "--filename" (buffer-file-name))))))
 
 (define-format-all-formatter rustfmt
-  (:executable "cargo-fmt")
+  (:executable "rustfmt")
   (:install "rustup component add rustfmt")
   (:languages "Rust")
-  (:format (format-all--buffer-easy executable "--" "--quiet" "--emit" "stdout")))
+  (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter scalafmt
   (:executable "scalafmt")
@@ -712,9 +726,7 @@ languages do not yet have official GitHub Linguist identifiers,
 yet format-all needs to know about them anyway. That's why we
 have this custom language-id function in format-all. The
 unofficial languages IDs are prefixed with \"_\"."
-  (or (and (equal major-mode 'snakemake-mode) "_Snakemake")
-      (language-id-buffer)
-      (and (or (equal major-mode 'angular-html-mode)
+  (or (and (or (equal major-mode 'angular-html-mode)
                (and (equal major-mode 'web-mode)
                     (equal (symbol-value 'web-mode-content-type) "html")
                     (equal (symbol-value 'web-mode-engine) "angular")))
@@ -724,7 +736,10 @@ unofficial languages IDs are prefixed with \"_\"."
            (not (null (symbol-value 'flow-minor-mode)))
            "_Flow")
       (and (equal major-mode 'f90-mode) "_Fortran 90")
-      (and (equal major-mode 'ledger-mode) "_Ledger")))
+      (and (equal major-mode 'gleam-mode) "_Gleam")
+      (and (equal major-mode 'ledger-mode) "_Ledger")
+      (and (equal major-mode 'snakemake-mode) "_Snakemake")
+      (language-id-buffer)))
 
 (defun format-all--please-install (executable installer)
   "Internal helper function for error about missing EXECUTABLE and INSTALLER."

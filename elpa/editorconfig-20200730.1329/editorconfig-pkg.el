@@ -1,7 +1,7 @@
-(define-package "editorconfig" "20200519.1128" "EditorConfig Emacs Plugin"
+(define-package "editorconfig" "20200730.1329" "EditorConfig Emacs Plugin"
   '((cl-lib "0.5")
     (emacs "24"))
-  :commit "9a73ff743b9fe820301ea9b5c5c7804bfc967324" :authors
+  :commit "9bc1343ce8bd2cc84bf04b58a053b7ec700244c0" :authors
   '(("EditorConfig Team" . "editorconfig@googlegroups.com"))
   :maintainer
   '("EditorConfig Team" . "editorconfig@googlegroups.com")

@@ -322,7 +322,7 @@
   say "Hi everyone".
 
 - Come up with a way to send emails and flag the newly-made thread as
-  'watched'. Incident count: 4
+  'watched'. Incident count: 5
 
 - Notify me when a new email comes into a thread I'm writing a response in.
   Incident count: 1
@@ -336,7 +336,8 @@
   Incident count: 1
 
 - Try dtrt-indent as an alternative to guess-style, since guess-style does fail
-  to guess what I want fairly often (particularly in package.json files):
+  to guess what I want fairly often (particularly in package.json files). A
+  quick test shows that it gets package.json right.
   https://github.com/jscheid/dtrt-indent
 
 - Figure out what mime-type should be used for emailing bash scripts as an

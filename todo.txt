@@ -1,7 +1,10 @@
 - Figure out why Emacs occasionally blanks a window while I'm working in it. I
   have no idea what causes it and it happens perhaps once every day or four. I
   suppose I could start a low-speed binary search through my packages, on the
-  assumption that it is in fact my configuration that's causing this.
+  assumption that it is in fact my configuration that's causing this. Another
+  alternative would be to start building up a more-minimal configuration that
+  does what I want until it triggers this behavior, sort of a binary search
+  *towards* a broken state.
 
 - Get aggressive-fill-paragraph-mode working in php-mode without horrible
   slowdowns when typing multiline comments (seemingly due to buffer indent
@@ -829,6 +832,10 @@
 
 - Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
   a bit more intelligence, or something? Popped up in list-packages today.
+
+- Look into Pylance as an LSP-based alternative to Jedi. It's not open source,
+  so that's a big strike against it.
+  https://github.com/microsoft/pylance-release
 
 - Try out with-venv in my Python config. Theoretically it should be what I need
   to run things with the correct venv from within Emacs.

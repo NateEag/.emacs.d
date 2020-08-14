@@ -6,12 +6,27 @@
   does what I want until it triggers this behavior, sort of a binary search
   *towards* a broken state.
 
+- Split my personal aspell wordlist out into a few different wordlists, so I
+  can distinguish between things like 'technical abbreviations', 'personal
+  terminology', etc. I thought this meant a lot of low-level fiddling, but I
+  was wrong - aspell has an --add-extra-dicts option that can be used multiple
+  times to add several dicts. Thus, if I can define rules for when I want any
+  given extra dictionary active, I just need to translate that into Emacs Lisp.
+  Note that ispell-extra-args is supposedly where I need to set this option,
+  but it does not seem to have any effect there, so I need to understand
+  flyspell better.
+
 - Get aggressive-fill-paragraph-mode working in php-mode without horrible
   slowdowns when typing multiline comments (seemingly due to buffer indent
   attempts, as I see buffer indents happening after almost every keystroke).
   Looks like this may be related to c-indent-new-comment-line, which tries to
   indent and is perhaps getting invoked somehow, with php-mode being an
   extension of cc-mode.
+
+- Get aggressive-fill-paragraph-mode working in multiline strings.
+
+- figure out workflow for evaluating code inline some writing a file (that is,
+  learn how to use the elisp workflow anywhere else I can, like shell / JS / PHP
 
 - Try smerge and/or ediff for git conflict resolution UI. Also take a look at
   Apple's opendiff tool (https://emacs.stackexchange.com/q/16469), but pretty
@@ -846,16 +861,6 @@
 
 - Integrate elpygen into my python development workflow? I've installed it but
   haven't thought about setup at all.
-
-- Split my personal aspell wordlist out into a few different wordlists, so I
-  can distinguish between things like 'technical abbreviations', 'personal
-  terminology', etc. I thought this meant a lot of low-level fiddling, but I
-  was wrong - aspell has an --add-extra-dicts option that can be used multiple
-  times to add several dicts. Thus, if I can define rules for when I want any
-  given extra dictionary active, I just need to translate that into Emacs Lisp.
-  Note that ispell-extra-args is supposedly where I need to set this option,
-  but it does not seem to have any effect there, so I need to understand
-  flyspell better.
 
 - Figure out how to get ispell to not spellcheck options or command names in
   sh-mode. By itself that's easy, but you probably *do* want to spell-check

@@ -849,7 +849,13 @@
 
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
-  terminology', etc.
+  terminology', etc. I thought this meant a lot of low-level fiddling, but I
+  was wrong - aspell has an --add-extra-dicts option that can be used multiple
+  times to add several dicts. Thus, if I can define rules for when I want any
+  given extra dictionary active, I just need to translate that into Emacs Lisp.
+  Note that ispell-extra-args is supposedly where I need to set this option,
+  but it does not seem to have any effect there, so I need to understand
+  flyspell better.
 
 - Figure out how to get ispell to not spellcheck options or command names in
   sh-mode. By itself that's easy, but you probably *do* want to spell-check

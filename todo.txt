@@ -6,6 +6,8 @@
   does what I want until it triggers this behavior, sort of a binary search
   *towards* a broken state.
 
+- Figure out if I have to automate generating package-quickstart when needed.
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I

@@ -8,6 +8,10 @@
 
 - Figure out if I have to automate generating package-quickstart when needed.
 
+- See whether my tweaks to any of package-load-list, package-user-dir, or
+  package-enable-at-startup should move to early-init.el (they definitely
+  should if package-quickstart doesn't pan out)
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I
@@ -45,6 +49,38 @@
   works out, delete my prototypical work on making tagedit work with web-mode
   in favor of it, per this comment of mine:
   https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
+
+- Make sure I'm using the 27.1 native JSON parser for LSP backends
+
+- Move package customizations to `early-init.el`
+
+- Remove manual call to (package-initialize)
+
+- auth-source-pass is built in as of 27.1, so I should really start using it
+  for securely retrieving SMTP credentials. It would clean things up slightly,
+  by letting me avoid configuring a .authinfo file by hand on each machine I
+  use.
+
+- Activate so-long-mode, as it's built-in now.
+
+- See whether the proposed changes to timestamp format will impact my time
+  logging package. format-time-string, decode-time, and time-convert are all
+  noted as possibly impacted.
+
+- There are FINALLY functions for parsing ISO 8601 formats, including durations
+  and intervals. Update any of my code appropriately (see the iso8601-*
+  functions for details).
+
+- Consider whether I have a use for server-after-make-frame-hook
+
+- Look into 'flex' completion style - add 'flex' to completion-styles if it
+  seems relevant.
+
+- Ditch fill-column-indicator package in favor of display-fill-column-indicator
+  variable.
+
+- Add font-lock-refontify to my Anki deck so I remember it exists (I rarely
+  deal with font-lock code but sometimes I do wander into it)
 
 - Make "<leader> g n" support going to the last hunk in a file and "<leader> g
   p" support going to the first hunk in a file. Feels like an off-by-one error.
@@ -163,12 +199,6 @@
 - Try out evil-smartparens, once I'm a little more used to smartparens itself.
   Looks like it might do some neat stuff.
   https://github.com/jschaf/evil-smartparens/
-
-- Use auth-source-pass for securely retrieving SMTP credentials. It would clean
-  things up slightly, by letting me avoid configuring a .authinfo file by hand
-  on each machine I use. Note that this package is included in Emacs 26, so I
-  can uninstall it once I upgrade.
-  https://github.com/DamienCassou/auth-password-store
 
 - When I'm working in a NodeJS script (detectable by '#! /usr/bin/env node',
   among other approaches), js2-mode should auto-execute

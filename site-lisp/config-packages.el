@@ -573,12 +573,15 @@ The shell command lives in my dotfiles repo."
                                  (setq jedi:use-shortcuts t)
                                  (setq jedi:complete-on-dot t))))
 
+(use-package lsp-clients)
+
 (use-package yaml-mode
   :mode "\\.yaml\\'"
   :defer t
   :config
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init)
+  (add-hook 'yaml-mode-hook 'lsp)
   ;; yaml-mode constantly shifts indentation and breaks things with
   ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there.
   (add-hook 'yaml-mode-hook '(lambda () (aggressive-fill-paragraph-mode -1)) 80))

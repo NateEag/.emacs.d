@@ -163,6 +163,13 @@ I use css-mode for CSS, which is somewhat lacking, but I use
 <https://github.com/NateEag/skewer-reload-stylesheets>`__ to live-edit, and
 that makes life better.
 
+I've been doing a decent amount of devops work using `Ansible
+<https://www.ansible.com/>`__ lately, so I've got yaml-mode set up with an
+Ansible-specific poly-mode and lsp-mode + `yaml-language-server
+<https://github.com/redhat-developer/yaml-language-server>`__. There's
+definitely some massaging to do, but it makes Ansible development much less
+painful.
+
 Look in todo.txt and tell me about entries that can be resolved by turning on
 built-in features. I've found a few and would not mind finding more.
 

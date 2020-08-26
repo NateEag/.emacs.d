@@ -492,7 +492,8 @@ The shell command lives in my dotfiles repo."
          ("\\.env" . sh-mode))
   :bind (:map sh-mode-map ("=" . 'ne-sh-mode-maybe-insert-equals))
   :hook ((sh-mode . (lambda () (setq-local ne-yas-auto-insert-snippet-name
-                                           "shell-script")))))
+                                           "shell-script")))
+         (sh-mode . lsp)))
 
 (use-package gnuplot-mode
   :interpreter "gnuplot")

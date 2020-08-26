@@ -267,6 +267,17 @@ See `writeroom-mode' for more information on Writeroom mode.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-shell-interpreter-20200527.828/with-shell-interpreter-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-shell-interpreter-20200527.828/with-shell-interpreter-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "with-shell-interpreter" '("with-shell-interpreter")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20200113.1745/async-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -13432,6 +13443,43 @@ Add a new release to the change log." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/friendly-shell-command-20200527.830/friendly-shell-command-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/friendly-shell-command-20200527.830/friendly-shell-command-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "friendly-shell-command" '("friendly-shell-command--kill-buffer-sentinel")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magrant-20200824.1500/magrant-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magrant-20200824.1500/magrant-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magrant-box" '("magrant-box")))
+
+
+ (autoload 'magrant "magrant" nil t)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magrant-core" '("magrant-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magrant-machine" '("magrant-machine")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magrant-utils" '("magrant-utils-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20200701.2112/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -22909,7 +22957,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-mode transient toggle-quotes epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-mode transient toggle-quotes epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

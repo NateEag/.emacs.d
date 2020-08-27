@@ -6,11 +6,11 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Automatically rename paired HTML/XML tag.
 ;; Keyword: auto-complete html rename tag xml
-;; Version: 0.2.9
-;; Package-Version: 20200717.814
-;; Package-Commit: 7227c93e58a2c1837aa35ca35b6325c6f734d0f9
+;; Version: 0.3.2
+;; Package-Version: 20200827.850
+;; Package-Commit: 38428092bcd26d32ec6de4f1e71956f2742d2fde
 ;; Package-Requires: ((emacs "24.4"))
-;; URL: https://github.com/jcs090218/auto-rename-tag
+;; URL: https://github.com/jcs-elpa/auto-rename-tag
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -25,7 +25,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -40,10 +40,22 @@
   "Automatically rename paired HTML/XML tag."
   :prefix "auto-rename-tag-"
   :group 'tool
-  :link '(url-link :tag "Repository" "https://github.com/jcs090218/auto-rename-tag"))
+  :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/auto-rename-tag"))
 
 (defconst auto-rename-tag--tag-regexp "<[^>]*"
   "Tag regular expression to find tag position.")
+
+(defcustom auto-rename-tag-disabled-commands
+  '(query-replace)
+  "List of disabled commands."
+  :type 'list
+  :group 'auto-rename-tag)
+
+(defcustom auto-rename-tag-disabled-minor-modes
+  '(iedit-mode)
+  "List of disabled minor modes."
+  :type 'list
+  :group 'auto-rename-tag)
 
 (defvar-local auto-rename-tag--pre-command-activated nil
   "Check if `pre-command-hook' called.")
@@ -51,7 +63,7 @@
 (defvar-local auto-rename-tag--record-prev-word ""
   "Record down the word in `pre-command-hook'.")
 
-;; Util
+;;; Util
 
 (defun auto-rename-tag--is-beginning-of-buffer-p ()
   "Is at the beginning of buffer?"
@@ -69,7 +81,7 @@
     (let ((current-char-string (string (char-before))))
       (string= current-char-string c))))
 
-;; Core
+;;; Core
 
 (defun auto-rename-tag--delete-tag-name ()
   "Delete the current tag name."
@@ -245,7 +257,6 @@ DNC : duplicate nested count."
                  name nested-count dup-nested-count))))
       nested-count)))
 
-
 (defun auto-rename-tag--start-tag-point ()
   "Return the point of the tag starting point."
   (if (auto-rename-tag--inside-tag-p)
@@ -346,27 +357,43 @@ DIRECT can be either only 'backward and 'forward."
       ('forward
        (unless is-closing-tag (auto-rename-tag--resolve-nested direct))))))
 
+(defun auto-rename-tag--disabled-minor-modes-p ()
+  "Check currently any disabled minor mode active.
+Return non-nil, if there is at least one minor mode active.
+Return nil, meaning is safe to do rename tag action."
+  (let ((ret t) (index 0) m-mode)
+    (while (and ret
+                (< index (length auto-rename-tag-disabled-minor-modes)))
+      (setq m-mode (nth index auto-rename-tag-disabled-minor-modes))
+      (setq ret (if (fboundp m-mode) (not (symbol-value m-mode)) t))
+      (setq index (1+ index)))
+    ret))
+
+(defun auto-rename-tag--valid-do-p ()
+  "See if current change are valid to do rename tag action."
+  (and (not undo-in-progress)
+       (auto-rename-tag--disabled-minor-modes-p)
+       (not (memq this-command auto-rename-tag-disabled-commands))
+       (auto-rename-tag--inside-tag-p)
+       (not (auto-rename-tag--self-tag-p))))
 
 (defun auto-rename-tag--before-action ()
   "Before rename core action."
   (setq auto-rename-tag--record-prev-word "")  ; Reset record.
   (setq auto-rename-tag--pre-command-activated nil)  ; Reset flag.
 
-  (when (and (not undo-in-progress)
-             (auto-rename-tag--inside-tag-p)
-             (not (auto-rename-tag--self-tag-p)))
-    (save-excursion
-      ;; Set active flag.
-      (setq auto-rename-tag--pre-command-activated t)
+  (when (auto-rename-tag--valid-do-p)
+    ;; Set active flag.
+    (setq auto-rename-tag--pre-command-activated t)
 
-      (setq auto-rename-tag--record-prev-word (auto-rename-tag--get-tag-name-at-point))
+    (setq auto-rename-tag--record-prev-word (auto-rename-tag--get-tag-name-at-point))
 
-      (when (string= auto-rename-tag--record-prev-word "/")
-        (setq auto-rename-tag--record-prev-word ""))
+    (when (string= auto-rename-tag--record-prev-word "/")
+      (setq auto-rename-tag--record-prev-word ""))
 
-      ;; Ensure `auto-rename-tag--record-prev-word' is something other than nil.
-      (unless auto-rename-tag--record-prev-word
-        (setq auto-rename-tag--record-prev-word "")))))
+    ;; Ensure `auto-rename-tag--record-prev-word' is something other than nil.
+    (unless auto-rename-tag--record-prev-word
+      (setq auto-rename-tag--record-prev-word ""))))
 
 (defun auto-rename-tag--after-action ()
   "After rename core action."
@@ -416,7 +443,6 @@ DIRECT can be either only 'backward and 'forward."
               ;; Insert new word.
               (insert current-word))))))))
 
-
 (defun auto-rename-tag--before-change (&rest _args)
   "Do stuff before buffer is changed."
   (auto-rename-tag--before-action))
@@ -424,6 +450,8 @@ DIRECT can be either only 'backward and 'forward."
 (defun auto-rename-tag--after-change (&rest _args)
   "Do stuff after buffer is changed."
   (auto-rename-tag--after-action))
+
+;; Entry
 
 (defun auto-rename-tag--enable ()
   "Enable `auto-rename-tag' in current buffer."
@@ -440,9 +468,7 @@ DIRECT can be either only 'backward and 'forward."
   "Minor mode 'auto-rename-tag' mode."
   :lighter " ART"
   :group auto-rename-tag
-  (if auto-rename-tag-mode
-      (auto-rename-tag--enable)
-    (auto-rename-tag--disable)))
+  (if auto-rename-tag-mode (auto-rename-tag--enable) (auto-rename-tag--disable)))
 
 (provide 'auto-rename-tag)
 ;;; auto-rename-tag.el ends here

@@ -1,4 +1,4 @@
-(define-package "lsp-java" "20200804.1609" "Java support for lsp-mode"
+(define-package "lsp-java" "20200827.658" "Java support for lsp-mode"
   '((emacs "25.1")
     (lsp-mode "6.0")
     (markdown-mode "2.3")
@@ -9,7 +9,7 @@
     (request "0.3.0")
     (treemacs "2.5")
     (dap-mode "0.5"))
-  :commit "260016236fa0520b5b6ec7f51ca2086288524cba" :keywords
+  :commit "541abcbdc4926b39cbd4c3bd4df3f1213670b01a" :keywords
   '("languague" "tools")
   :url "https://github.com/emacs-lsp/lsp-java")
 ;; Local Variables:

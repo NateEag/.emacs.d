@@ -4,8 +4,8 @@
 ;; Copyright (C) 2013-2018  Shingo Fukuyama
 
 ;; Version: 3.0.0
-;; Package-Version: 20200805.1943
-;; Package-Commit: a38d0b7a47918b2777ed9976e103f8c763a2a457
+;; Package-Version: 20200814.448
+;; Package-Commit: 1f7d3cf0d742b199e4ce13fcb8b19c977a44611e
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
@@ -1080,23 +1080,19 @@ If LINUM is number, lines are separated by LINUM."
 (defun helm-multi-swoop--get-marked-buffers ()
   "Get marked buffers."
   (let ((buf (get-buffer helm-multi-swoop-buffer-list))
-        list)
-    (when buf
-      (with-current-buffer (get-buffer helm-multi-swoop-buffer-list)
-        (mapc (lambda (ov)
-                (when (eq 'helm-visible-mark (overlay-get ov 'face))
-                  (setq list (cons
-                              (let ((word (buffer-substring-no-properties
-                                           (overlay-start ov) (overlay-end ov))))
-                                (mapc (lambda (r)
-                                        (setq word (replace-regexp-in-string
-                                                    (car r) (cdr r) word)))
-                                      (list '("\\`[ \t\n\r]+" . "")
-                                            '("[ \t\n\r]+\\'" . "")))
-                                word)
-                              list))))
-              (overlays-in (point-min) (point-max))))
-      (delete "" list))))
+        lst)
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (dolist (ov (cl-delete-if-not
+                     (lambda (o)
+                       (eq 'helm-visible-mark (overlay-get o 'face)))
+                     (overlays-in (point-min) (point-max))))
+          (let ((word (string-trim
+                       (buffer-substring-no-properties
+                        (overlay-start ov) (overlay-end ov)))))
+            (unless (string-empty-p word)
+              (push word lst)))))
+      (nreverse (sort lst #'string<)))))
 
 ;; core --------------------------------------------------------
 

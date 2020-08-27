@@ -300,6 +300,10 @@ We don't extract the string that `lps-line' is already displaying."
          (lsp:marked-string-language contents))
     (lsp-ui-doc--extract-marked-string (lsp:marked-string-value contents)
                                        (lsp:marked-string-language contents)))
+   ;; The specification for MarkedString also includes raw strings of
+   ;; markdown, which is not reflected by `lsp-marked-string?'
+   ((stringp contents)
+    (lsp-ui-doc--extract-marked-string contents lsp/markup-kind-markdown))
    ((lsp-marked-string? contents) (lsp-ui-doc--extract-marked-string contents))
    ((and (lsp-markup-content? contents)
          (string= (lsp:markup-content-kind contents) lsp/markup-kind-markdown))
@@ -359,7 +363,7 @@ We don't extract the string that `lps-line' is already displaying."
   (-when-let* ((xw (lsp-ui-doc--webkit-get-xwidget)))
     (xwidget-webkit-execute-script-rv xw script)))
 
-(defun lsp-ui-doc--hide-frame ()
+(defun lsp-ui-doc--hide-frame (&optional win)
   "Hide the frame."
   (setq lsp-ui-doc--bounds nil)
   (when (overlayp lsp-ui-doc--inline-ov)
@@ -449,13 +453,17 @@ FRAME just below the symbol at point."
           (window (frame-root-window frame))
           ((width . height) (window-text-pixel-size window nil nil 10000 10000 t))
           (width (+ width (* (frame-char-width frame) 1))) ;; margins
-          (char-h (frame-char-height))
+          (char-h (frame-char-height frame))
+          (char-w (frame-char-width frame))
           (height (min (- (* lsp-ui-doc-max-height char-h) (/ char-h 2)) height))
+          (width (min width (* lsp-ui-doc-max-width char-w)))
           (frame-right (pcase lsp-ui-doc-alignment
                          ('frame (frame-pixel-width))
                          ('window right)))
           (frame-resize-pixelwise t))
     (set-frame-size frame width height t)
+    (set-frame-parameter frame 'lsp-ui-doc--window-origin (selected-window))
+    (set-frame-parameter frame 'lsp-ui-doc--buffer-origin (current-buffer))
     (if (eq lsp-ui-doc-position 'at-point)
         (lsp-ui-doc--mv-at-point frame width height left top)
       (set-frame-position frame
@@ -752,10 +760,26 @@ before, or if the new window is the minibuffer."
                              (equal (window-buffer initial-window) doc-buffer)))
               (lsp-ui-doc--hide-frame))))))))
 
-(advice-add #'select-window :around #'lsp-ui-doc-hide-frame-on-window-change)
+(unless (boundp 'window-state-change-functions)
+  (advice-add #'select-window :around #'lsp-ui-doc-hide-frame-on-window-change)
+  (add-hook 'window-configuration-change-hook #'lsp-ui-doc--hide-frame))
+
+(defvar-local lsp-ui-doc--timer-on-changes nil)
+
+(defun lsp-ui-doc--on-state-changed (_frame &optional on-idle)
+  (-when-let* ((frame (lsp-ui-doc--get-frame)))
+    (and (frame-live-p frame)
+         (frame-visible-p frame)
+         (not (minibufferp (window-buffer)))
+         (or (not (eq (selected-window) (frame-parameter frame 'lsp-ui-doc--window-origin)))
+             (not (eq (window-buffer) (frame-parameter frame 'lsp-ui-doc--buffer-origin))))
+         (if on-idle (lsp-ui-doc--hide-frame)
+           (and (timerp lsp-ui-doc--timer-on-changes)
+                (cancel-timer lsp-ui-doc--timer-on-changes))
+           (setq lsp-ui-doc--timer-on-changes
+                 (run-with-idle-timer 0 nil (lambda nil (lsp-ui-doc--on-state-changed frame t))))))))
 
 (advice-add 'load-theme :before (lambda (&rest _) (lsp-ui-doc--delete-frame)))
-(add-hook 'window-configuration-change-hook #'lsp-ui-doc--hide-frame)
 
 (advice-add #'keyboard-quit :before #'lsp-ui-doc--hide-frame)
 
@@ -782,10 +806,14 @@ before, or if the new window is the minibuffer."
         ;; ‘frameset-filter-alist’ for explanation.
         (cl-callf copy-tree frameset-filter-alist)
         (push '(lsp-ui-doc-frame . :never) frameset-filter-alist)))
+    (when (boundp 'window-state-change-functions)
+      (add-hook 'window-state-change-functions 'lsp-ui-doc--on-state-changed))
     (add-hook 'post-command-hook 'lsp-ui-doc--make-request nil t)
     (add-hook 'delete-frame-functions 'lsp-ui-doc--on-delete nil t))
    (t
     (lsp-ui-doc-hide)
+    (when (boundp 'window-state-change-functions)
+      (remove-hook 'window-state-change-functions 'lsp-ui-doc--on-state-changed))
     (remove-hook 'post-command-hook 'lsp-ui-doc--make-request t)
     (remove-hook 'delete-frame-functions 'lsp-ui-doc--on-delete t))))
 

@@ -36,6 +36,7 @@
 (require 'dash)
 (require 'seq)
 (require 'subr-x)
+(require 'face-remap)
 
 (defgroup lsp-ui-sideline nil
   "Display information for the current line."
@@ -244,6 +245,15 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
   (+ (apply '+ lengths)
      (if (display-graphic-p) 1 2)))
 
+(defun lsp-ui-sideline--compute-height nil
+  "Return a fixed size for text in sideline."
+  (if (null text-scale-mode-remapping)
+      '(height 1)
+    ;; Readjust height when text-scale-mode is used
+    (list 'height
+          (/ 1 (or (plist-get (cdr text-scale-mode-remapping) :height)
+                   1)))))
+
 (defun lsp-ui-sideline--make-display-string (info symbol current)
   "Make final string to display in buffer.
 INFO is the information to display.
@@ -258,7 +268,7 @@ CURRENT is non-nil when the point is on the symbol."
     (add-face-text-property 0 len 'lsp-ui-sideline-global nil str)
     (concat
      (propertize " " 'display `(space :align-to (- right-fringe ,(lsp-ui-sideline--align len margin))))
-     (propertize str 'display '(height 1)))))
+     (propertize str 'display (lsp-ui-sideline--compute-height)))))
 
 (defun lsp-ui-sideline--check-duplicate (symbol info)
   "Check if there's already a SYMBOL containing INFO, unless `lsp-ui-sideline-ignore-duplicate'
@@ -277,7 +287,10 @@ is set to t."
               1)
          (and (boundp 'fringe-mode) (equal fringe-mode 0) 1)
          0)
-     (if (bound-and-true-p display-line-numbers-mode)
+     (if (and (bound-and-true-p display-line-numbers-mode)
+              (< emacs-major-version 27))
+         ;; This was necessary with emacs < 27, recent versions take
+         ;; into account the display-line width with :align-to
          (+ 2 (line-number-display-width))
        0)
      (if (or
@@ -288,7 +301,13 @@ is set to t."
 
 (defun lsp-ui-sideline--window-width ()
   (- (min (window-text-width) (window-body-width))
-     (lsp-ui-sideline--margin-width)))
+     (lsp-ui-sideline--margin-width)
+     (or (and (bound-and-true-p display-line-numbers-mode)
+              (>= emacs-major-version 27)
+              ;; We still need this number when calculating available space
+              ;; even with emacs >= 27
+              (+ (line-number-display-width) 2))
+         0)))
 
 (defun lsp-ui-sideline--push-info (symbol tag bounds info bol eol)
   (when (and (= tag (lsp-ui-sideline--calculate-tag))
@@ -367,7 +386,7 @@ Push sideline overlays on `lsp-ui-sideline--ovs'."
                                  (add-face-text-property 0 len face nil message)
                                  message))
                  (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(lsp-ui-sideline--align len margin))))
-                                 (propertize message 'display '(height 1))))
+                                 (propertize message 'display (lsp-ui-sideline--compute-height))))
                  (pos-ov (lsp-ui-sideline--find-line len bol eol nil offset))
                  (ov (and pos-ov (make-overlay (car pos-ov) (car pos-ov)))))
             (when pos-ov
@@ -412,7 +431,7 @@ Push sideline overlays on `lsp-ui-sideline--ovs'."
                           (add-text-properties 0 len `(keymap ,keymap mouse-face highlight) title)
                           title))
             (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(lsp-ui-sideline--align len margin))))
-                            (propertize title 'display '(height 1))))
+                            (propertize title 'display (lsp-ui-sideline--compute-height))))
             (pos-ov (lsp-ui-sideline--find-line (1+ (length title)) bol eol t))
             (ov (and pos-ov (make-overlay (car pos-ov) (car pos-ov)))))
       (when pos-ov

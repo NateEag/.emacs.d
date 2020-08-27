@@ -7,7 +7,7 @@
 ;; Keywords: languages, tools
 ;; URL: https://github.com/emacs-lsp/lsp-ui
 ;; Package-Requires: ((emacs "26.1") (dash "2.14") (dash-functional "1.2.0") (lsp-mode "6.0") (markdown-mode "2.3"))
-;; Version: 7.0
+;; Version: 7.0.1
 
 ;;; License
 ;;
@@ -135,7 +135,7 @@ Both should have the form (FILENAME LINE COLUMN)."
 (defun lsp-ui-find-next-reference (&optional extra)
   "Find next reference of the symbol at point."
   (interactive)
-  (let* ((cur (list buffer-file-name (line-number-at-pos) (- (point) (line-beginning-position))))
+  (let* ((cur (list buffer-file-name (1- (line-number-at-pos)) (- (point) (line-beginning-position))))
          (refs (lsp-ui--reference-triples extra))
          (idx -1)
          (res (-first (lambda (ref) (cl-incf idx) (lsp-ui--location< cur ref)) refs)))
@@ -152,7 +152,7 @@ Both should have the form (FILENAME LINE COLUMN)."
 (defun lsp-ui-find-prev-reference (&optional extra)
   "Find previous reference of the symbol at point."
   (interactive)
-  (let* ((cur (list buffer-file-name (line-number-at-pos) (- (point) (line-beginning-position))))
+  (let* ((cur (list buffer-file-name (1- (line-number-at-pos)) (- (point) (line-beginning-position))))
          (refs (lsp-ui--reference-triples extra))
          (idx -1)
          (res (-last (lambda (ref) (and (lsp-ui--location< ref cur) (cl-incf idx))) refs)))

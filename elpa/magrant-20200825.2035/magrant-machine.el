@@ -41,7 +41,7 @@
 This should be a cons cell (NAME . FLIP) where
 NAME is a string matching one of the column names
 and FLIP is a boolean to specify the sort order."
-  :group 'magrant-box
+  :group 'magrant-machine
   :type '(cons (choice (const "Id")
                        (const "Name")
                        (const "Provider")
@@ -49,6 +49,14 @@ and FLIP is a boolean to specify the sort order."
                        (const "Directory"))
                (choice (const :tag "Ascending" nil)
                        (const :tag "Descending" t))))
+
+(defcustom magrant-machine-force-all-status-refresh-on-startup nil
+  "If t, will force Vagrant to fetch all machines statuses, one by one.
+
+This prevents Vagrant from displaying outdated information but
+makes initial display of machines list slow."
+  :group 'magrant-machine
+  :type 'boolean)
 
 
 
@@ -59,6 +67,18 @@ and FLIP is a boolean to specify the sort order."
 (defun magrant-machine-refresh ()
   "Refresh the machines list."
   (setq tabulated-list-entries (magrant-machine-entries)))
+
+(defun magrant-machine-force-all-status-refresh (&optional tablist)
+  "Force the refresh of all machines statuses.
+This is needed for first retrieval as \"vagrant global status\" often reports outdated statuses.
+This forces Vagrant to refresh its cache for each machine."
+  (let ((tablist (or tablist (magrant-machine-entries))))
+    (--each tablist
+      (let* ((dir (aref (cadr it) 4))
+             (alias (file-name-nondirectory dir))
+             (id (magrant-utils-tablist-entry-id it))
+             (default-directory dir))
+        (magrant-run-vagrant "status")))))
 
 (defun magrant-machine-entries ()
   "Return the vagrant machines data for `tabulated-list-entries'."
@@ -150,9 +170,17 @@ and FLIP is a boolean to specify the sort order."
 (transient-define-prefix magrant-machine-list ()
   "Transient for listing machines."
   :man-page "magrant-machine-list"
+  ["Tune arguments"
+   ("-f" "Force" "-f")]
   ["Actions"
    ;; NB: `magrant-machine-refresh' called by hook, see `magrant-machine-mode'
-   ("l" "List" tablist-revert)])
+   ("l" "List" magrant-machine-list-impl)])
+
+(defun magrant-machine-list-impl ()
+  (interactive)
+  (when (member "-f" (transient-args transient-current-command))
+    (magrant-machine-force-all-status-refresh tabulated-list-entries))
+  (tablist-revert))
 
 
 
@@ -281,6 +309,8 @@ created buffer (for each target)."
   (interactive)
   (magrant-utils-pop-to-buffer "*vagrant-machines*")
   (magrant-machine-mode)
+  (when magrant-machine-force-all-status-refresh-on-startup
+    (magrant-machine-force-all-status-refresh))
   (tablist-revert))
 
 

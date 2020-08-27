@@ -7,7 +7,7 @@
 ;; Version: 0.7.1
 ;; URL: https://github.com/jschaf/esup
 ;; Keywords: convenience, processes
-;; Package-Requires: ((cl-lib "0.5") (emacs "25"))
+;; Package-Requires: ((cl-lib "0.5") (emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -36,6 +36,8 @@
 
 (require 'benchmark)
 (require 'eieio)
+(require 'seq)
+(require 'subr-x)
 
 ;; We don't use :accesssor for class slots because it cause a
 ;; byte-compiler error even if we use the accessor.  This is fixed in
@@ -187,6 +189,25 @@ a complete result.")
     (setq str (replace-match "" t t str)))
   str)
 
+(defun esup-child-s-pad-left (len padding s)
+  "If S is shorter than LEN, pad it with PADDING on the left."
+  (let ((extra (max 0 (- len (length s)))))
+    (concat (make-string extra (string-to-char padding))
+            s)))
+
+(defun esup-child-unindent (str)
+  "Remove common leading whitespace from each line of STR.
+If STR contains only whitespace, return an empty string."
+  (let* ((lines (split-string str "\\(\r\n\\|[\n\r]\\)"))
+         (non-whitespace-lines (seq-filter (lambda (s) (< 0 (length (string-trim-left s))))
+                                           lines))
+         (n-to-trim (apply #'min (mapcar (lambda (s) (- (length s) (length (string-trim-left s))))
+                                         (or non-whitespace-lines [""]))))
+         (result (string-join (mapcar (lambda (s) (substring (esup-child-s-pad-left n-to-trim " " s) n-to-trim))
+                                      lines)
+                              "\n")))
+    (if (= 0 (length (esup-child-chomp result))) "" result)))
+
 (defmacro with-esup-child-increasing-depth (&rest body)
   "Run BODY and with an incremented depth level.
 Decrement the depth level after complete."
@@ -315,7 +336,7 @@ BUFFER defaults to the current buffer."
 (defun esup-child-profile-sexp (start end)
   "Profile the sexp between START and END in the current buffer.
 Returns a list of class `esup-result'."
-  (let* ((sexp-string (esup-child-chomp (buffer-substring start end)))
+  (let* ((sexp-string (esup-child-unindent (buffer-substring start end)))
          (line-number (line-number-at-pos start))
          (file-name (buffer-file-name))
          sexp

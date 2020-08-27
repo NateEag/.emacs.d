@@ -2,8 +2,8 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20200719.1241
-;; Package-Commit: 02546beecf4c495940885e7b7b911d84b12646ef
+;; Package-Version: 20200823.1217
+;; Package-Commit: 8587416c2123dd4dd1a7c2bc9207205e47e9b54a
 ;; Version: 1.3.0
 ;; Package-Requires: ((emacs "25.1") (helm "3.2"))
 
@@ -201,7 +201,10 @@ Returns t if section is found, nil otherwise."
 ;;;###autoload
 (defun rfc-mode-read (number)
   "Read the RFC document NUMBER."
-  (interactive "nRFC number: ")
+  (interactive
+   (if (and current-prefix-arg (not (consp current-prefix-arg)))
+       (list (prefix-numeric-value current-prefix-arg))
+     (list (read-number "RFC number: "))))
   (display-buffer (rfc-mode--document-buffer number)))
 
 (defun rfc-mode-reload-index ()

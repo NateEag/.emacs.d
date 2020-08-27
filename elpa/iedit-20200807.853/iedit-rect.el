@@ -6,8 +6,8 @@
 ;; Author: Victor Ren <victorhge@gmail.com>
 ;; Keywords: occurrence region simultaneous rectangle refactoring
 ;; Version: 0.9.9.9
-;; X-URL: https://www.emacswiki.org/emacs/Iedit
-;;        https://github.com/victorhge/iedit
+;; X-URL: https://github.com/victorhge/iedit
+;;        https://www.emacswiki.org/emacs/Iedit
 ;; Compatibility: GNU Emacs: 22.x, 23.x, 24.x, 25.x
 
 ;; This file is not part of GNU Emacs, but it is distributed under
@@ -121,7 +121,6 @@ Commands:
   (setq beg (copy-marker beg))
   (setq end (copy-marker end t))
   (setq iedit-occurrences-overlays nil)
-  (setq iedit-initial-string-local nil)
   (setq iedit-occurrence-keymap iedit-rect-keymap)
   (save-excursion
     (let ((beg-col (progn (goto-char beg) (current-column)))

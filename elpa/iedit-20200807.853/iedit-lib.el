@@ -7,8 +7,8 @@
 ;; Author: Victor Ren <victorhge@gmail.com>
 ;; Keywords: occurrence region simultaneous rectangle refactoring
 ;; Version: 0.9.9.9
-;; X-URL: https://www.emacswiki.org/emacs/Iedit
-;;        https://github.com/victorhge/iedit
+;; X-URL: https://github.com/victorhge/iedit
+;;        https://www.emacswiki.org/emacs/Iedit
 ;; Compatibility: GNU Emacs: 22.x, 23.x, 24.x, 25.x
 
 ;; This file is not part of GNU Emacs, but it is distributed under
@@ -489,7 +489,7 @@ occurrence, it will abort Iedit mode."
       (when (not iedit-post-undo-hook-installed)
         (add-hook 'post-command-hook 'iedit-post-undo nil t)
         (setq iedit-post-undo-hook-installed t))
-    (when (not iedit-aborting)
+    (when (and (not iedit-updating) (not iedit-aborting))
       ;; before modification
       (if (null after)
           (if (or (< beg (overlay-start occurrence))
@@ -527,7 +527,7 @@ occurrence, it will abort Iedit mode."
 This part is running in `post-command-hook'. It combines
 `iedit-after-change-list' into one change and then call the third
 part to apply it to all the other occurrences."
-  (when iedit-after-change-list
+  (when (and (not iedit-updating) iedit-after-change-list)
 	(let ((beg (buffer-size))
 		  (end (buffer-size))
 		  (change 0))

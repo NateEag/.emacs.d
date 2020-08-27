@@ -17,8 +17,8 @@
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
-;; Package-Version: 20200701.2042
-;; Package-Commit: 5c960e7800dc8f4432f3a1466a637d484b87dc35
+;; Package-Version: 20200808.713
+;; Package-Commit: 4263c967267b0579956b3b12ef32878a9ea80d97
 ;; URL: https://github.com/yyoncho/helm-lsp
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (helm "2.0"))
 ;; Version: 0.2
@@ -72,6 +72,13 @@ CANDIDATE is the selected item in the helm menu."
   (ht-get (treemacs-theme->gui-icons (treemacs--find-theme lsp-treemacs-theme))
           (lsp-treemacs-symbol-kind->icon kind)))
 
+(defun helm-lsp--extract-file-name (uri)
+  (propertize
+   (if (string= "jdt" (-> uri url-unhex-string url-generic-parse-url url-type))
+       (cl-second (s-match ".*\(\\(.*\\)" uri))
+     (f-filename uri))
+   'face 'helm-lsp-container-face))
+
 (defun helm-lsp--workspace-symbol (workspaces name input)
   "Search against WORKSPACES NAME with default INPUT."
   (setq helm-lsp-symbols-result nil)
@@ -106,7 +113,7 @@ CANDIDATE is the selected item in the helm menu."
                     (lambda (candidates)
                       (-map
                        (-lambda ((candidate &as
-                                            &SymbolInformation :container-name? :name :kind))
+                                            &SymbolInformation :container-name? :name :kind :location (&Location :uri)))
                          (let ((type (or (alist-get kind lsp--symbol-kind) "Unknown")))
                            (cons
                             (if (and (featurep 'lsp-treemacs)
@@ -116,15 +123,18 @@ CANDIDATE is the selected item in the helm menu."
                                      (helm-lsp--get-icon 'fallback))
                                  (if (s-blank? container-name?)
                                      name
-                                   (concat name " " (propertize container-name? 'face 'helm-lsp-container-face))))
-
+                                   (concat name " " (propertize container-name? 'face 'helm-lsp-container-face)))
+                                 (propertize " · " 'face 'success)
+                                 (helm-lsp--extract-file-name uri))
                               (concat (if (s-blank? container-name?)
                                           name
                                         (concat name " " (propertize container-name? 'face 'helm-lsp-container-face) " -" ))
                                       " "
-                                      (propertize (concat "(" type ")") 'face 'font-lock-type-face)))
+                                      (propertize (concat "(" type ")") 'face 'font-lock-type-face)
+                                      (propertize " · " 'face 'success)
+                                      (helm-lsp--extract-file-name uri)))
                             candidate)))
-                       candidates))
+                       (-take helm-candidate-number-limit candidates)))
                     :candidate-number-limit nil
                     :requires-pattern 0)
          :input input))

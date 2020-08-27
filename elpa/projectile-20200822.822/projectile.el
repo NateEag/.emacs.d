@@ -4,8 +4,8 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200802.1502
-;; Package-Commit: 7ed2ce31ef7db12f3c9bfede6bd0678cf18d261e
+;; Package-Version: 20200822.822
+;; Package-Commit: a2b5a70e204e277a738615901dfebf274c8202c2
 ;; Keywords: project, convenience
 ;; Version: 2.3.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -61,12 +61,14 @@
 (declare-function make-term "term")
 (declare-function term-mode "term")
 (declare-function term-char-mode "term")
+(declare-function term-ansi-make-term "term")
 (declare-function eshell-search-path "esh-ext")
 (declare-function vc-dir "vc-dir")
 (declare-function vc-dir-busy "vc-dir")
 (declare-function string-trim "subr-x")
 (declare-function fileloop-continue "fileloop")
 (declare-function fileloop-initialize-replace "fileloop")
+(declare-function tramp-archive-file-name-p "tramp-archive")
 
 (declare-function ggtags-ensure-project "ext:ggtags")
 (declare-function ggtags-update-tags "ext:ggtags")
@@ -379,6 +381,7 @@ Regular expressions can be used."
 
 (defcustom projectile-globally-ignored-directories
   '(".idea"
+    ".vscode"
     ".ensime_cache"
     ".eunit"
     ".git"
@@ -389,7 +392,9 @@ Regular expressions can be used."
     "_darcs"
     ".tox"
     ".svn"
-    ".stack-work")
+    ".stack-work"
+    ".ccls-cache"
+    ".clangd")
   "A list of directories globally ignored by projectile.
 
 Regular expressions can be used."
@@ -1126,6 +1131,12 @@ Controlled by `projectile-require-project-root'."
      (projectile-require-project-root (error "Projectile can't find a project definition in %s" dir))
      (t default-directory))))
 
+(defun projectile-acquire-root (&optional dir)
+  "Find the current project root, and prompts the user for it if that fails.
+Provides the common idiom (projectile-ensure-root (projectile-project-root)).
+Starts the search for the project with DIR."
+  (projectile-ensure-project (projectile-project-root dir)))
+
 (defun projectile-project-p (&optional dir)
   "Check if DIR is a project.
 Defaults to the current directory if not provided
@@ -1439,6 +1450,14 @@ If PROJECT is not specified the command acts on the current project."
   (let ((project-buffers (projectile-project-buffers)))
     (dolist (buffer project-buffers)
       (funcall action buffer))))
+
+(defun projectile-process-current-project-buffers-current (action)
+  "Invoke ACTION on every project buffer with that buffer current.
+ACTION is called without arguments."
+  (let ((project-buffers (projectile-project-buffers)))
+    (dolist (buffer project-buffers)
+      (with-current-buffer buffer
+        (funcall action)))))
 
 (defun projectile-project-buffer-files (&optional project)
   "Get a list of a project's buffer files.
@@ -2704,6 +2723,12 @@ test/impl/other files as below:
                                   :test "pipenv run test"
                                   :test-prefix "test_"
                                   :test-suffix "_test")
+(projectile-register-project-type 'python-poetry '("poetry.lock")
+                                  :project-file "poetry.lock"
+                                  :compile "poetry build"
+                                  :test "poetry run python -m unittest discover"
+                                  :test-prefix "test_"
+                                  :test-suffix "_test")
 ;; Java & friends
 (projectile-register-project-type 'maven '("pom.xml")
                                   :project-file "pom.xml"
@@ -2804,9 +2829,11 @@ test/impl/other files as below:
                                   :test-suffix "-test")
 (projectile-register-project-type 'emacs-eldev (lambda () (or (projectile-verify-file "Eldev")
                                                               (projectile-verify-file "Eldev-local")))
-                                  :compile "eldev package"
+                                  :project-file "Eldev"
+                                  :compile "eldev compile"
                                   :test "eldev test"
-                                  :run "eldev emacs")
+                                  :run "eldev emacs"
+                                  :package "eldev package")
 
 ;; R
 (projectile-register-project-type 'r '("DESCRIPTION")
@@ -3658,7 +3685,7 @@ to run the replacement."
                                   (goto-char (match-beginning 0))))
             tags-loop-operate `(perform-replace ',old-text ',new-text t nil nil
                                                 nil multi-query-replace-map))
-      (tags-loop-continue (or (cons 'list files) t)))))
+      (with-no-warnings (tags-loop-continue (or (cons 'list files) t))))))
 
 ;;;###autoload
 (defun projectile-replace-regexp (&optional arg)
@@ -3686,7 +3713,8 @@ to run the replacement."
           (cl-remove-if
            #'file-directory-p
            (mapcar #'projectile-expand-root (projectile-dir-files directory)))))
-    (tags-query-replace old-text new-text nil (cons 'list files))))
+    ;; FIXME: Probably would fail on Emacs 27+, fourth argument is gone.
+    (with-no-warnings (tags-query-replace old-text new-text nil (cons 'list files)))))
 
 ;;;###autoload
 (defun projectile-kill-buffers ()

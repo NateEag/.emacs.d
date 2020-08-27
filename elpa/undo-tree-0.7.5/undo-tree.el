@@ -4,7 +4,7 @@
 
 ;; Author: Toby Cubitt <toby-undo-tree@dr-qubit.org>
 ;; Maintainer: Toby Cubitt <toby-undo-tree@dr-qubit.org>
-;; Version: 0.7.4
+;; Version: 0.7.5
 ;; Keywords: convenience, files, undo, redo, history, tree
 ;; URL: http://www.dr-qubit.org/emacs.php
 ;; Repository: http://www.dr-qubit.org/git/undo-tree.git
@@ -3294,7 +3294,10 @@ without asking for confirmation."
 	  (with-temp-buffer
 	    (prin1 (sha1 buff) (current-buffer))
 	    (terpri (current-buffer))
-	    (let ((print-circle t)) (prin1 tree (current-buffer)))
+            (let ((print-circle t)
+                  (print-length nil)
+                  (print-level nil))
+	      (prin1 tree (current-buffer)))
 	    (write-region nil nil filename)))))))
 
 
@@ -4648,6 +4651,13 @@ specifies `saved', and a negative prefix argument specifies
 
 ;;;; ChangeLog:
 
+;; 2020-08-19  Fabrice Popineau  <fabrice.popineau@gmail.com>
+;; 
+;; 	Print complete objects when saving undo-tree history
+;; 
+;; 	* packages/undo-tree/undo-tree.el (undo-tree-save-history): Print 
+;; 	complete objects (bug#24469).
+;; 
 ;; 2020-01-28  Toby S. Cubitt  <tsc25@cantab.net>
 ;; 
 ;; 	Undo-tree bug-fix release.

@@ -321,6 +321,7 @@ The \"project\" is determined by trying, in order:
 
 - `projectile-project-root'
 - `vc-root-dir'
+- `project-current'
 - `file-name-directory'" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl-buffer-name" '("racket-")))

@@ -297,7 +297,7 @@ If `t', Geiser will use `next-error' to jump to the error's location."
   ;; if your version of gambit support modules we directly load geiser module
   ;; else we go load the file in geiser
   (let* ((v (geiser-gambit--version (geiser-gambit--binary)))
-         (gambit-version (substring v 1 (string-width v))))
+         (gambit-version (geiser--cut-version v)))
     (if (version< gambit-version "4.9.4")
         `( "-:d-" ,(expand-file-name "gambit/geiser/gambit.scm" geiser-scheme-dir) "-" )
       `("-:d-" "gambit/geiser" "-"))))

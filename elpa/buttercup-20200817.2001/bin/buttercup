@@ -29,10 +29,11 @@ Buttercup options:
 --pattern, -p PATTERN   Only run tests with names matching PATTERN.
                           This option can be used multiple times, in
                           which case tests will be run if they match
-                          any of the given patterns. PATTERN is
-                          matched as a substring of the full test
-                          description (the concatenation of the test
-                          and all paremt suites descriptions).
+                          any of the given patterns. PATTERN should be
+                          an Emacs regex that will be matched against
+                          the full test description (the concatenation
+                          of the test and all parent suites
+                          descriptions).
 
 --no-skip               Do not print the descriptions for tests that
                           are filtered out with "--pattern" or disabled
@@ -56,6 +57,8 @@ Buttercup options:
                           frame with a lambda or M to indicate whether
                           it is a normal function call or a
                           macro/special form.
+
+--stale-file-error      Fail the test run if stale .elc files are loaded.
 EOF
 }
 
@@ -81,7 +84,7 @@ do
             shift
             shift
             ;;
-        "-c"|"--no-color"|"--no-skip"|"--only-error")
+        "-c"|"--no-color"|"--no-skip"|"--only-error"|"--stale-file-error")
             BUTTERCUP_ARGS+=("$1")
             shift
             ;;
@@ -100,3 +103,7 @@ done
 
 # `--' is needed so that Buttercup options don't get parsed by Emacs itself.
 exec "$EMACS_BIN" -batch "${EMACS_ARGS[@]}" -l buttercup -f buttercup-run-discover -- "${BUTTERCUP_ARGS[@]}"
+
+# Local Variables:
+# indent-tabs-mode: nil
+# End:

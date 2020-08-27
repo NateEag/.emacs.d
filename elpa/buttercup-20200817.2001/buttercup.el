@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.22
+;; Version: 1.23
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/jorgenschaefer/emacs-buttercup
@@ -1386,6 +1386,9 @@ current directory."
         (push 'pending buttercup-reporter-batch-quiet-statuses)
         (push 'passed buttercup-reporter-batch-quiet-statuses)
         (setq args (cdr args)))
+       ((equal (car args) "--stale-file-error")
+        (buttercup-error-on-stale-elc)
+        (setq args (cdr args)))
        (t
         (push (car args) dirs)
         (setq args (cdr args)))))
@@ -1396,21 +1399,28 @@ current directory."
         (when (not (string-match "\\(^\\|/\\)\\." (file-relative-name file)))
           (load file nil t))))
     (when patterns
-      (buttercup-mark-skipped (regexp-opt patterns) t))
+      (buttercup-mark-skipped patterns t))
     (buttercup-run)))
 
 (defun buttercup-mark-skipped (matcher &optional reverse)
   "Mark any spec that match MATCHER as skipped.
-MATCHER can be either a regex or a function taking a spec as the
-single argument. If REVERSE is non-nil, specs will be marked as
-pending when MATCHER does not match."
+MATCHER can be either a regex, a list of regexes, or a function
+taking a spec as the single argument. If REVERSE is non-nil,
+specs will be marked as pending when MATCHER does not match."
   (cl-etypecase matcher
     (string (buttercup--mark-skipped
              buttercup-suites
              (lambda (spec)
                (string-match matcher (buttercup-spec-full-name spec)))
              reverse))
-    (function (buttercup--mark-skipped buttercup-suites matcher reverse))))
+    (function (buttercup--mark-skipped buttercup-suites matcher reverse))
+    (list (cond
+           ((cl-every #'stringp matcher)
+            (buttercup-mark-skipped (mapconcat (lambda (re)
+                                                 (concat "\\(?:" re "\\)"))
+                                               matcher "\\|")
+                                    reverse))
+           (t (error "Bad matcher list: %s, should be list of strings" matcher))))))
 
 (defun buttercup--mark-skipped (suites predicate &optional reverse-predicate)
   "Mark all specs in SUITES as skipped if PREDICATE(spec) is true.
@@ -2002,6 +2012,32 @@ With buttercup minor mode active the following is activated:
       (font-lock-remove-keywords nil font-lock-form)
       (cl-dolist (form imenu-forms)
         (setq imenu-generic-expression (delete form imenu-generic-expression))))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Signal errors when files have to be recompiled
+
+(defun buttercup-check-for-stale-elc (elc-file)
+  "Raise an error when ELC-FILE is an elc-file and older than its el-file."
+  (when (string= (file-name-extension elc-file) "elc")
+    (let ((el-file (substring elc-file 0 -1)))
+      (when (and (file-exists-p el-file)
+                 (time-less-p
+                  (file-attribute-modification-time (file-attributes elc-file))
+                  (file-attribute-modification-time (file-attributes el-file))))
+        (error "%s is newer than %s" el-file elc-file)))))
+
+(defun buttercup-error-on-stale-elc (&optional arg)
+  "Activate errors when an stale (older than .el) .elc-file is loaded.
+
+Enable the functionality if ARG is omitted or nil, toggle it if
+ARG is ‘toggle’; disable otherwise."
+  (cond ((null arg)
+         (add-hook 'after-load-functions #'buttercup-check-for-stale-elc))
+        ((eq arg 'toggle)
+         (if (memq 'buttercup-check-for-stale-elc after-load-functions)
+             (remove-hook 'after-load-functions #'buttercup-check-for-stale-elc)
+           (add-hook 'after-load-functions #'buttercup-check-for-stale-elc)))
+        (t (remove-hook 'after-load-functions #'buttercup-check-for-stale-elc))))
 
 ;; Local Variables:
 ;; indent-tabs-mode: nil

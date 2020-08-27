@@ -577,11 +577,12 @@ functionality, e.g. as seen in `isearch'."
 (defvar ivy-case-fold-search ivy-case-fold-search-default
   "Store the current overriding `case-fold-search'.")
 
-(defvar ivy-more-chars-alist
+(defcustom ivy-more-chars-alist
   '((t . 3))
   "Map commands to their minimum required input length.
 That is the number of characters prompted for before fetching
-candidates.  The special key t is used as a fallback.")
+candidates.  The special key t is used as a fallback."
+  :type '(alist :key-type symbol :value-type integer))
 
 (defun ivy-more-chars ()
   "Return two fake candidates prompting for at least N input.
@@ -928,9 +929,7 @@ Is is a cons cell, related to `tramp-get-completion-function'."
 
 (defcustom ivy-alt-done-functions-alist nil
   "Customize what `ivy-alt-done' does per-collection."
-  :type '(alist
-          :key-type symbol
-          :value-type function))
+  :type '(alist :key-type symbol :value-type function))
 
 (defun ivy-alt-done (&optional arg)
   "Exit the minibuffer with the selected candidate.
@@ -1766,12 +1765,13 @@ specified for the current collection in
       (setcdr cell (nconc (cddr cell) (list (cadr cell))))
       (ivy--reset-state ivy-last))))
 
-(defvar ivy-index-functions-alist
+(defcustom ivy-index-functions-alist
   '((t . ivy-recompute-index-zero))
   "An alist of index recomputing functions for each collection function.
 When the input changes, the appropriate function returns an
 integer - the index of the matched candidate that should be
-selected.")
+selected."
+  :type '(alist :key-type symbol :value-type function))
 
 (defvar ivy-re-builders-alist
   '((t . ivy--regex-plus))
@@ -1839,20 +1839,32 @@ May supersede `ivy-initial-inputs-alist'."
            (const :tag "Off" nil)
            (const :tag "Call action on change" auto))))
 
-(defvar ivy-unwind-fns-alist nil
-  "An alist associating commands to their :unwind values.")
+(defcustom ivy-unwind-fns-alist nil
+  "An alist associating commands to their :unwind values."
+  :type '(alist :key-type symbol :value-type function))
 
-(defvar ivy-init-fns-alist nil
+(defcustom ivy-init-fns-alist nil
   "An alist associating commands to their :init values.
 An :init is a function with no arguments.
-`ivy-read' calls it to initialize.")
+`ivy-read' calls it to initialize."
+  :type '(alist :key-type symbol :value-type function))
 
 (defun ivy--alist-set (alist-sym key val)
-  (let ((cell (assoc key (symbol-value alist-sym))))
-    (if cell
-        (setcdr cell val)
-      (set alist-sym (cons (cons key val)
-                           (symbol-value alist-sym))))))
+  (let ((curr-val (symbol-value alist-sym))
+        (customized-val (get alist-sym 'customized-value))
+        (default-val (eval (car (get alist-sym 'standard-value)))))
+    ;; when the value was set by `customize-set-variable', don't touch it
+    (unless customized-val
+      ;; only works if the value wasn't customized by the user
+      (when (or (null default-val) (equal curr-val default-val))
+        (let ((cell (assoc key curr-val)))
+          (if cell
+              (setcdr cell val)
+            (set alist-sym (cons (cons key val)
+                                 (symbol-value alist-sym)))))
+        (when default-val
+          (put alist-sym 'standard-value
+               (list (list 'quote (symbol-value alist-sym)))))))))
 
 (declare-function counsel-set-async-exit-code "counsel")
 
@@ -2235,7 +2247,8 @@ This is useful for recursive `ivy-read'."
     (setq ivy-use-ignore ivy-use-ignore-default)
     (setf (ivy-state-ignore state) ivy-use-ignore)
     (setq ivy--highlight-function
-          (or (cdr (assq ivy--regex-function ivy-highlight-functions-alist))
+          (or (cdr (assq (ivy-alist-setting ivy-re-builders-alist)
+                         ivy-highlight-functions-alist))
               #'ivy--highlight-default))
     (let ((ivy-recursive-restore nil)
           coll sort-fn)
@@ -3675,8 +3688,9 @@ CANDS are the current candidates."
                                         cands
                                         :test #'ivy--case-fold-string=)))
                      ((and (eq caller 'ivy-switch-buffer)
-                           (not empty)
-                           0))
+                           (not empty))
+                      (or (cl-position current cands :test #'string=)
+                          0))
                      ((and (not empty)
                            (not (eq caller 'swiper))
                            (not (and ivy--flx-featurep

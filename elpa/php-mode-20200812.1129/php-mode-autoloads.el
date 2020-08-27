@@ -73,6 +73,14 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "php-local-manual" "php-local-manual.el" (0
+;;;;;;  0 0 0))
+;;; Generated autoloads from php-local-manual.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-search")))
+
+;;;***
+
 ;;;### (autoloads nil "php-mode" "php-mode.el" (0 0 0 0))
 ;;; Generated autoloads from php-mode.el
 

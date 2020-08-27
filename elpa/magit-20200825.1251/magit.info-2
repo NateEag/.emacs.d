@@ -1979,8 +1979,9 @@ to try.  Personally I use:
      $ EDITOR="emacsclient --alternate-editor emacs" git commit
 
    This will actually end up using ‘emacs’, not ‘emacsclient’.  If you
-do this, then can still edit the commit message but ‘git-commit-mode’
-won’t be used and you have to exit ‘emacs’ to finish the process.
+do this, then you can still edit the commit message but
+‘git-commit-mode’ won’t be used and you have to exit ‘emacs’ to finish
+the process.
 
    Tautology ahead.  If you want to be able to use ‘emacsclient’ to
 connect to a running ‘emacs’ instance, even though no ‘emacs’ instance

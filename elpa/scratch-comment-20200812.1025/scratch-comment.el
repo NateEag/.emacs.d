@@ -3,9 +3,9 @@
 ;; Copyright (C) 2020  Naoya Yamashita
 
 ;; Author: Naoya Yamashita <conao3@gmail.com>
-;; Version: 1.0.0
-;; Package-Version: 20200620.2105
-;; Package-Commit: d62665ecbeb05d1f92761af185736609278ffba2
+;; Version: 1.0.1
+;; Package-Version: 20200812.1025
+;; Package-Commit: cf3e967b4def1308b6ef1cfeedd2cf15ee6e226c
 ;; Keywords: convenience
 ;; Package-Requires: ((emacs "26.1"))
 ;; URL: https://github.com/conao3/scratch-comment.el

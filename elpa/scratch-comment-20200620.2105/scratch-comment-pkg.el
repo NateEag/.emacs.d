@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/scratch-comment-20200620.2105/scratch-comment.el  -*- no-byte-compile: t -*-
-(define-package "scratch-comment" "20200620.2105" "Insert Elisp result as comment in scratch buffer" '((emacs "26.1")) :commit "d62665ecbeb05d1f92761af185736609278ffba2" :keywords '("convenience") :authors '(("Naoya Yamashita" . "conao3@gmail.com")) :maintainer '("Naoya Yamashita" . "conao3@gmail.com") :url "https://github.com/conao3/scratch-comment.el")

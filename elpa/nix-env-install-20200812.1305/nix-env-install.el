@@ -4,8 +4,8 @@
 
 ;; Author: Akira Komamura <akira.komamura@gmail.com>
 ;; Version: 0.1
-;; Package-Version: 20200113.751
-;; Package-Commit: b343a7e885206e78544da7313b860442abbd7440
+;; Package-Version: 20200812.1305
+;; Package-Commit: 79c34bc117ba1cebeb67fab32c364951d2ec37a0
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: processes tools
 ;; URL: https://github.com/akirak/nix-env-install
@@ -252,7 +252,9 @@ where the key is the form and the value is nil."
       (executable-find nix-env-install-cachix-executable)))
 
 (cl-defun nix-env-install-cachix (&key (on-finished #'nix-env-install-cachix-setup))
-  "Install cachix, if you haven't already."
+  "Install cachix, if you haven't already.
+
+When the installation process is finished, ON-FINISHED is called."
   (interactive)
   (if (nix-env-install-cachix-exists-p)
       (when (called-interactively-p 'interactive)

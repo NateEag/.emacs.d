@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/nix-env-install-20200113.751/nix-env-install.el  -*- no-byte-compile: t -*-
-(define-package "nix-env-install" "20200113.751" "Install packages using nix-env" '((emacs "25.1")) :commit "b343a7e885206e78544da7313b860442abbd7440" :keywords '("processes" "tools") :authors '(("Akira Komamura" . "akira.komamura@gmail.com")) :maintainer '("Akira Komamura" . "akira.komamura@gmail.com") :url "https://github.com/akirak/nix-env-install")

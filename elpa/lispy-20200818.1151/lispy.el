@@ -4265,6 +4265,7 @@ Sexp is obtained by exiting list ARG times."
   '((clojure-mode lispy-goto-symbol-clojure le-clojure)
     (clojurescript-mode lispy-goto-symbol-clojurescript le-clojure)
     (scheme-mode lispy-goto-symbol-scheme le-scheme)
+    (geiser-repl-mode lispy-goto-symbol-scheme le-scheme)
     (racket-mode lispy-goto-symbol-racket le-racket)
     (lisp-mode lispy-goto-symbol-lisp le-lisp)
     (slime-repl-mode lispy-goto-symbol-lisp le-lisp)
@@ -4936,7 +4937,7 @@ ARG can extend the bounds beyond the current defun."
        lispy-avy-style-paren))))
 
 (defun lispy-ace-symbol (arg)
-  "Jump to a symbol withing the current sexp and mark it.
+  "Jump to a symbol within the current sexp and mark it.
 Sexp is obtained by exiting the list ARG times."
   (interactive "p")
   (lispy--out-forward
@@ -5009,7 +5010,7 @@ Use STYLE function to update the overlays."
        (post #'avy--overlay-post)))))
 
 (defun lispy-ace-symbol-replace (arg)
-  "Jump to a symbol withing the current sexp and delete it.
+  "Jump to a symbol within the current sexp and delete it.
 Sexp is obtained by exiting the list ARG times."
   (interactive "p")
   (lispy-ace-symbol arg)

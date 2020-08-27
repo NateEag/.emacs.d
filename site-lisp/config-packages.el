@@ -460,19 +460,6 @@ The shell command lives in my dotfiles repo."
 (use-package string-edit
   :hook ((string-edit-mode . evil-local-mode)))
 
-;; Commented out because this is crashing my setup for some reason, and I'm not
-;; currently using eclim.
-;; (use-package eclimd
-;;   :defer t
-;;   :diminish
-;;   :init
-;;   (progn
-;;     (autoload 'eclimd--running-p "eclimd" nil t)))
-
-;; (use-package eclim
-;;   :defer t
-;;   :diminish)
-
 (use-package ne-smart-dash-hacks
   :commands ne-smart-dash-hacks-sh-mode-install)
 

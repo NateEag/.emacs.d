@@ -1,6 +1,6 @@
-(define-package "haskell-mode" "20200531.2255" "A Haskell editing mode"
+(define-package "haskell-mode" "20200825.629" "A Haskell editing mode"
   '((emacs "25.1"))
-  :commit "41683c0e634bb3f54eac8747919a82132e1714fe" :keywords
+  :commit "e688ed4e265aeea61f38835359e55f7df1ffdd65" :keywords
   '("haskell" "cabal" "ghc" "repl")
   :url "https://github.com/haskell/haskell-mode")
 ;; Local Variables:

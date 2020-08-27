@@ -11,8 +11,8 @@
 ;;         Steve Purcell <steve@sanityinc.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: http://www.github.com/clojure-emacs/cider
-;; Version: 0.26.0
-;; Package-Requires: ((emacs "25") (clojure-mode "5.11") (parseedn "0.1") (pkg-info "0.4") (queue "0.2") (spinner "1.7") (seq "2.16") (sesman "0.3.2"))
+;; Version: 0.26.1
+;; Package-Requires: ((emacs "25") (clojure-mode "5.12") (parseedn "0.1") (pkg-info "0.4") (queue "0.2") (spinner "1.7") (seq "2.16") (sesman "0.3.2"))
 ;; Keywords: languages, clojure, cider
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -87,7 +87,7 @@
 (require 'seq)
 (require 'sesman)
 
-(defconst cider-version "0.26.0"
+(defconst cider-version "0.26.1"
   "Fallback version used when it cannot be extracted automatically.
 Normally it won't be used, unless `pkg-info' fails to extract the
 version from the CIDER package or library.")
@@ -388,7 +388,7 @@ Throws an error if PROJECT-TYPE is unknown."
   "List of dependencies where elements are lists of artifact name and version.
 Added to `cider-jack-in-dependencies' when doing `cider-jack-in-cljs'.")
 (put 'cider-jack-in-cljs-dependencies 'risky-local-variable t)
-(cider-add-to-alist 'cider-jack-in-cljs-dependencies "cider/piggieback" "0.5.0")
+(cider-add-to-alist 'cider-jack-in-cljs-dependencies "cider/piggieback" "0.5.1")
 
 (defvar cider-jack-in-dependencies-exclusions nil
   "List of exclusions for jack in dependencies.

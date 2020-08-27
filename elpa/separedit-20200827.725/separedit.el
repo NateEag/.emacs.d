@@ -5,8 +5,9 @@
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
 ;; Version: 0.2.0
-;; Package-Version: 20200407.728
-;; Package-Requires: ((emacs "24.4") (dash "2.0") (edit-indirect "0.1.5"))
+;; Package-Version: 20200827.725
+;; Package-Commit: dc0b3448f3d9738f5233c34c5c8fc172eda26323
+;; Package-Requires: ((emacs "24.4") (dash "2.0") (dash-functional "1.2") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
 
@@ -26,40 +27,67 @@
 ;;; Commentary:
 
 ;; [![Build Status](https://travis-ci.com/twlz0ne/separedit.el.svg?branch=master)](https://travis-ci.com/twlz0ne/separedit.el)
+;; [![MELPA](https://melpa.org/packages/separedit-badge.svg)](https://melpa.org/#/separedit)
 
 ;; # separedit.el
 
-;; Edit comment or docstring or code block inside them with your favorite mode.
+;; Edit comment/string/docstring/code block in separate buffer with your favorite mode.
 
 ;;     +----------+         Edit           +-----------+         Edit           +-----------+
 ;;     |          | ---------------------> |   edit    | ---------------------> |   edit    | ...
 ;;     |          |  point-at-comment?     |   buffer  |  point-at-comment?     |   buffer  |
 ;;     |  source  |  point-at-string?      |           |  point-at-string?      |           | ...
 ;;     |  buffer  |  point-at-codeblock?   | (markdown |  point-at-codeblock?   | (markdown | ...
-;;     |          |                        |  orgmode  |                        |  orgmode  |
+;;     |          |  point-at-...?         |  orgmode  |  point-at-...?         |  orgmode  |
 ;;     |          | <--------------------- |   ...)    | <--------------------- |   ...)    | ...
 ;;     +----------+     Commit changes     +-----------+     Commit changes     +-----------+
 
 ;; ## Installation
 
-;; Clone this repository to `~/.emacs.d/site-lisp/separedit`.  Add the following to your `.emacs`:
+;; Clone this repository, or install from MELPA. Add the following to your `.emacs`:
 
-;; ```elisp
+;; ``` elisp
 ;; (require 'separedit)
-;; (define-key prog-mode-map (kbd "C-c '") #'separedit)
-;; (setq separedit-default-mode 'markdown-mode) ;; or org-mode
+
+;; ;; Key binding for modes you want edit
+;; ;; or simply bind ‘global-map’ for all.
+;; (define-key prog-mode-map        (kbd "C-c '") #'separedit)
+;; (define-key minibuffer-local-map (kbd "C-c '") #'separedit)
+;; (define-key help-mode-map        (kbd "C-c '") #'separedit)
+;; (define-key helpful-mode-map     (kbd "C-c '") #'separedit)
+
+;; ;; Default major-mode for edit buffer
+;; ;; can also be other mode e.g. ‘org-mode’.
+;; (setq separedit-default-mode 'markdown-mode)
+
+;; ;; Feature options
+;; ;; (setq separedit-preserve-string-indentation t)
+;; ;; (setq separedit-continue-fill-column t)
+;; ;; (setq separedit-write-file-when-execute-save t)
+;; ;; (setq separedit-remove-trailing-spaces-in-comment t)
 ;; ```
 
 ;; ## Usage
 
-;; - Move the cursor to a comment or string, or a code block inside them.
-;; - <kbd>C-c '</kbd>.
+;; - Move the cursor to a comment/string/code block or any supported place.
+;; - Press <kbd>C-c '</kbd>.
 
 ;;     or press <kbd>C-u C-c '</kbd> to starting edit with manually selected major mode.
 
-;; ## Edit comment
+;; Can also press <kbd>C-c '</kbd> on an active region.
 
-;; `separedit` use **continuity** as basis for determning whether it is a comment **block** or **line**.
+;; Following are default keys in edit buffer:
+
+;; | Key                | Function                                           | Summary                                                             |
+;; |:-------------------|:---------------------------------------------------|:--------------------------------------------------------------------|
+;; | <kbd>C-c C-c</kbd> | `separedit-commit`                                 | Commit changes and close edit buffer                                |
+;; | <kbd>C-x C-s</kbd> | `separedit-save`                                   | Commit changes (even write source file) without closing edit buffer |
+;; | <kbd>C-c C-k</kbd> | `separedit-abort`                                  | Discard changes and close edit buffer                               |
+;; | <kbd>C-c '</kbd>   | `separedit` or follow the settings of markdown/org | Open a new edit buffer                                              |
+
+;; ### Edit comment
+
+;; `separedit` use **continuity** as basis for determining whether it is a comment **block** or **line**.
 ;; Continuous means that there is no barrier (e.g. code or blank line) between the end of previous line and the beginning of next line, for example:
 
 ;;     /*
@@ -83,58 +111,189 @@
 ;;     code 4 // all this are comment lines
 
 ;; By setting `separedit-default-mode` to choose the mode (e.g. `markdown-mode` or `org-mode`) for edit buffer.
-;; In edit buffer, the comment delimiter will be removed, for example:
+;; In edit buffer, the comment delimiter will be removed, for example (█ represents the cursor):
 
 ;;     source buffer     ->    edit buffer   ->    edit buffer
 
 ;;     /*
-;;      * # Example            # Example
+;;      * # Example█           # Example
 ;;      *
 ;;      * ``` C                ``` C
-;;      * foo("bar");          foo("bar");         foo("bar");
+;;      * foo("bar");          foo("bar");█        foo("bar");
 ;;      * ```                  ```
 ;;      */
 
-;;     // * Example            * Example
+;;     // * Example█           * Example
 ;;     //
 ;;     // #+BEGIN_SRC C        #+BEGIN_SRC C
-;;     // foo("bar");          foo("bar");         foo("bar");
+;;     // foo("bar");          foo("bar");█        foo("bar");
 ;;     // #+END_SRC            #+END_SRC
 
-;; ## Edit string
+;; ### Edit string
 
 ;; `separedit` provides convenience for editing escaped strings, if there are nested string or code block, just continue press <kbd>C-c '</kbd> to enter a new edit buffer:
 
 ;;     source buffer     ->    edit buffer   ->    edit buffer
 
-;;     "a\"b\\\"c\\\"\""       a"b\"c\""           b"c"
+;;     "a█\"b\\\"c\\\"\""       a"b█\"c\""           b"c"
 
-;; ## Edit code block
+;; ### Edit code block
 
 ;; `separedit` also support for editing code block directly in comment or string:
 
 ;;     source buffer     ->    edit buffer
 
 ;;     ",--- elisp
-;;      | (foo \"bar\")        (foo "bar")
+;;      | (foo \"bar\")█       (foo "bar")
 ;;      `---"
 
 ;;     /*
 ;;      * ``` C
-;;      * foo("bar");          foo("bar");
+;;      * foo("bar");█         foo("bar");
 ;;      * ```
 ;;      */
 
 ;; If the language identifier of code block is omitted, the edit buffer uses the same mode as the source buffer.
 
-;; ## Screencasts
+;; ### Edit value form of variable in help/helpful buffer
 
-;; <p float="left" align="center">
-;;   <img src="images/separedit1.gif" />
-;;   <img src="images/separedit2.gif" />
-;; </p>
+;; Describe a variable, move cursor to the local/global value form, press <kbd>C-c '</kbd> to edit it.
 
-;; <i>P.S.</i> The language identifier of code block can be omitted in these cases.
+;; ### Edit minibuffer
+
+;; Don't get stuck in minibuffer, press <kbd>C-c '</kbd> to open a edit buffer.
+
+;; ## Customization
+
+;; ### Change key bindings in edit buffer
+
+;; If you don't like the default key bindings in edit buffer, you can change it:
+
+;; - `separedit-save-key`
+;; - `separedit-entry-key`
+;; - `separedit-abort-key`
+;; - `separedit-commit-key`
+
+;; ### Add support for a new major mode
+
+;; 1. Add the start/end delimiter of block style comment to `separedit-comment-encloser-alist`.
+;; 1. Add the delimiter of each comment line to `separedit-comment-delimiter-alist`.
+;; 1. Add the string (including docstring) quotes to `separedit-string-quotes-alist`.
+;; 1. Add definition to `separedit-string-indent-offset-alist` if there is base indent offset in docstring.
+;; 1. Add a mode name to `separedit-not-support-docstring-modes` if not support docstring.
+
+;; ### Add support for a new code block
+
+;; 1. Add a set of regexps matching the new code block to `separedit-block-regexp-plists`.
+;; 1. Add a language name to `separedit-code-lang-modes` if can't get mode by simply adding suffix `-mode`.
+
+;; ### Preserving indentation of block in string
+
+;; If `separedit-preserve-string-indentation` is non-nil, the indentation of string block will be preseved in edit buffer, e.g:
+
+;; ```
+;; source buffer                         edit buffer
+;; +--------------------+                +--------------------+
+;; | def func():        |                | Usage:             |
+;; |     '''            |                |     func()         |
+;; |     Usage:         |       ->       |                    |
+;; |         func()     |                |                    |
+;; |     '''            |                |                    |
+;; |     pass           |                |                    |
+;; +====================+                +====================+
+;; ```
+
+;; No only for the docsting, normal string are also supported:
+
+;; ```
+;; source buffer                         edit buffer
+;; +--------------------+                +--------------------+
+;; | emacs \            |                | (progn             |
+;; |    --batch \       |                |   ...)             |
+;; |    --eval "(progn  |       ->       |                    |
+;; |              ...)" |                |                    |
+;; |                    |                |                    |
+;; +====================+                +====================+
+;; ```
+
+;; ### Continue fill-column width in edit buffer
+
+;; If `separedit-continue-fill-column` is non-nil, use the remaining fill-width in edit buffer:
+
+;; ```
+;; source buffer                   edit buffer
+
+;;     //
+;;     // this is a                this is a
+;;     // comment block            comment block
+;;     //
+
+;; |<---->|<------------>|         |<------------->|
+;;    |         |                         |
+;;    |         '-- available width for --'
+;;    |                edit buffer
+;; used width
+;; ```
+
+;; You may also like to enable `auto-fill-mode` in edit buffer:
+
+;; ```elisp
+;; (add-hook 'separedit-buffer-creation-hook #'auto-fill-mode)
+;; ```
+
+;; ## Some extended usage
+
+;; ### Combine multipe adjacent blocks as a single edit block
+
+;; ``` elisp
+;; (defun separedit//region-of-el-commentary ()
+;;   (save-excursion
+;;     (goto-char (point-min))
+;;     (when (re-search-forward "^;;; Commentary:\n+")
+;;       (let ((begin (point)))
+;;         (when (re-search-forward  "\n;;; .*$" nil t)
+;;           (goto-char (match-beginning 0))
+;;           (list begin (point)))))))
+
+;; (defun separedit/edit-el-commentary ()
+;;   "Edit whole commentary section as a single block."
+;;   (interactive)
+;;   (let ((separedit-leave-blank-line-in-comment t))
+;;     (separedit-dwim
+;;      (apply #'separedit-mark-region
+;;             `(,@(separedit/region-of-el-commentary)
+;;               markdown-mode)))))
+;; ```
+
+;; ### Break long lines in comment
+
+;; ``` elisp
+;; (defun separedit/re-fill ()
+;;   (interactive)
+;;   (let ((separedit-continue-fill-column t))
+;;     (with-current-buffer (separedit-dwim)
+;;       (fill-region (point-min) (point-max))
+;;       (execute-kbd-macro (kbd "C-c C-k")))))
+;; ```
+
+;; ### Eval multiple-line sexp in comment
+
+;; ``` elisp
+;; (defun separedit/eval-last-sexp-in-comment ()
+;;   (interactive)
+;;   (let ((separedit-default-mode 'emacs-lisp-mode))
+;;     (with-current-buffer (separedit)
+;;       (prog1 (call-interactively #'eval-last-sexp)
+;;         (execute-kbd-macro (kbd "C-c C-k"))))))
+
+;; (define-key emacs-lisp-mode-map (kbd "C-x C-e")
+;;   (lambda ()
+;;     (interactive)
+;;     (call-interactively
+;;      (if (separedit--point-at-comment)
+;;          #'separedit/eval-last-sexp-in-comment
+;;        #'eval-last-sexp))))
+;; ```
 
 ;;; Change Log:
 
@@ -145,6 +304,7 @@
 
 (require 'cl-lib)
 (require 'dash)
+(require 'dash-functional)
 (require 'edit-indirect)
 (require 'calc-misc)
 (require 'subr-x)
@@ -217,26 +377,26 @@ Taken from `markdown-code-lang-modes'."
   :type 'alist)
 
 (defcustom separedit-comment-encloser-alist
-  '((("/\\*+" "\\*/")       . (c-mode
-                               c++-mode
-                               csharp-mode
-                               css-mode
-                               go-mode
-                               java-mode
-                               js-mode
-                               nix-mode
-                               objc-mode
-                               php-mode
-                               rust-mode
-                               rustic-mode
-                               swift-mode
-                               typescript-mode))
+  '((("/\\*+" "\\*+/") . (c-mode
+                          c++-mode
+                          csharp-mode
+                          css-mode
+                          go-mode
+                          java-mode
+                          js-mode
+                          nix-mode
+                          objc-mode
+                          php-mode
+                          rust-mode
+                          rustic-mode
+                          swift-mode
+                          typescript-mode))
     (("{-" "-}")       . haskell-mode)
     (("{" "}")         . pascal-mode)
-    (("(\\*" "\\*)")       . (applescript-mode fsharp-mode ocaml-mode))
+    (("(\\*" "\\*)")   . (applescript-mode fsharp-mode ocaml-mode))
     (("#|" "#|")       . (common-lisp racket-mode scheme-mode))
     (("<!--" "-->")    . (html-mode xml-mode))
-    (("--\\[[" "--\\]\\]")   . lua-mode)
+    (("--\\[[" "--\\]\\]") . lua-mode)
     (("=begin" "=end") . ruby-mode))
   "Alist mapping comment encloser to their major mode."
   :group 'separedit
@@ -315,7 +475,11 @@ Example of a string block with indentation offset:
 
 (defvar separedit--line-delimiter nil "Comment delimiter of each editing line.")
 
-(defvar separedit--string-indent nil "Indentation of each line in string.")
+(defvar separedit--indent-length nil "Indent length of each editing line.")
+
+(defvar separedit--indent-line1 nil "Whether to indent the 1st editing line of comment.")
+
+(defvar separedit--code-block-p nil "Wheter or not editing a code block.")
 
 (defvar separedit-debug-p nil)
 
@@ -451,19 +615,23 @@ If MODE is nil, use ‘major-mode’."
 ;;; Comment functions
 
 (defun separedit--comment-delimiter-regexp (&optional mode)
-  "Return comment delimiter regex of MODE."
+  "Return comment delimiter regex of MODE.
+
+If MODE is nil, it defaults to `major-mode'.
+If there is no comment delimiter regex for MODE, return `comment-start-skip'."
   (let* ((mode (or mode major-mode))
          (def (or (separedit--rassoc mode separedit-comment-delimiter-alist)
                   (separedit--rassoc (get mode 'derived-mode-parent)
                                      separedit-comment-delimiter-alist)
                   (separedit--rassoc (separedit--get-real-mode mode)
                                      separedit-comment-delimiter-alist))))
-    (when def
-      (if (symbolp (car def))
-          (separedit--comment-delimiter-regexp (car def))
-        (concat "^\s*\\(?:"
-                (mapconcat #'identity (car def) "\\|")
-                "\\)\s?")))))
+    (if def
+        (if (symbolp (car def))
+            (separedit--comment-delimiter-regexp (car def))
+          (concat "^\s*\\(?:"
+                  (mapconcat #'identity (car def) "\\|")
+                  "\\)\s?"))
+      comment-start-skip)))
 
 (defun separedit--point-at-comment-exclusive-one-line ()
   "Determine if comment exclusive one line and return the comment face."
@@ -581,43 +749,49 @@ Style 2:
                                      (line-number-at-pos fend)))))
           (list (save-excursion
                   (goto-char fbeg)
-                  (if enclosed-p
-                      ;; Skip `/*' for C/C++
-                      (re-search-forward
-                       (separedit--comment-begin-encloser multi-line-p)
-                       nil t))
+                  (when enclosed-p
+                    (separedit--skip-comment-begin-encloser multi-line-p))
                   (point))
                 (save-excursion
                   (goto-char fend)
                   (when enclosed-p
-                    ;; Skip `*/' for C/C++
-                    (re-search-backward
-                     (separedit--comment-end-encloser multi-line-p)
-                     nil t)
-                    (when (and (not multi-line-p) (= (char-before) ?\s))
-                      (backward-char 1)))
+                    (separedit--skip-comment-end-encloser multi-line-p))
                   (point))))
       (user-error "Not inside a comment"))))
 
-(defun separedit--comment-begin-encloser (&optional multi-line-p mode)
-  "Return a regexp to match the beginning of enclosed comment.
+(defun separedit--skip-comment-begin-encloser (&optional multi-line-p mode)
+  "Search forward from point for the beginning encloser of comment.
 
 MULTI-LINE-P means whether the comment is multi-line.
 If MODE is nil, use ‘major-mode’."
-  (concat (caar (separedit--get-comment-encloser (or mode major-mode)))
-          "[\t\s]*"
-          (when multi-line-p
-            "\n")))
+  (re-search-forward
+   (concat
+    (caar (separedit--get-comment-encloser (or mode major-mode)))
+    "[\t\s]*"
+    (when multi-line-p
+      "\n?"))))
 
-(defun separedit--comment-end-encloser (&optional multi-line-p mode)
-  "Return a regexp to match the end of enclosed comment.
+(defun separedit--skip-comment-end-encloser (&optional multi-line-p mode)
+  "Search backward from point for the beginning encloser of comment.
 
 MULTI-LINE-P means whether the comment is multi-line.
 If MODE is nil, use ‘major-mode’."
-  (concat (when multi-line-p
-            "\n")
-          "[\t\s]*"
-          (cl-cadar (separedit--get-comment-encloser (or mode major-mode)))))
+  (let ((encloser-end
+         (cl-cadar (separedit--get-comment-encloser (or mode major-mode)))))
+    (when (re-search-backward encloser-end nil t)
+      ;; Search backward greedy
+      (let (pos)
+        (save-excursion
+          (backward-char 1)
+          (while (looking-at encloser-end)
+            (setq pos (point))
+            (backward-char 1)))
+        (when pos
+          (goto-char pos)))
+      (while (looking-back "[\t\s]" nil)
+        (backward-char 1))
+      (when (and multi-line-p (= (char-before) ?\n))
+        (backward-char 1)))))
 
 (defun separedit--get-comment-encloser (&optional mode)
   "Return a list in the form of ‘((begin-encloser end-enclose) mode1 mode2...)’ for MODE."
@@ -627,18 +801,21 @@ If MODE is nil, use ‘major-mode’."
 (defun separedit--enclosed-comment-p (&optional comment-beginning comment-close)
   "Determine if the comment from COMMENT-BEGINNING to COMMENT-CLOSE is enclosed."
   (-when-let (encloser (car (separedit--get-comment-encloser major-mode)))
-    (and (save-excursion
-           (if comment-beginning
-               (goto-char comment-beginning)
-             (separedit--comment-beginning))
-           (re-search-forward (car encloser) nil t 1))
-         (save-excursion
-           (if comment-close
-               (goto-char comment-close)
-             (separedit--comment-end))
-           (ignore-errors (forward-char 1))
-           (re-search-backward (cadr encloser) nil t 1))
-         t)))
+    (save-restriction
+      (narrow-to-region (or comment-beginning (point-min))
+                        (or comment-close     (point-max)))
+      (and (save-excursion
+             (if comment-beginning
+                 (goto-char comment-beginning)
+               (separedit--comment-beginning))
+             (re-search-forward (car encloser) nil t 1))
+           (save-excursion
+             (if comment-close
+                 (goto-char comment-close)
+               (separedit--comment-end))
+             (ignore-errors (forward-char 1))
+             (re-search-backward (cadr encloser) nil t 1))
+           t))))
 
 ;;; Code block functions
 
@@ -656,13 +833,16 @@ Search process will skip characters COMMENT-DELIMITER at beginning of each line.
               (plist-get it :header))
             separedit-block-regexp-plists
             "\\|")
-           "\\)")))
+           "\\)"))
+         code-block-indent)
     (catch 'break
       (save-excursion
         (separedit--log "==> [code-block-beginning] comment-delimiter: %S" comment-delimiter)
         (separedit--log "==> [code-block-beginning] regexp-group: %S" regexp-group)
         (when (re-search-backward regexp-group nil t)
+          (setq code-block-indent (current-column))
           (save-match-data
+            (separedit--log "==> [code-block-beginning] cbindent: %s" code-block-indent)
             (separedit--log "==> [code-block-beginning] matched1: %s" (match-string-no-properties 2))
             (separedit--log "==> [code-block-beginning] language: %s" (separedit-get-mode-lang major-mode)))
           (separedit--beginning-of-next-line)
@@ -681,6 +861,11 @@ Search process will skip characters COMMENT-DELIMITER at beginning of each line.
                                     it)
                                   separedit-block-regexp-plists)))))
                    (list
+                    :indent-length
+                    (when (and
+                           (funcall (-orfn #'not #'string-empty-p) comment-delimiter)
+                           (funcall (-orfn #'not #'string-empty-p) (plist-get block-regexp :body)))
+                      code-block-indent)
                     :beginning (point-at-bol)
                     :lang-mode
                     (or (plist-get block-regexp :mode)
@@ -816,10 +1001,38 @@ Block info example:
                 :footer \"```$\")
       :end 12
       :string-quotes nil
-      :string-indent nil)
+      :indent-length nil)
 
 :regexps        not nil means point at a code block.
-:string-quotes       not nil means point at a string block otherwise a comment block."
+:string-quotes  not nil means point at a string block otherwise a comment block.
+:indent-length  base indent of comment/string/code block
+
+                string:
+
+                        ''|indent base
+                          rest string''
+
+                        ''
+                        |indent base
+                        rest string
+                        ''
+
+                comment:
+
+                        /* |indent base
+                           rest comment */
+
+                        /*
+                         *|indent base
+                         * rest comment
+                         */
+
+                code block:
+
+                        ```
+                        |indent base
+                        rest code
+                        ```"
   (let* ((pos (point))
          (strp (separedit--point-at-string))
          (comment-or-string-region
@@ -831,27 +1044,45 @@ Block info example:
             (when (or (derived-mode-p 'prog-mode)
                       (memq major-mode '(gfm-mode markdown-mode org-mode)))
               (separedit--comment-region))))
+         (indent-line1 nil)
          (string-indent
-          (when (and strp separedit-preserve-string-indentation)
-            (apply #'separedit--indent-of-string-block
-                   strp
-                   comment-or-string-region))))
+          (if (and strp separedit-preserve-string-indentation)
+              (apply #'separedit--indent-of-string-block
+                     strp
+                     comment-or-string-region)
+            (save-excursion
+              (goto-char (car comment-or-string-region))
+              ;; Not at "/*|"
+              (unless (= (point) (point-at-eol))
+                (if (= (point) (point-at-bol))
+                    ;; At "| * comment"
+                    (save-excursion
+                      (when (re-search-forward "[^\s\t]" nil t)
+                        (setq indent-line1 t)
+                        (backward-char)
+                        (current-column)))
+                  ;; At "/* |comment"
+                  (current-column)))))))
     (save-restriction
       (when comment-or-string-region
         (apply #'narrow-to-region comment-or-string-region))
       (let* ((delimiter (unless strp (separedit--comment-delimiter-regexp)))
              (code-info (separedit--code-block-end
-                         (separedit--code-block-beginning delimiter))))
+                         (separedit--code-block-beginning delimiter)))
+             (indent-length (or (plist-get code-info :indent-length)
+                                string-indent)))
         (if (and code-info
                  (<= (plist-get code-info :beginning) pos)
                  (<= pos (plist-get code-info :end)))
             (append code-info (list :string-quotes strp
-                                    :string-indent string-indent))
+                                    :indent-line1 indent-line1
+                                    :indent-length indent-length))
           (if comment-or-string-region
               (list :beginning (point-min)
                     :end (point-max)
                     :string-quotes strp
-                    :string-indent string-indent)
+                    :indent-line1 indent-line1
+                    :indent-length indent-length)
             (user-error "Not inside a edit block")))))))
 
 ;;; Help/helpful mode variables / funcstions
@@ -1051,20 +1282,36 @@ It will override by the key that `separedit' binding in source buffer.")
         (separedit--log "==> [-buffer-creation-setup] hooks finished"))
     (warn "Unknown major-mode: %s" major-mode)))
 
-(defun separedit--remove-comment-delimiter (regexp)
-  "Remove comment delimiter of each line by REGEXP when entering comment edit buffer."
+(defun separedit--remove-comment-delimiter (regexp &optional max-width)
+  "Remove comment delimiter of each line when entering comment edit buffer.
+
+REGEXP          regexp expression that matches the delimiter
+MAX-WIDTH       maximum width that can be removed"
   (let ((line-delimiter)
-        (inhibit-read-only t))
+        (inhibit-read-only t)
+        match-len
+        replace-str)
     (save-excursion
       (goto-char (point-max))
       (catch 'break
         (while (and (< (point-min) (point)) (re-search-backward regexp nil t))
+          (setq match-len (length (match-string 0)))
+          (setq replace-str
+                (if (and max-width (> match-len max-width))
+                    (setq replace-str (substring (match-string 0) max-width))
+                  ""))
           (unless line-delimiter
-            (setq line-delimiter (match-string 0)))
-          (replace-match "")
+            (setq line-delimiter
+                  (if max-width
+                      (if (zerop max-width)
+                          ""
+                        (substring (match-string 0) 0 (- (length (match-string 0))
+                                                         (length replace-str))))
+                    (match-string 0))))
+          (replace-match replace-str)
           (when (eq (point) (point-min))
             (throw 'break nil))
-          (backward-char))))
+          (goto-char (1- (point-at-bol))))))
     line-delimiter))
 
 (defun separedit--restore-comment-delimiter ()
@@ -1079,6 +1326,15 @@ It will override by the key that `separedit' binding in source buffer.")
                        (concat separedit--line-delimiter " "))))
       (save-excursion
         (goto-char (point-min))
+        (when (and (not separedit--code-block-p)
+                   (not separedit--indent-line1) separedit--indent-length)
+          ;; For the comment block like following:
+          ;;      ,-----------,
+          ;;    /*|comment    |
+          ;;  ,---'       ,---'
+          ;;  |  * comment|*/
+          ;;  '-----------'
+          (forward-line 1))
         (catch 'end-of-buffer
           (while (re-search-forward "^.*$" nil t)
             (let* ((str (string-trim-right (match-string 0)))
@@ -1112,14 +1368,16 @@ It will override by the key that `separedit' binding in source buffer.")
              (with-temp-buffer
                (insert buffer-str)
                (goto-char (point-min))
-               (while (and (zerop (forward-line))
-                           (re-search-forward "[^\s\t\n\r]" nil t 1))
+               (when (looking-at-p "[^\s\t\n\r]")
+                 (forward-line))
+               (while (re-search-forward "[^\s\t\n\r]" nil t 1)
                  (goto-char (match-beginning 0))
                  (if (<= indent-length (current-column))
                      (delete-region (point-at-bol)
                                     (+ (point-at-bol) indent-length))
                    ;; Respect the origninal indentation
-                   (throw 'break nil)))
+                   (throw 'break nil))
+                 (forward-line))
                (buffer-string))))))
     (when indented-str
       (save-excursion
@@ -1139,12 +1397,15 @@ It will override by the key that `separedit' binding in source buffer.")
   +-----\---------------+    +-\-------------------+
          indent                 indent"
   (when (and (separedit-in-edit-buffer-p)
-             separedit--string-indent)
+             separedit--indent-length)
     (goto-char (point-min))
-    (while (and (zerop (forward-line))
-                (re-search-forward "[^\s\t\n\r]" nil t 1))
+    (when (and (not separedit--indent-line1)
+               (looking-at-p "[^\s\t\n\r]"))
+      (forward-line))
+    (while (re-search-forward "[^\s\t\n\r]" nil t 1)
         (goto-char (match-beginning 0))
-        (insert (make-string separedit--string-indent ?\s)))))
+        (insert (make-string separedit--indent-length ?\s))
+        (forward-line))))
 
 (defun separedit--remove-nested-escape ()
   "Remove escape of nested string."
@@ -1324,7 +1585,8 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
          (point-info (separedit--point-info beg end))
          (lang-mode (plist-get block :lang-mode))
          (strp (plist-get block :string-quotes))
-         (str-indent (plist-get block :string-indent))
+         (indent-length (plist-get block :indent-length))
+         (indent-line1 (plist-get block :indent-line1))
          (commentp (not strp))
          (codep (and lang-mode t))
          (delimiter-regexp (concat (if strp "^\s*"
@@ -1345,24 +1607,30 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                                (t separedit-default-mode))))))
           (setq-local edit-indirect-guess-mode-function
                       `(lambda (_parent-buffer _beg _end)
-                         (let ((line-delimiter (and (or ,codep ,commentp) (separedit--remove-comment-delimiter ,delimiter-regexp))))
+                         (let* ((line-delimiter
+                                 (when (or ,(and strp codep) ,commentp)
+                                   (separedit--remove-comment-delimiter ,delimiter-regexp ,(unless commentp indent-length))))
+                                (indent-len (when ,indent-length
+                                              (- ,indent-length (length line-delimiter)))))
                            (separedit--log "==> block(edit buffer): %S" (buffer-substring-no-properties (point-min) (point-max)))
+                           (separedit--log "==> indent-len: %s" indent-len)
                            (when ,strp
                              (separedit--log "==> quotes(edit buffer): %S" ,strp)
                              (separedit--remove-escape ,strp))
                            (separedit--log "==> mode(edit buffer): %S" ',mode)
                            (funcall ',mode)
-                           (when ,str-indent
-                             (set (make-local-variable 'separedit--string-indent) (separedit--remove-string-indent ,str-indent)))
+                           (when (and indent-len (>= indent-len 0))
+                             (set (make-local-variable 'separedit--indent-line1) ,indent-line1)
+                             (set (make-local-variable 'separedit--indent-length) (separedit--remove-string-indent indent-len)))
                            (set (make-local-variable 'separedit-leave-blank-line-in-comment)
                                 ,separedit-leave-blank-line-in-comment)
                            (set (make-local-variable 'separedit--line-delimiter) line-delimiter)
+                           (set (make-local-variable 'separedit--code-block-p) ,codep)
                            (set (make-local-variable 'edit-indirect-before-commit-hook)
                                 (append '((lambda ()
+                                            (separedit--restore-string-indent)
                                             (separedit--restore-comment-delimiter)
                                             (when ,strp
-                                              (when ,str-indent
-                                                (separedit--restore-string-indent))
                                               (separedit--restore-escape ,strp))))
                                         edit-indirect-before-commit-hook))
                            (separedit--restore-point ,@point-info))))
@@ -1392,7 +1660,10 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
            ;; region
            (when (region-active-p)
              (list :beginning (region-beginning)
-                   :end       (region-end)
+                   :end (if (and (= ?\n (char-before (region-end)))
+                                 (not (= ?\n (char-after (region-end)))))
+                            (1- (region-end))
+                          (region-end))
                    :lang-mode (if (called-interactively-p 'any)
                                   (intern (separedit--select-mode))
                                 separedit-default-mode))))))))

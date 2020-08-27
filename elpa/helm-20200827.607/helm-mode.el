@@ -321,6 +321,17 @@ i.e. completing-read's."
 ;;; helm-comp-read
 ;;
 ;;
+(defvar helm-comp-read-use-marked nil
+  "[INTERNAL] When non nil `helm-comp-read' will return marked candidates.
+
+Use this ONLY in `let', NOT globally, this allows third party packages
+to use a list as return value when `helm-mode' is enabled, e.g.
+
+    (let ((helm-comp-read-use-marked t))
+      (completing-read \"test: \" '(a b c d e f g)))
+
+")
+
 (defun helm-cr-empty-string ()
   "Return empty string."
   (interactive)
@@ -535,7 +546,7 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
                             sort
                             fc-transformer
                             hist-fc-transformer
-                            marked-candidates
+                            (marked-candidates helm-comp-read-use-marked)
                             nomark
                             (alistp t)
                             (candidate-number-limit helm-candidate-number-limit)
@@ -872,7 +883,7 @@ It should be used when candidate list doesn't need to be rebuilt dynamically."
                                     (eq require-match
                                         'confirm-after-completion)))
                            1 0)
-     :nomark t
+     :nomark (null helm-comp-read-use-marked)
      :candidates-in-buffer cands-in-buffer
      :exec-when-only-one exec-when-only-one
      :fuzzy helm-mode-fuzzy-match
@@ -970,7 +981,7 @@ This handler uses dynamic matching which allows honouring `completion-styles'."
          :initial-input input
          :buffer buffer
          :history history
-         :nomark t
+         :nomark (null helm-comp-read-use-marked)
          :reverse-history helm-mode-reverse-history
          ;; In helm h-c-styles default is passed directly in
          ;; candidates.
@@ -1694,6 +1705,12 @@ Can be used for `completion-in-region-function' by advicing it with an
      'lisp--local-variables
      :around #'helm-mode--advice-lisp--local-variables)
     (let ((old--helm-completion-style helm-completion-style)
+          (exit-fun (plist-get completion-extra-properties :exit-function))
+          ;; Always start with prefix to allow completing without
+          ;; the need of inserting a space after cursor or
+          ;; relaying on crap old completion-styles emacs22 which
+          ;; add suffix after prefix. e.g. def|else.
+          (initial-input (buffer-substring-no-properties start (point)))
           string)
       (helm-aif (cdr (assq major-mode helm-completion-styles-alist))
           (customize-set-variable 'helm-completion-style
@@ -1707,11 +1724,6 @@ Can be used for `completion-in-region-function' by advicing it with an
                  (completion-flex-nospace t)
                  (completion-styles (helm--prepare-completion-styles))
                  (input (buffer-substring-no-properties start end))
-                 ;; Always start with prefix to allow completing without
-                 ;; the need of inserting a space after cursor or
-                 ;; relaying on crap old completion-styles emacs22 which
-                 ;; add suffix after prefix. e.g. def|else.
-                 (initial-input (buffer-substring-no-properties start (point)))
                  (prefix (and (eq helm-completion-style 'emacs) initial-input))
                  (point (point))
                  (current-command (or (helm-this-command) this-command))
@@ -1842,13 +1854,20 @@ Can be used for `completion-in-region-function' by advicing it with an
                               t)        ; exit minibuffer immediately.
                             :must-match require-match))))
             ;; `helm-completion-in-region--insert-result' is stripping
-            ;; out properties on RESULT and by side-effect (perhaps
-            ;; `choose-completion-string'?) modify STRING so make a copy.
+            ;; out properties on RESULT by side-effect (perhaps
+            ;; `choose-completion-string'?) so make a copy of STRING
+            ;; to not loose props.
             (setq string (copy-sequence result))
-            (helm-completion-in-region--insert-result result start point end base-size))
-        ;; Allow running extra property :exit-function (Issue #2265)
-        (when (stringp string)
-          (completion--done string 'exact))
+            (helm-completion-in-region--insert-result
+             result start point end base-size))
+        ;; Allow running extra property `:exit-function' (Issues #2265,
+        ;; #2356). Function is called with 'exact if for a unique
+        ;; match which is exact, the return value of `try-completion'
+        ;; is t, otherwise it is called with 'finished.
+        (when (and (stringp string) exit-fun)
+          (funcall exit-fun string
+                   (if (eq (try-completion initial-input collection) t)
+                       'exact 'finished)))
         (remove-hook 'helm-before-action-hook 'helm-completion-in-region--selection)
         (customize-set-variable 'helm-completion-style old--helm-completion-style)
         (setq helm-completion--sorting-done nil)
@@ -1867,8 +1886,15 @@ character.
 Be sure to know what you are doing when modifying this.")
 (defun helm-completion-in-region--insert-result (result start point end base-size)
   (cond ((stringp result)
+         ;; When RESULT have annotation, annotation is displayed
+         ;; in it with a display property attached to a space
+         ;; added at end of string, take care of removing this
+         ;; space (issue #2360). However keep RESULT intact to
+         ;; pass it to `:exit-function' i.e. Don't store the
+         ;; modified string in STRING.
          (choose-completion-string
-          result (current-buffer)
+          (replace-regexp-in-string " \\'" "" result)
+          (current-buffer)
           (list (+ start base-size) point)
           completion-list-insert-choice-function)
          (when helm-completion-mark-suffix

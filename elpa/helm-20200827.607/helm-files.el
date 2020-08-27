@@ -3363,11 +3363,12 @@ When this is set to a valid string, it is used as lighter in `helm-ff-cache-mode
 (define-minor-mode helm-ff-cache-mode
   "Auto refresh `helm-find-files' cache when emacs is idle.
 
-You will probably don't want to start this mode directly but instead
-customize `helm-ff-keep-cached-candidates' to a non nil value to
-enable it.
-With `helm-ff-keep-cached-candidates' set to a nil value the mode will
-disable itself.
+You probably don't want to start this mode directly.  Instead you
+should customize `helm-ff-keep-cached-candidates' to a non nil
+value to enable it.
+
+With `helm-ff-keep-cached-candidates' set to a nil value the mode
+will disable itself.
 
 When Emacs is idle, refresh the cache all the
 `helm-ff-refresh-cache-delay' seconds then stop when done or after
@@ -4183,9 +4184,7 @@ file."
   (let* ((follow        (or (helm-follow-mode-p)
                             helm--temp-follow-flag))
          (image-cand    (string-match-p (image-file-name-regexp) candidate))
-         (new-pattern   (helm-get-selection))
-         (num-lines-buf (with-current-buffer helm-buffer
-                          (count-lines (point-min) (point-max))))
+         (selection   (helm-get-selection))
          (insert-in-minibuffer (lambda (fname)
                                    (with-selected-window (or (active-minibuffer-window)
                                                              (minibuffer-window))
@@ -4235,9 +4234,10 @@ file."
                    (helm-check-minibuffer-input)) ; Force update.
                  'never-split))
           ;; A regular file, expand it, (first hit)
-          ((and (>= num-lines-buf 3) (not current-prefix-arg) (not follow))
+          ((and (not (file-equal-p selection helm-pattern))
+                (not current-prefix-arg) (not follow))
            (cons (lambda (_candidate)
-                   (funcall insert-in-minibuffer new-pattern)
+                   (funcall insert-in-minibuffer selection)
                    (helm-check-minibuffer-input)) ; Force update.
                  'never-split))
           ;; An image file and it is the second hit on C-j,

@@ -1,14 +1,16 @@
-;; Automatically generated for Ansible 2.7.2.
+;; Automatically generated for Ansible 2.9.11.
 
 (defvar poly-ansible-jinja2-filters
   (list
    "urlsplit"
+   "urldecode"
    "parse_cli"
    "parse_cli_textfsm"
    "parse_xml"
    "type5_pw"
    "hash_salt"
    "comp_type5"
+   "vlan_parser"
    "min"
    "max"
    "log"
@@ -27,6 +29,7 @@
    "rekey_on_member"
    "zip"
    "zip_longest"
+   "k8s_config_resource_name"
    "json_query"
    "cidr_merge"
    "ipaddr"
@@ -45,6 +48,8 @@
    "slaac"
    "hwaddr"
    "macaddr"
+   "gcp_kms_encrypt"
+   "gcp_kms_decrypt"
    "groupby"
    "b64decode"
    "b64encode"
@@ -94,6 +99,6 @@
    "subelements"
    "random_mac")
   "Additional Jinja2 filters defined by Ansible.
-Automatically generated for Ansible 2.7.2.")
+Automatically generated for Ansible 2.9.11.")
 
 (provide 'poly-ansible-jinja2-filters)

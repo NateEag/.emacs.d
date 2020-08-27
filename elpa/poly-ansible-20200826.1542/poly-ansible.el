@@ -1,6 +1,6 @@
 ;;; poly-ansible.el --- Polymode for Ansible: Jinja2 in YAML -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015, 2018, Peter Oliver.
+;; Copyright (C) 2015, 2018, 2020, Peter Oliver.
 ;;
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,7 +17,7 @@
 
 ;; Author: Peter Oliver <poly-ansible@mavit.org.uk>
 ;; Version: 0.3
-;; Package-Requires: ((ansible) (ansible-doc "0.4") (jinja2-mode "0.2") (polymode "0.1.5") (yaml-mode "0.0.13"))
+;; Package-Requires: ((ansible "0.2") (ansible-doc "0.4") (jinja2-mode "0.2") (polymode "0.1.5") (yaml-mode "0.0.13"))
 ;; Keywords: languages
 ;; URL: https://gitlab.com/mavit/poly-ansible/
 

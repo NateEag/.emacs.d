@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.5-dev
-;; Package-Version: 20200804.538
-;; Package-Commit: 0b5386b67118767b01e69019c16ae7f1ef30bde7
+;; Package-Version: 20200826.1509
+;; Package-Commit: bdaf248f96014400a581028965e04f5d81f9be66
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -791,7 +791,7 @@ Groups 3 and 5 matches the opening and closing delimiters.
 Group 4 matches the text inside the delimiters.")
 
 (defconst markdown-regex-gfm-italic
-  "\\(?:^\\|[^\\]\\)\\(?1:\\(?2:[*_]\\)\\(?3:[^ \\]\\2\\|[^ ]\\(?:.\\|\n[^\n]\\)*?[^\\ ]\\)\\(?4:\\2\\)\\)"
+  "\\(?:^\\|[^\\]\\)\\(?1:\\(?2:[*_]\\)\\(?3:[^ \\]\\2\\|[^ ]\\(?:.\\|\n[^\n]\\)*?\\)\\(?4:\\2\\)\\)"
   "Regular expression for matching italic text in GitHub Flavored Markdown.
 Underscores in words are not treated as special.
 Group 1 matches the entire expression, including delimiters.
@@ -2758,30 +2758,7 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
       (goto-char (min (1+ (match-end 0)) last (point-max)))
       t))
 
-(defun markdown-match-bold (last)
-  "Match inline bold from the point to LAST."
-  (when (markdown-match-inline-generic markdown-regex-bold last)
-    (let ((begin (match-beginning 2))
-          (end (match-end 2)))
-      (if (or (markdown-inline-code-at-pos-p begin)
-              (markdown-inline-code-at-pos-p end)
-              (markdown-in-comment-p)
-              (markdown-range-property-any
-               begin begin 'face '(markdown-url-face
-                                   markdown-plain-url-face))
-              (markdown-range-property-any
-               begin end 'face '(markdown-hr-face
-                                 markdown-math-face)))
-          (progn (goto-char (min (1+ begin) last))
-                 (when (< (point) last)
-                   (markdown-match-bold last)))
-        (set-match-data (list (match-beginning 2) (match-end 2)
-                              (match-beginning 3) (match-end 3)
-                              (match-beginning 4) (match-end 4)
-                              (match-beginning 5) (match-end 5)))
-        t))))
-
-(defun markdown--gfm-italic-p (begin end)
+(defun markdown--gfm-markup-underscore-p (begin end)
   (let ((is-underscore (eql (char-after begin) ?_)))
     (if (not is-underscore)
         t
@@ -2793,9 +2770,34 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
                  (goto-char end)
                  (looking-at-p "\\(?:[[:blank:]]\\|$\\)"))))))))
 
+(defun markdown-match-bold (last)
+  "Match inline bold from the point to LAST."
+  (when (markdown-match-inline-generic markdown-regex-bold last)
+    (let ((is-gfm (derived-mode-p 'gfm-mode))
+          (begin (match-beginning 2))
+          (end (match-end 2)))
+      (if (or (markdown-inline-code-at-pos-p begin)
+              (markdown-inline-code-at-pos-p end)
+              (markdown-in-comment-p)
+              (markdown-range-property-any
+               begin begin 'face '(markdown-url-face
+                                   markdown-plain-url-face))
+              (markdown-range-property-any
+               begin end 'face '(markdown-hr-face
+                                 markdown-math-face))
+              (and is-gfm (not (markdown--gfm-markup-underscore-p begin end))))
+          (progn (goto-char (min (1+ begin) last))
+                 (when (< (point) last)
+                   (markdown-match-bold last)))
+        (set-match-data (list (match-beginning 2) (match-end 2)
+                              (match-beginning 3) (match-end 3)
+                              (match-beginning 4) (match-end 4)
+                              (match-beginning 5) (match-end 5)))
+        t))))
+
 (defun markdown-match-italic (last)
   "Match inline italics from the point to LAST."
-  (let* ((is-gfm (memq major-mode '(gfm-mode gfm-view-mode)))
+  (let* ((is-gfm (derived-mode-p 'gfm-mode))
          (regex (if is-gfm
                     markdown-regex-gfm-italic
                   markdown-regex-italic)))
@@ -2818,7 +2820,9 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
                                    markdown-list-face
                                    markdown-hr-face
                                    markdown-math-face))
-                (and is-gfm (not (markdown--gfm-italic-p begin close-end))))
+                (and is-gfm
+                     (or (char-equal (char-after begin) (char-after (1+ begin))) ;; check bold case
+                         (not (markdown--gfm-markup-underscore-p begin close-end)))))
             (progn (goto-char (min (1+ begin) last))
                    (when (< (point) last)
                      (markdown-match-italic last)))
@@ -5849,7 +5853,7 @@ CHECKER-FUNCTION."
        "\n\nIf SILENT is non-nil, do not message anything when no
 such references found.")
      (interactive "P")
-     (when (not (memq major-mode '(markdown-mode gfm-mode)))
+     (unless (derived-mode-p 'markdown-mode)
        (user-error "Not available in current mode"))
      (let ((oldbuf (current-buffer))
            (refs (,checker-function))
@@ -6683,15 +6687,15 @@ setext header, but should not be folded."
 ;; This function was originally derived from `org-cycle' from org.el.
 (defun markdown-cycle (&optional arg)
   "Visibility cycling for Markdown mode.
-If ARG is t, perform global visibility cycling.  If the point is
-at an atx-style header, cycle visibility of the corresponding
-subtree.  Otherwise, indent the current line or insert a tab,
-as appropriate, by calling `indent-for-tab-command'."
+This function is called with a `\\[universal-argument]' or if ARG is t, perform
+global visibility cycling.  If the point is at an atx-style header, cycle
+visibility of the corresponding subtree.  Otherwise, indent the current line
+ or insert a tab, as appropriate, by calling `indent-for-tab-command'."
   (interactive "P")
   (cond
 
    ;; Global cycling
-   ((eq arg t)
+   (arg
     (cond
      ;; Move from overview to contents
      ((and (eq last-command this-command)
@@ -7765,7 +7769,7 @@ in parent directories if
 `markdown-wiki-link-search-parent-directories' is non-nil."
   (let* ((basename (replace-regexp-in-string
                     "[[:space:]\n]" markdown-link-space-sub-char name))
-         (basename (if (memq major-mode '(gfm-mode gfm-view-mode))
+         (basename (if (derived-mode-p 'gfm-mode)
                        (concat (upcase (substring basename 0 1))
                                (downcase (substring basename 1 nil)))
                      basename))
@@ -7806,7 +7810,7 @@ window when OTHER is non-nil."
       (when other (other-window 1))
       (let ((default-directory wp))
         (find-file filename)))
-    (unless (memq major-mode '(markdown-mode gfm-mode))
+    (unless (derived-mode-p 'markdown-mode)
       (markdown-mode))))
 
 (defun markdown-follow-wiki-link-at-point (&optional arg)
@@ -8131,8 +8135,7 @@ or span."
 (defun markdown-reload-extensions ()
   "Check settings, update font-lock keywords and hooks, and re-fontify buffer."
   (interactive)
-  (when (member major-mode
-                '(markdown-mode markdown-view-mode gfm-mode gfm-view-mode))
+  (when (derived-mode-p 'markdown-mode)
     ;; Refontify buffer
     (font-lock-flush)
     ;; Add or remove hooks related to extensions
@@ -9093,7 +9096,7 @@ Create new table lines if required."
         (progn
           (re-search-forward "\\(?:^\\|[^\\]\\)|" end)
           (when (looking-at "[ \t]*$")
-            (re-search-forward "\\(?^|[^\\]:\\)|" end))
+            (re-search-forward "\\(?:^\\|[^\\]:\\)|" end))
           (when (and (looking-at "[-:]")
                      (re-search-forward "^\\(?:[ \t]*\\|[^\\]\\)|\\([^-:]\\)" end t))
             (goto-char (match-beginning 1)))

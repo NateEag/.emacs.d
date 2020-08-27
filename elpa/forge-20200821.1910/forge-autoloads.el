@@ -130,8 +130,8 @@ Please see the manual for more information.
 
 (autoload 'forge-checkout-worktree "forge-commands" "\
 Create, configure and checkout a new worktree from a pull-request.
-This is like `magit-checkout-pull-request', except that it
-also creates a new worktree. Please see the manual for more
+This is like `magit-checkout-pullreq', except that it also
+creates a new worktree. Please see the manual for more
 information.
 
 \(fn PATH N)" t nil)

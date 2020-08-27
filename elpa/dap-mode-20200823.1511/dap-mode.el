@@ -19,7 +19,7 @@
 ;; Keywords: languages, debug
 ;; URL: https://github.com/yyoncho/dap-mode
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0"))
-;; Version: 0.5
+;; Version: 0.6
 
 ;;; Commentary:
 ;; Debug Adapter Protocol client for Emacs.
@@ -34,6 +34,9 @@
 (require 'cl-lib)
 (require 'ansi-color)
 (require 'posframe)
+
+(require 'dap-variables)
+(require 'dap-launch)
 
 (defcustom dap-breakpoints-file (expand-file-name (locate-user-emacs-file ".dap-breakpoints"))
   "Where to persist breakpoints"
@@ -672,14 +675,30 @@ thread exection but the server will log message."
                      debug-session)
   (dap--resume-application debug-session))
 
-(defun dap-debug-restart ()
-  "Restarts current frame."
-  (interactive)
+(defcustom dap-debug-restart-keep-session t
+  "Set if `dap-debug-restart' should use a new session.
+When running `dap-debug-restart' with this variable set, the old
+session will still be visible and accessible after restarting. If
+not, the old session will be deleted, `dap-debug-restart'
+behaving like an in-place restart instead. Note that you can
+override this variable by calling `dap-debug-restart' with a
+prefix argument (the effect will be reversed)."
+  :group 'dap-mode
+  :type 'boolean)
+
+(defun dap-debug-restart (&optional toggle-keep-session)
+  "Restarts current frame.
+If TOGGLE-KEEP-SESSION is set (in interactive mode this is the
+prefix argument), the effect of `dap-debug-restart-keep-session'
+will be reversed."
+  (interactive "P")
   (if-let ((debug-session (dap--cur-session)))
       (progn
         (when (dap--session-running debug-session)
           (message "Disconnecting from %s" (dap--debug-session-name debug-session))
-          (dap-disconnect debug-session))
+          (if (eq toggle-keep-session dap-debug-restart-keep-session)
+              (dap-delete-session debug-session)
+            (dap-disconnect debug-session)))
         (dap-debug (dap--debug-session-launch-args debug-session)))
     (user-error "There is session to restart")))
 
@@ -1210,6 +1229,7 @@ should be started after the :port argument is taken.
 
 :program-to-start - when set it will be started using `compilation-start'
 before starting the debug process."
+  (setq launch-args (dap-variables-expand-in-launch-configuration launch-args))
   (-let* (((&plist :name :skip-debug-session :cwd :program-to-start
                    :wait-for-port :type :request :port
                    :environment-variables :hostName host) launch-args)
@@ -1442,13 +1462,25 @@ If ORIGIN is t, return the original configuration without prepopulation"
           (error "There is no debug provider for language %s"
                  (or (plist-get debug-args :type) "'Not specified'"))))))
 
+(defun dap-debug-template-configurations-provider ()
+  dap-debug-template-configurations)
+
+(defvar dap-launch-configuration-providers
+  '(dap-launch-find-parse-launch-json
+    dap-debug-template-configurations-provider)
+  "List of functions that can contribute launch configurations to dap-debug.
+When the user invokes dap-debug, all of the functions in this
+list are called and their results (which must be lists) are
+concatenated. The user can then choose one of them from the
+resulting list.")
+
 (defun dap-debug (debug-args)
   "Run debug configuration DEBUG-ARGS.
 
 If DEBUG-ARGS is not specified the configuration is generated
 after selecting configuration template."
   (interactive (list (-> (dap--completing-read "Select configuration template: "
-                                               dap-debug-template-configurations
+                                               (-mapcat #'funcall dap-launch-configuration-providers)
                                                'cl-first nil t)
                          cl-rest
                          copy-tree)))

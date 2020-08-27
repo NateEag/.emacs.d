@@ -762,6 +762,11 @@ DEBUG-SESSION is the debug session triggering the event."
 
 ;; locals
 
+(defcustom dap-ui-variable-length 30
+  "Default number of variables to load in inspect variables view for array variables."
+  :group 'dap-ui
+  :type 'number)
+
 (dap-ui-define-action dap-ui-set-variable-value (:session :variables-reference :value :name)
   (dap--send-message
    (dap--make-request "setVariable"
@@ -784,7 +789,9 @@ DEBUG-SESSION is the debug session triggering the event."
              `(:label ,(concat (propertize (format "%s" name)
                                            'face 'font-lock-variable-name-face)
                                ": "
-                               value)
+                               (propertize (s-truncate dap-ui-variable-length
+                                                       (s-replace "\n" "\\n" value))
+                                           'help-echo value))
                       :icon dap-variable
                       :value ,value
                       :session ,debug-session
@@ -863,12 +870,17 @@ DEBUG-SESSION is the debug session triggering the event."
                        ((region-active-p) (buffer-substring-no-properties
                                            (region-beginning)
                                            (region-end)))
-                       (t (symbol-at-point))))))
+                       (t (symbol-name (symbol-at-point)))))))
   (when (-contains? dap-ui-expressions expression)
     (user-error "\"%s\" is already watched" expression))
   (add-to-list 'dap-ui-expressions expression)
   (dap-ui-expressions)
   (dap-ui-expressions-refresh))
+
+(defun dap-ui-expressions-add-prompt (expression)
+  "Prompts for an expression and adds it to `dap-ui-expressions'."
+  (interactive (list (read-string "Add watch expression: ")))
+  (dap-ui-expressions-add expression))
 
 (defun dap-ui-expressions-remove (expression)
   (interactive (list (completing-read
@@ -906,7 +918,9 @@ DEBUG-SESSION is the debug session triggering the event."
                       `(:key ,expression
                              :expression ,expression
                              :label ,(concat (propertize (format "%s: " expression) 'face 'font-lock-variable-name-face)
-                                             result)
+                                             (propertize (s-truncate dap-ui-variable-length
+                                                                     (s-replace "\n" "\\n" result))
+                                                         'help-echo result))
                              :icon expression
                              ,@(when (and variables-reference (not (zerop variables-reference)))
                                  (list :children (-partial #'dap-ui-render-variables debug-session variables-reference)))
@@ -992,7 +1006,8 @@ DEBUG-SESSION is the debug session triggering the event."
   (goto-char point))
 
 (dap-ui-define-action dap-ui-breakpoint-delete (:file-name :breakpoint)
-  (dap-breakpoint-delete breakpoint file-name))
+  (with-current-buffer (find-file-noselect file-name)
+    (dap-breakpoint-delete breakpoint file-name)))
 
 (dap-ui-define-action dap-ui-breakpoint-condition (:file-name :breakpoint)
   (dap-breakpoint-condition file-name breakpoint))

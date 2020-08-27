@@ -5,8 +5,8 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.5.0
-;; Package-Version: 20200803.811
-;; Package-Commit: 91e0e0e7a89be1465accdaefc1a31955d16bcd02
+;; Package-Version: 20200807.1101
+;; Package-Commit: e675cf0881408e10b76f2e70c6158237cb94671e
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3") (php-mode "1.22.3"))
@@ -77,6 +77,13 @@
 (defcustom phpstan-enable-on-no-config-file t
   "If T, activate configuration from composer even when `phpstan.neon' is not found."
   :type 'boolean
+  :group 'phpstan)
+
+(defcustom phpstan-memory-limit nil
+  "Set --memory-limit option."
+  :type '(choice (string :tag "Specifies the memory limit in the same format php.ini accepts.")
+                 (const :tag "Not set --memory-limit option" nil))
+  :safe (lambda (v) (or (null v) (stringp v)))
   :group 'phpstan)
 
 ;;;###autoload
@@ -261,6 +268,10 @@ it returns the value of `SOURCE' as it is."
    ((symbolp phpstan-level) (symbol-name phpstan-level))
    (t phpstan-level)))
 
+(defun phpstan-get-memory-limit ()
+  "Return --memory-limit value."
+  phpstan-memory-limit)
+
 (defun phpstan-analyze-file (file)
   "Analyze a PHPScript FILE using PHPStan."
   (interactive "fChoose a PHP script: ")
@@ -297,11 +308,13 @@ it returns the value of `SOURCE' as it is."
   (let ((executable (phpstan-get-executable))
         (path (phpstan-normalize-path (phpstan-get-config-file)))
         (autoload (phpstan-get-autoload-file))
+        (memory-limit (phpstan-get-memory-limit))
         (level (phpstan-get-level)))
     (append executable
             (list "analyze" "--error-format=raw" "--no-progress" "--no-interaction")
             (and path (list "-c" path))
             (and autoload (list "-a" autoload))
+            (and memory-limit (list "--memory-limit" memory-limit))
             (and level (list "-l" level))
             (list "--"))))
 

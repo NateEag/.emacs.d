@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/lsp-origami-20200809.1537/lsp-origami.el  -*- no-byte-compile: t -*-
+(define-package "lsp-origami" "20200809.1537" "origami.el support for lsp-mode" '((origami "1.0") (lsp-mode "6.1")) :commit "110c40eafde81179ec7a78aab94b0b2059689374" :keywords '("languages" "lsp-mode") :authors '(("Vibhav Pant")) :maintainer '("Vibhav Pant") :url "https://github.com/emacs-lsp/lsp-origami")

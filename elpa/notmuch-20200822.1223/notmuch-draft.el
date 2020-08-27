@@ -153,15 +153,17 @@ Used when a new version is saved, or the message is sent."
 
 `notmuch-draft-save-plaintext' controls the behaviour."
   (cl-case notmuch-draft-save-plaintext
-	((ask)
-	 (unless (yes-or-no-p "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
+    ((ask)
+     (unless (yes-or-no-p
+	      "(Customize `notmuch-draft-save-plaintext' to avoid this warning)
 This message contains mml tags that suggest it is intended to be encrypted.
 Really save and index an unencrypted copy? ")
-	   (error "Save aborted")))
-	((nil)
-	 (error "Refusing to save draft with encryption tags (see `notmuch-draft-save-plaintext')"))
-	((t)
-	 (ignore))))
+       (error "Save aborted")))
+    ((nil)
+     (error "Refusing to save draft with encryption tags (see `%s')"
+	    'notmuch-draft-save-plaintext))
+    ((t)
+     (ignore))))
 
 (defun notmuch-draft--make-message-id ()
   ;; message-make-message-id gives the id inside a "<" ">" pair,
@@ -192,14 +194,16 @@ applied to newly inserted messages)."
        (message-remove-header "Message-ID")
        (message-add-header (concat "Message-ID: <" id ">")))
       (t
-       (message "You have customized emacs so Message-ID is not a deletable header, so not changing it")
+       (message "You have customized emacs so Message-ID is not a %s"
+		"deletable header, so not changing it")
        (setq id nil)))
      (cond
       ((member 'Date message-deletable-headers)
        (message-remove-header "Date")
        (message-add-header (concat "Date: " (message-make-date))))
       (t
-       (message "You have customized emacs so Date is not a deletable header, so not changing it")))
+       (message "You have customized emacs so Date is not a deletable %s"
+		"header, so not changing it")))
      (message-add-header "X-Notmuch-Emacs-Draft: True")
      (notmuch-draft-quote-some-mml)
      (notmuch-maildir-setup-message-for-saving)
@@ -228,7 +232,8 @@ applied to newly inserted messages)."
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
     (when (or draft
 	      (yes-or-no-p "Message does not appear to be a draft: edit as new? "))
-      (switch-to-buffer (get-buffer-create (concat "*notmuch-draft-" id "*")))
+      (pop-to-buffer-same-window
+       (get-buffer-create (concat "*notmuch-draft-" id "*")))
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((coding-system-for-read 'no-conversion))
@@ -259,7 +264,7 @@ applied to newly inserted messages)."
       ;; If the resumed message was a draft then set the draft
       ;; message-id so that we can delete the current saved draft if the
       ;; message is resaved or sent.
-      (setq notmuch-draft-id (when draft id)))))
+      (setq notmuch-draft-id (and draft id)))))
 
 
 (add-hook 'message-send-hook 'notmuch-draft--mark-deleted)

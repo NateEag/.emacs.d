@@ -18,7 +18,7 @@
 ;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
-;; Homepage: https://notmuchmail.org/
+;; Homepage: https://notmuchmail.org
 
 ;;; Commentary:
 
@@ -62,7 +62,7 @@
 ;;
 ;; TL;DR: notmuch-emacs from MELPA and notmuch from distro packages is
 ;; NOT SUPPORTED.
-;;
+
 ;;; Code:
 
 (eval-when-compile (require 'cl-lib))
@@ -117,23 +117,23 @@ there will be called at other points of notmuch execution."
 
 (defun notmuch-foreach-mime-part (function mm-handle)
   (cond ((stringp (car mm-handle))
-         (dolist (part (cdr mm-handle))
-           (notmuch-foreach-mime-part function part)))
-        ((bufferp (car mm-handle))
-         (funcall function mm-handle))
-        (t (dolist (part mm-handle)
-             (notmuch-foreach-mime-part function part)))))
+	 (dolist (part (cdr mm-handle))
+	   (notmuch-foreach-mime-part function part)))
+	((bufferp (car mm-handle))
+	 (funcall function mm-handle))
+	(t (dolist (part mm-handle)
+	     (notmuch-foreach-mime-part function part)))))
 
 (defun notmuch-count-attachments (mm-handle)
   (let ((count 0))
     (notmuch-foreach-mime-part
      (lambda (p)
        (let ((disposition (mm-handle-disposition p)))
-         (and (listp disposition)
-              (or (equal (car disposition) "attachment")
-                  (and (equal (car disposition) "inline")
-                       (assq 'filename disposition)))
-              (cl-incf count))))
+	 (and (listp disposition)
+	      (or (equal (car disposition) "attachment")
+		  (and (equal (car disposition) "inline")
+		       (assq 'filename disposition)))
+	      (cl-incf count))))
      mm-handle)
     count))
 
@@ -142,13 +142,13 @@ there will be called at other points of notmuch execution."
    (lambda (p)
      (let ((disposition (mm-handle-disposition p)))
        (and (listp disposition)
-            (or (equal (car disposition) "attachment")
-                (and (equal (car disposition) "inline")
-                     (assq 'filename disposition)))
-            (or (not queryp)
-                (y-or-n-p
-                 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
-            (mm-save-part p))))
+	    (or (equal (car disposition) "attachment")
+		(and (equal (car disposition) "inline")
+		     (assq 'filename disposition)))
+	    (or (not queryp)
+		(y-or-n-p
+		 (concat "Save '" (cdr (assq 'filename disposition)) "' ")))
+	    (mm-save-part p))))
    mm-handle))
 
 (require 'hl-line)
@@ -264,7 +264,8 @@ there will be called at other points of notmuch execution."
   (goto-char (point-max))
   (forward-line -2)
   (let ((beg (notmuch-search-result-beginning)))
-    (when beg (goto-char beg))))
+    (when beg
+      (goto-char beg))))
 
 (defun notmuch-search-first-thread ()
   "Select the first thread in the search results."
@@ -272,11 +273,15 @@ there will be called at other points of notmuch execution."
   (goto-char (point-min)))
 
 (defface notmuch-message-summary-face
- '((((class color) (background light)) (:background "#f0f0f0"))
-   (((class color) (background dark)) (:background "#303030")))
- "Face for the single-line message summary in notmuch-show-mode."
- :group 'notmuch-show
- :group 'notmuch-faces)
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "#f0f0f0")
+    (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "#303030"))
+  "Face for the single-line message summary in notmuch-show-mode."
+  :group 'notmuch-show
+  :group 'notmuch-faces)
 
 (defface notmuch-search-date
   '((t :inherit default))
@@ -392,9 +397,9 @@ Complete list of currently available key bindings:
   (setq truncate-lines t)
   (setq buffer-read-only t)
   (setq imenu-prev-index-position-function
-        #'notmuch-search-imenu-prev-index-position-function)
+	#'notmuch-search-imenu-prev-index-position-function)
   (setq imenu-extract-index-name-function
-        #'notmuch-search-imenu-extract-index-name-function))
+	#'notmuch-search-imenu-extract-index-name-function))
 
 (defun notmuch-search-get-result (&optional pos)
   "Return the result object for the thread at POS (or point).
@@ -406,11 +411,12 @@ If there is no thread at POS (or point), returns nil."
   "Return the point at the beginning of the thread at POS (or point).
 
 If there is no thread at POS (or point), returns nil."
-  (when (notmuch-search-get-result pos)
-    ;; We pass 1+point because previous-single-property-change starts
-    ;; searching one before the position we give it.
-    (previous-single-property-change (1+ (or pos (point)))
-				     'notmuch-search-result nil (point-min))))
+  (and (notmuch-search-get-result pos)
+       ;; We pass 1+point because previous-single-property-change starts
+       ;; searching one before the position we give it.
+       (previous-single-property-change (1+ (or pos (point)))
+					'notmuch-search-result nil
+					(point-min))))
 
 (defun notmuch-search-result-end (&optional pos)
   "Return the point at the end of the thread at POS (or point).
@@ -418,18 +424,18 @@ If there is no thread at POS (or point), returns nil."
 The returned point will be just after the newline character that
 ends the result line.  If there is no thread at POS (or point),
 returns nil."
-  (when (notmuch-search-get-result pos)
-    (next-single-property-change (or pos (point)) 'notmuch-search-result
-				 nil (point-max))))
+  (and (notmuch-search-get-result pos)
+       (next-single-property-change (or pos (point))
+				    'notmuch-search-result nil
+				    (point-max))))
 
 (defun notmuch-search-foreach-result (beg end fn)
   "Invoke FN for each result between BEG and END.
 
-FN should take one argument.  It will be applied to the
-character position of the beginning of each result that overlaps
-the region between points BEG and END.  As a special case, if (=
-BEG END), FN will be applied to the result containing point
-BEG."
+FN should take one argument.  It will be applied to the character
+position of the beginning of each result that overlaps the region
+between points BEG and END.  As a special case, if (= BEG END),
+FN will be applied to the result containing point BEG."
   (let ((pos (notmuch-search-result-beginning beg))
 	;; End must be a marker in case fn changes the
 	;; text.
@@ -443,8 +449,8 @@ BEG."
     (while (and pos (or (< pos end) first))
       (when (notmuch-search-get-result pos)
 	(funcall fn pos))
-      (setq pos (notmuch-search-result-end pos)
-	    first nil))))
+      (setq pos (notmuch-search-result-end pos))
+      (setq first nil))))
 ;; Unindent the function argument of notmuch-search-foreach-result so
 ;; the indentation of callers doesn't get out of hand.
 (put 'notmuch-search-foreach-result 'lisp-indent-function 2)
@@ -461,7 +467,8 @@ BEG."
 
 If BARE is set then do not prefix with \"thread:\"."
   (let ((thread (plist-get (notmuch-search-get-result) :thread)))
-    (when thread (concat (unless bare "thread:") thread))))
+    (when thread
+      (concat (and (not bare) "thread:") thread))))
 
 (defun notmuch-search-find-stable-query ()
   "Return the stable queries for the current thread.
@@ -482,8 +489,8 @@ no messages in the region then return nil."
 	(push (car queries) query-list))
       (when (and all (cadr queries))
 	(push (cadr queries) query-list)))
-    (when query-list
-      (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
+    (and query-list
+	 (concat "(" (mapconcat 'identity query-list ") or (") ")"))))
 
 (defun notmuch-search-find-authors ()
   "Return the authors for the current thread."
@@ -516,7 +523,9 @@ thread."
 		      (current-buffer)
 		      notmuch-search-query-string
 		      ;; Name the buffer based on the subject.
-		      (concat "*" (truncate-string-to-width subject 30 nil nil t) "*"))
+		      (concat "*"
+			      (truncate-string-to-width subject 30 nil nil t)
+			      "*"))
       (message "End of search results."))))
 
 (defun notmuch-tree-from-search-current-query ()
@@ -536,7 +545,7 @@ thread."
 		notmuch-search-query-string
 		nil
 		(notmuch-prettify-subject (notmuch-search-find-subject))
-		t))
+		t nil (current-buffer)))
 
 (defun notmuch-search-reply-to-thread (&optional prompt-for-sender)
   "Begin composing a reply-all to the entire current thread in a new buffer."
@@ -587,8 +596,8 @@ is inactive this applies to the thread at point.
 If ONLY-MATCHED is non-nil, only tag matched messages."
   (interactive (notmuch-search-interactive-tag-changes))
   (unless (and beg end)
-    (setq beg (car (notmuch-interactive-region))
-	  end (cadr (notmuch-interactive-region))))
+    (setq beg (car (notmuch-interactive-region)))
+    (setq end (cadr (notmuch-interactive-region))))
   (let ((search-string (notmuch-search-find-stable-query-region
 			beg end only-matched)))
     (notmuch-tag search-string tag-changes)
@@ -668,28 +677,28 @@ of the result."
     (when (memq status '(exit signal))
       (catch 'return
 	(kill-buffer (process-get proc 'parse-buf))
-	(if (buffer-live-p buffer)
-	    (with-current-buffer buffer
-	      (save-excursion
-		(let ((inhibit-read-only t)
-		      (atbob (bobp)))
-		  (goto-char (point-max))
-		  (if (eq status 'signal)
-		      (insert "Incomplete search results (search process was killed).\n"))
-		  (when (eq status 'exit)
-		    (insert "End of search results.\n")
-		    ;; For version mismatch, there's no point in
-		    ;; showing the search buffer
-		    (when (or (= exit-status 20) (= exit-status 21))
-		      (kill-buffer)
-		      (throw 'return nil))
-		    (if (and atbob
+	(when (buffer-live-p buffer)
+	  (with-current-buffer buffer
+	    (save-excursion
+	      (let ((inhibit-read-only t)
+		    (atbob (bobp)))
+		(goto-char (point-max))
+		(when (eq status 'signal)
+		  (insert "Incomplete search results (search process was killed).\n"))
+		(when (eq status 'exit)
+		  (insert "End of search results.\n")
+		  ;; For version mismatch, there's no point in
+		  ;; showing the search buffer
+		  (when (or (= exit-status 20) (= exit-status 21))
+		    (kill-buffer)
+		    (throw 'return nil))
+		  (when (and atbob
 			     (not (string= notmuch-search-target-thread "found")))
-			(set 'never-found-target-thread t)))))
-	      (when (and never-found-target-thread
+		    (set 'never-found-target-thread t)))))
+	    (when (and never-found-target-thread
 		       notmuch-search-target-line)
-		  (goto-char (point-min))
-		  (forward-line (1- notmuch-search-target-line)))))))))
+	      (goto-char (point-min))
+	      (forward-line (1- notmuch-search-target-line)))))))))
 
 (define-widget 'notmuch--custom-face-edit 'lazy
   "Custom face edit with a tag Edit Face"
@@ -709,7 +718,7 @@ Here is an example of how to color search results based on tags.
  (the following text would be placed in your ~/.emacs file):
 
  (setq notmuch-search-line-faces \\='((\"unread\" . (:foreground \"green\"))
-                                   (\"deleted\" . (:foreground \"red\"
+				   (\"deleted\" . (:foreground \"red\"
 						  :background \"blue\"))))
 
 The FACE must be a face name (a symbol or string), a property
@@ -720,7 +729,7 @@ the above settings would have a green foreground and blue
 background."
   :type '(alist :key-type (string)
 		:value-type (radio (face :tag "Face name")
-				    (notmuch--custom-face-edit)))
+				   (notmuch--custom-face-edit)))
   :group 'notmuch-search
   :group 'notmuch-faces)
 
@@ -753,58 +762,57 @@ non-authors is found, assume that all of the authors match."
 	   (visible-string formatted-authors)
 	   (invisible-string "")
 	   (padding ""))
-
       ;; Truncate the author string to fit the specification.
-      (if (> (length formatted-authors)
-	     (length formatted-sample))
-	  (let ((visible-length (- (length formatted-sample)
-				   (length "... "))))
-	    ;; Truncate the visible string according to the width of
-	    ;; the display string.
-	    (setq visible-string (substring formatted-authors 0 visible-length)
-		  invisible-string (substring formatted-authors visible-length))
-	    ;; If possible, truncate the visible string at a natural
-	    ;; break (comma or pipe), as incremental search doesn't
-	    ;; match across the visible/invisible border.
-	    (when (string-match "\\(.*\\)\\([,|] \\)\\([^,|]*\\)" visible-string)
-	      ;; Second clause is destructive on `visible-string', so
-	      ;; order is important.
-	      (setq invisible-string (concat (match-string 3 visible-string)
-					     invisible-string)
-		    visible-string (concat (match-string 1 visible-string)
-					   (match-string 2 visible-string))))
-	    ;; `visible-string' may be shorter than the space allowed
-	    ;; by `format-string'. If so we must insert some padding
-	    ;; after `invisible-string'.
-	    (setq padding (make-string (- (length formatted-sample)
-					  (length visible-string)
-					  (length "..."))
-				       ? ))))
-
+      (when (> (length formatted-authors)
+	       (length formatted-sample))
+	(let ((visible-length (- (length formatted-sample)
+				 (length "... "))))
+	  ;; Truncate the visible string according to the width of
+	  ;; the display string.
+	  (setq visible-string (substring formatted-authors 0 visible-length))
+	  (setq invisible-string (substring formatted-authors visible-length))
+	  ;; If possible, truncate the visible string at a natural
+	  ;; break (comma or pipe), as incremental search doesn't
+	  ;; match across the visible/invisible border.
+	  (when (string-match "\\(.*\\)\\([,|] \\)\\([^,|]*\\)" visible-string)
+	    ;; Second clause is destructive on `visible-string', so
+	    ;; order is important.
+	    (setq invisible-string (concat (match-string 3 visible-string)
+					   invisible-string))
+	    (setq visible-string (concat (match-string 1 visible-string)
+					 (match-string 2 visible-string))))
+	  ;; `visible-string' may be shorter than the space allowed
+	  ;; by `format-string'. If so we must insert some padding
+	  ;; after `invisible-string'.
+	  (setq padding (make-string (- (length formatted-sample)
+					(length visible-string)
+					(length "..."))
+				     ? ))))
       ;; Use different faces to show matching and non-matching authors.
       (if (string-match "\\(.*\\)|\\(.*\\)" visible-string)
 	  ;; The visible string contains both matching and
 	  ;; non-matching authors.
-	  (setq visible-string (notmuch-search-author-propertize visible-string)
-		;; The invisible string must contain only non-matching
-		;; authors, as the visible-string contains both.
-		invisible-string (propertize invisible-string
-					     'face 'notmuch-search-non-matching-authors))
+	  (progn
+	    (setq visible-string (notmuch-search-author-propertize visible-string))
+	    ;; The invisible string must contain only non-matching
+	    ;; authors, as the visible-string contains both.
+	    (setq invisible-string (propertize invisible-string
+					       'face 'notmuch-search-non-matching-authors)))
 	;; The visible string contains only matching authors.
 	(setq visible-string (propertize visible-string
-					 'face 'notmuch-search-matching-authors)
-	      ;; The invisible string may contain both matching and
-	      ;; non-matching authors.
-	      invisible-string (notmuch-search-author-propertize invisible-string)))
-
+					 'face 'notmuch-search-matching-authors))
+	;; The invisible string may contain both matching and
+	;; non-matching authors.
+	(setq invisible-string (notmuch-search-author-propertize invisible-string)))
       ;; If there is any invisible text, add it as a tooltip to the
       ;; visible text.
-      (when (not (string= invisible-string ""))
-	(setq visible-string (propertize visible-string 'help-echo (concat "..." invisible-string))))
-
+      (unless (string= invisible-string "")
+	(setq visible-string
+	      (propertize visible-string
+			  'help-echo (concat "..." invisible-string))))
       ;; Insert the visible and, if present, invisible author strings.
       (insert visible-string)
-      (when (not (string= invisible-string ""))
+      (unless (string= invisible-string "")
 	(let ((start (point))
 	      overlay)
 	  (insert invisible-string)
@@ -827,11 +835,9 @@ non-authors is found, assume that all of the authors match."
     (insert (propertize (format format-string
 				(notmuch-sanitize (plist-get result :subject)))
 			'face 'notmuch-search-subject)))
-
    ((string-equal field "authors")
     (notmuch-search-insert-authors
      format-string (notmuch-sanitize (plist-get result :authors))))
-
    ((string-equal field "tags")
     (let ((tags (plist-get result :tags))
 	  (orig-tags (plist-get result :orig-tags)))
@@ -892,7 +898,8 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 		(longest-length 0))
 	    (cl-loop for tuple in notmuch-saved-searches
 		     if (let ((quoted-query
-			       (regexp-quote (notmuch-saved-search-get tuple :query))))
+			       (regexp-quote
+				(notmuch-saved-search-get tuple :query))))
 			  (and (string-match (concat "^" quoted-query) query)
 			       (> (length (match-string 0 query))
 				  longest-length)))
@@ -905,13 +912,13 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 	   (concat "*notmuch-saved-search-" saved-search-name "*"))
 	  (saved-search
 	   (concat "*notmuch-search-"
-		   (replace-regexp-in-string (concat "^" (regexp-quote saved-search-query))
-					     (concat "[ " saved-search-name " ]")
-					     query)
+		   (replace-regexp-in-string
+		    (concat "^" (regexp-quote saved-search-query))
+		    (concat "[ " saved-search-name " ]")
+		    query)
 		   "*"))
 	  (t
-	   (concat "*notmuch-search-" query "*"))
-	  )))
+	   (concat "*notmuch-search-" query "*")))))
 
 (defun notmuch-read-query (prompt)
   "Read a notmuch-query from the minibuffer with completion.
@@ -919,14 +926,15 @@ See `notmuch-tag' for information on the format of TAG-CHANGES."
 PROMPT is the string to prompt with."
   (let*
       ((all-tags
-        (mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
-                (process-lines notmuch-command "search" "--output=tags" "*")))
+	(mapcar (lambda (tag) (notmuch-escape-boolean-term tag))
+		(process-lines notmuch-command "search" "--output=tags" "*")))
        (completions
-	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		       "subject:" "attachment:")
-		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
-		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
-		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype)) (mailcap-mime-types)))))
+	(append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
+		      "subject:" "attachment:")
+		(mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
+		(mapcar (lambda (tag) (concat "is:" tag)) all-tags)
+		(mapcar (lambda (mimetype) (concat "mimetype:" mimetype))
+			(mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (cl-case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
@@ -986,7 +994,7 @@ the configured default sort order."
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
     (if no-display
 	(set-buffer buffer)
-      (switch-to-buffer buffer))
+      (pop-to-buffer-same-window buffer))
     ;; avoid wiping out third party buffer-local variables in the case
     ;; where we're just refreshing or changing the sort order of an
     ;; existing search results buffer
@@ -1001,9 +1009,8 @@ the configured default sort order."
     (notmuch-tag-clear-cache)
     (let ((proc (get-buffer-process (current-buffer)))
 	  (inhibit-read-only t))
-      (if proc
-	  (error "notmuch search process already running for query `%s'" query)
-	)
+      (when proc
+	(error "notmuch search process already running for query `%s'" query))
       (erase-buffer)
       (goto-char (point-min))
       (save-excursion
@@ -1078,8 +1085,10 @@ current search results AND the additional query string provided."
 Runs a new search matching only messages that match both the
 current search results AND that are tagged with the given tag."
   (interactive
-   (list (notmuch-select-tag-with-completion "Filter by tag: " notmuch-search-query-string)))
-  (notmuch-search (concat notmuch-search-query-string " and tag:" tag) notmuch-search-oldest-first))
+   (list (notmuch-select-tag-with-completion "Filter by tag: "
+					     notmuch-search-query-string)))
+  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)
+		  notmuch-search-oldest-first))
 
 (defun notmuch-search-by-tag (tag)
   "Display threads matching TAG in a notmuch-search buffer."
@@ -1109,7 +1118,6 @@ current search results AND that are tagged with the given tag."
 If the current buffer is the only notmuch buffer, bury it. If no
 notmuch buffers exist, run `notmuch'."
   (interactive)
-
   (let (start first)
     ;; If the current buffer is a notmuch buffer, remember it and then
     ;; bury it.
@@ -1126,7 +1134,7 @@ notmuch buffers exist, run `notmuch'."
 	;; If the first one we found is any other than the starting
 	;; buffer, switch to it.
 	(unless (eq first start)
-	  (switch-to-buffer first))
+	  (pop-to-buffer-same-window first))
       (notmuch))))
 
 ;;;; Imenu Support
@@ -1151,7 +1159,7 @@ beginning of the line."
 (provide 'notmuch)
 
 ;; After provide to avoid loops if notmuch was require'd via notmuch-init-file.
-(if init-file-user ; don't load init file if the -q option was used.
-    (load notmuch-init-file t t nil t))
+(when init-file-user ; don't load init file if the -q option was used.
+  (load notmuch-init-file t t nil t))
 
 ;;; notmuch.el ends here

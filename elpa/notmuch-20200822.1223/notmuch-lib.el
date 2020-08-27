@@ -19,8 +19,6 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 
-;; This is an part of an emacs-based interface to the notmuch mail system.
-
 ;;; Code:
 
 (require 'cl-lib)
@@ -34,9 +32,6 @@
 (unless (require 'notmuch-version nil t)
   (defconst notmuch-emacs-version "unknown"
     "Placeholder variable when notmuch-version.el[c] is not available."))
-
-(autoload 'notmuch-jump-search "notmuch-jump"
-  "Jump to a saved search by shortcut key." t)
 
 (defgroup notmuch nil
   "Notmuch mail reader for Emacs."
@@ -56,9 +51,8 @@
 
 (defgroup notmuch-send nil
   "Sending messages from Notmuch."
-  :group 'notmuch)
-
-(custom-add-to-group 'notmuch-send 'message 'custom-group)
+  :group 'notmuch
+  :group 'message)
 
 (defgroup notmuch-tag nil
   "Tags and tagging in Notmuch."
@@ -211,7 +205,7 @@ Otherwise the output will be returned."
   (unless (notmuch-cli-sane-p)
     (notmuch-logged-error
      "notmuch cli seems misconfigured or unconfigured."
-"Perhaps you haven't run \"notmuch setup\" yet? Try running this
+     "Perhaps you haven't run \"notmuch setup\" yet? Try running this
 on the command line, and then retry your notmuch command")))
 
 (defun notmuch-cli-version ()
@@ -259,11 +253,13 @@ on the command line, and then retry your notmuch command")))
 Invokes `notmuch-poll-script', \"notmuch new\", or does nothing
 depending on the value of `notmuch-poll-script'."
   (interactive)
+  (message "Polling mail...")
   (if (stringp notmuch-poll-script)
       (unless (string= notmuch-poll-script "")
 	(unless (equal (call-process notmuch-poll-script nil nil) 0)
 	  (error "Notmuch: poll script `%s' failed!" notmuch-poll-script)))
-    (notmuch-call-notmuch-process "new")))
+    (notmuch-call-notmuch-process "new"))
+  (message "Polling mail...done"))
 
 (defun notmuch-bury-or-kill-this-buffer ()
   "Undisplay the current buffer.
@@ -316,10 +312,12 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
 		tail)))
       ;; Documentation for command
       (push (cons key-string
-		  (or (and (symbolp binding) (get binding 'notmuch-doc))
-		      (and (functionp binding) (notmuch-documentation-first-line binding))))
+		  (or (and (symbolp binding)
+			   (get binding 'notmuch-doc))
+		      (and (functionp binding)
+			   (notmuch-documentation-first-line binding))))
 	    tail)))
-    tail)
+  tail)
 
 (defun notmuch-describe-remaps (remap-keymap ua-keys base-keymap prefix tail)
   ;; Remappings are represented as a binding whose first "event" is
@@ -327,13 +325,13 @@ It does not prepend if ACTUAL-KEY is already listed in TAIL."
   ;; binding whose "key" is 'remap, and whose "binding" is itself a
   ;; keymap that maps not from keys to commands, but from old (remapped)
   ;; functions to the commands to use in their stead.
-  (map-keymap
-   (lambda (command binding)
-     (mapc
-      (lambda (actual-key)
-	(setq tail (notmuch-describe-key actual-key binding prefix ua-keys tail)))
-      (where-is-internal command base-keymap)))
-   remap-keymap)
+  (map-keymap (lambda (command binding)
+		(mapc (lambda (actual-key)
+			(setq tail
+			      (notmuch-describe-key actual-key binding
+						    prefix ua-keys tail)))
+		      (where-is-internal command base-keymap)))
+	      remap-keymap)
   tail)
 
 (defun notmuch-describe-keymap (keymap ua-keys base-keymap &optional prefix tail)
@@ -356,9 +354,13 @@ prefix argument.  PREFIX and TAIL are used internally."
 		      (notmuch-describe-remaps
 		       binding ua-keys base-keymap prefix tail)
 		    (notmuch-describe-keymap
-		     binding ua-keys base-keymap (notmuch-prefix-key-description key) tail))))
+		     binding ua-keys base-keymap
+		     (notmuch-prefix-key-description key)
+		     tail))))
 	   (binding
-	    (setq tail (notmuch-describe-key (vector key) binding prefix ua-keys tail)))))
+	    (setq tail
+		  (notmuch-describe-key (vector key)
+					binding prefix ua-keys tail)))))
    keymap)
   tail)
 
@@ -368,11 +370,15 @@ prefix argument.  PREFIX and TAIL are used internally."
     (while (string-match "\\\\{\\([^}[:space:]]*\\)}" doc beg)
       (let ((desc
 	     (save-match-data
-	       (let* ((keymap-name (substring doc (match-beginning 1) (match-end 1)))
+	       (let* ((keymap-name (substring doc
+					      (match-beginning 1)
+					      (match-end 1)))
 		      (keymap (symbol-value (intern keymap-name)))
 		      (ua-keys (where-is-internal 'universal-argument keymap t))
 		      (desc-alist (notmuch-describe-keymap keymap ua-keys keymap))
-		      (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist)))
+		      (desc-list (mapcar (lambda (arg)
+					   (concat (car arg) "\t" (cdr arg)))
+					 desc-alist)))
 		 (mapconcat #'identity desc-list "\n")))))
 	(setq doc (replace-match desc 1 1 doc)))
       (setq beg (match-end 0)))
@@ -391,7 +397,8 @@ its prefixed behavior by setting the 'notmuch-prefix-doc property
 of its command symbol."
   (interactive)
   (let* ((mode major-mode)
-	 (doc (substitute-command-keys (notmuch-substitute-command-keys (documentation mode t)))))
+	 (doc (substitute-command-keys
+	       (notmuch-substitute-command-keys (documentation mode t)))))
     (with-current-buffer (generate-new-buffer "*notmuch-help*")
       (insert doc)
       (goto-char (point-min))
@@ -402,17 +409,18 @@ of its command symbol."
   "Show help for a subkeymap."
   (interactive)
   (let* ((key (this-command-keys-vector))
-	(prefix (make-vector (1- (length key)) nil))
-	(i 0))
+	 (prefix (make-vector (1- (length key)) nil))
+	 (i 0))
     (while (< i (length prefix))
       (aset prefix i (aref key i))
-      (setq i (1+ i)))
-
+      (cl-incf i))
     (let* ((subkeymap (key-binding prefix))
 	   (ua-keys (where-is-internal 'universal-argument nil t))
 	   (prefix-string (notmuch-prefix-key-description prefix))
-	   (desc-alist (notmuch-describe-keymap subkeymap ua-keys subkeymap prefix-string))
-	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg))) desc-alist))
+	   (desc-alist (notmuch-describe-keymap
+			subkeymap ua-keys subkeymap prefix-string))
+	   (desc-list (mapcar (lambda (arg) (concat (car arg) "\t" (cdr arg)))
+			      desc-alist))
 	   (desc (mapconcat #'identity desc-list "\n")))
       (with-help-window (help-buffer)
 	(with-current-buffer standard-output
@@ -473,7 +481,6 @@ This includes newlines, tabs, and other funny characters."
 The caller is responsible for prepending the term prefix and a
 colon.  This performs minimal escaping in order to produce
 user-friendly queries."
-
   (save-match-data
     (if (or (equal term "")
 	    ;; To be pessimistic, only pass through terms composed
@@ -516,7 +523,7 @@ This replaces spaces, percents, and double quotes in STR with
   (let (out)
     (while list
       (when (funcall predicate (car list))
-        (push (car list) out))
+	(push (car list) out))
       (setq list (cdr list)))
     (nreverse out)))
 
@@ -544,12 +551,11 @@ This replaces spaces, percents, and double quotes in STR with
       (string= (downcase t1) (downcase t2)))))
 
 (defvar notmuch-multipart/alternative-discouraged
-  '(
-    ;; Avoid HTML parts.
+  '(;; Avoid HTML parts.
     "text/html"
-    ;; multipart/related usually contain a text/html part and some associated graphics.
-    "multipart/related"
-    ))
+    ;; multipart/related usually contain a text/html part and some
+    ;; associated graphics.
+    "multipart/related"))
 
 (defun notmuch-multipart/alternative-determine-discouraged (msg)
   "Return the discouraged alternatives for the specified message."
@@ -598,12 +604,14 @@ the given type."
 		       (set-buffer-multibyte nil))
 		     (let ((args `("show" "--format=raw"
 				   ,(format "--part=%s" (plist-get part :id))
-				   ,@(when process-crypto '("--decrypt=true"))
+				   ,@(and process-crypto '("--decrypt=true"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
-			    (if binaryp 'no-conversion
-			      (let ((coding-system (mm-charset-to-coding-system
-						    (plist-get part :content-charset))))
+			    (if binaryp
+				'no-conversion
+			      (let ((coding-system
+				     (mm-charset-to-coding-system
+				      (plist-get part :content-charset))))
 				;; Sadly,
 				;; `mm-charset-to-coding-system' seems
 				;; to return things that are not
@@ -615,7 +623,8 @@ the given type."
 				  ;; charset is US-ASCII. RFC6657
 				  ;; complicates this somewhat.
 				  'us-ascii)))))
-		       (apply #'call-process notmuch-command nil '(t nil) nil args)
+		       (apply #'call-process
+			      notmuch-command nil '(t nil) nil args)
 		       (buffer-string))))))
     (when (and cache data)
       (plist-put part plist-elem data))
@@ -647,16 +656,14 @@ MSG (if it isn't already)."
 ;; Workaround: The call to `mm-display-part' below triggers a bug in
 ;; Emacs 24 if it attempts to use the shr renderer to display an HTML
 ;; part with images in it (demonstrated in 24.1 and 24.2 on Debian and
-;; Fedora 17, though unreproducable in other configurations).
+;; Fedora 17, though unreproducible in other configurations).
 ;; `mm-shr' references the variable `gnus-inhibit-images' without
 ;; first loading gnus-art, which defines it, resulting in a
 ;; void-variable error.  Hence, we advise `mm-shr' to ensure gnus-art
 ;; is loaded.
-(if (>= emacs-major-version 24)
-    (defadvice mm-shr (before load-gnus-arts activate)
-      (require 'gnus-art nil t)
-      (ad-disable-advice 'mm-shr 'before 'load-gnus-arts)
-      (ad-activate 'mm-shr)))
+(define-advice mm-shr (:before (_handle) notmuch--load-gnus-args)
+  "Require `gnus-art' since we use its variables."
+  (require 'gnus-art nil t))
 
 (defun notmuch-mm-display-part-inline (msg part content-type process-crypto)
   "Use the mm-decode/mm-view functions to display a part in the
@@ -668,9 +675,11 @@ current buffer, if possible."
       ;; `gnus-decoded' charset.  Otherwise, we'll fetch the binary
       ;; part content and let mm-* decode it.
       (let* ((have-content (plist-member part :content))
-	     (charset (if have-content 'gnus-decoded
+	     (charset (if have-content
+			  'gnus-decoded
 			(plist-get part :content-charset)))
-	     (handle (mm-make-handle (current-buffer) `(,content-type (charset . ,charset)))))
+	     (handle (mm-make-handle (current-buffer)
+				     `(,content-type (charset . ,charset)))))
 	;; If the user wants the part inlined, insert the content and
 	;; test whether we are able to inline it (which includes both
 	;; capability and suitability tests).
@@ -714,7 +723,6 @@ must be a face name (a symbol or string), a property list of face
 attributes, or a list of these.  If START and/or END are omitted,
 they default to the beginning/end of OBJECT.  For convenience
 when applied to strings, this returns OBJECT."
-
   ;; A face property can have three forms: a face name (a string or
   ;; symbol), a property list, or a list of these two forms.  In the
   ;; list case, the faces will be combined, with the earlier faces
@@ -757,7 +765,6 @@ This logs MSG and EXTRA to the *Notmuch errors* buffer and
 signals MSG as an error.  If EXTRA is non-nil, text referring the
 user to the *Notmuch errors* buffer will be appended to the
 signaled error.  This function does not return."
-
   (with-current-buffer (get-buffer-create "*Notmuch errors*")
     (goto-char (point-max))
     (unless (bobp)
@@ -770,8 +777,7 @@ signaled error.  This function does not return."
 	(insert extra)
 	(unless (bolp)
 	  (newline)))))
-  (error "%s" (concat msg (when extra
-			    " (see *Notmuch errors* for more details)"))))
+  (error "%s%s" msg (if extra " (see *Notmuch errors* for more details)" "")))
 
 (defun notmuch-check-async-exit-status (proc msg &optional command err)
   "If PROC exited abnormally, pop up an error buffer and signal an error.
@@ -786,7 +792,8 @@ provided, it is taken from `process-command'."
 	   ((exit) (process-exit-status proc))
 	   ((signal) msg))))
     (when exit-status
-      (notmuch-check-exit-status exit-status (or command (process-command proc))
+      (notmuch-check-exit-status exit-status
+				 (or command (process-command proc))
 				 nil err))))
 
 (defun notmuch-check-exit-status (exit-status command &optional output err)
@@ -801,7 +808,6 @@ command and its arguments.  OUTPUT, if provided, is a string
 giving the output of command.  ERR, if provided, is the error
 output of command.  OUTPUT and ERR will be included in the error
 message."
-
   (cond
    ((eq exit-status 0) t)
    ((eq exit-status 20)
@@ -822,24 +828,22 @@ You may need to restart Emacs or upgrade your notmuch package."))
 		       command " "))
 	   (extra
 	    (concat "command: " command-string "\n"
-	     (if (integerp exit-status)
-		 (format "exit status: %s\n" exit-status)
-	       (format "exit signal: %s\n" exit-status))
-	     (when err
-	       (concat "stderr:\n" err))
-	     (when output
-	       (concat "stdout:\n" output)))))
-	(if err
-	    ;; We have an error message straight from the CLI.
-	    (notmuch-logged-error
-	     (replace-regexp-in-string "[ \n\r\t\f]*\\'" "" err) extra)
-	  ;; We only have combined output from the CLI; don't inundate
-	  ;; the user with it.  Mimic `process-lines'.
-	  (notmuch-logged-error (format "%s exited with status %s"
-					(car command) exit-status)
-				extra))
-	;; `notmuch-logged-error' does not return.
-	))))
+		    (if (integerp exit-status)
+			(format "exit status: %s\n" exit-status)
+		      (format "exit signal: %s\n" exit-status))
+		    (and err    (concat "stderr:\n" err))
+		    (and output (concat "stdout:\n" output)))))
+      (if err
+	  ;; We have an error message straight from the CLI.
+	  (notmuch-logged-error
+	   (replace-regexp-in-string "[ \n\r\t\f]*\\'" "" err) extra)
+	;; We only have combined output from the CLI; don't inundate
+	;; the user with it.  Mimic `process-lines'.
+	(notmuch-logged-error (format "%s exited with status %s"
+				      (car command) exit-status)
+			      extra))
+      ;; `notmuch-logged-error' does not return.
+      ))))
 
 (defun notmuch-call-notmuch--helper (destination args)
   "Helper for synchronous notmuch invocation commands.
@@ -847,12 +851,11 @@ You may need to restart Emacs or upgrade your notmuch package."))
 This wraps `call-process'.  DESTINATION has the same meaning as
 for `call-process'.  ARGS is as described for
 `notmuch-call-notmuch-process'."
-
   (let (stdin-string)
     (while (keywordp (car args))
       (cl-case (car args)
-	(:stdin-string (setq stdin-string (cadr args)
-			     args (cddr args)))
+	(:stdin-string (setq stdin-string (cadr args))
+		       (setq args (cddr args)))
 	(otherwise
 	 (error "Unknown keyword argument: %s" (car args)))))
     (if (null stdin-string)
@@ -885,7 +888,6 @@ notmuch's output as an S-expression and returns the parsed value.
 Like `notmuch-call-notmuch-process', if notmuch exits with a
 non-zero status, this will report its output and signal an
 error."
-
   (with-temp-buffer
     (let ((err-file (make-temp-file "nmerr")))
       (unwind-protect
@@ -913,11 +915,10 @@ when the process exits, or nil for none.  The caller must *not*
 invoke `set-process-sentinel' directly on the returned process,
 as that will interfere with the handling of stderr and the exit
 status."
-
   (let (err-file err-buffer proc err-proc
-	;; Find notmuch using Emacs' `exec-path'
-	(command (or (executable-find notmuch-command)
-		     (error "Command not found: %s" notmuch-command))))
+		 ;; Find notmuch using Emacs' `exec-path'
+		 (command (or (executable-find notmuch-command)
+			      (error "Command not found: %s" notmuch-command))))
     (if (fboundp 'make-process)
 	(progn
 	  (setq err-buffer (generate-new-buffer " *notmuch-stderr*"))
@@ -931,14 +932,13 @@ status."
 		      :buffer buffer
 		      :command (cons command args)
 		      :connection-type 'pipe
-		      :stderr err-buffer)
-		err-proc (get-buffer-process err-buffer))
+		      :stderr err-buffer))
+	  (setq err-proc (get-buffer-process err-buffer))
 	  (process-put proc 'err-buffer err-buffer)
 
 	  (process-put err-proc 'err-file err-file)
 	  (process-put err-proc 'err-buffer err-buffer)
 	  (set-process-sentinel err-proc #'notmuch-start-notmuch-error-sentinel))
-
       ;; On Emacs versions before 25, there is no way to capture
       ;; stdout and stderr separately for asynchronous processes, or
       ;; even to redirect stderr to a file, so we use a trivial shell
@@ -951,7 +951,6 @@ status."
 			  "exec 2>\"$1\"; shift; exec \"$0\" \"$@\""
 			  command err-file args)))
       (process-put proc 'err-file err-file))
-
     (process-put proc 'sub-sentinel sentinel)
     (process-put proc 'real-command (cons notmuch-command args))
     (set-process-sentinel proc #'notmuch-start-notmuch-sentinel)
@@ -962,8 +961,8 @@ status."
   (let* ((err-file (process-get proc 'err-file))
 	 (err-buffer (or (process-get proc 'err-buffer)
 			 (find-file-noselect err-file)))
-	 (err (when (not (zerop (buffer-size err-buffer)))
-		(with-current-buffer err-buffer (buffer-string))))
+	 (err (and (not (zerop (buffer-size err-buffer)))
+		   (with-current-buffer err-buffer (buffer-string))))
 	 (sub-sentinel (process-get proc 'sub-sentinel))
 	 (real-command (process-get proc 'real-command)))
     (condition-case err
@@ -981,16 +980,17 @@ status."
 	  ;; If that didn't signal an error, then any error output was
 	  ;; really warning output.  Show warnings, if any.
 	  (let ((warnings
-		 (when err
-		   (with-current-buffer err-buffer
-		     (goto-char (point-min))
-		     (end-of-line)
-		     ;; Show first line; stuff remaining lines in the
-		     ;; errors buffer.
-		     (let ((l1 (buffer-substring (point-min) (point))))
-		       (skip-chars-forward "\n")
-		       (cons l1 (unless (eobp)
-				  (buffer-substring (point) (point-max)))))))))
+		 (and err
+		      (with-current-buffer err-buffer
+			(goto-char (point-min))
+			(end-of-line)
+			;; Show first line; stuff remaining lines in the
+			;; errors buffer.
+			(let ((l1 (buffer-substring (point-min) (point))))
+			  (skip-chars-forward "\n")
+			  (cons l1 (and (not (eobp))
+					(buffer-substring (point)
+							  (point-max)))))))))
 	    (when warnings
 	      (notmuch-logged-error (car warnings) (cdr warnings)))))
       (error
@@ -1022,8 +1022,8 @@ region if the region is active, or both `point' otherwise."
     (list (point) (point))))
 
 (define-obsolete-function-alias
-    'notmuch-search-interactive-region
-    'notmuch-interactive-region
+  'notmuch-search-interactive-region
+  'notmuch-interactive-region
   "notmuch 0.29")
 
 (provide 'notmuch-lib)

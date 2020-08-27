@@ -125,14 +125,32 @@ keys configured in the :key property of `notmuch-saved-searches'.
 Typically these shortcuts are a single key long, so this is a
 fast way to jump to a saved search from anywhere in Notmuch." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-jump" '("notmuch-jump")))
+(autoload 'notmuch-jump "notmuch-jump" "\
+Interactively prompt for one of the keys in ACTION-MAP.
+
+Displays a summary of all bindings in ACTION-MAP in the
+minibuffer, reads a key from the minibuffer, and performs the
+corresponding action.  The prompt can be canceled with C-g or
+RET.  PROMPT must be a string to use for the prompt.  PROMPT
+should include a space at the end.
+
+ACTION-MAP must be a list of triples of the form
+  (KEY LABEL ACTION)
+where KEY is a key binding, LABEL is a string label to display in
+the buffer, and ACTION is a nullary function to call.  LABEL may
+be null, in which case the action will still be bound, but will
+not appear in the pop-up buffer.
+
+\(fn ACTION-MAP PROMPT)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-jump" '("notmuch-jump-")))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-lib" "notmuch-lib.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-lib.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("notmuch-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("mm-shr" "notmuch-")))
 
 ;;;***
 

@@ -1,4 +1,4 @@
-;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata.
+;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata
 ;;
 ;; Copyright © Jameson Rollins
 ;;
@@ -117,23 +117,21 @@ by user FROM."
 	    (userid (plist-get sigstatus :userid)))
 	;; If userid is present it has full or greater validity.
 	(if userid
-	    (setq label (concat "Good signature by: " userid)
-		  face 'notmuch-crypto-signature-good)
-	  (setq label (concat "Good signature by key: " fingerprint)
-		face 'notmuch-crypto-signature-good-key))
-	(setq button-action 'notmuch-crypto-sigstatus-good-callback
-	      help-msg (concat "Click to list key ID 0x" fingerprint "."))))
-
+	    (progn
+	      (setq label (concat "Good signature by: " userid))
+	      (setq face 'notmuch-crypto-signature-good))
+	  (setq label (concat "Good signature by key: " fingerprint))
+	  (setq face 'notmuch-crypto-signature-good-key))
+	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
+	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
      ((string= status "error")
-      (setq label (concat "Unknown key ID " keyid " or unsupported algorithm")
-	    button-action 'notmuch-crypto-sigstatus-error-callback
-	    help-msg (concat "Click to retrieve key ID " keyid
-			     " from keyserver.")))
-
+      (setq label (concat "Unknown key ID " keyid " or unsupported algorithm"))
+      (setq button-action 'notmuch-crypto-sigstatus-error-callback)
+      (setq help-msg (concat "Click to retrieve key ID " keyid
+			     " from key server.")))
      ((string= status "bad")
-      (setq label (concat "Bad signature (claimed key ID " keyid ")")
-	    face 'notmuch-crypto-signature-bad))
-
+      (setq label (concat "Bad signature (claimed key ID " keyid ")"))
+      (setq face 'notmuch-crypto-signature-bad))
      (status
       (setq label (concat "Unknown signature status: " status)))
      (t
@@ -161,7 +159,8 @@ by user FROM."
 	(goto-char (point-max))
 	(insert (format "-- Key %s in message %s:\n"
 			fingerprint id))
-	(call-process notmuch-crypto-gpg-program nil t t "--batch" "--no-tty" "--list-keys" fingerprint))
+	(call-process notmuch-crypto-gpg-program nil t t
+		      "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
@@ -220,17 +219,17 @@ corresponding key when the status button is pressed."
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
 	    (insert (format "--- Retrieving key %s:\n" keyid)))
-	  (let ((p (make-process :name "notmuch GPG key retrieval"
-				 :connection-type 'pipe
-				 :buffer buffer
-				 :stderr buffer
-				 :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
-				 :sentinel #'notmuch-crypto--async-key-sentinel)))
+	  (let ((p (make-process
+		    :name "notmuch GPG key retrieval"
+		    :connection-type 'pipe
+		    :buffer buffer
+		    :stderr buffer
+		    :command (list notmuch-crypto-gpg-program "--recv-keys" keyid)
+		    :sentinel #'notmuch-crypto--async-key-sentinel)))
 	    (process-put p :gpg-key-id keyid)
 	    (process-put p :notmuch-show-buffer (current-buffer))
 	    (process-put p :notmuch-show-point (point))
 	    (message "Getting the GPG key %s asynchronously..." keyid)))
-
       (let ((window (display-buffer buffer)))
 	(with-selected-window window
 	  (with-current-buffer buffer
@@ -254,7 +253,7 @@ corresponding key when the status button is pressed."
 	       "Decryption error")
 	      (t
 	       (concat "Unknown encryption status"
-		       (if status (concat ": " status))))))
+		       (and status (concat ": " status))))))
 	   " ]")
    :type 'notmuch-crypto-status-button-type
    'face 'notmuch-crypto-decryption

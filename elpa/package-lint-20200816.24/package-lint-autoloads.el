@@ -9,6 +9,11 @@
 ;;;### (autoloads nil "package-lint" "package-lint.el" (0 0 0 0))
 ;;; Generated autoloads from package-lint.el
 
+(autoload 'package-lint-describe-symbol-history "package-lint" "\
+Show the version history of SYM, if any.
+
+\(fn SYM)" t nil)
+
 (autoload 'package-lint-buffer "package-lint" "\
 Get linter errors and warnings for BUFFER.
 

@@ -89,6 +89,12 @@
 (define-obsolete-variable-alias 'post-transient-hook
   'transient-exit-hook "Transient 0.3.0")
 
+(defmacro transient--with-emergency-exit (&rest body)
+  (declare (indent defun))
+  `(condition-case err
+       ,(macroexp-progn body)
+     (error (transient--emergency-exit err))))
+
 ;;; Options
 
 (defgroup transient nil
@@ -645,6 +651,7 @@ slot is non-nil."
    (shortarg    :initarg :shortarg)
    (value                             :initform nil)
    (multi-value :initarg :multi-value :initform nil)
+   (always-read :initarg :always-read :initform nil)
    (allow-empty :initarg :allow-empty :initform nil)
    (history-key :initarg :history-key :initform nil)
    (reader      :initarg :reader      :initform nil)
@@ -1582,29 +1589,30 @@ EDIT may be non-nil."
   (when (and (>= (minibuffer-depth) 1) transient--prefix)
     (error "Cannot invoke %s while minibuffer is active %s"
            this-command "on behalf of another prefix command"))
-  (cond
-   ((not name)
-    ;; Switching between regular and edit mode.
-    (transient--pop-keymap 'transient--transient-map)
-    (transient--pop-keymap 'transient--redisplay-map)
-    (setq name (oref transient--prefix command))
-    (setq params (list :scope (oref transient--prefix scope))))
-   ((not (or layout                      ; resuming parent/suspended prefix
-             transient-current-command)) ; entering child prefix
-    (transient--stack-zap))              ; replace suspended prefix, if any
-   (edit
-    ;; Returning from help to edit.
-    (setq transient--editp t)))
-  (transient--init-objects name layout params)
-  (transient--history-init transient--prefix)
-  (setq transient--predicate-map (transient--make-predicate-map))
-  (setq transient--transient-map (transient--make-transient-map))
-  (setq transient--redisplay-map (transient--make-redisplay-map))
-  (setq transient--original-window (selected-window))
-  (setq transient--original-buffer (current-buffer))
-  (transient--redisplay)
-  (transient--init-transient)
-  (transient--suspend-which-key-mode))
+  (transient--with-emergency-exit
+    (cond
+     ((not name)
+      ;; Switching between regular and edit mode.
+      (transient--pop-keymap 'transient--transient-map)
+      (transient--pop-keymap 'transient--redisplay-map)
+      (setq name (oref transient--prefix command))
+      (setq params (list :scope (oref transient--prefix scope))))
+     ((not (or layout                      ; resuming parent/suspended prefix
+               transient-current-command)) ; entering child prefix
+      (transient--stack-zap))              ; replace suspended prefix, if any
+     (edit
+      ;; Returning from help to edit.
+      (setq transient--editp t)))
+    (transient--init-objects name layout params)
+    (transient--history-init transient--prefix)
+    (setq transient--predicate-map (transient--make-predicate-map))
+    (setq transient--transient-map (transient--make-transient-map))
+    (setq transient--redisplay-map (transient--make-redisplay-map))
+    (setq transient--original-window (selected-window))
+    (setq transient--original-buffer (current-buffer))
+    (transient--redisplay)
+    (transient--init-transient)
+    (transient--suspend-which-key-mode)))
 
 (defun transient--init-objects (name layout params)
   (setq transient--prefix
@@ -1958,7 +1966,7 @@ EDIT may be non-nil."
                  arg this-command transient--exitp)
       (apply #'message arg args))))
 
-(defun transient--emergency-exit ()
+(defun transient--emergency-exit (&optional err)
   "Exit the current transient command after an error occurred.
 
 Beside being used with `condition-case', this function also has
@@ -1969,19 +1977,16 @@ either be unbound or do something else.
 
 When no transient is active (i.e. when `transient--prefix') is
 nil, then do nothing."
+  (transient--debug 'emergency-exit)
   (when transient--prefix
     (setq transient--stack nil)
     (setq transient--exitp t)
     (transient--pre-exit)
-    (transient--post-command)))
+    (transient--post-command)
+    (when err
+      (signal (car err) (cdr err)))))
 
 (add-hook 'debugger-mode-hook 'transient--emergency-exit)
-
-(defmacro transient--with-emergency-exit (&rest body)
-  (declare (indent defun))
-  `(condition-case nil
-       ,(macroexp-progn body)
-     (error (transient--emergency-exit))))
 
 ;;; Pre-Commands
 
@@ -2367,9 +2372,10 @@ limited number of possible values should you replace this with a
 simple method that does not handle history.  (E.g. for a command
 line switch the only possible values are \"use it\" and \"don't use
 it\", in which case it is pointless to preserve history.)"
-  (with-slots (value multi-value allow-empty choices) obj
+  (with-slots (value multi-value always-read allow-empty choices) obj
     (if (and value
              (not multi-value)
+             (not always-read)
              transient--prefix)
         (oset obj value nil)
       (let* ((overriding-terminal-local-map nil)
@@ -3408,6 +3414,35 @@ we stop there."
        (2 'font-lock-function-name-face nil t)))))
 
 (font-lock-add-keywords 'emacs-lisp-mode transient-font-lock-keywords)
+
+;;; Auxiliary Classes
+;;;; `transient-lisp-variable'
+
+(defclass transient-lisp-variable (transient-variable)
+  ((reader :initform transient-lisp-variable--reader)
+   (always-read :initform t))
+  "[Experimental] Class used for Lisp variables.")
+
+(cl-defmethod transient-init-value ((obj transient-lisp-variable))
+  (oset obj value (symbol-value (oref obj variable))))
+
+(cl-defmethod transient-infix-set ((obj transient-lisp-variable) value)
+  (set (oref obj variable)
+       (oset obj value value)))
+
+(cl-defmethod transient-format-description ((obj transient-lisp-variable))
+  (or (oref obj description)
+      (oref obj variable)))
+
+(cl-defmethod transient-format-value ((obj transient-lisp-variable))
+  (propertize (prin1-to-string (oref obj value))
+              'face 'transient-value))
+
+(cl-defmethod transient-prompt ((obj transient-lisp-variable))
+  (format "Set %s: " (oref obj variable)))
+
+(defun transient-lisp-variable--reader (prompt initial-input _history)
+  (read--expression prompt initial-input))
 
 ;;; _
 (provide 'transient)

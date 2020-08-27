@@ -454,6 +454,10 @@ in the current window." t nil)
 (autoload 'counsel-compile "counsel" "\
 Call `compile' completing with smart suggestions, optionally for DIR.
 
+Additional actions:
+
+\\{counsel-compile-map}
+
 \(fn &optional DIR)" t nil)
 
 (autoload 'counsel-compile-env "counsel" "\

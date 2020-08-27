@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200706.1447
-;; Package-Commit: c6b60d34ac37bf4d91a25f16d22e528f85e06938
+;; Package-Version: 20200824.1246
+;; Package-Commit: 7e4c56776f811f78b8eb95210156f8fbbdba67e7
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -116,6 +116,14 @@ complex regexes."
      str)
     str))
 
+(defalias 'counsel--executable-find
+  ;; Gained optional argument in 27.1.
+  (if (>= emacs-major-version 27)
+      #'executable-find
+    (lambda (command &optional _remote)
+      (executable-find command)))
+  "Compatibility shim for `executable-find'.")
+
 (defun counsel-require-program (cmd)
   "Check system for program used in CMD, printing error if not found.
 CMD is either a string or a list of strings.
@@ -126,7 +134,7 @@ To skip the `executable-find' check, start the string with a space."
                      (car (split-string cmd)))))
       (or (and (stringp program)
                (not (string= program ""))
-               (executable-find program))
+               (counsel--executable-find program t))
           (user-error "Required program \"%s\" not found in your path" program)))))
 
 (declare-function eshell-split-path "esh-util")
@@ -1188,6 +1196,15 @@ back to the face of the character after point, and finally the
   "Customize face with NAME in another window."
   (customize-face-other-window (intern name)))
 
+(declare-function hi-lock-set-pattern "hi-lock")
+(defun counsel-highlight-with-face (face)
+  "Highlight thing-at-point with FACE."
+  (hi-lock-mode 1)
+  (let ((thing (ivy-thing-at-point)))
+    (when (use-region-p)
+      (deactivate-mark))
+    (hi-lock-set-pattern (regexp-quote thing) (intern face))))
+
 (ivy-set-actions
  'counsel-describe-face
  '(("c" counsel-customize-face "customize")
@@ -1232,7 +1249,8 @@ selected face."
 (ivy-set-actions
  'counsel-faces
  '(("c" counsel-customize-face "customize")
-   ("C" counsel-customize-face-other-window "customize other window")))
+   ("C" counsel-customize-face-other-window "customize other window")
+   ("h" counsel-highlight-with-face "highlight")))
 
 ;;* Git
 ;;** `counsel-git'
@@ -3837,18 +3855,28 @@ include attachments of other Org buffers."
   (interactive)
   (require 'org-capture)
   (ivy-read "Capture template: "
-            (delq nil
-                  (mapcar
-                   (lambda (x)
-                     (when (> (length x) 2)
-                       (format "%-5s %s" (nth 0 x) (nth 1 x))))
-                   ;; We build the list of capture templates as in
-                   ;; `org-capture-select-template':
-                   (or (org-contextualize-keys
-                        (org-capture-upgrade-templates org-capture-templates)
-                        org-capture-templates-contexts)
-                       '(("t" "Task" entry (file+headline "" "Tasks")
-                          "* TODO %?\n  %u\n  %a")))))
+            ;; We build the list of capture templates as in `org-capture-select-template':
+            (let (prefixes)
+              (cl-mapcan
+               (lambda (x)
+                 (let ((x-keys (car x)))
+                   ;; Remove prefixed keys until we get one that matches the current item.
+                   (while (and prefixes
+                               (let ((p1-keys (caar prefixes)))
+                                 (or
+                                  (<= (length x-keys) (length p1-keys))
+                                  (not (string-prefix-p p1-keys x-keys)))))
+                     (pop prefixes))
+                   (if (> (length x) 2)
+                       (let ((desc (mapconcat #'cadr (reverse (cons x prefixes)) " | ")))
+                         (list (format "%-5s %s" x-keys desc)))
+                     (push x prefixes)
+                     nil)))
+               (or (org-contextualize-keys
+                    (org-capture-upgrade-templates org-capture-templates)
+                    org-capture-templates-contexts)
+                   '(("t" "Task" entry (file+headline "" "Tasks")
+                      "* TODO %?\n  %u\n  %a")))))
             :require-match t
             :action (lambda (x)
                       (org-capture nil (car (split-string x))))
@@ -4220,7 +4248,8 @@ Additional actions:\\<ivy-minibuffer-map>
             :history 'counsel-package-history
             :caller 'counsel-package))
 
-(cl-pushnew '(counsel-package . "^+") ivy-initial-inputs-alist :key #'car)
+(ivy-configure 'counsel-package
+  :initial-input "^+")
 
 (defun counsel-package-action (package)
   "Delete or install PACKAGE."
@@ -6288,7 +6317,8 @@ Use the presence of a `dir-locals-file' to determine the root."
 (defvar counsel-compile-local-builds
   '(counsel-compile-get-filtered-history
     counsel-compile-get-build-directories
-    counsel-compile-get-make-invocation)
+    counsel-compile-get-make-invocation
+    counsel-compile-get-make-help-invocations)
   "Additional compile invocations to feed into `counsel-compile'.
 
 This can either be a list of compile invocation strings or
@@ -6328,26 +6358,30 @@ list is passed to `compilation-environment'."
 (defvar counsel-compile-phony-pattern "^\\.PHONY:[\t ]+\\(.+\\)$"
   "Regexp for extracting phony targets from Makefiles.")
 
-;; This is loosely based on the Bash Make completion code
+(defvar counsel-compile-help-pattern
+  "\\(?:^\\(\\*\\)?[[:space:]]+\\([^[:space:]]+\\)[[:space:]]+-\\)"
+  "Regexp for extracting help targets from a make help call.")
+
+;; This is loosely based on the Bash Make completion code which
+;; relies on GNUMake having the following return codes:
+;;   0 = no-rebuild, -q & 1 needs rebuild, 2 error
 (defun counsel-compile--probe-make-targets (dir)
   "Return a list of Make targets for DIR.
 
-Return an empty list is Make exits with an error.  This might
-happen because some sort of configuration needs to be done first
-or the source tree is pristine and being used for multiple build
-trees."
-  (let ((default-directory dir)
-        (targets nil))
-    (with-temp-buffer
-      ;; 0 = no-rebuild, -q & 1 needs rebuild, 2 error (for GNUMake at
-      ;; least)
-      (when (< (call-process "make" nil t nil "-nqp") 2)
+Return a single blank target (so we invoke the default target)
+if Make exits with an error.  This might happen because some sort
+of configuration needs to be done first or the source tree is
+pristine and being used for multiple build trees."
+  (with-temp-buffer
+    (let* ((default-directory dir)
+           (res (call-process "make" nil t nil "-nqp"))
+           targets)
+      (if (or (not (numberp res)) (> res 1))
+          (list "")
         (goto-char (point-min))
         (while (re-search-forward counsel-compile-phony-pattern nil t)
-          (setq targets
-                (nconc targets (split-string
-                                (match-string-no-properties 1)))))))
-    (sort targets #'string-lessp)))
+          (push (split-string (match-string-no-properties 1)) targets))
+        (sort (apply #'nconc targets) #'string-lessp)))))
 
 (defun counsel-compile--pretty-propertize (leader text face)
   "Return a pretty string of the form \" LEADER TEXT\".
@@ -6358,12 +6392,13 @@ text with FACE."
                       'font-lock-warning-face)
           (propertize text 'face face)))
 
-(defun counsel--compile-get-make-targets (srcdir &optional blddir)
-  "Return a list of Make targets for a given SRCDIR/BLDDIR combination.
+(defun counsel--compile-get-make-targets (probe-fn srcdir &optional blddir)
+  "Return propertized make targets returned by PROBE-FN in SRCDIR.
 
-We search the Makefile for a list of phony targets which are
-generally the top level targets a Make system provides.
-The resulting strings are tagged with properties that
+The optional BLDDIR allows for handling build directories.  We
+search the Makefile for a list of phony targets which are
+generally the top level targets a Make system provides.  The
+resulting strings are tagged with properties that
 `counsel-compile-history' can use for filtering results."
   (let ((fmt (format (propertize "make %s %%s" 'cmd t)
                      counsel-compile-make-args))
@@ -6380,7 +6415,7 @@ The resulting strings are tagged with properties that
               (setq target (concat (format fmt target) suffix build-env))
               (add-text-properties 0 (length target) props target)
               target)
-            (counsel-compile--probe-make-targets (or blddir srcdir)))))
+            (funcall probe-fn (or blddir srcdir)))))
 
 (defun counsel-compile-get-make-invocation (&optional blddir)
   "Have a look in the root directory for any build control files.
@@ -6390,7 +6425,41 @@ sub-directories that builds may be invoked in."
   (let ((srcdir (counsel--compile-root)))
     (when (directory-files (or blddir srcdir) nil
                            counsel-compile-make-pattern t)
-      (counsel--compile-get-make-targets srcdir blddir))))
+      (counsel--compile-get-make-targets
+       #'counsel-compile--probe-make-targets srcdir blddir))))
+
+(defun counsel-compile--probe-make-help (dir)
+  "Return a list of Make targets based on help for DIR.
+
+It is quite common for a 'make help' invocation to return a human
+readable list of targets.  Often common targets are marked with a
+leading asterisk.  The exact search pattern is controlled by
+`counsel-compile-help-pattern'."
+  (let ((default-directory dir)
+        primary-targets targets)
+    ;; Only proceed if the help target exists.
+    (when (eql 1 (apply #'call-process "make" nil nil nil "-q" "help"
+                        counsel-compile-env))
+      (with-temp-buffer
+        (when (eql 0 (apply #'call-process "make" nil t nil "help"
+                            counsel-compile-env))
+          (goto-char (point-min))
+          (while (re-search-forward counsel-compile-help-pattern nil t)
+            (push (match-string 2)
+                  (if (match-beginning 1) primary-targets targets)))
+          (nconc (sort primary-targets #'string-lessp)
+                 (sort targets #'string-lessp)))))))
+
+(defun counsel-compile-get-make-help-invocations (&optional blddir)
+  "Query the root directory for makefiles with help output.
+
+The optional BLDDIR is useful for other helpers that have found
+sub-directories that builds may be invoked in."
+  (let ((srcdir (counsel--compile-root)))
+    (when (directory-files (or blddir srcdir) nil
+                           counsel-compile-make-pattern t)
+      (counsel--compile-get-make-targets
+       #'counsel-compile--probe-make-help srcdir blddir))))
 
 (defun counsel--find-build-subdir (srcdir)
   "Return builds subdirectory of SRCDIR, if one exists."
@@ -6504,9 +6573,36 @@ specified by the `blddir' property."
              (compile cmd)
           (remove-hook 'compilation-start-hook #'counsel-compile--update-history))))))
 
+(defun counsel-compile-edit-command ()
+  "Insert current compile command into the minibuffer for editing.
+
+This mirrors the behavior of `ivy-insert-current' but with specific
+handling for the `counsel-compile' metadata."
+  (interactive)
+  (delete-minibuffer-contents)
+  (let* ((cmd (ivy-state-current ivy-last))
+         (blddir (get-text-property 0 'blddir cmd)))
+    (when blddir
+      (setq counsel-compile--current-build-dir blddir))
+    (insert (substring-no-properties
+             cmd 0 (and (get-text-property 0 'cmd cmd)
+                        (next-single-property-change 0 'cmd cmd))))))
+
+;; Currently the only thing we do is override ivy's default insert
+;; operation which doesn't include the metadata we want.
+(defvar counsel-compile-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [remap ivy-insert-current] #'counsel-compile-edit-command)
+    map)
+  "Additional ivy keybindings during command selection.")
+
 ;;;###autoload
 (defun counsel-compile (&optional dir)
-  "Call `compile' completing with smart suggestions, optionally for DIR."
+  "Call `compile' completing with smart suggestions, optionally for DIR.
+
+Additional actions:
+
+\\{counsel-compile-map}"
   (interactive)
   (setq counsel-compile--current-build-dir (or dir
                                                (counsel--compile-root)
@@ -6514,6 +6610,7 @@ specified by the `blddir' property."
   (ivy-read "Compile command: "
             (delete-dups (counsel--get-compile-candidates dir))
             :action #'counsel-compile--action
+            :keymap counsel-compile-map
             :caller 'counsel-compile))
 
 (ivy-add-actions

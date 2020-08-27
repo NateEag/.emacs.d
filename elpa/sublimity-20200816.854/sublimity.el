@@ -18,8 +18,8 @@
 
 ;; Author: zk_phi
 ;; URL: https://github.com/zk-phi/sublimity
-;; Version: 1.1.4
-;; Package-Requires: ((cl-lib "0.3"))
+;; Version: 1.1.5
+;; Package-Requires: ((cl-lib "0.3") (emacs "26.1"))
 
 ;;; Commentary:
 
@@ -49,12 +49,15 @@
 ;;       make sublimity-mode global
 ;; 1.1.3 scroll-bar workaround
 ;; 1.1.4 divide `sublimity-handle-scroll-criteria' into three separate options
+;; 1.1.5 remove deprecated variable
+;;       migrate to nadvice.el (now requires Emacs 25.1 or later)
+;;       update window margins when frame size changes
 
 ;;; Code:
 
 (require 'cl-lib)
 
-(defconst sublimity-version "1.1.4")
+(defconst sublimity-version "1.1.5")
 
 ;; + customs
 
@@ -85,12 +88,6 @@
   :type '(repeat symbol)
   :group 'sublimity)
 
-(defvar sublimity-handle-scroll-criteria nil)
-(make-obsolete-variable
- 'sublimity-handle-scroll-criteria
- "use sublimity-ignored-scroll-commands, sublimity-disabled-major/minor-modes instead"
- "1.1.4")
-
 ;; + minor mode
 
 (defvar sublimity-auto-hscroll-mode nil)
@@ -116,12 +113,14 @@
          (add-hook 'pre-command-hook 'sublimity--pre-command nil)
          (add-hook 'post-command-hook 'sublimity--post-command t)
          (add-hook 'window-configuration-change-hook 'sublimity--window-change t)
+         (add-hook 'window-size-change-functions 'sublimity--window-change t)
          (add-hook 'window-setup-hook 'sublimity--window-change t)
          (run-hooks 'sublimity-mode-hook))
         (t
          (remove-hook 'pre-command-hook 'sublimity--pre-command)
          (remove-hook 'post-command-hook 'sublimity--post-command)
          (remove-hook 'window-configuration-change-hook 'sublimity--window-change)
+         (remove-hook 'window-size-change-functions 'sublimity--window-change)
          (remove-hook 'window-setup-hook 'sublimity--window-change)
          (run-hooks 'sublimity-mode-turn-off-hook)
          (setq auto-hscroll-mode sublimity-auto-hscroll-mode))))
@@ -168,8 +167,7 @@
                               (not (memq major-mode sublimity-disabled-major-modes))
                               (cl-every (lambda (x) (not (and (boundp x) (symbol-value x))))
                                         sublimity-disabled-minor-modes)
-                              (not (memq this-command sublimity-ignored-scroll-commands))
-                              (cl-every 'eval sublimity-handle-scroll-criteria))))
+                              (not (memq this-command sublimity-ignored-scroll-commands)))))
       (when handle-scroll
         (let (deactivate-mark)
           ;; do vscroll
@@ -196,7 +194,7 @@
           (when (not (zerop cols))
             (sublimity--run-hooks sublimity--post-hscroll-functions cols)))))))
 
-(defun sublimity--window-change ()
+(defun sublimity--window-change (&optional _)
   (sublimity--run-hooks sublimity--window-change-functions))
 
 ;; * provide

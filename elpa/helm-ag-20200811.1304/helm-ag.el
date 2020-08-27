@@ -4,8 +4,8 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
-;; Package-Version: 20200601.933
-;; Package-Commit: 08aaab53b8876caba619f956945a8152ece47182
+;; Package-Version: 20200811.1304
+;; Package-Commit: 4ee2174c4e27e02c75a487a235de4d80c663aa08
 ;; Version: 0.62
 ;; Package-Requires: ((emacs "25.1") (helm "2.0"))
 
@@ -1261,11 +1261,12 @@ Continue searching the parent directory? "))
 
 (defun helm-ag--set-do-ag-option ()
   "Not documented."
-  (when (or (< (prefix-numeric-value current-prefix-arg) 0)
-            helm-ag-always-set-extra-option)
-    (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
-                               'helm-ag--extra-options-history)))
-      (setq helm-ag--extra-options option))))
+  (if (or (< (prefix-numeric-value current-prefix-arg) 0)
+          helm-ag-always-set-extra-option)
+      (let ((option (read-string "Extra options: " (or helm-ag--extra-options "")
+                                 'helm-ag--extra-options-history)))
+        (setq helm-ag--extra-options option))
+    (setq helm-ag--extra-options nil)))
 
 (defun helm-ag--set-command-features ()
   "Not documented."

@@ -26,6 +26,11 @@ Reject a PR (to be run from a buffer corresponding to a review)." t nil)
 (autoload 'github-review-comment "github-review" "\
 Comment on a PR (to be run from a buffer corresponding to a review)." t nil)
 
+(autoload 'github-review-mode "github-review" "\
+Major mode for code review
+
+\(fn)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "github-review" '("github-review-")))
 
 ;;;***

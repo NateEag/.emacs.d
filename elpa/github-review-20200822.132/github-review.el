@@ -2,9 +2,10 @@
 ;; Author: Laurent Charignon <l.charignon@gmail.com>
 ;; Maintainer: Laurent Charignon <l.charignon@gmail.com>
 ;; Keywords: git, tools, vc, github
+;; Package-Commit: ff1b16ec3718148f952e962daee43b3457e4537e
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0") (deferred "0.5.1"))
-;; Package-Version: 20200314.438
+;; Package-Version: 20200822.132
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -68,6 +69,9 @@
 
 ;; Only repo scope needed to read PRs and submit reviews
 (defvar github-review-github-token-scopes '(repo))
+
+(defvar github-review-mode-hook nil
+  "Mode hook for `github-review-mode'.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Alist utilities to treat associative lists as immutable data structures  ;;
@@ -390,7 +394,8 @@ ACC is an alist accumulating parsing state."
                      (github-review-a-get pr-alist 'num)))
   (erase-buffer)
   (insert diff)
-  (save-buffer))
+  (save-buffer)
+  (github-review-mode))
 
 (defun github-review-parsed-review-from-current-buffer ()
   "Return a code review given the current buffer containing a diff."
@@ -553,6 +558,14 @@ See ‘github-review-start’ for more information"
   "Comment on a PR (to be run from a buffer corresponding to a review)."
   (interactive)
   (github-review-submit-review "COMMENT"))
+
+;;;###autoload
+(define-derived-mode github-review-mode
+  diff-mode "Code Review"
+  "Major mode for code review"
+  (setq mode-name "Code Review")
+  (setq major-mode 'github-review-mode)
+  (run-mode-hooks 'github-review-mode-hook))
 
 (provide 'github-review)
 ;;; github-review.el ends here

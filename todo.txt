@@ -12,6 +12,13 @@
   package-enable-at-startup should move to early-init.el (they definitely
   should if package-quickstart doesn't pan out)
 
+- Apply the advice in
+  https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly
+  to my config. It looks like the Doom Emacs maintainer has taken the time to
+  figure out all the things I've thought about trying but have not actually
+  done (like loading packages only on demand, but preloading big packages in
+  the background on idle, so your idle time is used intelligently).
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I
@@ -28,6 +35,9 @@
   Looks like this may be related to c-indent-new-comment-line, which tries to
   indent and is perhaps getting invoked somehow, with php-mode being an
   extension of cc-mode.
+
+- Try using chemacs for managing custom environments for bug reports:
+  https://github.com/plexus/chemacs
 
 - Get aggressive-fill-paragraph-mode working in multiline strings.
 

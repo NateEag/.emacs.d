@@ -41,8 +41,14 @@
 
 - Get aggressive-fill-paragraph-mode working in multiline strings.
 
+- Try modern-sh's REPL (or perhaps skip straight to just using
+  eval-in-repl-shell.el, which got installed as a dependency)
+
+- Try eval-in-repl's Python and JavaScript support
+
 - figure out workflow for evaluating code inline some writing a file (that is,
-  learn how to use the elisp workflow anywhere else I can, like shell / JS / PHP
+  learn how to use the elisp workflow anywhere else I can, like shell / JS /
+  PHP)
 
 - Try smerge and/or ediff for git conflict resolution UI. Also take a look at
   Apple's opendiff tool (https://emacs.stackexchange.com/q/16469), but pretty

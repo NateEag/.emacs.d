@@ -787,7 +787,7 @@ With this alias I hope to not need to remember it.")
 
 (use-package csv-mode
   ;; One does not often want to automatically fill paragraphs in CSVs.
-  :hook (lambda () (aggressive-fill-paragraph-mode t)))
+  :hook (csv-mode-hook . (lambda () (aggressive-fill-paragraph-mode t))))
 
 ;; eldoc-overlay mode is interesting, but has some quirks that make it kinda
 ;; painful.

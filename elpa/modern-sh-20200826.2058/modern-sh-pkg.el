@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/modern-sh-20200826.2058/modern-sh.el  -*- no-byte-compile: t -*-
+(define-package "modern-sh" "20200826.2058" "Minor mode for editing shell script" '((emacs "25.1") (hydra "0.15.0") (eval-in-repl "0.9.7")) :commit "87fc7aaf63aa723b4046e59d2d273572e33ad33c" :keywords '("languages" "programming") :url "https://github.com/damon-kwok/modern-sh")

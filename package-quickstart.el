@@ -13423,6 +13423,173 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20191116.1107/eval-in-repl-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20191116.1107/eval-in-repl-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl" '("eir-")))
+
+
+
+(autoload 'eir-eval-in-cider "eval-in-repl-cider" "\
+eval-in-repl for cider." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-cider" '("eir-")))
+
+
+
+(autoload 'eir-eval-in-elm "eval-in-repl-elm" "\
+Provides eval-in-repl for Elm." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-elm" '("eir-send-to-elm")))
+
+
+
+(autoload 'eir-eval-in-erlang "eval-in-repl-erlang" "\
+Provides eval-in-repl for Erlang." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-erlang" '("eir-send-to-erlang")))
+
+
+
+(autoload 'eir-eval-in-geiser "eval-in-repl-geiser" "\
+eval-in-repl for Geiser." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-geiser" '("eir-send-to-geiser")))
+
+
+
+(autoload 'eir-eval-in-hy "eval-in-repl-hy" "\
+eval-in-repl for Hy." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-hy" '("eir-")))
+
+
+
+(autoload 'eir-eval-in-ielm "eval-in-repl-ielm" "\
+eval-in-repl for IELM." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ielm" '("eir-")))
+
+
+
+(autoload 'eir-eval-in-iex "eval-in-repl-iex" "\
+Provides eval-in-repl for Elixir." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-iex" '("eir-send-to-iex")))
+
+
+
+(autoload 'eir-eval-in-javascript "eval-in-repl-javascript" "\
+eval-in-repl for Javascript." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-javascript" '("eir-send-to-javascript")))
+
+
+
+(autoload 'eir-eval-in-lua "eval-in-repl-lua" "\
+eval-in-repl for Lua." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-lua" '("eir-send-to-lua" "eval-in-repl-run-lua")))
+
+
+
+(autoload 'eir-eval-in-ocaml "eval-in-repl-ocaml" "\
+eval-in-repl for OCaml." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ocaml" '("eir-send-to-ocaml")))
+
+
+
+(autoload 'eir-eval-in-prolog "eval-in-repl-prolog" "\
+eval-in-repl for SWI Prolog." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-prolog" '("eir-send-to-prolog")))
+
+
+
+(autoload 'eir-eval-in-python "eval-in-repl-python" "\
+eval-in-repl for Python." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-python" '("eir-")))
+
+
+
+(autoload 'eir-eval-in-racket "eval-in-repl-racket" "\
+eval-in-repl for Racket." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-racket" '("eir-send-to-racket")))
+
+
+
+(autoload 'eir-eval-in-ruby "eval-in-repl-ruby" "\
+eval-in-repl for Ruby." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ruby" '("eir-send-to-ruby")))
+
+
+
+(autoload 'eir-eval-in-scheme "eval-in-repl-scheme" "\
+eval-in-repl for Scheme." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-scheme" '("eir-send-to-scheme")))
+
+
+
+(autoload 'eir-eval-in-shell "eval-in-repl-shell" "\
+eval-in-repl for shell." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-send-to-shell")))
+
+
+
+(autoload 'eir-eval-in-slime "eval-in-repl-slime" "\
+eval-in-repl for SLIME." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-slime" '("eir-send-to-slime")))
+
+
+
+(autoload 'eir-eval-in-sly "eval-in-repl-sly" "\
+eval-in-repl for Sly." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-sly" '("eir-send-to-sly")))
+
+
+
+(autoload 'eir-eval-in-sml "eval-in-repl-sml" "\
+eval-in-repl for Standard ML." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-sml" '("eir-send-to-sml")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/modern-sh-20200826.2058/modern-sh-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/modern-sh-20200826.2058/modern-sh-autoloads.el") (car load-path))))
+
+
+
+(autoload 'modern-sh-mode "modern-sh" "\
+Minor mode for editing shell script.
+
+If called interactively, enable Modern-Sh mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "modern-sh" '("modern-sh-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/mocha-snippets-20190417.1931/mocha-snippets-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -23182,7 +23349,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-mode transient toggle-quotes epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-mode transient toggle-quotes epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

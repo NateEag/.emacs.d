@@ -768,6 +768,14 @@
   just do it. This is likely mostly on the language server, with maybe a little
   editor intelligence on when to trigger it.
 
+- Teach yaml-language-server to suggest available Ansible modules when defining
+  a new task and you request completion on a blank line after the '- name: ...'
+  line. It currently fails due to something being undefined, but it seems
+  obvious to me this is where you put a pragmatic hack into the codebase to
+  enable what people will usually want, rather than stick with purity. I know
+  this is language-server-specific, because the same issue happens in Visual
+  Studio Code (I downloaded it to test that).
+
 - Define a really good ac-source for use with lsp-mode. Seems like most of what
   we need to do here could be set up generically based on the features a given
   server offers, but I suppose working on this could show me I'm wrong about

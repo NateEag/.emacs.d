@@ -561,8 +561,6 @@ The shell command lives in my dotfiles repo."
                                  (setq jedi:use-shortcuts t)
                                  (setq jedi:complete-on-dot t))))
 
-(use-package lsp-clients)
-
 (use-package yaml-mode
   :mode "\\.yaml\\'"
   :defer t

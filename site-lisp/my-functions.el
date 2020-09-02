@@ -85,6 +85,10 @@ By default it handles C-like function parameters, hence the name."
 
 ;; Slightly tweaked from http://stackoverflow.com/a/25212377, to support moving
 ;; to a new directory.
+;;
+;; FIXME Handle moving a buffer to being a descendant of its current path.
+;; Right now, it fails on the reasonable grounds that what is currently the
+;; buffer's path is not a directory.
 (defun move-current-buffer ()
   "Renames current buffer and file it is visiting."
   (interactive)

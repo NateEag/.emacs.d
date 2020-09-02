@@ -129,12 +129,6 @@
   necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
   should insert a _. You can maybe do smarter stuff than just that, too.
 
-- Teach auto-compile to not get in the way when bisecting. I sometimes wind up
-  in states that won't yield a working Emacs, which is kind of a pain. I might
-  be able to just update/extend my `githooks/` dir and get what I need here.
-
-- Set up lsp-latex if I ever start using LaTeX seriously.
-
 - Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
   It's handy for bash but not sure how generally applicable it is. Teaching
   smart-dash-mode to be smarter about languages with variable sigils could be
@@ -143,6 +137,17 @@
 
 - Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
   comment.
+
+- Fix move-current-buffer's behavior on trying to move a buffer to be a child
+  of its own current path. I went for years without realizing I hadn't handled
+  this case, so it's probably not worth fussing over, but it is definitely
+  incorrect as-is. Rough incident dates: 2020-08-28
+
+- Teach auto-compile to not get in the way when bisecting. I sometimes wind up
+  in states that won't yield a working Emacs, which is kind of a pain. I might
+  be able to just update/extend my `githooks/` dir and get what I need here.
+
+- Set up lsp-latex if I ever start using LaTeX seriously.
 
 - Try setting up dap-mode for debugging PHP, as doing so should get me close to
   debugging support for a lot of languages out of the gate and an
@@ -838,7 +843,8 @@
   existing modes it could make life a lot better (and easier).
 
 - Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
-  embedding in php-mode.
+  embedding in php-mode. Actually, maybe just replace it with something using
+  poly-mode, which seems to be much better developed in 2020.
 
 - Consider this alternative to mmm-mode and friends: https://github.com/Fanael/edit-indirect/blob/master/edit-indirect.el
 

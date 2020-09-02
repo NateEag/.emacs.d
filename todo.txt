@@ -762,6 +762,12 @@
 - If I ever start using multiple windows more seriously, window-numbering-mode
   might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
+- Teach yaml-mode + lsp-mode + ansible to auto-generate a yasnippet with for
+  all required fields on tabbing or autocompleting after typing a module name.
+  By definition, you'll want to populate all required fields, so might as well
+  just do it. This is likely mostly on the language server, with maybe a little
+  editor intelligence on when to trigger it.
+
 - Define a really good ac-source for use with lsp-mode. Seems like most of what
   we need to do here could be set up generically based on the features a given
   server offers, but I suppose working on this could show me I'm wrong about

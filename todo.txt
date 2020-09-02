@@ -143,6 +143,11 @@
   this case, so it's probably not worth fussing over, but it is definitely
   incorrect as-is. Rough incident dates: 2020-08-28
 
+- Consider using emacs-async to byte-compile packages on upgrade, and maybe
+  also config-packages.el: https://github.com/jwiegley/emacs-async Be careful,
+  though - there's a reason auto-compile doesn't do it, and it's probably a
+  good one.
+
 - Teach auto-compile to not get in the way when bisecting. I sometimes wind up
   in states that won't yield a working Emacs, which is kind of a pain. I might
   be able to just update/extend my `githooks/` dir and get what I need here.

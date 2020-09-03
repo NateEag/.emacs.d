@@ -19,6 +19,11 @@
   done (like loading packages only on demand, but preloading big packages in
   the background on idle, so your idle time is used intelligently).
 
+- Figure out how to keep moving the cursor snappy when lsp-ui mode is running.
+  At least in yaml-mode when I'm hacking Ansible, the cursor gets painfully
+  unresponsive while it's running, but as soon as I turn it off it's reasonable
+  again.
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I

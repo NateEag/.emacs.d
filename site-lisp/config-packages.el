@@ -775,6 +775,10 @@ With this alias I hope to not need to remember it.")
   :bind (:map diff-mode-map
               ("M-\d" . backward-kill-word)))
 
+(use-package todotxt-mode
+  :mode "\\todo.txt\\'"
+  :hook (todotxt-mode-hook . (lambda () (aggressive-fill-paragraph-mode -1))))
+
 (use-package apache-mode
   :hook (apache-mode . conf-mode-init))
 
@@ -785,7 +789,7 @@ With this alias I hope to not need to remember it.")
 
 (use-package csv-mode
   ;; One does not often want to automatically fill paragraphs in CSVs.
-  :hook (csv-mode-hook . (lambda () (aggressive-fill-paragraph-mode t))))
+  :hook (csv-mode-hook . (lambda () (aggressive-fill-paragraph-mode -1))))
 
 ;; eldoc-overlay mode is interesting, but has some quirks that make it kinda
 ;; painful.

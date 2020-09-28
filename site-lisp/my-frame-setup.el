@@ -87,7 +87,8 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
   ;; If I have two displays, I like Emacs to set up for showing two documents
   ;; side-by-side, since my other stuff can go on the other monitor.
   ;;
-  ;; On a large display this would make a mess.
+  ;; On rare occasions I'll use a three-way split window, usually for working
+  ;; on tricky merge conflicts.
   (let* ((current-monitor-width
           ;; I hate alists. They're hard to read, both when inspecting
           ;; variables and when writing code... :P
@@ -128,9 +129,16 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
 
   (set-frame-width (selected-frame) (* my-window-width num-windows))
 
-  ;; HACK I never use more than two windows.
- (if (= 2 num-windows)
-        (split-window-right)))
+  ;; The below logic is dumb, but I only rarely use even three windows, so why
+  ;; bother generalizing?
+
+  (if (= 3 num-windows)
+      (progn (split-window-right my-window-width)
+             (other-window 1)
+             (split-window-right my-window-width)))
+
+  (if (= 2 num-windows)
+        (split-window-right my-window-width)))
 
 (defadvice make-frame-command (after set-up-new-frame activate)
   "After creating a new frame, size it the way I like."

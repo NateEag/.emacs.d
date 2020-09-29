@@ -11,6 +11,7 @@
 ;;; Code:
 
 (require 'use-package)
+(require 'auto-minor-mode)
 
 (use-package envrc
   :diminish
@@ -817,8 +818,11 @@ With this alias I hope to not need to remember it.")
 ;; TODO Get an open-source spellchecker to add support for camelCasing words.
 (use-package camel-spell)
 
+(use-package text-mode
+  :mode "\\.txt.gpg")
+
 (use-package sensitive-mode
-  :init (add-auto-mode 'sensitive-mode "\\.gpg$"))
+  :minor ("\\.gpg$" . sensitive-mode))
 
 (use-package flyspell
   :defer t

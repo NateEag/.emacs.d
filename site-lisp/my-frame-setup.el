@@ -117,6 +117,14 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
          (num-windows (floor (- (/ screen-width-in-chars my-window-width)
                                 0.5))))
 
+    ;; Hack to get only one window in my Emacs frame on an MBP 16". That, in turn,
+    ;; makes my Hammerspoon window configuration not shrink browser windows to
+    ;; unusably tiny sizes.
+    ;;
+    ;; TODO Replace this with better logic?
+    (if (= current-monitor-width 1792)
+        (setq-local num-windows 1))
+
     (my-set-frame-width-by-window-count num-windows)
 
     (set-frame-height (selected-frame)

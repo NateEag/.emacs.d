@@ -908,6 +908,7 @@ With this alias I hope to not need to remember it.")
   )
 
 (use-package conf-mode
+  :mode "\\.service\\'"
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
   ;; more-specific regex, it should probably open in conf-mode.
   ;;

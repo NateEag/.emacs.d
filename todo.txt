@@ -35,6 +35,10 @@
   but it does not seem to have any effect there, so I need to understand
   flyspell better.
 
+- Keep a history of caught spelling errors, so I can correct words I get wrong
+  regularly. This is really a spellchecker feature request, not an Emacs thing,
+  but Emacs is mostly where I use my spellchecker.
+
 - Get aggressive-fill-paragraph-mode working in php-mode without horrible
   slowdowns when typing multiline comments (seemingly due to buffer indent
   attempts, as I see buffer indents happening after almost every keystroke).

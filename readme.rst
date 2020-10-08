@@ -170,6 +170,8 @@ Ansible-specific poly-mode and lsp-mode + `yaml-language-server
 definitely some massaging to do, but it makes Ansible development much less
 painful.
 
+I'm starting an experiment in using `chemacs <https://github.com/plexus/chemacs>`__ to let me swap between profiles, so I can try out different setups. I'm curious about Doom, and I'd also like a simple way to write bug reproduction scripts starting with the huge collection of packages my heavily-customized setup uses, and I think it might just be the ticket.
+
 Look in todo.txt and tell me about entries that can be resolved by turning on
 built-in features. I've found a few and would not mind finding more.
 

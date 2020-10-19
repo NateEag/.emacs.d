@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200824.1246
-;; Package-Commit: 7e4c56776f811f78b8eb95210156f8fbbdba67e7
+;; Package-Version: 20200922.1006
+;; Package-Commit: b65e401c22ec56a008b00f651cd9536caf593d43
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -1809,9 +1809,16 @@ currently checked out."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-DEL") 'counsel-up-directory)
     (define-key map (kbd "C-<backspace>") 'counsel-up-directory)
-    (define-key map (kbd "`") (ivy-make-magic-action 'counsel-find-file "b"))
+    (define-key map (kbd "`") #'counsel-file-jump-from-find)
+    (define-key map (kbd "C-`") (ivy-make-magic-action 'counsel-find-file "b"))
     (define-key map [remap undo] 'counsel-find-file-undo)
     map))
+
+(defun counsel-file-jump-from-find ()
+  "Switch to `counsel-file-jump' from `counsel-find-file'."
+  (interactive)
+  (ivy-quit-and-run
+    (counsel-file-jump ivy-text)))
 
 (when (executable-find "git")
   (add-to-list 'ivy-ffap-url-functions 'counsel-github-url-p)

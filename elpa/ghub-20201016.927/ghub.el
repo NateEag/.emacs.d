@@ -723,7 +723,8 @@ and call `auth-source-forget+'."
               (concat "Basic "
                       (base64-encode-string
                        (concat username ":"
-                               (ghub--token host username auth nil forge))))
+                               (ghub--token host username auth nil forge))
+                       t))
             (concat
              (and (not (eq forge 'gitlab)) "token ")
              (encode-coding-string
@@ -757,7 +758,7 @@ and call `auth-source-forget+'."
                 (and (not nocreate)
                      (error "\
 Required %s token (%S for %S) does not exist.
-See https://magit.vc/manual/ghub/Getting Started.html
+See https://magit.vc/manual/ghub/Getting-Started.html
 or (info \"(ghub)Getting Started\") for instructions.
 (The setup wizard no longer exists.)"
                             (capitalize (symbol-name (or forge 'github)))

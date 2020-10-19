@@ -1,3 +1,4 @@
+;;; -*- lexical-binding: t -*-
 ;;; sublimity.el --- smooth-scrolling, minimap and distraction-free mode
 
 ;; Copyright (C) 2013- zk_phi
@@ -19,7 +20,7 @@
 ;; Author: zk_phi
 ;; URL: https://github.com/zk-phi/sublimity
 ;; Version: 1.1.5
-;; Package-Requires: ((cl-lib "0.3") (emacs "26.1"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;;; Commentary:
 
@@ -54,8 +55,6 @@
 ;;       update window margins when frame size changes
 
 ;;; Code:
-
-(require 'cl-lib)
 
 (defconst sublimity-version "1.1.5")
 
@@ -114,6 +113,7 @@
          (add-hook 'post-command-hook 'sublimity--post-command t)
          (add-hook 'window-configuration-change-hook 'sublimity--window-change t)
          (add-hook 'window-size-change-functions 'sublimity--window-change t)
+         (add-hook 'window-buffer-change-functions 'sublimity--window-change t)
          (add-hook 'window-setup-hook 'sublimity--window-change t)
          (run-hooks 'sublimity-mode-hook))
         (t
@@ -121,6 +121,7 @@
          (remove-hook 'post-command-hook 'sublimity--post-command)
          (remove-hook 'window-configuration-change-hook 'sublimity--window-change)
          (remove-hook 'window-size-change-functions 'sublimity--window-change)
+         (remove-hook 'window-buffer-change-functions 'sublimity--window-change)
          (remove-hook 'window-setup-hook 'sublimity--window-change)
          (run-hooks 'sublimity-mode-turn-off-hook)
          (setq auto-hscroll-mode sublimity-auto-hscroll-mode))))
@@ -136,8 +137,8 @@
 (defun sublimity--run-hooks (hook &optional arg)
   (let* ((sublimity--window-change-functions nil))
     (if arg
-        (run-hook-with-args 'hook arg)
-      (run-hooks 'hook))))
+        (run-hook-with-args hook arg)
+      (run-hooks hook))))
 
 (defun sublimity--horizontal-recenter ()
   ;; NOT accurate for some propertized texts.
@@ -156,7 +157,7 @@
         sublimity--prev-buf (current-buffer)
         sublimity--prev-wnd (selected-window)
         sublimity--prepared t)
-  (sublimity--run-hooks sublimity--pre-command-functions))
+  (sublimity--run-hooks 'sublimity--pre-command-functions))
 
 (defun sublimity--post-command ()
   ;; avoid running post-command multiple times
@@ -165,8 +166,9 @@
     (let ((handle-scroll (and (eq sublimity--prev-buf (current-buffer))
                               (eq sublimity--prev-wnd (selected-window))
                               (not (memq major-mode sublimity-disabled-major-modes))
-                              (cl-every (lambda (x) (not (and (boundp x) (symbol-value x))))
-                                        sublimity-disabled-minor-modes)
+                              (not (delq nil
+                                         (mapcar (lambda (x) (and (boundp x) (symbol-value x)))
+                                                 sublimity-disabled-minor-modes)))
                               (not (memq this-command sublimity-ignored-scroll-commands)))))
       (when handle-scroll
         (let (deactivate-mark)
@@ -183,19 +185,19 @@
                             (current-column))))
             (sublimity--horizontal-recenter))))
       ;; call post-command functions
-      (sublimity--run-hooks sublimity--post-command-functions)
+      (sublimity--run-hooks 'sublimity--post-command-functions)
       ;; animation
       (when handle-scroll
         (let ((lins (- (line-number-at-pos (window-start))
                        sublimity--prev-lin))
               (cols (- (window-hscroll) sublimity--prev-col)))
           (when (not (zerop lins))
-            (sublimity--run-hooks sublimity--post-vscroll-functions lins))
+            (sublimity--run-hooks 'sublimity--post-vscroll-functions lins))
           (when (not (zerop cols))
-            (sublimity--run-hooks sublimity--post-hscroll-functions cols)))))))
+            (sublimity--run-hooks 'sublimity--post-hscroll-functions cols)))))))
 
 (defun sublimity--window-change (&optional _)
-  (sublimity--run-hooks sublimity--window-change-functions))
+  (run-hooks 'sublimity--window-change-functions))
 
 ;; * provide
 

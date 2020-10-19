@@ -13,6 +13,9 @@
 (autoload 'goto-line-preview "goto-line-preview" "\
 Preview goto line." t nil)
 
+(autoload 'goto-line-preview-relative "goto-line-preview" "\
+Preview goto line relative." t nil)
+
 (define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "goto-line-preview" '("goto-line-preview-")))

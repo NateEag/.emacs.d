@@ -4,7 +4,7 @@
 
 ;; Author: David Engster <deng@randomsample.de>
 ;; Keywords:
-;; Version: 1.3
+;; Version: 1.4
 
 ;; This file is part of GNU Emacs.
 
@@ -531,7 +531,8 @@ Re-use already existing minimap window if possible."
   (interactive)
   (when (minimap-get-window)
     (delete-window (minimap-get-window)))
-  (cancel-timer minimap-timer-object))
+  (when minimap-timer-object
+    (cancel-timer minimap-timer-object)))
 
 ;;; Minimap update
 
@@ -933,6 +934,13 @@ TAGS is the list of tags.  If it is t, fetch tags from buffer."
 
 ;;;; ChangeLog:
 
+;; 2020-09-13  Adam Spiers	 <emacs@adamspiers.org>
+;; 
+;; 	Check whether timer exists before killing it in minimap
+;; 
+;; 	* packages/minimap/minimap.el (minimap-kill): Check whether the timer
+;; 	exists before killing it.  This avoids signalling an error.
+;; 
 ;; 2020-05-09  David Engster  <deng@randomsample.de>
 ;; 
 ;; 	[minimap] Upgrade to version 1.3

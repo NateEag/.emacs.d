@@ -56,7 +56,8 @@ See `auto-complete-mode' for more information on Auto-Complete mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from auto-complete-config.el
 
-(autoload 'ac-config-default "auto-complete-config" nil nil nil)
+(autoload 'ac-config-default "auto-complete-config" "\
+No documentation." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-complete-config" '("ac-")))
 

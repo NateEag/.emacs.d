@@ -6,9 +6,9 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Automatically rename paired HTML/XML tag.
 ;; Keyword: auto-complete html rename tag xml
-;; Version: 0.3.2
-;; Package-Version: 20200827.850
-;; Package-Commit: 38428092bcd26d32ec6de4f1e71956f2742d2fde
+;; Version: 0.3.5
+;; Package-Version: 20201012.630
+;; Package-Commit: 88c5236280ff8212ff5c74f3e2e654c1a288dbf2
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/auto-rename-tag
 
@@ -327,60 +327,60 @@ DIRECT can be either only 'backward and 'forward."
     ;; Get nested count.
     (setq nested-count
           (cl-case direct
-            ('backward (auto-rename-tag--backward-count-nested-close-tag auto-rename-tag--record-prev-word))
-            ('forward (auto-rename-tag--forward-count-nested-open-tag auto-rename-tag--record-prev-word))))
+            (backward (auto-rename-tag--backward-count-nested-close-tag auto-rename-tag--record-prev-word))
+            (forward (auto-rename-tag--forward-count-nested-open-tag auto-rename-tag--record-prev-word))))
 
     ;; Resolve nested.
     (while (not (= nested-count 0))
       (setq nested-count (- nested-count 1))
       (cl-case direct
-        ('backward
+        (backward
          (auto-rename-tag--goto-backward-tag-name auto-rename-tag--record-prev-word)
          (auto-rename-tag--goto-backward-tag-name auto-rename-tag--record-prev-word))
-        ('forward
+        (forward
          (auto-rename-tag--goto-forward-tag-name auto-rename-tag--record-prev-word)
          (auto-rename-tag--goto-forward-tag-name auto-rename-tag--record-prev-word))))
 
     ;; Goto the target pair.
     (cl-case direct
-      ('backward
+      (backward
        (auto-rename-tag--goto-backward-tag-name auto-rename-tag--record-prev-word))
-      ('forward
+      (forward
        (auto-rename-tag--goto-forward-tag-name auto-rename-tag--record-prev-word)
        (ignore-errors (forward-char 1))))
 
     (setq is-closing-tag (auto-rename-tag--is-closing-tag-p))
 
     (cl-case direct
-      ('backward
+      (backward
        (when is-closing-tag (auto-rename-tag--resolve-nested direct)))
-      ('forward
+      (forward
        (unless is-closing-tag (auto-rename-tag--resolve-nested direct))))))
 
 (defun auto-rename-tag--disabled-minor-modes-p ()
   "Check currently any disabled minor mode active.
 Return non-nil, if there is at least one minor mode active.
 Return nil, meaning is safe to do rename tag action."
-  (let ((ret t) (index 0) m-mode)
-    (while (and ret
+  (let ((index 0) ret m-mode)
+    (while (and (not ret)
                 (< index (length auto-rename-tag-disabled-minor-modes)))
-      (setq m-mode (nth index auto-rename-tag-disabled-minor-modes))
-      (setq ret (if (fboundp m-mode) (not (symbol-value m-mode)) t))
+      (setq m-mode (nth index auto-rename-tag-disabled-minor-modes)
+            ret (ignore-errors (symbol-value m-mode)))
       (setq index (1+ index)))
     ret))
 
 (defun auto-rename-tag--valid-do-p ()
   "See if current change are valid to do rename tag action."
   (and (not undo-in-progress)
-       (auto-rename-tag--disabled-minor-modes-p)
+       (not (auto-rename-tag--disabled-minor-modes-p))
        (not (memq this-command auto-rename-tag-disabled-commands))
        (auto-rename-tag--inside-tag-p)
        (not (auto-rename-tag--self-tag-p))))
 
 (defun auto-rename-tag--before-action ()
   "Before rename core action."
-  (setq auto-rename-tag--record-prev-word "")  ; Reset record.
-  (setq auto-rename-tag--pre-command-activated nil)  ; Reset flag.
+  (setq auto-rename-tag--record-prev-word ""  ; Reset record.
+        auto-rename-tag--pre-command-activated nil)  ; Reset flag.
 
   (when (auto-rename-tag--valid-do-p)
     ;; Set active flag.

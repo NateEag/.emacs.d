@@ -126,7 +126,7 @@ This forces Vagrant to refresh its cache for each machine."
     (define-key map "c" #'magrant-machine-config)
 
     (define-key map "p" #'magrant-machine-provision)
-    (define-key map "s" #'magrant-machine-up)
+    (define-key map "u" #'magrant-machine-up)
     (define-key map "H" #'magrant-machine-halt)
     (define-key map "S" #'magrant-machine-suspend)
 
@@ -159,7 +159,7 @@ This forces Vagrant to refresh its cache for each machine."
 
    ("p" "Provision" magrant-machine-provision)
 
-   ("s" "Up (start)" magrant-machine-up)
+   ("u" "Up (start)" magrant-machine-up)
    ("H" "Halt" magrant-machine-halt)
    ("S" "Suspend" magrant-machine-suspend)
 
@@ -225,7 +225,7 @@ This forces Vagrant to refresh its cache for each machine."
   "Transient for starting machines."
   :man-page "magrant-machine-up"
   [:description magrant-utils-generic-actions-heading
-                ("s" "Start" magrant-machine-generic-action-async)])
+                ("u" "Start" magrant-machine-generic-action-async)])
 
 (magrant-utils-transient-define-prefix magrant-machine-halt ()
   "Transient for halting machines."

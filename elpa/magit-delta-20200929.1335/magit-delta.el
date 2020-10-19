@@ -2,8 +2,8 @@
 
 ;; Author: Dan Davison <dandavison7@gmail.com>
 ;; URL: https://github.com/dandavison/magit-delta
-;; Package-Version: 20200518.2205
-;; Package-Commit: d988abd99882c6b89f21f2746f721a4d7ece6ad4
+;; Package-Version: 20200929.1335
+;; Package-Commit: b8526f890415374822514e488341d2b706d6bc2f
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "25.1") (magit "20200426") (xterm-color "2.0"))
 
@@ -71,8 +71,7 @@ will be added if not present.")
   "Use Delta when displaying diffs in Magit.
 
 https://github.com/dandavison/delta"
-  :lighter " Magit-Δ"
-  :global t
+  :lighter " Δ"
   (let ((magit-faces-to-override
          '(magit-diff-context-highlight
            magit-diff-added

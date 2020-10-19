@@ -9,16 +9,6 @@
 ;;;### (autoloads nil "magit-delta" "magit-delta.el" (0 0 0 0))
 ;;; Generated autoloads from magit-delta.el
 
-(defvar magit-delta-mode nil "\
-Non-nil if Magit-Delta mode is enabled.
-See the `magit-delta-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `magit-delta-mode'.")
-
-(custom-autoload 'magit-delta-mode "magit-delta" nil)
-
 (autoload 'magit-delta-mode "magit-delta" "\
 Use Delta when displaying diffs in Magit.
 

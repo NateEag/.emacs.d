@@ -25,7 +25,9 @@
 ;;; Code:
 
 (require 'dap-mode)
+(require 'dap-ui)
 (require 'lsp-mode)
+(require 'lsp-treemacs)
 (require 'tooltip)
 
 (defface  dap-mouse-eval-thing-face
@@ -47,7 +49,8 @@ applied with lower priority than the syntax highlighting."
         :min-height 10)
   "The properties which will be used for creating the `posframe'.")
 
-(defconst dap-mouse-buffer "*dap-mouse*")
+(defconst dap-mouse-buffer "*dap-mouse*"
+  "Buffer name for `dap-mouse'.")
 
 (defun dap-mouse--hide-popup? ()
   (let ((buffer-under-mouse (window-buffer (cl-first (window-list (cl-first (mouse-position))))))
@@ -57,7 +60,9 @@ applied with lower priority than the syntax highlighting."
              (eq buffer-under-mouse popup-buffer)))))
 
 (defcustom dap-mouse-popup-timeout 0.3
-  "The time to wait after command before hiding the popup.")
+  "The time to wait after command before hiding the popup."
+  :type 'float
+  :group 'dap-mouse)
 
 ;;;###autoload
 (define-minor-mode dap-tooltip-mode
@@ -190,29 +195,32 @@ This function must return nil if it doesn't handle EVENT."
         (dap--send-message
          (dap--make-request "evaluate"
                             (list :expression expression
-                                  :frameId active-frame-id))
+                                  :frameId active-frame-id
+                                  :context "hover"))
          (-lambda ((&hash "message" "body" (var &as &hash? "result")))
            (when (= request-id dap-tooltip--request)
              (if result
                  (progn
                    (add-text-properties start end
                                         '(mouse-face dap-mouse-eval-thing-face))
-                   (apply #'posframe-show
-                          (with-current-buffer (get-buffer-create dap-mouse-buffer)
-                            (lsp-treemacs-render
-                             (-let [(&hash "result" "variablesReference" variables-reference) var]
-                               `((:key ,expression
-                                       :label ,result
-                                       :icon dap-field
-                                       :children ,(dap-ui-render-variables
-                                                   debug-session
-                                                   variables-reference nil))))
-                             ""
-                             nil
-                             (buffer-name)))
+                   (when (get-buffer dap-mouse-buffer)
+                     (kill-buffer dap-mouse-buffer))
+                   (apply #'posframe-show dap-mouse-buffer
                           :position start
                           :accept-focus t
                           dap-mouse-posframe-properties)
+                   (with-current-buffer (get-buffer-create dap-mouse-buffer)
+                     (lsp-treemacs-render
+                      (-let [(&hash "result" "variablesReference" variables-reference) var]
+                        `((:key ,expression
+                                :label ,result
+                                :icon dap-field
+                                :children ,(dap-ui-render-variables
+                                            debug-session
+                                            variables-reference nil))))
+                      ""
+                      nil
+                      (buffer-name)))
                    (add-hook 'post-command-hook 'dap-tooltip-post-tooltip))
                (message message))))
          debug-session))))

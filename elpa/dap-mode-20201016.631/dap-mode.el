@@ -48,6 +48,74 @@
   :group 'dap-mode
   :type 'boolean)
 
+(defcustom dap-external-terminal '("xterm" "-T" "{title}"
+                                   "-hold" "-e" "sh" "-c" "exec {command}")
+  "Command to launch the external terminal for debugging.
+When specifying that the program be run in an external terminal,
+this command is used to launch it. It shall be a list of strings,
+the first of which is the program to run and the rest of which
+are arguments to pass to it. Special expansion is performed:
+
+{command} will be replaced with the program to execute.
+{display} will be replaced with window title.
+
+See also `dap-default-terminal-kind'."
+  :group 'dap-mode
+  :type '(repeat string))
+
+(defun dap--make-terminal-buffer (title debug-session)
+  "Generate an internal terminal buffer.
+The name is derived from TITLE and DEBUG-SESSION. This function
+should be used in `dap-internal-terminal-*'."
+  (generate-new-buffer
+   (format "*%s %s*"
+           (dap--debug-session-name debug-session)
+           (if title (concat "- " title) "console"))))
+
+(declare-function vterm-mode "ext:vterm" (&optional arg))
+(defvar vterm-shell)
+(defvar vterm-kill-buffer-on-exit)
+
+(defun dap-internal-terminal-vterm (command title debug-session)
+  (with-current-buffer (dap--make-terminal-buffer title debug-session)
+    (require 'vterm)
+    (let ((vterm-shell command)
+          (vterm-kill-buffer-on-exit nil))
+      (vterm-mode)
+      ;; TODO: integrate into dap-ui
+      (display-buffer (current-buffer)))))
+
+(defun dap-internal-terminal-shell (command title debug-session)
+  (let ((buf (dap--make-terminal-buffer title debug-session)))
+    (async-shell-command command buf buf)))
+
+(defun dap-internal-terminal-auto (command title debug-session)
+  "Run COMMAND with an auto-detected terminal.
+If `vterm' is loaded or auto-loaded, use vterm. Otherwise, use
+`async-shell-command'."
+  ;; NOTE: 'vterm is autoloaded. This means that (fboundp 'vterm) will yield t
+  ;; even before vterm is loaded.
+  (if (fboundp 'vterm)
+      (dap-internal-terminal-vterm command title debug-session)
+    (dap-internal-terminal-shell command title debug-session)))
+
+(defcustom dap-internal-terminal #'dap-internal-terminal-auto
+  "Terminal used with :console \"integratedTerminal\".
+It is a function that shall take three arguments: the command to
+run, as a string, the title from the debug adapter (may be nil)
+and the debug session and it should execute COMMAND. Aside from
+that, it can do anything and is itself responsible for displaying
+any buffers, ....
+
+If you are looking at implementing your own such function, see
+also `dap--make-terminal-buffer'."
+  :group 'dap-mode
+  :type '(radio
+          (const :tag "auto-detect" :value dap-internal-terminal-auto)
+          (const :tag "vterm" :value dap-internal-terminal-vterm)
+          (const :tag "asnyc-shell" :value dap-internal-terminal-shell)
+          (function :tag "Custom function")))
+
 (defcustom dap-output-buffer-filter '("stdout" "stderr")
   "If non-nil, a list of output types to display in the debug output buffer."
   :group 'dap-mode
@@ -175,8 +243,9 @@ The hook will be called with the session file and the new set of breakpoint loca
 (defvar dap-connect-retry-interval 0.02
   "Retry interval for dap connect.")
 
-(defun dash-expand:&dap-session (key source)
-  `(,(intern-soft (format "dap--debug-session-%s" (eval key) )) ,source))
+(eval-and-compile
+  (defun dash-expand:&dap-session (key source)
+    `(,(intern-soft (format "dap--debug-session-%s" (eval key))) ,source)))
 
 (cl-defstruct dap--debug-session
   (name nil)
@@ -214,7 +283,9 @@ The hook will be called with the session file and the new set of breakpoint loca
   (loaded-sources nil)
   (program-proc)
   ;; Optional metadata to set and get it.
-  (metadata (make-hash-table :test 'eql)))
+  (metadata (make-hash-table :test 'eql))
+  ;; when t the output already has been displayed for this buffer.
+  (output-displayed))
 
 (cl-defstruct dap--parser
   (waiting-for-response nil)
@@ -776,7 +847,12 @@ will be reversed."
 
   (run-hook-with-args 'dap-stack-frame-changed-hook debug-session)
   (run-hook-with-args 'dap-terminated-hook debug-session)
-  (dap--refresh-breakpoints))
+  (dap--refresh-breakpoints)
+
+  (when-let ((cleanup-fn (plist-get
+                          (dap--debug-session-launch-args debug-session)
+                          :cleanup-function)))
+    (funcall cleanup-fn debug-session)))
 
 (defun dap--output-buffer-format-with-category (category output)
   "Formats a string suitable for printing to the output buffer using CATEGORY and OUTPUT."
@@ -807,7 +883,11 @@ will be reversed."
         (save-excursion
           (dap--insert-at-point-max str))
       (dap--insert-at-point-max str))
-    (setq-local buffer-read-only t)))
+    (setq-local buffer-read-only t))
+  (when (and dap-auto-show-output
+             (not (dap--debug-session-output-displayed debug-session)))
+    (setf (dap--debug-session-output-displayed debug-session) t)
+    (save-excursion (dap-go-to-output-buffer t))))
 
 (cl-defgeneric dap-handle-event (event-type session params)
   "Extension point for handling custom events.
@@ -894,6 +974,64 @@ PARAMS are the event params.")
          (run-hook-with-args 'dap-loaded-sources-changed-hook debug-session)))
       (_ (dap-handle-event (intern event-type) debug-session body)))))
 
+(defcustom dap-default-terminal-kind "integrated"
+  "Default terminal type used for :console."
+  :type '(radio
+          (const :tag "Terminal within Emacs" :value "integrated")
+          (const :tag "External terminal program (`dap-external-terminal')"
+                 :value "external"))
+  :group 'dap-mode)
+
+(defun dap--start-process (debug-session parsed-msg)
+  (-let* (((&hash "arguments" (&hash? "args" "cwd" "title" "kind") "seq")
+           parsed-msg)
+          (default-directory cwd)
+          (command-to-run (string-join args " "))
+          (kind (or kind dap-default-terminal-kind)))
+    (or
+     (when (string= kind "external")
+       (let* ((name (or title (concat (dap--debug-session-name debug-session)
+                                     "- terminal")))
+              (terminal-argv
+               (cl-loop for part in dap-external-terminal collect
+                        (->> part (s-replace "{display}" name)
+                             (s-replace "{command}" command-to-run)))))
+         (when
+             (condition-case-unless-debug err
+                 (progn (apply #'start-process name name terminal-argv) t)
+               (error (lsp--warn
+                       "dap-debug: failed to start external
+terminal: %S (launch command was: \"%s\"). Set
+`dap-external-terminal' to the correct value or install the
+terminal configured (probably xterm)."
+                       (error-message-string err)
+                       (mapconcat #'shell-quote-argument terminal-argv " "))
+                      ;; we did *not* succeed; use the integrated terminal
+                      ;; instead
+                      nil))
+           ;; NOTE: we cannot know the process id of the started
+           ;; application.
+           (dap--send-message (dap--make-success-response
+                               seq "runInTerminal")
+                              ;; NOTE: assuming that the terminal starts the
+                              ;; application without another subshell
+                              (dap--resp-handler) debug-session)
+           ;; success; don't use the integrated terminal
+           t)))
+     ;; integrated terminal *or* the external terminal could not be executed
+     ;; (file error).
+     (when (or (string= kind "integrated") (string= kind "external"))
+       (funcall dap-internal-terminal command-to-run title debug-session)
+       ;; NOTE: we don't know the PID of the shell that ran the process and we
+       ;; don't know the PID of the started process.
+       (dap--send-message (dap--make-success-response seq "runInTerminal")
+                          (dap--resp-handler) debug-session)
+       ;; success
+       t)
+     (dap--send-message (dap--make-error-response
+                         seq "runInTerminal" nil
+                         (format "unknown terminal kind %s" kind))
+                        (dap--resp-handler) debug-session))))
 
 (defun dap--create-filter-function (debug-session)
   "Create filter function for DEBUG-SESSION."
@@ -916,15 +1054,7 @@ PARAMS are the event params.")
                                                         debug-session
                                                         (gethash "command" parsed-msg)))
                                 (message "Unable to find handler for %s." (pp parsed-msg))))
-                  ("request" (-let* (((&hash "arguments"
-                                             (&hash? "args" "cwd")
-                                             "seq")
-                                      parsed-msg)
-                                     (default-directory cwd))
-                               (async-shell-command (s-join " " args))
-                               (dap--send-message (dap--make-response seq)
-                                                  (dap--resp-handler)
-                                                  debug-session))))))
+                  ("request" (dap--start-process debug-session parsed-msg)))))
             (dap--parser-read parser msg)))))
 
 (defun dap--create-output-buffer (session-name)
@@ -943,11 +1073,25 @@ PARAMS are the event params.")
     (list :command command
           :type "request")))
 
-(defun dap--make-response (id &optional _args)
-  "Make request with ID and arguments ARGS."
-  (list :request_seq id
-        :success t
-        :type "response"))
+(defun dap--make-response (id command success &optional body message)
+  (nconc (list :type "response" :request_seq id :success success
+               :command command)
+         (when message (list :message message))
+         (when body (list :body body))))
+
+(defun dap--make-success-response (id command &optional body message)
+  "Make a successful DAP response.
+The result is aplist usable with `json-encode'. ID, COMMAND, BODY
+and MESSAGE correspond to \"request_seq\", \"command\", \"body\"
+and \"message\". Consult the DAP protocol specification for
+details."
+  (dap--make-response id command t body message))
+
+(defun dap--make-error-response (id command &optional body message)
+  "Like `dap--make-success-response', but for failure.
+In the future, this function may do logging, call `user-error',
+etc...."
+  (dap--make-response id command nil body message))
 
 (defun dap--initialize-message (adapter-id)
   "Create initialize message.
@@ -1090,6 +1234,7 @@ DEBUG-SESSION is the active debug session."
         (run-hooks 'dap-breakpoints-changed-hook)))))
 
 (defun dap--breakpoint-filter-enabled (filter type default)
+  (defvar dap-exception-breakpoints) ;; NOTE: always called with dap-ui loaded
   (alist-get filter
              (alist-get type dap-exception-breakpoints nil nil #'equal)
              default
@@ -1151,7 +1296,8 @@ RESULT to use for the callback."
         (dap--send-message
          (dap--make-request "evaluate"
                             (list :expression expression
-                                  :frameId active-frame-id))
+                                  :frameId active-frame-id
+                                  :context "hover"))
          (-lambda ((&hash "success" "message" "body"))
            (dap-overlays--display-interactive-eval-result
             (if success (gethash "result" body) message)
@@ -1220,7 +1366,7 @@ DEBUG-SESSIONS - list of the currently active sessions."
                                  (get-buffer-window-list))))
                        (current-buffer)))
 
-(defun dap-start-debugging (launch-args)
+(defun dap-start-debugging-noexpand (launch-args)
   "Start debug session with LAUNCH-ARGS.
 Special arguments:
 
@@ -1229,10 +1375,9 @@ should be started after the :port argument is taken.
 
 :program-to-start - when set it will be started using `compilation-start'
 before starting the debug process."
-  (setq launch-args (dap-variables-expand-in-launch-configuration launch-args))
   (-let* (((&plist :name :skip-debug-session :cwd :program-to-start
                    :wait-for-port :type :request :port
-                   :environment-variables :hostName host) launch-args)
+                   :startup-function :environment-variables :hostName host) launch-args)
           (session-name (dap--calculate-unique-name name (dap--get-sessions)))
           (default-directory (or cwd default-directory))
           program-process)
@@ -1240,13 +1385,14 @@ before starting the debug process."
     (plist-put launch-args :name session-name)
 
     (when program-to-start
-
       (setf program-process
             (get-buffer-process
              (compilation-start program-to-start 'dap-server-log-mode
                                 (lambda (_) (concat "*" session-name " server log*"))))))
     (when wait-for-port
       (dap--wait-for-port host port dap-connect-retry-count dap-connect-retry-interval))
+
+    (when startup-function (funcall startup-function launch-args))
 
     (unless skip-debug-session
       (let ((debug-session (dap--create-session launch-args)))
@@ -1262,16 +1408,29 @@ before starting the debug process."
 
               (dap--set-sessions (cons debug-session debug-sessions)))
             (dap--send-message
-             (dap--make-request request launch-args)
+             (dap--make-request request (-> launch-args
+                                            (cl-copy-list)
+                                            (dap--plist-delete :cleanup-function)
+                                            (dap--plist-delete :startup-function)
+                                            (dap--plist-delete :dap-server-path)
+                                            (dap--plist-delete :environment-variables)
+                                            (dap--plist-delete :wait-for-port)
+                                            (dap--plist-delete :skip-debug-session)
+                                            (dap--plist-delete :program-to-start)))
              (dap--session-init-resp-handler debug-session)
              debug-session)))
          debug-session)
 
         (dap--set-cur-session debug-session)
         (push (cons session-name launch-args) dap--debug-configuration)
-        (run-hook-with-args 'dap-session-created-hook debug-session))
-      (when (and dap-auto-show-output)
-        (save-excursion (dap-go-to-output-buffer))))))
+        (run-hook-with-args 'dap-session-created-hook debug-session)))))
+
+(defun dap-start-debugging (conf)
+  "Like `dap-start-debugging-noexpand', but expand variables.
+CONF's variables are expanded before being passed to
+`dap-start-debugging'."
+  (dap-start-debugging-noexpand
+   (dap-variables-expand-in-launch-configuration conf)))
 
 (defun dap--set-breakpoints-in-file (file file-breakpoints)
   "Establish markers for FILE-BREAKPOINTS in FILE."
@@ -1474,6 +1633,7 @@ list are called and their results (which must be lists) are
 concatenated. The user can then choose one of them from the
 resulting list.")
 
+;;;###autoload
 (defun dap-debug (debug-args)
   "Run debug configuration DEBUG-ARGS.
 
@@ -1484,15 +1644,22 @@ after selecting configuration template."
                                                'cl-first nil t)
                          cl-rest
                          copy-tree)))
-  (let ((launch-args (or (-some-> (plist-get debug-args :type)
-                           (gethash dap--debug-providers)
-                           (funcall debug-args))
-                         (user-error "Have you loaded the `%s' specific dap package?"
-                                     (or (plist-get debug-args :type)
-                                         (user-error "%s does not specify :type" debug-args))))))
+  ;; NOTE: the launch configuration must be expanded *before* being passed to a
+  ;; debug provider. This is because some debug providers (e.g. dap-python) pass
+  ;; some fields of DEBUG-ARGS as shell arguments in :program-to-launch and try
+  ;; very hard to quote them. Because of this, `dap-start-debugging' cannot
+  ;; expand them properly. Any python configuration that uses variables in :args
+  ;; will fail.
+  (let* ((debug-args (dap-variables-expand-in-launch-configuration debug-args))
+         (launch-args (or (-some-> (plist-get debug-args :type)
+                            (gethash dap--debug-providers)
+                            (funcall debug-args))
+                          (user-error "Have you loaded the `%s' specific dap package?"
+                                      (or (plist-get debug-args :type)
+                                          (user-error "%s does not specify :type" debug-args))))))
     (if (functionp launch-args)
-        (funcall launch-args #'dap-start-debugging)
-      (dap-start-debugging launch-args))))
+        (funcall launch-args #'dap-start-debugging-noexpand)
+      (dap-start-debugging-noexpand launch-args))))
 
 (defun dap-debug-edit-template (&optional debug-args)
   "Edit registered template DEBUG-ARGS.
@@ -1543,14 +1710,14 @@ normally with `dap-debug'"
        cl-rest
        dap-debug))
 
-(defun dap-go-to-output-buffer ()
+(defun dap-go-to-output-buffer (&optional no-select)
   "Go to output buffer."
   (interactive)
   (let ((win (display-buffer-in-side-window
               (dap--debug-session-output-buffer (dap--cur-session-or-die))
               `((side . bottom) (slot . 5) (window-width . 0.20)))))
     (set-window-dedicated-p win t)
-    (select-window win)
+    (unless no-select (select-window win))
     (fit-window-to-buffer nil dap-output-window-max-height dap-output-window-min-height)))
 
 (defun dap-delete-session (debug-session)
@@ -1563,7 +1730,7 @@ If the current session it will be terminated."
                             (dap--set-sessions))
                        (when (eq (dap--cur-session) debug-session)
                          (dap--switch-to-session nil))
-                       (-when-let (buffer (dap--debug-session-output-buffer debug-session))
+                       (when-let (buffer (dap--debug-session-output-buffer debug-session))
                          (kill-buffer buffer))
                        (dap--refresh-breakpoints))))
     (if (not (dap--session-running debug-session))
@@ -1571,24 +1738,32 @@ If the current session it will be terminated."
       (dap--send-message (dap--make-request "disconnect"
                                             (list :restart :json-false))
                          (dap--resp-handler
-                          (lambda (_resp) (funcall cleanup-fn)))
+                          (lambda (_resp)
+                            ;; its still alive, so kill its debugger off,
+                            ;; causing the process sentinel from
+                            ;; `dap--create-session' to do its thing. NOTE that
+                            ;; this need not be done if the process isn't alive
+                            ;; (case above), so this was moved here, as a minor
+                            ;; optimization.
+                            (when-let (proc (dap--debug-session-program-proc debug-session))
+                              ;; ensure that `dap-terminated-hook' runs; must be
+                              ;; done before CLEANUP-FN, as otherwise the
+                              ;; process' buffer will be killed before it,
+                              ;; potentially causing weirdness.
+                              (when (process-live-p proc)
+                                ;; The server might have already died due to the
+                                ;; disconnect.
+                                (kill-process proc)))
+                            (funcall cleanup-fn)))
                          debug-session))))
 
 (defun dap-delete-all-sessions ()
   "Terminate/remove all sessions."
   (interactive)
-  (--each (dap--get-sessions)
-    (when (dap--session-running it)
-      (condition-case _err
-          (dap--send-message (dap--make-request "disconnect"
-                                                (list :restart :json-false))
-                             (dap--resp-handler)
-                             it)
-        (error))))
-
-  (dap--set-sessions ())
-  (dap--switch-to-session nil)
-  (dap--refresh-breakpoints))
+  ;; NOTE: this will call `dap-terminated-hook' for each live session; this is
+  ;; correct because `dap-terminated-hook' must be called after each session
+  ;; terminates.
+  (mapc #'dap-delete-session (dap--get-sessions)))
 
 (defun dap-breakpoint-delete-all ()
   "Delete all breakpoints."
@@ -1673,10 +1848,12 @@ point is set."
   :init-value nil
   :global t
   :group 'dap-mode
+  (declare-function dap-ui-mode "dap-ui" (&optional arg))
+  (declare-function dap-ui-many-windows-mode "dap-ui" (&optional arg))
   (cond
    (dap-auto-configure-mode
     (dap-mode 1)
-    (dap-ui-mode 1)
+    (dap-ui-mode 1) ;; NOTE: `dap-ui-mode' is auto-loaded
     (seq-doseq (feature dap-auto-configure-features)
       (when-let (mode (alist-get feature dap-features->modes))
         (if (consp mode)

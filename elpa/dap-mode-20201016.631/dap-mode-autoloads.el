@@ -13,6 +13,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "dap-cpptools" "dap-cpptools.el" (0 0 0 0))
+;;; Generated autoloads from dap-cpptools.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-cpptools" '("dap-cpptools-")))
+
+;;;***
+
 ;;;### (autoloads nil "dap-edge" "dap-edge.el" (0 0 0 0))
 ;;; Generated autoloads from dap-edge.el
 
@@ -75,6 +82,14 @@ Run `dap-hydra/body'." t nil)
 ;;;### (autoloads nil "dap-mode" "dap-mode.el" (0 0 0 0))
 ;;; Generated autoloads from dap-mode.el
 
+(autoload 'dap-debug "dap-mode" "\
+Run debug configuration DEBUG-ARGS.
+
+If DEBUG-ARGS is not specified the configuration is generated
+after selecting configuration template.
+
+\(fn DEBUG-ARGS)" t nil)
+
 (defvar dap-mode nil "\
 Non-nil if Dap mode is enabled.
 See the `dap-mode' command
@@ -115,7 +130,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mode" '("dap-" "dash-expand:&dap-session")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mode" '("dap-")))
 
 ;;;***
 
@@ -143,6 +158,13 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 \(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mouse" '("dap-")))
+
+;;;***
+
+;;;### (autoloads nil "dap-netcore" "dap-netcore.el" (0 0 0 0))
+;;; Generated autoloads from dap-netcore.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-netcore" '("dap-netcore-")))
 
 ;;;***
 
@@ -245,17 +267,12 @@ Show auto configured feature windows." t nil)
 (autoload 'dap-ui-hide-many-windows "dap-ui" "\
 Hide all debug windows when sessions are dead." t nil)
 
+(autoload 'dap-ui-repl "dap-ui" "\
+Start an adapter-specific REPL.
+This could be used to evaluate JavaScript in a browser, to
+evaluate python in the context of the debugee, ...." t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui" '("dap-")))
-
-;;;***
-
-;;;### (autoloads nil "dap-ui-repl" "dap-ui-repl.el" (0 0 0 0))
-;;; Generated autoloads from dap-ui-repl.el
-
-(autoload 'dap-ui-repl "dap-ui-repl" "\
-Start a JavaScript REPL to be evaluated in the visiting browser." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui-repl" '("company-dap-ui-repl" "dap-ui-")))
 
 ;;;***
 

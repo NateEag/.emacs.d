@@ -18,18 +18,18 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-(require 'lsp-mode)
-(require 'json)
-(require 'f)
-(require 'rx)
-
 ;;; Commentary:
 ;; Extend dap-mode with support for launch.json files
 
 ;;; Code:
 
-(defun dap-launch-remove-comments ()
-  "Remove all C-style comments in the current buffer.
+(require 'lsp-mode)
+(require 'json)
+(require 'f)
+(require 'rx)
+
+(defun dap-launch-sanitize-json ()
+  "Remove all C-style comments and trailing commas in the current buffer.
 Comments in strings are ignored. The buffer is modified in place.
 Replacement starts at point, and strings before it are ignored,
 so you may want to move point to `point-min' with `goto-char'
@@ -39,12 +39,15 @@ supported."
           (rx
            (or (group
                 (or (: "//" (* nonl) eol)
-                    (: "/*" (* (or (not ?*) (: (+ ?*) (not ?/)))) (+ ?*) ?/)))
+                    (: "/*" (* (or (not (any ?*))
+                                   (: (+ ?*) (not (any ?/))))) (+ ?*) ?/)
+                    (: "," (group (* (any blank space ?\v ?\u2028 ?\u2029))
+                                  (any ?\} ?\])))))
                (: "\"" (* (or (not (any ?\\ ?\")) (: ?\\ nonl))) "\"")))
           nil t)
     ;; we matched a comment
     (when (match-beginning 1)
-      (replace-match ""))))
+      (replace-match (or (match-string 2) "")))))
 
 (defun dap-launch-find-launch-json ()
   "Return the location of the launch.json file in the current project."
@@ -63,9 +66,9 @@ supported."
              (json-object-type 'plist)
              (json-array-type 'list))
     (with-temp-buffer
-      ;; note: insert-file-contents does not move point
+      ;; NOTE: insert-file-contents does not move point
       (insert-file-contents launch-json)
-      (dap-launch-remove-comments)
+      (dap-launch-sanitize-json)
       ;; dap-launch-remove-comments does move point
       (goto-char (point-min))
 

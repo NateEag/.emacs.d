@@ -27,6 +27,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'dap-mode)
 
 (defcustom dap-python-default-debug-port 32000
@@ -49,10 +50,10 @@ For example you may set it to `xterm -e' which will pop xterm console when you a
   :type 'string)
 
 (defun dap-python--pyenv-executable-find (command)
-  "Find executable taking pyenv shims into account.
+  "Find executable COMMAND, taking pyenv shims into account.
 If the executable is a system executable and not in the same path
-as the pyenv version then also return nil. This works around https://github.com/pyenv/pyenv-which-ext
-"
+as the pyenv version then also return nil. This works around
+https://github.com/pyenv/pyenv-which-ext."
   (if (executable-find "pyenv")
       (progn
         (let ((pyenv-string (shell-command-to-string (concat "pyenv which " command)))
@@ -71,17 +72,17 @@ as the pyenv version then also return nil. This works around https://github.com/
     (executable-find command)))
 
 (cl-defstruct dap-python--point
-  (line (:type integer) :named t)
-  (character (:type integer) :named t))
+  (line nil :type integer)
+  (character nil :type integer))
 
 (cl-defstruct dap-python--location
-  (start (:type dap-python--point) :named t)
-  (end (:type dap-python--point) :named t))
+  (start nil :type dap-python--point)
+  (end nil :type dap-python--point))
 
 (cl-defstruct dap-python--symbol
-  (name (:type string) :named t)
-  (type (:type string) :named t)
-  (location (:type dap-python--location) :named t))
+  (name nil :type string)
+  (type nil :type string)
+  (location nil :type dap-python--location))
 
 (cl-defgeneric dap-python--equal (lhs rhs)
   (:documentation "Check if lhs and rhs are equal"))
@@ -140,28 +141,28 @@ as the pyenv version then also return nil. This works around https://github.com/
 (defun dap-python--test-p (lsp-symbol)
   (let ((name (dap-python--symbol-name lsp-symbol)))
     (and (dap-python--equal (dap-python--symbol-type lsp-symbol) "Function")
-	 (s-starts-with? "test_" name))))
+	       (s-starts-with? "test_" name))))
 
 (defun dap-python--test-class-p (test-symbol lsp-symbol)
   (when (dap-python--equal (dap-python--symbol-type lsp-symbol) "Class")
-      (let* ((class-location (dap-python--symbol-location lsp-symbol))
-	     (class-start-line (-> class-location dap-python--location-start dap-python--point-line))
-	     (class-end-line (-> class-location dap-python--location-end dap-python--point-line))
-	     (test-start-line (-> test-symbol dap-python--symbol-location dap-python--location-start dap-python--point-line)))
-	(and (> test-start-line class-start-line)
-	     (< test-start-line class-end-line)))))
+    (let* ((class-location (dap-python--symbol-location lsp-symbol))
+	         (class-start-line (-> class-location dap-python--location-start dap-python--point-line))
+	         (class-end-line (-> class-location dap-python--location-end dap-python--point-line))
+	         (test-start-line (-> test-symbol dap-python--symbol-location dap-python--location-start dap-python--point-line)))
+	    (and (> test-start-line class-start-line)
+	         (< test-start-line class-end-line)))))
 
 (defun dap-python--nearest-test (lsp-symbols)
   (let* ((reversed (reverse lsp-symbols))
-	 (test-symbol (-first 'dap-python--test-p reversed))
-	 (class-symbol (-first (-partial 'dap-python--test-class-p test-symbol) reversed)))
+	       (test-symbol (-first 'dap-python--test-p reversed))
+	       (class-symbol (-first (-partial 'dap-python--test-class-p test-symbol) reversed)))
     (if (eq nil class-symbol)
-	(concat "::" (dap-python--symbol-name test-symbol))
-        (concat "::" (dap-python--symbol-name class-symbol) "::" (dap-python--symbol-name test-symbol)))))
+	      (concat "::" (dap-python--symbol-name test-symbol))
+      (concat "::" (dap-python--symbol-name class-symbol) "::" (dap-python--symbol-name test-symbol)))))
 
 (defun dap-python--cursor-position ()
   (make-dap-python--point :line (line-number-at-pos)
-			  :character (current-column)))
+			                    :character (current-column)))
 
 (defun dap-python--test-at-point ()
   (->> (lsp--get-document-symbols)
@@ -178,58 +179,78 @@ as the pyenv version then also return nil. This works around https://github.com/
   (interactive)
   (dap-debug (dap-python--template "Python :: Run pytest (at point)")))
 
+(defcustom dap-python-debugger 'ptvsd
+  "Specify which debugger to use for `dap-python'.
+Can be either 'ptvsd or 'debugpy. Note that this setting can be
+overriden in individual `dap-python' launch configurations."
+  :type '(choice (const 'ptvsd) (const 'debugpy))
+  :group 'dap-python)
+
 (defun dap-python--populate-start-file-args (conf)
   "Populate CONF with the required arguments."
-  (let* ((host "localhost")
-         (debug-port (dap--find-available-port))
-         (python-executable (dap-python--pyenv-executable-find dap-python-executable))
-         (python-args (or (plist-get conf :args) ""))
+  (let* ((python-executable (dap-python--pyenv-executable-find dap-python-executable))
+         (python-args (plist-get conf :args))
          (program (or (plist-get conf :target-module)
                       (plist-get conf :program)
                       (buffer-file-name)))
-         (module (plist-get conf :module)))
+         (module (plist-get conf :module))
+         (debugger (plist-get conf :debugger)))
+    (cl-remf conf :debugger)
+    (pcase (or debugger dap-python-debugger)
+      ('ptvsd
+       (let ((host "localhost")
+             (debug-port (dap--find-available-port)))
+         ;; support :args ["foo" "bar"]; NOTE: :args can be nil; however, nil is
+         ;; a list, so it will be mapconcat'ed, yielding the empty string.
+         (when (sequencep python-args)
+           (setq python-args (mapconcat #'shell-quote-argument python-args " ")))
+         (plist-put conf :program-to-start
+                    (format "%s%s -m ptvsd --wait --host %s --port %s%s %s %s"
+                            (or dap-python-terminal "")
+                            (shell-quote-argument python-executable)
+                            host
+                            debug-port
+                            (if module (concat " -m " (shell-quote-argument module)) "")
+                            (shell-quote-argument program)
+                            python-args))
+         (plist-put conf :debugServer debug-port)
+         (plist-put conf :port debug-port)
+         (plist-put conf :hostName host)
+         (plist-put conf :host host)))
+      ('debugpy
+       ;; If certain properties are nil, issues will arise, as debugpy expects
+       ;; them to unspecified instead. Some templates in this file set such
+       ;; properties (e.g. :module) to nil instead of leaving them undefined. To
+       ;; support them, sanitize CONF before passing it on.
+       (when (or (null python-args) (stringp python-args))
+         (cl-remf conf :args))
+       (when (stringp python-args)
+         (let ((args (split-string-and-unquote python-args)))
+           (if args
+               (plist-put conf :args args)
+             ;; :args "" -> :args nil -> {"args": null}; to handle that edge
+             ;; case, use the empty vector instead.
+             (plist-put conf :args []))))
+       (unless program
+         (cl-remf conf :target-module)
+         (cl-remf conf :program))
+       (unless module
+         (cl-remf conf :module))
+       (unless (plist-get conf :cwd)
+         (cl-remf conf :cwd))
 
-    (plist-put conf :program-to-start
-               (format "%s%s -m ptvsd --wait --host %s --port %s %s %s %s"
-                       (or dap-python-terminal "")
-                       (shell-quote-argument python-executable)
-                       host
-                       debug-port
-                       (if module (concat "-m " (shell-quote-argument module)) "")
-                       (shell-quote-argument program)
-                       python-args))
+       (plist-put conf :dap-server-path
+                  (list python-executable "-m" "debugpy.adapter"))))
     (plist-put conf :program program)
-    (plist-put conf :debugServer debug-port)
-    (plist-put conf :port debug-port)
-    (plist-put conf :hostName host)
-    (plist-put conf :host host)
     conf))
 
 (defun dap-python--populate-test-at-point (conf)
   "Populate CONF with the required arguments."
-  (let* ((host "localhost")
-         (debug-port (dap--find-available-port))
-         (python-executable (dap-python--pyenv-executable-find dap-python-executable))
-         (python-args (or (plist-get conf :args) ""))
-         (program (concat (buffer-file-name) (dap-python--test-at-point)))
-         (module (plist-get conf :module)))
+  (plist-put conf :target-module (concat (buffer-file-name)
+                                         (dap-python--test-at-point)))
+  (plist-put conf :cwd (lsp-workspace-root))
 
-    (plist-put conf :program-to-start
-               (format "%s%s -m ptvsd --wait --host %s --port %s %s %s %s"
-                       (or dap-python-terminal "")
-                       (shell-quote-argument python-executable)
-                       host
-                       debug-port
-                       (if module (concat "-m " (shell-quote-argument module)) "")
-                       (shell-quote-argument program)
-                       python-args))
-    (plist-put conf :program program)
-    (plist-put conf :debugServer debug-port)
-    (plist-put conf :port debug-port)
-    (plist-put conf :hostName host)
-    (plist-put conf :host host)
-    (plist-put conf :cwd (lsp-workspace-root))
-    conf))
+  (dap-python--populate-start-file-args conf))
 
 (dap-register-debug-provider "python" 'dap-python--populate-start-file-args)
 (dap-register-debug-template "Python :: Run file (buffer)"
@@ -252,11 +273,11 @@ as the pyenv version then also return nil. This works around https://github.com/
 
 (dap-register-debug-provider "python-test-at-point" 'dap-python--populate-test-at-point)
 (dap-register-debug-template "Python :: Run pytest (at point)"
-			     (list :type "python-test-at-point"
-				   :args ""
-				   :module "pytest"
-				   :request "launch"
-				   :name "Python :: Run pytest (at point)"))
+			                       (list :type "python-test-at-point"
+				                           :args ""
+				                           :module "pytest"
+				                           :request "launch"
+				                           :name "Python :: Run pytest (at point)"))
 
 (provide 'dap-python)
 ;;; dap-python.el ends here

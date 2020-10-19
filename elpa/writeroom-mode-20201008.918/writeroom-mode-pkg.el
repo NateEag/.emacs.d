@@ -1,7 +1,7 @@
-(define-package "writeroom-mode" "20200519.37" "Minor mode for distraction-free writing"
-  '((emacs "24.1")
+(define-package "writeroom-mode" "20201008.918" "Minor mode for distraction-free writing"
+  '((emacs "25.1")
     (visual-fill-column "1.9"))
-  :commit "8a226a31a12a9203067094774ba6fd6175793e70" :keywords
+  :commit "e7fba5c6dd6db28fface74d6a3de7245aff50df7" :keywords
   '("text")
   :authors
   '(("Joost Kremers" . "joostkremers@fastmail.fm"))

@@ -4,7 +4,8 @@
 ;; the LICENSE file in the root directory of this source tree.
 
 ;; Version: 0.3
-;; Package-Version: 20191214.1309
+;; Package-Version: 20200905.1730
+;; Package-Commit: 804217a15a28f6918fba93c91d495ed7d50b0495
 ;; URL: https://github.com/an-sh/flow-minor-mode
 
 ;; Package-Requires: ((emacs "25.1"))
@@ -157,6 +158,8 @@ BODY progn"
     (flow-minor-colorize-buffer)
     (buffer-string)))
 
+(defvar flow-minor-pos-regexp "\n\\(.*:[0-9]+:[0-9]+.*\n\\)?\\'")
+
 (defun flow-minor-type-at-pos ()
   "Show type at position."
   (interactive)
@@ -164,8 +167,9 @@ BODY progn"
    (let* ((file (buffer-file-name))
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
-          (type (flow-minor-cmd-to-string "type-at-pos" file line col)))
-     (message "%s" (flow-minor-colorize-type (car (split-string type "\n")))))))
+          (type (flow-minor-cmd-to-string "type-at-pos" "--quiet" file line col)))
+     (message "%s" (flow-minor-colorize-type
+                    (replace-regexp-in-string flow-minor-pos-regexp "" type))))))
 
 (defun flow-minor-jump-to-definition ()
   "Jump to definition."
@@ -175,7 +179,7 @@ BODY progn"
           (line (number-to-string (line-number-at-pos)))
           (col (number-to-string (1+ (current-column))))
           (location (json-read-from-string
-                     (flow-minor-cmd-to-string "get-def" "--json" file line col)))
+                     (flow-minor-cmd-to-string "get-def" "--json" "--quiet" file line col)))
           (path (alist-get 'path location))
           (line (alist-get 'line location))
           (offset-in-line (alist-get 'start location)))
@@ -229,10 +233,11 @@ BODY progn"
     (if (eq (process-exit-status process) 0)
         (with-current-buffer "*Flow Eldoc*"
           (goto-char (point-min))
-          (forward-line 1)
-          (delete-region (point) (point-max))
+          (save-match-data
+            (if (re-search-forward flow-minor-pos-regexp nil t)
+                (replace-match "")))
           (flow-minor-colorize-buffer)
-          (eldoc-message (car (split-string (buffer-substring (point-min) (point-max)) "\n")))))))
+          (eldoc-message (buffer-string))))))
 
 (defun flow-minor-eldoc-documentation-function ()
   "Display type at point with eldoc."
@@ -245,6 +250,7 @@ BODY progn"
          (command (list (flow-minor-binary)
                         "type-at-pos"
                         "--path" buffer-file-name
+                        "--quiet"
                         (number-to-string line)
                         (number-to-string col)))
          (process (make-process :name "flow-minor-eldoc"

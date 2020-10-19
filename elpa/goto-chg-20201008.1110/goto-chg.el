@@ -24,9 +24,8 @@
 ;; Maintainer: Vasilij Schneidermann <mail@vasilij.de>
 ;; Created: 16 May 2002
 ;; Version: 1.7.3
-;; Package-Version: 20200603.1911
-;; Package-Commit: 85fca9f7d8b04be3fbb37cc5d42416f3c4d32830
-;; Package-Requires: ((undo-tree "0.1.3"))
+;; Package-Version: 20201008.1110
+;; Package-Commit: 5c057c8623abadf7fd57ce625843435d231f2739
 ;; Keywords: convenience, matching
 ;; URL: https://github.com/emacs-evil/goto-chg
 ;;
@@ -99,8 +98,6 @@
 ;;--------------------------------------------------------------------
 
 ;;; Code:
-
-(require 'undo-tree)
 
 (defvar glc-default-span 8 "*goto-last-change don't visit the same point twice. glc-default-span tells how far around a visited point not to visit again.")
 (defvar glc-current-span 8 "Internal for goto-last-change.\nA copy of glc-default-span or the ARG passed to goto-last-change.")
@@ -233,6 +230,13 @@ Return nil if E represents no real change.
   "Return t if E indicates a buffer became \"modified\",
 that is, it was previously saved or unchanged. Nil otherwise."
   (and (listp e) (eq (car e) t)))
+
+(declare-function undo-tree-current "undo-tree")
+(declare-function undo-tree-node-p "undo-tree")
+(declare-function undo-tree-node-previous "undo-tree")
+(declare-function undo-tree-node-undo "undo-tree")
+(declare-function undo-list-transfer-to-tree "undo-tree")
+(defvar buffer-undo-tree)
 
 ;;;###autoload
 (defun goto-last-change (arg)

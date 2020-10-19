@@ -4,8 +4,8 @@
 
 ;; Authors: Damon Kwok <damon-kwok@outlook.com>
 ;; Version: 0.0.1
-;; Package-Version: 20200826.2058
-;; Package-Commit: 87fc7aaf63aa723b4046e59d2d273572e33ad33c
+;; Package-Version: 20200904.1838
+;; Package-Commit: 05430398a5070245c4358e6a1b7e49a154da174e
 ;; URL: https://github.com/damon-kwok/modern-sh
 ;; Keywords: languages programming
 ;; Package-Requires: ((emacs "25.1") (hydra "0.15.0") (eval-in-repl "0.9.7"))
@@ -414,7 +414,7 @@ Optional argument BUILD If the tags file does not exist, execute the build."
       (modern-sh-add-keywords)
       (imenu-add-to-menubar "Index")
       (substitute-key-definition #'sh-for nil sh-mode-map)
-      (define-key sh-mode-map (kbd "C-x C-f") #'modern-sh-format-buffer)
+      (define-key sh-mode-map (kbd "C-c C-f") #'modern-sh-format-buffer)
       (define-key sh-mode-map (kbd "C-x C-e") #'eir-eval-in-shell)
       (add-hook 'after-save-hook #'modern-sh-after-save-hook nil t)
       (modern-sh-load-tags))
@@ -423,7 +423,7 @@ Optional argument BUILD If the tags file does not exist, execute the build."
       (imenu--cleanup)
       (substitute-key-definition #'modern-sh-format-buffer nil sh-mode-map)
       (substitute-key-definition #'eir-eval-in-shell nil sh-mode-map)
-      (define-key sh-mode-map (kbd "C-x C-f") #'sh-for)
+      (define-key sh-mode-map (kbd "C-c C-f") #'sh-for)
       (remove-hook 'after-save-hook #'modern-sh-after-save-hook)))
   ;;
   (font-lock-flush))

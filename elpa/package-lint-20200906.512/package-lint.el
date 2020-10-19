@@ -107,21 +107,24 @@ published in ELPA for use by older Emacsen.")
                                                 default-directory)))
                            (read (current-buffer))))
          (info (make-hash-table)))
-    (cl-labels ((add-info (syms action version)
-                          (dolist (sym syms)
-                            (puthash sym (cons (cons action version) (gethash sym info)) info))))
-      (pcase-dolist (`(,version . ,info) stdlib-changes)
-        (let-alist info
-          (add-info .variables.added 'variable-added version)
-          (add-info .variables.removed 'variable-removed version)
-          (add-info .features.added 'library-added version)
-          (add-info .features.removed 'library-removed version)
-          (add-info .functions.added 'function-added version)
-          (add-info .functions.removed 'function-removed version))))
-    info))
+    (pcase-dolist (`(,version . ,data) stdlib-changes)
+      (pcase-dolist (`(,syms . ,action)
+                     (let-alist data
+                       (list (cons .variables.added 'variable-added)
+                             (cons .variables.removed 'variable-removed)
+                             (cons .features.added 'library-added)
+                             (cons .features.removed 'library-removed)
+                             (cons .functions.added 'function-added)
+                             (cons .functions.removed 'function-removed))))
+        (dolist (sym syms)
+          (puthash sym (cons (cons action version) (gethash sym info)) info))))
+    info)
+  "A hash table from SYMBOL to a list of events in its history.
+Each event is of the form (ACTION . EMACS-VER), where ACTION is a
+symbol such as 'variable-added.")
 
 (defun package-lint-symbol-info (sym)
-  "Retrieve information about SYM, as an alist of (action . emacs-ver)."
+  "Retrieve information about SYM, as an alist of (ACTION . EMACS-VER)."
   (gethash (cl-etypecase sym
              (string (intern sym))
              (symbol sym))

@@ -211,7 +211,11 @@
 (defmethod helm--setup-source :before ((source helm-type-buffer))
   (setf (slot-value source 'action) 'helm-type-buffer-actions)
   (setf (slot-value source 'persistent-help) "Show this buffer")
-  (setf (slot-value source 'mode-line) (list "Buffer(s)" helm-mode-line-string))
+  (setf (slot-value source 'mode-line)
+        ;; Use default-value of `helm-mode-line-string' in case user
+        ;; starts with a helm buffer as current-buffer otherwise the
+        ;; local value of this helm buffer is used (issues #1517,#2377).
+        (list "Buffer(s)" (default-value 'helm-mode-line-string)))
   (setf (slot-value source 'filtered-candidate-transformer)
         '(helm-skip-boring-buffers
           helm-buffers-sort-transformer
@@ -297,7 +301,8 @@
                              (describe-function (timer--function tm))))
     ("Find Function" . (lambda (tm)
                          (helm-aif (timer--function tm)
-                             (if (byte-code-function-p it)
+                             (if (or (byte-code-function-p it)
+                                     (helm-subr-native-elisp-p it))
                                  (message "Can't find anonymous function `%s'" it)
                                  (find-function it))))))
   "Default actions for type timers."

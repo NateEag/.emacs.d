@@ -4,8 +4,8 @@
 ;; Copyright 2011-2020 François-Xavier Bois
 
 ;; Version: 17.0.2
-;; Package-Version: 20200826.1954
-;; Package-Commit: da53553fd4e876ac121994cc48e54ab54fa3ace7
+;; Package-Version: 20201009.1633
+;; Package-Commit: b4b0a857088d12cf254f6a2105c58039f29a0d04
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -1332,7 +1332,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("riot"             . "{.\\|/// begin script")
    '("smarty"           . "{[[:alpha:]#$/*\"]")
    '("spip"             . "\\[(#REM)\\|(\\|#[A-Z0-9_]\\|{\\|<:")
-   '("template-toolkit" . "\\[%.\\|%%#")
+   '("template-toolkit" . "\\[%\\(.\\|$\\)\\|%%#")
    '("underscore"       . "<%")
    '("velocity"         . "#[[:alpha:]#*]\\|$[[:alpha:]!{]")
    '("vue"              . "{{\\|[:@][-[:alpha:]]+=\"")

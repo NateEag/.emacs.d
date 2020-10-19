@@ -4,8 +4,8 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200822.822
-;; Package-Commit: a2b5a70e204e277a738615901dfebf274c8202c2
+;; Package-Version: 20201011.657
+;; Package-Commit: 3670ebea092c7bae4973f5bcecf5ac3588a0ac60
 ;; Keywords: project, convenience
 ;; Version: 2.3.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -686,6 +686,14 @@ as defined in `vc.el'."
     ("h"   . ("c" "cc" "cpp" "ipp" "hpp" "cxx" "ixx" "hxx" "m" "mm"))
     ("cc"  . ("h" "hh" "hpp"))
     ("hh"  . ("cc"))
+
+    ;; OCaml extensions
+    ("ml" . ("mli"))
+    ("mli" . ("ml" "mll" "mly"))
+    ("mll" . ("mli"))
+    ("mly" . ("mli"))
+    ("eliomi" . ("eliom"))
+    ("eliom" . ("eliomi"))
 
     ;; vertex shader and fragment shader extensions in glsl
     ("vert" . ("frag"))
@@ -2758,6 +2766,13 @@ test/impl/other files as below:
                                   :compile "sbt compile"
                                   :test "sbt test"
                                   :test-suffix "Spec")
+
+(projectile-register-project-type 'mill '("build.sc")
+                                  :project-file "build.sc"
+                                  :compile "mill all __.compile"
+                                  :test "mill all __.test"
+                                  :test-suffix "Test")
+
 ;; Clojure
 (projectile-register-project-type 'lein-test '("project.clj")
                                   :project-file "project.clj"
@@ -2868,6 +2883,11 @@ test/impl/other files as below:
                                   :run "dart"
                                   :test-suffix "_test.dart")
 
+;; OCaml
+(projectile-register-project-type 'ocaml-dune '("dune-project")
+                                  :project-file "dune-project"
+                                  :compile "dune build"
+                                  :test "dune runtest")
 
 (defvar-local projectile-project-type nil
   "Buffer local var for overriding the auto-detected project type.
@@ -3420,7 +3440,12 @@ regular expression."
            (tags-exclude (projectile-tags-exclude-patterns))
            (default-directory project-root)
            (tags-file (expand-file-name projectile-tags-file-name))
-           (command (format projectile-tags-command tags-file tags-exclude default-directory))
+           (command (format projectile-tags-command
+                            tags-file
+                            tags-exclude
+                            ;; Use directory file name for MSYS2 compatibility.
+                            ;; See https://github.com/bbatsov/projectile/issues/1377 for more details
+                            (directory-file-name default-directory)))
            shell-output exit-code)
       (with-temp-buffer
         (setq exit-code
@@ -4499,8 +4524,10 @@ overwriting each other's changes."
   (:reader (read-directory-name "Project root: " (projectile-project-root))
            :description nil)
   (with-current-buffer buf
-    (equal (file-name-as-directory (expand-file-name qualifier))
-           (projectile-project-root))))
+    (let ((directory (file-name-as-directory (expand-file-name qualifier))))
+      (and (projectile-project-buffer-p buf directory)
+           (equal directory
+                  (projectile-project-root))))))
 
 (defun projectile-ibuffer-by-project (project-root)
   "Open an IBuffer window showing all buffers in PROJECT-ROOT."

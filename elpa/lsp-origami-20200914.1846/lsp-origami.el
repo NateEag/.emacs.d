@@ -4,8 +4,8 @@
 
 ;; Author: Vibhav Pant
 ;; Version: 1.0.0
-;; Package-Version: 20200809.1537
-;; Package-Commit: 110c40eafde81179ec7a78aab94b0b2059689374
+;; Package-Version: 20200914.1846
+;; Package-Commit: aa309589668d32a8b4bb23c8f41163f6ae208f7b
 ;; Keywords: languages lsp-mode
 ;; Package-Requires: ((origami "1.0") (lsp-mode "6.1"))
 ;; URL: https://github.com/emacs-lsp/lsp-origami
@@ -54,7 +54,7 @@
 (defun lsp-origami--parser (create)
   "Get a list of Folding Ranges for the current buffer, with CREATE as the origami callback."
   (lambda (_content)
-    (unless (lsp--capability "foldingRangeProvider")
+    (unless (lsp-feature? "foldingRangeProvider")
       (signal 'lsp-capability-not-supported (list "foldingRangeProvider")))
     (seq-map (lambda (range)
 	       (lsp-origami--folding-range-to-fold range create))

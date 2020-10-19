@@ -1,11 +1,11 @@
-(define-package "tide" "20200823.524" "Typescript Interactive Development Environment"
+(define-package "tide" "20201017.632" "Typescript Interactive Development Environment"
   '((emacs "25.1")
     (dash "2.10.0")
     (s "1.11.0")
     (flycheck "27")
     (typescript-mode "0.1")
     (cl-lib "0.5"))
-  :commit "fa617f54629dc53a3182251dd8076c9e7ac9effa" :keywords
+  :commit "ac5f070138fbc3657082412c3911d46a1107f39d" :keywords
   '("typescript")
   :authors
   '(("Anantha kumaran" . "ananthakumaran@gmail.com"))

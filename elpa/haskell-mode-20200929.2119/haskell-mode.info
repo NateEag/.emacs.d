@@ -709,7 +709,7 @@ in the Haskell compilation sub-mode as well.  The additional features
 provided compared to Emacs’ basic Compilation mode are:
 
    • DWIM-style auto-detection of compile command (including support for
-     CABAL projects)
+     stack and cabal projects)
    • Support for GHC’s compile messages and recognizing error, warning
      and info source locations (including ‘-ferror-spans’ syntax)
    • Support for filtering out GHC’s uninteresting ‘Loading package...’
@@ -730,26 +730,36 @@ instance, you can add the following to your Emacs initialization to bind
 The following description assumes that ‘haskell-compile’ has been bound
 to ‘C-c C-c’.
 
-   When invoked, ‘haskell-compile’ tries to guess how to compile the
-Haskell program your currently visited buffer belongs to, by searching
-for a ‘.cabal’ file in the current of enclosing parent folders.  If a
-‘.cabal’ file was found, the command defined in the
-‘haskell-compile-cabal-build-command’ option is used.  Note that to
-compile a ‘stack’ based project you will need to set this variable to
-‘stack build’.  As usual you can do it using ‘M-x customize-variable’ or
-with:
+   When invoked, ‘haskell-compile’ decides what build tool to run by
+consulting the value of ‘haskell-compiler-type’.
 
-     (setq haskell-compile-cabal-build-command "stack build")
+   • If this is the symbol ‘cabal’, then ‘cabal’ is run, using the
+     command defined by ‘haskell-compile-cabal-build-command’.
+     ‘haskell-compile’ looks for a ‘.cabal’ file in the current
+     directory or its closet ancestor.
 
-   Moreover, when requesting to compile a ‘.cabal’-file is detected and
-a negative prefix argument (e.g.  ‘C-- C-c C-c’) was given, the
-alternative ‘haskell-compile-cabal-build-command-alt’ is invoked.  By
-default, ‘haskell-compile-cabal-build-command-alt’ contains a ‘cabal
-clean -s’ command in order to force a full rebuild.
+   • If ‘haskell-compiler-type’ is the symbol ‘stack’, then ‘stack’ is
+     run, using the command ‘haskell-compile-stack-build-command’, and
+     looking for the closest ‘stack.yaml’ file.
 
-   Otherwise if no ‘.cabal’ could be found, a single-module compilation
-is assumed and ‘haskell-compile-command’ is used (_if_ the currently
-visited buffer contains Haskell source code).
+   • If ‘haskell-compiler-type’ is the symbol ‘ghc’, then ‘ghc’ is run,
+     using the command ‘haskell-compile-command’.
+
+   • But if ‘haskell-compiler-type’ is the symbol ‘auto’ (the default),
+     then emacs tries to choose which build tool to use by looking for
+     the closest ‘stack.yaml’ or ‘.cabal’ file.  (This is similar to the
+     way ‘haskell-interactive-mode’ uses the variable
+     ‘haskell-process-type’.)
+
+   Moreover, when a negative prefix argument is supplied (e.g.  ‘C-- C-c
+C-c’), the alternative build command is used, that is,
+‘haskell-compile-cabal-build-command-alt’ or
+‘haskell-compile-stack-build-command-alt’.  By default, the alternative
+build commands force a full rebuild.  (Note this does not affect
+‘haskell-compile-command’.)
+
+   As usual you can change any of these variables using ‘M-x
+customize-variable’.
 
    You can also inspect and modify the compile command to be invoked
 temporarily by invoking ‘haskell-compile’ with a prefix argument (e.g.
@@ -867,18 +877,22 @@ remember for the current GHCi session.
 
 What kind of Haskell REPL ‘haskell-interactive-mode’ will start up
 depends on the value of ‘haskell-process-type’.  This can be one of the
-symbols ‘auto’, ‘ghci’, ‘cabal-repl’, ‘cabal-new-repl’, or ‘stack-ghci’.
-If it’s ‘auto’, the directory contents and available programs will be
+symbols ‘auto’, ‘ghci’, ‘stack-ghci’, ‘cabal-repl’, or ‘cabal-new-repl’.
+
+   (‘cabal-new-repl’ is allowed but obsolete, like the cabal command
+‘new-build’ that it selected.  Emacs actually runs the equivalent cabal
+command ‘build’.)
+
+   If it’s ‘auto’, the directory contents and available programs will be
 used to make a best guess at the process type.  The actual process type
 will then determine which variables ‘haskell-interactive-mode’ will
 access to determine the program to start and its arguments:
 
    • If it’s ‘ghci’, ‘haskell-process-path-ghci’ and
      ‘haskell-process-args-ghci’ will be used.
-   • If it’s ‘cabal-repl’, ‘haskell-process-path-cabal’ and
-     ‘haskell-process-args-cabal-repl’.
-   • If it’s ‘cabal-new-repl’, ‘haskell-process-path-cabal’ and
-     ‘haskell-process-args-cabal-new-repl’.
+   • If it’s ‘cabal-repl’ or ‘cabal-new-repl’,
+     ‘haskell-process-path-cabal’ and ‘haskell-process-args-cabal-repl’
+     are used.
    • If it’s ‘stack-ghci’, ‘haskell-process-path-stack’ and
      ‘haskell-process-args-stack-ghci’ will be used.
 
@@ -962,8 +976,6 @@ setting by running ‘M-x’ ‘customize-variable’ ‘RET’
    • ghci
    • cabal-repl
    • cabal-new-repl
-   • cabal-dev
-   • cabal-ghci
    • stack-ghci
 
    Please, check the documentation for ‘haskell-process-type’ to see how
@@ -2207,15 +2219,14 @@ values recognized by it are (default is ’auto):
 searched for ‘cabal.sandbox.config’ or ‘stack.yaml’ or ‘*.cabal’ file.
 If the file is present, then appropriate process is started.
 
-   When ‘cabal.sandbox.config’ is found ‘haskell-process-type’ is
-‘'cabal-repl’.  Similarly, when ‘stack.yaml’ is found
-‘haskell-process-type’ is ‘'stack-ghci’.  Similarly, when ‘xyz.cabal’ is
-found ‘haskell-process-type’ is ‘'cabal-repl’.  When nothing is found
-‘haskell-process-type’ is ‘'ghci’.  When more than one file such as
-‘cabal.sandbox.config’ and ‘stack.yaml’ are found the following
-preference is followed.
-
-   ‘cabal.sandbox.config’ > ‘stack.yaml’ > ‘*.cabal’
+   When ‘cabal.project’ or ‘cabal.sandbox.config’ is found,
+‘haskell-process-type’ is ‘'cabal-repl’.  Similarly, when ‘stack.yaml’
+is found ‘haskell-process-type’ is ‘'stack-ghci’.  Similarly, when
+‘xyz.cabal’ is found ‘haskell-process-type’ is ‘'cabal-repl’.  When
+nothing is found ‘haskell-process-type’ is ‘'ghci’.  When more than one
+file such as ‘cabal.sandbox.config’ and ‘stack.yaml’ are found the
+following preference is followed: ‘cabal.project’ > ‘stack.yaml’ >
+‘*.cabal’
 
 
 File: haskell-mode.info,  Node: Collapsing Haskell code,  Next: Getting Help and Reporting Bugs,  Prev: REPL,  Up: Top
@@ -2340,20 +2351,20 @@ Concept index
  [index ]
 * Menu:
 
-* benchmarking:                          Interactive Haskell. (line 468)
+* benchmarking:                          Interactive Haskell. (line 470)
 * CUA mode:                              Indentation.         (line  49)
 * customizing:                           Installation.        (line  48)
 * customizing <1>:                       Interactive Haskell. (line  49)
 * haskell-mode:                          Editing Haskell Code.
                                                               (line   6)
-* Images, rendering SVG images:          Interactive Haskell. (line 610)
+* Images, rendering SVG images:          Interactive Haskell. (line 612)
 * indentation:                           Indentation.         (line   6)
 * layout rule:                           Indentation.         (line   6)
 * off-side rule:                         Indentation.         (line   6)
 * rectangle:                             Indentation.         (line  49)
-* Rendering SVG images:                  Interactive Haskell. (line 610)
-* SVG images, rendering:                 Interactive Haskell. (line 610)
-* testing:                               Interactive Haskell. (line 466)
+* Rendering SVG images:                  Interactive Haskell. (line 612)
+* SVG images, rendering:                 Interactive Haskell. (line 612)
+* testing:                               Interactive Haskell. (line 468)
 * Unicode:                               Unicode support.     (line   6)
 
 
@@ -2372,8 +2383,8 @@ Function index
                                                               (line   6)
 * haskell-mode:                          Editing Haskell Code.
                                                               (line   6)
-* haskell-session-change-target:         Interactive Haskell. (line 459)
-* haskell-svg-toggle-render-images:      Interactive Haskell. (line 626)
+* haskell-session-change-target:         Interactive Haskell. (line 461)
+* haskell-svg-toggle-render-images:      Interactive Haskell. (line 628)
 
 
 File: haskell-mode.info,  Node: Variable index,  Prev: Function index,  Up: Top
@@ -2387,29 +2398,31 @@ Variable index
 * haskell-c2hs-hook-name-face:           Syntax highlighting. (line  39)
 * haskell-c2hs-hook-pair-face:           Syntax highlighting. (line  38)
 * haskell-cabal-mode-hook:               Editing Cabal files. (line   6)
-* haskell-compile-cabal-build-command:   Compilation.         (line  35)
-* haskell-compile-cabal-build-command-alt: Compilation.       (line  35)
-* haskell-compile-command:               Compilation.         (line  35)
+* haskell-compile-cabal-build-alt-command: Compilation.       (line  71)
+* haskell-compile-cabal-build-command:   Compilation.         (line  72)
+* haskell-compile-command:               Compilation.         (line  72)
+* haskell-compile-stack-build-alt-command: Compilation.       (line  72)
+* haskell-compile-stack-build-command:   Compilation.         (line  72)
+* haskell-compiler-type:                 Compilation.         (line  72)
 * haskell-constructor-face:              Syntax highlighting. (line  30)
 * haskell-decl-scan-mode-hook:           Declaration scanning.
                                                               (line   6)
 * haskell-definition-face:               Syntax highlighting. (line  31)
-* haskell-interactive-mode-hook:         Interactive Haskell. (line 459)
+* haskell-interactive-mode-hook:         Interactive Haskell. (line 461)
 * haskell-keyword-face:                  Syntax highlighting. (line  28)
 * haskell-literate-comment-face:         Syntax highlighting. (line  35)
 * haskell-mode-hook:                     Installation.        (line  53)
 * haskell-operator-face:                 Syntax highlighting. (line  33)
 * haskell-pragma-face:                   Syntax highlighting. (line  34)
-* haskell-process-args-cabal-new-repl:   Interactive Haskell. (line  72)
-* haskell-process-args-cabal-repl:       Interactive Haskell. (line  72)
-* haskell-process-args-ghci:             Interactive Haskell. (line  72)
-* haskell-process-args-stack-ghci:       Interactive Haskell. (line  71)
-* haskell-process-path-cabal:            Interactive Haskell. (line  72)
-* haskell-process-path-ghci:             Interactive Haskell. (line  72)
-* haskell-process-path-stack:            Interactive Haskell. (line  72)
-* haskell-process-type:                  Interactive Haskell. (line  72)
+* haskell-process-args-cabal-repl:       Interactive Haskell. (line  76)
+* haskell-process-args-ghci:             Interactive Haskell. (line  76)
+* haskell-process-args-stack-ghci:       Interactive Haskell. (line  75)
+* haskell-process-path-cabal:            Interactive Haskell. (line  76)
+* haskell-process-path-ghci:             Interactive Haskell. (line  76)
+* haskell-process-path-stack:            Interactive Haskell. (line  76)
+* haskell-process-type:                  Interactive Haskell. (line  76)
 * haskell-quasi-quote-face:              Syntax highlighting. (line  36)
-* haskell-svg-render-images:             Interactive Haskell. (line 631)
+* haskell-svg-render-images:             Interactive Haskell. (line 633)
 * haskell-type-face:                     Syntax highlighting. (line  29)
 
 
@@ -2428,19 +2441,19 @@ Node: Autoformatting23477
 Node: Module templates24106
 Node: Declaration scanning24537
 Node: Compilation27825
-Node: Interactive Haskell31730
-Ref: printing mode51099
-Node: Editing Cabal files63863
-Node: Browsing Haddocks64610
-Node: Spell checking strings and comments67435
-Node: Aligning code68541
-Node: Rectangular commands70286
-Node: REPL71806
-Node: Collapsing Haskell code76542
-Node: Getting Help and Reporting Bugs79150
-Node: Concept index80194
-Node: Function index81452
-Node: Variable index82247
+Node: Interactive Haskell32131
+Ref: printing mode51555
+Node: Editing Cabal files64319
+Node: Browsing Haddocks65066
+Node: Spell checking strings and comments67891
+Node: Aligning code68997
+Node: Rectangular commands70742
+Node: REPL72262
+Node: Collapsing Haskell code77011
+Node: Getting Help and Reporting Bugs79619
+Node: Concept index80663
+Node: Function index81921
+Node: Variable index82716
 
 End Tag Table
 

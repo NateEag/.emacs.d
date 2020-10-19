@@ -1971,6 +1971,49 @@ This variable must be set before evil is loaded."
                (add-hook 'minibuffer-setup-hook 'evil-initialize)
              (remove-hook 'minibuffer-setup-hook 'evil-initialize))))
 
+(defun evil--redo-placeholder (_count)
+  (user-error "Customize `evil-undo-system' for redo functionality."))
+
+(defvar evil-undo-function 'undo
+  "Function to be used by `evil-undo'.
+Customized via `evil-undo-system'.")
+
+(defvar evil-redo-function 'evil--redo-placeholder
+  "Function to be used by 'evil-redo'.
+Customized via `evil-undo-system'.")
+
+(defun evil-set-undo-system (system)
+  "Set `evil-undo-function' and `evil-redo-function` by SYSTEM."
+  (cond
+   ((not system)
+    (setq evil-undo-function 'undo
+          evil-redo-function 'evil--redo-placeholder))
+   ((eq system 'undo-redo)
+    (setq evil-undo-function 'undo-only
+          evil-redo-function 'undo-redo))
+   ((eq system 'undo-tree)
+    (setq evil-undo-function 'undo-tree-undo
+          evil-redo-function 'undo-tree-redo))
+   ((eq system 'undo-fu)
+    (setq evil-undo-function 'undo-fu-only-undo
+          evil-redo-function 'undo-fu-only-redo))
+   (t
+    (error "Unknown undo system %s" system))))
+
+(defcustom evil-undo-system nil
+  "Undo system Evil should use.  If equal to `undo-tree' or
+`undo-fu', those packages must be installed.  If equal to
+`undo-tree', `undo-tree-mode' must also be activated.  If equal
+to `undo-redo', Evil uses commands natively available in Emacs 28."
+  :type '(choice (const :tag "Vanilla undo" nil)
+                 (const undo-redo)
+                 (const undo-tree)
+                 (const undo-fu))
+  :group 'evil
+  :set #'(lambda (sym value)
+           (evil-set-undo-system value)
+           (set-default sym value)))
+
 (defun evil-version ()
   (interactive)
   (message "Evil version %s" evil-version))

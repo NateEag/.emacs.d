@@ -6,9 +6,9 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Show end of line symbol in buffer.
 ;; Keyword: end eol line
-;; Version: 0.0.4
-;; Package-Version: 20200723.706
-;; Package-Commit: 9fe95a4b1cda218082eb1d977190cc66c7a6b4ea
+;; Version: 0.0.5
+;; Package-Version: 20200921.1201
+;; Package-Commit: 02fdb5b2832889afd6cad5c517da9b1e4611c766
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/show-eol
 
@@ -69,11 +69,11 @@
 
 (defun show-eol-get-eol-mark-by-system ()
   "Return the EOL mark string by system type."
-  (let ((sys-mark nil))
-    (cl-case (show-eol--get-current-system)
-      ('dos (setq sys-mark show-eol-crlf-mark))
-      ('mac (setq sys-mark show-eol-cr-mark))
-      ('unix (setq sys-mark show-eol-lf-mark)))
+  (let ((sys-mark nil) (sys (show-eol--get-current-system)))
+    (cond ((eq sys 'dos) (setq sys-mark show-eol-crlf-mark))
+          ((eq sys 'mac) (setq sys-mark show-eol-cr-mark))
+          ((eq sys 'unix) (setq sys-mark show-eol-lf-mark))
+          (t (user-error "[WARNING] Unknown system type")))
     sys-mark))
 
 (defun show-eol-find-mark-in-list (mk-sym)

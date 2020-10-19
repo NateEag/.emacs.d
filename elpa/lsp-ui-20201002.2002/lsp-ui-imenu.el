@@ -92,29 +92,22 @@
 
 (defun lsp-ui-imenu--get-bar (bars index depth for-title is-last)
   (cond
-   ((>= index lsp-ui-imenu--max-bars)
-    ;; Exceeding maximum bars
-    "   ")
-   ((not (aref bars index))
-    ;; No bar for this level
-    "   ")
-   ((and (= depth 1) (not for-title))
-    ;; For the first level, the title is rendered differently, so leaf items are
-    ;; decorated with the full height bar regardless if it's the last item or
-    ;; not.
-    " ┃ ")
-   ((< (1+ index) depth)
-    ;; Full height bar for levels other than the rightmost one.
-    " ┃ ")
-   (is-last
-    ;; The rightmost bar for the last item.
-    " ┗ " )
-   (for-title
-    ;; The rightmost bar for the title items other than the last one.
-    " ┣ ")
-   (t
-    ;; The rightmost bar for the leaf items other than the last one.
-    " ┃ ")))
+   ;; Exceeding maximum bars
+   ((>= index lsp-ui-imenu--max-bars) "   ")
+   ;; No bar for this level
+   ((not (aref bars index)) "   ")
+   ;; For the first level, the title is rendered differently, so leaf items are
+   ;; decorated with the full height bar regardless if it's the last item or
+   ;; not.
+   ((and (= depth 1) (not for-title)) " ┃ ")
+   ;; Full height bar for levels other than the rightmost one.
+   ((< (1+ index) depth) " ┃ ")
+   ;; The rightmost bar for the last item.
+   (is-last " ┗ " )
+   ;; The rightmost bar for the title items other than the last one.
+   (for-title " ┣ ")
+   ;; The rightmost bar for the leaf items other than the last one.
+   (t " ┃ ")))
 
 (defun lsp-ui-imenu--get-color (index)
   (nth (mod index (length lsp-ui-imenu-colors)) lsp-ui-imenu-colors))
@@ -323,9 +316,7 @@ Return the updated COLOR-INDEX."
       (recenter)
       (pulse-momentary-highlight-one-line (point) 'next-error))))
 
-(defvar lsp-ui-imenu-mode-map nil
-  "Keymap for ‘lsp-ui-peek-mode’.")
-(unless lsp-ui-imenu-mode-map
+(defvar lsp-ui-imenu-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "q") 'lsp-ui-imenu--kill)
     (define-key map (kbd "<right>") 'lsp-ui-imenu--next-kind)
@@ -334,7 +325,8 @@ Return the updated COLOR-INDEX."
     (define-key map (kbd "<M-return>") 'lsp-ui-imenu--visit)
     (define-key map (kbd "RET") 'lsp-ui-imenu--view)
     (define-key map (kbd "M-RET") 'lsp-ui-imenu--visit)
-    (setq lsp-ui-imenu-mode-map map)))
+    map)
+  "Keymap for ‘lsp-ui-peek-mode’.")
 
 (define-derived-mode lsp-ui-imenu-mode special-mode "lsp-ui-imenu"
   "Mode showing imenu entries.")

@@ -161,6 +161,9 @@ will cause performances issues.")
 (defvar-local lsp-ui-peek--method nil)
 (defvar-local lsp-ui-peek--deactivate-keymap-fn nil)
 
+(defvar lsp--peek-save-major-mode nil
+  "Stores the major mode for lsp ui peek.")
+
 (defvar lsp-ui-peek--jumps (make-hash-table)
   "Hashtable which stores all jumps on a per window basis.")
 
@@ -258,7 +261,10 @@ will cause performances issues.")
       (propertize "\n" 'face '(:height 0.5))))))
 
 (defun lsp-ui-peek--peek-new (src1 src2)
-  (-let* ((win-width (window-text-width))
+  (-let* ((win-width (- (window-text-width)
+                        (if (bound-and-true-p display-line-numbers-mode)
+                            (+ 2 (line-number-display-width))
+                          0)))
           (string (-some--> (-zip-fill "" src1 src2)
                     (--map (lsp-ui-peek--adjust win-width it) it)
                     (-map-indexed 'lsp-ui-peek--make-line it)
@@ -350,9 +356,6 @@ XREFS is a list of references/definitions."
           (header2 (format " %s %s" lsp-ui-peek--size-list
                            (string-remove-prefix "workspace/" (string-remove-prefix "textDocument/" lsp-ui-peek--method))))
           (ref-view (--> chunk
-                         (if (eq lsp-ui-peek-fontify 'on-demand)
-                             (lsp-ui-peek--render major-mode it)
-                           chunk)
                          (subst-char-in-string ?\t ?\s it)
                          (concat header it)
                          (split-string it "\n")))
@@ -363,7 +366,9 @@ XREFS is a list of references/definitions."
                           (lsp-ui-peek--fill (1- lsp-ui-peek-peek-height))
                           (-concat (list header2)))))
     (setq lsp-ui-peek--last-xref (or xref lsp-ui-peek--last-xref))
-    (lsp-ui-peek--peek-new ref-view list-refs)))
+    (lsp-ui-peek--peek-new ref-view list-refs)
+    (and (fboundp 'lsp-ui-doc--hide-frame)
+         (lsp-ui-doc--hide-frame))))
 
 (defun lsp-ui-peek--toggle-text-prop (s)
   (let ((state (lsp-ui-peek--prop 'lsp-ui-peek-hidden s)))
@@ -472,7 +477,8 @@ XREFS is a list of references/definitions."
     (delete-overlay lsp-ui-peek--overlay))
   (setq lsp-ui-peek--overlay nil
         lsp-ui-peek--last-xref nil)
-  (set-window-start (get-buffer-window) lsp-ui-peek--win-start))
+  (when lsp-ui-peek--win-start
+    (set-window-start (get-buffer-window) lsp-ui-peek--win-start)))
 
 (defun lsp-ui-peek--deactivate-keymap ()
   "Deactivate keymap."
@@ -523,9 +529,7 @@ XREFS is a list of references/definitions."
   (interactive)
   (lsp-ui-peek--goto-xref nil t))
 
-(defvar lsp-ui-peek-mode-map nil
-  "Keymap for ‘lsp-ui-peek-mode’.")
-(unless lsp-ui-peek-mode-map
+(defvar lsp-ui-peek-mode-map
   (let ((map (make-sparse-keymap)))
     (suppress-keymap map t)
     (define-key map "\e\e\e" 'lsp-ui-peek--abort)
@@ -544,7 +548,8 @@ XREFS is a list of references/definitions."
     (define-key map (kbd "q") 'lsp-ui-peek--abort)
     (define-key map (kbd "RET") 'lsp-ui-peek--goto-xref)
     (define-key map (kbd "M-RET") 'lsp-ui-peek--goto-xref-other-window)
-    (setq lsp-ui-peek-mode-map map)))
+    map)
+  "Keymap for ‘lsp-ui-peek-mode’.")
 
 (defun lsp-ui-peek--disable ()
   "Do not call this function, call `lsp-ui-peek--abort' instead."
@@ -553,6 +558,7 @@ XREFS is a list of references/definitions."
     (lsp-ui-peek--peek-hide)))
 
 (defun lsp-ui-peek--abort ()
+  "Abort peek."
   (interactive)
   ;; The timer fixes https://github.com/emacs-lsp/lsp-ui/issues/33
   (run-with-idle-timer 0 nil 'lsp-ui-peek--disable))
@@ -635,11 +641,22 @@ START and END are delimiters."
       (let* ((before (buffer-substring (line-beginning-position line-start) (line-beginning-position)))
              (line (buffer-substring (line-beginning-position) (line-end-position)))
              (after (buffer-substring (line-end-position) (line-end-position line-end)))
-             (len (length line)))
-        (add-face-text-property (min start len)
-                                (if (null end) len (min end len))
-                                'lsp-ui-peek-highlight t line)
-        `(,line . ,(concat before line after))))))
+             (len (length line))
+             (chunk (concat before line after))
+             (start-in-chunk (length before)))
+
+        (when (eq lsp-ui-peek-fontify 'on-demand)
+          (setq chunk (lsp-ui-peek--render lsp--peek-save-major-mode chunk)))
+
+        (remove-text-properties (+ (min start len) start-in-chunk)
+                                (+ (if (null end) len (min end len)) start-in-chunk) '(face nil)
+                                chunk)
+
+        (add-face-text-property (+ (min start len) start-in-chunk)
+                                (+ (if (null end) len (min end len)) start-in-chunk)
+                                'lsp-ui-peek-highlight t chunk)
+
+        `(,(substring chunk start-in-chunk (+ start-in-chunk len)) . ,chunk)))))
 
 (defun lsp-ui-peek--xref-make-item (filename loc)
   "Return an item from FILENAME given a LOC.
@@ -680,6 +697,7 @@ references.  The function returns a list of `ls-xref-item'."
   (let* ((filename (car file))
          (visiting (find-buffer-visiting filename))
          (fn (lambda (loc) (lsp-ui-peek--xref-make-item filename loc))))
+    (setq lsp--peek-save-major-mode major-mode)
     (cond
      (visiting
       (with-temp-buffer

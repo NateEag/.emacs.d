@@ -35,6 +35,14 @@
 
 (require 'dash)
 (require 'lsp-protocol)
+(require 'find-func)
+
+(defconst lsp-ui-resources-dir
+  (--> (find-library-name "lsp-ui")
+       (file-name-directory it)
+       (expand-file-name "resources" it)
+       (file-name-as-directory it)
+       (and (file-exists-p it) it)))
 
 (require 'lsp-ui-sideline)
 (require 'lsp-ui-peek)

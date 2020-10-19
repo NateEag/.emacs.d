@@ -48,7 +48,7 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 ;;;### (autoloads nil "lsp-ui-peek" "lsp-ui-peek.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-ui-peek.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-peek" '("lsp-ui-peek-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-peek" '("lsp-")))
 
 ;;;***
 

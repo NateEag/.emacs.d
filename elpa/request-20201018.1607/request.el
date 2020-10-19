@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20200517.1305
-;; Package-Commit: 912525c772984c6af0fd84acd6699ee43d91037a
+;; Package-Version: 20201018.1607
+;; Package-Commit: 94f87a84fd3c643bd85638e667f01513c9223ea5
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.2
 
@@ -957,7 +957,9 @@ Currently it is used only for testing.")
            (setf (default-value 'buffer-file-coding-system)
                  buffer-file-coding-system-orig)))
        (list "--data-binary" (concat  "@" (request-untrampify-filename tempfile)))))
-   (when type (list "--request" type))
+   (when type (if (equal "head" (downcase type))
+		  (list "--head")
+		(list "--request" type)))
    (cl-loop for (k . v) in headers
             collect "--header"
             collect (format "%s: %s" k v))

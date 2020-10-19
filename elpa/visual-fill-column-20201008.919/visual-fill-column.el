@@ -7,10 +7,11 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; URL: https://github.com/joostkremers/visual-fill-column
-;; Package-Version: 20200428.816
+;; Package-Version: 20201008.919
+;; Package-Commit: 598bc992f050575c48db6fb9ea50794a5ce5d065
 ;; Created: 2015
 ;; Version: 1.11
-;; Package-Requires: ((emacs "24.3"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -29,11 +30,11 @@
 
 ;;; Commentary:
 
-;; `visual-fill-column-mode' is a small Emacs minor mode that mimics the effect of `fill-column'
-;; in `visual-line-mode'.  Instead of wrapping lines at the window edge, which
-;; is the standard behaviour of `visual-line-mode', it wraps lines at
-;; `fill-column'.  If `fill-column' is too large for the window, the text is
-;; wrapped at the window edge.
+;; `visual-fill-column-mode' is a small Emacs minor mode that mimics the effect
+;; of `fill-column' in `visual-line-mode'.  Instead of wrapping lines at the
+;; window edge, which is the standard behaviour of `visual-line-mode', it wraps
+;; lines at `fill-column'.  If `fill-column' is too large for the window, the
+;; text is wrapped at the window edge.
 
 ;;; Code:
 
@@ -67,19 +68,43 @@ this option is set to a value, it is used instead."
 (make-variable-buffer-local 'visual-fill-column-center-text)
 (put 'visual-fill-column-center-text 'safe-local-variable 'symbolp)
 
+(defvar visual-fill-column-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [right-margin mouse-1] (global-key-binding [mouse-1])) ; #'mouse-set-point
+    (define-key map [right-margin mouse-2] (global-key-binding [mouse-2])) ; #'mouse-yank-primary
+    (define-key map [right-margin mouse-3] (global-key-binding [mouse-3])) ; #'mouse-save-then-kill
+    (define-key map [right-margin drag-mouse-1] #'ignore)
+    (define-key map [right-margin drag-mouse-2] #'ignore)
+    (define-key map [right-margin drag-mouse-3] #'ignore)
+    (define-key map [right-margin double-mouse-1] #'ignore)
+    (define-key map [right-margin double-mouse-2] #'ignore)
+    (define-key map [right-margin double-mouse-3] #'ignore)
+    (define-key map [right-margin triple-mouse-1] #'ignore)
+    (define-key map [right-margin triple-mouse-2] #'ignore)
+    (define-key map [right-margin triple-mouse-3] #'ignore)
+    (define-key map [left-margin mouse-1] (global-key-binding [mouse-1])) ; #'mouse-set-point
+    (define-key map [left-margin mouse-2] (global-key-binding [mouse-2])) ; #'mouse-yank-primary
+    (define-key map [left-margin mouse-3] (global-key-binding [mouse-3])) ; #'mouse-save-then-kill
+    (define-key map [left-margin drag-mouse-1] #'ignore)
+    (define-key map [left-margin drag-mouse-2] #'ignore)
+    (define-key map [left-margin drag-mouse-3] #'ignore)
+    (define-key map [left-margin double-mouse-1] #'ignore)
+    (define-key map [left-margin double-mouse-2] #'ignore)
+    (define-key map [left-margin double-mouse-3] #'ignore)
+    (define-key map [left-margin triple-mouse-1] #'ignore)
+    (define-key map [left-margin triple-mouse-2] #'ignore)
+    (define-key map [left-margin triple-mouse-3] #'ignore)
+    (when (bound-and-true-p mouse-wheel-mode)
+      (define-key map [right-margin mouse-wheel-down-event] #'mwheel-scroll)
+      (define-key map [right-margin mouse-wheel-up-event] #'mwheel-scroll)
+      (define-key map [left-margin mouse-wheel-down-event] #'mwheel-scroll)
+      (define-key map [left-margin mouse-wheel-up-event] #'mwheel-scroll))
+    map))
+
 ;;;###autoload
 (define-minor-mode visual-fill-column-mode
   "Wrap lines according to `fill-column' in `visual-line-mode'."
   :init-value nil :lighter nil :global nil
-  :keymap
-  (let ((map (make-sparse-keymap)))
-    (when (bound-and-true-p mouse-wheel-mode)
-      (progn
-        (define-key map (vector 'left-margin mouse-wheel-down-event) 'mwheel-scroll)
-        (define-key map (vector 'left-margin mouse-wheel-up-event) 'mwheel-scroll)
-        (define-key map (vector 'right-margin mouse-wheel-down-event) 'mwheel-scroll)
-        (define-key map (vector 'right-margin mouse-wheel-up-event) 'mwheel-scroll))
-      map))
   (if visual-fill-column-mode
       (visual-fill-column-mode--enable)
     (visual-fill-column-mode--disable)))
@@ -94,8 +119,7 @@ this option is set to a value, it is used instead."
 Note that `visual-fill-column-mode' is only turned on in buffers
 in which Visual Line mode is active as well, and only in buffers
 that actually visit a file."
-  (when (and visual-line-mode
-             buffer-file-name)
+  (when buffer-file-name
     (visual-fill-column-mode 1)))
 
 (defun visual-fill-column-mode--enable ()

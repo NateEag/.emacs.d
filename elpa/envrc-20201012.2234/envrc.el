@@ -4,10 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
-;; Package-Commit: 19b4d6a8384a8e2a52caa496315377797fa8a062
+;; Package-Commit: 0761041302e51e96ca6857b69551868aea555a3f
 ;; Homepage: https://github.com/purcell/envrc
 ;; Package-Requires: ((seq "2") (emacs "24.4"))
-;; Package-Version: 20200714.201
+;; Package-Version: 20201012.2234
 ;; Package-X-Original-Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -57,6 +57,7 @@
 ;; TODO: click on mode lighter to get details
 ;; TODO: handle when direnv is not installed?
 ;; TODO: provide a way to disable in certain projects?
+;; TODO: cleanup the cache?
 
 (require 'seq)
 (require 'json)
@@ -148,9 +149,9 @@ One of '(none on error).")
     "]"))
 
 (defun envrc--find-env-dir ()
-  "Return the env dir for the current buffer, if any.
+  "Return the envrc directory for the current buffer, if any.
 This is based on a file scan.  In most cases we prefer to use the
-cached list of known dirs.
+cached list of known directories.
 
 Regardless of buffer file name, we always use
 `default-directory': the two should always match, unless the user
@@ -166,18 +167,18 @@ called `cd'"
   (mapconcat 'identity (cons env-dir process-env) "\0"))
 
 (defun envrc--update ()
-  "Add the current buffer's env, if any.
-All `envrc'-managed buffers with this env will have their
+  "Update the current buffer's environment if it is managed by direnv.
+All envrc.el-managed buffers with this env will have their
 environments updated."
-  (let* ((env-dir (envrc--find-env-dir))
-         (cache-key (envrc--cache-key env-dir process-environment)))
+  (let ((env-dir (envrc--find-env-dir)))
     ;; TODO: if no env-dir?
     (when env-dir
-      (let ((result (pcase (gethash cache-key envrc--cache 'missing)
-                      (`missing (let ((calculated (envrc--export env-dir)))
-                                  (puthash cache-key calculated envrc--cache)
-                                  calculated))
-                      (cached cached))))
+      (let* ((cache-key (envrc--cache-key env-dir process-environment))
+             (result (pcase (gethash cache-key envrc--cache 'missing)
+                       (`missing (let ((calculated (envrc--export env-dir)))
+                                   (puthash cache-key calculated envrc--cache)
+                                   calculated))
+                       (cached cached))))
         (envrc--apply (current-buffer) result)
         ;; We assume direnv and envrc's use of it is idempotent, and
         ;; add a cache entry for the new process-environment on that
@@ -320,7 +321,7 @@ If there is no current env dir, abort with a user error."
      ,@body))
 
 (defun envrc--call-process-with-default-exec-path (&rest args)
-  "Like `call-process', but ensures the default `exec-path' is used.
+  "Like `call-process', but ensures the default variable `exec-path' is used.
 This ensures the globally-accessible \"direnv\" binary is
 consistently available.  ARGS is as for `call-process'."
   (let ((exec-path (default-value 'exec-path)))
@@ -362,6 +363,27 @@ This can be useful if a .envrc has been deleted."
     (with-current-buffer buf
       (envrc--update))))
 
+(defvar envrc-file-extra-keywords
+  '("MANPATH_add" "PATH_add" "direnv_layout_dir" "direnv_load" "dotenv"
+    "expand_path" "find_up" "has" "join_args" "layout" "load_prefix"
+    "log_error" "log_status" "path_add" "rvm" "source_env" "source_up"
+    "use" "use_guix" "use_nix" "user_rel_path" "watch_file")
+  "Useful direnv keywords to be highlighted.")
+
+;;;###autoload
+(define-derived-mode envrc-file-mode
+  sh-mode "envrc"
+  "Major mode for .envrc files as used by direnv.
+\\{envrc-file-mode-map}"
+  (font-lock-add-keywords
+   nil `((,(regexp-opt envrc-file-extra-keywords 'symbols)
+          (0 font-lock-keyword-face)))))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.envrc\\'" . envrc-file-mode))
+
 
 (provide 'envrc)
 ;;; envrc.el ends here
+
+;; LocalWords:  envrc direnv

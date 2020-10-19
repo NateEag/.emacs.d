@@ -43,6 +43,14 @@ See `envrc-mode' for more information on Envrc mode.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'envrc-file-mode "envrc" "\
+Major mode for .envrc files as used by direnv.
+\\{envrc-file-mode-map}
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\.envrc\\'" . envrc-file-mode))
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "envrc" '("envrc-")))
 
 ;;;***

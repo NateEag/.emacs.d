@@ -684,7 +684,7 @@ hidden."
       (cond ((and (--any-p (oref it hidden)   children)
                   (--any-p (oref it children) children))
              (magit-section-show-headings section))
-            ((-any-p 'magit-section-hidden-body children)
+            ((seq-some 'magit-section-hidden-body children)
              (magit-section-show-children section))
             (t
              (magit-section-hide section))))))
@@ -696,7 +696,7 @@ hidden."
     (cond ((and (--any-p (oref it hidden)   children)
                 (--any-p (oref it children) children))
            (magit-section-show-headings magit-root-section))
-          ((-any-p 'magit-section-hidden-body children)
+          ((seq-some 'magit-section-hidden-body children)
            (magit-section-show-children magit-root-section))
           (t
            (mapc 'magit-section-hide children)))))
@@ -971,9 +971,9 @@ at point."
 
 (defun magit-section-match-assoc (section alist)
   "Return the value associated with SECTION's type or lineage in ALIST."
-  (-some (pcase-lambda (`(,key . ,val))
-           (and (magit-section-match-1 key section) val))
-         alist))
+  (seq-some (pcase-lambda (`(,key . ,val))
+              (and (magit-section-match-1 key section) val))
+            alist))
 
 ;;; Create
 

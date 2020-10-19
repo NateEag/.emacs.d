@@ -206,9 +206,14 @@ pass a list, only a vector."
   :group 'lsp-java)
 
 (defcustom lsp-java-import-exclusions ["**/node_modules/**" "**/.metadata/**" "**/archetype-resources/**" "**/META-INF/maven/**"]
-  "Configure glob patterns for excluding folders"
-  :type '(repeat string)
-  :group 'lsp-string-vector)
+  "Configure glob patterns for excluding folders when importing for the first time"
+  :type 'lsp-string-vector
+  :group 'lsp-java)
+
+(defcustom lsp-java-project-resource-filters ["node_modules" ".metadata" "archetype-resources" "META-INF/maven"]
+  "Configure glob patterns for excluding folders whenever workspace is refreshed"
+  :type 'lsp-string-vector
+  :group 'lsp-java)
 
 (defcustom lsp-java-content-provider-preferred nil
   "Preferred content provider (a 3rd party decompiler id,
@@ -425,7 +430,8 @@ example 'java.awt.*' will hide all types from the awt packages."
    ("java.import.gradle.arguments" lsp-java-import-gradle-arguments)
    ("java.import.gradle.offline.enabled" lsp-java-import-gradle-offline-enabled t)
    ("java.import.gradle.java.home" lsp-java-import-gradle-java-home)
-   ("java.import.gradle.home" lsp-java-import-gradle-home)))
+   ("java.import.gradle.home" lsp-java-import-gradle-home)
+   ("java.project.resourceFilters" lsp-java-project-resource-filters)))
 
 (defcustom lsp-java-inhibit-message t
   "If non-nil, inhibit java messages echo via `inhibit-message'."
@@ -794,12 +800,7 @@ PARAMS progress report notification data."
 (defun lsp-java--ensure-server (_client callback error-callback _update?)
   "Ensure that JDT server and the other configuration."
   (let* ((default-directory (make-temp-file "lsp-java-install" t))
-         (installed-mvn (let ((mvn-executable (executable-find "mvn")))
-                          ;; Quote path to maven executable if it has spaces.
-                          (if (and mvn-executable
-                                   (string-match "\s" mvn-executable))
-                              (format "\"%s\"" mvn-executable)
-                            mvn-executable)))
+         (installed-mvn (executable-find "mvn"))
          (mvn-command-and-options (if installed-mvn
                                       (list installed-mvn)
                                     (lsp-java--prepare-mvnw)))

@@ -63,8 +63,6 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (autoload 'lsp-jt-browser "lsp-jt" nil t nil)
 
-(autoload 'lsp-jt-show-report "lsp-jt" nil t nil)
-
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-jt" '("lsp-jt-")))
 
 ;;;***

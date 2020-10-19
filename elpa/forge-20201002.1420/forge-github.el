@@ -169,7 +169,8 @@
              t)))
         (when bump
           (forge--set-id-slot repo issue 'assignees .assignees)
-          (forge--set-id-slot repo issue 'labels .labels))
+          (unless (magit-get-boolean "forge.kludge-for-issue-294")
+            (forge--set-id-slot repo issue 'labels .labels)))
         issue))))
 
 (cl-defmethod forge--update-pullreqs ((repo forge-github-repository) data bump)
@@ -230,7 +231,8 @@
           (forge--set-id-slot repo pullreq 'review-requests
                               (--map (cdr (cadr (car it)))
                                      .reviewRequests))
-          (forge--set-id-slot repo pullreq 'labels .labels))
+          (unless (magit-get-boolean "forge.kludge-for-issue-294")
+            (forge--set-id-slot repo pullreq 'labels .labels)))
         pullreq))))
 
 (cl-defmethod forge--update-revnotes ((repo forge-github-repository) data)
@@ -534,33 +536,33 @@
 
 (cl-defmethod forge--submit-edit-post ((_ forge-github-repository) post)
   (forge--ghub-patch post
-                     (cl-typecase post
-                       (forge-pullreq "/repos/:owner/:repo/pulls/:number")
-                       (forge-issue   "/repos/:owner/:repo/issues/:number")
-                       (forge-post    "/repos/:owner/:repo/issues/comments/:number"))
-                     (if (cl-typep post 'forge-topic)
-                         (let-alist (forge--topic-parse-buffer)
-                           `((title . , .title)
-                             (body  . , .body)))
-                       `((body . ,(string-trim (buffer-string)))))
-                     :callback  (forge--post-submit-callback)
-                     :errorback (forge--post-submit-errorback)))
+    (cl-typecase post
+      (forge-pullreq "/repos/:owner/:repo/pulls/:number")
+      (forge-issue   "/repos/:owner/:repo/issues/:number")
+      (forge-post    "/repos/:owner/:repo/issues/comments/:number"))
+    (if (cl-typep post 'forge-topic)
+        (let-alist (forge--topic-parse-buffer)
+          `((title . , .title)
+            (body  . , .body)))
+      `((body . ,(string-trim (buffer-string)))))
+    :callback  (forge--post-submit-callback)
+    :errorback (forge--post-submit-errorback)))
 
 (cl-defmethod forge--set-topic-title
   ((_repo forge-github-repository) topic title)
   (forge--ghub-patch topic
-                     "/repos/:owner/:repo/issues/:number"
-                     `((title . ,title))
-                     :callback (forge--set-field-callback)))
+    "/repos/:owner/:repo/issues/:number"
+    `((title . ,title))
+    :callback (forge--set-field-callback)))
 
 (cl-defmethod forge--set-topic-state
   ((_repo forge-github-repository) topic)
   (forge--ghub-patch topic
-                     "/repos/:owner/:repo/issues/:number"
-                     `((state . ,(cl-ecase (oref topic state)
-                                   (closed "OPEN")
-                                   (open   "CLOSED"))))
-                     :callback (forge--set-field-callback)))
+    "/repos/:owner/:repo/issues/:number"
+    `((state . ,(cl-ecase (oref topic state)
+                  (closed "OPEN")
+                  (open   "CLOSED"))))
+    :callback (forge--set-field-callback)))
 
 (cl-defmethod forge--set-topic-milestone
   ((repo forge-github-repository) topic milestone)
@@ -654,6 +656,7 @@
                                silent unpaginate noerror reader
                                host
                                callback errorback)
+  (declare (indent defun))
   (ghub-get (if obj (forge--format-resource obj resource) resource)
             params
             :host (or host (oref (forge-get-repository obj) apihost))
@@ -669,6 +672,7 @@
                                silent unpaginate noerror reader
                                host
                                callback errorback)
+  (declare (indent defun))
   (ghub-put (if obj (forge--format-resource obj resource) resource)
             params
             :host (or host (oref (forge-get-repository obj) apihost))
@@ -683,6 +687,7 @@
                                 &key query payload headers
                                 silent unpaginate noerror reader
                                 host callback errorback)
+  (declare (indent defun))
   (ghub-post (forge--format-resource obj resource)
              params
              :host (or host (oref (forge-get-repository obj) apihost))
@@ -697,6 +702,7 @@
                                  &key query payload headers
                                  silent unpaginate noerror reader
                                  host callback errorback)
+  (declare (indent defun))
   (ghub-patch (forge--format-resource obj resource)
               params
               :host (or host (oref (forge-get-repository obj) apihost))
@@ -711,6 +717,7 @@
                                   &key query payload headers
                                   silent unpaginate noerror reader
                                   host callback errorback)
+  (declare (indent defun))
   (ghub-delete (forge--format-resource obj resource)
                params
                :host (or host (oref (forge-get-repository obj) apihost))

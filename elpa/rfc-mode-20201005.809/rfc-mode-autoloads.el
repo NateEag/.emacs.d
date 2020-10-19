@@ -11,8 +11,12 @@
 
 (autoload 'rfc-mode-read "rfc-mode" "\
 Read the RFC document NUMBER.
+Offer the number at point as default.
 
 \(fn NUMBER)" t nil)
+
+(autoload 'rfc-mode-browse "rfc-mode" "\
+Browse through all RFC documents referenced in the index using Helm." t nil)
 
 (autoload 'rfc-mode "rfc-mode" "\
 Major mode to browse and read RFC documents.

@@ -2,8 +2,8 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20200823.1217
-;; Package-Commit: 8587416c2123dd4dd1a7c2bc9207205e47e9b54a
+;; Package-Version: 20201005.809
+;; Package-Commit: ff7a36b81047892240d70fddd25e4e36d3434345
 ;; Version: 1.3.0
 ;; Package-Requires: ((emacs "25.1") (helm "3.2"))
 
@@ -52,18 +52,15 @@
 
 (defface rfc-mode-browser-title-face
   '((t :inherit default))
-  "Face used to highlight the title of RFC documents in the RFC
-  browser.")
+  "Face used to highlight the title of RFC documents in the RFC browser.")
 
 (defface rfc-mode-browser-title-obsolete-face
   '((t :inherit font-lock-comment-face))
-  "Face used to highlight the title of obsolete RFC documents in
-  the RFC browser.")
+  "Face used to highlight the title of obsolete RFC documents in the RFC browser.")
 
 (defface rfc-mode-browser-status-face
   '((t :inherit font-lock-keyword-face))
-  "Face used to highlight RFC document statuses in the RFC'
-  browser.")
+  "Face used to highlight RFC document statuses in the RFC browser.")
 
 (defcustom rfc-mode-directory (expand-file-name "~/rfc/")
   "The directory where RFC documents are stored."
@@ -76,7 +73,8 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   :type 'string)
 
 (defcustom rfc-mode-use-original-buffer-names nil
-  "Whether RFC document buffers should have the name of the document file (e.g. rfc21.txt vs *rfc21*)."
+  "Whether RFC document buffers should have the name of the document file.
+If nil (the default) then use e.g. *rfc21*, otherwise use e.g. rfc21.txt."
   :type 'boolean)
 
 (defcustom rfc-mode-browser-entry-title-width 60
@@ -200,11 +198,24 @@ Returns t if section is found, nil otherwise."
 
 ;;;###autoload
 (defun rfc-mode-read (number)
-  "Read the RFC document NUMBER."
+  "Read the RFC document NUMBER.
+Offer the number at point as default."
   (interactive
    (if (and current-prefix-arg (not (consp current-prefix-arg)))
        (list (prefix-numeric-value current-prefix-arg))
-     (list (read-number "RFC number: "))))
+     (let ((default
+             ;; Note that we don't use `number-at-point' as it will
+             ;; match number formats that make no sense as RFC numbers
+             ;; (floating point, hexadecimal, etc.).
+	     (save-excursion
+	       (skip-chars-backward "0-9")
+	       (if (looking-at "[0-9]")
+		   (string-to-number
+		    (buffer-substring-no-properties
+		     (point)
+		     (progn (skip-chars-forward "0-9")
+			    (point))))))))
+       (list (read-number "RFC number: " default)))))
   (display-buffer (rfc-mode--document-buffer number)))
 
 (defun rfc-mode-reload-index ()
@@ -213,6 +224,7 @@ Returns t if section is found, nil otherwise."
   (setq rfc-mode-index-entries
         (rfc-mode-read-index-file (rfc-mode-index-path))))
 
+;;;###autoload
 (defun rfc-mode-browse ()
   "Browse through all RFC documents referenced in the index using Helm."
   (interactive)
@@ -268,11 +280,12 @@ Returns t if section is found, nil otherwise."
           (let ((start (match-beginning 0))
                 (end (match-end 0))
                 (number (string-to-number (match-string 1))))
-            (make-text-button start end
-                              'action `(lambda (button)
-                                         (rfc-mode-read ,number))
-                              'help-echo (format "Read RFC %d" number)
-                              'follow-link t)
+            (unless (= start (line-beginning-position))
+              (make-text-button start end
+                                'action `(lambda (button)
+                                           (rfc-mode-read ,number))
+                                'help-echo (format "Read RFC %d" number)
+                                'follow-link t))
             (goto-char end)))))))
 
 (defun rfc-mode-header-start ()

@@ -690,19 +690,22 @@ They become the value of this this argument.")
 ;;;; Group
 
 (defclass transient-group (transient-child)
-  ((suffixes    :initarg :suffixes    :initform nil)
-   (hide        :initarg :hide        :initform nil)
-   (description :initarg :description :initform nil))
+  ((suffixes       :initarg :suffixes       :initform nil)
+   (hide           :initarg :hide           :initform nil)
+   (description    :initarg :description    :initform nil)
+   (setup-children :initarg :setup-children))
   "Abstract superclass of all group classes."
   :abstract t)
 
-(defclass transient-column (transient-group) ()
+(defclass transient-column (transient-group)
+  ((pad-keys :initarg :pad-keys))
   "Group class that displays each element on a separate line.")
 
 (defclass transient-row (transient-group) ()
   "Group class that displays all elements on a single line.")
 
-(defclass transient-columns (transient-group) ()
+(defclass transient-columns (transient-group)
+  ((pad-keys :initarg :pad-keys))
   "Group class that displays elements organized in columns.
 Direct elements have to be groups whose elements have to be
 commands or string.  Each subgroup represents a column.  This
@@ -944,6 +947,15 @@ example, sets a variable use `transient-define-infix' instead.
         (error "Need command, got %S" car))
        ((symbolp car)
         (setq args (plist-put args :command pop)))
+       ((and (commandp car)
+             (not (stringp car)))
+        (let ((cmd pop)
+              (sym (intern (format "transient:%s:%s"
+                                   prefix
+                                   (or (plist-get args :description)
+                                       (plist-get args :key))))))
+          (defalias sym cmd)
+          (setq args (plist-put args :command sym))))
        ((or (stringp car)
             (and car (listp car)))
         (let ((arg pop))
@@ -1505,7 +1517,6 @@ of the corresponding object.")
           (when-let ((conflict (and transient-detect-key-conflicts
                                     (transient--lookup-key map kbd))))
             (unless (eq cmd conflict)
-              (transient--emergency-exit)
               (error "Cannot bind %S to %s and also %s"
                      (string-trim key)
                      cmd conflict)))
@@ -1614,6 +1625,15 @@ EDIT may be non-nil."
     (transient--init-transient)
     (transient--suspend-which-key-mode)))
 
+(cl-defgeneric transient-setup-children (group children)
+  "Setup the CHILDREN of GROUP.
+If the value of the `setup-children' slot is non-nil, then call
+that function with CHILDREN as the only argument and return the
+value.  Otherwise return CHILDREN as is."
+  (if (slot-boundp group 'setup-children)
+      (funcall (oref group setup-children) children)
+    children))
+
 (defun transient--init-objects (name layout params)
   (setq transient--prefix
         (let ((proto (get name 'transient--prefix)))
@@ -1656,7 +1676,7 @@ EDIT may be non-nil."
         (when (transient--use-suffix-p obj)
           (when-let ((suffixes
                       (cl-mapcan (lambda (c) (transient--init-child levels c))
-                                 children)))
+                                 (transient-setup-children obj children))))
             (oset obj suffixes suffixes)
             (list obj)))))))
 
@@ -1982,9 +2002,9 @@ nil, then do nothing."
     (setq transient--stack nil)
     (setq transient--exitp t)
     (transient--pre-exit)
-    (transient--post-command)
-    (when err
-      (signal (car err) (cdr err)))))
+    (transient--post-command))
+  (when err
+    (signal (car err) (cdr err))))
 
 (add-hook 'debugger-mode-hook 'transient--emergency-exit)
 
@@ -2774,6 +2794,7 @@ have a history of their own.")
   (insert ?\n))
 
 (cl-defmethod transient--insert-group ((group transient-column))
+  (transient--maybe-pad-keys group)
   (dolist (suffix (oref group suffixes))
     (let ((str (transient-format suffix)))
       (insert str)
@@ -2784,6 +2805,7 @@ have a history of their own.")
   (let* ((columns
           (mapcar
            (lambda (column)
+             (transient--maybe-pad-keys column group)
              (let ((rows (mapcar 'transient-format (oref column suffixes))))
                (when-let ((desc (transient-format-description column)))
                  (push desc rows))
@@ -3025,6 +3047,21 @@ If the OBJ's `key' is currently unreachable, then apply the face
 (defun transient--lookup-key (keymap key)
   (let ((val (lookup-key keymap key)))
     (and val (not (integerp val)) val)))
+
+(defun transient--maybe-pad-keys (group &optional parent)
+  (when-let ((pad (if (slot-boundp group 'pad-keys)
+                      (oref group pad-keys)
+                    (and parent
+                         (slot-boundp parent 'pad-keys)
+                         (oref parent pad-keys)))))
+    (let ((width (apply #'max
+                        (cons (if (integerp pad) pad 0)
+                              (mapcar (lambda (suffix)
+                                        (length (oref suffix key)))
+                                      (oref group suffixes))))))
+      (dolist (suffix (oref group suffixes))
+        (oset suffix key
+              (truncate-string-to-width (oref suffix key) width nil ?\s))))))
 
 ;;; Help
 
@@ -3397,6 +3434,18 @@ we stop there."
     (seq-doseq (elt sequence)
       (push (funcall function (car acc) elt) acc))
     (nreverse acc)))
+
+(defun transient-plist-to-alist (plist)
+  (let (alist)
+    (while plist
+      (push (cons (let* ((symbol (pop plist))
+                         (name (symbol-name symbol)))
+                    (if (eq (aref name 0) ?:)
+                        (intern (substring name 1))
+                      symbol))
+                  (pop plist))
+            alist))
+    (nreverse alist)))
 
 ;;; Font-Lock
 

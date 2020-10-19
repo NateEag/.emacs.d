@@ -12,9 +12,10 @@
 ;;         Matt Renaud <mrenaud92@gmail.com>
 ;; Maintainer: Joel C. Salomon <joelcsalomon@gmail.com>
 ;; URL: http://www.emacswiki.org/emacs/SmartTabs
-;; Package-Version: 20160629.1452
+;; Package-Version: 20200907.2025
+;; Package-Commit: 1044c17e42479de943e69cdeb85e4d05ad9cca8c
 ;; Created: 19 Sep 2011
-;; Version: 1.0
+;; Version: 1.1
 ;; Keywords: languages
 
 ;; This file is not part of GNU Emacs.
@@ -247,14 +248,13 @@ Smarttabs is enabled in mode hook.")
   `(progn
      (defadvice ,function (around smart-tabs activate)
        (cond
-        (smart-tabs-mode
+        ((and smart-tabs-mode indent-tabs-mode (eq ,offset tab-width))
          (save-excursion
            (beginning-of-line)
            (while (looking-at "\t*\\( +\\)\t+")
              (replace-match "" nil nil nil 1)))
          (setq tab-width tab-width)
-         (let ((indent-tabs-mode t)
-               (tab-width fill-column)
+         (let ((tab-width fill-column)
                (,offset fill-column))
            (unwind-protect
                (progn ad-do-it))))

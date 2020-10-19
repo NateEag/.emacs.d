@@ -1,10 +1,13 @@
 ;;; smart-tabs-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (23400
-;;;;;;  19363 0 0))
+;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (0 0
+;;;;;;  0 0))
 ;;; Generated autoloads from smart-tabs-mode.el
 
 (autoload 'smart-tabs-when "smart-tabs-mode" "\
@@ -33,12 +36,15 @@ simplifies the creation of such a cons cell.
 (autoload 'smart-tabs-mode "smart-tabs-mode" "\
 Intelligently indent with tabs, align with spaces!
 
+If called interactively, enable Smart-Tabs mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'smart-tabs-mode-enable "smart-tabs-mode" "\
-Enable smart-tabs-mode.
-
-\(fn)" nil nil)
+Enable smart-tabs-mode." nil nil)
 
 (autoload 'smart-tabs-advice "smart-tabs-mode" "\
 
@@ -60,11 +66,14 @@ Add support for a language not already in the `smart-tabs-insinuate-alist'.
 
 (function-put 'smart-tabs-add-language-support 'lisp-indent-function '2)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smart-tabs-mode" '("smart-tabs-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; smart-tabs-mode-autoloads.el ends here

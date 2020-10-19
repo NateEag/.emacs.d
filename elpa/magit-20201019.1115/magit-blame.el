@@ -475,7 +475,9 @@ modes is toggled, then this mode also gets toggled automatically.
 
 (defun magit-blame--parse-chunk (type)
   (let (chunk revinfo)
-    (looking-at "^\\(.\\{40\\}\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)")
+    (unless (looking-at "^\\(.\\{40\\}\\) \\([0-9]+\\) \\([0-9]+\\) \\([0-9]+\\)")
+      (error "Blaming failed due to unexpected output: %s"
+             (buffer-substring-no-properties (point) (line-end-position))))
     (with-slots (orig-rev orig-file prev-rev prev-file)
         (setq chunk (magit-blame-chunk
                      :orig-rev                     (match-string 1)
@@ -674,9 +676,10 @@ modes is toggled, then this mode also gets toggled automatically.
   (propertize
    (concat (propertize "\s" 'display '(space :height (2)))
            (propertize "\n" 'line-height t))
-   'font-lock-face (list :background
-                         (face-attribute 'magit-blame-heading
-                                         :background nil t))))
+   'font-lock-face `(:background
+                     ,(face-attribute 'magit-blame-heading
+                                      :background nil t)
+                     ,@(and (>= emacs-major-version 27) '(:extend t)))))
 
 (defun magit-blame--format-time-string (time tz)
   (let* ((time-format (or (magit-blame--style-get 'time-format)

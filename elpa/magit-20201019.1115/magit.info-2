@@ -1651,6 +1651,7 @@ A.1 FAQ - How to ...?
 
 * Menu:
 
+* How to pronounce Magit?::
 * How to show git's output?::
 * How to install the gitman info manual?::
 * How to show diffs for gpg-encrypted files?::
@@ -1659,9 +1660,31 @@ A.1 FAQ - How to ...?
 * Should I disable VC?::
 
 
-File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Up: FAQ - How to ...?
+File: magit.info,  Node: How to pronounce Magit?,  Next: How to show git's output?,  Up: FAQ - How to ...?
 
-A.1.1 How to show git’s output?
+A.1.1 How to pronounce Magit?
+-----------------------------
+
+Either ‘mu[m's] git’ or ‘magi{c => t}’ is fine.
+
+   The slogan is "It’s Magit!  The magical Git client", so it makes
+sense to pronounce Magit like magic, while taking into account that C
+and T do not sound the same.
+
+   The German "Magie" is not pronounced the same as the English "magic",
+so if you speak German then you can use the above rational to justify
+using the former pronunciation; ‘Mag{ie => it}’.
+
+   You can also choose to use the former pronunciation just because you
+like it better.
+
+   Also see <https://magit.vc/assets/videos/magic.mp4>.  Also see
+<https://emacs.stackexchange.com/questions/13696>.
+
+
+File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Prev: How to pronounce Magit?,  Up: FAQ - How to ...?
+
+A.1.2 How to show git’s output?
 -------------------------------
 
 To show the output of recently run git commands, press ‘$’ (or, if that
@@ -1678,7 +1701,7 @@ debugging purposes, it’s possible to do so anyway by setting
 
 File: magit.info,  Node: How to install the gitman info manual?,  Next: How to show diffs for gpg-encrypted files?,  Prev: How to show git's output?,  Up: FAQ - How to ...?
 
-A.1.2 How to install the gitman info manual?
+A.1.3 How to install the gitman info manual?
 --------------------------------------------
 
 Git’s manpages can be exported as an info manual called ‘gitman’.
@@ -1699,7 +1722,7 @@ one of the supported packages ‘man’ or ‘woman’, e.g.:
 
 File: magit.info,  Node: How to show diffs for gpg-encrypted files?,  Next: How does branching and pushing work?,  Prev: How to install the gitman info manual?,  Up: FAQ - How to ...?
 
-A.1.3 How to show diffs for gpg-encrypted files?
+A.1.4 How to show diffs for gpg-encrypted files?
 ------------------------------------------------
 
 Git supports showing diffs for encrypted files, but has to be told to do
@@ -1712,7 +1735,7 @@ affects the diffs displayed inside Magit.
 
 File: magit.info,  Node: How does branching and pushing work?,  Next: Can Magit be used as ediff-version-control-package?,  Prev: How to show diffs for gpg-encrypted files?,  Up: FAQ - How to ...?
 
-A.1.4 How does branching and pushing work?
+A.1.5 How does branching and pushing work?
 ------------------------------------------
 
 Please see *note Branching:: and
@@ -1721,7 +1744,7 @@ Please see *note Branching:: and
 
 File: magit.info,  Node: Can Magit be used as ediff-version-control-package?,  Next: Should I disable VC?,  Prev: How does branching and pushing work?,  Up: FAQ - How to ...?
 
-A.1.5 Can Magit be used as ‘ediff-version-control-package’?
+A.1.6 Can Magit be used as ‘ediff-version-control-package’?
 -----------------------------------------------------------
 
 No, it cannot.  For that to work the functions ‘ediff-magit-internal’
@@ -1755,7 +1778,7 @@ only shows yet-to-be resolved conflicts.
 
 File: magit.info,  Node: Should I disable VC?,  Prev: Can Magit be used as ediff-version-control-package?,  Up: FAQ - How to ...?
 
-A.1.6 Should I disable VC?
+A.1.7 Should I disable VC?
 --------------------------
 
 If you don’t use VC (the built-in version control interface) then you

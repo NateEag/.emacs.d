@@ -200,6 +200,16 @@ Then show the status buffer for the new repository."
                         (y-or-n-p "Set `remote.pushDefault' to \"origin\"? "))))))
     (run-hooks 'magit-credential-hook)
     (setq directory (file-name-as-directory (expand-file-name directory)))
+    (when (file-exists-p directory)
+      (if (file-directory-p directory)
+          (when (> (length (directory-files directory)) 2)
+            (let ((name (magit-clone--url-to-name repository)))
+              (unless (and name
+                           (setq directory (file-name-as-directory
+                                            (expand-file-name name directory)))
+                           (not (file-exists-p directory)))
+                (user-error "%s already exists" directory))))
+        (user-error "%s already exists and is not a directory" directory)))
     (magit-run-git-async "clone" args "--" repository
                          (magit-convert-filename-for-git directory))
     ;; Don't refresh the buffer we're calling from.
@@ -230,8 +240,7 @@ Then show the status buffer for the new repository."
                (funcall magit-clone-default-directory repo)
              magit-clone-default-directory)
            nil nil
-           (and (string-match "\\([^/:]+?\\)\\(/?\\.git\\)?$" repo)
-                (match-string 1 repo)))
+           (magit-clone--url-to-name repo))
           (transient-args 'magit-clone))))
 
 (defun magit-clone-read-repository ()
@@ -246,8 +255,12 @@ Then show the status buffer for the new repository."
     (?l "or [l]ocal url"
         (concat "file://" (read-directory-name "Clone repository: file://")))))
 
+(defun magit-clone--url-to-name (url)
+  (and (string-match "\\([^/:]+?\\)\\(/?\\.git\\)?$" url)
+       (match-string 1 url)))
+
 (defun magit-clone--name-to-url (name)
-  (or (-some
+  (or (seq-some
        (pcase-lambda (`(,re ,host ,user))
          (and (string-match re name)
               (let ((repo (match-string 1 name)))

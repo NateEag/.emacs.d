@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.0
-;; Package-Version: 20200721.2250
-;; Package-Commit: cbaf7033edad8d4712b6e7dc11cad979c6a002de
+;; Version: 0.8.1 (unreleased)
+;; Package-Version: 20200827.2326
+;; Package-Commit: 7109c36c82496d6954dcf2b0b9c622b26e6ac75d
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -190,7 +190,8 @@ See its docs."
     ("bitbucket" git-link-bitbucket)
     ("gitorious" git-link-gitorious)
     ("gitlab" git-link-gitlab)
-    ("visualstudio\\|azure" git-link-azure))
+    ("visualstudio\\|azure" git-link-azure)
+    ("sourcegraph" git-link-sourcegraph))
   "Alist of host names and functions creating file links for those.
 Each element looks like (REGEXP FUNCTION) where REGEXP is used to
 match the remote's host name and FUNCTION is used to generate a link
@@ -207,7 +208,8 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
     ("bitbucket" git-link-commit-bitbucket)
     ("gitorious" git-link-commit-gitorious)
     ("gitlab" git-link-commit-github)
-    ("visualstudio\\|azure" git-link-commit-azure))
+    ("visualstudio\\|azure" git-link-commit-azure)
+    ("sourcegraph" git-link-commit-sourcegraph))
   "Alist of host names and functions creating commit links for those.
 Each element looks like (REGEXP FUNCTION) where REGEXP is used to
 match the remote's host name and FUNCTION is used to generate a link
@@ -510,6 +512,27 @@ return (FILENAME . REVISION) otherwise nil."
 	  hostname
 	  dirname
 	  commit))
+
+(defun git-link-sourcegraph (hostname dirname filename branch commit start end)
+  (let ((line-or-range (cond ((and start end) (format "#L%s-%s" start end))
+                             (start (format "#L%s" start))
+                             (t "")))
+        (branch-or-commit (or branch commit))
+        (dir-file-name (directory-file-name dirname)))
+    (format "https://%s/%s@%s/-/blob/%s%s"
+            hostname
+            dir-file-name
+            branch-or-commit
+            filename
+            line-or-range)))
+
+(defun git-link-commit-sourcegraph (hostname dirname commit)
+  (let ((dir-file-name (directory-file-name dirname)))
+    (format "https://%s/%s/-/commit/%s"
+            hostname
+            dir-file-name
+            commit)))
+
 
 (defun git-link--select-remote ()
   (if current-prefix-arg

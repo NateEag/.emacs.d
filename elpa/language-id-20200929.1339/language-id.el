@@ -2,9 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20200726.1813
-;; Package-Commit: aa541a4461a07add17374fd56aef6e2fd1a61c60
-;; Version: 0.7.1
+;; Package-Version: 20200929.1339
+;; Package-Commit: 4bfda9f6351f8327024551c20fe882384941214b
+;; Version: 0.8
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -88,7 +88,7 @@
     ("Dockerfile" dockerfile-mode)
     ("Elixir" elixir-mode)
     ("Elm" elm-mode)
-    ("Emacs Lisp" emacs-lisp-mode lisp-interaction-mode)
+    ("Emacs Lisp" emacs-lisp-mode)
     ("Fish" fish-mode)
     ("GLSL" glsl-mode)
     ("Go" go-mode)
@@ -125,6 +125,7 @@
     ("PureScript" purescript-mode)
     ("Python" python-mode)
     ("R" ess-r-mode (ess-mode (ess-dialect "R")))
+    ("Reason" reason-mode)
     ("Ruby" enh-ruby-mode ruby-mode)
     ("Rust" rust-mode rustic-mode)
     ("Scala" scala-mode)

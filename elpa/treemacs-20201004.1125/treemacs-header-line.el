@@ -16,7 +16,7 @@
 ;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;;; Varations of header-line-format treemacs can use.
+;;; Variations of header-line-format treemacs can use.
 
 ;;; Code:
 
@@ -67,12 +67,12 @@
       (let* ((menu
               (easy-menu-create-menu
                nil
-               `(["Edit Workspaces"       treemacs-edit-workspaces]
-                 ["Create Workspace"      treemacs-create-workspace]
-                 ["Remove Worspace"       treemacs-remove-workspace]
-                 ["Rename Workspace"      treemacs-rename-workspace]
-                 ["Switch Worspaces"      treemacs-switch-workspace]
-                 ["Set Fallback Worspace" treemacs-set-fallback-workspace])))
+               `(["Edit Workspaces"        treemacs-edit-workspaces]
+                 ["Create Workspace"       treemacs-create-workspace]
+                 ["Remove Workspace"       treemacs-remove-workspace]
+                 ["Rename Workspace"       treemacs-rename-workspace]
+                 ["Switch Workspace"       treemacs-switch-workspace]
+                 ["Set Fallback Workspace" treemacs-set-fallback-workspace])))
              (choice (x-popup-menu event menu)))
         (when choice (call-interactively (lookup-key menu (apply 'vector choice))))) )
      'face 'treemacs-header-button-face)
@@ -109,7 +109,7 @@
           " " treemacs-header-workspace-button
           " " treemacs-header-toggles-button)
   "Possible value setting for `treemacs-header-line-format'.
-Conisits for 4 different buttons:
+Consists for 4 different buttons:
 - `treemacs-header-close-button'
 - `treemacs-header-projects-button'
 - `treemacs-header-workspace-button'

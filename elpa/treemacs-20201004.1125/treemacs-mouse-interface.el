@@ -54,7 +54,7 @@ Must be bound to a mouse click, or EVENT will not be supplied."
     (treemacs--evade-image)))
 
 (defun treemacs-doubleclick-action (event)
-  "Run the appropriate doubeclick action for the current node.
+  "Run the appropriate double-click action for the current node.
 In the default configuration this means to do the same as `treemacs-RET-action'.
 
 This function's exact configuration is stored in
@@ -242,12 +242,12 @@ and ignore any prefix argument."
                  ["Remove Project"         treemacs-remove-project-from-workspace :visible ,(check project)]
                  ["Rename Project"         treemacs-rename-project                :visible ,(check project)])
                 ("Workspaces"
-                 ["Edit Workspaces"       treemacs-edit-workspaces]
-                 ["Create Workspace"      treemacs-create-workspace]
-                 ["Remove Worspace"       treemacs-remove-workspace]
-                 ["Rename Workspace"      treemacs-rename-workspace]
-                 ["Switch Worspaces"      treemacs-switch-workspace]
-                 ["Set Fallback Worspace" treemacs-set-fallback-workspace])
+                 ["Edit Workspaces"        treemacs-edit-workspaces]
+                 ["Create Workspace"       treemacs-create-workspace]
+                 ["Remove Workspace"       treemacs-remove-workspace]
+                 ["Rename Workspace"       treemacs-rename-workspace]
+                 ["Switch Workspace"       treemacs-switch-workspace]
+                 ["Set Fallback Workspace" treemacs-set-fallback-workspace])
                 ("Toggles"
                  [,(format "Dotfile Visibility (Currently %s)"
                            (if treemacs-show-hidden-files "Enabled" "Disabled"))

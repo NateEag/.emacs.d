@@ -4,8 +4,8 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20200517.115
-;; Package-Commit: 1937db7513db570606ea8798916180b7dd75d3b1
+;; Package-Version: 20200927.747
+;; Package-Commit: c4a519be102cb99dd86be3ee8c387f008d097635
 ;; Version: 1.0.11
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -190,6 +190,15 @@
                     (region-end)
                   (progn
                     (skip-chars-forward string-inflection-word-chars)
+
+                    ;; https://github.com/akicho8/string-inflection/issues/30
+                    ;;
+                    ;;   objectName->method --> "objectName-" NG
+                    ;;                      --> "objectName"  OK
+                    (when (and (not (eobp)) (not (bobp)))
+                      (when (string= (buffer-substring (1- (point)) (1+ (point))) "->")
+                        (forward-char -1)))
+
                     (point))))
          (end (if (use-region-p)
                   (region-beginning)

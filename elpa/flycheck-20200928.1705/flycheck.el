@@ -242,6 +242,7 @@ attention to case differences."
     python-flake8
     python-pylint
     python-pycompile
+    python-pyright
     python-mypy
     r-lintr
     racket
@@ -10617,6 +10618,44 @@ See URL `https://docs.python.org/3.4/library/py_compile.html'."
   :modes python-mode
   :next-checkers ((warning . python-mypy)))
 
+(defun flycheck-pyright--parse-error (output checker buffer)
+  "Parse pyright errors/warnings from JSON OUTPUT.
+CHECKER and BUFFER denote the CHECKER that returned OUTPUT and
+the BUFFER that was checked respectively."
+  (seq-map
+   (lambda (err)
+     (let-alist err
+       (flycheck-error-new-at
+        (+ 1 .range.start.line)
+        (+ 1 .range.start.character)
+        (pcase .severity
+          ("error" 'error)
+          ("warning" 'warning)
+          (_ 'warning))
+        .message
+        :end-line (+ 1 .range.end.line)
+        :end-column (+ 1 .range.end.character)
+        :checker checker
+        :buffer buffer
+        :filename (buffer-file-name buffer))))
+   (cdr (nth 2 (car (flycheck-parse-json output))))))
+
+(defun flycheck-pyright--find-project-root (_checker)
+  "Find project root by searching for pyright config file."
+  (locate-dominating-file
+   (or buffer-file-name default-directory) "pyrightconfig.json"))
+
+(flycheck-define-checker python-pyright
+  "Static type checker for Python
+
+See URL https://github.com/microsoft/pyright."
+  :command ("pyright"
+            "--outputjson"
+            source-inplace)
+  :working-directory flycheck-pyright--find-project-root
+  :error-parser flycheck-pyright--parse-error
+  :modes python-mode)
+
 (define-obsolete-variable-alias 'flycheck-python-mypy-ini
   'flycheck-python-mypy-config "32")
 
@@ -10881,6 +10920,10 @@ See URL `https://nixos.org/nix/manual/#sec-nix-instantiate'."
   :standard-input t
   :error-patterns
   ((error line-start
+          "at: (" line ":" column ") from stdin"
+          (one-or-more "\n" (zero-or-more space (one-or-more not-newline)))
+          (message) line-end)
+   (error line-start
           "error: " (message) " at " (file-name) ":" line ":" column
           line-end))
   :error-filter
@@ -11066,8 +11109,7 @@ See URL `https://github.com/testdouble/standard' for more information."
   :next-checkers '((warning . ruby-reek)
                    (warning . ruby-rubylint)))
 
-;; Default to `nil' to let Reek find its configuration file by itself
-(flycheck-def-config-file-var flycheck-reekrc ruby-reek nil
+(flycheck-def-config-file-var flycheck-reekrc ruby-reek ".reek.yml"
   :safe #'string-or-null-p
   :package-version '(flycheck . "30"))
 
@@ -11960,6 +12002,11 @@ See URL `https://www.terraform.io/docs/commands/fmt.html'."
   :standard-input t
   :error-patterns
   ((error line-start "Error: " (one-or-more not-newline)
+          "\n\n  on <stdin> line " line ", in terraform:"
+          (one-or-more "\n" (zero-or-more space (one-or-more not-newline)))
+          (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
+          line-end)
+   (error line-start "Error: " (one-or-more not-newline)
           "\n\n  on <stdin> line " line ":\n  (source code not available)\n\n"
           (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
           line-end))

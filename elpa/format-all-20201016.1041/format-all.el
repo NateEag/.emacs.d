@@ -2,10 +2,10 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200804.1822
-;; Package-Commit: ccfff41a200e16e3644c2531e984959392e3341a
+;; Package-Version: 20201016.1041
+;; Package-Commit: 361178827723cb11ca774431c938c27894a08e13
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.7.1"))
+;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.8"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 ;;
@@ -64,6 +64,7 @@
 ;; - PureScript (purty)
 ;; - Python (black)
 ;; - R (styler)
+;; - Reason (bsrefmt)
 ;; - Ruby (rufo)
 ;; - Rust (rustfmt)
 ;; - Scala (scalafmt)
@@ -97,6 +98,7 @@
 ;;
 ;;; Code:
 
+(require 'cl-lib)
 (require 'language-id)
 
 (defvar format-all-debug nil
@@ -383,6 +385,12 @@ Consult the existing formatters for examples of BODY."
   (:executable "brittany")
   (:install "stack install brittany")
   (:languages "Haskell" "Literate Haskell")
+  (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter bsrefmt
+  (:executable "bsrefmt")
+  (:install "npm install --global bs-platform")
+  (:languages "Reason")
   (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter buildifier
@@ -803,8 +811,9 @@ Relies on FORMATTER and LANGUAGE from `format-all--probe'."
           (widen)
           (format-all--save-line-number
            (lambda ()
-             (erase-buffer)
-             (insert output))))
+             (let ((inhibit-read-only t))
+               (erase-buffer)
+               (insert output)))))
         (format-all--show-or-hide-errors errput)
         (run-hook-with-args 'format-all-after-format-functions
                             formatter status)

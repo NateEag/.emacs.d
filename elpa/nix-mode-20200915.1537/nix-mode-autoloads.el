@@ -179,6 +179,10 @@ See `nix-prettify-mode' for more information on Nix-Prettify mode.
 (autoload 'nix-repl "nix-repl" "\
 Load the Nix-REPL." t nil)
 
+(autoload 'nix-repl-completion-at-point "nix-repl" "\
+Completion at point function for Nix using \"nix-repl\".
+See `completion-at-point-functions'." nil nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-repl" '("nix-")))
 
 ;;;***

@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2019-2020 Jordan Besly
 ;;
-;; Version: 0.3.0
-;; Package-Version: 20200527.828
-;; Package-Commit: f8a01beda6260bd2eff3f9fe154ddc16da7b6504
+;; Version: 0.2.4
+;; Package-Version: 20200828.1217
+;; Package-Commit: 45b7d6ad63165c82a95966b291abbfe305d3ada2
 ;; Keywords: processes, terminals
 ;; URL: https://github.com/p3r7/with-shell-interpreter
 ;; Package-Requires: ((emacs "25.1")(cl-lib "0.6.1"))
@@ -154,49 +154,41 @@ For more detailed instructions, have a look at https://github.com/p3r7/with-shel
                                             w32-arg-quote
                                             allow-local-vars)
   "Same as `with-shell-interpreter' except :form has to be a quoted sexp."
-  (unless path
-    (setq path default-directory))
-  (unless (file-exists-p path)
-    (error "Path %s doesn't seem to exist" path))
-
-  (let* ((func
-          (if (functionp form) form
-            ;; Try to use the "current" lexical/dynamic mode for `form'.
-            (eval `(lambda () ,form) lexical-binding)))
-         (is-remote (file-remote-p path))
-         (allow-local-vars (or allow-local-vars 'connection)) ; default value
-         (allow-buffer-local-vars (member allow-local-vars '(buffer both)))
-         (allow-cnnx-local-vars (member allow-local-vars '(connection both)))
-         (cnnx-local-vars (with-shell-interpreter--cnnx-local-vars path))
-         (interpreter (with-shell-interpreter--interpreter-value is-remote allow-buffer-local-vars
-                                                                 allow-cnnx-local-vars cnnx-local-vars
-                                                                 interpreter))
-         (interpreter-name (with-shell-interpreter--interpreter-name interpreter))
-         (explicit-interpreter-args-var (intern (concat "explicit-" interpreter-name "-args")))
-         (interpreter-args (with-shell-interpreter--interpreter-args-value is-remote explicit-interpreter-args-var
-                                                                           interpreter
-                                                                           allow-buffer-local-vars
-                                                                           allow-cnnx-local-vars cnnx-local-vars
-                                                                           interpreter-args))
-         (command-switch (with-shell-interpreter--command-switch is-remote interpreter
-                                                                 allow-buffer-local-vars
-                                                                 allow-cnnx-local-vars cnnx-local-vars
-                                                                 command-switch))
-         ;; bellow are vars acting as implicit options to shell functions
-         (default-directory path)
-         (shell-file-name interpreter)
-         (explicit-shell-file-name interpreter)
-         (shell-command-switch command-switch)
-         (enable-connection-local-variables nil) ; disable lookup of connection-local vars in :form
-         ;; NB: w32-only feature
-         (w32-quote-process-args (with-shell-interpreter--w32-quote-process-args is-remote interpreter
-                                                                                 allow-buffer-local-vars
-                                                                                 allow-cnnx-local-vars cnnx-local-vars
-                                                                                 w32-arg-quote)))
-    (cl-progv
-        (list explicit-interpreter-args-var)
-        (list interpreter-args)
-      (funcall func))))
+  (cl-destructuring-bind (path
+                          is-remote
+                          allow-buffer-local-vars
+                          allow-cnnx-local-vars cnnx-local-vars
+                          interpreter interpreter-name
+                          explicit-interpreter-args-var)
+      (with-shell-interpreter--generate-props path interpreter allow-local-vars)
+    (let* ((func
+            (if (functionp form) form
+              ;; Try to use the "current" lexical/dynamic mode for `form'.
+              (eval `(lambda () ,form) lexical-binding)))
+           (interpreter-args (with-shell-interpreter--interpreter-args-value is-remote explicit-interpreter-args-var
+                                                                             interpreter
+                                                                             allow-buffer-local-vars
+                                                                             allow-cnnx-local-vars cnnx-local-vars
+                                                                             interpreter-args))
+           (command-switch (with-shell-interpreter--command-switch is-remote interpreter
+                                                                   allow-buffer-local-vars
+                                                                   allow-cnnx-local-vars cnnx-local-vars
+                                                                   command-switch))
+           ;; bellow are vars acting as implicit options to shell functions
+           (default-directory path)
+           (shell-file-name interpreter)
+           (explicit-shell-file-name interpreter)
+           (shell-command-switch command-switch)
+           (enable-connection-local-variables nil) ; disable lookup of connection-local vars in :form
+           ;; NB: w32-only feature
+           (w32-quote-process-args (with-shell-interpreter--w32-quote-process-args is-remote interpreter
+                                                                                   allow-buffer-local-vars
+                                                                                   allow-cnnx-local-vars cnnx-local-vars
+                                                                                   w32-arg-quote)))
+      (cl-progv
+          (list explicit-interpreter-args-var)
+          (list interpreter-args)
+        (funcall func)))))
 
 
 
@@ -447,6 +439,35 @@ The order of precedence is like so:
       ;; global value
       (ignore-errors
         (with-shell-interpreter--symbol-value 'w32-quote-process-args nil))))
+
+
+
+;; HELPER: COMPUTED VARS
+
+(defun with-shell-interpreter--generate-props (path interpreter allow-local-vars)
+  "Generate several usefull variable values from PATH, INTERPRETER and ALLOW-LOCAL-VARS.
+This function exists to be reused by package `friendly-shell'."
+  (unless path
+    (setq path default-directory))
+  (unless (file-exists-p path)
+    (error "Path %s doesn't seem to exist" path))
+
+  (let* ((is-remote (file-remote-p path))
+         (allow-local-vars (or allow-local-vars 'connection))
+         (allow-buffer-local-vars  (member allow-local-vars '(buffer both)))
+         (allow-cnnx-local-vars (member allow-local-vars '(connection both)))
+         (cnnx-local-vars (with-shell-interpreter--cnnx-local-vars path))
+         (interpreter (with-shell-interpreter--interpreter-value is-remote
+                                                                 allow-buffer-local-vars
+                                                                 allow-cnnx-local-vars cnnx-local-vars
+                                                                 interpreter))
+         (interpreter-name (with-shell-interpreter--interpreter-name interpreter))
+         (explicit-interpreter-args-var (intern (concat "explicit-" interpreter-name "-args"))))
+    (list path is-remote
+          allow-buffer-local-vars
+          allow-cnnx-local-vars cnnx-local-vars
+          interpreter interpreter-name
+          explicit-interpreter-args-var)))
 
 
 

@@ -363,6 +363,17 @@ available APPEND is ignored."
       (setq guess (abbreviate-file-name (expand-file-name guess))))
     (read-file-name prompt (file-name-directory guess) nil nil
                     (file-name-nondirectory guess))))
+
+;; The native-comp branch of emacs "is a modified Emacs capable of compiling
+;; and running Emacs Lisp as native code in form of re-loadable elf files."
+;; (https://akrl.sdf.org/gccemacs.html). The function subr-native-elisp-p is a
+;; native function available only in this branch and evaluates to true if the
+;; argument supplied is a natively compiled lisp function. Use this function
+;; if it's available, otherwise return nil. Helm needs to distinguish compiled
+;; functions from other symbols in a various places.
+(defun helm-subr-native-elisp-p (object)
+  (when (fboundp 'subr-native-elisp-p)
+      (subr-native-elisp-p object)))
 
 ;;; Macros helper.
 ;;
@@ -459,7 +470,7 @@ found in SEQ."
 (defmacro helm-aif (test-form then-form &rest else-forms)
   "Anaphoric version of `if'.
 Like `if' but set the result of TEST-FORM in a temporary variable
-called `it'.  THEN-FORM and ELSE-FORMS are then excuted just like
+called `it'.  THEN-FORM and ELSE-FORMS are then executed just like
 in `if'."
   (declare (indent 2) (debug t))
   `(let ((it ,test-form))
@@ -900,16 +911,22 @@ ARGS is (cand1 cand2 ...) or ((disp1 . real1) (disp2 . real2) ...)
         else
         collect (funcall function arg)))
 
+(defsubst helm-append-1 (elm seq)
+  "Append ELM to SEQ.
+If ELM is not a list transform it in list."
+  (append (helm-mklist elm) seq))
+
 (defun helm-append-at-nth (seq elm index)
   "Append ELM at INDEX in SEQ."
   (let ((len (length seq)))
     (setq index (min (max index 0) len))
     (if (zerop index)
-        (append elm seq)
+        (helm-append-1 elm seq)
       (cl-loop for i in seq
                for count from 1 collect i
                when (= count index)
-               if (listp elm) append elm
+               if (and (listp elm) (not (functionp elm)))
+               append elm
                else collect elm))))
 
 (defun helm-take-first-elements (seq n)
@@ -1110,7 +1127,8 @@ Example:
 
 (defun helm-symbol-name (obj)
   (if (or (and (consp obj) (functionp obj))
-          (byte-code-function-p obj))
+          (byte-code-function-p obj)
+          (helm-subr-native-elisp-p obj))
       "Anonymous"
       (symbol-name obj)))
 
@@ -1513,8 +1531,7 @@ flex or helm-flex completion style if present."
     (or
      styles
      (pcase (and (null nomode)
-                 (with-helm-current-buffer
-                   (cdr (assq major-mode helm-completion-styles-alist))))
+                 (cdr (assq major-mode helm-completion-styles-alist)))
        (`(,_l . ,ll) ll))
      ;; We need to have flex always behind helm, otherwise
      ;; when matching against e.g. '(foo foobar foao frogo bar
@@ -1576,7 +1593,8 @@ Also `helm-completion-style' settings have no effect here,
            ;; emacs22).
            (helm-completion-style 'emacs)
            (completion-styles
-            (helm--prepare-completion-styles nomode styles))
+            (with-helm-current-buffer
+              (helm--prepare-completion-styles nomode styles)))
            (completion-flex-nospace t)
            (nosort (eq metadata 'nosort))
            (compsfn (lambda (str pred _action)

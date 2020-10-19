@@ -2352,8 +2352,10 @@ i.e. functions called with RET."
   (let ((actions (helm-get-actions-from-current-source)))
     (when actions
       (cl-assert (or (eq action actions)
-                     ;; Compiled lambda
+                     ;; Compiled lambdas
                      (byte-code-function-p action)
+                     ;; Natively compiled (libgccjit)
+                     (helm-subr-native-elisp-p action)
                      ;; Lambdas
                      (and (listp action) (functionp action))
                      ;; One of current actions.
@@ -3389,6 +3391,7 @@ Note that this feature is available only with emacs-25+."
                  (foreground-color . ,(or helm-frame-foreground-color
                                           (face-attribute 'default :foreground)))
                  (alpha . ,(or helm-frame-alpha 100))
+                 (font . ,(assoc-default 'font (frame-parameters)))
                  (vertical-scroll-bars . nil)
                  (menu-bar-lines . 0)
                  (fullscreen . nil)
@@ -3884,6 +3887,9 @@ WARNING: Do not use this mode yourself, it is internal to Helm."
   (with-current-buffer helm-buffer
     (let ((frame (selected-frame)))
       (setq cursor-type t)
+      ;; Ensure restoring default-value of mode-line to allow user
+      ;; using the mouse when helm is inactive (issues #1517,#2377).
+      (setq mode-line-format (default-value 'mode-line-format))
       (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
       (remove-hook 'post-command-hook 'helm--update-header-line)
       ;; Be sure we call cleanup functions from helm-buffer.
@@ -5231,7 +5237,8 @@ If action buffer is selected, back to the Helm buffer."
                            (if (functionp actions)
                                (message "Sole action: %s"
                                         (if (or (consp actions)
-                                                (byte-code-function-p actions))
+                                                (byte-code-function-p actions)
+                                                (helm-subr-native-elisp-p actions))
                                             "Anonymous" actions))
                              (helm-show-action-buffer actions)
                              ;; Be sure the minibuffer is entirely deleted (#907).
@@ -5255,7 +5262,8 @@ If action buffer is selected, back to the Helm buffer."
             (if (functionp it)
                 (message "Sole action: %s"
                          (if (or (consp it)
-                                 (byte-code-function-p it))
+                                 (byte-code-function-p it)
+                                 (helm-subr-native-elisp-p it))
                              "Anonymous" it))
               (setq helm-saved-action
                     (x-popup-menu

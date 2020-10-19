@@ -405,6 +405,11 @@ Jump to the matching tag using INFO and NUM.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-terminal.el
 
+(autoload 'evilmi-prompt-line-p "evil-matchit-terminal" "\
+If line at POSITION has prompt at the beginning.
+
+\(fn &optional POSITION)" nil nil)
+
 (autoload 'evilmi-terminal-get-tag "evil-matchit-terminal" "\
 Get tag at point." nil nil)
 

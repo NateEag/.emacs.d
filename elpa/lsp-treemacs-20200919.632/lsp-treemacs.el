@@ -139,13 +139,12 @@
   "Select the element under cursor."
   (interactive)
   (let ((key (button-get (treemacs-node-at-point) :data)))
-    (if (and (consp key) (ht? (cdr key)))
-        (-let (((file . _diagnostic) key))
-          (with-current-buffer (find-file-noselect file)
-            (with-lsp-workspaces (lsp--try-project-root-workspaces nil nil)
-              (save-excursion
-                (goto-char (lsp--position-to-point :start))
-                (lsp-execute-code-action-by-kind "quickfix")))))
+    (if (and (consp key) (lsp-diagnostic? (cl-rest key)))
+        (progn
+          (lsp-treemacs--open-file-in-mru (cl-first key))
+          (-let [(&Diagnostic :range (&RangeToPoint :start)) (cl-rest key)]
+            (goto-char start)
+            (call-interactively #'lsp-execute-code-action)))
       (user-error "Not on a diagnostic"))))
 
 (defun lsp-treemacs-cycle-severity ()
@@ -864,7 +863,7 @@
      (with-current-buffer ,buffer
        ,@body)))
 
-(defvar lsp-treemacs-use-cache nil)
+(defvar-local lsp-treemacs-use-cache nil)
 (defvar-local lsp-treemacs--generic-cache nil)
 
 (defun lsp-treemacs--node-key (node)
@@ -890,9 +889,11 @@
                                  item
                                  (lambda (result)
                                    (lsp-treemacs-wcb-unless-killed buffer
-                                     (puthash node-key (cons t result) lsp-treemacs--generic-cache)
-                                     (let ((lsp-treemacs-use-cache t))
-                                       (lsp-treemacs-generic-refresh))))))
+                                     (unless (equal (gethash node-key  lsp-treemacs--generic-cache)
+                                                    (cons t result))
+                                       (puthash node-key (cons t result) lsp-treemacs--generic-cache)
+                                       (let ((lsp-treemacs-use-cache t))
+                                         (treemacs-update-node (cons :custom node-key) t)))))))
                       (or (cl-rest (gethash node-key lsp-treemacs--generic-cache))
                           `((:label ,(propertize "Loading..." 'face 'shadow)
                                     :icon-literal " "
@@ -1000,7 +1001,7 @@
                                             'face 'lsp-lens-face)))
           :key line
           :point start-point
-          :icon-literal " "
+          :icon-literal ""
           :ret-action (lambda (&rest _)
                         (interactive)
                         (lsp-treemacs--open-file-in-mru filename)
@@ -1014,10 +1015,11 @@
     (treemacs-GENERIC-extension)))
 
 (defun lsp-treemacs-generic-refresh ()
-  (condition-case _err
-      (let ((inhibit-read-only t))
-        (treemacs-update-node '(:custom LSP-Generic) t))
-    (error)))
+  (let (lsp-treemacs-use-cache)
+    (condition-case _err
+        (let ((inhibit-read-only t))
+          (treemacs-update-node '(:custom LSP-Generic) t))
+      (error))))
 
 (defun lsp-treemacs-generic-right-click (event)
   (interactive "e")
@@ -1074,16 +1076,6 @@
                      :ret-action (lambda (&rest _)
                                    (interactive)
                                    (lsp-treemacs--open-file-in-mru path)))))))
-
-(defmacro lsp-treemacs-define-action (name keys &rest body)
-  (declare (doc-string 3) (indent 2))
-  `(defun ,name (&rest args)
-     ,(format "Code action %s" name)
-     (interactive)
-     (if-let (node (treemacs-node-at-point))
-         (-let [,(cons '&plist keys) (button-get node :item)]
-           ,@body)
-       (treemacs-pulse-on-failure "No node at point"))))
 
 (defun lsp-treemacs-render (tree title expand-depth &optional buffer-name right-click-actions)
   (let ((search-buffer (get-buffer-create (or buffer-name "*LSP Lookup*"))))

@@ -165,7 +165,8 @@ available in your path to use. Otherwise the system will try to
 find a suitable one. Set this variable before loading lsp."
   :group 'lsp-clangd
   :risky t
-  :type 'file)
+  :type '(choice (file :tag "Path")
+                 (const :tag "Auto" nil)))
 
 (defvar lsp-clients--clangd-default-executable nil
   "Clang default executable full path when found.
@@ -181,10 +182,12 @@ This must be set only once after loading the clang client.")
   "Generate the language server startup command."
   (unless lsp-clients--clangd-default-executable
     (setq lsp-clients--clangd-default-executable
-          (-first #'executable-find
-                  (-map (lambda (version)
-                          (concat "clangd" version))
-                        '("" "-10" "-9" "-8" "-7" "-6")))))
+          (or (-first #'executable-find
+                      (-map (lambda (version)
+                              (concat "clangd" version))
+                            '("" "-12" "-11" "-10" "-9" "-8" "-7" "-6")))
+              (lsp-clients-executable-find "xcodebuild" "-find-executable" "clangd")
+              (lsp-clients-executable-find "xcrun" "--find" "clangd"))))
 
   `(,(or lsp-clients-clangd-executable lsp-clients--clangd-default-executable "clangd")
     ,@lsp-clients-clangd-args))
@@ -226,7 +229,9 @@ returned to avoid that the echo area grows uncomfortably."
                                        "\n")
                                       "```")) nil t nil)
           (progn (narrow-to-region (match-beginning 2) (match-end 2))
-                 (lsp--render-element (lsp-clangd-join-region (point-min) (point-max))))
+                 (lsp--render-element (lsp-make-marked-string
+                                       :language "cpp"
+                                       :value (lsp-clangd-join-region (point-min) (point-max)))))
         (car (s-lines (lsp--render-element contents)))))))
 
 

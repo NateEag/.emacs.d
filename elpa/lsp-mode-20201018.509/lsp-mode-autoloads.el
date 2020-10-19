@@ -52,6 +52,8 @@ Explain a clang-tidy ERROR by scraping documentation from llvm.org.
 
 (define-obsolete-variable-alias 'lsp-prefer-capf 'lsp-completion-provider "lsp-mode 7.0.1")
 
+(define-obsolete-variable-alias 'lsp-enable-completion-at-point 'lsp-completion-enable "lsp-mode 7.0.1")
+
 (autoload 'lsp-completion-at-point "lsp-completion" "\
 Get lsp completions." nil nil)
 
@@ -298,7 +300,7 @@ Click lsp lens using `avy' package." t nil)
 ;;;### (autoloads nil "lsp-lua" "lsp-lua.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-lua.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lua" '("lsp-clients-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lua" '("lsp-")))
 
 ;;;***
 
@@ -353,6 +355,17 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'lsp-modeline-workspace-status-mode "lsp-modeline" "\
+Toggle workspace status on modeline.
+
+If called interactively, enable Lsp-Modeline-Workspace-Status
+mode if ARG is positive, and disable it if ARG is zero or
+negative.  If called from Lisp, also enable the mode if ARG is
+omitted or nil, and toggle it if ARG is `toggle'; disable the
+mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-modeline" '("lsp-")))
 
 ;;;***
@@ -382,6 +395,13 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;; Generated autoloads from lsp-php.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-php" '("lsp-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-prolog" "lsp-prolog.el" (0 0 0 0))
+;;; Generated autoloads from lsp-prolog.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-prolog" '("lsp-prolog-server-command")))
 
 ;;;***
 
@@ -418,6 +438,13 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;; Generated autoloads from lsp-r.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-r" '("lsp-clients-r-server-command")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-racket" "lsp-racket.el" (0 0 0 0))
+;;; Generated autoloads from lsp-racket.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-racket" '("lsp-racket-lang")))
 
 ;;;***
 

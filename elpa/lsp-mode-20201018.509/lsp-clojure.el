@@ -33,28 +33,53 @@
   :group 'lsp-mode
   :tag "Lsp Clojure")
 
-(defcustom lsp-clojure-server-command  '("bash" "-c" "clojure-lsp")
+(define-obsolete-variable-alias 'lsp-clojure-server-command
+  'lsp-clojure-custom-server-command  "lsp-mode 7.1")
+
+(defcustom lsp-clojure-custom-server-command nil
   "The clojure-lisp server command."
   :group 'lsp-clojure
   :risky t
-  :type 'list)
+  :type '(repeat string))
+
+(defcustom lsp-clojure-server-download-url "https://github.com/snoe/clojure-lsp/releases/latest/download/clojure-lsp"
+  "Automatic download url for lsp-clojure."
+  :type 'string
+  :group 'lsp-clojure
+  :package-version '(lsp-mode . "7.1"))
+
+(defcustom lsp-clojure-server-store-path (f-join lsp-server-install-dir
+                                                "clojure"
+                                                "clojure-lsp")
+  "The path to the file in which `clojure-lsp' will be stored."
+  :type 'file
+  :group 'lsp-clojure
+  :package-version '(lsp-mode . "7.1"))
+
+;; Internal
+
+(lsp-dependency
+ 'clojure-lsp
+ '(:system "clojure-lsp")
+ `(:download :url lsp-clojure-server-download-url
+             :store-path lsp-clojure-server-store-path
+             :set-executable? t))
 
 ;; Refactorings
 
-(defun lsp-clojure--execute-command (command &rest args)
+(defun lsp-clojure--execute-command (command &optional args)
   "Send an executeCommand request for COMMAND with ARGS."
   (lsp--cur-workspace-check)
-  (lsp--send-execute-command command args))
+  (lsp--send-execute-command command (apply #'vector args)))
 
 (defun lsp-clojure--refactoring-call (refactor-name &rest additional-args)
   "Send an executeCommand request for REFACTOR-NAME with ADDITIONAL-ARGS.
 If there are more arguments expected after the line and column numbers."
   (lsp--cur-workspace-check)
-  (lsp-clojure--execute-command refactor-name (apply #'vector
-                                                     (cl-list* (lsp--buffer-uri)
-                                                               (- (line-number-at-pos) 1) ;; clojure-lsp expects line numbers to start at 0
-                                                               (current-column)
-                                                               additional-args))))
+  (lsp-clojure--execute-command refactor-name (cl-list* (lsp--buffer-uri)
+                                                        (- (line-number-at-pos) 1) ;; clojure-lsp expects line numbers to start at 0
+                                                        (current-column)
+                                                        additional-args)))
 
 (defun lsp-clojure-add-missing-libspec ()
   "Apply add-missing-libspec refactoring at point."
@@ -158,14 +183,27 @@ If there are more arguments expected after the line and column numbers."
         (current-buffer)))
     name))
 
+(defun lsp-clojure--server-executable-path ()
+  "Return the clojure-lsp server command."
+  (or (executable-find "clojure-lsp")
+      (lsp-package-path 'clojure-lsp)))
+
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (lambda () lsp-clojure-server-command))
-                  :major-modes '(clojure-mode clojurec-mode clojurescript-mode)
-                  :library-folders-fn #'lsp-clojure--library-folders
-                  :uri-handlers (lsp-ht ("jar" #'lsp-clojure--file-in-jar))
-                  :initialization-options '(:dependency-scheme "jar")
-                  :server-id 'clojure-lsp))
+ (make-lsp-client
+  :download-server-fn (lambda (_client callback error-callback _update?)
+                        (lsp-package-ensure 'clojure-lsp callback error-callback))
+  :new-connection (lsp-stdio-connection
+                   (lambda ()
+                     (or lsp-clojure-custom-server-command
+                         `("bash" "-c" ,(lsp-clojure--server-executable-path))))
+                   (lambda ()
+                     (or lsp-clojure-custom-server-command
+                         (lsp-clojure--server-executable-path))))
+  :major-modes '(clojure-mode clojurec-mode clojurescript-mode)
+  :library-folders-fn #'lsp-clojure--library-folders
+  :uri-handlers (lsp-ht ("jar" #'lsp-clojure--file-in-jar))
+  :initialization-options '(:dependency-scheme "jar")
+  :server-id 'clojure-lsp))
 
 (provide 'lsp-clojure)
 ;;; lsp-clojure.el ends here

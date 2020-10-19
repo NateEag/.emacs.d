@@ -62,6 +62,12 @@ on top the flycheck face for that error level."
   :type '(repeat list)
   :group 'lsp-mode)
 
+(defcustom lsp-diagnostics-disabled-modes nil
+  "A list of major models for which `lsp-diagnostics-mode' should be disabled."
+  :type '(repeat symbol)
+  :group 'lsp-mode
+  :package-version '(lsp-mode . "7.1"))
+
 ;; Flycheck integration
 
 (declare-function flycheck-mode "ext:flycheck")
@@ -72,6 +78,7 @@ on top the flycheck face for that error level."
 (declare-function flycheck-define-error-level "ext:flycheck" (level &rest properties))
 (declare-function flycheck-buffer "ext:flycheck")
 (declare-function flycheck-valid-checker-p "ext:flycheck")
+(declare-function flycheck-stop "ext:flycheck")
 
 (declare-function lsp-cpp-flycheck-clang-tidy-error-explainer "lsp-cpp")
 
@@ -172,7 +179,12 @@ from the language server."
     (->> lsp--cur-workspace
          (lsp--workspace-buffers)
          (mapc (lambda (buffer)
-                 (when (lsp-buffer-live-p buffer)
+                 (when (and (lsp-buffer-live-p buffer)
+                            (or
+                             (not (bufferp buffer))
+                             (and (get-buffer-window buffer)
+                                  (not (-contains? (buffer-local-value 'lsp-on-idle-hook buffer)
+                                                   'lsp-diagnostics--flycheck-buffer)))))
                    (lsp-with-current-buffer buffer
                      (add-hook 'lsp-on-idle-hook #'lsp-diagnostics--flycheck-buffer nil t)
                      (lsp--idle-reschedule (current-buffer)))))))))
@@ -194,6 +206,7 @@ See https://github.com/emacs-lsp/lsp-mode."
                                 (lsp-cpp-flycheck-clang-tidy-error-explainer e))
                                (t (flycheck-error-message e))))))
   (flycheck-mode 1)
+  (flycheck-stop)
   (setq-local flycheck-checker 'lsp)
   (lsp-flycheck-add-mode major-mode)
   (add-to-list 'flycheck-checkers 'lsp)
@@ -271,7 +284,8 @@ See https://github.com/emacs-lsp/lsp-mode."
 ;;;###autoload
 (defun lsp-diagnostics--enable ()
   "Enable LSP checker support."
-  (when (member lsp-diagnostics-provider '(:auto :none :flycheck :flymake t nil))
+  (when (and (member lsp-diagnostics-provider '(:auto :none :flycheck :flymake t nil))
+             (not (member major-mode lsp-diagnostics-disabled-modes)))
     (lsp-diagnostics-mode 1)))
 
 (defun lsp-diagnostics--disable ()

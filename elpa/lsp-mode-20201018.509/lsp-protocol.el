@@ -261,11 +261,14 @@ See `-let' for a description of the destructuring mechanism."
     (lsp-get ,source ,key)))
 
 (lsp-interface (eslint:StatusParams  (:state) nil)
-               (eslint:OpenESLintDocParams (:url) nil))
+               (eslint:OpenESLintDocParams (:url) nil)
+               (eslint:ConfirmESLintLibraryParams (:scope :file :libraryPath) nil))
 
 (lsp-interface (haxe:ProcessStartNotification (:title) nil))
 
 (lsp-interface (pwsh:ScriptRegion (:StartLineNumber :EndLineNumber :StartColumnNumber :EndColumnNumber :Text) nil))
+
+(lsp-interface (omnisharp:ErrorMessage (:Text :FileName :Line :Column)))
 
 (lsp-interface (rls:Cmd (:args :binary :env :cwd) nil))
 

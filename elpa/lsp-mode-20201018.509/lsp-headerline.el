@@ -76,16 +76,17 @@ caching purposes.")
 
 (defun lsp-headerline--fix-image-background (image)
   "Fix IMAGE background if it is a file otherwise return as an icon."
-  (if (and image (get-text-property 0 'display image))
-      (propertize " " 'display
-                  (cl-list* 'image
-                            (plist-put
-                             (cl-copy-list
-                              (cl-rest (get-text-property
-                                        0 'display
-                                        image)))
-                             :background (face-attribute 'header-line :background))))
-    (replace-regexp-in-string "\s\\|\t" "" image)))
+  (if image
+      (let ((display-image (get-text-property 0 'display image)))
+        (if (listp display-image)
+            (propertize " " 'display
+                        (cl-list* 'image
+                                  (plist-put
+                                   (cl-copy-list
+                                    (cl-rest display-image))
+                                   :background (face-attribute 'header-line :background))))
+          (replace-regexp-in-string "\s\\|\t" "" display-image)))
+    ""))
 
 (defun lsp-headerline--filename-with-icon (file-path)
   "Return the filename from FILE-PATH with the extension related icon."
@@ -137,16 +138,23 @@ narrow to the outer symbol."
               'help-echo help-echo-string
               'local-map local-map))
 
+(defmacro lsp-headerline--make-mouse-handler (&rest body)
+  "Making mouse event handler.
+Switch to current mouse interacting window before doing BODY."
+  (declare (debug t) (indent 0))
+  `(lambda (event)
+     (interactive "e")
+     (select-window (posn-window (elt event 1)))
+     ,@body))
+
 (defun lsp-headerline--directory-with-action (full-path directory-display-string)
   "Build action for FULL-PATH and DIRECTORY-DISPLAY-STRING."
   (lsp-headerline--with-action (let ((map (make-sparse-keymap)))
                                  (define-key map [header-line mouse-1]
-                                   (lambda ()
-                                     (interactive)
+                                   (lsp-headerline--make-mouse-handler
                                      (dired full-path)))
                                  (define-key map [header-line mouse-2]
-                                   (lambda ()
-                                     (interactive)
+                                   (lsp-headerline--make-mouse-handler
                                      (dired-other-window full-path)))
                                  map)
                                (format "mouse-1: browse '%s' with Dired\nmouse-2: browse '%s' with Dired in other window"
@@ -154,19 +162,29 @@ narrow to the outer symbol."
                                        directory-display-string)
                                directory-display-string))
 
+(declare-function evil-set-jump "ext:evil-jumps")
+
 (lsp-defun lsp-headerline--symbol-with-action ((symbol &as &DocumentSymbol :name) symbol-display-string)
   "Build action for SYMBOL and SYMBOL-STRING."
   (lsp-headerline--with-action (let ((map (make-sparse-keymap)))
                                  (define-key map [header-line mouse-1]
-                                   (lambda ()
-                                     (interactive)
+                                   (lsp-headerline--make-mouse-handler
+                                     (when (bound-and-true-p evil-mode)
+                                       (evil-set-jump))
                                      (lsp-headerline--go-to-symbol symbol)))
                                  (define-key map [header-line mouse-2]
-                                   (lambda ()
-                                     (interactive)
-                                     (lsp-headerline--narrow-to-symbol symbol)))
+                                   (lsp-headerline--make-mouse-handler
+                                     (-let (((&DocumentSymbol :range (&RangeToPoint :start :end)) symbol))
+                                       (if (and (eq (point-min) start) (eq (point-max) end))
+                                           (widen)
+                                         (lsp-headerline--narrow-to-symbol symbol)))))
                                  map)
-                               (format "mouse-1: go to '%s' symbol\nmouse-2: narrow to '%s' range" name name)
+                               (format "mouse-1: go to '%s' symbol\nmouse-2: %s"
+                                       name
+                                       (-let (((&DocumentSymbol :range (&RangeToPoint :start :end)) symbol))
+                                         (if (and (eq (point-min) start) (eq (point-max) end))
+                                             "widen"
+                                           (format "narrow to '%s' range" name))))
                                symbol-display-string))
 
 (defun lsp-headerline--path-up-to-project-root (root-path path)
@@ -216,7 +234,7 @@ PATH is the current folder to be checked."
   (if (lsp-feature? "textDocument/documentSymbol")
       (-if-let* ((lsp--document-symbols-request-async t)
                  (symbols (lsp--get-document-symbols))
-                 (symbols-hierarchy (lsp--symbols->symbols-hierarchy symbols))
+                 (symbols-hierarchy (lsp--symbols->document-symbols-hierarchy symbols))
                  (enumerated-symbols-hierarchy
                   (-map-indexed (lambda (index elt)
                                   (cons elt (1+ index)))
@@ -324,11 +342,16 @@ PATH is the current folder to be checked."
       (if (lsp-feature? "textDocument/documentSymbol")
           (-if-let* ((lsp--document-symbols-request-async t)
                      (symbols (lsp--get-document-symbols))
-                     (symbols-hierarchy (lsp--symbols->symbols-hierarchy symbols)))
+                     (symbols-hierarchy (lsp--symbols->document-symbols-hierarchy symbols)))
               (lsp-headerline--go-to-symbol (nth (1- symbol-position) symbols-hierarchy))
             (lsp--info "Symbol not found for position %s" symbol-position))
         (lsp--info "Server does not support breadcrumb."))
     (lsp--info "Call this function with a number representing the symbol position on breadcrumb")))
+
+(declare-function evil-set-command-property "ext:evil-common")
+
+(with-eval-after-load 'evil
+  (evil-set-command-property 'lsp-breadcrumb-go-to-symbol :jump t))
 
 ;;;###autoload
 (defun lsp-breadcrumb-narrow-to-symbol (symbol-position)
@@ -338,7 +361,7 @@ PATH is the current folder to be checked."
       (if (lsp-feature? "textDocument/documentSymbol")
           (-if-let* ((lsp--document-symbols-request-async t)
                      (symbols (lsp--get-document-symbols))
-                     (symbols-hierarchy (lsp--symbols->symbols-hierarchy symbols)))
+                     (symbols-hierarchy (lsp--symbols->document-symbols-hierarchy symbols)))
               (lsp-headerline--narrow-to-symbol (nth (1- symbol-position) symbols-hierarchy))
             (lsp--info "Symbol not found for position %s" symbol-position))
         (lsp--info "Server does not support breadcrumb."))

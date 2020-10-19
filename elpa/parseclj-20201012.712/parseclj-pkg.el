@@ -1,7 +1,7 @@
-(define-package "parseclj" "20190531.711" "Clojure/EDN parser"
+(define-package "parseclj" "20201012.712" "Clojure/EDN parser"
   '((emacs "25")
     (a "0.1.0alpha4"))
-  :keywords
+  :commit "eff941126859bc9e949eae5cd6c2592e731629f2" :keywords
   '("lisp" "clojure" "edn" "parser")
   :authors
   '(("Arne Brasseur" . "arne@arnebrasseur.net"))

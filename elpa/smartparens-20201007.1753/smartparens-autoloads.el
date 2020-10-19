@@ -288,6 +288,14 @@ Turn off `show-smartparens-mode'." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "smartparens-rst" "smartparens-rst.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from smartparens-rst.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-rst" '("sp-rst-point-after-backtick")))
+
+;;;***
+
 ;;;### (autoloads nil "smartparens-ruby" "smartparens-ruby.el" (0
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from smartparens-ruby.el
@@ -321,8 +329,8 @@ Turn off `show-smartparens-mode'." t nil)
 ;;;***
 
 ;;;### (autoloads nil nil ("smartparens-c.el" "smartparens-javascript.el"
-;;;;;;  "smartparens-ml.el" "smartparens-pkg.el" "smartparens-racket.el"
-;;;;;;  "smartparens-rst.el") (0 0 0 0))
+;;;;;;  "smartparens-ml.el" "smartparens-pkg.el" "smartparens-racket.el")
+;;;;;;  (0 0 0 0))
 
 ;;;***
 

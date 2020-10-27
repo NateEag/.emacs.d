@@ -979,6 +979,14 @@
 	     ("Michelangelo Rodriguez" . "michelangelo.rodriguez@gmail.com"))
 	    (:keywords "tools" "accessibility")
 	    (:url . "http://elpa.gnu.org/packages/greader.html"))])
+ (greenbar .
+	   [(1 0)
+	    nil "Mark comint output with \"greenbar\" background" single
+	    ((:url . "http://elpa.gnu.org/packages/greenbar.html")
+	     (:keywords "faces" "terminals")
+	     (:authors
+	      ("Michael R. Mauger" . "michael@mauger.com"))
+	     (:maintainer "Michael R. Mauger" . "michael@mauger.com"))])
  (guess-language .
 		 [(0 0 1)
 		  ((cl-lib
@@ -1684,7 +1692,7 @@
 	       ("Scott Andrew Borton" . "scott@pp.htv.fi"))
 	      (:maintainer "John Darrington" . "john@darrington.wattle.id.au"))])
  (python .
-	 [(0 26 1)
+	 [(0 27)
 	  ((emacs
 	    (24 1))
 	   (cl-lib

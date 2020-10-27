@@ -207,7 +207,7 @@ Yanked from https://stackoverflow.com/a/31449758/1128957."
 
   (mapconcat 'car (reverse load-history) "\n"))
 
-(defun ne/switch-window-then-helm-projectile-find-file ()
+(defun ne/switch-window-then-find-project-file ()
 "Open a file from the current project in the next window.
 
 I usually have just two windows in a frame, so this just Does
@@ -221,7 +221,7 @@ you."
   (let ((trigger-buffer) (current-buffer))
     (other-window 1)
     (switch-to-buffer trigger-buffer t)
-    (helm-projectile-find-file)))
+    (counsel-projectile-find-file)))
 
 (defun ne/yank-buffer-name ()
   "Put the current buffer's name in the kill ring.

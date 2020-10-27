@@ -109,9 +109,10 @@ discovered this bug report that has a plausible-sounding analysis of the bug's
 root cause: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=27214 I saw the bug
 for the first time in a long while on 2019-11-20.
 
-I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
-quickly and easily. `helm-swoop
-<https://github.com/ShingoFukuyama/helm-swoop>`__ is pretty neat too.
+I am trying out replacing `Helm <http://emacs-helm.github.io/helm/>`__ with
+`Ivy <https://oremacs.com/swiper/>`__ to find files and commands quickly and
+easily. `Swiper <https://github.com/abo-abo/swiper#swiper>`__ has accordingly
+replaced `helm-swoop <https://github.com/ShingoFukuyama/helm-swoop>`__.
 
 I use `magit <https://magit.vc>`__ for version control with `git
 <https://git-scm.org>`__. It really is magical and hides a lot of Git's worst
@@ -170,7 +171,12 @@ Ansible-specific poly-mode and lsp-mode + `yaml-language-server
 definitely some massaging to do, but it makes Ansible development much less
 painful.
 
-I'm starting an experiment in using `chemacs <https://github.com/plexus/chemacs>`__ to let me swap between profiles, so I can try out different setups. I'm curious about Doom, and I'd also like a simple way to write bug reproduction scripts starting with the huge collection of packages my heavily-customized setup uses, and I think it might just be the ticket.
+I'm starting an experiment in using `chemacs
+<https://github.com/plexus/chemacs>`__ to let me swap between profiles, so I
+can try out different setups. I'm curious about Doom, and I'd also like a
+simple way to write bug reproduction scripts starting with the huge collection
+of packages my heavily-customized setup uses, and I think it might just be the
+ticket.
 
 Look in todo.txt and tell me about entries that can be resolved by turning on
 built-in features. I've found a few and would not mind finding more.

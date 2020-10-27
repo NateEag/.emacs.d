@@ -60,8 +60,8 @@
 
     ("e" . eval-buffer)
 
-    ;; Switch buffers/find likely files via Helm.
-    ("b b" . helm-for-files)
+    ;; Switch buffers/find likely files.
+    ("b b" . counsel-switch-buffer)
 
     ;; Copy current buffer's name.
     ("b y" . ne/yank-buffer-name)
@@ -70,7 +70,7 @@
     ;; what I usually use.
     ("c" . string-inflection-toggle)
 
-    ("f" . helm-find-files)
+    ("f" . counsel-find-file)
 
     ;; A few project-related keybinds.
     ;; ...all this stuff kinda makes me think I should look into hydra.
@@ -78,11 +78,11 @@
     ;; falls back to just finding files across my machine, and also provides
     ;; all open buffers. Basically, I don't want to have to think about where
     ;; files live or whether I've opened it unless necessary.
-    ("p f" . helm-projectile-find-file)
-    ("p o f" . ne/switch-window-then-helm-projectile-find-file)
-    ("p s" . helm-projectile-ag)
-    ("p b" . helm-projectile-switch-to-buffer)
-    ("p p" . helm-projectile-switch-project)
+    ("p f" . counsel-projectile-find-file-dwim)
+    ("p o f" . ne/switch-window-then-find-project-file)
+    ("p s" . counsel-projectile-ag)
+    ("p b" . counsel-projectile-switch-to-buffer)
+    ("p p" . counsel-projectile-switch-project)
     ("p y" . ne/yank-buffer-project-relative-path)
 
     ;; Look up URLs quickly.
@@ -115,8 +115,8 @@
     ;; it less annoying.
     ("j" . emmet-expand-yas)
 
-    ;; Search through buffers with helm-swoop.
-    ("s" . helm-swoop)
+    ;; Search through filtered buffer contents visually.
+    ("s" . swiper)
 
     ;; Expand-region lets you select delimited regions quickly.
     ("r" . er/expand-region)
@@ -128,7 +128,7 @@
     ("w" . save-buffer)
 
     ;; M-x is too much work, and F8 is a bit of a reach.
-    ("x" . helm-M-x)
+    ("x" . execute-extended-command)
 
     ;; Jump-to-def and go-back-where-I-came from are things I like to be able
     ;; to do from normal-mode.

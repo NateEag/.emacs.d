@@ -6,10 +6,6 @@
   does what I want until it triggers this behavior, sort of a binary search
   *towards* a broken state.
 
-- Move my Emacs config from Helm to ivy.
-
-- Move to swiper instead of helm-swoop.
-
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
 
@@ -34,6 +30,12 @@
   Note that ispell-extra-args is supposedly where I need to set this option,
   but it does not seem to have any effect there, so I need to understand
   flyspell better.
+
+- Look into using tree-sitter to drive syntax coloration in Emacs. I've
+  installed the relevant packages but it will require a lot more than just
+  that. I know php-mode has a long history of slow syntax coloration and having
+  a hard time keeping up with the latest PHP syntax changes, so it might be
+  worth starting there.
 
 - Keep a history of caught spelling errors, so I can correct words I get wrong
   regularly. This is really a spellchecker feature request, not an Emacs thing,

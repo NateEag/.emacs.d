@@ -9,6 +9,10 @@
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
 
+- Submit bugfix for notmuch-address-selection-function upstream. See my
+  override of notmuch-address-selection-function in
+  site-lisp/config-packages.el.
+
 - Apply the advice in
   https://github.com/hlissner/doom-emacs/blob/develop/docs/faq.org#how-does-doom-start-up-so-quickly
   to my config. It looks like the Doom Emacs maintainer has taken the time to

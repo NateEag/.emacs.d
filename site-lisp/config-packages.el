@@ -173,7 +173,20 @@ found it."
     ;;
     ;; A rebinding of the standard 'w' keybinding, since I use 'w' for
     ;; something else."
-    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)))
+    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)
+
+    ;; This keeps my Shift-Tab keybinding for completing addresses from
+    ;; auto-selecting the wrong address, while still leaving a default
+    ;; selected. Judging from completing-read's docs, this is the way it ought
+    ;; to be done.
+    ;;
+    ;; TODO Submit this trivial patch upstream?
+    (defun notmuch-address-selection-function (prompt collection initial-input)
+      "Call (`completing-read'
+      PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
+      (completing-read
+       prompt collection nil nil nil 'notmuch-address-history initial-input))
+    ))
 
 (use-package notmuch-mua
   :config

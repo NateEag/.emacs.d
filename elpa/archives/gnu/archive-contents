@@ -131,7 +131,7 @@
 	   ("John Wiegley" . "jwiegley@gmail.com"))
 	  (:keywords "async"))])
  (auctex .
-	 [(12 2 5)
+	 [(12 3 1)
 	  ((emacs
 	    (24 1))
 	   (cl-lib
@@ -688,7 +688,7 @@
 	      (:keywords "lisp")
 	      (:url . "http://elpa.gnu.org/packages/el-search.html"))])
  (eldoc .
-	[(1 10 0)
+	[(1 11 0)
 	 ((emacs
 	   (26 3)))
 	 "Show function arglist or variable docstring in echo area" single
@@ -720,7 +720,7 @@
 		     (:keywords "languages" "lisp")
 		     (:url . "http://elpa.gnu.org/packages/elisp-benchmarks.html"))])
  (emms .
-       [(5 42)
+       [(6 0)
 	((cl-lib
 	  (0 5)))
 	"The Emacs Multimedia System" tar
@@ -939,7 +939,7 @@
 			    (:keywords "maint" "tools")
 			    (:url . "http://elpa.gnu.org/packages/gnu-elpa-keyring-update.html"))])
  (gnugo .
-	[(3 1 0)
+	[(3 1 1)
 	 ((ascii-art-to-unicode
 	   (1 5))
 	  (xpm
@@ -980,7 +980,7 @@
 	    (:keywords "tools" "accessibility")
 	    (:url . "http://elpa.gnu.org/packages/greader.html"))])
  (greenbar .
-	   [(1 0)
+	   [(1 1)
 	    nil "Mark comint output with \"greenbar\" background" single
 	    ((:url . "http://elpa.gnu.org/packages/greenbar.html")
 	     (:keywords "faces" "terminals")
@@ -1099,7 +1099,7 @@
 		 (:maintainer "Clemens Radermacher" . "clemera@posteo.net")
 		 (:url . "https://github.com/clemera/ivy-explorer"))])
  (ivy-posframe .
-	       [(0 5 1)
+	       [(0 5 2)
 		((emacs
 		  (26 0))
 		 (posframe
@@ -1371,7 +1371,7 @@
 			(:maintainer "Protesilaos Stavrou" . "info@protesilaos.com")
 			(:url . "https://gitlab.com/protesilaos/modus-themes"))])
  (multishell .
-	     [(1 1 5)
+	     [(1 1 7)
 	      ((cl-lib
 		(0 5)))
 	      "Easily use multiple shell buffers, local and remote" tar
@@ -1631,7 +1631,7 @@
 	     ("Phillip Lord" . "phillip.lord@russet.org.uk"))
 	    (:url . "http://elpa.gnu.org/packages/persist.html"))])
  (phps-mode .
-	    [(0 3 64)
+	    [(0 3 65)
 	     ((emacs
 	       (26)))
 	     "Major mode for PHP with Semantic integration" tar
@@ -1657,7 +1657,7 @@
 	   ("Mario Lang" . "mlang@delysid.org"))
 	  (:maintainer "Mario Lang" . "mlang@delysid.org"))])
  (posframe .
-	   [(0 8 1)
+	   [(0 8 2)
 	    ((emacs
 	      (26)))
 	    "Pop a posframe (just a frame) at point" single

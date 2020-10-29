@@ -1202,6 +1202,23 @@ Key bindings:
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20201014.1431/tsc-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20201014.1431/tsc-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tsc" '("tsc-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tsc-dyn-get" '("tsc-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ts-20191010.210/ts-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -1944,6 +1961,209 @@ and ignore any prefix argument.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-workspaces" '("treemacs-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201029.1200/tree-sitter-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201029.1200/tree-sitter-autoloads.el") (car load-path))))
+
+
+
+(autoload 'tree-sitter-mode "tree-sitter" "\
+Minor mode that keeps an up-to-date syntax tree using incremental parsing.
+
+If called interactively, enable Tree-Sitter mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'turn-on-tree-sitter-mode "tree-sitter" "\
+Turn on `tree-sitter-mode' in a buffer, if possible." nil nil)
+
+(put 'global-tree-sitter-mode 'globalized-minor-mode t)
+
+(defvar global-tree-sitter-mode nil "\
+Non-nil if Global Tree-Sitter mode is enabled.
+See the `global-tree-sitter-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `global-tree-sitter-mode'.")
+
+(custom-autoload 'global-tree-sitter-mode "tree-sitter" nil)
+
+(autoload 'global-tree-sitter-mode "tree-sitter" "\
+Toggle Tree-Sitter mode in all buffers.
+With prefix ARG, enable Global Tree-Sitter mode if ARG is positive;
+otherwise, disable it.  If called from Lisp, enable the mode if
+ARG is omitted or nil.
+
+Tree-Sitter mode is enabled in all buffers where
+`turn-on-tree-sitter-mode' would do it.
+See `tree-sitter-mode' for more information on Tree-Sitter mode.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'tree-sitter-node-at-point "tree-sitter" "\
+Return the smallest syntax node at point whose type is NODE-TYPE.
+If NODE-TYPE is nil, return the smallest syntax node at point.
+
+\(fn &optional NODE-TYPE)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter" '("tree-sitter-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-cli" '("tree-sitter-cli-")))
+
+
+
+(autoload 'tree-sitter-debug-mode "tree-sitter-debug" "\
+Toggle syntax tree debugging for the current buffer.
+This mode displays the syntax tree in another buffer, and keeps it up-to-date.
+
+If called interactively, enable Tree-Sitter-Debug mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'tree-sitter-debug-query "tree-sitter-debug" "\
+Execute query PATTERNS against the current syntax tree and return captures.
+
+If the optional arg MATCHES is non-nil, matches (from `tsc-query-matches') are
+returned instead of captures (from `tsc-query-captures').
+
+If the optional arg TAG-ASSIGNER is non-nil, it is passed to `tsc-make-query' to
+assign custom tags to capture names.
+
+This function is primarily useful for debugging purpose. Other packages should
+build queries and cursors once, then reuse them.
+
+\(fn PATTERNS &optional MATCHES TAG-ASSIGNER)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-debug" '("tree-sitter-debug--")))
+
+
+
+(autoload 'tree-sitter-save-excursion "tree-sitter-extras" "\
+Save the current location within the syntax tree; execute BODY; restore it.
+
+If the original location cannot be restored due to the syntax tree changing too
+much, this macro behaves like `save-excursion', unless
+`tree-sitter-save-excursion-try-hard' is non-nil, in which case it tries to get
+as close as possible to the original location.
+
+After the location is restored, the buffer text is scrolled so that point stays
+at roughly the same vertical screen position. If `pixel-scroll' is available and
+`tree-sitter-save-excursion-pixelwise' is non-nil, pixelwise scrolling is used
+instead, to make this restoration exact.
+
+\(fn &rest BODY)" nil t)
+
+(function-put 'tree-sitter-save-excursion 'lisp-indent-function '0)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-extras" '("tree-sitter-")))
+
+
+
+(autoload 'tree-sitter-hl-add-patterns "tree-sitter-hl" "\
+Add custom syntax highlighting PATTERNS.
+If LANG-SYMBOL is non-nil, it identifies the language that PATTERNS should be
+applied to. If LANG-SYMBOL is nil, PATTERNS are applied to the current buffer,
+and are prioritized over language-specific patterns. Either way, PATTERNS are
+prioritized over `tree-sitter-hl-default-patterns'.
+
+This function should be used by minor modes and configuration code. Major modes
+should set `tree-sitter-hl-default-patterns' instead.
+
+\(fn LANG-SYMBOL PATTERNS)" nil nil)
+
+(function-put 'tree-sitter-hl-add-patterns 'lisp-indent-function '1)
+
+(autoload 'tree-sitter-hl-mode "tree-sitter-hl" "\
+Toggle syntax highlighting based on Tree-sitter's syntax tree.
+If `tree-sitter-hl-default-patterns' is nil, turning on this mode does nothing,
+and does not interfere with `font-lock-mode'.
+
+If called interactively, enable Tree-Sitter-Hl mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+Enabling this automatically enables `tree-sitter-mode' in the buffer.
+
+To enable this automatically whenever `tree-sitter-mode' is enabled:
+
+ (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-hl" '("tree-sitter-hl-")))
+
+
+
+(autoload 'tree-sitter-require "tree-sitter-load" "\
+Return the language object loaded and registered under the name LANG-SYMBOL.
+If the language has not been loaded yet, load it with `tree-sitter-load'.
+
+FILE should be the base name (without extension) of the native shared library
+that exports the language as the native symbol NATIVE-SYMBOL-NAME.
+
+If FILE is nil, the base name is assumed to be LANG-SYMBOL's name.
+
+If NATIVE-SYMBOL-NAME is nil, the name of the exported native symbol is assumed
+to be LANG-SYMBOL's name, prefixed with \"tree_sitter_\".
+
+\(fn LANG-SYMBOL &optional FILE NATIVE-SYMBOL-NAME)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-load" '("tree-sitter-l")))
+
+
+
+(autoload 'tree-sitter-query-builder "tree-sitter-query" "\
+Provide means for developers to write and test tree-sitter queries.
+
+The buffer on focus when the command is called is set as the target buffer." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-query" '("tree-sitter-query-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20201026.602/tree-sitter-langs-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20201026.602/tree-sitter-langs-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-langs" '("tree-sitter-langs-")))
+
+
+
+(autoload 'tree-sitter-langs-install-grammars "tree-sitter-langs-build" "\
+Download and install the specified VERSION of the language grammar bundle.
+If VERSION or OS is not specified, use the default of
+`tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
+
+This installs the grammar bundle even if the same version was already installed,
+unless SKIP-IF-INSTALLED is non-nil.
+
+The download bundle file is deleted after installation, unless KEEP-BUNDLE is
+non-nil.
+
+\(fn &optional SKIP-IF-INSTALLED VERSION OS KEEP-BUNDLE)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-langs-build" '("tree-sitter-langs-")))
 
 
 
@@ -7882,6 +8102,24 @@ The Returned color-palette has the same format as `solarized-color-palette'
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-zenburn-theme" '("solarized-zenburn")))
 
 
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/smex-20151212.2209/smex-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smex-20151212.2209/smex-autoloads.el") (car load-path))))
+
+
+
+(autoload 'smex "smex" nil t nil)
+
+(autoload 'smex-major-mode-commands "smex" "\
+Like `smex', but limited to commands that are relevant to the active major mode." t nil)
+
+(autoload 'smex-initialize "smex" nil t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smex" '("smex-")))
 
 
 )
@@ -23732,7 +23970,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-sitter tree-sitter-langs tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smex smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

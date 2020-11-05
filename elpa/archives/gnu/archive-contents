@@ -606,7 +606,7 @@
 	       ("Leo Liu" . "sdl.web@gmail.com"))
 	      (:keywords "killing" "convenience"))])
  (ebdb .
-       [(0 6 19)
+       [(0 6 20)
 	((emacs
 	  (25 1))
 	 (cl-lib
@@ -1272,7 +1272,7 @@
 	 ("Nicolas Petton" . "nicolas@petton.fr"))
 	(:maintainer nil . "emacs-devel@gnu.org"))])
  (markchars .
-	    [(0 2 1)
+	    [(0 2 2)
 	     nil "Mark chars fitting certain characteristics" single
 	     ((:url . "http://elpa.gnu.org/packages/markchars.html")
 	      (:authors
@@ -1371,7 +1371,7 @@
 			(:maintainer "Protesilaos Stavrou" . "info@protesilaos.com")
 			(:url . "https://gitlab.com/protesilaos/modus-themes"))])
  (multishell .
-	     [(1 1 7)
+	     [(1 1 9)
 	      ((cl-lib
 		(0 5)))
 	      "Easily use multiple shell buffers, local and remote" tar
@@ -2211,7 +2211,7 @@
 	  ("Oleh Krehel" . "ohwoeowho@gmail.com"))
 	 (:keywords "convenience"))])
  (tramp .
-	[(2 4 4 2)
+	[(2 4 4 3)
 	 ((emacs
 	   (24 4)))
 	 "Transparent Remote Access, Multiple Protocol" tar
@@ -2317,17 +2317,17 @@
 	      ("Sergey Poznyakoff" . "gray@gnu.org.ua"))
 	     (:maintainer "Sergey Poznyakoff" . "gray@gnu.org.ua"))])
  (vdiff .
-	[(0 2 3)
+	[(0 2 4)
 	 ((emacs
 	   (24 4))
 	  (hydra
 	   (0 13 0)))
-	 "A diff tool similar to  vimdiff" single
-	 ((:keywords "diff")
+	 "A diff tool similar to  vimdiff" tar
+	 ((:url . "https://github.com/justbur/emacs-vdiff")
+	  (:maintainer "Justin Burkett" . "justin@burkett.cc")
 	  (:authors
 	   ("Justin Burkett" . "justin@burkett.cc"))
-	  (:maintainer "Justin Burkett" . "justin@burkett.cc")
-	  (:url . "https://github.com/justbur/emacs-vdiff"))])
+	  (:keywords "diff"))])
  (verilog-mode .
 	       [(2020 6 27 14326051)
 		nil "major mode for editing verilog source in Emacs" single

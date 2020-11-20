@@ -229,6 +229,12 @@ The shell command lives in my dotfiles repo."
   :bind (:map ivy-minibuffer-map
               ("<return>" . ivy-alt-done)
               ("C-j" . ivy-next-line)
+              ("C-k" . ivy-previous-line))
+  ;; Override the default binding, which kills buffers or text depending whether
+  ;; cursor is at end-of-line.
+  ;;
+  ;; That is a clever idea, but I'd prefer my vim-ish keybinding hack.
+  :bind (:map ivy-switch-buffer-map
               ("C-k" . ivy-previous-line)))
 
 (use-package flycheck

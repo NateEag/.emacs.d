@@ -9,6 +9,10 @@
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
 
+- Bind C-k to previous result in ivy buffer switching. Make sure I'm taking the
+  right approach to general ivy-based keybinds, as it works in projectile file
+  search, but not in buffer switching.
+
 - Submit bugfix for notmuch-address-selection-function upstream. See my
   override of notmuch-address-selection-function in
   site-lisp/config-packages.el.

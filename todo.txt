@@ -43,7 +43,8 @@
   installed the relevant packages but it will require a lot more than just
   that. I know php-mode has a long history of slow syntax coloration and having
   a hard time keeping up with the latest PHP syntax changes, so it might be
-  worth starting there.
+  worth starting there. Might also be helpful for yaml-mode's difficulties in
+  syntax coloration: https://github.com/ikatyang/tree-sitter-yaml
 
 - Keep a history of caught spelling errors, so I can correct words I get wrong
   regularly. This is really a spellchecker feature request, not an Emacs thing,

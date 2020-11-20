@@ -892,12 +892,15 @@
 - Try integrating the fancy new SQL indentation minor-mode:
   https://github.com/alex-hhh/emacs-sql-indent
 
-- Next time I have to work against a DB server, install emacs-edbi and
-  edbi-minor-mode:
-  https://github.com/kiwanami/emacs-edbi,
-  https://github.com/proofit404/edbi-minor-mode
-  Looks like it should beat the pants off sql-mode, even if it does depend on
-  Perl.
+- Configure edbi to have the niceties I like (evil-local-mode and so on).
+
+- Automate installing EDBI's CPAN dependencies (yuck) if I stick with it
+  as a DB interaction UI, I suppose. Maybe just figure out how to have them all
+  in my dotfiles, like I do with NodeJS modules.
+
+- Next time I have to work against a DB server regularly, install and configure
+  edbi-minor-mode: https://github.com/proofit404/edbi-minor-mode Looks like it
+  should beat the pants off sql-mode, even if it does depend on Perl.
 
 - sql-mode appears to be a far more powerful beast than I had ever really
   appreciated. I should look into setting up and learning the server

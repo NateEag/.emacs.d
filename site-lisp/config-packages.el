@@ -228,8 +228,13 @@ The shell command lives in my dotfiles repo."
   :config (ivy-mode 1)
   :bind (:map ivy-minibuffer-map
               ("<return>" . ivy-alt-done)
+              ;; I'm pretty used to vim keybindings at this point.
               ("C-j" . ivy-next-line)
-              ("C-k" . ivy-previous-line))
+              ("C-k" . ivy-previous-line)
+              ;; Sometimes you want to use input text that happens to match an
+              ;; existing candidate, but use it exactly as specified. This
+              ;; keybinding allows that.
+              ("C-<return>" . ivy-immediate-done))
   ;; Override the default binding, which kills buffers or text depending whether
   ;; cursor is at end-of-line.
   ;;

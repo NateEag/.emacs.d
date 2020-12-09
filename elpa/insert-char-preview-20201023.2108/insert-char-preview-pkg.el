@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/insert-char-preview-20201023.2108/insert-char-preview.el  -*- no-byte-compile: t -*-
+(define-package "insert-char-preview" "20201023.2108" "Insert Unicode char" '((emacs "24.1")) :commit "0e4a62b5407fb1bed8920a4c13cf9a91065e15ad" :keywords '("convenience") :authors '(("Matsievskiy S.V.")) :maintainer '("Matsievskiy S.V.") :url "https://gitlab.com/matsievskiysv/insert-char-preview")

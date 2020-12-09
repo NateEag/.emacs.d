@@ -871,6 +871,11 @@ With this alias I hope to not need to remember it.")
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
+(use-package monkeytype
+  :hook ((monkeytype-mode . (lambda ()
+                              (centered-cursor-mode)
+                              (evil-insert -1)))))
+
 (use-package atomic-chrome
   :demand
   :functions (atomic-chrome-start-server atomic-chrome-stop-server)

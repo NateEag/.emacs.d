@@ -13694,6 +13694,136 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/monkeytype-20201209.223/monkeytype-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/monkeytype-20201209.223/monkeytype-autoloads.el") (car load-path))))
+
+
+
+(autoload 'monkeytype-region "monkeytype" "\
+Type marked region from START to END.
+
+\\[monkeytype-region]
+
+\(fn START END)" t nil)
+
+(autoload 'monkeytype-repeat "monkeytype" "\
+Repeat run.
+
+\\[monkeytype-repeat]" t nil)
+
+(autoload 'monkeytype-dummy-text "monkeytype" "\
+Dummy text.
+
+\\[monkeytype-dummy-text]" t nil)
+
+(autoload 'monkeytype-fortune "monkeytype" "\
+Type fortune.
+
+\\[monkeytype-fortune]" t nil)
+
+(autoload 'monkeytype-buffer "monkeytype" "\
+Type entire current buffet.
+
+\\[monkeytype-buffer]" t nil)
+
+(autoload 'monkeytype-pause "monkeytype" "\
+Pause run.
+
+\\[monkeytype-pause]" t nil)
+
+(autoload 'monkeytype-stop "monkeytype" "\
+Finish run.
+
+\\[monkeytype-stop]" t nil)
+
+(autoload 'monkeytype-resume "monkeytype" "\
+Resume run.
+
+\\[monkeytype-resume]" t nil)
+
+(autoload 'monkeytype-mistyped-words "monkeytype" "\
+Practice mistyped words for current test.
+
+\\[monkeytype-mistyped-words]" t nil)
+
+(autoload 'monkeytype-hard-transitions "monkeytype" "\
+Practice hard key combinations/transitions for current test.
+
+\\[monkeytype-hard-transitions]" t nil)
+
+(autoload 'monkeytype-save-mistyped-words "monkeytype" "\
+Save mistyped words for current test.
+
+See also: `monkeytype-load-words-from-file'
+See also: `monkeytype-most-mistyped-words'
+
+\\[monkeytype-save-mistyped-words]" t nil)
+
+(autoload 'monkeytype-save-hard-transitions "monkeytype" "\
+Save hard transitions for current test.
+
+See also: `monkeytype-load-words-from-file'
+
+\\[monkeytype-save-hard-transition]" t nil)
+
+(autoload 'monkeytype-load-text-from-file "monkeytype" "\
+Prompt user to enter text-file to use for typing.
+Buffer will be filled with the vale of `fill-column' if
+`monkeytype-auto-fill' is set to true.
+
+\\[monkeytype-load-text-from-file]" t nil)
+
+(autoload 'monkeytype-load-words-from-file "monkeytype" "\
+Prompt user to enter words-file to use for typing.
+
+Words will be randomized if `monkeytype-randomize' is set to true.
+Words will be downcased if `monkeytype-downcase' is set to true.
+Words special characters will get removed based on
+`monkeytype-excluded-chars-regexp'.
+Buffer will be filled with the vale of `fill-column' if
+`monkeytype-words-auto-fill' is set to true.
+
+\\[monkeytype-load-words-from-file]" t nil)
+
+(autoload 'monkeytype-region-as-words "monkeytype" "\
+Put the marked region from START to END in typing buffer.
+
+Words will be randomized if `monkeytype-randomize' is set to true.
+Words will be downcased if `monkeytype-downcase' is set to true.
+Words special characters will get removed based on
+`monkeytype-excluded-chars-regexp'.
+Buffer will be filled with the vale of `fill-column' if
+`monkeytype-auto-fill' is set to true.
+
+\\[monkeytype-region-as-words]
+
+\(fn START END)" t nil)
+
+(autoload 'monkeytype-most-mistyped-words "monkeytype" "\
+Type most mistyped words from all word-files in `monkeytype-directory'.
+
+See: `monkeytype-save-mistyped-words' for how word-files are saved.
+
+\\[monkeytype-most-mistyped-words]" t nil)
+
+(autoload 'monkeytype-mode "monkeytype" "\
+Monkeytype mode is a minor mode for speed/touch typing.
+
+If called interactively, enable Monkeytype mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\\{monkeytype-mode-map}
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "monkeytype" '("monke")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20191116.1107/eval-in-repl-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -17747,6 +17877,17 @@ If COMMAND is nil, the key-chord is removed.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-assist-20201109.1358/key-assist-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/key-assist-20201109.1358/key-assist-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "key-assist" '("key-assist")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/json-snatcher-20200916.1717/json-snatcher-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -18159,6 +18300,23 @@ Complete code at point.
 Major mode for editing InnoSetup script files.
 
 \(fn)" t nil)
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/insert-char-preview-20201023.2108/insert-char-preview-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/insert-char-preview-20201023.2108/insert-char-preview-autoloads.el") (car load-path))))
+
+
+
+(autoload 'insert-char-preview "insert-char-preview" "\
+Insert COUNT copies of CHARACTER.
+Similar to `insert-char` in interactive mode, but with char preview.
+
+\(fn COUNT CHARACTER)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "insert-char-preview" '("insert-char-preview-")))
 
 
 )
@@ -22790,6 +22948,55 @@ See `compact-docstrings-mode' for more information on Compact-Docstrings mode.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/centered-cursor-mode-20200507.1529/centered-cursor-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/centered-cursor-mode-20200507.1529/centered-cursor-mode-autoloads.el") (car load-path))))
+
+
+
+(autoload 'ccm-visible-text-lines "centered-cursor-mode" "\
+Visible text lines" nil nil)
+
+(autoload 'centered-cursor-mode "centered-cursor-mode" "\
+Makes the cursor stay vertically in a defined
+position (usually centered).
+
+If called interactively, enable Centered-Cursor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(put 'global-centered-cursor-mode 'globalized-minor-mode t)
+
+(defvar global-centered-cursor-mode nil "\
+Non-nil if Global Centered-Cursor mode is enabled.
+See the `global-centered-cursor-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `global-centered-cursor-mode'.")
+
+(custom-autoload 'global-centered-cursor-mode "centered-cursor-mode" nil)
+
+(autoload 'global-centered-cursor-mode "centered-cursor-mode" "\
+Toggle Centered-Cursor mode in all buffers.
+With prefix ARG, enable Global Centered-Cursor mode if ARG is positive;
+otherwise, disable it.  If called from Lisp, enable the mode if
+ARG is omitted or nil.
+
+Centered-Cursor mode is enabled in all buffers where
+`centered-cursor-mode' would do it.
+See `centered-cursor-mode' for more information on Centered-Cursor mode.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "centered-cursor-mode" '("animate-first-start-p" "ccm-" "recenter-sequence")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cask-mode-20160410.1449/cask-mode-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cask-mode-20160410.1449/cask-mode-autoloads.el") (car load-path))))
 
@@ -23986,7 +24193,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-sitter tree-sitter-langs tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smex smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile compact-docstrings cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-sitter tree-sitter-langs tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smex smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile compact-docstrings centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

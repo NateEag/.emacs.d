@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20200723.2222
-;; Package-Commit: 799969a66192b27c6464fc2e0025f4089d70493b
+;; Package-Version: 20201028.1854
+;; Package-Commit: e3fbc0737bb5f891e4d57d048bbc1fe17401f17f
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -278,22 +278,31 @@ those mentioned in `outline-level's doc-string."
     (and (looking-at outline-regexp)
          (funcall outline-level))))
 
+(defvar-local bicycle--top-level nil)
+
 (defun bicycle--top-level ()
   "Return the number identifying the top-level in this buffer.
 Ideally this would always be 1, then we would not have to
 guess and risk that the guess was wrong, but sadly this
 number depends on the regexp used to identify headings."
-  (save-excursion
-    (goto-char (point-min))
-    (let ((min (or (bicycle--level) outline-code-level)))
-      (while (outline-next-heading)
-        (setq min (min min (bicycle--level))))
-      min)))
+  (or bicycle--top-level
+      (save-excursion
+        (save-restriction
+          (widen)
+          (goto-char (point-min))
+          (let ((min (or (bicycle--level) outline-code-level)))
+            (while (outline-next-heading)
+              (setq min (min min (bicycle--level))))
+            (setq bicycle--top-level min))))))
 
 (defun bicycle--top-level-p ()
   "Return t if inside the heading of a top-level section."
-  (= (bicycle--level)
-     (bicycle--top-level)))
+  (let ((lvl (bicycle--level))
+        (top (bicycle--top-level)))
+    (when (< lvl top)
+      (setq bicycle--top-level nil)
+      (setq top (bicycle--top-level)))
+    (= lvl top)))
 
 (defun bicycle--code-level-p ()
   "Return t if inside a code block.

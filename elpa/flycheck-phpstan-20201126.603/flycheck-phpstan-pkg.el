@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20201126.603/flycheck-phpstan.el  -*- no-byte-compile: t -*-
+(define-package "flycheck-phpstan" "20201126.603" "Flycheck integration for PHPStan" '((emacs "24.3") (flycheck "26") (phpstan "0.5.0")) :commit "6863a5278fc656cddb604b0c6e165f05d0171d0a" :authors '(("USAMI Kenta" . "tadsan@zonu.me")) :maintainer '("USAMI Kenta" . "tadsan@zonu.me") :keywords '("tools" "php") :url "https://github.com/emacs-php/phpstan.el")

@@ -1,13 +1,13 @@
 ;;; lsp-latex.el --- lsp-mode client for LaTeX, on texlab     -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2020  ROCKTAKEY
+;; Copyright (C) 2019-2021  ROCKTAKEY
 
 ;; Author: ROCKTAKEY <rocktakey@gmail.com>
 ;; Keywords: languages, tex
-;; Package-Version: 20200718.928
-;; Package-Commit: a9a26a21bf16b9444021563d844719ace0c5c3b6
+;; Package-Version: 20210110.1914
+;; Package-Commit: 2140e65fc5d759cdf163128ef6ab15c246d6039b
 
-;; Version: 1.2.6
+;; Version: 1.3.2
 
 ;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0"))
 ;; URL: https://github.com/ROCKTAKEY/lsp-latex
@@ -129,7 +129,7 @@ You don't have to set or care about this variable."
 
 If `lsp-latex-texlab-jar-file' is a string, return it.
 If `lsp-latex-texlab-jar-file' is the symbol search-from-exec-path,
-then search a file named \"texlab.jar\" from `exec-path'.
+then search a file named \"texlab.jar\" from variable `exec-path'.
 
 This function is only for texlab v0.4.2 or older. If you use newer,
 You don't have to set or care about this variable."
@@ -341,6 +341,56 @@ Build synchronously if SYNC is non-nil."
      "textDocument/build"
      (list :textDocument (lsp--text-document-identifier))
      #'lsp-latex--message-result-build)))
+
+
+
+;; To suppress warning.
+(defvar pdf-sync-forward-display-action)
+(declare-function pdf-info-synctex-forward-search "ext:pdf-info")
+(declare-function pdf-sync-synctex-file-name "ext:pdf-sync")
+(declare-function pdf-util-assert-pdf-window "ext:pdf-util")
+(declare-function pdf-util-tooltip-arrow "ext:pdf-util")
+(declare-function pdf-view-goto-page "ext:pdf-view")
+(declare-function pdf-view-image-size "ext:pdf-view")
+
+;;;###autoload
+(defun lsp-latex-forward-search-with-pdf-tools (tex-file pdf-file line)
+  "Forward search with pdf-tools, from TEX-FILE line LINE to PDF-FILE.
+This function is partially copied from
+`pdf-sync-forward-search' and `pdf-sync-forward-correlate'."
+  (unless (fboundp 'pdf-tools-install)
+    (error "Please install pdf-tools"))
+  (require 'pdf-tools)
+  (require 'pdf-sync)
+
+  (with-current-buffer (get-file-buffer tex-file)
+   (cl-destructuring-bind (pdf page _x1 y1 _x2 _y2)
+       (let* ((column 1)
+              (pdf (expand-file-name (with-no-warnings pdf-file)))
+              (sfilename (pdf-sync-synctex-file-name
+                          (buffer-file-name) pdf)))
+         (cons pdf
+               (condition-case error
+                   (let-alist (pdf-info-synctex-forward-search
+                               (or sfilename
+                                   (buffer-file-name))
+                               line column pdf)
+                     (cons .page .edges))
+                 (error
+                  (message "%s" (error-message-string error))
+                  (list nil nil nil nil nil)))))
+     (let ((buffer (or (find-buffer-visiting pdf)
+                       (find-file-noselect pdf))))
+       (with-selected-window (display-buffer
+                              buffer pdf-sync-forward-display-action)
+         (pdf-util-assert-pdf-window)
+         (when page
+           (pdf-view-goto-page page)
+           (when y1
+             (let ((top (* y1 (cdr (pdf-view-image-size)))))
+               (pdf-util-tooltip-arrow (round top))))))
+       (with-current-buffer buffer
+         (run-hooks 'pdf-sync-forward-hook))))))
 
 (defun lsp-latex--message-forward-search (result)
   "Message unless RESULT means success."

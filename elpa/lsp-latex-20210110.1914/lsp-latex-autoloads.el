@@ -9,6 +9,13 @@
 ;;;### (autoloads nil "lsp-latex" "lsp-latex.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-latex.el
 
+(autoload 'lsp-latex-forward-search-with-pdf-tools "lsp-latex" "\
+Forward search with pdf-tools, from TEX-FILE line LINE to PDF-FILE.
+This function is partially copied from
+`pdf-sync-forward-search' and `pdf-sync-forward-correlate'.
+
+\(fn TEX-FILE PDF-FILE LINE)" nil nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-latex" '("lsp-latex-")))
 
 ;;;***

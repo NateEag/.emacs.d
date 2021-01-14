@@ -1,11 +1,13 @@
 ;;; popup.el --- Visual Popup User Interface
 
 ;; Copyright (C) 2009-2015  Tomohiro Matsuyama
+;; Copyright (c) 2020-2021 Jen-Chieh Shen
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
+;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20200610.317
-;; Package-Commit: 9d104d4bbbcb37bbc9d9ce762e74d41174683f86
+;; Package-Version: 20210108.1821
+;; Package-Commit: bd5a0df7e5bc68af46eef37afe9e80764a1d4fd8
 ;; Version: 0.5.8
 ;; Package-Requires: ((cl-lib "0.5"))
 

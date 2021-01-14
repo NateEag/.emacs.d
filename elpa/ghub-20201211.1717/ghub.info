@@ -24,9 +24,9 @@ Ghub User and Developer Manual
 ******************************
 
 Ghub is an Emacs library that is used by various packages to access the
-APIs of various instances of various Git forge implementation.
+APIs of various instances of various Git forge implementations.
 
-This manual is for Ghub version 3.4.1 (v3.4.1+1).
+This manual is for Ghub version 3.4.2 (v3.4.2-2-g2eb4898+1).
 
      Copyright (C) 2017-2020 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -86,7 +86,7 @@ File: ghub.info,  Node: Introduction,  Next: Getting Started,  Prev: Top,  Up: T
 **************
 
 Ghub is an Emacs library that is used by various packages to access the
-APIs of various instances of various Git forge implementation.
+APIs of various instances of various Git forge implementations.
 
    A forge is a web-based collaborative software platform for developing
 and distributing computer applications.  Examples include Github and
@@ -105,7 +105,7 @@ this:
      (ghub-request "GET" "/user")
 
    To be able to do that, Ghub needs to know who you want to talk to,
-who you are, and how you are going to proof the latter to the former.
+who you are, and how you are going to prove the latter to the former.
 
    Additionally Ghub wants to know on behalf of which Emacs package it
 is making a request.  So the question of "who is making the request" has
@@ -123,7 +123,7 @@ be used, or failed, then it made things _more_ complicated.
    So now it is necessary for users to read some documentation and
 because many things can go wrong, those instructions have to be fairly
 detailed.  You can of course skip over most of this, but if things go
-wrong, then I would like to kindly requested that you take another look
+wrong, then I would like to kindly request that you take another look
 before asking me for help.
 
 * Menu:
@@ -329,7 +329,7 @@ File: ghub.info,  Node: Creating a Token,  Next: Storing a Token,  Up: Creating 
 2.3.1 Creating a Token
 ----------------------
 
-To create a token use the web interface of the forge/host you want to
+To create a token, use the web interface of the forge/host you want to
 connect to.  Here is a list of pages to do this for certain popular
 hosts:
 
@@ -383,14 +383,16 @@ into those three slots, and it does that by using "USERNAME^PACKAGE" as
 the "login".
 
    Assuming your *Github* username is "ziggy", the package is named
-"forge", and you want to access *Github.com*, an entry in one of the
-three mentioned files would then look like this:
+"forge", and you want to access *Github.com* with the *token*
+"012345abcdef...", an entry in one of the three mentioned files would
+then look like this:
 
      machine api.github.com login ziggy^forge password 012345abcdef...
 
    Assuming your *Gitlab* username is "ziggy", the package is named
-"forge", and you want to access *Gitlab.com*, an entry in one of the
-three mentioned files would then look like this:
+"forge", and you want to access *Gitlab.com* with the *token*
+"012345abcdef...", an entry in one of the three mentioned files would
+then look like this:
 
      machine gitlab.com/api/v4 login ziggy^forge password 012345abcdef...
 
@@ -1181,26 +1183,26 @@ Appendix B Variable Index
 
 Tag Table:
 Node: Top764
-Node: Introduction2298
-Node: Getting Started2702
-Node: Basic Concepts Arguments and Variables4386
-Node: Setting the Username8256
-Node: Creating and Storing a Token11147
-Node: Creating a Token11411
-Node: Storing a Token12429
-Node: Github Configuration Variables14204
-Node: API15918
-Node: Their APIs16156
-Node: Making REST Requests16887
-Node: Making GraphQL Requests26319
-Node: Github Convenience Wrappers32953
-Node: Non-Github Convenience Wrappers36660
-Node: Notes42166
-Node: Using Ghub in Personal Scripts42373
-Node: Using Ghub in Your Own Package43264
-Node: Forge Limitations and Notes44199
-Node: Function Index45172
-Node: Variable Index50821
+Node: Introduction2310
+Node: Getting Started2715
+Node: Basic Concepts Arguments and Variables4397
+Node: Setting the Username8267
+Node: Creating and Storing a Token11158
+Node: Creating a Token11422
+Node: Storing a Token12441
+Node: Github Configuration Variables14286
+Node: API16000
+Node: Their APIs16238
+Node: Making REST Requests16969
+Node: Making GraphQL Requests26401
+Node: Github Convenience Wrappers33035
+Node: Non-Github Convenience Wrappers36742
+Node: Notes42248
+Node: Using Ghub in Personal Scripts42455
+Node: Using Ghub in Your Own Package43346
+Node: Forge Limitations and Notes44281
+Node: Function Index45254
+Node: Variable Index50903
 
 End Tag Table
 

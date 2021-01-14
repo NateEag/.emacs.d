@@ -760,7 +760,7 @@ and call `auth-source-forget+'."
 Required %s token (%S for %S) does not exist.
 See https://magit.vc/manual/ghub/Getting-Started.html
 or (info \"(ghub)Getting Started\") for instructions.
-(The setup wizard no longer exists.)"
+\(The setup wizard no longer exists.)"
                             (capitalize (symbol-name (or forge 'github)))
                             user host))))))
     (if (functionp token) (funcall token) token)))
@@ -836,14 +836,29 @@ or (info \"(ghub)Getting Started\") for instructions.
               (plist-get plist k))
             keys)))
 
-(advice-add 'auth-source-netrc-parse-next-interesting :around
-            'auth-source-netrc-parse-next-interesting@save-match-data)
-(defun auth-source-netrc-parse-next-interesting@save-match-data (fn)
-  "Save match-data for the benefit of caller `auth-source-netrc-parse-one'.
+(when (version< emacs-version "26.2")
+  ;; Fixed by Emacs commit 60ff8101449eea3a5ca4961299501efd83d011bd.
+  (advice-add 'auth-source-netrc-parse-next-interesting :around
+              'auth-source-netrc-parse-next-interesting@save-match-data)
+  (defun auth-source-netrc-parse-next-interesting@save-match-data (fn)
+    "Save match-data for the benefit of caller `auth-source-netrc-parse-one'.
 Without wrapping this function in `save-match-data' the caller
 won't see the secret from a line that is followed by a commented
 line."
-  (save-match-data (funcall fn)))
+    (save-match-data (funcall fn))))
+
+(advice-add 'url-http-handle-authentication :around
+            'url-http-handle-authentication@unauthorized-bugfix)
+(defun url-http-handle-authentication@unauthorized-bugfix (fn proxy)
+  "If authorization failed then don't try again but fail properly.
+For Emacs 27.1 prevent a useful `http' error from being replaced
+by a generic one that omits all useful information.  For earlier
+releases prevent a new request from being made, which would
+either result in an infinite loop or (e.g. in the case of `ghub')
+the user being asked for their name."
+  (if (assoc "Authorization" url-http-extra-headers)
+      t ; Return "success", here also known as "successfully failed".
+    (funcall fn proxy)))
 
 ;;; _
 (provide 'ghub)

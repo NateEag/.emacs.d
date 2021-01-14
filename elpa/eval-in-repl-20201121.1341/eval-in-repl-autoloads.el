@@ -185,7 +185,7 @@ eval-in-repl for Scheme." t nil)
 (autoload 'eir-eval-in-shell "eval-in-repl-shell" "\
 eval-in-repl for shell." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-send-to-shell")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-")))
 
 ;;;***
 

@@ -336,6 +336,7 @@ properties -- and returning a card/contact object."
 	  (push (funcall prop-consumer prop value params)
 		card))
 	(forward-line)))
+    (forward-line)
     (if card-consumer
 	(funcall card-consumer (nreverse card))
       (nreverse card))))

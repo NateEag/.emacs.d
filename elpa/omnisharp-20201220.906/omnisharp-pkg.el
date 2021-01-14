@@ -1,4 +1,4 @@
-(define-package "omnisharp" "20201002.1600" "Omnicompletion (intellisense) and more for C#"
+(define-package "omnisharp" "20201220.906" "Omnicompletion (intellisense) and more for C#"
   '((emacs "24.4")
     (flycheck "30")
     (dash "2.12.0")
@@ -8,12 +8,12 @@
     (cl-lib "0.5")
     (s "1.10.0")
     (f "0.19.0"))
-  :commit "e26ff8b8d34a247cd4a93be5d62a5f21859b7b57" :keywords
-  '("languages" "csharp" "c#" "ide" "auto-complete" "intellisense")
-  :authors
+  :commit "8ec59296b2e2a12d8ea146fb7056091fbb7bdd10" :authors
   '(("Mika Vilpas and others"))
   :maintainer
   '("Mika Vilpas and others")
+  :keywords
+  '("languages" "csharp" "c#" "ide" "auto-complete" "intellisense")
   :url "https://github.com/Omnisharp/omnisharp-emacs")
 ;; Local Variables:
 ;; no-byte-compile: t

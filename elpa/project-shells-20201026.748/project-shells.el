@@ -5,8 +5,9 @@
 ;; Author: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
+;; Package-Commit: 382b3d48a797ea56383732ebf9cd219aeec676df
 ;; Version: 20170311
-;; Package-Version: 20191123.914
+;; Package-Version: 20201026.748
 ;; Package-X-Original-Version: 20171107.851
 ;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
@@ -98,7 +99,7 @@ function (symbol or lambda)."
 		       :value-type (list :tag "Shell setup"
 					 (string :tag "Name")
 					 (choice :tag "Directory" string (const ask))
-					 (choice :tag "Type" (const term) (const shell))
+					 (choice :tag "Type" (const term) (const shell) (const eshell) (const vterm))
 					 (choice :tag "Function" (const nil) function)))))
 
 (defcustom project-shells-default-init-func 'project-shells-init-sh

@@ -31,14 +31,16 @@ project-shells-setup.
 (autoload 'project-shells-mode "project-shells" "\
 Toggle Project-Shells mode on or off.
 
-If called interactively, enable Project-Shells mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Project-Shells mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \\{project-shells-mode-map}
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-project-shells-mode 'globalized-minor-mode t)
 
 (defvar global-project-shells-mode nil "\
 Non-nil if Global Project-Shells mode is enabled.

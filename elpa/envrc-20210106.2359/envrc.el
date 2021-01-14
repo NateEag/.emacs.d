@@ -4,10 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
-;; Package-Commit: 0761041302e51e96ca6857b69551868aea555a3f
+;; Package-Commit: d1b991f19a4c4781e73bbc3badd368727fae942c
 ;; Homepage: https://github.com/purcell/envrc
 ;; Package-Requires: ((seq "2") (emacs "24.4"))
-;; Package-Version: 20201012.2234
+;; Package-Version: 20210106.2359
 ;; Package-X-Original-Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -362,6 +362,22 @@ This can be useful if a .envrc has been deleted."
   (dolist (buf (envrc--mode-buffers))
     (with-current-buffer buf
       (envrc--update))))
+
+
+
+;;; Propagate local environment to commands that use temp buffers
+
+(defun envrc-propagate-environment (orig &rest args)
+  (if envrc-mode
+      (cl-letf* (((default-value 'process-environment) process-environment)
+                 ((default-value 'exec-path) exec-path))
+        (apply orig args))
+    (apply orig args)))
+
+(advice-add 'shell-command-to-string :around #'envrc-propagate-environment)
+
+
+;;; Major mode for .envrc files
 
 (defvar envrc-file-extra-keywords
   '("MANPATH_add" "PATH_add" "direnv_layout_dir" "direnv_load" "dotenv"

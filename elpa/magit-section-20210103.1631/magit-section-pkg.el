@@ -1,12 +1,12 @@
-(define-package "magit-section" "20200908.1021" "Sections for read-only buffers"
+(define-package "magit-section" "20210103.1631" "Sections for read-only buffers"
   '((emacs "25.1")
     (dash "20200524"))
-  :commit "64341b02d24144b519a3f06362f0a7e839ef7189" :keywords
-  '("tools")
-  :authors
+  :commit "25f432551347468ce97b8b03987e59092e91f8f0" :authors
   '(("Jonas Bernoulli" . "jonas@bernoul.li"))
   :maintainer
   '("Jonas Bernoulli" . "jonas@bernoul.li")
+  :keywords
+  '("tools")
   :url "https://github.com/magit/magit")
 ;; Local Variables:
 ;; no-byte-compile: t

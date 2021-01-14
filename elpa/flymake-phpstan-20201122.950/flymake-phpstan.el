@@ -5,7 +5,8 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 31 Mar 2020
 ;; Version: 0.5.0
-;; Package-Version: 20200415.1637
+;; Package-Version: 20201122.950
+;; Package-Commit: 6863a5278fc656cddb604b0c6e165f05d0171d0a
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "26.1") (phpstan "0.5.0"))
@@ -36,6 +37,7 @@
 ;; https://www.gnu.org/software/emacs/manual/html_node/flymake/An-annotated-example-backend.html
 
 ;;; Code:
+(require 'cl-lib)
 (require 'php-project)
 (require 'flymake)
 (require 'phpstan)

@@ -1,12 +1,12 @@
-(define-package "writeroom-mode" "20201008.918" "Minor mode for distraction-free writing"
+(define-package "writeroom-mode" "20201229.2242" "Minor mode for distraction-free writing"
   '((emacs "25.1")
-    (visual-fill-column "1.9"))
-  :commit "e7fba5c6dd6db28fface74d6a3de7245aff50df7" :keywords
-  '("text")
-  :authors
+    (visual-fill-column "2.2"))
+  :commit "b648b340172ce4e44307375697e190bc723203e0" :authors
   '(("Joost Kremers" . "joostkremers@fastmail.fm"))
   :maintainer
   '("Joost Kremers" . "joostkremers@fastmail.fm")
+  :keywords
+  '("text")
   :url "https://github.com/joostkremers/writeroom-mode")
 ;; Local Variables:
 ;; no-byte-compile: t

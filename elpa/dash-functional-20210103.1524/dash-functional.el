@@ -1,16 +1,17 @@
 ;;; dash-functional.el --- Collection of useful combinators for Emacs Lisp  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2014 Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021 Free Software Foundation, Inc.
 
 ;; Authors: Matus Goljer <matus.goljer@gmail.com>
 ;;          Magnar Sveen <magnars@gmail.com>
 ;; Version: 1.2.0
-;; Package-Version: 20200617.702
-;; Package-Commit: 732d92eac56023a4fb4a5dc3d9d4e274ebf44bf9
-;; Package-Requires: ((dash "2.0.0") (emacs "24"))
-;; Keywords: lisp functions combinators
+;; Package-Version: 20210103.1524
+;; Package-Commit: 7a9c9378772b687a452966ce4745c54afb19a2fc
+;; Package-Requires: ((emacs "24") (dash "2.0.0"))
+;; Keywords: extensions, lisp
+;; Homepage: https://github.com/magnars/dash.el
 
-;; This program is free software; you can redistribute it and/or modify
+;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
@@ -21,13 +22,13 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
-;; Collection of useful combinators for Emacs Lisp
+;; Collection of useful combinators for Emacs Lisp.
 ;;
-;; See documentation on https://github.com/magnars/dash.el#functions
+;; See their overview at https://github.com/magnars/dash.el#functions.
 
 ;;; Code:
 

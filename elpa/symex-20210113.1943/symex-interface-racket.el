@@ -26,8 +26,20 @@
 
 ;;; Code:
 
-(require 'racket-mode)
+(require 'racket-mode nil 'noerror)
 (require 'subr-x)
+
+(eval-when-compile                    ; from racket-mode
+  (defvar racket--repl-buffer-name))  ; avoid byte-compile warnings
+
+(declare-function racket-repl "ext:racket-mode")
+(declare-function racket--repl-forget-errors "ext:racket-mode")
+(declare-function with-racket-repl-buffer "ext:racket-mode")
+(declare-function racket-send-last-sexp "ext:racket-mode")
+(declare-function racket-send-definition "ext:racket-mode")
+(declare-function racket--repl-last-sexp-start "ext:racket-mode")
+(declare-function racket-describe "ext:racket-mode")
+(declare-function racket-run "ext:racket-mode")
 
 (defun symex--racket-send-to-repl (code)
   "Internal function to send CODE to the Racket REPL for evaluation.
@@ -48,7 +60,8 @@ Afterwards call `racket--repl-show-and-move-to-end'."
         (set-marker (process-mark proc) (point))))
     (comint-send-string proc code)
     (comint-send-string proc "\n"))
-  (racket--repl-show-and-move-to-end))
+  (when (fboundp 'racket--repl-show-and-move-to-end)
+    (racket--repl-show-and-move-to-end)))
 
 (defun symex-eval-racket ()
   "Eval last sexp.
@@ -95,7 +108,7 @@ Accounts for different point location in evil vs Emacs mode."
 (defun symex-describe-symbol-racket ()
   "Describe symbol at point."
   (interactive)
-  (racket-describe nil))
+  (racket-describe))
 
 (defun symex-repl-racket ()
   "Go to REPL."
@@ -103,7 +116,7 @@ Accounts for different point location in evil vs Emacs mode."
 
 (defun symex-run-racket ()
   "Evaluate buffer."
-  (racket-run nil))
+  (racket-run))
 
 
 (provide 'symex-interface-racket)

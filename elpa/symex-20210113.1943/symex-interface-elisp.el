@@ -1,4 +1,4 @@
-;;; symex-interface-common-lisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-elisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,54 +21,63 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Common Lisp language
+;; Interface for the Elisp language
 ;;
 
 ;;; Code:
 
-(require 'slime)
-(require 'slime-repl)
+(require 'evil)
 
-(defun symex-eval-common-lisp ()
-  "Eval last sexp.
-
-Accounts for different point location in evil vs Emacs mode."
+(defun symex-eval-elisp ()
+  "Eval Elisp symex."
   (interactive)
-  (slime-eval-last-expression))
+  (eval-last-sexp nil))
 
-(defun symex-eval-definition-common-lisp ()
+(defun symex-eval-definition-elisp ()
   "Eval entire containing definition."
-  (slime-eval-defun))
+  (eval-defun nil))
 
-(defun symex-eval-pretty-common-lisp ()
+(defun symex-eval-pretty-elisp ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-common-lisp))
+  (symex-eval-elisp))
 
-(defun symex-eval-thunk-common-lisp ()
+(defun symex-eval-thunk-elisp ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  ;; can use slime-interactive-eval
-  (message "eval as thunk currently not supported for Common Lisp"))
+  ;; can use (eval (car (read-from-string thunk-code)))
+  (message "eval as thunk currently not supported for ELisp"))
 
-(defun symex-eval-print-common-lisp ()
+(defun symex-eval-print-elisp ()
   "Eval symex and print result in buffer."
   (interactive)
-  (call-interactively 'slime-eval-print-last-expression))
+  (save-excursion
+    (forward-sexp)
+    (eval-print-last-sexp)))
 
-(defun symex-describe-symbol-common-lisp ()
+(defun symex-describe-symbol-elisp ()
   "Describe symbol at point."
   (interactive)
-  (call-interactively 'slime-documentation))
+  (describe-symbol (symbol-at-point)))
 
-(defun symex-repl-common-lisp ()
-  "Go to REPL."
-  (slime-repl))
+(defun symex-repl-elisp ()
+  "Enter elisp REPL, context-aware.
 
-(defun symex-run-common-lisp ()
+If there is only one window, open REPL in a new window.  Otherwise
+open in most recently used other window."
+  (interactive)
+  (if (= (length (window-list))
+         1)
+      (progn (evil-window-vsplit)
+             (evil-window-right 1)
+             (ielm))
+    (evil-window-mru)
+    (ielm)))
+
+(defun symex-run-elisp ()
   "Evaluate buffer."
-  (slime-eval-buffer))
+  (eval-buffer))
 
 
-(provide 'symex-interface-common-lisp)
-;;; symex-interface-common-lisp.el ends here
+(provide 'symex-interface-elisp)
+;;; symex-interface-elisp.el ends here

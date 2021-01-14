@@ -59,6 +59,14 @@ features." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "symex-interface-arc" "symex-interface-arc.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from symex-interface-arc.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-arc" '("symex-")))
+
+;;;***
+
 ;;;### (autoloads nil "symex-interface-clojure" "symex-interface-clojure.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-clojure.el
@@ -102,7 +110,7 @@ features." t nil)
 ;;;### (autoloads nil "symex-interop" "symex-interop.el" (0 0 0 0))
 ;;; Generated autoloads from symex-interop.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-e")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-")))
 
 ;;;***
 

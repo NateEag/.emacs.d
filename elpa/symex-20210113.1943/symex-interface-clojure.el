@@ -1,4 +1,4 @@
-;;; symex-interface-elisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-clojure.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,63 +21,59 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Elisp language
+;; Interface for the Clojure language
 ;;
 
 ;;; Code:
 
+(require 'cider nil 'noerror)
 
-(require 'evil)
+(declare-function cider-eval-last-sexp "ext:cider")
+(declare-function cider-eval-defun-at-point "ext:cider")
+(declare-function cider-eval-print-last-sexp "ext:cider")
+(declare-function cider-doc "ext:cider")
+(declare-function cider-switch-to-repl-buffer "ext:cider")
+(declare-function cider-eval-buffer "ext:cider")
 
+(defun symex-eval-clojure ()
+  "Eval last sexp.
 
-(defun symex-eval-elisp ()
-  "Eval Elisp symex."
+Accounts for different point location in evil vs Emacs mode."
   (interactive)
-  (eval-last-sexp nil))
+  (cider-eval-last-sexp))
 
-(defun symex-eval-definition-elisp ()
+(defun symex-eval-definition-clojure ()
   "Eval entire containing definition."
-  (eval-defun nil))
+  (cider-eval-defun-at-point nil))
 
-(defun symex-eval-pretty-elisp ()
+(defun symex-eval-pretty-clojure ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-elisp))
+  (symex-eval-clojure))
 
-(defun symex-eval-thunk-elisp ()
+(defun symex-eval-thunk-clojure ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  ;; can use (eval (car (read-from-string thunk-code)))
-  (message "eval as thunk currently not supported for ELisp"))
+  (message "eval as thunk currently not supported for Clojure"))
 
-(defun symex-eval-print-elisp ()
+(defun symex-eval-print-clojure ()
   "Eval symex and print result in buffer."
   (interactive)
-  (save-excursion
-    (forward-sexp)
-    (eval-print-last-sexp)))
+  (cider-eval-print-last-sexp))
 
-(defun symex-describe-symbol-elisp ()
+(defun symex-describe-symbol-clojure ()
   "Describe symbol at point."
   (interactive)
-  (describe-symbol (symbol-at-point)))
+  (cider-doc nil))
 
-(defun symex-repl-elisp ()
-  "Enter elisp REPL, context-aware.
+(defun symex-repl-clojure ()
+  "Go to REPL."
+  (cider-switch-to-repl-buffer))
 
-If there is only one window, open REPL in a new window.  Otherwise
-open in current window."
-  (interactive)
-  (when (= (length (window-list))
-           1)
-    (progn (evil-window-vsplit)
-           (evil-window-right 1)))
-  (ielm))
-
-(defun symex-run-elisp ()
+(defun symex-run-clojure ()
   "Evaluate buffer."
-  (eval-buffer))
+  (cider-eval-buffer))
 
 
-(provide 'symex-interface-elisp)
-;;; symex-interface-elisp.el ends here
+(provide 'symex-interface-clojure)
+;;; symex-interface-clojure.el ends here

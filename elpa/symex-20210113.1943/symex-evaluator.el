@@ -26,6 +26,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (require 'symex-data)
 (require 'symex-primitives)
 (require 'symex-computations)
@@ -254,7 +256,7 @@ Evaluates to a COMPUTATION on the traversal actually executed."
                                     ((symex-move-p traversal)
                                      (symex-execute-move traversal
                                                          computation))
-                                    (t (error "Syntax error '%s': unrecognized traversal type!" traversal)))))
+                                    (t (funcall traversal)))))
       (let ((result (funcall (symex--computation-perceive computation)
                              executed-traversal)))
         (if result

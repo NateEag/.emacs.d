@@ -5,8 +5,8 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.5.0
-;; Package-Version: 20200807.1101
-;; Package-Commit: e675cf0881408e10b76f2e70c6158237cb94671e
+;; Package-Version: 20201122.950
+;; Package-Commit: 6863a5278fc656cddb604b0c6e165f05d0171d0a
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3") (php-mode "1.22.3"))
@@ -55,6 +55,7 @@
 ;;
 
 ;;; Code:
+(require 'cl-lib)
 (require 'php-project)
 
 
@@ -83,6 +84,18 @@
   "Set --memory-limit option."
   :type '(choice (string :tag "Specifies the memory limit in the same format php.ini accepts.")
                  (const :tag "Not set --memory-limit option" nil))
+  :safe (lambda (v) (or (null v) (stringp v)))
+  :group 'phpstan)
+
+(defcustom phpstan-docker-image "ghcr.io/phpstan/phpstan"
+  "Docker image URL or Docker Hub image name or NIL."
+  :type '(choice
+          (string :tag "URL or image name of Docker Hub.")
+          (const :tag "Official Docker container" "ghcr.io/phpstan/phpstan")
+          (const :tag "No specify Docker image"))
+  :link '(url-link :tag "PHPStan Documentation" "https://phpstan.org/user-guide/docker")
+  :link '(url-link :tag "GitHub Container Registry"
+                   "https://github.com/orgs/phpstan/packages/container/package/phpstan")
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'phpstan)
 
@@ -283,7 +296,7 @@ it returns the value of `SOURCE' as it is."
    ((eq 'docker phpstan-executable)
     (list "run" "--rm" "-v"
           (concat (expand-file-name (php-project-get-root-dir)) ":/app")
-          "phpstan/phpstan"))
+          phpstan-docker-image))
    ((and (consp phpstan-executable)
          (eq 'root (car phpstan-executable)))
     (list

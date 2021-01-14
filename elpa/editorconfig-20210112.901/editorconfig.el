@@ -59,6 +59,10 @@ coding styles between different editors and IDEs."
   :prefix "editorconfig-"
   :group 'tools)
 
+(define-obsolete-variable-alias
+  'edconf-exec-path
+  'editorconfig-exec-path
+  "0.5")
 (defcustom editorconfig-exec-path
   "editorconfig"
   "Path to EditorConfig executable.
@@ -66,11 +70,11 @@ coding styles between different editors and IDEs."
 Used by `editorconfig-call-editorconfig-exec'."
   :type 'string
   :group 'editorconfig)
-(define-obsolete-variable-alias
-  'edconf-exec-path
-  'editorconfig-exec-path
-  "0.5")
 
+(define-obsolete-variable-alias
+  'edconf-get-properties-function
+  'editorconfig-get-properties-function
+  "0.5")
 (defcustom editorconfig-get-properties-function
   'editorconfig-core-get-properties-hash
   "A function which gets EditorConfig properties for current buffer.
@@ -100,16 +104,20 @@ Possible known values are:
   * Get properties by executing EditorConfig executable"
   :type 'function
   :group 'editorconfig)
-(define-obsolete-variable-alias
-  'edconf-get-properties-function
-  'editorconfig-get-properties-function
-  "0.5")
 
 (defcustom editorconfig-mode-lighter " EditorConfig"
   "`editorconfig-mode' lighter string."
   :type 'string
   :group 'editorconfig)
 
+(define-obsolete-variable-alias
+  'edconf-custom-hooks
+  'editorconfig-after-apply-functions
+  "0.5")
+(define-obsolete-variable-alias
+  'editorconfig-custom-hooks
+  'editorconfig-after-apply-functions
+  "0.7.14")
 (defcustom editorconfig-after-apply-functions ()
   "A list of functions after loading common EditorConfig settings.
 
@@ -132,14 +140,6 @@ This hook will be run even when there are no matching sections in
 \".editorconfig\", or no \".editorconfig\" file was found at all."
   :type 'hook
   :group 'editorconfig)
-(define-obsolete-variable-alias
-  'edconf-custom-hooks
-  'editorconfig-after-apply-functions
-  "0.5")
-(define-obsolete-variable-alias
-  'editorconfig-custom-hooks
-  'editorconfig-after-apply-functions
-  "0.7.14")
 
 (defcustom editorconfig-hack-properties-functions ()
   "A list of function to alter property values before applying them.
@@ -162,6 +162,10 @@ This hook will be run even when there are no matching sections in
   :type 'hook
   :group 'editorconfig)
 
+(define-obsolete-variable-alias
+  'edconf-indentation-alist
+  'editorconfig-indentation-alist
+  "0.5")
 (defcustom editorconfig-indentation-alist
   ;; For contributors: Sort modes in alphabetical order
   '((apache-mode apache-indent-level)
@@ -295,10 +299,6 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   :type '(alist :key-type symbol :value-type sexp)
   :risky t
   :group 'editorconfig)
-(define-obsolete-variable-alias
-  'edconf-indentation-alist
-  'editorconfig-indentation-alist
-  "0.5")
 
 (defcustom editorconfig-exclude-modes ()
   "Modes in which `editorconfig-mode-apply' will not run."
@@ -307,13 +307,18 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
 
 (defcustom editorconfig-exclude-regexps
   (list (eval-when-compile
-          (rx string-start (or "http" "https" "ftp" "sftp" "rsync") ":")))
+          (rx string-start "/" (or "http" "https" "ftp" "sftp" "rsync" "ssh") ":")))
   "List of regexp for buffer filenames `editorconfig-mode-apply' will not run.
 
 When variable `buffer-file-name' matches any of the regexps, then
 `editorconfig-mode-apply' will not do its work."
   :type '(repeat string)
   :group 'editorconfig)
+(with-eval-after-load 'recentf
+  (add-to-list 'editorconfig-exclude-regexps
+               (rx-to-string '(seq string-start
+                                   (eval (expand-file-name recentf-save-file)))
+                             t)))
 
 (defcustom editorconfig-trim-whitespaces-mode nil
   "Buffer local minor-mode to use to trim trailing whitespaces.
@@ -426,26 +431,45 @@ number - `lisp-indent-offset' is not set only if indent_size is
                                        ((integerp spec) (* spec size))
                                        (t spec))))))))))))))
 
-(defun editorconfig-set-coding-system (end-of-line charset)
+(defvar editorconfig--apply-coding-system-currently nil
+  "Used internally.")
+(make-variable-buffer-local 'editorconfig--apply-coding-system-currently)
+(put 'editorconfig--apply-coding-system-currently
+     'permanent-local
+     t)
+
+(cl-defun editorconfig-set-coding-system (end-of-line charset)
   "Set buffer coding system by END-OF-LINE and CHARSET."
-  (let ((eol (cond
-              ((equal end-of-line "lf") 'undecided-unix)
-              ((equal end-of-line "cr") 'undecided-mac)
-              ((equal end-of-line "crlf") 'undecided-dos)
+  (let* ((eol (cond
+               ((equal end-of-line "lf") 'undecided-unix)
+               ((equal end-of-line "cr") 'undecided-mac)
+               ((equal end-of-line "crlf") 'undecided-dos)
+               (t 'undecided)))
+         (cs (cond
+              ((equal charset "latin1") 'iso-latin-1)
+              ((equal charset "utf-8") 'utf-8)
+              ((equal charset "utf-8-bom") 'utf-8-with-signature)
+              ((equal charset "utf-16be") 'utf-16be-with-signature)
+              ((equal charset "utf-16le") 'utf-16le-with-signature)
               (t 'undecided)))
-        (cs (cond
-             ((equal charset "latin1") 'iso-latin-1)
-             ((equal charset "utf-8") 'utf-8)
-             ((equal charset "utf-8-bom") 'utf-8-with-signature)
-             ((equal charset "utf-16be") 'utf-16be-with-signature)
-             ((equal charset "utf-16le") 'utf-16le-with-signature)
-             (t 'undecided))))
-    (unless (and (eq eol 'undecided)
-                 (eq cs 'undecided))
-      (set-buffer-file-coding-system (merge-coding-systems
-                                      cs
-                                      eol)
-                                     nil t))))
+         (coding-system (merge-coding-systems cs eol)))
+    (when (eq coding-system 'undecided)
+      (cl-return-from editorconfig-set-coding-system))
+    (unless (file-readable-p buffer-file-name)
+      (set-buffer-file-coding-system coding-system)
+      (cl-return-from editorconfig-set-coding-system))
+    (unless (eq coding-system
+                editorconfig--apply-coding-system-currently)
+      ;; Revert functions might call editorconfig-apply again
+      (unwind-protect
+          (progn
+            (setq editorconfig--apply-coding-system-currently
+                  coding-system)
+            ;; Revert without query if buffer is not modified
+            (let ((revert-without-query '(".")))
+              (revert-buffer-with-coding-system coding-system)))
+        (setq editorconfig--apply-coding-system-currently
+              nil)))))
 
 (defun editorconfig-set-trailing-nl (final-newline)
   "Set up requiring final newline by FINAL-NEWLINE.

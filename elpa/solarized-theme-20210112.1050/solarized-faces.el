@@ -84,6 +84,8 @@
      `(trailing-whitespace ((,class (:background ,red))))
      `(vertical-border ((,class (:foreground ,s-line))))
      `(warning ((,class (:foreground ,yellow ))))
+     `(next-error ((,class (:foreground ,magenta-2fg :background ,magenta-2bg :weight normal))))
+
 ;;;;; compilation
      `(compilation-column-face ((,class (:foreground ,cyan :underline nil))))
      `(compilation-column-number ((,class (:inherit font-lock-doc-face :foreground ,cyan
@@ -198,6 +200,11 @@
      `(Man-overstrike ((,class (:foreground ,blue :weight bold))))
      `(Man-reverse ((,class (:foreground ,orange))))
      `(Man-underline ((,class (:foreground ,green :underline t))))
+
+;;;;; pulse
+     `(pulse-highlight-start-face ((,light-class
+                                    (:background ,(solarized-color-blend yellow base03 0.4)))
+                                   (,dark-class (:background ,(solarized-color-blend cyan base03 0.4)))))
 ;;;;; wid-edit
      `(widget-field ((,class (:background ,base02))))
 ;;;;; font lock
@@ -380,6 +387,8 @@
                                                  :inverse-video unspecified))))
 ;;;;; col-highlight
      `(col-highlight ((,class (:background ,base02))))
+;;;;; company-box
+     `(company-box-scrollbar ((,class (:background ,base01))))
 ;;;;; company-mode
      `(company-echo ((,class nil)))
      `(company-echo-common ((,class (:background ,red))))
@@ -871,7 +880,7 @@
        ((,class (,@(and (>= emacs-major-version 27) '(:extend t))
                  :background ,base02))))
 ;;;;; hydra
-     `(hydra-face-red ((,class (:foreground ,red))))
+     `(hydra-face-red ((,class (:foreground ,base1 :weight bold))))
      `(hydra-face-blue ((,class (:foreground ,blue))))
      `(hydra-face-amaranth ((,class (:foreground ,orange))))
      `(hydra-face-pink ((,class (:foreground ,magenta))))
@@ -1013,6 +1022,9 @@
      `(linum-relative-current-face ((,class (:inherit linum))))
 ;;;;; display-line-number-mode
      `(line-number ((,class (:weight thin :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
+     `(line-number-minor-tick ((,class (:inherit line-number :weight normal))))
+     `(line-number-major-tick ((,class (:inherit line-number-minor-tick :weight bold))))
+     `(line-number-current-line ((,class (:inherit line-number :background ,base03 :foreground ,base0))))
 ;;;;; lsp-ui
      `(lsp-ui-doc-background ((,class (:background ,base03))))
      `(lsp-ui-doc-header ((,class (:background ,yellow-1bg :foreground ,yellow-1fg))))
@@ -1555,8 +1567,8 @@
      `(rst-level-6 ((,class (:inherit org-level-6))))
 ;;;;; selectrum-mode
      `(selectrum-current-candidate ((,class (:weight bold :background ,base02 :underline t))))
-     `(selectrum-primary-highlight ((,class (:foreground ,base1))))
-     `(selectrum-secondary-highlight ((,class (:foreground ,yellow))))
+     `(selectrum-primary-highlight ((,class (:foreground ,yellow))))
+     `(selectrum-secondary-highlight ((,class (:foreground ,blue))))
 ;;;;; sh-mode
      `(sh-quoted-exec ((,class (:foreground ,violet :weight bold))))
      `(sh-escaped-newline ((,class (:foreground ,yellow :weight bold))))
@@ -1754,6 +1766,10 @@
      `(term-color-magenta ((t (:foreground ,magenta :background ,magenta))))
      `(term-color-cyan ((t (:foreground ,cyan :background ,cyan))))
      `(term-color-white ((t (:foreground ,base2 :background ,base2))))
+;;;;; terraform-mode
+     `(terraform--resource-name-face ((,class (:foreground ,green))))
+     `(terraform--resource-type-face ((,class (:foreground ,yellow))))
+
 ;;;;; todotxt
      `(todotxt-priority-a-face ((,class (:foreground ,orange))))
      `(todotxt-priority-b-face ((,class (:foreground ,yellow))))

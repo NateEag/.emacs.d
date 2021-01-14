@@ -6,7 +6,7 @@
 ;; Maintainer: John Wiegley <johnw@newartisans.com>
 ;; Created: 17 Jun 2012
 ;; Modified: 29 Nov 2017
-;; Version: 2.4
+;; Version: 2.4.1
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -43,6 +43,11 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
+;; Declare a synthetic theme for :custom variables.
+;; Necessary in order to avoid having those variables saved by custom.el.
+(deftheme use-package)
+(enable-theme 'use-package)
+
 (if (and (eq emacs-major-version 24) (eq emacs-minor-version 3))
     (defsubst hash-table-keys (hash-table)
       "Return a list of keys in HASH-TABLE."
@@ -56,7 +61,7 @@
   "A use-package declaration for simplifying your `.emacs'."
   :group 'startup)
 
-(defconst use-package-version "2.4"
+(defconst use-package-version "2.4.1"
   "This version of use-package.")
 
 (defcustom use-package-keywords
@@ -1394,9 +1399,9 @@ no keyword implies `:all'."
               (comment (nth 2 def)))
           (unless (and comment (stringp comment))
             (setq comment (format "Customized with use-package %s" name)))
-          `(funcall (or (get (quote ,variable) 'custom-set) #'set-default)
-                    (quote ,variable)
-                    ,value)))
+          `(let ((custom--inhibit-theme-enable nil))
+             (custom-theme-set-variables 'use-package
+			                 '(,variable ,value nil () ,comment)))))
     args)
    (use-package-process-keywords name rest state)))
 

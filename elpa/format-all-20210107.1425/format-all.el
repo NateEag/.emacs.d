@@ -2,10 +2,10 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20201016.1041
-;; Package-Commit: 361178827723cb11ca774431c938c27894a08e13
+;; Package-Version: 20210107.1425
+;; Package-Commit: 05bd6d0b4aa3d8b22291de5827da64b7be155590
 ;; Version: 0.3.0
-;; Package-Requires: ((emacs "24") (cl-lib "0.5") (language-id "0.8"))
+;; Package-Requires: ((emacs "24.3") (language-id "0.10"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 ;;
@@ -26,6 +26,7 @@
 ;;
 ;; - Angular/Vue (prettier)
 ;; - Assembly (asmfmt)
+;; - ATS (atsfmt)
 ;; - Bazel Starlark (buildifier)
 ;; - BibTeX (emacs)
 ;; - C/C++/Objective-C (clang-format)
@@ -44,17 +45,17 @@
 ;; - Fish Shell (fish_indent)
 ;; - Fortran 90 (fprettify)
 ;; - Gleam (gleam format)
-;; - Go (gofmt)
+;; - Go (gofmt, goimports)
 ;; - GraphQL (prettier)
-;; - Haskell (brittany)
+;; - Haskell (brittany, hindent, stylish-haskell)
 ;; - HTML/XHTML/XML (tidy)
 ;; - Java (clang-format)
-;; - JavaScript/JSON/JSX (prettier)
+;; - JavaScript/JSON/JSX (prettier, standard)
 ;; - Jsonnet (jsonnetfmt)
 ;; - Kotlin (ktlint)
 ;; - LaTeX (latexindent)
 ;; - Ledger (ledger-mode)
-;; - Lua (lua-fmt)
+;; - Lua (lua-fmt, prettier plugin-lua)
 ;; - Markdown (prettier)
 ;; - Nix (nixfmt)
 ;; - OCaml (ocp-indent)
@@ -62,16 +63,16 @@
 ;; - PHP (prettier plugin-php)
 ;; - Protocol Buffers (clang-format)
 ;; - PureScript (purty)
-;; - Python (black)
+;; - Python (black, yapf)
 ;; - R (styler)
 ;; - Reason (bsrefmt)
 ;; - Ruby (rufo)
 ;; - Rust (rustfmt)
 ;; - Scala (scalafmt)
-;; - Shell script (shfmt)
+;; - Shell script (beautysh, shfmt)
 ;; - Snakemake (snakefmt)
 ;; - Solidity (prettier prettier-plugin-solidity)
-;; - SQL (sqlformat)
+;; - SQL (pgformatter, sqlformat)
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
 ;; - TOML (prettier prettier-plugin-toml)
@@ -82,11 +83,6 @@
 ;; You will need to install external programs to do the formatting.
 ;; If `format-all-buffer` can't find the right program, it will try to
 ;; tell you how to install it.
-;;
-;; There are currently no customize variables, since it's not clear
-;; what approach should be taken.  Please see
-;; https://github.com/lassik/emacs-format-all-the-code/issues for
-;; discussion.
 ;;
 ;; Many of the external formatters support configuration files in the
 ;; source code directory to control their formatting.  Please see the
@@ -101,8 +97,91 @@
 (require 'cl-lib)
 (require 'language-id)
 
-(defvar format-all-debug nil
-  "When non-nil, format-all writes debug info using `message'.")
+(defgroup format-all nil
+  "Lets you auto-format source code."
+  :group 'format-all)
+
+(defcustom format-all-debug nil
+  "When non-nil, troubleshooting info is written into the *Messages* buffer."
+  :type 'boolean
+  :group 'format-all)
+
+(defcustom format-all-default-formatters
+  '(("Assembly" asmfmt)
+    ("ATS" atsfmt)
+    ("Bazel" buildifier)
+    ("BibTeX" bibtex-mode)
+    ("C" clang-format)
+    ("C++" clang-format)
+    ("CMake" cmake-format)
+    ("CSS" prettier)
+    ("Cabal Config" cabal-fmt)
+    ("Clojure" cljfmt)
+    ("Crystal" crystal)
+    ("D" dfmt)
+    ("Dart" dartfmt)
+    ("Dhall" dhall)
+    ("Dockerfile" dockfmt)
+    ("Elixir" mix-format)
+    ("Elm" elm-format)
+    ("Emacs Lisp" emacs-lisp)
+    ("Fish" fish-indent)
+    ("GLSL" clang-format)
+    ("Go" gofmt)
+    ("GraphQL" prettier)
+    ("HTML" html-tidy)
+    ("Haskell" brittany)
+    ("JSON" prettier)
+    ("JSX" prettier)
+    ("Java" clang-format)
+    ("JavaScript" prettier)
+    ("Jsonnet" jsonnetfmt)
+    ("Kotlin" ktlint)
+    ("LaTeX" latexindent)
+    ("Less" prettier)
+    ("Literate Haskell" brittany)
+    ("Lua" lua-fmt)
+    ("Markdown" prettier)
+    ("Nix" nixfmt)
+    ("OCaml" ocp-indent)
+    ("Objective-C" clang-format)
+    ("PHP" prettier)
+    ("Perl" perltidy)
+    ("Protocol Buffer" clang-format)
+    ("PureScript" purty)
+    ("Python" black)
+    ("R" styler)
+    ("Reason" bsrefmt)
+    ("Ruby" rufo)
+    ("Rust" rustfmt)
+    ("SCSS" prettier)
+    ("SQL" sqlformat)
+    ("Scala" scalafmt)
+    ("Shell" shfmt)
+    ("Solidity" prettier)
+    ("Swift" swiftformat)
+    ("TOML" prettier)
+    ("TSX" prettier)
+    ("Terraform" terraform-fmt)
+    ("TypeScript" prettier)
+    ("Verilog" istyle-verilog)
+    ("Vue" prettier)
+    ("XML" html-tidy)
+    ("YAML" prettier)
+    ("_Angular" prettier)
+    ("_Flow" prettier)
+    ("_Fortran 90" fprettify)
+    ("_Gleam" gleam)
+    ("_Ledger" ledger-mode)
+    ("_Snakemake" snakefmt))
+  "Default formatter to use for each language."
+  :type '(repeat (list string symbol))
+  :group 'format-all)
+
+(defcustom format-all-always-show-errors nil
+  "When non-nil, warnings are shown even when formatting is successful."
+  :type 'boolean
+  :group 'format-all)
 
 (defvar format-all-after-format-functions nil
   "Hook run after each time `format-all-buffer' has formatted a buffer.
@@ -126,7 +205,38 @@ is not guaranteed to be in any particular place, so `goto-char'
 before editing the buffer.  Narrowing may be in effect unless
 STATUS is :reformatted.")
 
-(eval-when-compile
+(defvar format-all--user-args nil
+  "Internal variable to temporarily store arguments for formatters.")
+
+(defvar-local format-all-formatters nil
+  "Rules to select which formatter format-all uses.
+
+The value is an association list.
+
+The first item of each association is the name of a programming
+language. (GitHub Linguist names are used.)
+
+The remaining items are one or more formatters to use for that
+language. Each formatter is either:
+
+* a symbol (e.g. black, clang-format, rufo)
+
+* a list whose first item is that symbol, and any remaining items
+  are extra command line arguments to pass to the formatter
+
+If more than one formatter is given for the same language, all of
+them are run as a chain, with the code from each formatter passed
+to the next. The final code is from the last formatter. In case
+any formatter in the chain is missing or fails to format the
+code, the entire chain fails and the old code before formatting
+is preserved.
+
+You'll probably want to set this in a \".dir-locals.el\" file or
+in a hook function. Any number of buffers can share the same
+association list. Using \".dir-locals.el\" is convenient since
+the rules for an entire source tree can be given in one file.")
+
+(eval-and-compile
   (defconst format-all--system-type
     (cl-case system-type
       (windows-nt 'windows)
@@ -141,7 +251,7 @@ STATUS is :reformatted.")
                  ((string-match "netbsd"  system-configuration) 'netbsd))))))
     "Current operating system according to the format-all package."))
 
-(eval-when-compile
+(eval-and-compile
   (defun format-all--resolve-system (choices)
     "Get first choice matching `format-all--system-type' from CHOICES."
     (cl-dolist (choice choices)
@@ -191,9 +301,9 @@ takes INPUT (the unformatted source code as a string).  THUNK is
 invoked such that the current buffer is an empty temp buffer.  It
 should call the formatter on INPUT and write the formatted source
 code output to the temp buffer.  It should return (ERRORP
-ERRPUT).  ERRORP is a boolean indicating whether the formatter
+ERROR-OUTPUT).  ERRORP is a boolean indicating whether the formatter
 caused an error and hence the contents of the temp buffer should
-be discarded.  ERRPUT is a string containing all error/warning
+be discarded.  ERROR-OUTPUT is a string containing all error/warning
 output from the formatter.
 
 Note that in some cases we can use the output of the formatter
@@ -204,7 +314,7 @@ even if it produced warnings.  Not all warnings are errors."
       (let ((inbuf (current-buffer))
             (input (buffer-string)))
         (with-temp-buffer
-          (cl-destructuring-bind (errorp errput) (funcall thunk input)
+          (cl-destructuring-bind (errorp error-output) (funcall thunk input)
             (let* ((no-chg (or errorp
                                (= 0 (let ((case-fold-search nil))
                                       (compare-buffer-substrings
@@ -212,7 +322,7 @@ even if it produced warnings.  Not all warnings are errors."
                    (output (cond (errorp nil)
                                  (no-chg t)
                                  (t (buffer-string)))))
-              (list output errput))))))))
+              (list output error-output))))))))
 
 (defun format-all--buffer-native (mode &rest funcs)
   "Internal helper function to implement formatters.
@@ -273,7 +383,7 @@ or none of ROOT-FILES are found in any parent directories, the
 working directory will be the one where the formatted file is.
 ROOT-FILES is ignored for buffers that are not visiting a file."
   (let ((ok-statuses (or ok-statuses '(0)))
-        (args (format-all--flatten-once args))
+        (args (append format-all--user-args (format-all--flatten-once args)))
         (default-directory (format-all--locate-default-directory root-files)))
     (when format-all-debug
       (message "Format-All: Running: %s"
@@ -285,15 +395,15 @@ ROOT-FILES is ignored for buffers that are not visiting a file."
               (status (apply #'call-process-region input nil
                              executable nil (list t errfile)
                              nil args))
-              (errput (with-temp-buffer
-                        (insert-file-contents errfile)
-                        (delete-file errfile)
-                        (buffer-string)))
+              (error-output (with-temp-buffer
+                              (insert-file-contents errfile)
+                              (delete-file errfile)
+                              (buffer-string)))
               (errorp (or (not (member status ok-statuses))
                           (and error-regexp
                                (save-match-data
-                                 (string-match error-regexp errput))))))
-         (list errorp errput))))))
+                                 (string-match error-regexp error-output))))))
+         (list errorp error-output))))))
 
 (defun format-all--buffer-easy (executable &rest args)
   "Internal helper function to implement formatters.
@@ -364,6 +474,18 @@ Consult the existing formatters for examples of BODY."
   (:install)
   (:languages "Assembly")
   (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter atsfmt
+  (:executable "atsfmt")
+  (:install "cabal new-install ats-format --happy-options='-gcsa' -O2")
+  (:languages "ATS")
+  (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter beautysh
+  (:executable "beautysh")
+  (:install "pip install beautysh")
+  (:languages "Shell")
+  (:format (format-all--buffer-easy executable "-")))
 
 (define-format-all-formatter bibtex-mode
   (:executable)
@@ -478,11 +600,11 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install elm"))
   (:languages "Elm")
   (:format
-   (cl-destructuring-bind (output errput)
+   (cl-destructuring-bind (output error-output)
        (format-all--buffer-hard nil nil '("elm.json" "elm-package.json")
                                 executable "--yes" "--stdin")
-     (let ((errput (format-all--remove-ansi-color errput)))
-       (list output errput)))))
+     (let ((error-output (format-all--remove-ansi-color error-output)))
+       (list output error-output)))))
 
 (define-format-all-formatter emacs-lisp
   (:executable)
@@ -517,6 +639,18 @@ Consult the existing formatters for examples of BODY."
    (macos "brew install go")
    (windows "scoop install go"))
   (:languages "Go")
+  (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter goimports
+  (:executable "goimports")
+  (:install "go get golang.org/x/tools/cmd/goimports")
+  (:languages "Go")
+  (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter hindent
+  (:executable "hindent")
+  (:install "stack install hindent")
+  (:languages "Haskell" "Literate Haskell")
   (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter html-tidy
@@ -580,10 +714,8 @@ Consult the existing formatters for examples of BODY."
     nil nil '("mix.exs")
     executable
     "format"
-    (let* ((file ".formatter.exs")
-           (dir (and (buffer-file-name)
-                     (locate-dominating-file (buffer-file-name) file))))
-      (when dir (list "--dot-formatter" (concat dir file))))
+    (let ((config-file (format-all--find-file ".formatter.exs")))
+      (when config-file (list "--dot-formatter" config-file)))
     "-")))
 
 (define-format-all-formatter nixfmt
@@ -604,15 +736,18 @@ Consult the existing formatters for examples of BODY."
   (:languages "Perl")
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter pgformatter
+  (:executable "pg_format")
+  (:install)
+  (:languages "SQL")
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter prettier
   (:executable "prettier")
-  (:install "npm install --global prettier @prettier/plugin-php prettier-plugin-solidity prettier-plugin-toml")
+  (:install "npm install --global prettier @prettier/plugin-lua @prettier/plugin-php prettier-plugin-solidity prettier-plugin-toml")
   (:languages
-   "CSS" "GraphQL" "JavaScript" "JSON" "JSX" "Less" "Markdown" "PHP"
-   "SCSS" "Solidity" "TOML" "TSX" "TypeScript" "Vue" "YAML"
-   ;; TODO: Use html-tidy instead of prettier for plain HTML. Enable
-   ;; prettier's HTML support once we have multi-formatter support.
-   ;; "HTML"
+   "CSS" "GraphQL" "HTML" "JavaScript" "JSON" "JSX" "Less" "Lua" "Markdown"
+   "PHP" "SCSS" "Solidity" "TOML" "TSX" "TypeScript" "Vue" "YAML"
    "_Angular" "_Flow")
   (:format
    (format-all--buffer-easy
@@ -625,7 +760,9 @@ Consult the existing formatters for examples of BODY."
                                     ("Solidity"   . "solidity-parse")
                                     ("TSX"        . "typescript")))))
                  (if pair (cdr pair) (downcase language)))
-    (when (buffer-file-name) (list "--stdin-filepath" (buffer-file-name))))))
+    (when (buffer-file-name) (list "--stdin-filepath" (buffer-file-name)))
+    (let ((ignore-file (format-all--find-file ".prettierignore")))
+      (when ignore-file (list "--ignore-path" ignore-file))))))
 
 (define-format-all-formatter purty
   (:executable "purty")
@@ -667,12 +804,14 @@ Consult the existing formatters for examples of BODY."
   (:format
    (format-all--buffer-easy
     executable
-    "-ln" (cl-case (and (eql major-mode 'sh-mode)
-                        (boundp 'sh-shell)
-                        (symbol-value 'sh-shell))
-            (bash "bash")
-            (mksh "mksh")
-            (t "posix")))))
+    (if (buffer-file-name)
+        (list "-filename" (buffer-file-name))
+      (list "-ln" (cl-case (and (eql major-mode 'sh-mode)
+                                (boundp 'sh-shell)
+                                (symbol-value 'sh-shell))
+                    (bash "bash")
+                    (mksh "mksh")
+                    (t "posix")))))))
 
 (define-format-all-formatter snakefmt
   (:executable "snakefmt")
@@ -693,12 +832,21 @@ Consult the existing formatters for examples of BODY."
                                  'utf-8)))
           (process-environment (cons (concat "PYTHONIOENCODING=" oenc)
                                      process-environment)))
-     (format-all--buffer-easy
-      executable
-      "--keywords" "upper"
-      "--reindent_aligned"
-      "--encoding" ienc
-      "-"))))
+     (format-all--buffer-easy executable "--encoding" ienc "-"))))
+
+(define-format-all-formatter standard
+  (:executable "standard")
+  (:install "npm install --global standard")
+  (:languages "JavaScript" "JSX")
+  (:format
+   ;; `standard --stdin` properly uses zero vs non-zero exit codes to
+   ;; indicate success vs error. However, it checks for quite a broad
+   ;; range of errors, all the way up to undeclared identifiers and
+   ;; such. To catch only syntax errors, we need to look specifically
+   ;; for the text "Parsing error:".
+   (format-all--buffer-hard
+    '(0 1) ".*?:.*?:[0-9]+:[0-9]+: Parsing error:" nil
+    executable "--fix" "--stdin")))
 
 (define-format-all-formatter styler
   (:executable "Rscript")
@@ -714,6 +862,12 @@ Consult the existing formatters for examples of BODY."
           " close(con);"
           " out"))))
 
+(define-format-all-formatter stylish-haskell
+  (:executable "stylish-haskell")
+  (:install "stack install stylish-haskell")
+  (:languages "Haskell")
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter swiftformat
   (:executable "swiftformat")
   (:install (macos "brew install swiftformat"))
@@ -725,6 +879,12 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install terraform"))
   (:languages "Terraform")
   (:format (format-all--buffer-easy executable "fmt" "-no-color" "-")))
+
+(define-format-all-formatter yapf
+  (:executable "yapf")
+  (:install "pip install yapf")
+  (:languages "Python")
+  (:format (format-all--buffer-easy executable)))
 
 (defun format-all--language-id-buffer ()
   "Return the language used in the current buffer, or NIL.
@@ -755,13 +915,6 @@ unofficial languages IDs are prefixed with \"_\"."
           (if (not installer) ""
             (format " You may be able to install it via %S." installer))))
 
-(defun format-all--probe ()
-  "Internal helper function to get the formatter for the current buffer."
-  (let ((language (format-all--language-id-buffer)))
-    (cl-dolist (formatter (gethash language format-all--language-table)
-                          (list nil nil))
-      (cl-return (list formatter language)))))
-
 (defun format-all--formatter-executable (formatter)
   "Internal helper function to get the external program for FORMATTER."
   (let ((executable (gethash formatter format-all--executable-table)))
@@ -771,17 +924,21 @@ unofficial languages IDs are prefixed with \"_\"."
                   executable
                   (gethash formatter format-all--install-table)))))))
 
-(defun format-all--show-or-hide-errors (error-output)
-  "Internal helper function to update *format-all-errors* with ERROR-OUTPUT."
-  (save-selected-window
-    (with-current-buffer (get-buffer-create "*format-all-errors*")
-      (erase-buffer)
-      (cond ((not (= 0 (length error-output)))
-             (insert error-output)
-             (display-buffer (current-buffer)))
-            (t
-             (let ((error-window (get-buffer-window (current-buffer))))
-               (when error-window (quit-window nil error-window))))))))
+(defun format-all--update-errors-buffer (status error-output)
+  "Internal helper function to update *format-all-errors*.
+
+STATUS and ERROR-OUTPUT come from the formatter."
+  (let ((show-errors-p (and (not (= 0 (length error-output)))
+                            (or format-all-always-show-errors
+                                (eq status :error)))))
+    (save-selected-window
+      (with-current-buffer (get-buffer-create "*format-all-errors*")
+        (erase-buffer)
+        (insert error-output)
+        (if show-errors-p
+            (display-buffer (current-buffer))
+          (let ((error-window (get-buffer-window (current-buffer))))
+            (when error-window (quit-window nil error-window))))))))
 
 (defun format-all--save-line-number (thunk)
   "Internal helper function to run THUNK and go back to the same line."
@@ -793,48 +950,121 @@ unofficial languages IDs are prefixed with \"_\"."
     (let ((line-length (- (point-at-eol) (point-at-bol))))
       (goto-char (+ (point) (min old-column line-length))))))
 
-(defun format-all-buffer--with (formatter language)
-  "Internal helper function to format the current buffer.
+(defun format-all--normalize-formatter (formatter)
+  "Internal function to convert FORMATTER spec into normal form."
+  (let ((formatter (if (listp formatter) formatter (list formatter))))
+    (when (cdr (last formatter))
+      (error "Formatter is not a proper list: %S" formatter))
+    (when (null formatter)
+      (error "Formatter name missing"))
+    (unless (symbolp (car formatter))
+      (error "Formatter name is not a symbol: %S" (car formatter)))
+    (unless (cl-every #'stringp (cdr formatter))
+      (error "Formatter command line arguments are not all strings: %S"
+             formatter))
+    formatter))
 
-Relies on FORMATTER and LANGUAGE from `format-all--probe'."
-  (when format-all-debug
-    (message "Format-All: Formatting %s using %S"
-             (buffer-name) (list formatter language)))
-  (let ((f-function (gethash formatter format-all--format-table))
-        (executable (format-all--formatter-executable formatter)))
-    (cl-destructuring-bind (output errput)
-        (funcall f-function executable language)
-      (let ((status (cond ((null output) :error)
-                          ((equal t output) :already-formatted)
-                          (t :reformatted))))
-        (when (equal :reformatted status)
-          (widen)
-          (format-all--save-line-number
-           (lambda ()
-             (let ((inhibit-read-only t))
-               (erase-buffer)
-               (insert output)))))
-        (format-all--show-or-hide-errors errput)
-        (run-hook-with-args 'format-all-after-format-functions
-                            formatter status)
-        (message (cl-ecase status
-                   (:error "Formatting error")
-                   (:already-formatted "Already formatted")
-                   (:reformatted "Reformatted!")))))))
+(defun format-all--normalize-chain (chain)
+  "Internal function to convert CHAIN spec into normal form."
+  (when (or (not (listp chain)) (cdr (last chain)))
+    (error "Formatter chain is not a proper list: %S" chain))
+  (mapcar #'format-all--normalize-formatter chain))
 
-(defun format-all-buffer--from-hook ()
+(defun format-all--run-chain (language chain)
+  "Internal function to run a formatter CHAIN on the current buffer.
+
+LANGUAGE is the language ID of the current buffer, from
+`format-all--language-id-buffer`."
+  (let* ((chain (format-all--normalize-chain chain))
+         (chain-tail chain)
+         (error-output "")
+         (reformatted-by '()))
+    (format-all--save-line-number
+     (lambda ()
+       (cl-loop
+        (unless (and chain-tail (= 0 (length error-output)))
+          (cl-return))
+        (let* ((formatter (car chain-tail))
+               (f-name (car formatter))
+               (f-args (cdr formatter))
+               (f-function (gethash f-name format-all--format-table))
+               (f-executable (format-all--formatter-executable f-name)))
+          (when format-all-debug
+            (message
+             "Format-All: Formatting %s as %s using %S%s"
+             (buffer-name) language f-name
+             (with-temp-buffer
+               (dolist (arg f-args) (insert " " (shell-quote-argument arg)))
+               (buffer-string))))
+          (cl-destructuring-bind (f-output f-error-output)
+              (let ((format-all--user-args f-args))
+                (funcall f-function f-executable language))
+            (let ((f-status :already-formatted))
+              (cond ((null f-output)
+                     (setq error-output f-error-output)
+                     (setq f-status :error))
+                    ((not (equal f-output t))
+                     (setq reformatted-by
+                           (append reformatted-by (list f-name)))
+                     (let ((inhibit-read-only t))
+                       (erase-buffer)
+                       (insert f-output))
+                     (setq f-status :reformatted)))
+              (run-hook-with-args 'format-all-after-format-functions
+                                  f-name f-status)
+              (format-all--update-errors-buffer f-status f-error-output))))
+        (setq chain-tail (cdr chain-tail)))
+       (message "%s"
+                (cond ((not (= 0 (length error-output))) "Formatting error")
+                      ((not reformatted-by) "Already formatted")
+                      (t "Reformatted!")))))))
+
+(defun format-all--get-default-chain (language)
+  "Internal function to get the default formatter chain for LANGUAGE."
+  (when language (cdr (assoc language format-all-default-formatters))))
+
+(defun format-all--get-chain (language)
+  "Internal function to get LANGUAGE formatter chain for current buffer."
+  (when language (cdr (assoc language format-all-formatters))))
+
+(defun format-all--set-chain (language chain)
+  "Internal function to set LANGUAGE formatter CHAIN for current buffer."
+  (cl-assert (stringp language))
+  (cl-assert (listp chain))
+  (setq format-all-formatters
+        (append (cl-remove-if (lambda (pair) (equal language (car pair)))
+                              format-all-formatters)
+                (when chain (list (cons language chain))))))
+
+(defun format-all--prompt-for-formatter (language)
+  "Internal function to choose a formatter for LANGUAGE."
+  (let ((f-names (gethash language format-all--language-table)))
+    (cond ((null f-names) (error "No supported formatters for %s" language))
+          ((null (cdr f-names)) (car f-names))
+          (t (let ((f-string (completing-read
+                              (format "Formatter for %s: " language)
+                              (mapcar #'list f-names) nil t)))
+               (and (not (= 0 (length f-string)))
+                    (intern f-string)))))))
+
+(defun format-all--buffer-from-hook ()
   "Internal helper function to auto-format current buffer from a hook.
 
 Format-All installs this function into `before-save-hook' to
 format buffers on save. This is a lenient version of
 `format-all-buffer' that silently succeeds instead of signaling
 an error if the current buffer has no formatter."
-  (cl-destructuring-bind (formatter language) (format-all--probe)
-    (when formatter
-      (format-all-buffer--with formatter language))))
+  (let ((language (format-all--language-id-buffer)))
+    (format-all--run-chain language (format-all--get-chain language))))
+
+(defun format-all--find-file (filename)
+  "Internal helper function to locate a dominating file for the current buffer."
+    (let* ((dir (and (buffer-file-name)
+                     (locate-dominating-file (buffer-file-name) filename))))
+      (when dir (expand-file-name (concat dir filename)))))
 
 ;;;###autoload
-(defun format-all-buffer ()
+(defun format-all-buffer (&optional prompt)
   "Auto-format the source code in the current buffer.
 
 No disk files are touched - the buffer doesn't even need to be
@@ -850,15 +1080,47 @@ external program.
 A suitable formatter is selected according to the `major-mode' of
 the buffer.  Many popular programming languages are supported.
 It is fairly easy to add new languages that have an external
-formatter.
+formatter.  When called interactively or PROMPT-P is non-nil, a
+missing formatter is prompted in the minibuffer.
+
+If PROMPT is non-nil (or the function is called as an interactive
+command), a missing formatter is prompted in the minibuffer.  If
+PROMPT is the symbol `always' (or a prefix argument is given),
+the formatter is prompted for even if one has already been set.
 
 If any errors or warnings were encountered during formatting,
 they are shown in a buffer called *format-all-errors*."
+  (interactive (list (if current-prefix-arg 'always t)))
+  (let* ((language (format-all--language-id-buffer))
+         (chain (format-all--get-chain language)))
+    (when (or (equal 'always prompt) (and prompt (not chain)))
+      (let ((f-name (format-all--prompt-for-formatter language)))
+        (when f-name
+          (message "Setting formatter to %S" f-name)
+          (setq chain (list f-name))
+          (format-all--set-chain language chain))))
+    (unless chain (error "No formatter"))
+    (format-all--run-chain language chain)))
+
+(defun format-all-ensure-formatter ()
+  "Ensure current buffer has a formatter, using default if not."
   (interactive)
-  (cl-destructuring-bind (formatter language) (format-all--probe)
-    (if formatter
-        (format-all-buffer--with formatter language)
-      (error "Don't know how to format %S code" major-mode))))
+  (let ((language (format-all--language-id-buffer)))
+    (unless (format-all--get-chain language)
+      (cond ((not language)
+             (message "No formatter for this language"))
+            ((not (gethash language format-all--language-table))
+             (message "No formatter for %s" language))
+            (t
+             (let ((default (format-all--get-default-chain language)))
+               (cond ((not default)
+                      (message "No default formatter for %s" language))
+                     (t
+                      (message "Using default formatter%s"
+                               (with-temp-buffer
+                                 (dolist (formatter default (buffer-string))
+                                   (insert (format " %S" formatter)))))
+                      (format-all--set-chain language default)))))))))
 
 ;;;###autoload
 (define-minor-mode format-all-mode
@@ -869,26 +1131,15 @@ automatically called to format your code each time before you
 save the buffer.
 
 The mode is buffer-local and needs to be enabled separately each
-time a file is visited.  You may want to use `add-hook' to add a
-function to your personal `after-change-major-mode-hook' in your
-`user-init-file' to enable the mode based on the buffer's
-`major-mode' and some `buffer-file-name' patterns. For example:
+time a file is visited. You may want to use `add-hook' in your
+`user-init-file' to enable the mode based on buffer modes. E.g.:
 
-    (defvar my-auto-format-modes '(js-mode python-mode))
-    (defvar my-auto-format-dirs '(\"foo\" \"bar\"))
+    (add-hook 'prog-mode-hook 'format-all-mode)
 
-    (defun my-auto-format-buffer-p ()
-      (and (member major-mode my-auto-format-modes)
-           (buffer-file-name)
-           (save-match-data
-             (let ((dir (file-name-directory (buffer-file-name))))
-               (cl-some (lambda (regexp) (string-match regexp dir))
-                        my-auto-format-dirs)))))
+To use a default formatter for projects that don't have one, add
+this too:
 
-    (defun my-after-change-major-mode ()
-      (format-all-mode (if (my-auto-format-buffer-p) 1 0)))
-
-    (add-hook 'after-change-major-mode-hook 'my-after-change-major-mode)
+    (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
 
 When `format-all-mode' is called as a Lisp function, the mode is
 toggled if ARG is ‘toggle’, disabled if ARG is a negative integer
@@ -897,10 +1148,10 @@ or zero, and enabled otherwise."
   :global nil
   (if format-all-mode
       (add-hook 'before-save-hook
-                'format-all-buffer--from-hook
+                'format-all--buffer-from-hook
                 nil 'local)
     (remove-hook 'before-save-hook
-                 'format-all-buffer--from-hook
+                 'format-all--buffer-from-hook
                  'local)))
 
 (provide 'format-all)

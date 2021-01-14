@@ -1,6 +1,6 @@
 ;;; flycheck.el --- On-the-fly syntax checking -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017-2019 Flycheck contributors
+;; Copyright (C) 2017-2020 Flycheck contributors
 ;; Copyright (C) 2012-2016 Sebastian Wiesner and Flycheck contributors
 ;; Copyright (C) 2013, 2014 Free Software Foundation, Inc.
 ;;
@@ -2222,6 +2222,8 @@ Return non-nil if CHECKER may be used for the current buffer, and
 nil otherwise.  The result of the `:enabled' check, if any, is
 cached."
   (and
+   ;; May only enable valid checkers
+   (flycheck-valid-checker-p checker)
    ;; Don't run the :enabled check if the checker is already disabled…
    (not (flycheck-disabled-checker-p checker))
    (or
@@ -2463,8 +2465,10 @@ Return a list of `flycheck-verification-result' objects."
 (define-button-type 'flycheck-checker-enable
   :supertype 'flycheck-button
   'flycheck-action (lambda (buffer checker)
+                     (interactive)
                      (with-current-buffer buffer
-                       (flycheck-disable-checker checker t)))
+                       (flycheck--toggle-checker checker t)
+                       (flycheck-buffer)))
   'help-echo "mouse-1, RET: re-enable this checker in this buffer")
 
 (define-button-type 'flycheck-checker-reset-enabled
@@ -3047,11 +3051,31 @@ CHECKER will be used, even if it is not contained in
     (when flycheck-mode
       (flycheck-buffer))))
 
+(defun flycheck--toggle-checker (checker enable)
+  "Enable or disable CHECKER for the current buffer.
+
+If ENABLE, re-enable CHECKER by removing it from the buffer-local
+value of `flycheck-disabled-checkers'.  Otherwise, add the syntax
+checker to the buffer-local value of `flycheck-disabled-checkers'."
+  (cond
+   (enable
+    ;; We must use `remq' instead of `delq', because we must _not_ modify the
+    ;; list.  Otherwise we could potentially modify the global default value,
+    ;; in case the list is the global default.
+    (when (memq checker flycheck-disabled-checkers)
+      (setq flycheck-disabled-checkers
+            (remq checker flycheck-disabled-checkers)))
+    (when (memq checker flycheck--automatically-disabled-checkers)
+      (setq flycheck--automatically-disabled-checkers
+            (remq checker flycheck--automatically-disabled-checkers))))
+   (t (unless (memq checker flycheck-disabled-checkers)
+        (push checker flycheck-disabled-checkers)))))
+
 (defun flycheck-disable-checker (checker &optional enable)
   "Interactively disable CHECKER for the current buffer.
 
-Interactively, prompt for a syntax checker to disable, and add
-the syntax checker to the buffer-local value of
+Prompt for a syntax checker to disable, and add the syntax
+checker to the buffer-local value of
 `flycheck-disabled-checkers'.
 
 With non-nil ENABLE or with prefix arg, prompt for a disabled
@@ -3072,22 +3096,8 @@ buffer-local value of `flycheck-disabled-checkers'."
      (list (flycheck-read-checker prompt nil nil candidates) enable)))
   (unless checker
     (user-error "No syntax checker given"))
-  (if enable
-      ;; We must use `remq' instead of `delq', because we must _not_ modify the
-      ;; list.  Otherwise we could potentially modify the global default value,
-      ;; in case the list is the global default.
-      (progn
-        (when (memq checker flycheck-disabled-checkers)
-          (setq flycheck-disabled-checkers
-                (remq checker flycheck-disabled-checkers))
-          (flycheck-buffer))
-        (when (memq checker flycheck--automatically-disabled-checkers)
-          (setq flycheck--automatically-disabled-checkers
-                (remq checker flycheck--automatically-disabled-checkers))
-          (flycheck-buffer)))
-    (unless (memq checker flycheck-disabled-checkers)
-      (push checker flycheck-disabled-checkers)
-      (flycheck-buffer))))
+  (flycheck--toggle-checker checker enable)
+  (flycheck-buffer))
 
 
 ;;; Syntax checks for the current buffer
@@ -3576,9 +3586,10 @@ Also remove global hooks.  (If optional argument IGNORE-LOCAL is
 non-nil, then only do this and skip per-buffer teardown.)"
   (unless ignore-local
     (dolist (buffer (buffer-list))
-      (with-current-buffer buffer
-        (when flycheck-mode
-          (flycheck-teardown 'ignore-global)))))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (when flycheck-mode
+            (flycheck-teardown 'ignore-global))))))
   (remove-hook 'buffer-list-update-hook #'flycheck-handle-buffer-switch))
 
 ;; Clean up the entire state of Flycheck when Emacs is killed, to get rid of any
@@ -5616,7 +5627,7 @@ this error to produce the explanation to display."
            (flycheck-explain-error-mode))
          (cond
           ((functionp explanation) (funcall explanation))
-          ((stringp explanation) (insert explanation))
+          ((stringp explanation) (princ explanation))
           (t (error "Unsupported error explanation: %S" explanation)))
          (display-message-or-buffer standard-output nil 'not-this-window)))))
 
@@ -5947,12 +5958,12 @@ STRING
      Return a unique temporary filename.  The file is *not*
      created.
 
-     To ignore the output of syntax checkers, try `null-device'
-     first.
+     To ignore the output of syntax checkers, try symbol
+     `null-device' first.
 
-`null-device'
-     Return the value of `null-device', i.e the system null
-     device.
+symbol `null-device'
+     Return the value of variable `null-device', i.e the system
+     null device.
 
      Use this option to ignore the output of a syntax checker.
      If the syntax checker cannot handle the null device, or
@@ -7222,9 +7233,10 @@ machine_message.rs at URL `https://git.io/vh24R'."
         ;; Errors and warnings from rustc are wrapped by cargo, so we filter and
         ;; unwrap them, and delegate the actual construction of `flycheck-error'
         ;; objects to `flycheck-parse-rustc-diagnostic'.
-        ;; Check whether the code is non-nil because Rust≥1.44 includes the
-        ;; warning count upon completion.
-        (when (and .message.code (string= .reason "compiler-message"))
+        ;; We put the error record with nil code since flycheck regards
+        ;; the case of nonzero return code without any error report
+        ;; as abnormal result.
+        (when (string= .reason "compiler-message")
           (push (flycheck-parse-rustc-diagnostic .message checker buffer)
                 errors))))
     (apply #'nconc errors)))
@@ -10754,7 +10766,7 @@ See URL `https://github.com/jimhester/lintr'."
 
 (defun flycheck-racket-has-expand-p (checker)
   "Whether the executable of CHECKER provides the `expand' command."
-  (eql 0 (flycheck-call-checker-process checker nil t nil "expand")))
+  (eql 0 (flycheck-call-checker-process checker nil nil nil "expand")))
 
 (flycheck-define-checker racket
   "A Racket syntax checker with `raco expand'.
@@ -10810,7 +10822,7 @@ See URL `https://racket-lang.org/'."
 (flycheck-define-checker rpm-rpmlint
   "A RPM SPEC file syntax checker using rpmlint.
 
-See URL `https://sourceforge.net/projects/rpmlint/'."
+See URL `https://github.com/rpm-software-management/rpmlint'."
   :command ("rpmlint" source)
   :error-patterns
   ((error line-start
@@ -10820,9 +10832,13 @@ See URL `https://sourceforge.net/projects/rpmlint/'."
             (file-name) ":" (optional line ":") " W: " (message)
             line-end))
   :error-filter
-  ;; Add fake line numbers if they are missing in the lint output
+  ;; rpmlint 1.1 outputs a spurious error for the temp file created by flycheck
   (lambda (errors)
-    (dolist (err errors)
+    (dolist (err (seq-remove
+                  (lambda (err)
+                    (string-suffix-p "(none)" (flycheck-error-filename err)))
+                  errors))
+      ;; Add fake line numbers if they are missing in the lint output
       (unless (flycheck-error-line err)
         (setf (flycheck-error-line err) 1)))
     errors)
@@ -10852,7 +10868,8 @@ See URL `https://github.com/igorshubovych/markdownlint-cli'."
             source)
   :error-patterns
   ((error line-start
-          (file-name) ":" line " " (id (one-or-more (not (any space))))
+          (file-name) ":" line
+          (? ":" column) " " (id (one-or-more (not (any space))))
           " " (message) line-end))
   :error-filter
   (lambda (errors)
@@ -11061,7 +11078,7 @@ report style issues as well."
 
 You need at least RuboCop 0.34 for this syntax checker.
 
-See URL `http://batsov.com/rubocop/'."
+See URL `https://rubocop.org/'."
   ;; ruby-standard is defined based on this checker
   :command '("rubocop"
              "--display-cop-names"
@@ -11920,7 +11937,7 @@ See URL `https://github.com/koalaman/shellcheck/'."
   :error-explainer
   (lambda (err)
     (let ((error-code (flycheck-error-id err))
-          (url "https://github.com/koalaman/shellcheck/wiki/%S"))
+          (url "https://github.com/koalaman/shellcheck/wiki/%s"))
       (and error-code `(url . ,(format url error-code))))))
 
 (flycheck-define-checker slim
@@ -11976,7 +11993,9 @@ See URL
   :error-patterns
   ((error line-start (file-name) ":" (optional line ":") (message) line-end)
    (error line-start "[" (file-name) ":" line "]" (message) line-end))
-  :error-filter flycheck-fill-empty-line-numbers
+  :error-filter (lambda (errors)
+                  (flycheck-sanitize-errors
+                   (flycheck-fill-empty-line-numbers errors)))
   :modes (systemd-mode))
 
 (flycheck-def-config-file-var flycheck-chktexrc tex-chktex ".chktexrc")
@@ -12002,7 +12021,7 @@ See URL `https://www.terraform.io/docs/commands/fmt.html'."
   :standard-input t
   :error-patterns
   ((error line-start "Error: " (one-or-more not-newline)
-          "\n\n  on <stdin> line " line ", in terraform:"
+          "\n\n  on <stdin> line " line ", in " (one-or-more not-newline) ":"
           (one-or-more "\n" (zero-or-more space (one-or-more not-newline)))
           (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
           line-end)

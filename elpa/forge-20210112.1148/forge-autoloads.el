@@ -130,7 +130,7 @@ Please see the manual for more information.
 
 (autoload 'forge-checkout-worktree "forge-commands" "\
 Create, configure and checkout a new worktree from a pull-request.
-This is like `magit-checkout-pullreq', except that it also
+This is like `forge-checkout-pullreq', except that it also
 creates a new worktree. Please see the manual for more
 information.
 
@@ -267,7 +267,7 @@ List them in a separate buffer.
 
 (autoload 'forge-list-owned-issues "forge-list" "\
 List open issues from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 
@@ -290,7 +290,7 @@ List them in a separate buffer.
 
 (autoload 'forge-list-owned-pullreqs "forge-list" "\
 List open pull-requests from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 
@@ -313,7 +313,7 @@ Here \"known\" means that an entry exists in the local database." t nil)
 (autoload 'forge-list-owned-repositories "forge-list" "\
 List your own known repositories in a separate buffer.
 Here \"known\" means that an entry exists in the local database
-and options `forge-owned-accounts' and `forge-owned-blacklist'
+and options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 

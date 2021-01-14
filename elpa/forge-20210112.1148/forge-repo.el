@@ -1,6 +1,6 @@
 ;;; forge-repo.el --- Repository support          -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -351,7 +351,7 @@ Return the repository identified by HOST, OWNER and NAME."
     ;; of https.
     ((forge-gitlab-repository forge-gitlab-http-repository) 'gitlab)
     (forge-github-repository    'github)
-    (forge-gitea-repository     'gittea)
+    (forge-gitea-repository     'gitea)
     (forge-gogs-repository      'gogs)
     (forge-bitbucket-repository 'bitbucket)))
 

@@ -1,6 +1,6 @@
 ;;; forge-issue.el --- Issue support               -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -161,13 +161,14 @@
 (defun forge-insert-issues ()
   "Insert a list of mostly recent and/or open issues.
 Also see option `forge-topic-list-limit'."
-  (when-let ((repo (forge-get-repository nil)))
-    (when (and (not (oref repo sparse-p))
-               (or (not (slot-boundp repo 'issues-p)) ; temporary KLUDGE
-                   (oref repo issues-p)))
-      (forge-insert-topics "Issues"
-                           (forge-ls-recent-topics repo 'issue)
-                           (forge--topic-type-prefix repo 'issue)))))
+  (when forge-display-in-status-buffer
+    (when-let ((repo (forge-get-repository nil)))
+      (when (and (not (oref repo sparse-p))
+                 (or (not (slot-boundp repo 'issues-p)) ; temporary KLUDGE
+                     (oref repo issues-p)))
+        (forge-insert-topics "Issues"
+                             (forge-ls-recent-topics repo 'issue)
+                             (forge--topic-type-prefix repo 'issue))))))
 
 (defun forge-insert-assigned-issues ()
   "Insert a list of open issues that are assigned to you."

@@ -1,6 +1,6 @@
 ;;; forge-commands.el --- Commands                 -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -69,7 +69,8 @@ for a repository using the command `forge-add-pullreq-refspec'."
     ("c f" "fork or remote" forge-fork)]]
   [["Configure"
     ("a" "add repository to database" forge-add-repository)
-    ("r" "forge.repository" forge-forge.remote)]])
+    ("r" "forge.repository" forge-forge.remote)
+    (7 "t" forge-toggle-display-in-status-buffer)]])
 
 ;;; Pull
 
@@ -88,6 +89,7 @@ If pulling is too slow, then also consider setting the Git variable
          (and current-prefix-arg
               (not (forge-get-repository 'full))
               (forge-read-date "Limit pulling to topics updates since: "))))
+  (forge--zap-repository-cache repo)
   (let (create)
     (unless repo
       (setq repo (forge-get-repository 'full))
@@ -163,6 +165,13 @@ topic N to pull instead."
 (cl-defmethod forge--pull-topic ((repo forge-repository) _n)
   (error "Fetching an individual topic not implemented for %s"
          (eieio-object-class repo)))
+
+(defun forge--zap-repository-cache (&optional repo)
+  (when-let ((r (if repo
+                    (oref repo worktree)
+                  (magit-repository-local-repository))))
+    (magit-repository-local-delete (list 'forge-ls-recent-topics 'issue) r)
+    (magit-repository-local-delete (list 'forge-ls-recent-topics 'pullreq) r)))
 
 ;;; Browse
 
@@ -317,7 +326,7 @@ read an issue N to visit instead."
          (buf (forge--prepare-post-buffer
                "new-pullreq"
                (forge--format repo "Create new pull-request on %p")
-               source)))
+               source target)))
     (with-current-buffer buf
       (setq forge--buffer-base-branch target)
       (setq forge--buffer-head-branch source)
@@ -572,7 +581,10 @@ topic N and modify that instead."
   "Create and configure a new branch from a pull-request.
 Please see the manual for more information."
   (interactive (list (forge-read-pullreq "Branch pull request" t)))
-  (forge--branch-pullreq (forge-get-repository t) n))
+  (if-let ((branch (forge--pullreq-branch-active (forge-get-pullreq n))))
+      (progn (message "Branch %S already exists and is configured" branch)
+             branch)
+    (forge--branch-pullreq (forge-get-repository t) n)))
 
 (cl-defmethod forge--branch-pullreq ((_repo forge-unusedapi-repository) n)
   ;; We don't know enough to do a good job.
@@ -595,7 +607,7 @@ Please see the manual for more information."
            (upstream (oref repo remote))
            (upstream-url (magit-git-string "remote" "get-url" upstream))
            (remote head-user)
-           (branch (forge--pullreq-branch (forge-get-pullreq repo n) t))
+           (branch (forge--pullreq-branch-select (forge-get-pullreq repo n)))
            (pr-branch head-ref))
       (when (string-match-p ":" pr-branch)
         ;; Such a branch name would be invalid.  If we encounter
@@ -670,27 +682,26 @@ Please see the manual for more information."
      (or (if (not (eq (oref pullreq state) 'open))
              (magit-ref-p (format "refs/pullreqs/%s"
                                   (oref pullreq number)))
-           (magit-branch-p (forge--pullreq-branch pullreq)))
+           (forge--pullreq-branch-active pullreq))
          (let ((inhibit-magit-refresh t))
            (forge-branch-pullreq n))))))
 
 ;;;###autoload
 (defun forge-checkout-worktree (path n)
   "Create, configure and checkout a new worktree from a pull-request.
-This is like `magit-checkout-pullreq', except that it also
+This is like `forge-checkout-pullreq', except that it also
 creates a new worktree. Please see the manual for more
 information."
   (interactive
    (let* ((n (forge-read-pullreq "Checkout pull request" t))
           (pullreq (forge-get-pullreq n)))
      (with-slots (number head-ref) pullreq
-       (let ((path (let ((branch (forge--pullreq-branch pullreq t)))
-                     (read-directory-name
-                      (format "Checkout #%s as `%s' in new worktree: "
-                              number branch)
-                      (file-name-directory
-                       (directory-file-name default-directory))
-                      nil nil
+       (let ((path (read-directory-name
+                    (format "Checkout #%s in new worktree: " number)
+                    (file-name-directory
+                     (directory-file-name default-directory))
+                    nil nil
+                    (let ((branch (forge--pullreq-branch-internal pullreq)))
                       (if (string-match-p "\\`pr-[0-9]+\\'" branch)
                           (number-to-string number)
                         (format "%s-%s" number head-ref))))))
@@ -811,6 +822,16 @@ is added anyway.  Currently this only supports Github and Gitlab."
   "List notifications."
   (interactive)
   (forge-notifications-setup-buffer))
+
+(transient-define-suffix forge-toggle-display-in-status-buffer ()
+  :description (lambda ()
+                 (if forge-display-in-status-buffer
+                     "hide topics"
+                   "display topics"))
+  "Toggle whether to display topics in the current Magit status buffer."
+  (interactive)
+  (setq forge-display-in-status-buffer (not forge-display-in-status-buffer))
+  (magit-refresh))
 
 (defun forge-toggle-closed-visibility ()
   "Toggle whether recently closed issues are shown."

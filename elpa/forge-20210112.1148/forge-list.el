@@ -1,6 +1,6 @@
 ;;; forge-list.el --- Tabulated-list interface     -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -67,8 +67,11 @@ properties are currently being used:
   :group 'forge
   :type '(repeat (cons (string :tag "Account") plist)))
 
-(defcustom forge-owned-blacklist nil
-  "A list of repositories that are not considered to be owned by you.
+(define-obsolete-variable-alias 'forge-owned-blacklist
+  'forge-owned-ignored "Forge 3.0.0")
+
+(defcustom forge-owned-ignored nil
+  "A list of repositories that are ignored when listing those owned by you.
 This is a list of package names.  Used by the commands
 `forge-list-owned-issues' and `forge-list-owned-pullreqs'."
   :package-version '(forge . "0.2.0")
@@ -198,7 +201,7 @@ This is a list of package names.  Used by the commands
                             :order-by [(asc owner) (asc name)]]
                            (forge--tablist-columns-vector)
                            (vconcat (mapcar #'car forge-owned-accounts))
-                           (vconcat forge-owned-blacklist)))))
+                           (vconcat forge-owned-ignored)))))
 
 ;;; Commands
 ;;;; Topic
@@ -246,7 +249,7 @@ List them in a separate buffer."
 ;;;###autoload
 (defun forge-list-owned-issues ()
   "List open issues from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now."
   (interactive)
@@ -263,7 +266,7 @@ Only Github is supported for now."
                              (desc issue:number)]]
                  (forge--tablist-columns-vector 'issue)
                  (vconcat (mapcar #'car forge-owned-accounts))
-                 (vconcat forge-owned-blacklist)))))
+                 (vconcat forge-owned-ignored)))))
 
 ;;;; Pullreq
 
@@ -314,7 +317,7 @@ List them in a separate buffer."
 ;;;###autoload
 (defun forge-list-owned-pullreqs ()
   "List open pull-requests from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now."
   (interactive)
@@ -331,7 +334,7 @@ Only Github is supported for now."
                              (desc pullreq:number)]]
                  (forge--tablist-columns-vector 'pullreq)
                  (vconcat (mapcar #'car forge-owned-accounts))
-                 (vconcat forge-owned-blacklist)))))
+                 (vconcat forge-owned-ignored)))))
 
 ;;;###autoload
 (defun forge-list-authored-pullreqs (id)
@@ -341,10 +344,10 @@ List them in a separate buffer."
   (forge-topic-list-setup #'forge-pullreq-list-mode id nil nil
     (lambda ()
       (forge-sql [:select $i1 :from [pullreq]
-                          :where (and (= pullreq:repository       $s2)
-                                      (= pullreq:author           $s3)
-                                      (isnull pullreq:closed))
-                          :order-by [(desc updated)]]
+                  :where (and (= pullreq:repository       $s2)
+                              (= pullreq:author           $s3)
+                              (isnull pullreq:closed))
+                  :order-by [(desc updated)]]
                  (forge--tablist-columns-vector 'pullreq)
                  id (ghub--username (forge-get-repository (list :id id)))))))
 
@@ -356,10 +359,10 @@ List them in a separate buffer."
   (forge-topic-list-setup #'forge-pullreq-list-mode id nil nil
     (lambda ()
       (forge-sql [:select $i1 :from [issue]
-                          :where (and (= issue:repository       $s2)
-                                      (= issue:author           $s3)
-                                      (isnull issue:closed))
-                          :order-by [(desc updated)]]
+                  :where (and (= issue:repository       $s2)
+                              (= issue:author           $s3)
+                              (isnull issue:closed))
+                  :order-by [(desc updated)]]
                  (forge--tablist-columns-vector 'issue)
                  id (ghub--username (forge-get-repository (list :id id)))))))
 
@@ -377,7 +380,7 @@ Here \"known\" means that an entry exists in the local database."
 (defun forge-list-owned-repositories ()
   "List your own known repositories in a separate buffer.
 Here \"known\" means that an entry exists in the local database
-and options `forge-owned-accounts' and `forge-owned-blacklist'
+and options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now."
   (interactive)

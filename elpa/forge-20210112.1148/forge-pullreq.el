@@ -1,6 +1,6 @@
 ;;; forge-pullreq.el --- Pullreq support          -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -152,28 +152,38 @@
     (and (string-match "\\`\\([0-9]+\\)" choice)
          (string-to-number (match-string 1 choice)))))
 
-(defun forge--pullreq-branch (pullreq &optional confirm-reset)
-  (with-slots (head-ref number cross-repo-p editable-p) pullreq
-    (let ((branch head-ref)
-          (branch-n (format "pr-%s" number)))
-      (when (or
-             ;; Handle deleted GitHub pull-request branch.
-             (not branch)
-             ;; Such a branch name would be invalid.  If we encounter
-             ;; this, then it means that we are dealing with a Gitlab
-             ;; pull-request whose source branch has been deleted.
-             (string-match-p ":" branch)
-             ;; These are usually the target, not source, of a pr.
-             (member branch '("master" "next" "maint")))
-        (setq branch branch-n))
-      (when (and confirm-reset (magit-branch-p branch))
-        (when (magit-branch-p branch)
-          (if (string-prefix-p "pr-" branch)
-              (unless (y-or-n-p
-                       (format "Branch %S already exists.  Reset it? " branch))
-                (user-error "Abort"))
-            (pcase (read-char-choice
-                    (format "A branch named %S already exists.
+(defun forge--pullreq-branch-internal (pullreq)
+  (let ((branch (oref pullreq head-ref)))
+    ;; It is invalid for a branch name to begin with a colon, yet
+    ;; that is what Gitlab uses when a pull-request's source branch
+    ;; has been deleted.  On Github this is simply nil in the same
+    ;; situation.
+    (and branch (not (string-prefix-p ":" branch)) branch)))
+
+(defun forge--pullreq-branch-active (pullreq)
+  (let* ((number (number-to-string (oref pullreq number)))
+         (branch-n (format "pr-%s" number))
+         (branch (forge--pullreq-branch-internal pullreq)))
+    (or (and (magit-branch-p branch)
+             (equal (magit-get "branch" branch "pullRequest") number)
+             branch)
+        (and (magit-branch-p branch-n)
+             (equal (magit-get "branch" branch-n "pullRequest") number)
+             branch-n))))
+
+(defun forge--pullreq-branch-select (pullreq)
+  (let* ((number (oref pullreq number))
+         (branch-n (format "pr-%s" number))
+         (branch (or (forge--pullreq-branch-internal pullreq)
+                     branch-n)))
+    (when (member branch '("master" "next" "maint"))
+      (setq branch branch-n))
+    (when (magit-branch-p branch)
+      (if (equal branch branch-n)
+          (unless (y-or-n-p (format "Reset existing branch %S? " branch))
+            (user-error "Abort"))
+        (pcase (read-char-choice
+                (format "A branch named %S already exists.
 
 This could be because you checked out this pull-request before,
 in which case resetting might be the appropriate thing to do.
@@ -188,13 +198,13 @@ yourself, in which case you probably should not reset either.
   [r]eset existing %S branch
   [c]reate new \"pr-%s\" branch instead
   [a]bort" branch branch number) '(?r ?c ?a))
-              (?r)
-              (?c (setq branch branch-n)
-                  (when (magit-branch-p branch)
-                    (error "Oh no!  %S already exists too" branch)))
-              (?a (user-error "Abort"))))
-          (message "")))
-      branch)))
+          (?r)
+          (?c (setq branch branch-n)
+              (when (magit-branch-p branch)
+                (error "Oh no!  %S already exists too" branch)))
+          (?a (user-error "Abort"))))
+      (message ""))
+    branch))
 
 (defun forge--pullreq-ref (pullreq)
   (let ((ref (format "refs/pullreqs/%s" (oref pullreq number))))
@@ -245,11 +255,12 @@ yourself, in which case you probably should not reset either.
 (defun forge-insert-pullreqs ()
   "Insert a list of mostly recent and/or open pull-requests.
 Also see option `forge-topic-list-limit'."
-  (when-let ((repo (forge-get-repository nil)))
-    (unless (oref repo sparse-p)
-      (forge-insert-topics "Pull requests"
-                           (forge-ls-recent-topics repo 'pullreq)
-                           (forge--topic-type-prefix repo 'pullreq)))))
+  (when forge-display-in-status-buffer
+    (when-let ((repo (forge-get-repository nil)))
+      (unless (oref repo sparse-p)
+        (forge-insert-topics "Pull requests"
+                             (forge-ls-recent-topics repo 'pullreq)
+                             (forge--topic-type-prefix repo 'pullreq))))))
 
 (defun forge--insert-pullreq-commits (pullreq)
   (when-let ((range (forge--pullreq-range pullreq)))

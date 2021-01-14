@@ -1,6 +1,6 @@
 ;;; forge-topic.el --- Topics support              -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -78,13 +78,23 @@ The following %-sequences are supported:
   :type 'boolean)
 
 (defcustom forge-bug-reference-hooks
-  '(find-file-hook git-commit-setup-hook magit-mode-hook)
+  '(find-file-hook
+    forge-post-mode-hook
+    git-commit-setup-hook
+    magit-mode-hook)
   "Hooks to which `forge-bug-reference-setup' is added.
 This variable has to be customized before `forge' is loaded."
   :package-version '(forge . "0.2.0")
   :group 'forge
-  :options '(find-file-hook git-commit-setup-hook magit-mode-hook)
+  :options '(find-file-hook
+             forge-post-mode-hook
+             git-commit-setup-hook
+             magit-mode-hook)
   :type '(list :convert-widget custom-hook-convert-widget))
+
+(defvar-local forge-display-in-status-buffer t
+  "Whether to display topics in the current Magit status buffer.")
+(put 'forge-display-in-status-buffer 'permanent-local t)
 
 ;;; Faces
 
@@ -195,6 +205,7 @@ This variable has to be customized before `forge' is loaded."
       (error "forge--topic-string-to-number: Invalid argument %S" s))))
 
 (cl-defmethod forge-ls-recent-topics ((repo forge-repository) table)
+  (magit--with-repository-local-cache (list 'forge-ls-recent-topics table)
   (let* ((id (oref repo id))
          (limit forge-topic-list-limit)
          (open-limit   (if (consp limit) (car limit) limit))
@@ -232,7 +243,7 @@ This variable has to be customized before `forge' is loaded."
                          (closql--remake-instance class (forge-db) row)))
                      topics)
              (cdr forge-topic-list-order)
-             :key (lambda (it) (eieio-oref it (car forge-topic-list-order))))))
+             :key (lambda (it) (eieio-oref it (car forge-topic-list-order)))))))
 
 (cl-defmethod forge-ls-topics ((repo forge-repository) class &optional type)
   (mapcar (lambda (row)
@@ -703,17 +714,15 @@ Return a value between 0 and 1."
                                           'issue
                                         'pullreq)
                                       (oref repo id))
-                         (cl-sort
-                          (nconc
-                           (forge-sql [:select [number title updated]
-                                       :from pullreq
-                                       :where (= repository $s1)]
-                                      (oref repo id))
-                           (forge-sql [:select [number title updated]
-                                       :from issue
-                                       :where (= repository $s1)]
-                                      (oref repo id)))
-                          #'string> :key #'cl-caddr)))
+                         (forge-sql [:select [number title updated]
+                                     :from pullreq
+                                     :where (= repository $s1)
+                                     :union
+                                     :select [number title updated]
+                                     :from issue
+                                     :where (= repository $s1)
+                                     :order-by [(desc updated)]]
+                                    (oref repo id))))
                :annotation-function (lambda (c) (get-text-property 0 :title c))))))
 
 ;;; Parse
@@ -807,27 +816,16 @@ alist, containing just `text' and `position'.")
                               (magit-git-insert "cat-file" "-p"
                                                 (concat branch ":" f))
                               (forge--topic-parse-buffer f)))
-                          (forge--topic-templates repo class)))
-         (choice  (if (cdr choices)
-                      (let ((c (magit-completing-read
-                                (if (eq class 'forge-pullreq)
-                                    "Select pull-request template"
-                                  "Select issue template")
-                                (--map (alist-get 'prompt it) choices)
-                                nil t)))
-                        (--first (equal (alist-get 'prompt it) c) choices))
-                    (car choices))))
-    (cond ((assq 'name choice)
-           (when (string-match "^title: .?" (alist-get 'text choice))
-             (setf (alist-get 'position choice) (match-end 0))))
-          (choice
-           (let ((text (alist-get 'text choice)))
-             (if (string-match "\\`#+[\s\t]+.?" text)
-                 (setf (alist-get 'position choice) (match-end 0))
-               (setf (alist-get 'text choice) (concat "# \n\n" text))
-               (setf (alist-get 'position choice) 3))))
-          (t (setq choice '((text . "# \n\n\n") (position . 3)))))
-    choice))
+                          (forge--topic-templates repo class))))
+    (if (cdr choices)
+        (let ((c (magit-completing-read
+                  (if (eq class 'forge-pullreq)
+                      "Select pull-request template"
+                    "Select issue template")
+                  (--map (alist-get 'prompt it) choices)
+                  nil t)))
+          (--first (equal (alist-get 'prompt it) c) choices))
+      (car choices))))
 
 ;;; Bug-Reference
 

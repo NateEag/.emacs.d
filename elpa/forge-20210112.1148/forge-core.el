@@ -1,6 +1,6 @@
 ;;; forge-core.el --- Core functionality           -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020  Jonas Bernoulli
+;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -229,6 +229,7 @@ at that time."
           "\\(?:ssh\\|ssh\\+git\\|git\\+ssh\\)://\\(?:[^/@]+@\\)?\\|"
           "https?://\\(?:[^/@]+@\\)?\\)"
           (regexp-opt (mapcar #'car forge-alist) t)
+          "\\(?::[0-9]+\\)?"
           "\\(?:/\\|:/?\\)"
           "\\(.+?\\)"
           "\\(?:\\.git\\|/\\)?\\'"))

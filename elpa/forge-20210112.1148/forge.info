@@ -1,6 +1,6 @@
 This is forge.info, produced by makeinfo version 6.5 from forge.texi.
 
-     Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -26,9 +26,9 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-328-g3e707156+1).
+This manual is for Forge version 0.1.0 (v0.1.0-359-gc4ae0f2b+1).
 
-     Copyright (C) 2018-2020 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -56,8 +56,8 @@ This manual is for Forge version 0.1.0 (v0.1.0-328-g3e707156+1).
 
 Getting Started
 
-* Initial Pull::
 * Token Creation::
+* Initial Pull::
 * Repository Detection::
 
 Usage
@@ -164,7 +164,7 @@ also see *note Getting Started::.
 
    • Gitea <https://gitea.io/en-us>
 
-     This is the next forge whose API will to be supported.
+     This is the next forge whose API will be supported.
 
      Currently no public Gitea Hosts are known to me.  The Gitea
      maintainers plan to create their own instance, see
@@ -228,7 +228,7 @@ also see *note Getting Started::.
         • Different sites use different URL schemata and some of the
           bigger sites use a fork.  For this reason Forge has to provide
           several classes to support different variations of Cgit and
-          you have to look at their definitions to figure out which on
+          you have to look at their definitions to figure out which one
           is the correct one for a particular installation.
 
      Cgit Hosts
@@ -279,7 +279,7 @@ caveats you should be aware of:
 
    • Fetched information is stored in a database.  The table schemata of
      that database have not been finalized yet.  Until that has happened
-     it will occasionally have to be discard.  That isn’t such a huge
+     it will occasionally have to be discarded.  That isn’t such a huge
      deal because for now the database does not contain any information
      that cannot simply be fetched again, see *note Initial Pull::.
 
@@ -308,54 +308,19 @@ something like this to your init file takes care of this:
 
 * Menu:
 
-* Initial Pull::
 * Token Creation::
+* Initial Pull::
 * Repository Detection::
 
 
-File: forge.info,  Node: Initial Pull,  Next: Token Creation,  Up: Getting Started
+File: forge.info,  Node: Token Creation,  Next: Initial Pull,  Up: Getting Started
 
-3.1 Initial Pull
-================
-
-To start using Forge in a certain repository visit the Magit status
-buffer for that repository and type ‘f y’ (‘forge-pull’).  Alternatively
-you can use ‘M-x forge-add-repository’, which makes it possible to add a
-forge repository without pulling all topics and even without having to
-clone the respective Git repository.
-
-   When adding the first repository from <https://github.com> to your
-local database you will be guided through the process of creating the
-API token.  For other forges as well as for other Github instances some
-additional setup is required *before* you can add the first repository.
-See *note Token Creation::.
-
-   The first time ‘forge-pull’ is run in a repository, an entry for that
-repository is added to the database and a new value is added to the Git
-variable ‘remote.<remote>.fetch’, which fetches all pull-requests.
-(‘+refs/pull/*/head:refs/pullreqs/*’ for Github)
-
-   ‘forge-pull’ then fetches topics and other information using the
-forge’s API and pull-request references using Git.
-
-   The initial fetch can take a while but most of that is done
-asynchronously.  Storing the information in the database is done
-synchronously though, so there can be a noticeable hang at the end.
-Subsequent fetches are much faster.
-
-   Fetching issues from Github is much faster than fetching from other
-forges because making a handful of GraphQL requests is much faster than
-making hundreds of REST requests.
-
-
-File: forge.info,  Node: Token Creation,  Next: Repository Detection,  Prev: Initial Pull,  Up: Getting Started
-
-3.2 Token Creation
+3.1 Token Creation
 ==================
 
 Forge uses the Ghub package to access the APIs of supported Git forges.
-How this works an how to create and store a token is documented in *note
-(ghub)Getting Started::.
+How this works and how to create and store a token is documented in
+*note (ghub)Getting Started::.
 
    Ghub used to provide a setup wizard, but that had to be removed for
 reasons given in the manual just mentioned.  Nowadays there is no way
@@ -381,7 +346,39 @@ around reading the documentation and doing this manually I am afraid.
      at all is required, then it is all or nothing.
 
 
-File: forge.info,  Node: Repository Detection,  Prev: Token Creation,  Up: Getting Started
+File: forge.info,  Node: Initial Pull,  Next: Repository Detection,  Prev: Token Creation,  Up: Getting Started
+
+3.2 Initial Pull
+================
+
+To start using Forge in a certain repository visit the Magit status
+buffer for that repository and type ‘f y’ (‘forge-pull’).
+Alternatively, you can use ‘M-x forge-add-repository’, which makes it
+possible to add a forge repository without pulling all topics and even
+without having to clone the respective Git repository.
+
+   You must set up a token *before* you can add the first repository.
+See *note Token Creation::.
+
+   The first time ‘forge-pull’ is run in a repository, an entry for that
+repository is added to the database and a new value is added to the Git
+variable ‘remote.<remote>.fetch’, which fetches all pull-requests.
+(‘+refs/pull/*/head:refs/pullreqs/*’ for Github)
+
+   ‘forge-pull’ then fetches topics and other information using the
+forge’s API and pull-request references using Git.
+
+   The initial fetch can take a while but most of that is done
+asynchronously.  Storing the information in the database is done
+synchronously though, so there can be a noticeable hang at the end.
+Subsequent fetches are much faster.
+
+   Fetching issues from Github is much faster than fetching from other
+forges because making a handful of GraphQL requests is much faster than
+making hundreds of REST requests.
+
+
+File: forge.info,  Node: Repository Detection,  Prev: Initial Pull,  Up: Getting Started
 
 3.3 Repository Detection
 ========================
@@ -405,11 +402,16 @@ remotes are tried.
 
    If you do not follow the naming convention, then you have to inform
 Forge about that by setting the Git variable ‘forge.remote’ to the name
-that you instead use for upstream remotes.  If this variable is set,
-then Forge uses the remote by that name, if it exists, the same way it
-may have used ‘origin’ if the the variable were undefined.  I.e.  it
-does not fall through to try ‘origin’ if no remote by your chosen name
-exists.
+that you instead use for upstream remotes.  For example, to use the
+upstream remote named "upstream":
+
+     cd /path/to/repo
+     git config --local forge.remote upstream
+
+   If this variable is set, then Forge uses the remote by that name, if
+it exists, the same way it may have used ‘origin’ if the the variable
+were undefined.  I.e.  it does not fall through to try ‘origin’ if no
+remote by your chosen name exists.
 
    Once the upstream remote has been determined, Forge looks it up in
 ‘forge-alist’, using the host part of the URL as the key.  For example
@@ -429,7 +431,7 @@ useful if you want to create a single pull-request.
 
 ‘' a’     (‘forge-add-repository’)
 
-     This command add a repository to the database.
+     This command adds a repository to the database.
 
      It offers to either pull topics (now and in the future) or to only
      pull individual topics when the user invokes ‘forge-pull-topic’.
@@ -478,7 +480,7 @@ from the ‘magit-pull’ transient (on ‘F’).
 ‘f Y’     (‘forge-pull-notifications’)
 
      This command uses a forge’s API to fetch all notifications from
-     that forge, including but not limited to the notifications for the
+     that forge including, but not limited to, the notifications for the
      current repository.
 
      Fetching all notifications fetches associated topics even if you
@@ -491,10 +493,10 @@ from the ‘magit-pull’ transient (on ‘F’).
 pulling Git data does; you do it explicitly when you want to see the
 work done by others.
 
-   This is less disruptive, more reliable and easier to understand than
+   This is less disruptive, more reliable, and easier to understand than
 if Forge did the pulling by itself at random intervals.  It might
 however mean that you occasionally invoke a command expecting the most
-recent data to be available and then having to abort to pull first.  The
+recent data to be available and then have to abort to pull first.  The
 same can happen with Git, e.g.  you might attempt to merge a branch that
 you know exists but haven’t actually pulled yet.
 
@@ -560,18 +562,18 @@ check out branches and work trees in a more generic fashion
      This command also configures the upstream and the push-remote of
      the local branch that it creates.
 
-     The branch against which the pull-request was opened, is always
-     used as the upstream.  This makes it easy to see what commits you
-     are being asked to merge in the section titled something like
-     "Unmerged into origin/master".
+     The branch against which the pull-request was opened is always used
+     as the upstream.  This makes it easy to see what commits you are
+     being asked to merge in the section titled something like "Unmerged
+     into origin/master".
 
-     Like for other commands that create a branch it depends on the
+     Like for other commands that create a branch, it depends on the
      option ‘magit-branch-prefer-remote-upstream’ whether the remote
      branch itself or the respective local branch is used as the
      upstream, so this section may also be titled e.g.  "Unmerged into
      master".
 
-     When necessary and possible, then the remote pull-request branch is
+     When necessary and possible, the remote pull-request branch is
      configured to be used as the push-target.  This makes it easy to
      see what further changes the contributor has made since you last
      reviewed their changes in the section titled something like
@@ -678,7 +680,7 @@ commit or branch section.
 ‘C-c C-w’     (‘forge-browse-dwim’)
 
      These commands visit the pull-request(s), issue(s), post, branch,
-     commit or remote at point in a browser.
+     commit, or remote at point in a browser.
 
      This is implemented using various commands named
      ‘forge-browse-TYPE’, and the key binding is defined by remapping
@@ -716,12 +718,12 @@ separate buffers.
 
  -- Function: forge-insert-pullreqs
 
-     This function inserts a list of mostly recent and/or open
+     This function inserts a list of the most recent and/or open
      pull-requests.
 
  -- Function: forge-insert-issues
 
-     This function inserts a list of mostly recent and/or open issues.
+     This function inserts a list of the most recent and/or open issues.
 
    • User Options: forge-topic-list-limit
 
@@ -780,8 +782,7 @@ dedicated buffers:
      This command lists all notifications for all forges in a separate
      buffer.
 
-‘' P’     (‘forge-list-pull-requests’)
-
+‘' P’     (‘forge-list-pullreqs’)
      This command lists the current repository’s pull-requests in a
      separate buffer.
 
@@ -832,7 +833,7 @@ dedicated buffers:
  -- User Option: forge-owned-accounts
 
      This is a list of accounts that are owned by you.  This should
-     include your username as well as any organization that you own.
+     include your username as well as any organizations that you own.
 
  -- User Option: forge-owned-blacklist
 
@@ -879,7 +880,7 @@ a post visits that post in a browser.
      When the post is done, then the user has to submit using ‘C-c C-c’.
 
      If the region is active and marks part of an existing post, then
-     that part of the post is quoted.  Otherwise and if a prefix
+     that part of the post is quoted.  Otherwise, or if a prefix
      argument is used, then the complete post that point is currently on
      is quoted.
 
@@ -935,7 +936,7 @@ a post visits that post in a browser.
 
    Creating a new post and editing an existing post are similar to
 creating a new commit and editing the message of an existing commit.  In
-both cases the message has to be written in a separate buffer.  And then
+both cases the message has to be written in a separate buffer and then
 the process has to be finished or canceled using a separate command.
 
    The following commands are available in buffers used to edit posts:
@@ -968,7 +969,7 @@ File: forge.info,  Node: Miscellaneous,  Prev: Working with Topics,  Up: Usage
    • Key ’ a, forge-add-repository
 
      This command reads a repository from the user and adds it to the
-     database.  The repository can be provided as URL, as a name, or in
+     database.  The repository can be provided as a URL, a name, or in
      the form OWNER/NAME.  This is subject to ‘magit-clone-name-alist’.
 
      This command offers to either pull topics (now and in the future)
@@ -978,29 +979,28 @@ File: forge.info,  Node: Miscellaneous,  Prev: Working with Topics,  Up: Usage
  -- Command: forge-add-user-repositories
 
      This command reads a host and a username from the user and adds all
-     of the repositories of that user on that host to the local
-     database.
+     of that user’s repositories on that host to the local database.
 
      This may take a while.  Only Github is supported at the moment.
 
  -- Command: forge-add-organization-repositories
 
      This command reads a host and an organization from the user and
-     adds all of the repositories of that user on that host to the local
+     adds all the organization’s repositories on that host to the local
      database.
 
      This may take a while.  Only Github is supported at the moment.
 
  -- Command: forge-remove-repository
 
-     This command reads a repository and remove it from the local
+     This command reads a repository and removes it from the local
      database.
 
  -- Command: forge-remove-topic-locally
 
-     This command reads a topic and remove it from the local database.
-     The topic is not removed from the forge and it is later modified,
-     then it will be added to the database again.
+     This command reads a topic and removes it from the local database.
+     The topic is not removed from the forge and, if it is later
+     modified, then it will be added to the database again.
 
      Due to how the supported APIs work, it would be too expensive to
      automatically remove topics from the local datbase that were
@@ -1050,7 +1050,7 @@ Appendix B Keystroke Index
 * ' c i:                                 Creating Topics.     (line  11)
 * ' c p:                                 Creating Topics.     (line   6)
 * ' I:                                   Listing Topics and Notifications.
-                                                              (line  84)
+                                                              (line  83)
 * ' l:                                   Listing Topics and Notifications.
                                                               (line  74)
 * ' P:                                   Listing Topics and Notifications.
@@ -1106,7 +1106,7 @@ Appendix C Command Index
  [index ]
 * Menu:
 
-* forge-add-organization-repositories:   Miscellaneous.       (line  33)
+* forge-add-organization-repositories:   Miscellaneous.       (line  32)
 * forge-add-repository:                  Usage.               (line  12)
 * forge-add-user-repositories:           Miscellaneous.       (line  25)
 * forge-branch-pullreq:                  Branching.           (line  12)
@@ -1144,27 +1144,27 @@ Appendix C Command Index
 * forge-edit-topic-title:                Editing Topics and Posts.
                                                               (line  33)
 * forge-list-assigned-issues:            Listing Topics and Notifications.
-                                                              (line  94)
+                                                              (line  93)
 * forge-list-assigned-pullreqs:          Listing Topics and Notifications.
-                                                              (line  89)
+                                                              (line  88)
 * forge-list-authored-issues:            Listing Topics and Notifications.
-                                                              (line 109)
+                                                              (line 108)
 * forge-list-authored-pullreqs:          Listing Topics and Notifications.
-                                                              (line 104)
+                                                              (line 103)
 * forge-list-issues:                     Listing Topics and Notifications.
-                                                              (line  84)
+                                                              (line  83)
 * forge-list-notifications:              Listing Topics and Notifications.
                                                               (line  74)
 * forge-list-owned-issues:               Listing Topics and Notifications.
-                                                              (line 121)
+                                                              (line 120)
 * forge-list-owned-pullreqs:             Listing Topics and Notifications.
-                                                              (line 114)
-* forge-list-pull-requests:              Listing Topics and Notifications.
+                                                              (line 113)
+* forge-list-pullreqs:                   Listing Topics and Notifications.
                                                               (line  79)
 * forge-list-repositories:               Listing Topics and Notifications.
                                                               (line  70)
 * forge-list-requested-reviews:          Listing Topics and Notifications.
-                                                              (line  99)
+                                                              (line  98)
 * forge-post-cancel:                     Editing Topics and Posts.
                                                               (line  89)
 * forge-post-submit:                     Editing Topics and Posts.
@@ -1172,9 +1172,9 @@ Appendix C Command Index
 * forge-pull:                            Pulling.             (line  11)
 * forge-pull-notifications:              Pulling.             (line  23)
 * forge-pull-pullreq:                    Pulling.             (line  46)
-* forge-remove-repository:               Miscellaneous.       (line  41)
-* forge-remove-topic-locally:            Miscellaneous.       (line  46)
-* forge-reset-database:                  Miscellaneous.       (line  57)
+* forge-remove-repository:               Miscellaneous.       (line  40)
+* forge-remove-topic-locally:            Miscellaneous.       (line  45)
+* forge-reset-database:                  Miscellaneous.       (line  56)
 * forge-toggle-closed-visibility:        Listing Topics and Notifications.
                                                               (line  34)
 * forge-visit-topic:                     Visiting Topics.     (line  27)
@@ -1189,7 +1189,7 @@ Appendix D Function Index
  [index ]
 * Menu:
 
-* forge-add-organization-repositories:   Miscellaneous.       (line  33)
+* forge-add-organization-repositories:   Miscellaneous.       (line  32)
 * forge-add-user-repositories:           Miscellaneous.       (line  25)
 * forge-insert-assigned-issues:          Listing Topics and Notifications.
                                                               (line  57)
@@ -1206,22 +1206,22 @@ Appendix D Function Index
 * forge-insert-requested-reviews:        Listing Topics and Notifications.
                                                               (line  47)
 * forge-list-assigned-issues:            Listing Topics and Notifications.
-                                                              (line  94)
+                                                              (line  93)
 * forge-list-assigned-pullreqs:          Listing Topics and Notifications.
-                                                              (line  89)
+                                                              (line  88)
 * forge-list-authored-issues:            Listing Topics and Notifications.
-                                                              (line 109)
+                                                              (line 108)
 * forge-list-authored-pullreqs:          Listing Topics and Notifications.
-                                                              (line 104)
+                                                              (line 103)
 * forge-list-owned-issues:               Listing Topics and Notifications.
-                                                              (line 121)
+                                                              (line 120)
 * forge-list-owned-pullreqs:             Listing Topics and Notifications.
-                                                              (line 114)
+                                                              (line 113)
 * forge-list-requested-reviews:          Listing Topics and Notifications.
-                                                              (line  99)
-* forge-remove-repository:               Miscellaneous.       (line  41)
-* forge-remove-topic-locally:            Miscellaneous.       (line  46)
-* forge-reset-database:                  Miscellaneous.       (line  57)
+                                                              (line  98)
+* forge-remove-repository:               Miscellaneous.       (line  40)
+* forge-remove-topic-locally:            Miscellaneous.       (line  45)
+* forge-reset-database:                  Miscellaneous.       (line  56)
 * forge-toggle-closed-visibility:        Listing Topics and Notifications.
                                                               (line  34)
 
@@ -1235,9 +1235,9 @@ Appendix E Variable Index
 * Menu:
 
 * forge-owned-accounts:                  Listing Topics and Notifications.
-                                                              (line 128)
+                                                              (line 127)
 * forge-owned-blacklist:                 Listing Topics and Notifications.
-                                                              (line 133)
+                                                              (line 132)
 
 
 
@@ -1245,25 +1245,25 @@ Tag Table:
 Node: Top751
 Node: Introduction2205
 Node: Supported Forges and Hosts2768
-Node: Getting Started8318
-Node: Initial Pull10045
-Node: Token Creation11625
-Node: Repository Detection12912
-Node: Usage14670
-Node: Pulling15946
-Node: Branching18814
-Node: Working with Topics24935
-Node: Visiting Topics25308
-Node: Listing Topics and Notifications27036
-Node: Creating Topics31578
-Node: Editing Topics and Posts32143
-Node: Miscellaneous35700
-Node: FAQ38029
-Node: Is it possible to create a single pull-request without pulling everything?38229
-Node: Keystroke Index38634
-Node: Command Index42520
-Node: Function Index47961
-Node: Variable Index50719
+Node: Getting Started8316
+Node: Token Creation10045
+Node: Initial Pull11304
+Node: Repository Detection12699
+Node: Usage14586
+Node: Pulling15863
+Node: Branching18731
+Node: Working with Topics24847
+Node: Visiting Topics25220
+Node: Listing Topics and Notifications26949
+Node: Creating Topics31490
+Node: Editing Topics and Posts32055
+Node: Miscellaneous35610
+Node: FAQ37937
+Node: Is it possible to create a single pull-request without pulling everything?38137
+Node: Keystroke Index38542
+Node: Command Index42428
+Node: Function Index47869
+Node: Variable Index50627
 
 End Tag Table
 

@@ -80,25 +80,35 @@ See issue #327.")
    :buffer          (get-buffer-create (concat " *" racket--cmd-process-name "*"))
    :stderr          (make-pipe-process
                      :name     (concat racket--cmd-process-name "-stderr")
-                     :buffer   (concat "*" racket--cmd-process-name "-stderr*")
+                     :buffer   nil
                      :noquery  t
                      :coding   'utf-8
                      :filter   #'racket--cmd-process-stderr-filter
                      :sentinel #'ignore)
    :command         (list racket-program
                           (funcall racket-adjust-run-rkt racket--run.rkt)
-                          (setq racket--cmd-auth (format "%S" `(auth ,(random)))))
+                          (setq racket--cmd-auth (let ((print-length nil) ;for %S
+                                                       (print-level nil))
+                                                   (format "%S" `(auth ,(random)))))
+                          (if (and (boundp 'image-types)
+                                   (fboundp 'image-type-available-p)
+                                   (or (and (memq 'svg image-types)
+                                            (image-type-available-p 'svg))
+                                       (and (memq 'imagemagick image-types)
+                                            (image-type-available-p 'imagemagick))))
+                              "--use-svg"
+                            "--do-not-use-svg"))
    :filter          #'racket--cmd-process-filter))
 
 (defun racket--cmd-close ()
   (pcase (get-process racket--cmd-process-name)
     ((and (pred (processp)) proc) (delete-process proc))))
 
-(defun racket--call-when-connected-to-command-server (func)
-  "Call FUNC, starting the back end process if necessary."
-  (unless (racket--cmd-open-p)
-    (racket--cmd-open))
-  (funcall func (get-process racket--cmd-process-name)))
+(defun racket--cmd-process-stderr-filter (proc string)
+  "Show back end process stderr via `message'.
+Won't show noise like \"process finished\" if process sentinel is
+`ignore'."
+  (message "{%s} %s\n" proc string))
 
 (defun racket--cmd-process-filter (proc string)
   "Parse complete sexprs from the process output and give them to
@@ -117,45 +127,6 @@ See issue #327.")
                                         (point)))
                        (racket--cmd-dispatch-response sexp)
                        t)))))))
-
-(defvar racket--display-stderr-p t)
-
-;;;###autoload
-(defun racket-toggle-display-back-end-stderr ()
-  "Toggle whether the Racket Mode back end stderr buffer displays automatically.
-
-If you toggle this off, the buffer will still accumulate error
-messages -- it just won't `display-buffer' every time it is
-updated. You might prefer this if you are hacking on Racket or
-Racket Mode, temporarily have things in a state where the back
-end cannot start, and don't need to be notified repeatedly."
-  (interactive)
-  (setq racket--display-stderr-p (not racket--display-stderr-p))
-  (message "Racket Mode back end stderr buffer %s display automatically"
-           (if racket--display-stderr-p "WILL" "will NOT")))
-
-(defun racket--cmd-process-stderr-filter (proc string)
-  "A default process filter but also automatically display the buffer.
-
-Intended to surface error messages that wouldn't be shown by the
-command server or even appear in the racket-mode logger. Added as
-part of investigating issue #468.
-
-This assumes the process sentinel is set to `ignore' so we're not
-displaying the buffer for noise like \"process finished\"
-messages."
-  (when noninteractive ;emacs --batch
-    (princ (format "{racket-stderr}: %s\n" string)))
-  (when (buffer-live-p (process-buffer proc))
-    (with-current-buffer (process-buffer proc)
-      (setq header-line-format
-            "M-x racket-toggle-display-back-end-stderr to change automatically displaying this buffer")
-      (goto-char (process-mark proc))
-      (save-excursion
-        (insert string)
-        (set-marker (process-mark proc) (point))))
-    (when racket--display-stderr-p
-      (display-buffer (process-buffer proc)))))
 
 (defvar racket--cmd-nonce->callback (make-hash-table :test 'eq)
   "A hash from nonce to callback function.")
@@ -199,17 +170,17 @@ CALLBACK is called, as it was when the command was sent. If you
 need to do something to do that original buffer, save the
 `current-buffer' in a `let' and use it in a `with-current-buffer'
 form. See `racket--restoring-current-buffer'."
-  (racket--call-when-connected-to-command-server
-   (lambda (process)
-     (cl-incf racket--cmd-nonce)
-     (when (and callback
-                (not (equal callback #'ignore)))
-       (puthash racket--cmd-nonce callback racket--cmd-nonce->callback))
-     (process-send-string
-      process
-      (format "%S\n" (cons racket--cmd-nonce
-                           (cons repl-session-id
-                                 command-sexpr)))))))
+  (unless (racket--cmd-open-p)
+    (racket--cmd-open))
+  (cl-incf racket--cmd-nonce)
+  (when (and callback
+             (not (equal callback #'ignore)))
+    (puthash racket--cmd-nonce callback racket--cmd-nonce->callback))
+  (process-send-string
+   (get-process racket--cmd-process-name)
+   (let ((print-length nil) ;for %S
+         (print-level nil))
+     (format "%S\n" `(,racket--cmd-nonce ,repl-session-id . ,command-sexpr)))))
 
 (defun racket--cmd/async (repl-session-id command-sexpr &optional callback)
   "You probably want to use this instead of `racket--cmd/async-raw'.
@@ -246,7 +217,9 @@ mistake."
              (`(ok ,v)    (with-current-buffer buf (funcall callback v)))
              (`(error ,m) (message "%s" m))
              (`(break)    nil)
-             (v           (message "Unknown command response: %S" v))))
+             (v           (let ((print-length nil) ;for %S
+                                (print-level nil))
+                            (message "Unknown command response: %S" v)))))
        #'ignore))))
 
 (defun racket--cmd/await (repl-session-id command-sexpr)
@@ -266,7 +239,9 @@ in a specific namespace."
       (pcase response
         (`(ok ,v)    v)
         (`(error ,m) (error "%s" m))
-        (v           (error "Unknown command response: %S" v))))))
+        (v           (let ((print-length nil) ;for %S
+                           (print-level nil))
+                       (error "Unknown command response: %S" v)))))))
 
 (provide 'racket-cmd)
 

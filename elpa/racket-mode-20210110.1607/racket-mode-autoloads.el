@@ -36,15 +36,6 @@ Stop the back end process used by Racket Mode.
 
 If the process is not already started, this does nothing." t nil)
 
-(autoload 'racket-toggle-display-back-end-stderr "racket-cmd" "\
-Toggle whether the Racket Mode back end stderr buffer displays automatically.
-
-If you toggle this off, the buffer will still accumulate error
-messages -- it just won't `display-buffer' every time it is
-updated. You might prefer this if you are hacking on Racket or
-Racket Mode, temporarily have things in a state where the back
-end cannot start, and don't need to be notified repeatedly." t nil)
-
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket-")))
 
 ;;;***
@@ -168,12 +159,17 @@ end cannot start, and don't need to be notified repeatedly." t nil)
 ;;; Generated autoloads from racket-mode.el
 
 (autoload 'racket-mode "racket-mode" "\
-Major mode for editing Racket.
+Major mode for editing Racket source files.
+
 \\{racket-mode-map}
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("\\.rkt[dl]?\\'" . racket-mode))
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode))
+
+(add-to-list 'auto-mode-alist '("\\.rktd\\'" . racket-mode))
+
+(add-to-list 'auto-mode-alist '("\\.rktl\\'" . racket-mode))
 
 (modify-coding-system-alist 'file "\\.rkt[dl]?\\'" 'utf-8)
 
@@ -470,7 +466,7 @@ can turn it off by setting `input-method-highlight-flag' to nil." t nil)
 ;;;### (autoloads nil "racket-visit" "racket-visit.el" (0 0 0 0))
 ;;; Generated autoloads from racket-visit.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-visit" '("racket-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-visit" '("racket--")))
 
 ;;;***
 
@@ -586,6 +582,15 @@ If you have one or more syntax errors, `racket-xp-next-error' and
 `racket-xp-previous-error' to navigate among them. Although most
 languages will stop after the first syntax error, some like Typed
 Racket will try to collect and report multiple errors.
+
+You may use `xref-find-definitions' \\[xref-find-definitions],
+`xref-pop-marker-stack' \\[xref-pop-marker-stack], and
+`xref-find-references': `racket-xp-mode' adds a backend to the
+variable `xref-backend-functions'. This backend uses information
+from the drracket/check-syntax static analysis. Its ability to
+find references is limited to the current file; when it finds
+none it will try the default xref backend implementation which is
+grep-based.
 
 Tip: This mode follows the convention that a minor mode may only
 use a prefix key consisting of \"C-c\" followed by a punctuation

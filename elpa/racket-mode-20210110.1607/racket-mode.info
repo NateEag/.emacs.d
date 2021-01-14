@@ -32,11 +32,16 @@ Install
 * Uninstall::
 * Update::
 
+Update
+
+* Upgrading all packages::
+* Updating just Racket Mode::
 Configure
 
 * Key bindings::
 * Font-lock (syntax highlighting)::
 * Completion::
+* Xref (definitions and references)::
 * Indent::
 * paredit::
 * smartparens::
@@ -61,6 +66,7 @@ Commands
 
 Edit
 
+* racket-mode::
 * racket-insert-lambda::
 * racket-fold-all-tests::
 * racket-unfold-all-tests::
@@ -81,20 +87,19 @@ Edit
 Explore
 
 * racket-xp-mode::
-* racket-xp-visit-definition::
 * racket-xp-describe::
 * racket-xp-documentation::
 * racket-documentation-search::
 
 Run
 
+* racket-repl-mode::
 * racket-run::
 * racket-run-and-switch-to-repl::
 * racket-run-module-at-point::
 * racket-repl::
 * racket-repl-describe::
 * racket-repl-documentation::
-* racket-repl-visit-definition::
 * racket-racket::
 * racket-profile::
 * racket-profile-mode::
@@ -115,7 +120,6 @@ Eval
 
 Collections
 
-* racket-visit-module::
 * racket-open-require-path::
 * racket-find-collection::
 
@@ -129,7 +133,6 @@ Macro expand
 
 Other
 
-* racket-unvisit::
 * racket-mode-start-faster::
 
 Showing information
@@ -266,7 +269,7 @@ File: racket-mode.info,  Node: Install,  Next: Configure,  Prev: Introduction,  
 *********
 
 The recommended way to use Racket Mode is to install the package from
-MELPA (https://melpa.org/).
+MELPA (https://melpa.org/#/racket-mode).
 * Menu:
 
 * Configure Emacs to use MELPA::
@@ -300,8 +303,8 @@ File: racket-mode.info,  Node: Install Racket Mode,  Next: Minimal Racket,  Prev
 2.2 Install Racket Mode
 =======================
 
-When Emacs is configured to use MELPA, simply type ‘M-x’ package-install
-‘RET’ racket-mode ‘RET’ .
+When Emacs is configured to use MELPA, simply type ‘M-x’
+‘package-install’ ‘RET’ ‘racket-mode’ ‘RET’ .
 
 
 File: racket-mode.info,  Node: Minimal Racket,  Next: Uninstall,  Prev: Install Racket Mode,  Up: Install
@@ -335,19 +338,50 @@ File: racket-mode.info,  Node: Update,  Prev: Uninstall,  Up: Install
 2.5 Update
 ==========
 
-Be aware that updating an Emacs package doesn’t necessarily fully update
-Emacs’ state.  (One example symptom: an “invalid function” error
-message.)
+* Menu:
 
-   After updating the package, you might need to restart Emacs.
+* Upgrading all packages::
+* Updating just Racket Mode::
 
-   In some cases, you might even need to:
+
+File: racket-mode.info,  Node: Upgrading all packages,  Next: Updating just Racket Mode,  Up: Update
 
-  1. Uninstall Racket Mode.
+2.5.1 Upgrading all packages
+----------------------------
 
-  2. Exit and restart Emacs.
+The “easy path” provided by Emacs is to update _all_ packages to their
+latest versions.  Although you might not want to do this — see next
+section — here is how to do so:
 
-  3. Install Racket Mode.
+  1. Use ‘M-x’ ‘list-packages’.  It should display a message like “42
+     packages can be upgraded; type ‘U’ to mark them for upgrading.”.
+
+  2. Press ‘U’ as suggested to mark them all.
+
+  3. Press ‘x’ to execute.
+
+   After such a mass update, it might be wise to exist restart Emacs.
+
+
+File: racket-mode.info,  Node: Updating just Racket Mode,  Prev: Upgrading all packages,  Up: Update
+
+2.5.2 Updating just Racket Mode
+-------------------------------
+
+Updating all packages sometimes is more than you want.  For example,
+maybe you will discover that some packages have changed in ways that
+require you to take time to learn about, change customizations, and so
+on.
+
+   To update just Racket Mode:
+
+  1. Uninstall Racket Mode: ‘M-x’ ‘package-delete’ ‘RET’ ‘racket-mode’
+     ‘RET’ .
+
+  2. Optional but most reliable: Exit and restart Emacs.
+
+  3. Install Racket Mode: ‘M-x’ ‘package-install’ ‘RET’ ‘racket-mode’
+     ‘RET’ .  This will install the latest version.
 
 
 File: racket-mode.info,  Node: Configure,  Next: Reference,  Prev: Install,  Up: Top
@@ -366,8 +400,7 @@ This is the name or pathname of the Racket executable.  It defaults to
 ‘PATH’.  Even after you add it, GUI Emacs doesn’t automatically use your
 path (unless you use the handy exec-path-from-shell
 (https://melpa.org/#/exec-path-from-shell) package).  Therefore you
-might want to set ‘racket-program’ to a full pathname like
-‘/usr/racket/bin/racket’.
+might want to set ‘racket-program’ to a complete pathname.
 
    You can ‘setq’ this directly in your Emacs init file (~/.emacs or
 ~/.emacs.d/init.el), or, use ‘M-x’ ‘customize’, as you prefer.
@@ -376,6 +409,7 @@ might want to set ‘racket-program’ to a full pathname like
 * Key bindings::
 * Font-lock (syntax highlighting)::
 * Completion::
+* Xref (definitions and references)::
 * Indent::
 * paredit::
 * smartparens::
@@ -429,7 +463,7 @@ you might do so because you prefer a simpler appearance.
      languages.).
 
 
-File: racket-mode.info,  Node: Completion,  Next: Indent,  Prev: Font-lock (syntax highlighting),  Up: Configure
+File: racket-mode.info,  Node: Completion,  Next: Xref (definitions and references),  Prev: Font-lock (syntax highlighting),  Up: Configure
 
 3.3 Completion
 ==============
@@ -471,9 +505,71 @@ following to your Emacs init file:
 ‘racket-mode’ and ‘racket-repl-mode’.
 
 
-File: racket-mode.info,  Node: Indent,  Next: paredit,  Prev: Completion,  Up: Configure
+File: racket-mode.info,  Node: Xref (definitions and references),  Next: Indent,  Prev: Completion,  Up: Configure
 
-3.4 Indent
+3.4 Xref (definitions and references)
+=====================================
+
+Several modes support the Emacs commands
+
+   • ‘M-.’  ‘xref-find-definitions’
+   • ‘M-?’  ‘xref-find-references’
+   • ‘M-,’ ‘xref-pop-marker-stack’
+
+   To do so, each mode adds a local hook for ‘xref-backend-functions’:
+
+   • *note racket-mode::: ‘#'racket-mode-xref-backend-function’
+   • *note racket-xp-mode::: ‘#'racket-xp-xref-backend-function’
+   • *note racket-repl-mode::: ‘#'racket-repl-xref-backend-function’
+
+   If you prefer, you can remove the local hook — e.g.  for
+‘racket-mode’: ‘(remove-hook 'xref-backend-functions
+#'racket-mode-xref-function t)’.
+
+   You can ‘M-x customize-group’ and enter ‘xref’ to adjust some other
+settings.  For example, the customization variable
+‘xref-prompt-for-identifier’ controls which commands prompt you and
+when.  You might prefer to set it to ‘nil’.
+
+   If you use ‘paredit’, by default it binds ‘M-?’ to
+‘paredit-convolute-sexp’.  You can change that binding in
+‘paredit-mode-map’ allowing the global binding for ‘M-?’ to be used, or,
+pick some other key for ‘xref-find-references’ in the global map.
+
+   Finally, what to expect:
+
+   • Racket does not have a global or project-wide database of
+     definitions and references.
+   • Various modules can export identifiers with the same symbolic value
+     – for example a different “define” is provided by ‘racket/base’,
+     ‘typed/racket/base’, and other modules.
+   • A module can import something, then rename, contract, and re-export
+     it.
+
+   As a result, to find a definition, it is necessary to know exactly
+_which_ identifier is meant — either by expanding the module (as is done
+by ‘racket-xp-mode’) or by actually running it (‘racket-repl-mode’).
+Once known, we can usually find the definition site, even through a
+chain of renaming and/or contract-wrapping exports.  In addition, when
+point is on a module within ‘require’ form, we can usually find the
+source file.  (In plain ‘racket-mode’ edit buffers not enhanced by
+‘racket-xp-mode’, the only thing that ‘xref-find-definitions’ does is
+visit relative requires, e.g.  ‘foo.rkt’ in ‘(require "foo.rkt")’.)
+
+   As for finding references, the default xref implementation is used,
+which greps for strings among a project’s files.  Although
+‘racket-xp-mode’ can sometimes do better, using ‘drracket/check-syntax’
+for definitions and references _within_ the current buffer, beyond those
+it also falls back to the default implementation.
+
+   In any case, using the Emacs xref API allows for consistent command
+names, shortcut keys, and even a special buffer to navigate among
+references and visit each source location.
+
+
+File: racket-mode.info,  Node: Indent,  Next: paredit,  Prev: Xref (definitions and references),  Up: Configure
+
+3.5 Indent
 ==========
 
 Indentation can be customized in a way similar to lisp-mode and
@@ -482,7 +578,7 @@ scheme-mode: *note racket-indent-line::.
 
 File: racket-mode.info,  Node: paredit,  Next: smartparens,  Prev: Indent,  Up: Configure
 
-3.5 paredit
+3.6 paredit
 ===========
 
 If you use paredit (https://melpa.org/#/paredit), you might want to add
@@ -514,7 +610,7 @@ keybindings to ‘paredit-mode-map’:
 
 File: racket-mode.info,  Node: smartparens,  Next: Edit buffers and REPL buffers,  Prev: paredit,  Up: Configure
 
-3.6 smartparens
+3.7 smartparens
 ===============
 
 If instead of paredit you prefer smartparens
@@ -526,25 +622,25 @@ it provides for Lisp modes generally and for Racket Mode specifically:
 
 File: racket-mode.info,  Node: Edit buffers and REPL buffers,  Next: eldoc,  Prev: smartparens,  Up: Configure
 
-3.7 Edit buffers and REPL buffers
+3.8 Edit buffers and REPL buffers
 =================================
 
 By default, all ‘racket-mode’ edit buffers share one ‘racket-repl-mode’
-buffer.  For example, if you ‘racket-run’ “foo.rkt”, the REPL prompt
-changes to “foo.rkt>”, and the REPL is inside the file module namespace.
-If you then ‘racket-run’ “bar.rkt”, the REPL prompt changes to
-“bar.rkt>”, and you are in that namespace.
+buffer.  For example, if you run foo.rkt, the REPL prompt changes to
+‘foo.rkt>’, and the REPL is inside the file module namespace.  If you
+then run bar.rkt, the REPL prompt changes to ‘bar.rkt>’, and you are in
+that namespace.
 
    If you prefer, you can use more than one REPL buffer, by customizing
 the variable *note racket-repl-buffer-name-function::: Another option is
 to have one REPL buffer for each edit buffer, similar to Dr Racket.  Yet
-another option is to have files belong to the same project all share the
-same REPL buffer.  You can also define your own, custom function.
+another option is to share the same REPL buffer for files belonging to
+the same project.  You can also define your own, custom function.
 
 
 File: racket-mode.info,  Node: eldoc,  Next: Start faster,  Prev: Edit buffers and REPL buffers,  Up: Configure
 
-3.8 eldoc
+3.9 eldoc
 =========
 
 By default Racket Mode sets ‘eldoc-documentation-function’ to ‘nil’ — no
@@ -573,8 +669,8 @@ doesn’t work in many common cases:
 
 File: racket-mode.info,  Node: Start faster,  Next: Unicode input method,  Prev: eldoc,  Up: Configure
 
-3.9 Start faster
-================
+3.10 Start faster
+=================
 
 You can use *note racket-mode-start-faster:: to make the Racket REPL
 start faster.
@@ -582,7 +678,7 @@ start faster.
 
 File: racket-mode.info,  Node: Unicode input method,  Prev: Start faster,  Up: Configure
 
-3.10 Unicode input method
+3.11 Unicode input method
 =========================
 
 An optional Emacs input method, ‘racket-unicode’, lets you easily type
@@ -607,7 +703,7 @@ File: racket-mode.info,  Node: Reference,  Next: Commands,  Prev: Configure,  Up
 
 The following sections are generated from the doc strings for each
 command, variable, or face.  (As a result, some of the formatting might
-not be quite as nice or correct as the previous sections.)
+not be quite as nice or correct as in the previous sections.)
 
    You can also view these by using the normal Emacs help mechanism:
 
@@ -642,6 +738,7 @@ File: racket-mode.info,  Node: Edit,  Next: Explore,  Up: Commands
 
 * Menu:
 
+* racket-mode::
 * racket-insert-lambda::
 * racket-fold-all-tests::
 * racket-unfold-all-tests::
@@ -660,9 +757,49 @@ File: racket-mode.info,  Node: Edit,  Next: Explore,  Up: Commands
 * racket-complete-at-point::
 
 
-File: racket-mode.info,  Node: racket-insert-lambda,  Next: racket-fold-all-tests,  Up: Edit
+File: racket-mode.info,  Node: racket-mode,  Next: racket-insert-lambda,  Up: Edit
 
-5.1.1 racket-insert-lambda
+5.1.1 racket-mode
+-----------------
+
+‘M-x’ ‘racket-mode’
+
+   Major mode for editing Racket source files.
+
+Key                                                             Binding
+‘}’                                                             *note racket-insert-closing::
+‘]’                                                             *note racket-insert-closing::
+‘)’                                                             *note racket-insert-closing::
+‘TAB’                                                           ‘indent-for-tab-command’
+‘C-x C-e’                                                       *note racket-send-last-sexp::
+‘C-M-y’                                                         *note racket-insert-lambda::
+‘C-M-u’                                                         *note racket-backward-up-list::
+‘C-M-x’                                                         *note racket-send-definition::
+‘C-c C-u’                                                       *note racket-unfold-all-tests::
+‘C-c C-f’                                                       *note racket-fold-all-tests::
+‘C-c C-d’                                                       *note racket-documentation-search::
+‘C-c C-p’                                                       *note racket-cycle-paren-shapes::
+‘C-c C-x C-f’                                                   *note racket-open-require-path::
+‘C-c C-e r’                                                     *note racket-expand-region::
+‘C-c C-e e’                                                     *note racket-expand-last-sexp::
+‘C-c C-e x’                                                     *note racket-expand-definition::
+‘C-c C-e f’                                                     *note racket-expand-file::
+‘C-c C-r’                                                       *note racket-send-region::
+‘C-c C-o’                                                       *note racket-profile::
+‘C-c C-l’                                                       *note racket-logger::
+‘C-c C-t’                                                       *note racket-test::
+‘C-c C-z’                                                       *note racket-repl::
+‘C-c C-k’                                                       *note racket-run-module-at-point::
+‘C-c C-c’                                                       *note racket-run-module-at-point::
+
+   In addition to any hooks its parent mode ‘prog-mode’ might have run,
+this mode runs the hook ‘racket-mode-hook’, as the final step during
+initialization.
+
+
+File: racket-mode.info,  Node: racket-insert-lambda,  Next: racket-fold-all-tests,  Prev: racket-mode,  Up: Edit
+
+5.1.2 racket-insert-lambda
 --------------------------
 
 ‘C-M-y’
@@ -675,7 +812,7 @@ racket-unicode-input-method-enable::.
 
 File: racket-mode.info,  Node: racket-fold-all-tests,  Next: racket-unfold-all-tests,  Prev: racket-insert-lambda,  Up: Edit
 
-5.1.2 racket-fold-all-tests
+5.1.3 racket-fold-all-tests
 ---------------------------
 
 ‘C-c C-f’
@@ -685,7 +822,7 @@ File: racket-mode.info,  Node: racket-fold-all-tests,  Next: racket-unfold-all-t
 
 File: racket-mode.info,  Node: racket-unfold-all-tests,  Next: racket-tidy-requires,  Prev: racket-fold-all-tests,  Up: Edit
 
-5.1.3 racket-unfold-all-tests
+5.1.4 racket-unfold-all-tests
 -----------------------------
 
 ‘C-c C-u’
@@ -695,7 +832,7 @@ File: racket-mode.info,  Node: racket-unfold-all-tests,  Next: racket-tidy-requi
 
 File: racket-mode.info,  Node: racket-tidy-requires,  Next: racket-trim-requires,  Prev: racket-unfold-all-tests,  Up: Edit
 
-5.1.4 racket-tidy-requires
+5.1.5 racket-tidy-requires
 --------------------------
 
 ‘M-x’ ‘racket-tidy-requires’
@@ -727,7 +864,7 @@ racket-base-requires::.
 
 File: racket-mode.info,  Node: racket-trim-requires,  Next: racket-base-requires,  Prev: racket-tidy-requires,  Up: Edit
 
-5.1.5 racket-trim-requires
+5.1.6 racket-trim-requires
 --------------------------
 
 ‘M-x’ ‘racket-trim-requires’
@@ -748,7 +885,7 @@ delete top level requires that are actually needed by such submodules.
 
 File: racket-mode.info,  Node: racket-base-requires,  Next: racket-add-require-for-identifier,  Prev: racket-trim-requires,  Up: Edit
 
-5.1.6 racket-base-requires
+5.1.7 racket-base-requires
 --------------------------
 
 ‘M-x’ ‘racket-base-requires’
@@ -779,7 +916,7 @@ changing “#lang typed/racket” to “#lang typed/racket/base”.
 
 File: racket-mode.info,  Node: racket-add-require-for-identifier,  Next: racket-indent-line,  Prev: racket-base-requires,  Up: Edit
 
-5.1.7 racket-add-require-for-identifier
+5.1.8 racket-add-require-for-identifier
 ---------------------------------------
 
 ‘M-x’ ‘racket-add-require-for-identifier’
@@ -787,12 +924,15 @@ File: racket-mode.info,  Node: racket-add-require-for-identifier,  Next: racket-
    Add a require for the identifier at point.
 
    When more than one module supplies an identifer with the same name,
-they are listed for you to choose.  The listed is sorted alphabetically,
-except modules starting with “racket/” and “typed/racket/” are sorted
-before others.
+they are listed for you to choose one.  The list is sorted
+alphabetically, except modules starting with “racket/” and
+“typed/racket/” are sorted before others.  While at the prompt, as a
+convenience you can press C-h to see the “Search Manuals” page for
+locally installed packages – effectively like doing “raco doc” at the
+command line.
 
-   A “require” is added for the module, followed by doing a *note
-racket-tidy-requires::.
+   A “require” form is inserted into the buffer, followed by doing a
+*note racket-tidy-requires::.
 
    Caveat: This works in terms of identifers that are documented.  The
 mechanism is similar to that used for Racket’s “Search Manuals” feature.
@@ -802,7 +942,7 @@ exported but not documented.
 
 File: racket-mode.info,  Node: racket-indent-line,  Next: racket-smart-open-bracket-mode,  Prev: racket-add-require-for-identifier,  Up: Edit
 
-5.1.8 racket-indent-line
+5.1.9 racket-indent-line
 ------------------------
 
 ‘M-x’ ‘racket-indent-line’
@@ -861,8 +1001,8 @@ of file or dir local variables.  Otherwise prefer putting properties on
 
 File: racket-mode.info,  Node: racket-smart-open-bracket-mode,  Next: racket-insert-closing,  Prev: racket-indent-line,  Up: Edit
 
-5.1.9 racket-smart-open-bracket-mode
-------------------------------------
+5.1.10 racket-smart-open-bracket-mode
+-------------------------------------
 
 ‘M-x’ ‘racket-smart-open-bracket-mode’
 
@@ -903,7 +1043,7 @@ variable ‘minor-mode-map-alist’.
 
 File: racket-mode.info,  Node: racket-insert-closing,  Next: racket-cycle-paren-shapes,  Prev: racket-smart-open-bracket-mode,  Up: Edit
 
-5.1.10 racket-insert-closing
+5.1.11 racket-insert-closing
 ----------------------------
 
 ‘]’ or ‘)’
@@ -919,7 +1059,7 @@ added in Emacs 24.5.
 
 File: racket-mode.info,  Node: racket-cycle-paren-shapes,  Next: racket-backward-up-list,  Prev: racket-insert-closing,  Up: Edit
 
-5.1.11 racket-cycle-paren-shapes
+5.1.12 racket-cycle-paren-shapes
 --------------------------------
 
 ‘C-c C-p’
@@ -929,7 +1069,7 @@ File: racket-mode.info,  Node: racket-cycle-paren-shapes,  Next: racket-backward
 
 File: racket-mode.info,  Node: racket-backward-up-list,  Next: racket-unicode-input-method-enable,  Prev: racket-cycle-paren-shapes,  Up: Edit
 
-5.1.12 racket-backward-up-list
+5.1.13 racket-backward-up-list
 ------------------------------
 
 ‘C-M-u’
@@ -945,7 +1085,7 @@ comment, if any, then use normal ‘backward-up-list’ repeatedly.
 
 File: racket-mode.info,  Node: racket-unicode-input-method-enable,  Next: racket-align,  Prev: racket-backward-up-list,  Up: Edit
 
-5.1.13 racket-unicode-input-method-enable
+5.1.14 racket-unicode-input-method-enable
 -----------------------------------------
 
 ‘M-x’ ‘racket-unicode-input-method-enable’
@@ -1001,7 +1141,7 @@ can turn it off by setting ‘input-method-highlight-flag’ to nil.
 
 File: racket-mode.info,  Node: racket-align,  Next: racket-unalign,  Prev: racket-unicode-input-method-enable,  Up: Edit
 
-5.1.14 racket-align
+5.1.15 racket-align
 -------------------
 
 ‘M-x’ ‘racket-align’
@@ -1066,7 +1206,7 @@ For example:
 
 File: racket-mode.info,  Node: racket-unalign,  Next: racket-complete-at-point,  Prev: racket-align,  Up: Edit
 
-5.1.15 racket-unalign
+5.1.16 racket-unalign
 ---------------------
 
 ‘M-x’ ‘racket-unalign’
@@ -1079,7 +1219,7 @@ couple’s value.
 
 File: racket-mode.info,  Node: racket-complete-at-point,  Prev: racket-unalign,  Up: Edit
 
-5.1.16 racket-complete-at-point
+5.1.17 racket-complete-at-point
 -------------------------------
 
 A value for the variable ‘completion-at-point-functions’.
@@ -1097,13 +1237,12 @@ File: racket-mode.info,  Node: Explore,  Next: Run,  Prev: Edit,  Up: Commands
 * Menu:
 
 * racket-xp-mode::
-* racket-xp-visit-definition::
 * racket-xp-describe::
 * racket-xp-documentation::
 * racket-documentation-search::
 
 
-File: racket-mode.info,  Node: racket-xp-mode,  Next: racket-xp-visit-definition,  Up: Explore
+File: racket-mode.info,  Node: racket-xp-mode,  Next: racket-xp-describe,  Up: Explore
 
 5.2.1 racket-xp-mode
 --------------------
@@ -1112,10 +1251,10 @@ File: racket-mode.info,  Node: racket-xp-mode,  Next: racket-xp-visit-definition
 
    A minor mode that analyzes expanded code to explain and explore.
 
-   This minor mode is an optional enhancement to ‘racket-mode’ edit
-buffers.  Like any minor mode, you can turn it on or off for a specific
-buffer.  If you always want to use it, put the following code in your
-Emacs init file:
+   This minor mode is an optional enhancement to *note racket-mode::
+edit buffers.  Like any minor mode, you can turn it on or off for a
+specific buffer.  If you always want to use it, put the following code
+in your Emacs init file:
 
      (require 'racket-xp)
      (add-hook 'racket-mode-hook #'racket-xp-mode)
@@ -1199,6 +1338,13 @@ and whether or not you had a syntax error.
 languages will stop after the first syntax error, some like Typed Racket
 will try to collect and report multiple errors.
 
+   You may use ‘xref-find-definitions’ ‘M-.’ , ‘xref-pop-marker-stack’
+‘M-,’ , and ‘xref-find-references’: *note racket-xp-mode:: adds a
+backend to the variable ‘xref-backend-functions’.  This backend uses
+information from the drracket/check-syntax static analysis.  Its ability
+to find references is limited to the current file; when it finds none it
+will try the default xref backend implementation which is grep-based.
+
    Tip: This mode follows the convention that a minor mode may only use
 a prefix key consisting of “C-c” followed by a punctuation key.  As a
 result, ‘racket-xp-control-c-hash-keymap’ is bound to “C-c #” by
@@ -1208,46 +1354,33 @@ prefix, and/or bind any individual commands directly to whatever keys
 you prefer.
 
 Key                                                     Binding
-‘M-.’                                                   *note racket-xp-visit-definition::
+‘M-.’                                                   ‘xref-find-definitions’
 ‘C-c C-d’                                               *note racket-xp-documentation::
 ‘C-c C-.’                                               *note racket-xp-describe::
 ‘C-c # P’                                               ‘racket-xp-previous-error’
 ‘C-c # N’                                               ‘racket-xp-next-error’
 ‘C-c # g’                                               ‘racket-xp-annotate’
 ‘C-c # r’                                               ‘racket-xp-rename’
-‘C-c # .’                                               *note racket-xp-visit-definition::
+‘C-c # ?’                                               ‘xref-find-references’
+‘C-c # .’                                               ‘xref-find-definitions’
 ‘C-c # p’                                               ‘racket-xp-previous-use’
 ‘C-c # n’                                               ‘racket-xp-next-use’
 ‘C-c # k’                                               ‘racket-xp-previous-definition’
 ‘C-c # j’                                               ‘racket-xp-next-definition’
 
 
-File: racket-mode.info,  Node: racket-xp-visit-definition,  Next: racket-xp-describe,  Prev: racket-xp-mode,  Up: Explore
+File: racket-mode.info,  Node: racket-xp-describe,  Next: racket-xp-documentation,  Prev: racket-xp-mode,  Up: Explore
 
-5.2.2 racket-xp-visit-definition
---------------------------------
-
-‘M-.’ or ‘C-c # .’
-
-   When point is on a use, go to its definition.
-
-   With ‘C-u’ prompts you, but in this case beware it assumes
-definitions in or imported by the file module – not locals or
-definitions in submodules.
-
-
-File: racket-mode.info,  Node: racket-xp-describe,  Next: racket-xp-documentation,  Prev: racket-xp-visit-definition,  Up: Explore
-
-5.2.3 racket-xp-describe
+5.2.2 racket-xp-describe
 ------------------------
 
 ‘C-c C-.’
 
    Describe the identifier at point in a ‘*Racket Describe*’ buffer.
 
-   With ‘C-u’ prompts you, but in this case beware it assumes
-definitions in or imported by the file module – not locals or
-definitions in submodules.
+   With ‘C-u’ you are prompted enter the identifier, but in this case it
+only considers definitions or imports at the file’s module level – not
+local bindings nor definitions in submodules.
 
    The intent is to give a quick reminder or introduction to something,
 regardless of whether it has installed documentation – and to do so
@@ -1265,13 +1398,13 @@ F1 or C-h in its pop up completion list.
 
    You can quit the buffer by pressing q.  Also, at the bottom of the
 buffer are Emacs buttons – which you may navigate among using TAB, and
-activate using RET – for *note racket-xp-visit-definition:: and *note
+activate using RET – for ‘xref-find-definitions’ and *note
 racket-xp-documentation::.
 
 
 File: racket-mode.info,  Node: racket-xp-documentation,  Next: racket-documentation-search,  Prev: racket-xp-describe,  Up: Explore
 
-5.2.4 racket-xp-documentation
+5.2.3 racket-xp-documentation
 -----------------------------
 
 ‘C-c C-d’
@@ -1290,7 +1423,6 @@ supply.
      this case, the variable *note
      racket-documentation-search-location:: determines whether the
      search is done locally as with ‘raco doc‘, or visits a URL.
-
   2. ‘C-u’
 
      Prompts you to enter a symbol, defaulting to the symbol at point if
@@ -1310,7 +1442,7 @@ supply.
 
 File: racket-mode.info,  Node: racket-documentation-search,  Prev: racket-xp-documentation,  Up: Explore
 
-5.2.5 racket-documentation-search
+5.2.4 racket-documentation-search
 ---------------------------------
 
 ‘C-c C-d’
@@ -1319,11 +1451,11 @@ File: racket-mode.info,  Node: racket-documentation-search,  Prev: racket-xp-doc
 
    This command is useful in several situations:
 
-   • You are not using *note racket-xp-mode:: for a ‘racket-mode’ edit
-     buffer, so *note racket-xp-documentation:: is not available.
+   • You are not using *note racket-xp-mode:: for a *note racket-mode::
+     edit buffer, so *note racket-xp-documentation:: is not available.
 
-   • There is no ‘racket-repl-mode’ buffer with a live namespace, so
-     *note racket-repl-documentation:: is not available or helpful.
+   • There is no *note racket-repl-mode:: buffer with a live namespace,
+     so *note racket-repl-documentation:: is not available or helpful.
 
    • You want to search for definitions provided by all modules – for
      example, the “define” syntax provided by racket/base, by
@@ -1342,13 +1474,13 @@ File: racket-mode.info,  Node: Run,  Next: Test,  Prev: Explore,  Up: Commands
 
 * Menu:
 
+* racket-repl-mode::
 * racket-run::
 * racket-run-and-switch-to-repl::
 * racket-run-module-at-point::
 * racket-repl::
 * racket-repl-describe::
 * racket-repl-documentation::
-* racket-repl-visit-definition::
 * racket-racket::
 * racket-profile::
 * racket-profile-mode::
@@ -1357,9 +1489,51 @@ File: racket-mode.info,  Node: Run,  Next: Test,  Prev: Explore,  Up: Commands
 * racket-debug-mode::
 
 
-File: racket-mode.info,  Node: racket-run,  Next: racket-run-and-switch-to-repl,  Up: Run
+File: racket-mode.info,  Node: racket-repl-mode,  Next: racket-run,  Up: Run
 
-5.3.1 racket-run
+5.3.1 racket-repl-mode
+----------------------
+
+‘M-x’ ‘racket-repl-mode’
+
+   Major mode for Racket REPL.
+
+   You may use ‘xref-find-definitions’ ‘M-.’ and ‘xref-pop-marker-stack’
+‘M-,’ : *note racket-repl-mode:: adds a backend to the variable
+‘xref-backend-functions’.  This backend uses information about
+identifier bindings and modules from the REPL’s namespace.
+
+Key                                                         Binding
+‘}’                                                         *note racket-insert-closing::
+‘]’                                                         *note racket-insert-closing::
+‘)’                                                         *note racket-insert-closing::
+‘C-c C-\’                                                   ‘racket-repl-exit’
+‘C-c C-c’                                                   ‘racket-repl-break’
+‘C-c C-l’                                                   *note racket-logger::
+‘C-c C-z’                                                   ‘racket-repl-switch-to-edit’
+‘C-c C-.’                                                   *note racket-repl-describe::
+‘C-c C-d’                                                   *note racket-repl-documentation::
+‘C-c C-e r’                                                 *note racket-expand-region::
+‘C-c C-e e’                                                 *note racket-expand-last-sexp::
+‘C-c C-e x’                                                 *note racket-expand-definition::
+‘C-c C-e f’                                                 *note racket-expand-file::
+‘C-w’                                                       ‘comint-kill-region’
+‘C-a’                                                       ‘comint-bol’
+‘C-M-y’                                                     *note racket-insert-lambda::
+‘C-M-q’                                                     ‘prog-indent-sexp’
+‘C-M-u’                                                     *note racket-backward-up-list::
+‘TAB’                                                       ‘indent-for-tab-command’
+‘C-j’                                                       ‘newline-and-indent’
+‘RET’                                                       ‘racket-repl-submit’
+
+   In addition to any hooks its parent mode ‘comint-mode’ might have
+run, this mode runs the hook ‘racket-repl-mode-hook’, as the final step
+during initialization.
+
+
+File: racket-mode.info,  Node: racket-run,  Next: racket-run-and-switch-to-repl,  Prev: racket-repl-mode,  Up: Run
+
+5.3.2 racket-run
 ----------------
 
 ‘M-x’ ‘racket-run’
@@ -1392,8 +1566,9 @@ also make them to your source file, they will be lost on the next run.
 like Dr Racket’s Run command because it selects the REPL window after
 running.
 
-   In the ‘racket-repl-mode’ buffer, output that describes a file and
-position is automatically “linkified”.  Examples of such text include:
+   In the *note racket-repl-mode:: buffer, output that describes a file
+and position is automatically “linkified”.  Examples of such text
+include:
 
    • Racket error messages.
    • rackunit test failure location messages.
@@ -1405,7 +1580,7 @@ click.  Or, use the standard ‘next-error’ and ‘previous-error’ commands.
 
 File: racket-mode.info,  Node: racket-run-and-switch-to-repl,  Next: racket-run-module-at-point,  Prev: racket-run,  Up: Run
 
-5.3.2 racket-run-and-switch-to-repl
+5.3.3 racket-run-and-switch-to-repl
 -----------------------------------
 
 ‘<f5>’
@@ -1416,7 +1591,7 @@ window.
 
 File: racket-mode.info,  Node: racket-run-module-at-point,  Next: racket-repl,  Prev: racket-run-and-switch-to-repl,  Up: Run
 
-5.3.3 racket-run-module-at-point
+5.3.4 racket-run-module-at-point
 --------------------------------
 
 ‘C-c C-k’ or ‘C-c C-c’
@@ -1431,7 +1606,7 @@ module.
 
 File: racket-mode.info,  Node: racket-repl,  Next: racket-repl-describe,  Prev: racket-run-module-at-point,  Up: Run
 
-5.3.4 racket-repl
+5.3.5 racket-repl
 -----------------
 
 ‘C-c C-z’
@@ -1456,7 +1631,7 @@ plain Emacs shell buffer to run command-line Racket.
 
 File: racket-mode.info,  Node: racket-repl-describe,  Next: racket-repl-documentation,  Prev: racket-repl,  Up: Run
 
-5.3.5 racket-repl-describe
+5.3.6 racket-repl-describe
 --------------------------
 
 ‘C-c C-.’
@@ -1480,13 +1655,13 @@ F1 or C-h in its pop up completion list.
 
    You can quit the buffer by pressing q.  Also, at the bottom of the
 buffer are Emacs buttons – which you may navigate among using TAB, and
-activate using RET – for *note racket-repl-visit-definition:: and *note
+activate using RET – for ‘racket-repl-visit-definition’ and *note
 racket-repl-documentation::.
 
 
-File: racket-mode.info,  Node: racket-repl-documentation,  Next: racket-repl-visit-definition,  Prev: racket-repl-describe,  Up: Run
+File: racket-mode.info,  Node: racket-repl-documentation,  Next: racket-racket,  Prev: racket-repl-describe,  Up: Run
 
-5.3.6 racket-repl-documentation
+5.3.7 racket-repl-documentation
 -------------------------------
 
 ‘C-c C-d’
@@ -1523,31 +1698,7 @@ supply.
      for example.
 
 
-File: racket-mode.info,  Node: racket-repl-visit-definition,  Next: racket-racket,  Prev: racket-repl-documentation,  Up: Run
-
-5.3.7 racket-repl-visit-definition
-----------------------------------
-
-‘M-.’
-
-   Visit definition of identifier at point.
-
-   If there is no identifier at point, prompt for it.
-
-   With ‘C-u’ always prompt for the identifier.
-
-   Use *note racket-unvisit:: to return.
-
-   Please keep in mind the following limitations:
-
-   • Finds symbols defined in the REPL’s namespace, which only includes
-     imported and module binding – but not local bindings.
-
-   • If the definition is found in Racket’s “#%kernel” module, it will
-     tell you so but won’t visit the definition site.
-
-
-File: racket-mode.info,  Node: racket-racket,  Next: racket-profile,  Prev: racket-repl-visit-definition,  Up: Run
+File: racket-mode.info,  Node: racket-racket,  Next: racket-profile,  Prev: racket-repl-documentation,  Up: Run
 
 5.3.8 racket-racket
 -------------------
@@ -1688,9 +1839,9 @@ value and/or too much cost.
      instrument a function you are about to call, so you can “step into”
      it:
 
-        • ‘M-.’ or ‘C-c # .’ to visit the definition.
+        • ‘M-x’ ‘racket-xp-visit-definition’ to visit the definition.
         • ‘C-u’ ‘C-M-x’ to instrument the definition.
-        • ‘M-,’ to return.
+        • ‘M-x’ ‘racket-unvisit’ to return.
         • Continue stepping.
      Limitation: Instrumenting a function required from another module
      won’t redefine that function.  Instead, it attempts to define an
@@ -1699,15 +1850,15 @@ value and/or too much cost.
      in that other module.  In that case you’ll probably need to use
      entire-file instrumentation as described above.
 
-  2. When a break occurs, the ‘racket-repl-mode’ prompt changes.  In
-     this debug REPL, local variables are available for you to use and
-     even to ‘set!’.
+  2. When a break occurs, the *note racket-repl-mode:: prompt changes.
+     In this debug REPL, local variables are available for you to use
+     and even to ‘set!’.
 
-     Also, in the ‘racket-mode’ buffer where the break is located, *note
-     racket-debug-mode:: is enabled.  This minor mode makes the buffer
-     read-only, provides visual feedback – about the break position,
-     local variable values, and result values – and provides shortcut
-     keys:
+     Also, in the *note racket-mode:: buffer where the break is located,
+     *note racket-debug-mode:: is enabled.  This minor mode makes the
+     buffer read-only, provides visual feedback – about the break
+     position, local variable values, and result values – and provides
+     shortcut keys:
 
 Key                                             Binding
 ‘?’                                             ‘racket-debug-help’
@@ -1820,32 +1971,13 @@ File: racket-mode.info,  Node: Collections,  Next: Macro expand,  Prev: Eval,  U
 
 * Menu:
 
-* racket-visit-module::
 * racket-open-require-path::
 * racket-find-collection::
 
 
-File: racket-mode.info,  Node: racket-visit-module,  Next: racket-open-require-path,  Up: Collections
+File: racket-mode.info,  Node: racket-open-require-path,  Next: racket-find-collection,  Up: Collections
 
-5.6.1 racket-visit-module
--------------------------
-
-‘C-M-.’
-
-   Visit definition of module at point, e.g.  net/url or “file.rkt”.
-
-   If there is no module at point, prompt for it.
-
-   With ‘C-u’ always prompt for the module.
-
-   Use *note racket-unvisit:: to return.
-
-   See also: *note racket-find-collection::.
-
-
-File: racket-mode.info,  Node: racket-open-require-path,  Next: racket-find-collection,  Prev: racket-visit-module,  Up: Collections
-
-5.6.2 racket-open-require-path
+5.6.1 racket-open-require-path
 ------------------------------
 
 ‘C-c C-x C-f’
@@ -1866,7 +1998,7 @@ the top, marked with “->”.
 
 File: racket-mode.info,  Node: racket-find-collection,  Prev: racket-open-require-path,  Up: Collections
 
-5.6.3 racket-find-collection
+5.6.2 racket-find-collection
 ----------------------------
 
 ‘M-x’ ‘racket-find-collection’
@@ -1891,8 +2023,7 @@ installed.  To install it, in ‘shell’ enter:
    Tip: This works best with ‘ido-enable-flex-matching’ set to t.  Also
 handy is the ‘flx-ido’ package from MELPA.
 
-   See also: *note racket-visit-module:: and *note
-racket-open-require-path::.
+   See also: *note racket-open-require-path::.
 
 
 File: racket-mode.info,  Node: Macro expand,  Next: Other,  Prev: Collections,  Up: Commands
@@ -1941,7 +2072,7 @@ File: racket-mode.info,  Node: racket-expand-file,  Next: racket-expand-region, 
 
 ‘C-c C-e f’
 
-   Expand the ‘racket-mode’ buffer’s file in *note
+   Expand the *note racket-mode:: buffer’s file in *note
 racket-stepper-mode::.
 
    Uses the ‘macro-debugger’ package to do the expansion.
@@ -2003,24 +2134,12 @@ File: racket-mode.info,  Node: Other,  Next: Showing information,  Prev: Macro e
 
 * Menu:
 
-* racket-unvisit::
 * racket-mode-start-faster::
 
 
-File: racket-mode.info,  Node: racket-unvisit,  Next: racket-mode-start-faster,  Up: Other
+File: racket-mode.info,  Node: racket-mode-start-faster,  Up: Other
 
-5.8.1 racket-unvisit
---------------------
-
-‘M-,’
-
-   Return from previous ‘racket-visit-definition’ or *note
-racket-visit-module::.
-
-
-File: racket-mode.info,  Node: racket-mode-start-faster,  Prev: racket-unvisit,  Up: Other
-
-5.8.2 racket-mode-start-faster
+5.8.1 racket-mode-start-faster
 ------------------------------
 
 ‘M-x’ ‘racket-mode-start-faster’
@@ -2132,7 +2251,8 @@ File: racket-mode.info,  Node: racket-repl-buffer-name-shared,  Next: racket-rep
 
 ‘M-x’ ‘racket-repl-buffer-name-shared’
 
-   All ‘racket-mode’ edit buffers share one ‘racket-repl-mode’ buffer.
+   All *note racket-mode:: edit buffers share one *note
+racket-repl-mode:: buffer.
 
    A value for the variable *note racket-repl-buffer-name-function::.
 
@@ -2144,8 +2264,8 @@ File: racket-mode.info,  Node: racket-repl-buffer-name-unique,  Next: racket-rep
 
 ‘M-x’ ‘racket-repl-buffer-name-unique’
 
-   Each ‘racket-mode’ edit buffer gets its own ‘racket-repl-mode’
-buffer.
+   Each *note racket-mode:: edit buffer gets its own *note
+racket-repl-mode:: buffer.
 
    A value for the variable *note racket-repl-buffer-name-function::.
 
@@ -2157,8 +2277,8 @@ File: racket-mode.info,  Node: racket-repl-buffer-name-project,  Next: racket-pr
 
 ‘M-x’ ‘racket-repl-buffer-name-project’
 
-   All ‘racket-mode’ buffers in a project share a ‘racket-repl-mode’
-buffer.
+   All *note racket-mode:: buffers in a project share a *note
+racket-repl-mode:: buffer.
 
    A value for the variable *note racket-repl-buffer-name-function::.
 
@@ -2454,8 +2574,8 @@ File: racket-mode.info,  Node: racket-repl-buffer-name-function,  Next: racket-s
 6.2.1 racket-repl-buffer-name-function
 --------------------------------------
 
-How to associate ‘racket-mode’ edit buffers with ‘racket-repl-mode’
-buffers.
+How to associate *note racket-mode:: edit buffers with *note
+racket-repl-mode:: buffers.
 
    The default is nil, which is equivalent to supplying *note
 racket-repl-buffer-name-shared::: One REPL buffer is shared.
@@ -2464,13 +2584,14 @@ racket-repl-buffer-name-shared::: One REPL buffer is shared.
 racket-repl-buffer-name-unique:: and *note
 racket-repl-buffer-name-project::.
 
-   This is used when a ‘racket-mode’ buffer is created.  Changing this
-to a new value only affects ‘racket-mode’ buffers created later.
+   This is used when a *note racket-mode:: buffer is created.  Changing
+this to a new value only affects *note racket-mode:: buffers created
+later.
 
    Any such function takes no arguments, should look at
 ‘buffer-file-name’ if necessary, and either ‘setq-default’ or
-‘setq-local’ the variable ‘racket-repl-buffer-name’ to a desired
-‘racket-repl-mode’ buffer name.  As a result, *note racket-run::
+‘setq-local’ the variable ‘racket-repl-buffer-name’ to a desired *note
+racket-repl-mode:: buffer name.  As a result, *note racket-run::
 commands will use a buffer of that name, creating it if necessary.
 
 
@@ -2845,143 +2966,144 @@ Face for *note racket-logger-mode:: debug level.
 
 Tag Table:
 Node: Top220
-Node: Introduction4157
-Ref: Introduction-Footnote-15316
-Node: Install5711
-Node: Configure Emacs to use MELPA6032
-Node: Install Racket Mode6505
-Node: Minimal Racket6794
-Node: Uninstall7358
-Node: Update7646
-Node: Configure8093
-Node: Key bindings9249
-Node: Font-lock (syntax highlighting)9866
-Node: Completion11150
-Node: Indent12990
-Node: paredit13211
-Node: smartparens14204
-Node: Edit buffers and REPL buffers14579
-Node: eldoc15473
-Node: Start faster16732
-Node: Unicode input method16957
-Node: Reference17655
-Node: Commands18144
-Node: Edit18463
-Node: racket-insert-lambda19000
-Node: racket-fold-all-tests19268
-Node: racket-unfold-all-tests19505
-Node: racket-tidy-requires19748
-Node: racket-trim-requires20792
-Node: racket-base-requires21502
-Node: racket-add-require-for-identifier22767
-Node: racket-indent-line23661
-Node: racket-smart-open-bracket-mode25649
-Node: racket-insert-closing27294
-Node: racket-cycle-paren-shapes27787
-Node: racket-backward-up-list28038
-Node: racket-unicode-input-method-enable28598
-Node: racket-align30598
-Node: racket-unalign32566
-Node: racket-complete-at-point32899
-Node: Explore33321
-Node: racket-xp-mode33571
-Node: racket-xp-visit-definition38962
-Node: racket-xp-describe39390
-Node: racket-xp-documentation40712
-Node: racket-documentation-search41844
-Node: Run42827
-Node: racket-run43244
-Node: racket-run-and-switch-to-repl45135
-Node: racket-run-module-at-point45425
-Node: racket-repl45932
-Node: racket-repl-describe46900
-Node: racket-repl-documentation48136
-Node: racket-repl-visit-definition49259
-Node: racket-racket49990
-Node: racket-profile50211
-Node: racket-profile-mode50928
-Node: racket-logger51943
-Node: racket-logger-mode52164
-Node: racket-debug-mode53287
-Node: Test56818
-Node: racket-test56963
-Node: racket-raco-test57636
-Node: Eval57883
-Node: racket-send-region58075
-Node: racket-send-definition58293
-Node: racket-send-last-sexp58542
-Node: Collections58852
-Node: racket-visit-module59070
-Node: racket-open-require-path59503
-Node: racket-find-collection60173
-Node: Macro expand61119
-Node: racket-stepper-mode61389
-Node: racket-expand-file62427
-Node: racket-expand-region63151
-Node: racket-expand-definition63517
-Node: racket-expand-last-sexp63906
-Node: Other64258
-Node: racket-unvisit64441
-Node: racket-mode-start-faster64676
-Node: Showing information65857
-Node: racket-show-pseudo-tooltip66159
-Node: racket-show-echo-area66784
-Node: racket-show-header-line67081
-Node: racket-show-pos-tip67601
-Node: Associating edit buffers with REPL buffers67878
-Node: racket-repl-buffer-name-shared68275
-Node: racket-repl-buffer-name-unique68704
-Node: racket-repl-buffer-name-project69176
-Node: racket-project-root69711
-Node: Browsing file URLs with anchors70164
-Node: racket-browse-url-using-temporary-file70424
-Node: Variables71936
-Node: General variables72198
-Node: racket-program72721
-Node: racket-command-timeout72904
-Node: racket-memory-limit73374
-Node: racket-error-context73980
-Node: racket-user-command-line-arguments75097
-Node: racket-path-from-emacs-to-racket-function75956
-Node: racket-path-from-racket-to-emacs-function76643
-Node: racket-browse-url-function77435
-Node: racket-xp-after-change-refresh-delay77838
-Node: racket-xp-highlight-unused-regexp78255
-Node: racket-documentation-search-location78715
-Node: REPL variables79519
-Node: racket-repl-buffer-name-function79920
-Node: racket-submodules-to-run80932
-Node: racket-history-filter-regexp81678
-Node: racket-images-inline82025
-Node: racket-imagemagick-props82273
-Node: racket-images-keep-last82881
-Node: racket-images-system-viewer83135
-Node: racket-pretty-print83409
-Node: Other variables83617
-Node: racket-indent-curly-as-sequence83953
-Node: racket-indent-sequence-depth84336
-Node: racket-pretty-lambda85026
-Node: racket-smart-open-bracket-enable85433
-Node: racket-logger-config85889
-Node: Experimental debugger variables86684
-Node: racket-debuggable-files86930
-Node: Showing informationx87624
-Node: racket-show-functions87820
-Node: Faces88827
-Node: All88930
-Node: racket-keyword-argument-face89370
-Node: racket-selfeval-face89580
-Node: racket-here-string-face89839
-Node: racket-xp-def-face90048
-Node: racket-xp-use-face90281
-Node: racket-xp-unused-face90505
-Node: racket-logger-config-face90768
-Node: racket-logger-topic-face91018
-Node: racket-logger-fatal-face91262
-Node: racket-logger-error-face91510
-Node: racket-logger-warning-face91762
-Node: racket-logger-info-face92019
-Node: racket-logger-debug-face92267
+Node: Introduction4190
+Ref: Introduction-Footnote-15349
+Node: Install5744
+Node: Configure Emacs to use MELPA6078
+Node: Install Racket Mode6551
+Node: Minimal Racket6852
+Node: Uninstall7416
+Node: Update7704
+Node: Upgrading all packages7867
+Node: Updating just Racket Mode8521
+Node: Configure9242
+Node: Key bindings10406
+Node: Font-lock (syntax highlighting)11023
+Node: Completion12307
+Node: Xref (definitions and references)14174
+Node: Indent17117
+Node: paredit17361
+Node: smartparens18354
+Node: Edit buffers and REPL buffers18729
+Node: eldoc19584
+Node: Start faster20843
+Node: Unicode input method21070
+Node: Reference21768
+Node: Commands22260
+Node: Edit22579
+Node: racket-mode23132
+Node: racket-insert-lambda25912
+Node: racket-fold-all-tests26200
+Node: racket-unfold-all-tests26437
+Node: racket-tidy-requires26680
+Node: racket-trim-requires27724
+Node: racket-base-requires28434
+Node: racket-add-require-for-identifier29699
+Node: racket-indent-line30792
+Node: racket-smart-open-bracket-mode32780
+Node: racket-insert-closing34427
+Node: racket-cycle-paren-shapes34920
+Node: racket-backward-up-list35171
+Node: racket-unicode-input-method-enable35731
+Node: racket-align37731
+Node: racket-unalign39699
+Node: racket-complete-at-point40032
+Node: Explore40454
+Node: racket-xp-mode40673
+Node: racket-xp-describe46578
+Node: racket-xp-documentation47922
+Node: racket-documentation-search49053
+Node: Run50040
+Node: racket-repl-mode50445
+Node: racket-run53087
+Node: racket-run-and-switch-to-repl55005
+Node: racket-run-module-at-point55295
+Node: racket-repl55802
+Node: racket-repl-describe56770
+Node: racket-repl-documentation58004
+Node: racket-racket59112
+Node: racket-profile59330
+Node: racket-profile-mode60047
+Node: racket-logger61062
+Node: racket-logger-mode61283
+Node: racket-debug-mode62406
+Node: Test65977
+Node: racket-test66122
+Node: racket-raco-test66795
+Node: Eval67042
+Node: racket-send-region67234
+Node: racket-send-definition67452
+Node: racket-send-last-sexp67701
+Node: Collections68011
+Node: racket-open-require-path68205
+Node: racket-find-collection68847
+Node: Macro expand69761
+Node: racket-stepper-mode70031
+Node: racket-expand-file71069
+Node: racket-expand-region71795
+Node: racket-expand-definition72161
+Node: racket-expand-last-sexp72550
+Node: Other72902
+Node: racket-mode-start-faster73066
+Node: Showing information74224
+Node: racket-show-pseudo-tooltip74526
+Node: racket-show-echo-area75151
+Node: racket-show-header-line75448
+Node: racket-show-pos-tip75968
+Node: Associating edit buffers with REPL buffers76245
+Node: racket-repl-buffer-name-shared76642
+Node: racket-repl-buffer-name-unique77075
+Node: racket-repl-buffer-name-project77551
+Node: racket-project-root78090
+Node: Browsing file URLs with anchors78543
+Node: racket-browse-url-using-temporary-file78803
+Node: Variables80315
+Node: General variables80577
+Node: racket-program81100
+Node: racket-command-timeout81283
+Node: racket-memory-limit81753
+Node: racket-error-context82359
+Node: racket-user-command-line-arguments83476
+Node: racket-path-from-emacs-to-racket-function84335
+Node: racket-path-from-racket-to-emacs-function85022
+Node: racket-browse-url-function85814
+Node: racket-xp-after-change-refresh-delay86217
+Node: racket-xp-highlight-unused-regexp86634
+Node: racket-documentation-search-location87094
+Node: REPL variables87898
+Node: racket-repl-buffer-name-function88299
+Node: racket-submodules-to-run89321
+Node: racket-history-filter-regexp90067
+Node: racket-images-inline90414
+Node: racket-imagemagick-props90662
+Node: racket-images-keep-last91270
+Node: racket-images-system-viewer91524
+Node: racket-pretty-print91798
+Node: Other variables92006
+Node: racket-indent-curly-as-sequence92342
+Node: racket-indent-sequence-depth92725
+Node: racket-pretty-lambda93415
+Node: racket-smart-open-bracket-enable93822
+Node: racket-logger-config94278
+Node: Experimental debugger variables95073
+Node: racket-debuggable-files95319
+Node: Showing informationx96013
+Node: racket-show-functions96209
+Node: Faces97216
+Node: All97319
+Node: racket-keyword-argument-face97759
+Node: racket-selfeval-face97969
+Node: racket-here-string-face98228
+Node: racket-xp-def-face98437
+Node: racket-xp-use-face98670
+Node: racket-xp-unused-face98894
+Node: racket-logger-config-face99157
+Node: racket-logger-topic-face99407
+Node: racket-logger-fatal-face99651
+Node: racket-logger-error-face99899
+Node: racket-logger-warning-face100151
+Node: racket-logger-info-face100408
+Node: racket-logger-debug-face100656
 
 End Tag Table
 

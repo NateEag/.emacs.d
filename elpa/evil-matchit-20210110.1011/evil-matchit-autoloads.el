@@ -234,6 +234,22 @@ Return information of current tag: (list position-of-word word)." nil nil)
 
 ;;;***
 
+;;;### (autoloads nil "evil-matchit-octave" "evil-matchit-octave.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from evil-matchit-octave.el
+
+(autoload 'evilmi-octave-get-tag "evil-matchit-octave" "\
+Get current tag info." nil nil)
+
+(autoload 'evilmi-octave-jump "evil-matchit-octave" "\
+Use INFO returned by `evilmi-octave-get-tag' and NUM to jump to matched tag.
+
+\(fn INFO NUM)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-octave" '("evilmi-octave-")))
+
+;;;***
+
 ;;;### (autoloads nil "evil-matchit-org" "evil-matchit-org.el" (0
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-org.el

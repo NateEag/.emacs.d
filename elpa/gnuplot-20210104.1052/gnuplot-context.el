@@ -230,31 +230,20 @@
 
 ;;; Code:
 
-
-;; Library dependencies
-(eval-when-compile
-  (require 'cl)
-
-  ;; Prevent compiler warnings about undefined functions
-  (require 'gnuplot))
-
-;; We need ElDoc support
+(require 'cl-lib)
+(require 'gnuplot)
 (require 'eldoc)
-
-;; Compatibility for Emacs version < 23
-(eval-when-compile
-  (when (not (fboundp 'string-match-p))
-    (defmacro string-match-p (&rest args)
-      `(save-match-data (string-match ,@args)))))
+(require 'info)
+(require 'info-look)
 
 
 ;;;; The tokenizer.
 
-(defstruct gnuplot-token
-  start         ; Buffer start position
+(cl-defstruct gnuplot-token
+  start     ; Buffer start position
   end       ; Buffer end position
   id        ; Text
-  type)         ; a symbol: name, number, string, operator, separator
+  type)     ; a symbol: name, number, string, operator, separator
 
 (defvar gnuplot-operator-regexp
   (eval-when-compile
@@ -447,7 +436,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
 
      ;; Symbols match token types or calls to other patterns
      ((symbolp pat)
-      (case pat
+      (cl-case pat
         ((any) `((any)))
         ((name number string separator) `((token-type ,pat)))
         (t `((call ,pat)))))
@@ -460,11 +449,11 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
      ;; Other forms combine simpler patterns
      (t
       (let ((type (car pat)))
-        (case type
+        (cl-case type
           ;; (sequence...): concatenate patterns, with optional eldoc
           ;; and info strings
           ((sequence)
-           (destructuring-bind
+           (cl-destructuring-bind
                (subpats eldoc info)
                (gnuplot-filter-arg-list (cdr pat))
              (let ((eldoc-push '()) (eldoc-pop '())
@@ -498,7 +487,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
 
             (t              ; two patterns
              (let* ((pat1 (cadr pat))
-                    (pat2 (caddr pat))
+                    (pat2 (cl-caddr pat))
                     (pat1-c (gnuplot-compile-pattern pat1))
                     (pat2-c (gnuplot-compile-pattern pat2))
                     (pat1-l (length pat1-c))
@@ -536,13 +525,13 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
           ;; Syntactic sugar for delimited lists
           ((delimited-list)
            (let* ((item (cadr pat))
-                  (sep (caddr pat)))
+                  (sep (cl-caddr pat)))
              (gnuplot-compile-pattern
               `(sequence ,item (many (sequence ,sep ,item))))))
 
           ;; keywords
           ((kw)
-           (destructuring-bind (regex name)
+           (cl-destructuring-bind (regex name)
                (gnuplot-keyword-helper (cdr pat))
              `((keyword ,regex ,name))))
 
@@ -579,7 +568,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
           (eldoc nil) (info nil))
       (dolist (item args)
         (let ((type (car-safe item)))
-          (case type
+          (cl-case type
             ((:eldoc) (setq eldoc (cadr item)))
             ((:no-info) (setq info :no-info)) ; inhibit stack scanning
             ((:info) (setq info (cadr item)))
@@ -641,7 +630,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
           (let ((name (car chunk))
                 (code (cdr chunk)))
             (setf (aref object-code i) `(label ,name))
-            (incf i)
+            (cl-incf i)
             (puthash name i name->offset)
             (while code
               (setf (aref object-code i) (car code)
@@ -654,7 +643,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
         (let ((pattern-name nil))
           (dotimes (i (length object-code))
             (let ((inst (aref object-code i)))
-              (case (car inst)
+              (cl-case (car inst)
                 ((label)
                  (setq pattern-name (cadr inst)))
 
@@ -1800,15 +1789,15 @@ there."
       (when start-symbol        ; HACK FIXME
         (let ((look-for `(label ,start-symbol)))
           (while (not (equal (aref instructions pc) look-for))
-            (incf pc))
-          (incf pc)))
+            (cl-incf pc))
+          (cl-incf pc)))
 
       (setq gnuplot-completions nil
             gnuplot-eldoc nil
             gnuplot-info-at-point nil
             gnuplot-captures nil)
 
-      (flet ((advance
+      (cl-flet ((advance
               ()
               (pop tokens)
               (if (and (null tokens) (not completing-p))
@@ -1823,11 +1812,11 @@ there."
                  (end-of-tokens (null tokens)))
             (gnuplot-trace "%s\t%s\t%s\n" pc inst (and token (gnuplot-token-id token)))
 
-            (case opcode
+            (cl-case opcode
               ;; (literal LITERAL NO-COMPLETE)
               ((literal)
                (let ((expect (cadr inst))
-                     (no-complete (caddr inst)))
+                     (no-complete (cl-caddr inst)))
                  (cond (end-of-tokens
                         (unless no-complete
                           (gnuplot-trace "\tpushing \"%s\" to completions\n" expect)
@@ -1852,7 +1841,7 @@ there."
               ;; regexp-matches REGEXP, use NAME for completions
               ((keyword)
                (let ((regexp (cadr inst))
-                     (name (caddr inst)))
+                     (name (cl-caddr inst)))
                  (cond (end-of-tokens
                         (gnuplot-trace "\tpushing \"%s\" to completions\n" name)
                         (push name gnuplot-completions)
@@ -1929,7 +1918,7 @@ there."
               ;; onto the stack
               ((push)
                (let* ((type (cadr inst))
-                      (value (caddr inst)))
+                      (value (cl-caddr inst)))
                  (push `(,type ,value ,tokens) stack)))
 
               ;; (pop TYPE): pop something off the stack
@@ -1953,7 +1942,7 @@ there."
                       (record (assoc name gnuplot-captures)))
                  (if (not record)
                      (error "Gnuplot-match-tokens: no open capture group named %s" name)
-                   (setf (caddr record) tokens)
+                   (setf (cl-caddr record) tokens)
                    (gnuplot-debug (gnuplot-dump-captures)))))
 
               ;; (check-progress): make sure not stuck in an infinite loop
@@ -1981,7 +1970,7 @@ there."
                 (when (and end-of-tokens (not completing-p))
                   (gnuplot-scan-stack stack tokens))
 
-                (destructuring-bind
+                (cl-destructuring-bind
                     (bt-stack bt-tokens bt-pc bt-captures bt-progress)
                     (pop backtrack)
                   (setq stack bt-stack
@@ -2003,10 +1992,10 @@ there."
                 (not (and gnuplot-info-at-point gnuplot-eldoc)))
       (let* ((item (car stack))
              (type (car item))
-             (position (caddr item))) ; must progress by at least one token
+             (position (cl-caddr item))) ; must progress by at least one token
         (if (and (memq type '(info eldoc no-scan))
                  (not (eq position tokens)))
-            (case type
+            (cl-case type
               ((no-scan)
                (throw 'no-scan nil))
 
@@ -2041,7 +2030,7 @@ there."
   (let ((record (assoc name gnuplot-captures)))
     (if (not record) nil
       (let ((begin (cadr record))
-            (end (caddr record))
+            (end (cl-caddr record))
             (accum '()))
         (while (and begin (not (eq begin end)))
           (push (pop begin) accum))
@@ -2061,9 +2050,7 @@ there."
 ;; Completions
 (defun gnuplot-completions ()
   (gnuplot-parse-at-point t)
-  (if (featurep 'xemacs)                ; Need an alist
-      (mapcar (lambda (s) (cons s nil)) gnuplot-completions)
-    gnuplot-completions))
+  gnuplot-completions)
 
 (defun gnuplot-context-completion-at-point ()
   "Return completions of keyword preceding point, using context."

@@ -29,16 +29,8 @@
 ;; arguments appropriate the the item that was near point.  The goal
 ;; is to provide point-and-click functionality to gnuplot-mode.
 ;;
-;; gnuplot-gui is designed for gnuplot 3.7, but since much of 3.7 is
-;; backward compatible to 3.5, it will work well for that version
-;; also.
-;;
-;; gnuplot-gui.el was developed using Emacs 19.34 and is known to work
-;; on Emacs 20.x and XEmacs 20.x.  I do not know what is the earliest
-;; version for which it will work, but I make no guarantees for
-;; versions before 19.34.  Note that this makes heavy use of the
-;; widget package, so this will not work on Emacs 19.34 unless you
-;; install the widget package separately.
+;; gnuplot-gui.el was developed using GNU Emacs 25 and should be
+;; compatible with GNU Emacs 24.3 and above.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -72,9 +64,8 @@
         (require 'widget)
         (require 'wid-edit))
     (error nil)))
-(require 'cl)
+(require 'cl-lib)
 (eval-when-compile          ; suppress some compiler warnings
-  (defvar gnuplot-xemacs-p nil)
   (defvar gnuplot-quote-character nil)
   (defvar gnuplot-info-display nil)
   (defvar gnuplot-mode-map nil))
@@ -115,17 +106,7 @@ This would be done after menu insertion of Gnuplot commands."
 
 (defvar gnuplot-gui-frame nil
   "Frame used to hold the buffer for setting options.")
-(defcustom gnuplot-gui-frame-plist
-  '(height 18 width 65 border-width 0
-           user-position t top 150 left 150
-           internal-border-width 0 unsplittable t
-           default-toolbar-visible-p nil has-modeline-p nil
-           menubar-visible-p nil)
-  "Frame plist for the input run-time display frame in XEmacs."
-  :type '(repeat (group :inline t
-                        (symbol :tag "Property")
-                        (sexp :tag "Value")))
-  :group 'gnuplot-gui)
+
 (defcustom gnuplot-gui-frame-parameters
   '((height . 18)
     (width . 65)
@@ -885,13 +866,10 @@ currently supported."
       (gnuplot-gui-set-options-and-insert))))
 
 (defun gnuplot-gui-get-frame-param (param)
-  (if gnuplot-xemacs-p
-      (plist-get gnuplot-gui-frame-plist param)
-    (cdr (assoc param gnuplot-gui-frame-parameters))))
+  (cdr (assoc param gnuplot-gui-frame-parameters)))
+
 (defun gnuplot-gui-set-frame-param (param value)
-  (if gnuplot-xemacs-p
-      (plist-put gnuplot-gui-frame-plist param value)
-    (setcdr (assoc param gnuplot-gui-frame-parameters) value)))
+  (setcdr (assoc param gnuplot-gui-frame-parameters) value))
 
 (defun gnuplot-gui-set-options-and-insert ()
   "Insert arguments using a GUI interface.
@@ -952,7 +930,7 @@ Note that \"cntrparam\" is not currently supported."
                         (old-top    (gnuplot-gui-get-frame-param 'top)))
                    (when (or
                           (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
-                               (member* word '("plot" "splot" "fit")
+                               (cl-member word '("plot" "splot" "fit")
                                         :test 'string=))
                           (equal word "test"))
                      (gnuplot-gui-set-frame-param 'height 32)
@@ -960,7 +938,7 @@ Note that \"cntrparam\" is not currently supported."
                    (gnuplot-gui-prompt-for-frame word)
                    (when (or
                           (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
-                               (member* word '("plot" "splot" "fit")
+                               (cl-member word '("plot" "splot" "fit")
                                         :test 'string=))
                           (equal word "test"))
                      (gnuplot-gui-set-frame-param 'height old-height)
@@ -984,9 +962,7 @@ Note that \"cntrparam\" is not currently supported."
 
 
 (defun gnuplot-gui-y-n (foo))
-(if gnuplot-xemacs-p
-    (defalias 'gnuplot-gui-y-n 'y-or-n-p-maybe-dialog-box)
-  (defalias 'gnuplot-gui-y-n 'y-or-n-p))
+(defalias 'gnuplot-gui-y-n 'y-or-n-p)
 
 (defun gnuplot-gui-correct-command (word set term begin)
   "Check syntax of set command and terminal specifications.
@@ -1031,8 +1007,8 @@ argument, for example an axis label or a font name.  It also replaces
 bounding single quotes with double quotes, since double quotes are
 used in `gnuplot-gui-all-types'."
   (let (fixed-list quote quoted)    ; remove blanks
-    (setq list (remove* "\\s-+" list :test 'string-match)
-          list (remove* ""      list :test 'string=))
+    (setq list (cl-remove "\\s-+" list :test 'string-match)
+          list (cl-remove ""      list :test 'string=))
     (while list             ; concatinate parts of quoted string
       (if (not (string-match "^\\([\]\[()'\"]\\)" (car list)))
           (setq fixed-list (append fixed-list (list (car list))))
@@ -1083,14 +1059,14 @@ arguments."
         (while temp-list
           (cond
            ;; ---------------------------- list
-           ((member* symbol '(list list*) :test 'equal)
+           ((cl-member symbol '(list list*) :test 'equal)
             (let* ((case-fold-search nil)
-                   (match-cons (member* (concat "^" (car temp-list))
+                   (match-cons (cl-member (concat "^" (car temp-list))
                                         values :test 'string-match)))
               (if (and (car match-cons) ; " " may be first elem. of list
                        (not (string= " " (car match-cons))))
                   (setq this-cons (cons tag (car match-cons))
-                        arg-list (remove* (car temp-list) arg-list
+                        arg-list (cl-remove (car temp-list) arg-list
                                           :test 'string= :count 1)
                         temp-list nil)
                 (setq temp-list (cdr temp-list)))))
@@ -1111,16 +1087,16 @@ arguments."
             (cond ((and (string= prefix (car temp-list))
                         (string-match "^[-0-9.]+$" (cadr temp-list)))
                    (setq this-cons (cons tag (cadr temp-list))
-                         arg-list (remove* (car temp-list) arg-list
+                         arg-list (cl-remove (car temp-list) arg-list
                                            :test 'string= :count 1)
-                         arg-list (remove* (cadr temp-list) arg-list
+                         arg-list (cl-remove (cadr temp-list) arg-list
                                            :test 'string= :count 1)
                          temp-list nil))
                   ;; --------------------- number without prefix
                   ((and (not prefix)
                         (string-match "^[-0-9.]+$" (car temp-list)))
                    (setq this-cons (cons tag (car temp-list))
-                         arg-list (remove* (car temp-list) arg-list
+                         arg-list (cl-remove (car temp-list) arg-list
                                            :test 'string= :count 1)
                          temp-list nil))
                   (t
@@ -1130,8 +1106,8 @@ arguments."
             (if (and (string= prefix (car temp-list))
                      (string-match "^[-0-9.]+$" (cadr temp-list)))
                 (let ((this-car (cadr temp-list))
-                      (this-cdr (if (string-match "^[-0-9.]+$" (caddr temp-list))
-                                    (caddr temp-list) "")))
+                      (this-cdr (if (string-match "^[-0-9.]+$" (cl-caddr temp-list))
+                                    (cl-caddr temp-list) "")))
                   (setq this-cons (cons tag (cons this-car this-cdr))
                         temp-list nil))
               (setq temp-list (cdr temp-list))))
@@ -1146,7 +1122,7 @@ arguments."
                 (setq this-cons
                       (cons tag (cons (match-string 1 (car temp-list))
                                       (match-string 2 (car temp-list))))
-                      arg-list (remove* (car temp-list) arg-list
+                      arg-list (cl-remove (car temp-list) arg-list
                                         :test 'string= :count 1)
                       temp-list nil)
               (setq temp-list (cdr temp-list)) ))
@@ -1157,7 +1133,7 @@ arguments."
                                       ")") ; closing paren
                               (car temp-list))
                 (let* ((list (split-string (car temp-list) "[ \t(),]+"))
-                       (list (remove* "" list :test 'string=))
+                       (list (cl-remove "" list :test 'string=))
                        (return ()))
                   (while list
                     (if (string-match "['\"]\\([^'\"]*\\)['\"]" (car list))
@@ -1168,18 +1144,18 @@ arguments."
                       (setq return (append return (list "" (car list)))))
                     (setq list (cdr list)) )
                   (setq this-cons (cons tag return)
-                        arg-list (remove* (car temp-list) arg-list
+                        arg-list (cl-remove (car temp-list) arg-list
                                           :test 'string= :count 1)
                         temp-list nil))
               (setq temp-list (cdr temp-list))) )
            ;; ---------------------------- string, file, format
-           ((member* symbol '(string file format) :test 'equal)
+           ((cl-member symbol '(string file format) :test 'equal)
             (if (string-match (concat "['\"]" ; opening quote
                                       "\\([^'\"]*\\)" ; string
                                       "['\"]") ; closing quote
                               (car temp-list))
                 (setq this-cons (cons tag (match-string 0 (car temp-list)))
-                      arg-list (remove* (car temp-list) arg-list
+                      arg-list (cl-remove (car temp-list) arg-list
                                         :test 'string= :count 1)
                       temp-list nil)
               (setq temp-list (cdr temp-list)) ))
@@ -1187,9 +1163,9 @@ arguments."
            ((equal symbol 'string*)
             (if (string= prefix (car temp-list))
                 (setq this-cons (cons tag (cadr temp-list))
-                      arg-list (remove* (car temp-list) arg-list
+                      arg-list (cl-remove (car temp-list) arg-list
                                         :test 'string= :count 1)
-                      arg-list (remove* (cadr temp-list) arg-list
+                      arg-list (cl-remove (cadr temp-list) arg-list
                                         :test 'string= :count 1)
                       temp-list nil)
               (setq temp-list (cdr temp-list)) ) )
@@ -1281,25 +1257,15 @@ SAVE-FRAME is non-nil when the widgets are being reset."
           gnuplot-current-buffer (current-buffer)
           gnuplot-current-buffer-point (point-marker))
     (unless (and gnuplot-gui-frame (frame-live-p gnuplot-gui-frame))
-      (setq gnuplot-gui-frame (if gnuplot-xemacs-p
-                                  (make-frame gnuplot-gui-frame-plist)
-                                (make-frame gnuplot-gui-frame-parameters))))
+      (setq gnuplot-gui-frame (make-frame gnuplot-gui-frame-parameters)))
     (select-frame gnuplot-gui-frame)
     ;;(set-frame-position gnuplot-gui-frame 150 150) ;; so herky-jerky
-    (if gnuplot-xemacs-p
-        (set-mouse-position (selected-window) 0 0)
-      (set-mouse-position gnuplot-gui-frame 0 0)))
+    (set-mouse-position gnuplot-gui-frame 0 0))
   (kill-buffer (get-buffer-create "*Gnuplot GUI*"))
   (switch-to-buffer (get-buffer-create "*Gnuplot GUI*"))
   (kill-all-local-variables)
-  (if gnuplot-xemacs-p
-      (progn
-        (set (make-local-variable 'frame-title-format)
-             "Set Gnuplot Options")
-        (set (make-local-variable 'frame-icon-title-format)
-             "Set Gnuplot Options"))
-    (modify-frame-parameters (selected-frame)
-                             '((title . "Set Gnuplot Options"))) )
+  (modify-frame-parameters (selected-frame)
+                           '((title . "Set Gnuplot Options")))
   (widget-insert "\nSet options for \"" item "\"  ")
   (let (tag help val)
     (cond ((string-match "^[xyz]2?tics" item)
@@ -1331,19 +1297,19 @@ SAVE-FRAME is non-nil when the widgets are being reset."
       (widget-insert "\t")      ; insert the appropriate widget
       (cond
        ;;------------------------------ list, list* ------------
-       ((member* (eval wtype) '(list list*) :test 'equal)
+       ((cl-member (eval wtype) '(list list*) :test 'equal)
         (let ((starred (if (equal (eval wtype) 'list*) t nil)))
           (gnuplot-gui-menu-choice tag default list starred)))
        ;;------------------------------ number, tag, fontsize --
-       ((member* (eval wtype) '(number tag fontsize) :test 'equal)
+       ((cl-member (eval wtype) '(number tag fontsize) :test 'equal)
         (gnuplot-gui-number tag default prefix))
        ;;------------------------------ position ---------------
        ;;------------------------------ range, pair ------------
-       ((member* (eval wtype) '(range pair) :test 'equal)
+       ((cl-member (eval wtype) '(range pair) :test 'equal)
         (let ((is-range (equal (eval wtype) 'range)))
           (gnuplot-gui-range tag default prefix is-range)))
        ;;------------------------------ string, string* --------
-       ((member* (eval wtype) '(string string*) :test 'equal)
+       ((cl-member (eval wtype) '(string string*) :test 'equal)
         (let ((starred (if (equal (eval wtype) 'string) nil t)))
           (gnuplot-gui-string tag default prefix starred)))
        ;;------------------------------ format -----------------
@@ -1466,8 +1432,7 @@ SAVE-FRAME is non-nil when the widgets are being reset."
                                     (:bold t :foreground "tan"))
                                    (t
                                     (:italic t)))
-  "Face used for push-buttons.
-Only used in Emacs.  XEmacs displays push-buttons with a pixmap."
+  "Face used for push-buttons."
   :group 'gnuplot-faces)
 (defface gnuplot-gui-labels-face '((((class color) (background light))
                                     (:bold t :foreground "darkslateblue"))

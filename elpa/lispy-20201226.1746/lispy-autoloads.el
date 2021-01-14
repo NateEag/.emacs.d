@@ -94,7 +94,7 @@ backward through lists, which is useful to move into special.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "eval-error" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
 
 ;;;***
 

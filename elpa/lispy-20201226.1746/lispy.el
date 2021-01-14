@@ -4364,37 +4364,46 @@ SYMBOL is a string."
     (hy-mode
      le-hy lispy--eval-hy)))
 
-(defvar lispy-eval-error nil
-  "The eval function may set this when there's an error.")
+(defvar lispy-eval-output nil
+  "The eval function may set this when there's output.")
 
 (declare-function cider--display-interactive-eval-result "ext:cider-overlays")
 (declare-function eros--eval-overlay "ext:eros")
 
+(define-error 'eval-error "Eval error")
+
 (defun lispy-eval (arg)
-  "Eval last sexp.
-When ARG is 2, insert the result as a comment."
+  "Eval the current sexp and display the result.
+When ARG is 2, insert the result as a comment.
+When at an outline, eval the outline."
   (interactive "p")
-  (cond ((eq arg 2)
-         (lispy-eval-and-comment))
-        ((and (looking-at lispy-outline)
-              (looking-at lispy-outline-header))
-         (lispy-eval-outline))
-        (t
-         (let ((res (lispy--eval nil)))
-           (when (member res '(nil ""))
-             (setq res lispy-eval-error))
-           (cond ((eq lispy-eval-display-style 'message)
-                  (lispy-message res))
-                 ((or (fboundp 'cider--display-interactive-eval-result)
-                      (require 'cider nil t))
-                  (cider--display-interactive-eval-result
-                   res (cdr (lispy--bounds-dwim))))
-                 ((or (fboundp 'eros--eval-overlay)
-                      (require 'eros nil t))
-                  (eros--eval-overlay
-                   res (cdr (lispy--bounds-dwim))))
-                 (t
-                  (error "Please install CIDER >= 0.10 or eros to display overlay")))))))
+  (setq lispy-eval-output nil)
+  (condition-case e
+      (cond ((eq arg 2)
+             (lispy-eval-and-comment))
+            ((and (looking-at lispy-outline)
+                  (looking-at lispy-outline-header))
+             (lispy-eval-outline))
+            (t
+             (let ((res (lispy--eval nil)))
+               (when (memq major-mode lispy-clojure-modes)
+                 (setq res (lispy--clojure-pretty-string res)))
+               (when lispy-eval-output
+                 (setq res (concat lispy-eval-output res)))
+               (cond ((eq lispy-eval-display-style 'message)
+                      (lispy-message res))
+                     ((or (fboundp 'cider--display-interactive-eval-result)
+                          (require 'cider nil t))
+                      (cider--display-interactive-eval-result
+                       res (cdr (lispy--bounds-dwim))))
+                     ((or (fboundp 'eros--eval-overlay)
+                          (require 'eros nil t))
+                      (eros--eval-overlay
+                       res (cdr (lispy--bounds-dwim))))
+                     (t
+                      (error "Please install CIDER >= 0.10 or eros to display overlay"))))))
+    (eval-error
+     (lispy-message (cdr e)))))
 
 (defun lispy-forward-outline ()
   (let ((pt (point)))
@@ -4485,15 +4494,11 @@ Return the result of the last evaluation as a string."
 (defun lispy-eval-single-outline ()
   (let* ((pt (point))
          (bnd (lispy--eval-bounds-outline))
-         (res (lispy--eval
-               (lispy--string-dwim bnd))))
-    (when (and (null res)
-               (eq major-mode 'python-mode)
-               (string-match "^\\(.*Error:.*\\)" lispy-eval-error))
-      (setq res (match-string-no-properties 1 lispy-eval-error)))
-    (cond ((null res)
-           (lispy-message lispy-eval-error))
-          ((equal res "")
+         (res
+          (lispy--eval-dwim bnd)))
+    (when lispy-eval-output
+      (setq res (concat lispy-eval-output res)))
+    (cond ((equal res "")
            (message "(ok)"))
           ((= ?: (char-before (line-end-position)))
            (goto-char (cdr bnd))
@@ -4531,18 +4536,26 @@ If STR is too large, pop it to a buffer instead."
         (let ((inhibit-read-only t))
           (delete-region (point-min) (point-max))
           (insert str)
-          (pp-buffer)
+          (ignore-errors (pp-buffer))
           (goto-char (point-min)))
         str)
     (condition-case nil
         (message str)
       (error (message (replace-regexp-in-string "%" "%%" str))))))
 
-(defun lispy--eval-dwim ()
-  (let ((eval-str (if (eq major-mode 'python-mode)
-                      (lispy-eval-python-str)
-                    (lispy--string-dwim))))
-    (lispy--eval eval-str)))
+(defun lispy--eval-dwim (&optional bnd)
+  (let ((eval-str
+         (cond (bnd
+                (lispy--string-dwim bnd))
+               ((eq major-mode 'python-mode)
+                (lispy-eval-python-str))
+               (t
+                (lispy--string-dwim)))))
+    (if (string= "" eval-str)
+        ""
+      (condition-case e
+          (lispy--eval eval-str)
+        (eval-error (cdr e))))))
 
 (defun lispy-eval-and-insert ()
   "Eval last sexp and insert the result."
@@ -4595,7 +4608,7 @@ If STR is too large, pop it to a buffer instead."
                        (point))))))))
             ((lispy-left-p)
              (lispy-different)))
-      (lispy--insert-eval-result (or str lispy-eval-error))
+      (lispy--insert-eval-result str)
       (unless (eolp)
         (newline)))
     (unless (eq major-mode 'python-mode)
@@ -4841,6 +4854,14 @@ When ARG is non-nil, force select the window."
 
 (declare-function cider-doc-lookup "ext:cider-doc")
 
+(defun lispy-show-top-level ()
+  "Show first line of top-level form containing point."
+  (interactive)
+  (save-excursion
+    (beginning-of-defun)
+    (message "%s"
+             (buffer-substring (point-at-bol) (point-at-eol)))))
+
 (defun lispy-describe ()
   "Display documentation for `lispy--current-function'."
   (interactive)
@@ -5084,7 +5105,8 @@ Sexp is obtained by exiting the list ARG times."
     (lispy--remember)
     (let ((level-up (1- (funcall outline-level))))
       (when (> level-up 0)
-        (re-search-backward (format "^#\\*\\{1,%d\\} " level-up) nil t)))))
+        (re-search-backward
+         (format "^%s\\*\\{1,%d\\} " lispy-outline-header level-up) nil t)))))
 
 (defun lispy-outline-right ()
   "Move right."
@@ -5157,22 +5179,32 @@ When region is active, call `lispy-mark-car'."
           (t
            (lispy--normalize-1)))))
 
-(defun lispy-shifttab (arg)
-  "Hide/show outline summary.
-When ARG isn't nil, show table of contents."
-  (interactive "P")
+(defun lispy--show-hidden-outlines ()
+  (remove-overlays (point-min) (point-max) 'invisible 'outline))
+
+(defun lispy--org-content ()
   (require 'org)
+  (lispy--show-hidden-outlines)
+  (save-excursion
+    (goto-char (point-max))
+    (let ((last (point)))
+      (while (re-search-backward outline-regexp nil t)
+        (org-flag-region (line-end-position) last t 'outline)
+        (setq last (line-end-position 0))))))
+
+(defvar lispy--outline-state 'show-all)
+
+(defun lispy-shifttab ()
+  "Hide/show outline summary."
+  (interactive)
   (outline-minor-mode 1)
-  (let* ((outline-regexp lispy-outline)
-         (org-outline-regexp outline-regexp)
-         (org-outline-regexp-bol
-          (car (split-string lispy-outline))))
-    (lispy-flet (org-unlogged-message (&rest _x))
-      (if arg
-          (org-content)
-        (when (eq org-cycle-global-status 'overview)
-          (setq org-cycle-global-status 'contents))
-        (org-cycle-internal-global))))
+  (let ((outline-regexp lispy-outline))
+    (if (eq lispy--outline-state 'show-all)
+        (progn
+          (setq lispy--outline-state 'content)
+          (lispy--org-content))
+      (setq lispy--outline-state 'show-all)
+      (lispy--show-hidden-outlines)))
   (recenter))
 
 ;;* Locals: refactoring
@@ -5986,7 +6018,7 @@ An equivalent of `cl-destructuring-bind'."
   ("t" lispy-view-test "view test")
   ("u" lispy-unbind-variable "unbind let-var")
   ("v" lispy-eval-expression "eval")
-  ;; ("w" nil)
+  ("w" lispy-show-top-level "where")
   ;; ("x" nil)
   ;; ("y" nil)
   ;; ("z" nil)
@@ -6998,6 +7030,7 @@ so that no other packages disturb the match data."
      ;; misc
      (defhydra . 1)
      (ivy-set-actions . 1)
+     (ivy-add-actions . 1)
      (ivy-set-sources . 1)
      (ivy-set-occur . 1)
      (ivy-configure . 1)))
@@ -7329,7 +7362,9 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
   (goto-char (point-min))
   (while (re-search-forward regex nil t)
     (cond ((string= (match-string 0) "ly-raw")
-           (up-list))
+           (if (looking-at " clojure-\\(map\\|set\\|lambda\\)")
+               (goto-char (match-end 0))
+             (up-list)))
           ((lispy--in-string-or-comment-p))
           (t
            (replace-match
@@ -7428,8 +7463,8 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                 (lispy--read-1)
                 ;; ——— ? char syntax ——————————
                 (goto-char (point-min))
-                (if (memq major-mode '(clojure-mode hy-mode))
-                    (lispy--read-replace "[[:alnum:]-/*<>_?.,\\\\:!@#]+" "clojure-symbol")
+                (if (memq major-mode (cons 'hy-mode lispy-clojure-modes))
+                    (lispy--read-replace "[[:alnum:]-/*<>_?.,\\\\:!@#=]+" "clojure-symbol")
                   (while (re-search-forward "\\(?:\\s-\\|\\s(\\)\\?" nil t)
                     (unless (lispy--in-string-or-comment-p)
                       (let ((pt (point))
@@ -8772,7 +8807,7 @@ Return an appropriate `setq' expression when in `let', `dolist',
           ((progn
              (lispy--out-backward 1)
              (looking-back
-              "(\\(?:lexical-\\)?let\\(?:\\*\\|-when-compile\\)?[ \t\n]*"
+              "(\\(?:lexical-\\|if-\\|when-\\)?let\\(?:\\*\\|-when-compile\\)?[ \t\n]*"
               (line-beginning-position 0)))
            (cons
             (if (eq major-mode 'scheme-mode)

@@ -93,7 +93,7 @@ build queries and cursors once, then reuse them.
 
 \(fn PATTERNS &optional MATCHES TAG-ASSIGNER)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-debug" '("tree-sitter-debug--")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-debug" '("tree-sitter-debug-")))
 
 ;;;***
 

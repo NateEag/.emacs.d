@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/git-commit-20200828.1753/git-commit.el  -*- no-byte-compile: t -*-
-(define-package "git-commit" "20200828.1753" "Edit Git commit messages" '((emacs "25.1") (dash "20200524") (transient "20200601") (with-editor "20200522")) :commit "64341b02d24144b519a3f06362f0a7e839ef7189" :keywords '("git" "tools" "vc") :maintainer '("Jonas Bernoulli" . "jonas@bernoul.li") :url "https://github.com/magit/magit")

@@ -1,6 +1,6 @@
 ;;; git-commit.el --- Edit Git commit messages  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2020  The Magit Project Contributors
+;; Copyright (C) 2010-2021  The Magit Project Contributors
 ;;
 ;; You should have received a copy of the AUTHORS.md file which
 ;; lists all contributors.  If not, see http://magit.vc/authors.
@@ -12,8 +12,8 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20200524") (transient "20200601") (with-editor "20200522"))
-;; Package-Version: 20200828.1753
-;; Package-Commit: 64341b02d24144b519a3f06362f0a7e839ef7189
+;; Package-Version: 20210102.1242
+;; Package-Commit: 25f432551347468ce97b8b03987e59092e91f8f0
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -119,6 +119,7 @@
 (require 'magit-git nil t)
 (require 'magit-utils nil t)
 (require 'ring)
+(require 'rx)
 (require 'server)
 (require 'transient)
 (require 'with-editor)
@@ -195,6 +196,7 @@ The major mode configured here is turned on by the minor mode
   :get (and (featurep 'magit-utils) 'magit-hook-custom-get)
   :options '(git-commit-save-message
              git-commit-setup-changelog-support
+             magit-generate-changelog
              git-commit-turn-on-auto-fill
              git-commit-turn-on-flyspell
              git-commit-propertize-diff
@@ -578,6 +580,8 @@ Don't use it directly, instead enable `global-git-commit-mode'."
 
 (defun git-commit-setup-changelog-support ()
   "Treat ChangeLog entries as unindented paragraphs."
+  (when (fboundp 'log-indent-fill-entry) ; New in Emacs 27.
+    (setq-local fill-paragraph-function #'log-indent-fill-entry))
   (setq-local fill-indent-according-to-mode t)
   (setq-local paragraph-start (concat paragraph-start "\\|\\*\\|(")))
 
@@ -652,17 +656,29 @@ conventions are checked."
   "Cycle backward through message history, after saving current message.
 With a numeric prefix ARG, go back ARG comments."
   (interactive "*p")
-  (when (and (git-commit-save-message) (> arg 0))
-    (setq log-edit-comment-ring-index
-          (log-edit-new-comment-index
-           arg (ring-length log-edit-comment-ring))))
-  (save-restriction
-    (goto-char (point-min))
-    (narrow-to-region (point)
-                      (if (re-search-forward (concat "^" comment-start) nil t)
-                          (max 1 (- (point) 2))
-                        (point-max)))
-    (log-edit-previous-comment arg)))
+  (let ((len (ring-length log-edit-comment-ring)))
+    (if (<= len 0)
+        (progn (message "Empty comment ring") (ding))
+      ;; Unlike `log-edit-previous-comment' we save the current
+      ;; non-empty and newly written comment, because otherwise
+      ;; it would be irreversibly lost.
+      (when-let ((message (git-commit-buffer-message)))
+        (unless (ring-member log-edit-comment-ring message)
+          (ring-insert log-edit-comment-ring message)
+          (cl-incf arg)
+          (setq len (ring-length log-edit-comment-ring))))
+      ;; Delete the message but not the instructions at the end.
+      (save-restriction
+        (goto-char (point-min))
+        (narrow-to-region
+         (point)
+         (if (re-search-forward (concat "^" comment-start) nil t)
+             (max 1 (- (point) 2))
+           (point-max)))
+        (delete-region (point-min) (point)))
+      (setq log-edit-comment-ring-index (log-edit-new-comment-index arg len))
+      (message "Comment %d" (1+ log-edit-comment-ring-index))
+      (insert (ring-ref log-edit-comment-ring log-edit-comment-ring-index)))))
 
 (defun git-commit-next-message (arg)
   "Cycle forward through message history, after saving current message.
@@ -857,7 +873,8 @@ Added to `font-lock-extend-region-functions'."
     "Changes not staged for commit:"
     "Unmerged paths:"
     "Author:"
-    "Date:"))
+    "Date:")
+  "Also fontified outside of comments in `git-commit-font-lock-keywords-2'.")
 
 (defconst git-commit-font-lock-keywords-1
   '(;; Pseudo headers
@@ -865,8 +882,6 @@ Added to `font-lock-extend-region-functions'."
                        (regexp-opt git-commit-known-pseudo-headers))
               (1 'git-commit-known-pseudo-header)
               (2 'git-commit-pseudo-header)))
-    ("^[-a-zA-Z]+: [^<]+? <[^>]+>"
-     (0 'git-commit-pseudo-header))
     ;; Summary
     (eval . `(,(git-commit-summary-regexp)
               (1 'git-commit-summary)))
@@ -892,7 +907,13 @@ Added to `font-lock-extend-region-functions'."
               (1 'git-commit-comment-heading t)))
     (eval . `(,(format "^%s\t\\(?:\\([^:\n]+\\):\\s-+\\)?\\(.*\\)" comment-start)
               (1 'git-commit-comment-action t t)
-              (2 'git-commit-comment-file t)))))
+              (2 'git-commit-comment-file t)))
+    ;; "commit HASH"
+    (eval . `(,(rx bol "commit " (1+ alnum) eol)
+              (0 'git-commit-pseudo-header)))
+    ;; `git-commit-comment-headings' (but not in commented lines)
+    (eval . `(,(rx-to-string `(seq bol (or ,@git-commit-comment-headings) (1+ blank) (1+ nonl) eol))
+              (0 'git-commit-pseudo-header)))))
 
 (defconst git-commit-font-lock-keywords-3
   `(,@git-commit-font-lock-keywords-2
@@ -935,8 +956,12 @@ Added to `font-lock-extend-region-functions'."
     (modify-syntax-entry ?`  "." table)
     (set-syntax-table table))
   (setq-local comment-start
-              (or (ignore-errors
-                    (car (process-lines "git" "config" "core.commentchar")))
+              (or (with-temp-buffer
+                    (call-process "git" nil (current-buffer) nil
+                                  "config" "core.commentchar")
+                    (unless (bobp)
+                      (goto-char (point-min))
+                      (buffer-substring (point) (line-end-position))))
                   "#"))
   (setq-local comment-start-skip (format "^%s+[\s\t]*" comment-start))
   (setq-local comment-end-skip "\n")

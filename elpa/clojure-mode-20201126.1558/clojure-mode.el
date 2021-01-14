@@ -10,8 +10,8 @@
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20201001.1449
-;; Package-Commit: 75c28897c7e91aa130c71c076aa2a6ce2e02da8f
+;; Package-Version: 20201126.1558
+;; Package-Commit: 53ef8ac076ae7811627fbdd408e519ab7fca9a0b
 ;; Keywords: languages clojure clojurescript lisp
 ;; Version: 5.13.0-snapshot
 ;; Package-Requires: ((emacs "25.1"))
@@ -471,7 +471,7 @@ val} as of Clojure 1.9.")
 (declare-function paredit-close-curly "ext:paredit" t t)
 (declare-function paredit-convolute-sexp "ext:paredit")
 
-(defun clojure--replace-let-bindings-and-indent ()
+(defun clojure--replace-let-bindings-and-indent (&rest _)
   "Replace let bindings and indent."
   (save-excursion
     (backward-sexp)
@@ -1829,7 +1829,6 @@ content) are considered part of the preceding sexp."
   (if (clojure-find-ns)
       (save-excursion
         (goto-char (match-beginning 0))
-        (redisplay)
         (let ((beg (point))
               (ns))
           (forward-sexp 1)
@@ -1844,10 +1843,7 @@ content) are considered part of the preceding sexp."
           (goto-char beg)
           (if (looking-at (regexp-quote ns))
               (message "ns form is already sorted")
-            (sleep-for 0.1)
-            (redisplay)
-            (message "ns form has been sorted")
-            (sleep-for 0.1))))
+            (message "ns form has been sorted"))))
     (user-error "Can't find ns form")))
 
 (defconst clojure-namespace-name-regex

@@ -1,11 +1,11 @@
-(define-package "transient" "20201016.1936" "Transient commands"
+(define-package "transient" "20210103.1546" "Transient commands"
   '((emacs "25.1"))
-  :commit "aaac13bb9d8014ba3e91a481edb7181249cc5d30" :keywords
-  '("bindings")
-  :authors
+  :commit "7811dcff825210c17bd15525fb6a98854501af99" :authors
   '(("Jonas Bernoulli" . "jonas@bernoul.li"))
   :maintainer
   '("Jonas Bernoulli" . "jonas@bernoul.li")
+  :keywords
+  '("bindings")
   :url "https://github.com/magit/transient")
 ;; Local Variables:
 ;; no-byte-compile: t

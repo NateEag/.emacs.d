@@ -7,8 +7,8 @@
 ;; Description: Preview line when executing `goto-line` command.
 ;; Keyword: line navigation
 ;; Version: 0.1.1
-;; Package-Version: 20200927.252
-;; Package-Commit: 66817b66ce124b2961df3521faa3adc87943d0d9
+;; Package-Version: 20210113.616
+;; Package-Commit: 605a182c389b60b11dad0738babc66d227a4ed23
 ;; Package-Requires: ((emacs "25"))
 ;; URL: https://github.com/jcs-elpa/goto-line-preview
 
@@ -106,7 +106,7 @@
     (goto-line-preview)))
 
 ;;;###autoload
-(define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview)
+(define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview "0.1.1")
 
 (defun goto-line-preview--minibuffer-setup ()
   "Locally set up preview hooks for this minibuffer command."

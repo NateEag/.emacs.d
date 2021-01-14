@@ -9,24 +9,6 @@
 ;;;### (autoloads nil "python-mode" "python-mode.el" (0 0 0 0))
 ;;; Generated autoloads from python-mode.el
 
-(autoload 'py-backward-class "python-mode" "\
-Go to beginning of ‘class’.
-
-If already at beginning, go one ‘class’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
-
-(autoload 'py-backward-def "python-mode" "\
-Go to beginning of ‘def’.
-
-If already at beginning, go one ‘def’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
-
-(autoload 'py-backward-def-or-class "python-mode" "\
-Go to beginning of ‘def-or-class’.
-
-If already at beginning, go one ‘def-or-class’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
-
 (autoload 'py-backward-class-bol "python-mode" "\
 Go to beginning of ‘class’, go to BOL.
 If already at beginning, go one ‘class’ backward.
@@ -108,7 +90,7 @@ See available customizations listed in files variables-python-mode at directory 
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "eva" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ios" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pios" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-" "with-buffer-prepared-for-jit-lock")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-")))
 
 ;;;***
 

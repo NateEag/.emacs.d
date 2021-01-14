@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.23
+;; Version: 1.24
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/jorgenschaefer/emacs-buttercup
@@ -1982,7 +1982,10 @@ If STYLE is nil, use `buttercup-stack-frame-style' or `crop'."
   (setq style (or style buttercup-stack-frame-style 'crop))
   (pcase style
     (`omit) ; needed to verify valid styles
-    (`full (format "  %S" (cdr frame)))
+    (`full
+     (if (car frame)
+         (format "  %S%s" (cadr frame) (if (cddr frame) (prin1-to-string (cddr frame)) "()"))
+       (format "  %S" (cdr frame))))
     (`crop
      (let ((line (buttercup--format-stack-frame frame 'full)))
        ;; Note: this could be done sith `s-truncate' from the s

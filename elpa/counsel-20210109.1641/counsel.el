@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200922.1006
-;; Package-Commit: b65e401c22ec56a008b00f651cd9536caf593d43
+;; Package-Version: 20210109.1641
+;; Package-Commit: 8f2abd397dba7205806cfa1615624adc8cd5145f
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -128,7 +128,7 @@ complex regexes."
   "Check system for program used in CMD, printing error if not found.
 CMD is either a string or a list of strings.
 To skip the `executable-find' check, start the string with a space."
-  (unless (and (stringp cmd) (string-match-p "^ " cmd))
+  (unless (and (stringp cmd) (string-prefix-p " " cmd))
     (let ((program (if (listp cmd)
                        (car cmd)
                      (car (split-string cmd)))))
@@ -1102,17 +1102,17 @@ See `describe-buffer-bindings' for further information."
         (describe-buffer-bindings buffer prefix))
       (goto-char (point-min))
       ;; Skip the "Key translations" section
-      (re-search-forward "")
-      (forward-char 1)
+      (skip-chars-forward "^\C-l")
+      (forward-char 2)
       (while (not (eobp))
         (when (looking-at "^\\([^\t\n]+\\)[\t ]*\\(.*\\)$")
           (let ((key (match-string 1))
                 (fun (match-string 2))
                 cmd)
             (unless (or (member fun '("??" "self-insert-command"))
-                        (string-match re-exclude key)
+                        (string-match-p re-exclude key)
                         (not (or (commandp (setq cmd (intern-soft fun)))
-                                 (member fun '("Prefix Command")))))
+                                 (equal fun "Prefix Command"))))
               (push
                (cons (format
                       "%-15s %s"
@@ -1120,7 +1120,7 @@ See `describe-buffer-bindings' for further information."
                       fun)
                      (cons key cmd))
                res))))
-        (forward-line 1)))
+        (forward-line)))
     (nreverse res)))
 
 (defcustom counsel-descbinds-function #'describe-function
@@ -1818,7 +1818,7 @@ currently checked out."
   "Switch to `counsel-file-jump' from `counsel-find-file'."
   (interactive)
   (ivy-quit-and-run
-    (counsel-file-jump ivy-text)))
+    (counsel-file-jump ivy-text (ivy-state-directory ivy-last))))
 
 (when (executable-find "git")
   (add-to-list 'ivy-ffap-url-functions 'counsel-github-url-p)
@@ -1988,15 +1988,14 @@ Skip some dotfiles unless `ivy-text' requires them."
 
 (defun counsel-find-file-action (x)
   "Find file X."
-  (with-ivy-window
-    (cond ((and counsel-find-file-speedup-remote
-                (file-remote-p ivy--directory))
-           (let ((find-file-hook nil))
-             (find-file (expand-file-name x ivy--directory))))
-          ((member (file-name-extension x) counsel-find-file-extern-extensions)
-           (counsel-find-file-extern x))
-          (t
-           (find-file (expand-file-name x ivy--directory))))))
+  (cond ((and counsel-find-file-speedup-remote
+              (file-remote-p ivy--directory))
+         (let ((find-file-hook nil))
+           (find-file (expand-file-name x ivy--directory))))
+        ((member (file-name-extension x) counsel-find-file-extern-extensions)
+         (counsel-find-file-extern x))
+        (t
+         (find-file (expand-file-name x ivy--directory)))))
 
 (defun counsel--preselect-file ()
   "Return candidate to preselect during filename completion.
@@ -2029,14 +2028,14 @@ The preselect behavior can be customized via user options
               :caller caller)))
 
 ;;;###autoload
-(defun counsel-find-file (&optional initial-input)
+(defun counsel-find-file (&optional initial-input initial-directory)
   "Forward to `find-file'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
-  (counsel--find-file-1
-   "Find file: " initial-input
-   #'counsel-find-file-action
-   'counsel-find-file))
+  (let ((default-directory (or initial-directory default-directory)))
+    (counsel--find-file-1 "Find file: " initial-input
+                          #'counsel-find-file-action
+                          'counsel-find-file)))
 
 (ivy-configure 'counsel-find-file
   :parent 'read-file-name-internal
@@ -2545,13 +2544,13 @@ can use `C-x r j i' to open that file."
 
 ;;** `counsel-locate'
 (defcustom counsel-locate-cmd (cond ((memq system-type '(darwin berkeley-unix))
-                                     'counsel-locate-cmd-noregex)
+                                     #'counsel-locate-cmd-noregex)
                                     ((and (eq system-type 'windows-nt)
                                           (executable-find "es.exe"))
-                                     'counsel-locate-cmd-es)
+                                     #'counsel-locate-cmd-es)
                                     (t
-                                     'counsel-locate-cmd-default))
-  "The function for producing a locate command string from the input.
+                                     #'counsel-locate-cmd-default))
+  "The function for producing a `locate' command string from the input.
 
 The function takes a string - the current input, and returns a
 string - the full shell command to run."
@@ -2559,7 +2558,8 @@ string - the full shell command to run."
           (const :tag "Default" counsel-locate-cmd-default)
           (const :tag "No regex" counsel-locate-cmd-noregex)
           (const :tag "mdfind" counsel-locate-cmd-mdfind)
-          (const :tag "everything" counsel-locate-cmd-es)))
+          (const :tag "everything" counsel-locate-cmd-es)
+          (function :tag "Custom")))
 
 (ivy-set-actions
  'counsel-locate
@@ -2594,33 +2594,33 @@ string - the full shell command to run."
   (dired-jump nil x))
 
 (defun counsel-locate-cmd-default (input)
-  "Return a shell command based on INPUT."
+  "Return a `locate' shell command based on regexp INPUT."
   (counsel-require-program "locate")
-  (format "locate -i --regex '%s'"
-          (counsel--elisp-to-pcre
-           (ivy--regex input))))
+  (format "locate -i --regex %s"
+          (shell-quote-argument
+           (counsel--elisp-to-pcre
+            (ivy--regex input)))))
 
 (defun counsel-locate-cmd-noregex (input)
-  "Return a shell command based on INPUT."
+  "Return a `locate' shell command based on INPUT."
   (counsel-require-program "locate")
-  (format "locate -i '%s'" input))
+  (format "locate -i %s" (shell-quote-argument input)))
 
 (defun counsel-locate-cmd-mdfind (input)
-  "Return a shell command based on INPUT."
+  "Return a `mdfind' shell command based on INPUT."
   (counsel-require-program "mdfind")
-  (format "mdfind -name '%s'" input))
-
-(defvar w32-ansi-code-page)
+  (format "mdfind -name %s" (shell-quote-argument input)))
 
 (defun counsel-locate-cmd-es (input)
-  "Return a shell command based on INPUT."
+  "Return a `es' shell command based on INPUT."
+  (defvar w32-ansi-code-page)
   (counsel-require-program "es.exe")
   (let ((raw-string (format "es.exe -i -p -r %s"
                             (counsel--elisp-to-pcre
                              (ivy--regex input t)))))
-    ;; W32 don't use Unicode by default, so we encode search command
-    ;; to local codepage to support searching filename contains non-ASCII
-    ;; characters.
+    ;; W32 doesn't use Unicode by default, so we encode search command
+    ;; to local codepage to support searching file names containing
+    ;; non-ASCII characters.
     (if (and (eq system-type 'windows-nt)
              (boundp 'w32-ansi-code-page))
         (encode-coding-string raw-string
@@ -2628,7 +2628,7 @@ string - the full shell command to run."
       raw-string)))
 
 (defun counsel-locate-function (input)
-  "Call the \"locate\" shell command with INPUT."
+  "Call a \"locate\" style shell command with INPUT."
   (or
    (ivy-more-chars)
    (progn
@@ -2642,10 +2642,7 @@ string - the full shell command to run."
 
 (defun counsel-file-stale-p (fname seconds)
   "Return non-nil if FNAME was modified more than SECONDS ago."
-  (> (time-to-seconds
-      (time-subtract
-       (current-time)
-       (nth 5 (file-attributes fname))))
+  (> (float-time (time-subtract nil (nth 5 (file-attributes fname))))
      seconds))
 
 (defun counsel--locate-updatedb ()
@@ -2660,7 +2657,7 @@ string - the full shell command to run."
 
 ;;;###autoload
 (defun counsel-locate (&optional initial-input)
-  "Call the \"locate\" shell command.
+  "Call a \"locate\" style shell command.
 INITIAL-INPUT can be given as the initial minibuffer input."
   (interactive)
   (counsel--locate-updatedb)
@@ -2846,6 +2843,18 @@ FZF-PROMPT, if non-nil, is passed as `ivy-read' prompt argument."
   :type '(repeat string))
 
 ;;** `counsel-file-jump'
+(defvar counsel-file-jump-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "`") #'counsel-find-file-from-jump)
+    map)
+  "Key bindings to be used when in a file-jump minibuffer.")
+
+(defun counsel-find-file-from-jump ()
+  "Switch to `counsel-find-file' from `counsel-file-jump'."
+  (interactive)
+  (ivy-quit-and-run
+    (counsel-find-file ivy-text (ivy-state-directory ivy-last))))
+
 ;;;###autoload
 (defun counsel-file-jump (&optional initial-input initial-directory)
   "Jump to a file below the current directory.
@@ -2866,6 +2875,7 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search."
               :preselect (counsel--preselect-file)
               :require-match 'confirm-after-completion
               :history 'file-name-history
+              :keymap counsel-file-jump-map
               :caller 'counsel-file-jump)))
 
 (ivy-set-actions
@@ -3090,10 +3100,12 @@ Works for `counsel-git-grep', `counsel-ag', etc."
               (funcall cmd-template ivy-text)
             (let* ((command-args (counsel--split-command-args ivy-text))
                    (regex (counsel--grep-regex (cdr command-args)))
+                   (extra-switches (counsel--ag-extra-switches regex))
                    (all-args (append
                               (when (car command-args)
                                 (split-string (car command-args)))
-                              (counsel--ag-extra-switches regex)
+                              (when extra-switches
+                                (split-string extra-switches))
                               (list
                                (counsel--grep-smart-case-flag)
                                regex))))
@@ -3796,7 +3808,7 @@ include attachments of other Org buffers."
   (let (dirs)
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward "^:\\(ATTACH_DIR\\|ID\\):[\t ]+\\(.*\\)$" nil t)
+      (while (re-search-forward ":\\(?:ATTACH_DIR\\|ID\\):[\t ]+.*$" nil t)
         (let ((dir (org-attach-dir)))
           (when dir
             (push dir dirs)))))
@@ -4031,7 +4043,7 @@ This variable has no effect unless
 ;; Misc. Emacs
 ;;** `counsel-mark-ring'
 (defface counsel--mark-ring-highlight
-  '((t (:inherit highlight)))
+  '((t :inherit highlight))
   "Face for current `counsel-mark-ring' line."
   :group 'ivy-faces)
 
@@ -4081,7 +4093,7 @@ Obeys `widen-automatically', which see."
             (cons (copy-marker (mark-marker)) marks)))
          (candidates (counsel-mark--get-candidates marks)))
     (if candidates
-        (counsel-mark--ivy-read candidates 'counsel-mark-ring)
+        (counsel-mark--ivy-read "Mark: " candidates 'counsel-mark-ring)
       (message "Mark ring is empty"))))
 
 (defun counsel-mark--get-candidates (marks)
@@ -4105,7 +4117,7 @@ point to indicarte where the candidate mark is."
                       (propertize (format fmt linum line) 'point (point))))
                   marks))))))
 
-(defun counsel-mark--ivy-read (candidates caller)
+(defun counsel-mark--ivy-read (prompt candidates caller)
   "call `ivy-read' with sane defaults for traversing marks.
 CANDIDATES should be an alist with the `car' of the list being
 the string displayed by ivy and the `cdr' being the point that
@@ -4113,7 +4125,7 @@ mark should take you to.
 
 NOTE This has been abstracted out into it's own method so it can
 be used by both `counsel-mark-ring' and `counsel-evil-marks'"
-  (ivy-read "Mark: " candidates
+  (ivy-read prompt candidates
             :require-match t
             :update-fn #'counsel--mark-ring-update-fn
             :action (lambda (cand)
@@ -4194,8 +4206,8 @@ When ARG is non-nil, display all active evil registers."
       (let* ((counsel--mark-ring-calling-point (point))
              (candidates (counsel-mark--get-evil-candidates arg)))
         (if candidates
-            (counsel-mark--ivy-read candidates 'counsel-evil-marks)
-          (message "no evil marks are active")))
+            (counsel-mark--ivy-read "Evil mark: " candidates 'counsel-evil-marks)
+          (message "No evil marks are active")))
     (user-error "Required feature `evil' not installed or loaded")))
 
 ;;** `counsel-package'
@@ -4432,13 +4444,18 @@ Signal a `buffer-read-only' error if called from a read-only
 buffer position."
   (with-ivy-window
     (barf-if-buffer-read-only)
-    (setq last-command 'yank)
     (setq yank-window-start (window-start))
+    (unless (eq last-command 'yank)
+      ;; Avoid unexpected deletions with `yank-handler' properties.
+      (setq yank-undo-function nil))
     (condition-case nil
-        ;; Avoid unexpected additions to `kill-ring'
-        (let (interprogram-paste-function)
+        (let (;; Deceive `yank-pop'.
+              (last-command 'yank)
+              ;; Avoid unexpected additions to `kill-ring'.
+              interprogram-paste-function)
           (yank-pop (counsel--yank-pop-position s)))
       (error
+       ;; Support strings not present in the kill ring.
        (insert s)))
     (when (funcall (if counsel-yank-pop-after-point #'> #'<)
                    (point) (mark t))
@@ -4583,7 +4600,7 @@ matching the register's value description against a regexp in
 
 ;;** `counsel-evil-registers'
 (defface counsel-evil-register-face
-  '((t (:inherit counsel-outline-1)))
+  '((t :inherit counsel-outline-1))
   "Face for highlighting `evil' registers in ivy."
   :group 'ivy-faces)
 
@@ -4768,9 +4785,11 @@ An extra action allows to switch to the process buffer."
 (defvar eshell-history-index)
 (defvar slime-repl-input-history-position)
 
-(defvar counsel-esh--index-last)
-(defvar counsel-shell-history--index-last)
-(defvar counsel-slime-repl-history--index-last)
+(defvar counsel-esh--index-last nil
+  "Index corresponding to last selection with `counsel-esh-history'.")
+
+(defvar counsel-shell-history--index-last nil
+  "Index corresponding to last selection with `counsel-shell-history'.")
 
 (defun counsel--browse-history-action (pair)
   (let ((snd (cdr pair)))
@@ -4781,9 +4800,12 @@ An extra action allows to switch to the process buffer."
       (counsel-shell-history
        (setq comint-input-ring-index snd
              counsel-shell-history--index-last snd))
+      ;; Leave this as a no-op. If someone decides to patch
+      ;; `slime-repl-previous-input' or one of its utility functions,
+      ;; or to add history-replay to Slime, then this section can be
+      ;; updated to add the relevant support for those commands.
       (counsel-slime-repl-history
-       (setq slime-repl-input-history-position snd
-             counsel-slime-repl-history--index-last snd)))
+       nil))
     (ivy-completion-in-region-action (car pair))))
 
 (cl-defun counsel--browse-history (ring &key caller)
@@ -4806,9 +4828,6 @@ An extra action allows to switch to the process buffer."
 (defvar eshell-history-ring)
 (defvar eshell-matching-input-from-input-string)
 
-(defvar counsel-esh--index-last nil
-  "Index corresponding to last selection with `counsel-esh-history'.")
-
 ;;;###autoload
 (defun counsel-esh-history ()
   "Browse Eshell history."
@@ -4828,9 +4847,6 @@ An extra action allows to switch to the process buffer."
 (defvar comint-input-ring)
 (defvar comint-matching-input-from-input-string)
 
-(defvar counsel-shell-history--index-last nil
-  "Index corresponding to last selection with `counsel-shell-history'.")
-
 ;;;###autoload
 (defun counsel-shell-history ()
   "Browse shell history."
@@ -4849,9 +4865,6 @@ An extra action allows to switch to the process buffer."
 
 (defvar slime-repl-input-history)
 
-(defvar counsel-slime-repl-history--index-last nil
-  "Index corresponding to last selection with `counsel-slime-repl-history'.")
-
 ;;;###autoload
 (defun counsel-slime-repl-history ()
   "Browse Slime REPL history."
@@ -4861,7 +4874,9 @@ An extra action allows to switch to the process buffer."
                            :caller #'counsel-slime-repl-history))
 
 ;; TODO: add advice for slime-repl-input-previous/next to properly
-;; reassign the ring index and match string
+;; reassign the ring index and match string.  This requires a case for
+;; `counsel-slime-repl-history' within
+;; `counsel--browse-history-action'.
 
 ;;** `counsel-hydra-heads'
 (defvar hydra-curr-body-fn)
@@ -5899,6 +5914,7 @@ as arguments."
           (const :tag "Command : Name - Comment" counsel-linux-app-format-function-default)
           (const :tag "Name - Comment (Command)" counsel-linux-app-format-function-name-first)
           (const :tag "Name - Comment" counsel-linux-app-format-function-name-only)
+          (const :tag "Name - Comment (Pretty)" counsel-linux-app-format-function-name-pretty)
           (const :tag "Command" counsel-linux-app-format-function-command-only)
           (function :tag "Custom")))
 
@@ -5973,7 +5989,9 @@ NAME is the name of the application, COMMENT its comment and EXEC
 the command to launch it."
   (format "% -45s: %s%s"
           (propertize
-           (ivy--truncate-string exec 45)
+           (ivy--truncate-string
+            (replace-regexp-in-string "env +[^ ]+ +" "" exec)
+            45)
            'face 'counsel-application-name)
           name
           (if comment
@@ -6001,6 +6019,16 @@ EXEC is the command to launch the application."
 (defun counsel-linux-app-format-function-command-only (_name _comment exec)
   "Display only the command EXEC when formatting Linux application names."
   exec)
+
+(defun counsel-linux-app-format-function-name-pretty (name comment _exec)
+  "Format Linux application names with the NAME (and COMMENT) only, but pretty."
+  (format "% -45s%s"
+          (propertize
+           (ivy--truncate-string name 45)
+           'face 'counsel-application-name)
+          (if comment
+              (concat ": " comment)
+            "")))
 
 (defun counsel-linux-apps-list-desktop-files ()
   "Return an alist of all Linux applications.
@@ -6132,7 +6160,7 @@ Any desktop entries that fail to parse are recorded in
   "Launch a Linux desktop application, similar to Alt-<F2>.
 When ARG is non-nil, ignore NoDisplay property in *.desktop files."
   (interactive "P")
-  (ivy-read "Run a command: " (counsel-linux-apps-list)
+  (ivy-read "Run application: " (counsel-linux-apps-list)
             :predicate (unless arg (lambda (x) (get-text-property 0 'visible (car x))))
             :action #'counsel-linux-app-action-default
             :caller 'counsel-linux-app))
@@ -6792,7 +6820,7 @@ We update it in the callback with `ivy-update-candidates'."
   (browse-url
    (concat
     (nth 2 (assoc counsel-search-engine counsel-search-engines-alist))
-    x)))
+    (url-hexify-string x))))
 
 (defun counsel-search ()
   "Ivy interface for dynamically querying a search engine."

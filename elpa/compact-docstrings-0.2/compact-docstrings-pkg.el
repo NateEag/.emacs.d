@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/compact-docstrings-0.2/compact-docstrings.el  -*- no-byte-compile: t -*-
+(define-package "compact-docstrings" "0.2" "Shrink blank lines in docstrings and doc comments" 'nil :keywords '("convenience" "faces" "lisp" "maint" "c") :authors '(("Clément Pit-Claudel" . "clement.pitclaudel@live.com")) :maintainer '("Clément Pit-Claudel" . "clement.pitclaudel@live.com") :url "https://github.com/cpitclaudel/compact-docstrings")

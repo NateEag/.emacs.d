@@ -853,9 +853,9 @@ selection, non-nil otherwise."
                                     (string-prefix-p key (car x)))
                                   (cdr actions)))
                 (not (string= key (car (nth action-idx (cdr actions))))))
-      (setq key (concat key (key-description (string (read-key hint))))))
+      (setq key (concat key (key-description (vector (read-key hint))))))
     (ivy-shrink-after-dispatching)
-    (cond ((member key '("ESC" "C-g"))
+    (cond ((member key '("ESC" "C-g" "M-o"))
            nil)
           ((null action-idx)
            (message "%s is not bound" key)
@@ -931,6 +931,12 @@ Is is a cons cell, related to `tramp-get-completion-function'."
   "Customize what `ivy-alt-done' does per-collection."
   :type '(alist :key-type symbol :value-type function))
 
+(defun ivy--completing-fname-p ()
+  (eq 'file (cdr (assoc
+                  'category
+                  (ignore-errors
+                    (funcall (ivy-state-collection ivy-last) ivy-text nil 'metadata))))))
+
 (defun ivy-alt-done (&optional arg)
   "Exit the minibuffer with the selected candidate.
 When ARG is t, exit with current text, ignoring the candidates.
@@ -944,6 +950,8 @@ of exiting.  This function is otherwise like `ivy-done'."
            (ivy-immediate-done))
           ((setq alt-done-fn (ivy-alist-setting ivy-alt-done-functions-alist))
            (funcall alt-done-fn))
+          ((ivy--completing-fname-p)
+           (ivy--directory-done))
           (t
            (ivy-done)))))
 
@@ -1005,38 +1013,37 @@ contains a single candidate.")
 (defun ivy--directory-done ()
   "Handle exit from the minibuffer when completing file names."
   (let ((dir (ivy--handle-directory ivy-text)))
-    (cond
-      ((equal (ivy-state-current ivy-last) (ivy-state-def ivy-last))
-       (ivy-done))
-      ((and (ivy-state-require-match ivy-last)
-            (equal ivy-text "")
-            (null ivy--old-cands))
-       (ivy-immediate-done))
-      (dir
-       (let ((inhibit-message t))
-         (ivy--cd dir)))
-      ((ivy--directory-enter))
-      ((unless (string= ivy-text "")
-         ;; Obsolete since 26.1 and removed in 28.1.
-         (defvar tramp-completion-mode)
-         (with-no-warnings
-           (let* ((tramp-completion-mode t)
-                  (file (expand-file-name
-                         (if (> ivy--length 0) (ivy-state-current ivy-last) ivy-text)
-                         ivy--directory)))
-             (when (ignore-errors (file-exists-p file))
-               (if (file-directory-p file)
-                   (ivy--cd (file-name-as-directory file))
-                 (ivy-done))
-               ivy-text)))))
-      ((or (and (equal ivy--directory "/")
-                (string-match-p "\\`[^/]+:.*:.*\\'" ivy-text))
-           (string-match-p "\\`/[^/]+:.*:.*\\'" ivy-text))
-       (ivy-done))
-      ((ivy--tramp-prefix-p)
-       (ivy--tramp-candidates))
-      (t
-       (ivy-done)))))
+    (cond ((equal (ivy-state-current ivy-last) (ivy-state-def ivy-last))
+           (ivy-done))
+          ((and (ivy-state-require-match ivy-last)
+                (equal ivy-text "")
+                (null ivy--old-cands))
+           (ivy-immediate-done))
+          (dir
+           (let ((inhibit-message t))
+             (ivy--cd dir)))
+          ((ivy--directory-enter))
+          ((unless (string= ivy-text "")
+             ;; Obsolete since 26.1 and removed in 28.1.
+             (defvar tramp-completion-mode)
+             (with-no-warnings
+               (let* ((tramp-completion-mode t)
+                      (file (expand-file-name
+                             (if (> ivy--length 0) (ivy-state-current ivy-last) ivy-text)
+                             ivy--directory)))
+                 (when (ignore-errors (file-exists-p file))
+                   (if (file-directory-p file)
+                       (ivy--cd (file-name-as-directory file))
+                     (ivy-done))
+                   ivy-text)))))
+          ((or (and (equal ivy--directory "/")
+                    (string-match-p "\\`[^/]+:.*:.*\\'" ivy-text))
+               (string-match-p "\\`/[^/]+:.*:.*\\'" ivy-text))
+           (ivy-done))
+          ((ivy--tramp-prefix-p)
+           (ivy--tramp-candidates))
+          (t
+           (ivy-done)))))
 
 (defun ivy--tramp-prefix-p ()
   (or (and (equal ivy--directory "/")
@@ -1588,24 +1595,25 @@ If so, move to that directory, while keeping only the file name."
 
 (defun ivy--cd (dir)
   "When completing file names, move to directory DIR."
-  (if (null ivy--directory)
-      (error "Unexpected")
-    (push dir ivy--directory-hist)
-    (setq ivy--old-cands nil)
-    (setq ivy--old-re nil)
-    (ivy-set-index 0)
-    (setq ivy--all-candidates
-          (append
-           (ivy--sorted-files (setq ivy--directory dir))
-           (when (and (string= dir "/") (featurep 'tramp))
-             (sort
-              (mapcar
-               (lambda (s) (substring s 1))
-               (tramp-get-completion-methods ""))
-              #'string<))))
-    (ivy-set-text "")
-    (setf (ivy-state-directory ivy-last) dir)
-    (delete-minibuffer-contents)))
+  (if (ivy--completing-fname-p)
+      (progn
+        (push dir ivy--directory-hist)
+        (setq ivy--old-cands nil)
+        (setq ivy--old-re nil)
+        (ivy-set-index 0)
+        (setq ivy--all-candidates
+              (append
+               (ivy--sorted-files (setq ivy--directory dir))
+               (when (and (string= dir "/") (featurep 'tramp))
+                 (sort
+                  (mapcar
+                   (lambda (s) (substring s 1))
+                   (tramp-get-completion-methods ""))
+                  #'string<))))
+        (ivy-set-text "")
+        (setf (ivy-state-directory ivy-last) dir)
+        (delete-minibuffer-contents))
+    (error "Unexpected")))
 
 (defun ivy--parent-dir (filename)
   "Return parent directory of absolute FILENAME."
@@ -1681,6 +1689,7 @@ minibuffer."
   (interactive)
   (setq ivy--old-re nil)
   (cl-rotatef ivy--regex-function ivy--regexp-quote)
+  (setq ivy--old-text "")
   (setq ivy-regex (funcall ivy--regex-function ivy-text)))
 
 (defcustom ivy-format-functions-alist
@@ -2405,8 +2414,6 @@ This is useful for recursive `ivy-read'."
                    prompt)))
         ((string-match-p "%.*d" ivy-count-format)
          (concat ivy-count-format prompt))
-        (ivy--directory
-         prompt)
         (t
          prompt)))
 
@@ -2621,6 +2628,12 @@ See `ivy-set-prompt'."
   "When non-nil `ivy-mode' will set `completion-in-region-function'."
   :type 'boolean)
 
+(defvar ivy--old-crf nil
+  "Store previous value of `completing-read-function'.")
+
+(defvar ivy--old-cirf nil
+  "Store previous value of `completion-in-region-function'.")
+
 ;;;###autoload
 (define-minor-mode ivy-mode
   "Toggle Ivy mode on or off.
@@ -2639,11 +2652,21 @@ Minibuffer bindings:
   :lighter " ivy"
   (if ivy-mode
       (progn
-        (setq completing-read-function 'ivy-completing-read)
+        (unless (eq completing-read-function #'ivy-completing-read)
+          (setq ivy--old-crf completing-read-function)
+          (setq completing-read-function #'ivy-completing-read))
         (when ivy-do-completion-in-region
-          (setq completion-in-region-function 'ivy-completion-in-region)))
-    (setq completing-read-function 'completing-read-default)
-    (setq completion-in-region-function 'completion--in-region)))
+          (unless (eq completion-in-region-function #'ivy-completion-in-region)
+            (setq ivy--old-cirf completion-in-region-function)
+            (setq completion-in-region-function #'ivy-completion-in-region))))
+    (when (eq completing-read-function #'ivy-completing-read)
+      (setq completing-read-function (or ivy--old-crf
+                                         #'completing-read-default))
+      (setq ivy--old-crf nil))
+    (when (eq completion-in-region-function #'ivy-completion-in-region)
+      (setq completion-in-region-function (or ivy--old-cirf
+                                              #'completion--in-region))
+      (setq ivy--old-cirf nil))))
 
 (defun ivy--preselect-index (preselect candidates)
   "Return the index of PRESELECT in CANDIDATES."
@@ -3683,7 +3706,7 @@ CANDS are the current candidates."
                      ((cl-position (string-remove-prefix "^" re-str)
                                    cands
                                    :test #'ivy--case-fold-string=))
-                     ((and ivy--directory
+                     ((and (ivy--completing-fname-p)
                            (cl-position (concat re-str "/")
                                         cands
                                         :test #'ivy--case-fold-string=)))
@@ -3976,7 +3999,8 @@ in this case."
               (let ((beg (match-beginning i))
                     (end (match-end i)))
                 (when (and beg end)
-                  (unless (and prev (= prev beg))
+                  (unless (or (and prev (= prev beg))
+                              (zerop i))
                     (cl-incf n))
                   (let ((face
                          (cond ((and ivy-use-group-face-if-no-groups
@@ -5108,7 +5132,7 @@ EVENT gives the mouse position."
   (ivy--occur-press-update-window)
   (when (save-excursion
           (beginning-of-line)
-          (looking-at "\\(?:./\\|    \\)\\(.*\\)$"))
+          (looking-at "\\(?:.[/\\]\\|    \\)\\(.*\\)$"))
     (let* ((ivy-last ivy-occur-last)
            (ivy-text (ivy-state-text ivy-last))
            (str (buffer-substring

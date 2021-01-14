@@ -1,8 +1,8 @@
 ;;; iedit.el --- Edit multiple regions in the same way simultaneously.
 
-;; Copyright (C) 2010, 2011, 2012 Victor Ren
+;; Copyright (C) 2010 - 2019, 2020 Victor Ren
 
-;; Time-stamp: <2020-07-21 13:52:42 Victor Ren>
+;; Time-stamp: <2021-01-13 22:39:04 Victor Ren>
 ;; Author: Victor Ren <victorhge@gmail.com>
 ;; Keywords: occurrence region simultaneous refactoring
 ;; Version: 0.9.9.9
@@ -28,11 +28,16 @@
 
 ;;; Commentary:
 
-;; This package includes Emacs minor modes (iedit-mode and
-;; iedit-rectangle-mode) based on a API library (iedit-lib) and allows you to edit
-;; one occurrence of some text in a buffer (possibly narrowed) or region, and
-;; simultaneously have other occurrences edited in the same way, with visual
-;; feedback as you type.
+;; This package includes Emacs minor modes (iedit-mode and iedit-rectangle-mode)
+;; based on a API library (iedit-lib) and allows you to alter one occurrence of
+;; some text in a buffer (possibly narrowed) or region, and simultaneously have
+;; other occurrences changed in the same way, with visual feedback as you type.
+
+;; `iedit-mode' is a great alternative of build-in replace commands:
+
+;;  - A more intuitive way to alter all the occurrences at once
+;;  - Visual feedback
+;;  - Less keystrokes in most cases
 
 ;; Normal work flow of Iedit mode is like:
 
@@ -54,7 +59,7 @@
 ;; effect of a temporary `keep-lines' or `occur'.  To get this effect, hit C-'
 ;; when in Iedit mode - it toggles hiding non-matching lines.
 
-;; Renaming refactoring is convenient in Iedit mode
+;; `iedit-mode' is optimized for renaming refactoring in many ways:
 
 ;;  - The symbol under point is selected as occurrence by default and only complete
 ;;    symbols are matched
@@ -279,7 +284,7 @@ This is like `describe-bindings', but displays only Iedit keys."
 
 ;; Avoid to restore Iedit mode when restoring desktop
 (add-to-list 'desktop-minor-mode-handlers
-             '(iedit-mode . nil))
+             '(iedit-mode . ignore))
 
 ;;; Define iedit help map.
 (eval-when-compile (require 'help-macro))
@@ -295,6 +300,7 @@ This is like `describe-bindings', but displays only Iedit keys."
     (define-key map (kbd "M-n") 'iedit-expand-down-to-occurrence)
     (define-key map (kbd "M-G") 'iedit-apply-global-modification)
     (define-key map (kbd "M-C") 'iedit-toggle-case-sensitive)
+	(define-key map (kbd "M-S") 'iedit-toggle-search-invisible)
     map)
   "Keymap used within overlays in Iedit mode.")
 
@@ -478,12 +484,8 @@ Keymap used within overlays:
     (setq iedit-mode t))
   (when iedit-auto-buffering
 	(iedit-start-buffering))
-  (iedit-lib-start)
-  (run-hooks 'iedit-mode-hook)
-  (add-hook 'before-revert-hook 'iedit-done nil t)
-  (add-hook 'kbd-macro-termination-hook 'iedit-done nil t)
-  (add-hook 'change-major-mode-hook 'iedit-done nil t)
-  (add-hook 'iedit-aborting-hook 'iedit-done nil t))
+  (iedit-lib-start 'iedit-done)
+  (run-hooks 'iedit-mode-hook))
 
 (defun iedit-default-occurrence()
   "This function returns a string as occurrence candidate.
@@ -587,10 +589,6 @@ the initial string globally."
   (setq iedit-initial-string-local nil)
   (setq iedit-mode nil)
   (force-mode-line-update)
-  (remove-hook 'before-revert-hook 'iedit-done t)
-  (remove-hook 'kbd-macro-termination-hook 'iedit-done t)
-  (remove-hook 'change-major-mode-hook 'iedit-done t)
-  (remove-hook 'iedit-aborting-hook 'iedit-done t)
   (run-hooks 'iedit-mode-end-hook))
 
 (defun iedit-mode-on-action (&optional arg)
@@ -714,7 +712,7 @@ line.  N defaults to 1.  If N is negative, collapses the top of
 the search region by `-N' lines."
   (interactive "p")
   (iedit-expand-by-a-line 'top N))
-  
+
 (defun iedit-expand-down-a-line (&optional N)
   "After start iedit-mode only on current symbol or the active
 region, this function expands the search region downwards by N
@@ -797,6 +795,33 @@ prefix, bring the top of the region back down one occurrence."
                counter
                (iedit-printable occurrence-regexp))
       (force-mode-line-update))))
+
+(defun iedit-toggle-search-invisible ()
+  "Toggle search-invisible matching occurrences. "
+  (interactive)
+  (setq iedit-search-invisible
+        (if iedit-search-invisible
+            nil
+		  (or search-invisible 'open)))
+  (if iedit-buffering
+      (iedit-stop-buffering))
+  (let ((occurrence-string (iedit-current-occurrence-string)))
+  (when occurrence-string
+    (remove-overlays nil nil iedit-occurrence-overlay-name t)
+    (iedit-show-all)
+	(isearch-clean-overlays)
+    (let* ((occurrence-regexp (iedit-regexp-quote occurrence-string))
+           (begin (car iedit-initial-region))
+           (end (cadr iedit-initial-region))
+           (counter (iedit-make-occurrences-overlays occurrence-regexp begin end)))
+      (message "iedit %s. %d matches for \"%s\""
+               (if iedit-search-invisible
+                   "matching invisible"
+                 "matching visible")
+               counter
+               (iedit-printable occurrence-regexp))
+	  (setq iedit-last-occurrence-local occurrence-string)
+      (force-mode-line-update)))))
 
 (provide 'iedit)
 

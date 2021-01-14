@@ -12,10 +12,10 @@
 (autoload 'auto-compile-mode "auto-compile" "\
 Compile Emacs Lisp source files after the visiting buffers are saved.
 
-If called interactively, enable Auto-Compile mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Auto-Compile mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 After a buffer containing Emacs Lisp code is saved to its source
 file update the respective byte code file.  If the latter does
@@ -28,6 +28,8 @@ variant `auto-compile-on-save-mode'.  Also see the related
 `auto-compile-on-load-mode'.
 
 \(fn &optional ARG)" t nil)
+
+(put 'auto-compile-on-save-mode 'globalized-minor-mode t)
 
 (defvar auto-compile-on-save-mode nil "\
 Non-nil if Auto-Compile-On-Save mode is enabled.
@@ -111,10 +113,10 @@ for a description of this minor mode.")
 (autoload 'auto-compile-on-load-mode "auto-compile" "\
 Before loading a library recompile it if it needs recompilation.
 
-If called interactively, enable Auto-Compile-On-Load mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Auto-Compile-On-Load mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 A library needs to be recompiled if the source file is newer than
 it's byte-compile destination.  Without this advice the outdated

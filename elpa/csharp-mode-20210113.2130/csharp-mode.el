@@ -5,11 +5,9 @@
 ;;            : Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 0.10.0
-;; Package-Version: 20201014.1607
-;; Package-Commit: 97903a2d37a72aa38cda51ea4d12d961cbc51b9b
+;; Version    : 0.11.0
 ;; Keywords   : c# languages oop mode
-;; X-URL      : https://github.com/josteink/csharp-mode
+;; X-URL      : https://github.com/emacs-csharp/csharp-mode
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -36,38 +34,62 @@
 (eval-when-compile
   (require 'cc-fonts))
 
-(require 'compile)
-
-(eval-and-compile
-  (c-add-language 'csharp-mode 'java-mode))
+(require 'csharp-compilation)
 
 (defgroup csharp nil
   "Major mode for editing C# code."
   :group 'prog-mode)
 
+(eval-and-compile
+  (defconst csharp--regex-identifier
+    "[A-Za-z][A-Za-z0-9_]*"
+    "Regex describing an dentifier in C#.")
+
+  (defconst csharp--regex-identifier-matcher
+    (concat "\\(" csharp--regex-identifier "\\)")
+    "Regex matching an identifier in C#.")
+
+  (defconst csharp--regex-type-name
+    "[A-Z][A-Za-z0-9_]*"
+    "Regex describing a type identifier in C#.")
+
+  (defconst csharp--regex-type-name-matcher
+    (concat "\\(" csharp--regex-type-name "\\)")
+    "Regex matching a type identifier in C#.")
+
+  (defconst csharp--regex-using-or-namespace
+    (concat "^using" "\\|" "namespace"
+            "\\s *"
+            csharp--regex-type-name-matcher)
+    "Regex matching identifiers after a using or namespace
+    declaration."))
+
+(eval-and-compile
+  (c-add-language 'csharp-mode 'java-mode))
+
 (c-lang-defconst c-make-mode-syntax-table
   csharp `(lambda ()
             (let ((table (make-syntax-table)))
-	      (c-populate-syntax-table table)
+              (c-populate-syntax-table table)
               (modify-syntax-entry ?@ "_" table)
-	      table)))
+              table)))
 
 (c-lang-defconst c-identifier-syntax-modifications
   csharp (append '((?@ . "w"))
-	         (c-lang-const c-identifier-syntax-modifications)))
+                 (c-lang-const c-identifier-syntax-modifications)))
 
 (c-lang-defconst c-symbol-start
   csharp (concat "[" c-alpha "_@]"))
 
 (c-lang-defconst c-opt-type-suffix-key
-  csharp "\\(\\?\\)")
+  csharp (concat "\\(\\[" (c-lang-const c-simple-ws) "*\\]\\|\\?\\)"))
 
 (c-lang-defconst c-identifier-ops
   csharp '((left-assoc ".")))
 
 (c-lang-defconst c-overloadable-operators
   csharp '("+" "-" "*" "/" "%" "&" "|" "^" "<<" ">>" "=="
-	   "!=" ">" "<" ">=" "<="))
+           "!=" ">" "<" ">=" "<="))
 
 (c-lang-defconst c-multiline-string-start-char
   csharp ?@)
@@ -82,7 +104,16 @@
 
 (c-lang-defconst c-primitive-type-kwds
   csharp '("bool" "byte" "sbyte" "char" "decimal" "double" "float" "int" "uint"
-	   "long" "ulong" "short" "ushort" "void" "object" "string" "var"))
+           "long" "ulong" "short" "ushort" "void" "object" "string" "var"))
+
+(c-lang-defconst c-other-decl-kwds
+  csharp nil)
+
+(c-lang-defconst c-type-list-kwds
+  csharp nil)
+
+(c-lang-defconst c-other-block-decl-kwds
+  csharp nil)
 
 (c-lang-defconst c-return-kwds
   csharp '("return"))
@@ -108,9 +139,6 @@
 (c-lang-defconst c-ref-list-kwds
   csharp nil)
 
-(c-lang-defconst c-other-block-decl-kwds
-  csharp '("namespace"))
-
 (c-lang-defconst c-using-kwds
   csharp '("using"))
 
@@ -135,20 +163,15 @@
 
 (c-lang-defconst c-modifier-kwds
   csharp '("abstract" "default" "final" "native" "private" "protected"
-	   "public" "partial" "internal" "readonly" "static" "event" "transient"
-	   "volatile" "sealed" "ref" "out" "virtual" "implicit" "explicit"
-	   "fixed" "override" "params" "async" "await" "extern" "unsafe"
+           "public" "partial" "internal" "readonly" "static" "event" "transient"
+           "volatile" "sealed" "ref" "out" "virtual" "implicit" "explicit"
+           "fixed" "override" "params" "async" "await" "extern" "unsafe"
            "get" "set" "this" "const" "delegate"))
-
-(c-lang-defconst c-other-decl-kwds
-  csharp '("using"))
-
-(c-lang-defconst c-type-list-kwds
-  csharp '("using"))
 
 (c-lang-defconst c-other-kwds
   csharp '("select" "from" "where" "join" "in" "on" "equals" "into"
-           "orderby" "descending" "group" "nameof"))
+           "orderby" "ascending" "descending" "group" "when"
+           "let" "by" "namespace"))
 
 (c-lang-defconst c-colon-type-list-kwds
   csharp '("class" "struct" "interface"))
@@ -161,7 +184,7 @@
 
 (c-lang-defconst c-block-stmt-2-kwds
   csharp '("for" "if" "switch" "while" "catch" "foreach" "fixed" "checked"
-	   "unchecked" "using" "lock"))
+           "unchecked" "using" "lock"))
 
 (c-lang-defconst c-simple-stmt-kwds
   csharp '("break" "continue" "goto" "throw" "return" "yield"))
@@ -205,7 +228,7 @@
 
 (c-lang-defconst c-other-op-syntax-tokens
   csharp  (append '("#")
-	          (c-lang-const c-other-op-syntax-tokens)))
+                  (c-lang-const c-other-op-syntax-tokens)))
 
 (c-lang-defconst c-line-comment-starter
   csharp "//")
@@ -225,74 +248,109 @@
                                    (cpp-macro             . c-lineup-dont-change)
                                    (substatement-open     . 0)))))
 
+(eval-and-compile
+  (unless (assoc 'csharp-mode c-default-style)
+    (setq c-default-style
+          (cons '(csharp-mode . "csharp")
+                c-default-style))))
+
+(defun csharp--color-forwards (font-lock-face)
+  (let (id-beginning)
+    (goto-char (match-beginning 0))
+    (forward-word)
+    (while (and (not (or (eq (char-after) ?\;)
+                         (eq (char-after) ?\{)))
+                (progn
+                  (forward-char)
+                  (c-forward-syntactic-ws)
+                  (setq id-beginning (point))
+                  (> (skip-chars-forward
+                      (c-lang-const c-symbol-chars))
+                     0))
+                (not (get-text-property (point) 'face)))
+      (c-put-font-lock-face id-beginning (point) font-lock-face)
+      (c-forward-syntactic-ws))))
+
 (c-lang-defconst c-basic-matchers-before
-  "Font lock matchers for basic keywords, labels, references and various
-other easily recognizable things that should be fontified before generic
-casts and declarations are fontified.  Used on level 2 and higher."
   csharp `(
-           ;; Put warning face on unclosed strings
+           ;; Warning face on unclosed strings
            ,@(if (version< emacs-version "27.0")
                  ;; Taken from 26.1 branch
                  `(,(c-make-font-lock-search-function
-	             (concat ".\\(" c-string-limit-regexp "\\)")
-	             '((c-font-lock-invalid-string))))
+                     (concat ".\\(" c-string-limit-regexp "\\)")
+                     '((c-font-lock-invalid-string))))
                `(("\\s|" 0 font-lock-warning-face t nil)))
 
            ;; Invalid single quotes
            c-font-lock-invalid-single-quotes
 
-           ;; Fontify keyword constants
+           ;; Keyword constants
            ,@(when (c-lang-const c-constant-kwds)
-	       (let ((re (c-make-keywords-re nil (c-lang-const c-constant-kwds))))
-	         `((eval . (list ,(concat "\\<\\(" re "\\)\\>")
-			         1 c-constant-face-name)))))
+               (let ((re (c-make-keywords-re nil (c-lang-const c-constant-kwds))))
+                 `((eval . (list ,(concat "\\<\\(" re "\\)\\>")
+                                 1 c-constant-face-name)))))
 
-           ;; Fontify all keywords except the primitive types.
+           ;; Keywords except the primitive types.
            ,`(,(concat "\\<" (c-lang-const c-regular-keywords-regexp))
-	      1 font-lock-keyword-face)
+              1 font-lock-keyword-face)
 
-           ,@(when (c-lang-const c-opt-identifier-concat-key)
-	       `(,(c-make-font-lock-search-function
-	           ;; Search for identifiers preceded by ".".  The anchored
-	           ;; matcher takes it from there.
-	           (concat (c-lang-const c-opt-identifier-concat-key)
-	        	   (c-lang-const c-simple-ws) "*"
-	        	   (concat "\\("
-	        		   ;; "[" c-upper "]"
-	        		   "[" (c-lang-const c-symbol-chars) "]*"
-	        		   "\\|"
-	        		   "\\)"))
-	           `((let (id-end)
-	               (goto-char (1+ (match-beginning 0)))
-	               (while (and (eq (char-before) ?.)
-	        		   (progn
-	        		     (backward-char)
-	        		     (c-backward-syntactic-ws)
-	        		     (setq id-end (point))
-	        		     (< (skip-chars-backward
-	        			 ,(c-lang-const c-symbol-chars))
-	        		        0))
-	        		   (not (get-text-property (point) 'face)))
-	        	 (c-put-font-lock-face (point) id-end
-	        			       font-lock-variable-name-face)
-	        	 (c-backward-syntactic-ws)))
-	             nil
-	             (goto-char (match-end 0))))))
+           ;; Chained identifiers in using/namespace statements
+           ,`(,(c-make-font-lock-search-function
+                csharp--regex-using-or-namespace
+                `((csharp--color-forwards font-lock-variable-name-face)
+                  nil
+                  (goto-char (match-end 0)))))
 
+
+           ;; Negation character
            (eval . (list "\\(!\\)[^=]" 1 c-negation-char-face-name))
+
+           ;; Types after 'new'
+           (eval . (list (concat "\\<new\\> *" csharp--regex-type-name-matcher)
+                         1 font-lock-type-face))
+
+           ;; Single identifier in attribute
+           (eval . (list (concat "\\[" csharp--regex-type-name-matcher "\\][^;]")
+                         1 font-lock-variable-name-face t))
+
+           ;; Function names
+           (eval . (list "\\([A-Za-z0-9_]+\\)\\(<[a-zA-Z0-9, ]+>\\)?("
+                         1 font-lock-function-name-face))
+
+           ;; Nameof
+           (eval . (list (concat "\\(\\<nameof\\>\\) *(")
+                         1 font-lock-function-name-face))
+
+           (eval . (list (concat "\\<nameof\\> *( *"
+                                 csharp--regex-identifier-matcher
+                                 " *) *")
+                         1 font-lock-variable-name-face))
+
+           ;; Catch statements with type only
+           (eval . (list (concat "\\<catch\\> *( *"
+                                 csharp--regex-type-name-matcher
+                                 " *) *")
+                         1 font-lock-type-face))
            ))
 
 (c-lang-defconst c-basic-matchers-after
   csharp (append
-          ;; merge with cc-mode defaults
-          (c-lang-const c-basic-matchers-after)
+          ;; Merge with cc-mode defaults - enables us to add more later
+          (c-lang-const c-basic-matchers-after)))
 
-          ;; function names
-          `(("\\.\\([A-Za-z0-9_]+\\)[<(]" 1 font-lock-function-name-face t))
-          ))
+(defcustom csharp-codedoc-tag-face 'c-doc-markup-face-name
+  "Face to be used on the codedoc docstring tags.
+
+Should be one of the font lock faces, such as
+`font-lock-variable-name-face' and friends.
+
+Needs to be set before `csharp-mode' is loaded, because of
+compilation and evaluation time conflicts."
+  :type 'symbol
+  :group 'csharp)
 
 (defcustom csharp-font-lock-extra-types
-  (list (concat "[" c-upper "]\\sw*[" c-lower "]\\sw"))
+  (list csharp--regex-type-name)
   (c-make-font-lock-extra-types-blurb "C#" "csharp-mode" (concat))
   :type 'c-extra-types-widget
   :group 'c)
@@ -316,136 +374,26 @@ casts and declarations are fontified.  Used on level 2 and higher."
 (defun csharp-font-lock-keywords ()
   (c-compose-keywords-list csharp-font-lock-keywords))
 
-;;; Compilation support
-;; When invoked by MSBuild, csc’s errors look like this:
-;; subfolder\file.cs(6,18): error CS1006: Name of constructor must
-;; match name of class [c:\Users\user\project.csproj]
-
-(defun csharp--compilation-error-file-resolve ()
-  "Resolve an msbuild error to a (filename . dirname) cons cell."
-  ;; http://stackoverflow.com/a/18049590/429091
-  (cons (match-string 1) (file-name-directory (match-string 4))))
-
-(defconst csharp-compilation-re-msbuild-error
-  (concat
-   "^[[:blank:]]*\\(?:[[:digit:]]+>\\)?"
-   "\\([^(\r\n)]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?): "
-   "error [[:alnum:]]+: [^\r\n]+\\[\\([^]\r\n]+\\)\\]$")
-  "Regexp to match compilation error from msbuild.")
-
-(defconst csharp-compilation-re-msbuild-warning
-  (concat
-   "^[[:blank:]]*\\(?:[[:digit:]]+>\\)?"
-   "\\([^(\r\n)]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?): "
-   "warning [[:alnum:]]+: [^\r\n]+\\[\\([^]\r\n]+\\)\\]$")
-  "Regexp to match compilation warning from msbuild.")
-
-;; Notes on xbuild and devenv commonalities
-;;
-;; These regexes were tailored for xbuild, but apart from the concurrent
-;; build-marker ("1>") they share exactly the same match-markers.
-;;
-;; If we don't exclude the match-markers explicitly, these regexes
-;; will also be used to match for devenv as well, including the build-marker
-;; in the file-name, causing the lookup to fail.
-;;
-;; So if we don't want devenv to fail, we actually need to handle it in our
-;; xbuild-regexes, but then we automatically get devenv-support for free.
-
-(defconst csharp-compilation-re-xbuild-error
-  (concat
-   "^[[:blank:]]*\\(?:[[:digit:]]+>\\)?"
-   "\\([^(\r\n)]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?"
-   ;; handle weird devenv output format with 4 numbers, not 2 by having optional
-   ;; extra capture-groups.
-   "\\(?:,\\([0-9]+\\)\\)*): "
-   "error [[:alnum:]]+: .+$")
-  "Regexp to match compilation error from xbuild.")
-
-(defconst csharp-compilation-re-xbuild-warning
-  (concat
-   "^[[:blank:]]*\\(?:[[:digit:]]+>\\)?"
-   "\\([^(\r\n)]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?"
-   ;; handle weird devenv output format with 4 numbers, not 2 by having optional
-   ;; extra capture-groups.
-   "\\(?:,\\([0-9]+\\)\\)?*): "
-   "warning [[:alnum:]]+: .+$")
-  "Regexp to match compilation warning from xbuild.")
-
-(defconst csharp-compilation-re-dotnet-error
-  "\\([^\r\n]+\\) : error [A-Z]+[0-9]+:")
-
-(defconst csharp-compilation-re-dotnet-warning
-  "\\([^\r\n]+\\) : warning [A-Z]+[0-9]+:")
-
-(defconst csharp-compilation-re-dotnet-testfail
-  (concat
-   "\\[[A-Za-z.]+[[:blank:]]+[0-9]+:[0-9]+:[0-9]+.[0-9]+\\][^(\r\n)]+ \\[FAIL\\]\n"
-   "[[:blank:]]+X \\(?:.+\n\\)+"
-   "[[:blank:]]+Stack Trace:\n"
-   "[[:blank:]]+at [^\r\n]+ in \\([^\r\n]+\\):line \\([0-9]+\\)"))
-
-(eval-after-load 'compile
-  (lambda ()
-    (dolist
-        (regexp
-         `((xbuild-error
-            ,csharp-compilation-re-xbuild-error
-            1 2 3 2)
-           (xbuild-warning
-            ,csharp-compilation-re-xbuild-warning
-            1 2 3 1)
-           (msbuild-error
-            ,csharp-compilation-re-msbuild-error
-            csharp--compilation-error-file-resolve
-            2
-            3
-            2
-            nil
-            (1 compilation-error-face)
-            (4 compilation-error-face))
-           (msbuild-warning
-            ,csharp-compilation-re-msbuild-warning
-            csharp--compilation-error-file-resolve
-            2
-            3
-            1
-            nil
-            (1 compilation-warning-face)
-            (4 compilation-warning-face))
-           (dotnet-error
-            ,csharp-compilation-re-dotnet-error
-            1)
-           (dotnet-warning
-            ,csharp-compilation-re-dotnet-warning
-            1 nil nil 1)
-           (dotnet-testfail
-            ,csharp-compilation-re-dotnet-testfail
-            1 2)))
-      (add-to-list 'compilation-error-regexp-alist-alist regexp)
-      (add-to-list 'compilation-error-regexp-alist (car regexp)))))
-
 ;;; Doc comments
 
 (defconst codedoc-font-lock-doc-comments
   ;; Most of this is taken from the javadoc example, however, we don't use the
   ;; '@foo' syntax, so I removed that. Supports the XML tags only
-  `((,(concat "</?\\sw"			; XML tags.
-	      "\\("
-	      (concat "\\sw\\|\\s \\|[=\n\r*.:]\\|"
-		      "\"[^\"]*\"\\|'[^']*'")
-	      "\\)*>")
-     0 ,c-doc-markup-face-name prepend nil)
-    ("&\\(\\sw\\|[.:]\\)+;"		; XML entities.
-     0 ,c-doc-markup-face-name prepend nil)
-    (,(lambda (limit)
-	(c-find-invalid-doc-markup "[<>&]\\|{@" limit))
-     0 'font-lock-warning-face prepend nil)))
+  `((,(concat "</?\\sw"         ; XML tags.
+              "\\("
+              (concat "\\sw\\|\\s \\|[=\n\r*.:]\\|"
+                      "\"[^\"]*\"\\|'[^']*'")
+              "\\)*/?>")
+     0 ,csharp-codedoc-tag-face prepend nil)
+    ;; ("\\([a-zA-Z0-9_]+\\)=" 0 font-lock-variable-name-face prepend nil)
+    ;; ("\".*\"" 0 font-lock-string-face prepend nil)
+    ("&\\(\\sw\\|[.:]\\)+;"     ; XML entities.
+     0 ,csharp-codedoc-tag-face prepend nil)))
 
 (defconst codedoc-font-lock-keywords
   `((,(lambda (limit)
-	(c-font-lock-doc-comments "///" limit
-	  codedoc-font-lock-doc-comments)))))
+        (c-font-lock-doc-comments "///" limit
+          codedoc-font-lock-doc-comments)))))
 
 ;;; End of doc comments
 
@@ -461,13 +409,13 @@ casts and declarations are fontified.  Used on level 2 and higher."
       (apply orig-fun args))))
 
 (defun csharp-at-lambda-header ()
-  (unless (bobp)
-    (save-excursion
-      (c-backward-syntactic-ws)
+  (save-excursion
+    (c-backward-syntactic-ws)
+    (unless (bobp)
       (backward-char)
       (c-safe (goto-char (scan-sexps (point) -1)))
       (when (or (looking-at "([[:alnum:][:space:]_,]*)[ \t\n]*=>[ \t\n]*{")
-	        (looking-at "[[:alnum:]_]+[ \t\n]*=>[ \t\n]*{"))
+                (looking-at "[[:alnum:]_]+[ \t\n]*=>[ \t\n]*{"))
         ;; If we are at a C# lambda header
         (cons 'inexpr (point))))))
 
@@ -519,61 +467,61 @@ casts and declarations are fontified.  Used on level 2 and higher."
 
 (when (version= emacs-version "27.1")
   ;; See:
-  ;; https://github.com/josteink/csharp-mode/issues/175
-  ;; https://github.com/josteink/csharp-mode/issues/151
+  ;; https://github.com/emacs-csharp/csharp-mode/issues/175
+  ;; https://github.com/emacs-csharp/csharp-mode/issues/151
   ;; for the full story.
   (defun c-pps-to-string-delim (end)
     (let* ((start (point))
-	   (no-st-s `(0 nil nil ?\" nil nil 0 nil ,start nil nil))
-	   (st-s `(0 nil nil t nil nil 0 nil ,start nil nil))
-	   no-st-pos st-pos
-	   )
+           (no-st-s `(0 nil nil ?\" nil nil 0 nil ,start nil nil))
+           (st-s `(0 nil nil t nil nil 0 nil ,start nil nil))
+           no-st-pos st-pos
+           )
       (parse-partial-sexp start end nil nil no-st-s 'syntax-table)
       (setq no-st-pos (point))
       (goto-char start)
       (while (progn
-	       (parse-partial-sexp (point) end nil nil st-s 'syntax-table)
-	       (unless (bobp)
-		 (c-clear-syn-tab (1- (point))))
-	       (setq st-pos (point))
-	       (and (< (point) end)
-		    (not (eq (char-before) ?\")))))
+               (parse-partial-sexp (point) end nil nil st-s 'syntax-table)
+               (unless (bobp)
+                 (c-clear-syn-tab (1- (point))))
+               (setq st-pos (point))
+               (and (< (point) end)
+                    (not (eq (char-before) ?\")))))
       (goto-char (min no-st-pos st-pos))
       nil))
 
   (defun c-multiline-string-check-final-quote ()
     (let (pos-ll pos-lt)
       (save-excursion
-	(goto-char (point-max))
-	(skip-chars-backward "^\"")
-	(while
-	    (and
-	     (not (bobp))
-	     (cond
-	      ((progn
-		 (setq pos-ll (c-literal-limits)
-		       pos-lt (c-literal-type pos-ll))
-		 (memq pos-lt '(c c++)))
-	       ;; In a comment.
-	       (goto-char (car pos-ll)))
-	      ((save-excursion
-		 (backward-char)		; over "
-		 (c-is-escaped (point)))
-	       ;; At an escaped string.
-	       (backward-char)
-	       t)
-	      (t
-	       ;; At a significant "
-	       (c-clear-syn-tab (1- (point)))
-	       (setq pos-ll (c-literal-limits)
-		     pos-lt (c-literal-type pos-ll))
-	       nil)))
-	  (skip-chars-backward "^\""))
-	(cond
-	 ((bobp))
-	 ((eq pos-lt 'string)
-	  (c-put-syn-tab (1- (point)) '(15)))
-	 (t nil))))))
+        (goto-char (point-max))
+        (skip-chars-backward "^\"")
+        (while
+            (and
+             (not (bobp))
+             (cond
+              ((progn
+                 (setq pos-ll (c-literal-limits)
+                       pos-lt (c-literal-type pos-ll))
+                 (memq pos-lt '(c c++)))
+               ;; In a comment.
+               (goto-char (car pos-ll)))
+              ((save-excursion
+                 (backward-char)        ; over "
+                 (c-is-escaped (point)))
+               ;; At an escaped string.
+               (backward-char)
+               t)
+              (t
+               ;; At a significant "
+               (c-clear-syn-tab (1- (point)))
+               (setq pos-ll (c-literal-limits)
+                     pos-lt (c-literal-type pos-ll))
+               nil)))
+          (skip-chars-backward "^\""))
+        (cond
+         ((bobp))
+         ((eq pos-lt 'string)
+          (c-put-syn-tab (1- (point)) '(15)))
+         (t nil))))))
 
 ;;; End of fix for strings on version 27.1
 
@@ -588,7 +536,7 @@ casts and declarations are fontified.  Used on level 2 and higher."
     map)
   "Keymap used in csharp-mode buffers.")
 
-(easy-menu-define csharp-menu csharp-mode-map "C# Mode Commands"
+(easy-menu-define csharp-mode-menu csharp-mode-map "C# Mode Commands"
   (cons "C#" (c-lang-const c-mode-menu csharp)))
 
 ;;;###autoload
@@ -611,8 +559,7 @@ Key bindings:
   (c-initialize-cc-mode t)
   (c-init-language-vars csharp-mode)
   (c-common-init 'csharp-mode)
-  (easy-menu-add csharp-menu)
-  (c-set-style "csharp")
+  (easy-menu-add csharp-mode-menu)
   (setq-local c-doc-comment-style '((csharp-mode . codedoc)))
   (c-run-mode-hooks 'c-mode-common-hook 'csharp-mode-hook))
 

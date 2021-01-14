@@ -76,8 +76,7 @@
   :group 'geiser-chicken)
 
 (geiser-custom--defcustom geiser-chicken-load-path nil
-  "A list of paths to be added to Chicken's load path when it's
-started."
+  "A list of paths to be added to Chicken's load path when it's started."
   :type '(repeat file)
   :group 'geiser-chicken)
 
@@ -151,15 +150,19 @@ This function uses `geiser-chicken-init-file' if it exists."
        (format "(geiser#geiser-%s %s)" proc form)))))
 
 (defconst geiser-chicken--module-re
-  "( *module +\\(([^)]+)\\|[^ ]+\\)\\|( *define-library +\\(([^)]+)\\|[^ ]+\\)")
+  "( *module +\\(([^)]+)\\|[^ ]+\\)")
+
+(defconst geiser-chicken--define-library-re
+  "( *define-library +\\(([^)]+)\\)")
 
 (defun geiser-chicken--get-module (&optional module)
   (cond ((null module)
          (save-excursion
            (geiser-syntax--pop-to-top)
            (if (or (re-search-backward geiser-chicken--module-re nil t)
-                   (looking-at geiser-chicken--module-re)
-                   (re-search-forward geiser-chicken--module-re nil t))
+                   (re-search-backward geiser-chicken--define-library-re nil t)
+                   (re-search-forward geiser-chicken--module-re nil t)
+                   (re-search-forward geiser-chicken--define-library-re nil t))
                (geiser-chicken--get-module (match-string-no-properties 1))
              :f)))
         ((listp module) module)
@@ -214,8 +217,9 @@ This function uses `geiser-chicken-init-file' if it exists."
 (defun geiser-chicken--external-help (id module)
   "Loads chicken doc into a buffer"
   (let* ((version (geiser-chicken--version (geiser-chicken--binary)))
-	 (major-version (first (split-string version "\\\."))))
-    (browse-url (format "http://api.call-cc.org/%s/cdoc?q=%s&query-name=Look+up" major-version id))))
+	 (major-version (car (split-string version "\\\."))))
+    (browse-url (format "http://api.call-cc.org/%s/cdoc?q=%s&query-name=Look+up"
+                        major-version id))))
 
 
 ;;; Keywords and syntax

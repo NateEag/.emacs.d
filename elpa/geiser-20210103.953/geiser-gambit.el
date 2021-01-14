@@ -58,8 +58,7 @@
   :group 'geiser-gambit)
 
 (geiser-custom--defcustom geiser-gambit-load-path nil
-  "A list of paths to be added to gambit's load path when it's
-started."
+  "A list of paths to be added to gambit's load path when it's started."
   :type '(repeat file)
   :group 'geiser-gambit)
 
@@ -123,8 +122,11 @@ If `t', Geiser will use `next-error' to jump to the error's location."
   :type 'boolean
   :group 'geiser-gambit)
 
-;;; evaluation support when module loaded at opening
-;;; the gambit/geiser# is the namespace of geiser module for gambit
+;;; Evaluation support:
+
+;; evaluation support when module loaded at opening
+;; the gambit/geiser# is the namespace of geiser module for gambit
+
 (defun geiser-gambit--geiser-procedure (proc &rest args)
   (cl-case proc
     ((eval compile)
@@ -185,8 +187,6 @@ If `t', Geiser will use `next-error' to jump to the error's location."
 
 (defun geiser-gambit--symbol-begin (module)
   (save-excursion (skip-syntax-backward "^-()> ") (point)))
-
-;; error display
 
 ;;; Error display
 
@@ -310,6 +310,7 @@ If `t', Geiser will use `next-error' to jump to the error's location."
 
 (defun geiser-gambit--startup (remote)
   (compilation-setup t))
+
 ;;; Implementation definition:
 
 (define-geiser-implementation gambit

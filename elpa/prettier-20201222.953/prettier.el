@@ -46,6 +46,7 @@
 (require 'subr-x)
 (require 'compile)
 (require 'ansi-color)
+(require 'package)
 
 (eval-when-compile
   (require 'cl-lib)
@@ -143,8 +144,10 @@ Requires Prettier 1.9+."
 (defcustom prettier-enabled-parsers '(angular
                                       babel
                                       babel-flow
+                                      babel-ts
                                       css
                                       elm
+                                      espree
                                       flow
                                       graphql
                                       html
@@ -154,12 +157,14 @@ Requires Prettier 1.9+."
                                       lua
                                       markdown
                                       mdx
+                                      meriyah
                                       php
                                       postgresql
                                       pug
                                       python
                                       ruby
                                       scss
+                                      sh
                                       solidity
                                       svelte
                                       swift
@@ -179,8 +184,10 @@ on your Prettier version and which plug-ins you have installed."
     (const :tag "Angular (1.15+)" angular)
     (const :tag "Babel (formerly Babylon)" babel)
     (const :tag "Babel-Flow (1.15+)" babel-flow)
+    (const :tag "Babel-TS (2.0+)" babel-ts)
     (const :tag "CSS (1.4+)" css)
     (const :tag "Elm (2.0+?, requires plugin)" elm)
+    (const :tag "Espree (2.2+)" espree)
     (const :tag "Flow" flow)
     (const :tag "GraphQL (1.5+)" graphql)
     (const :tag "Java (2.0+?, requires plugin)" java)
@@ -192,12 +199,14 @@ on your Prettier version and which plug-ins you have installed."
     (const :tag "HTML (1.16+)" html)
     (const :tag "Markdown (1.8+)" markdown)
     (const :tag "MDX (1.15+)" mdx)
+    (const :tag "Meriyah (2.2+)" meriyah)
     (const :tag "PHP (1.10+, requires plugin)" php)
     (const :tag "PostgreSQL (1.10+, requires plugin" postgresql)
     (const :tag "Pug (2.0+, requires plugin)" pug)
     (const :tag "Python (1.10+, requires plugin)" python)
     (const :tag "Ruby (1.10+, requires plugin)" ruby)
     (const :tag "SCSS (1.4+)" scss)
+    (const :tag "Shell (2.0+)" sh)
     (const :tag "Solidity (2.0+?, requires plugin)" solidity)
     (const :tag "Svelte (1.16+, requires plugin)" svelte)
     (const :tag "Swift (1.10+, requires plugin)" swift)
@@ -296,6 +305,7 @@ Other errors are shown inline or in the error buffer.")
       python-indent                 ; python-mode
       ruby-indent-level             ; ruby-mode
       sgml-basic-offset             ; js2-mode, html-mode, svelte-mode
+      sh-indentation                ; sh-mode
       smie-indent-basic             ; smie.el (generic)
       standard-indent               ; indent.el (generic)
       swift-mode:basic-offset       ; swift-mode.el
@@ -369,14 +379,18 @@ won't be touched.")
 (defun prettier--guess-js-ish ()
   "Return which parsers to use for a buffer with a JS-like mode."
   (cond
-   ((and (boundp 'tide-mode)
-         tide-mode)
-    '(typescript babel flow babel-flow))
+   ((or (and (boundp 'tide-mode)
+             tide-mode)
+        (and (fboundp 'lsp-buffer-language)
+             (ignore-errors
+               (member (lsp-buffer-language)
+                       '("typescript" "typescriptreact")))))
+    '(typescript babel-ts babel meriyah espree flow babel-flow))
    ((and (boundp 'flow-minor-mode)
          flow-minor-mode)
-    '(babel-flow flow babel))
+    '(babel-flow flow babel meriyah espree))
    (t
-    '(babel flow babel-flow))))
+    '(babel meriyah espree flow babel-flow))))
 
 (defconst prettier-major-mode-parsers
   `((angular-mode . (angular))
@@ -388,7 +402,7 @@ won't be touched.")
     (js-mode . ,#'prettier--guess-js-ish)
     (js2-mode . ,#'prettier--guess-js-ish)
     (js3-mode . ,#'prettier--guess-js-ish)
-    (typescript-mode . (typescript))
+    (typescript-mode . (typescript babel-ts))
     (css-mode . (css))
     (scss-mode . (scss))
     (less-mode . (less))
@@ -415,6 +429,7 @@ won't be touched.")
     (enh-ruby-mode . (ruby))
     (python-mode . (python))
     (php-mode . (php))
+    (sh-mode . (sh))
     (sql-mode . (postgresql))
     (swift-mode . (swift)))
   "Map from major mode to Prettier parsers.
@@ -427,7 +442,7 @@ when called with buffer current, returns such a list.")
   `((nil . (html))
     ("javascript" . ,#'prettier--guess-js-ish)
     ("jsx" . ,#'prettier--guess-js-ish)
-    ("typescript" . (typescript))
+    ("typescript" . (typescript babel-ts))
     ("css" . (css))
     ("json" . (json json5))
     ("markdown" . (markdown))
@@ -486,6 +501,9 @@ returns.")
 (defvar prettier-nvm-node-command-cache nil
   "Cache for the result of `prettier--node-from-nvm'.")
 
+(defvar prettier-parser-history nil
+  "History for `prettier--read-parsers'.")
+
 ;;;;; Local Variables
 
 (defvar-local prettier-parsers nil
@@ -500,9 +518,6 @@ parser unless `prettier-infer-parser-flag' is nil.")
 
 (defvar-local prettier-previous-local-settings nil
   "Used to backup settings so they can be restored later.")
-
-(defvar-local prettier-config-cache nil
-  "Used to memoize Prettier options")
 
 (defvar-local prettier-error-overlay nil
   "Used to remember the last error overlay")
@@ -639,7 +654,14 @@ should be used when filing bug reports."
                  'local)
     (remove-hook 'after-change-major-mode-hook
                  #'prettier--maybe-sync-config
-                 'local)))
+                 'local)
+
+    (prettier--revert-synced-config)
+
+    (setq prettier-last-parser nil
+          prettier-last-error-marker nil
+          prettier-version nil
+          prettier-previous-local-settings nil)))
 
 ;;;###autoload
 (define-globalized-minor-mode
@@ -704,8 +726,7 @@ Prettier parser name) or nil when nothing was selected."
 Configuration is synced when `prettier-mode-sync-config-flag' is
 non-nil and `prettier' is enabled in current buffer."
   (when (and prettier-mode
-             prettier-mode-sync-config-flag
-             (null prettier-config-cache))
+             prettier-mode-sync-config-flag)
     (with-temp-message "Prettier syncing config"
       (prettier--sync-config))))
 
@@ -936,11 +957,9 @@ If loaded successfully, uses it to set a variety of buffer-local
 variables in an effort to make pre-formatting indentation etc as
 close to post-formatting as possible."
   (condition-case-unless-debug err
-      (let ((config (prettier--load-config)))
+      (let* ((config (prettier--load-config))
+             (options (plist-get config :options)))
         (setq
-         prettier-config-cache
-         (plist-get config :options)
-
          prettier-last-parser
          (plist-get config :bestParser)
 
@@ -948,36 +967,55 @@ close to post-formatting as possible."
          (plist-get (plist-get config :versions) :prettier)
 
          prettier-previous-local-settings
-         (seq-filter
-          #'identity
-          (apply
-           #'append
-           (mapcar
-            (lambda (setting)
-              (let* ((vars (nth 0 setting))
-                     (source (nth 1 setting))
-                     (value (funcall
-                             (or (nth 2 setting) #'identity)
-                             (if (keywordp source)
-                                 (plist-get prettier-config-cache
-                                            source)
-                               source))))
-                (unless (eq value 'unchanged)
-                  (mapcar
-                   (lambda (var)
-                     (when (boundp var)
-                       (let ((result
-                              (list var (local-variable-p var)
-                                    (eval var)
-                                    value)))
-                         (set (make-local-variable var) value)
-                         result)))
-                   vars))))
-            prettier-sync-settings)))))
+         (when options
+           (seq-filter
+            #'identity
+            (apply
+             #'append
+             (mapcar
+              (lambda (setting)
+                (let* ((vars (nth 0 setting))
+                       (source (nth 1 setting))
+                       (value (funcall
+                               (or (nth 2 setting) #'identity)
+                               (if (keywordp source)
+                                   (plist-get options source)
+                                 source))))
+                  (unless (eq value 'unchanged)
+                    (mapcar
+                     (lambda (var)
+                       (when (boundp var)
+                         (let ((result
+                                (list var (local-variable-p var)
+                                      (eval var)
+                                      value)))
+                           (set (make-local-variable var) value)
+                           result)))
+                     vars))))
+              prettier-sync-settings))))))
     ;; Ignore any errors but print a warning
     ((debug error)
      (message "Could not sync Prettier config, consider setting \
 `prettier-mode-sync-config-flag' to nil: %S" err))))
+
+(defun prettier--revert-synced-config ()
+  "Revert any change made by `prettier--sync-config'."
+  (mapc
+   (lambda (local-setting)
+     (let ((var (car local-setting)))
+       (cond
+        ((or (not (boundp var))
+             (not (eq (eval var) (nth 3 local-setting))))
+         ;; If the setting has changed since we set it, or the
+         ;; variable was unbound in the meantime, leave it alone
+         nil)
+        ((null (nth 1 local-setting))
+         ;; setting wasn't local before, kill the variable
+         (kill-local-variable var))
+        (t
+         ;; otherwise, set it to previous value
+         (set var (nth 2 local-setting))))))
+   prettier-previous-local-settings))
 
 (iter2-defun prettier--request-iter (prettier-process
                                      request
@@ -1159,7 +1197,7 @@ formatting."
          (point-end-p (eq point-before (point-max)))
          (relative-point (and (>= point-before start-point)
                               (<= point-before end-point)
-                              (- point-before start-point -1)))
+                              (- point-before start-point)))
          (filename (prettier--local-file-name))
          (tempfile (make-nearby-temp-file "prettier-emacs."))
          result-point
@@ -1234,7 +1272,7 @@ formatting."
 
           (unless any-errors
             (prettier--clear-errors)
-            (when result-point (goto-char result-point)))
+            (when result-point (goto-char (1+ result-point))))
 
           (prettier--maybe-show-benchmark start-time
                                           (current-time)
@@ -1313,10 +1351,12 @@ for derived modes.)"
        (lambda (parser)
          (member parser prettier-enabled-parsers))
        (prettier--parsers-for-mode
-        (if (and (fboundp 'mhtml-mode)
-                 (get-text-property (point) 'mhtml-submode))
-            'mhtml-mode
-          major-mode)))))
+        (or (and (fboundp 'mhtml-mode)
+                 (get-text-property (point) 'mhtml-submode)
+                 'mhtml-mode)
+            (and (boundp 'mmm-primary-mode)
+                 mmm-primary-mode)
+            major-mode)))))
 
 (defun prettier--parsers-for-mode (mode)
   "Return a list of parsers for the given major MODE.

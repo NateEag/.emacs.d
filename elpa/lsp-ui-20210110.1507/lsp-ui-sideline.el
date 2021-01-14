@@ -38,6 +38,11 @@
 (require 'subr-x)
 (require 'face-remap)
 
+(defvar flycheck-display-errors-function)
+(declare-function flycheck-overlay-errors-in "ext:flycheck.el")
+(declare-function flycheck-error-format-message-and-id "ext:flycheck.el")
+(declare-function flycheck-error-level "ext:flycheck.el")
+
 (defgroup lsp-ui-sideline nil
   "Display information for the current line."
   :group 'tools
@@ -152,20 +157,21 @@ It is used to know when the window has changed of width.")
   :group 'lsp-ui-sideline)
 
 (defface lsp-ui-sideline-current-symbol
-  '((default
-      :foreground "white"
-      :weight ultra-bold
-      :box (:line-width -1 :color "white")
-      :height 0.99)
-    (((background light))
-     :foreground "dim gray"
-     :box (:line-width -1 :color "dim gray")))
+  '((((background light))
+     :foreground "black"
+     :weight ultra-bold
+     :box (:line-width -1 :color "black")
+     :height 0.99)
+    (t :foreground "white"
+       :weight ultra-bold
+       :box (:line-width -1 :color "white")
+       :height 0.99))
   "Face used to highlight the symbol on point."
   :group 'lsp-ui-sideline)
 
 (defface lsp-ui-sideline-code-action
-  '((default :foreground "yellow")
-    (((background light)) :foreground "DarkOrange"))
+  '((((background light)) :foreground "DarkOrange")
+    (t :foreground "yellow"))
   "Face used to highlight code action text."
   :group 'lsp-ui-sideline)
 
@@ -598,13 +604,13 @@ from the language server."
                    "textDocument/hover"
                    (lsp-make-hover-params :text-document doc-id :position position)
                    (lambda (info)
-                     (setq current-index (1+ current-index))
+                     (cl-incf current-index)
                      (and info (push (list symbol bounds info) list-infos))
                      (when (or (= current-index length-symbols) (not lsp-ui-sideline-wait-for-all-symbols))
                        (lsp-ui-sideline--display-all-info buffer list-infos tag bol eol)))
                    :error-handler
                    (lambda (&rest _)
-                     (setq current-index (1+ current-index))
+                     (cl-incf current-index)
                      (when (or (= current-index length-symbols) (not lsp-ui-sideline-wait-for-all-symbols))
                        (lsp-ui-sideline--display-all-info buffer list-infos tag bol eol)))
                    :mode 'tick))))))))))
@@ -655,8 +661,7 @@ COMMAND is `company-pseudo-tooltip-frontend' parameter."
 This does not toggle display of flycheck diagnostics or code actions."
   (interactive)
   (when (bound-and-true-p lsp-ui-sideline-mode)
-    (setq lsp-ui-sideline-show-hover
-          (not lsp-ui-sideline-show-hover))
+    (setq lsp-ui-sideline-show-hover (not lsp-ui-sideline-show-hover))
     (lsp-ui-sideline--run (current-buffer))))
 
 (defun lsp-ui-sideline--diagnostics-changed ()
@@ -670,8 +675,7 @@ This does not toggle display of flycheck diagnostics or code actions."
 (defun lsp-ui-sideline--erase (&rest _)
   "Remove all sideline overlays and delete last tag."
   (when (bound-and-true-p lsp-ui-sideline-mode)
-    (ignore-errors
-      (lsp-ui-sideline--delete-ov))))
+    (ignore-errors (lsp-ui-sideline--delete-ov))))
 
 (define-minor-mode lsp-ui-sideline-mode
   "Minor mode for showing information for current line."

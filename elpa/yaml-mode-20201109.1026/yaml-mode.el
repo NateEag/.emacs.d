@@ -6,10 +6,10 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <mail@vasilij.de>
 ;; Package-Requires: ((emacs "24.1"))
-;; Package-Version: 20200725.1836
-;; Package-Commit: 68fecb5f0dec712a10c8655df6881392a4613617
+;; Package-Version: 20201109.1026
+;; Package-Commit: fc5e1c58f94472944c4aa838f00f6adcac6fa992
 ;; Keywords: data yaml
-;; Version: 0.0.14
+;; Version: 0.0.15
 
 ;; This file is not part of Emacs
 
@@ -119,7 +119,7 @@ that key is pressed to begin a block literal."
 
 ;; Constants
 
-(defconst yaml-mode-version "0.0.14" "Version of `yaml-mode'.")
+(defconst yaml-mode-version "0.0.15" "Version of `yaml-mode'.")
 
 (defconst yaml-blank-line-re "^ *$"
   "Regexp matching a line containing only (valid) whitespace.")
@@ -324,6 +324,8 @@ artificially limited to the value of
           (unless (looking-at yaml-blank-line-re)
             (setq min-level (min min-level (current-indentation))))
           (forward-line -1))
+        (when (looking-at-p " *- ")
+          (setq min-level (- min-level 2)))
         (cond
          ((and (< (current-indentation) min-level)
                (looking-at yaml-block-literal-re))

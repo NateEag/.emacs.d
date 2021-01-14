@@ -37,7 +37,7 @@
 ;;;; Customization
 
 (defgroup bufler-workspace nil
-  "Options for Mr. Buffer's workspaces."
+  "Options for Bufler's workspaces."
   :group 'bufler)
 
 (defcustom bufler-workspace-ignore-case t
@@ -54,6 +54,24 @@ with prefix arguments."
   (list #'bufler-workspace-set-frame-name)
   "Functions called when the workspace is set."
   :type 'hook)
+
+(defcustom bufler-workspace-format-path-fn #'bufler-format-path
+  "Function to format group paths for display in mode line and frame title.
+May be customized to, e.g. only return the last element of a path."
+  :type '(choice (const :tag "Whole path" bufler-format-path)
+                 (const :tag "Last element" (lambda (path)
+                                              (car (last (bufler-faceify-path path)))))
+                 (function :tag "Custom function")))
+
+(defcustom bufler-workspace-switch-buffer-filter-fns
+  '(bufler--buffer-hidden-p bufler--buffer-mode-filtered-p bufler--buffer-name-filtered-p)
+  "Buffers that match these functions are not shown when offering buffers for switching."
+  :type '(repeat
+          (choice (function-item bufler--buffer-hidden-p)
+                  (function-item bufler--buffer-mode-filtered-p)
+                  (function-item bufler--buffer-name-filtered-p)
+                  (function-item bufler--buffer-special-p)
+                  (function :tag "Custom function"))))
 
 ;;;; Commands
 
@@ -83,7 +101,7 @@ Return the workspace path."
                 alist (mapcar #'path-cons group-paths))
           (bufler-read-from-alist "Group: " alist))))))
   (set-frame-parameter nil 'bufler-workspace-path path)
-  (set-frame-parameter nil 'bufler-workspace-path-formatted (bufler-format-path path))
+  (set-frame-parameter nil 'bufler-workspace-path-formatted (funcall bufler-workspace-format-path-fn path))
   (run-hook-with-args 'bufler-workspace-set-hook path)
   (force-mode-line-update 'all)
   path)
@@ -96,22 +114,31 @@ Interactively, use current buffer."
   (bufler-workspace-frame-set (bufler-buffer-workspace-path buffer)))
 
 ;;;###autoload
-(defun bufler-workspace-switch-buffer (&optional all-p set-workspace-p)
+(defun bufler-workspace-switch-buffer (&optional all-p set-workspace-p no-filter)
   "Switch to another buffer in the current group.
 Without any input, switch to the previous buffer, like
 `switch-to-buffer'.  If ALL-P (interactively, with universal
 prefix) or if the frame has no workspace, select from all
 buffers.  If SET-WORKSPACE-P (with two universal prefixes),
-select from all buffers and set the frame's workspace.
+select from all buffers and set the frame's workspace.  If
+NO-FILTER (with three universal prefixes), include buffers that
+would otherwise be filtered by
+`bufler-workspace-switch-buffer-filter-fns'.
 
 If `bufler-workspace-switch-buffer-sets-workspace' is non-nil,
 act as if SET-WORKSPACE-P is non-nil."
-  (interactive (list current-prefix-arg (equal '(16) current-prefix-arg)))
+  (interactive (list current-prefix-arg
+                     (and current-prefix-arg
+                          (>= (car current-prefix-arg) 16))
+                     (and current-prefix-arg
+                          (>= (car current-prefix-arg) 64))))
   (let* ((bufler-vc-state nil)
          (completion-ignore-case bufler-workspace-ignore-case)
          (path (unless all-p
                  (frame-parameter nil 'bufler-workspace-path)))
-         (buffers (bufler-buffer-alist-at path))
+         (buffers (bufler-buffer-alist-at
+                   path :filter-fns (unless no-filter
+                                      bufler-workspace-switch-buffer-filter-fns)))
          (other-buffer-path (bufler-group-tree-leaf-path
                              (bufler-buffers) (other-buffer (current-buffer))))
          (other-buffer-cons (cons (buffer-name (-last-item other-buffer-path))
@@ -151,7 +178,7 @@ appear in a named workspace, the buffer must be matched by an
 
 ;;;###autoload
 (define-minor-mode bufler-workspace-mode
-  "When active, set the frame title according to current Mr. Buffer group."
+  "When active, set the frame title according to current Bufler group."
   :global t
   (let ((lighter '(bufler-workspace-mode (:eval (bufler-workspace-mode-lighter)))))
     (if bufler-workspace-mode
@@ -180,7 +207,7 @@ Works as `tab-line-tabs-function'."
 (defun bufler-workspace-set-frame-name (path)
   "Set current frame's name according to PATH."
   (set-frame-name (when path
-                    (format "Workspace: %s" (bufler-format-path path)))))
+                    (format "Workspace: %s" (funcall bufler-workspace-format-path-fn path)))))
 
 (cl-defun bufler-workspace-read-item (tree &key (leaf-key #'identity))
   "Return a leaf read from TREE with completion.

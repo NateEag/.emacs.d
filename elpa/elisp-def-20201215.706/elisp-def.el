@@ -1,9 +1,9 @@
 ;;; elisp-def.el --- macro-aware go-to-definition for elisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018  Wilfred Hughes
-;; Version: 1.1
-;; Package-Version: 20200528.633
-;; Package-Commit: da1f76391ac0d277e3c5758203e0150f6bae0beb
+;; Copyright (C) 2020  Wilfred Hughes
+;; Version: 1.2
+;; Package-Version: 20201215.706
+;; Package-Commit: 679fa7d2d702263b6a55f30a1b8cfbb2fd817549
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: lisp
@@ -836,36 +836,44 @@ Or for let-bound variables:
 Point is placed on the first character of SYM.
 
 If SYM isn't present, use the most relevant symbol."
-  (let ((form-end-pos (scan-sexps (point) 1))
-        sym-end-pos)
-    (when
-        (re-search-forward
-         (rx-to-string `(seq symbol-start ,(symbol-name sym) symbol-end))
-         form-end-pos
-         t)
-      (setq sym-end-pos (point)))
+  (save-match-data
+    (let (sym-end-pos)
+      (cond
+       ((or (derived-mode-p 'c-mode) (derived-mode-p 'c++-mode))
+        ;; move to the quoted function/variable name string; the bound is after
+        ;; two sexps: one DEFUN/DEFVAR/... followed by a parenthesised list of
+        ;; arguments.
+        (re-search-forward "\"" (scan-sexps (point) 2))
+        (save-excursion
+          (backward-char)
+          (setq sym-end-pos (1- (scan-sexps (point) 1)))))
+       (t
+        (let ((form-end-pos (scan-sexps (point) 1)))
+          (when
+              (re-search-forward
+               (rx-to-string `(seq symbol-start ,(symbol-name sym) symbol-end))
+               form-end-pos
+               t)
+            (setq sym-end-pos (point)))
+          ;; If we couldn't find the symbol, use the second symbol in the
+          ;; form. This is the best we can do when the symbol doesn't occur
+          ;; (e.g. a foo-mode-hook variable or a make-foo function from a
+          ;; struct).
+          (unless sym-end-pos
+            ;; Move past the opening paren.
+            (forward-char)
+            ;; Move past the first sexp.
+            (forward-sexp)
+            (forward-char)
+            ;; Move the second symbol.
+            (setq
+             sym-end-pos
+             (re-search-forward (rx symbol-end) form-end-pos t)))
 
-    ;; If we couldn't find the symbol, use the second symbol in the
-    ;; form. This is the best we can do when the symbol doesn't occur
-    ;; (e.g. a foo-mode-hook variable or a make-foo function from a
-    ;; struct).
-    (unless sym-end-pos
-      ;; Move past the opening paren.
-      (forward-char)
-      ;; Move past the first sexp.
-      (forward-sexp)
-      (forward-char)
-      ;; Move the second symbol.
-      (setq
-       sym-end-pos
-       (re-search-forward (rx symbol-end) form-end-pos t)))
+          ;; Put point on the first character of the symbol.
+          (goto-char (scan-sexps sym-end-pos -1)))))
 
-    ;; Put point on the first character of the symbol.
-    (goto-char (scan-sexps sym-end-pos -1))
-
-    ;; TODO: this doesn't work properly in c-mode buffers. It works for
-    ;; e.g. `point', but not for `re-search-forward'.
-    (elisp-def--flash-region (point) sym-end-pos)))
+      (elisp-def--flash-region (point) sym-end-pos))))
 
 ;;;###autoload
 (defun elisp-def ()

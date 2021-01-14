@@ -102,6 +102,14 @@ simply concatenated (no quoting)."
   :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
+(defcustom ledger-report-native-highlighting-arguments '("--color" "--force-color")
+  "List of strings to pass to ledger when `ledger-report-use-native-highlighting' is non-nil.
+
+If you are using hledger instead of ledger, you might want to set
+this variable to `(\"--color=always\")'."
+  :type '(repeat string)
+  :group 'ledger-report)
+
 (defcustom ledger-report-auto-width t
   "When non-nil, tell ledger about the width of the report window."
   :type 'boolean
@@ -149,7 +157,6 @@ Calls `shrink-window-if-larger-than-buffer'."
 (defvar ledger-report-cmd nil)
 (defvar ledger-report-name-prompt-history nil)
 (defvar ledger-report-cmd-prompt-history nil)
-(defvar ledger-original-window-cfg nil)
 (defvar ledger-report-saved nil)
 (defvar ledger-minibuffer-history nil)
 (defvar ledger-report-mode-abbrev-table)
@@ -278,8 +285,7 @@ used to generate the buffer, navigating the buffer, etc."
            (edit (not (null current-prefix-arg))))
        (list rname edit))))
   (let* ((file (ledger-master-file))
-         (buf (find-file-noselect file))
-         (wcfg (current-window-configuration)))
+         (buf (find-file-noselect file)))
     (with-current-buffer
         (pop-to-buffer (get-buffer-create ledger-report-buffer-name))
       (with-silent-modifications
@@ -288,7 +294,6 @@ used to generate the buffer, navigating the buffer, etc."
         (set (make-local-variable 'ledger-report-saved) nil)
         (set (make-local-variable 'ledger-buf) buf)
         (set (make-local-variable 'ledger-report-name) report-name)
-        (set (make-local-variable 'ledger-original-window-cfg) wcfg)
         (set (make-local-variable 'ledger-report-is-reversed) nil)
         (set (make-local-variable 'ledger-report-current-month) nil)
         (set 'ledger-master-file file)
@@ -454,7 +459,7 @@ MONTH is of the form (YEAR . INDEX) where INDEX ranges from
     ,@(when ledger-report-auto-width
         `("--columns" ,(format "%d" (- (window-width) 1))))
     ,@(when ledger-report-use-native-highlighting
-        '("--color" "--force-color"))
+        ledger-report-native-highlighting-arguments)
     ,@(when ledger-report-use-strict
         '("--strict"))))
 
@@ -490,7 +495,7 @@ Optionally EDIT the command."
 
 (defun ledger-report--add-links ()
   "Replace file and line annotations with buttons."
-  (while (re-search-forward "^\\(/[^:]+\\)?:\\([0-9]+\\)?:" nil t)
+  (while (re-search-forward "^\\(\\(?:/\\|[a-zA-Z]:[\\/]\\)[^:]+\\)?:\\([0-9]+\\)?:" nil t)
     (let ((file (match-string 1))
           (line (string-to-number (match-string 2))))
       (delete-region (match-beginning 0) (match-end 0))
@@ -587,13 +592,13 @@ IGNORE-AUTO and NOCONFIRM are for compatibility with
       (pop-to-buffer cur-buf))))
 
 (defun ledger-report-quit ()
-  "Quit the ledger report buffer."
+  "Quit the ledger report buffer and kill its buffer."
   (interactive)
-  (ledger-report-goto)
-  (set-window-configuration ledger-original-window-cfg)
-  (kill-buffer (get-buffer ledger-report-buffer-name)))
+  (unless (buffer-live-p (get-buffer ledger-report-buffer-name))
+    (user-error "No ledger report buffer"))
+  (quit-windows-on ledger-report-buffer-name 'kill))
 
-(define-obsolete-function-alias 'ledger-report-kill #'ledger-report-quit)
+(define-obsolete-function-alias 'ledger-report-kill #'ledger-report-quit "2018-03-18")
 
 (defun ledger-report-edit-reports ()
   "Edit the defined ledger reports."

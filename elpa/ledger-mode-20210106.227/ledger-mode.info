@@ -1186,7 +1186,26 @@ File: ledger-mode.info,  Node: Hacking Ledger-mode,  Next: Concept Index,  Prev:
 9 Hacking Ledger-mode
 *********************
 
-Work in Progress.
+* Menu:
+
+* Use org-like outlines::
+
+
+File: ledger-mode.info,  Node: Use org-like outlines,  Prev: Hacking Ledger-mode,  Up: Hacking Ledger-mode
+
+9.1 Use org-like outlines
+=========================
+
+Some users like to have org-like outlines for their ledger files.  A
+suggested customization is to include something like the following in
+your Emacs configuration:
+
+     (eval-after-load 'ledger-mode
+       (progn
+         ;; org-cycle allows completion to work whereas outline-toggle-children does not
+         (define-key ledger-mode-map (kbd "TAB") #'org-cycle)
+         (add-hook 'ledger-mode-hook #'outline-minor-mode)
+         (font-lock-add-keywords 'ledger-mode outline-font-lock-keywords)))
 
 
 File: ledger-mode.info,  Node: Concept Index,  Next: Command & Variable Index,  Prev: Hacking Ledger-mode,  Up: Top
@@ -1197,71 +1216,80 @@ Concept Index
  [index ]
 * Menu:
 
-* balance:                               Quick Balance Display. (line 6)
-* Calc:                                  Editing Amounts.       (line 6)
-* cleared:                               Marking Transactions.  (line 6)
+* balance:                               Quick Balance Display.
+                                                               (line  6)
+* Calc:                                  Editing Amounts.      (line  6)
+* cleared:                               Marking Transactions. (line  6)
 * customization, executable:             Ledger Exec Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, faces:                  Ledger Faces Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, ledger-mode:            Ledger Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, post:                   Ledger Post Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, reconcile:              Ledger Reconcile Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, report:                 Ledger Report Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, test:                   Ledger Test Customization Group.
-                                                                (line 6)
+                                                               (line  6)
 * customization, texi:                   Ledger Texi Customization Group.
-                                                                (line 6)
-* demo:                                  Quick Demo.            (line 6)
+                                                               (line  6)
+* demo:                                  Quick Demo.           (line  6)
 * effective date:                        Setting a Transactions Effective Date.
-                                                                (line 6)
-* GNU Emacs Calculator:                  Editing Amounts.       (line 6)
-* installation:                          Quick Installation.    (line 6)
-* menu:                                  Menus.                 (line 6)
-* pending:                               Marking Transactions.  (line 6)
+                                                               (line  6)
+* folding:                               Use org-like outlines.
+                                                               (line 10)
+* GNU Emacs Calculator:                  Editing Amounts.      (line  6)
+* installation:                          Quick Installation.   (line  6)
+* menu:                                  Menus.                (line  6)
+* org:                                   Use org-like outlines.
+                                                               (line 10)
+* outline:                               Use org-like outlines.
+                                                               (line 10)
+* pending:                               Marking Transactions. (line  6)
 * reconciliation, account changing:      Changing Reconciliation Account.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, basics:                Basics of Reconciliation.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, finalizing:            Finalize Reconciliation.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, starting:              Starting a Reconciliation.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, target changing:       Changing Reconciliation Target.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, transaction adding and deleting: Adding and Deleting Transactions during Reconciliation.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, transaction editing:   Edit Transactions During Reconciliation.
-                                                                (line 6)
+                                                               (line  6)
 * reconciliation, transaction marking:   Mark Transactions Pending.
-                                                                (line 6)
+                                                               (line  6)
 * report, adding and editing:            Adding and Editing Reports.
-                                                                (line 6)
+                                                               (line  6)
 * report, custom command:                Make Report Transactions Active.
-                                                                (line 6)
-* report, custom variable:               Expansion Formats.     (line 6)
+                                                               (line  6)
+* report, custom variable:               Expansion Formats.    (line  6)
 * report, order reversing:               Reversing Report Order.
-                                                                (line 6)
-* report, running:                       Running Basic Reports. (line 6)
-* transaction, adding:                   Adding Transactions.   (line 6)
-* transaction, copying:                  Copying Transactions.  (line 6)
-* transaction, deleting:                 Deleting Transactions. (line 6)
+                                                               (line  6)
+* report, running:                       Running Basic Reports.
+                                                               (line  6)
+* transaction, adding:                   Adding Transactions.  (line  6)
+* transaction, copying:                  Copying Transactions. (line  6)
+* transaction, deleting:                 Deleting Transactions.
+                                                               (line  6)
 * transaction, display filtering:        Narrowing Transactions.
-                                                                (line 6)
-* transaction, editing amounts:          Editing Amounts.       (line 6)
+                                                               (line  6)
+* transaction, editing amounts:          Editing Amounts.      (line  6)
 * transaction, formatting:               Formatting Transactions.
-                                                                (line 6)
-* transaction, marking:                  Marking Transactions.  (line 6)
+                                                               (line  6)
+* transaction, marking:                  Marking Transactions. (line  6)
 * transaction, narrowing:                Narrowing Transactions.
-                                                                (line 6)
+                                                               (line  6)
 * transaction, navigation:               Navigating Transactions.
-                                                                (line 6)
-* transaction, sorting:                  Sorting Transactions.  (line 6)
-* uncleared:                             Marking Transactions.  (line 6)
+                                                               (line  6)
+* transaction, sorting:                  Sorting Transactions. (line  6)
+* uncleared:                             Marking Transactions. (line  6)
 
 
 File: ledger-mode.info,  Node: Command & Variable Index,  Next: Keystroke Index,  Prev: Concept Index,  Up: Top
@@ -1514,9 +1542,10 @@ Node: Ledger Texi Customization Group46262
 Node: Generating Ledger Regression Tests46754
 Node: Embedding Example results in Ledger Documentation47017
 Node: Hacking Ledger-mode47306
-Node: Concept Index47514
-Node: Command & Variable Index52427
-Node: Keystroke Index60537
+Node: Use org-like outlines47531
+Node: Concept Index48196
+Node: Command & Variable Index53712
+Node: Keystroke Index61822
 
 End Tag Table
 

@@ -49,11 +49,11 @@ Split WINDOW sensibly, unsetting its margins first.
 This function unsets the window margins and calls
 `split-window-sensibly'.
 
-By default, `split-window-sensibly' does not split a window
-vertically if it has wide margins, even if there is enough space
-for a vertical split.  This function can be used as the value of
-`split-window-preferred-function' to enable vertically splitting
-windows with wide margins.
+By default, `split-window-sensibly' does not split a window in
+two side-by-side windows if it has wide margins, even if there is
+enough space for a vertical split.  This function is used as the
+value of `split-window-preferred-function' to allow
+`display-buffer' to split such windows.
 
 \(fn &optional WINDOW)" nil nil)
 

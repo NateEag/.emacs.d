@@ -12,6 +12,8 @@
 (autoload 'parse-it "parse-it" "\
 Parse the PATH with symbol language LAN support.
 
+If optional argument is nil; then it will use current buffer instead.
+
 \(fn LAN &optional PATH)" nil nil)
 
 ;;;***
@@ -67,6 +69,14 @@ Parse the PATH with symbol language LAN support.
 
 ;;;***
 
+;;;### (autoloads nil "parse-it-elisp" "parse-it-elisp.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from parse-it-elisp.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-elisp" '("parse-it-elisp")))
+
+;;;***
+
 ;;;### (autoloads nil "parse-it-go" "parse-it-go.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-go.el
 
@@ -114,6 +124,13 @@ Parse the PATH with symbol language LAN support.
 ;;; Generated autoloads from parse-it-lex.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lex" '("parse-it-lex-")))
+
+;;;***
+
+;;;### (autoloads nil "parse-it-lisp" "parse-it-lisp.el" (0 0 0 0))
+;;; Generated autoloads from parse-it-lisp.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lisp" '("parse-it-lisp")))
 
 ;;;***
 

@@ -6,7 +6,7 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Basic Parser in Emacs Lisp.
 ;; Keyword: parse parser lex lexer ast
-;; Version: 0.1.8
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "25.1") (s "1.12.0"))
 ;; URL: https://github.com/jcs-elpa/parse-it
 
@@ -49,7 +49,9 @@
 
 ;;;###autoload
 (defun parse-it (lan &optional path)
-  "Parse the PATH with symbol language LAN support."
+  "Parse the PATH with symbol language LAN support.
+
+If optional argument is nil; then it will use current buffer instead."
   (let ((mod-name (intern (format "parse-it-%s" (symbol-name lan)))))
     (if (and (ignore-errors (require mod-name))
              (functionp mod-name))

@@ -1,4 +1,4 @@
-;;; notmuch-show.el --- displaying notmuch forests
+;;; notmuch-show.el --- displaying notmuch forests  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -58,6 +58,12 @@
 		  (&optional query query-context target buffer-name open-target))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))
+
+(defvar shr-blocked-images)
+(defvar gnus-blocked-images)
+(defvar shr-content-function)
+
+;;; Options
 
 (defcustom notmuch-message-headers '("Subject" "To" "Cc" "Date")
   "Headers that should be shown in a message, in this order.
@@ -162,23 +168,19 @@ indentation."
   :type '(choice (const nil) regexp)
   :group 'notmuch-show)
 
-(defvar notmuch-show-thread-id nil)
-(make-variable-buffer-local 'notmuch-show-thread-id)
+;;; Variables
 
-(defvar notmuch-show-parent-buffer nil)
-(make-variable-buffer-local 'notmuch-show-parent-buffer)
+(defvar-local notmuch-show-thread-id nil)
 
-(defvar notmuch-show-query-context nil)
-(make-variable-buffer-local 'notmuch-show-query-context)
+(defvar-local notmuch-show-parent-buffer nil)
 
-(defvar notmuch-show-process-crypto nil)
-(make-variable-buffer-local 'notmuch-show-process-crypto)
+(defvar-local notmuch-show-query-context nil)
 
-(defvar notmuch-show-elide-non-matching-messages nil)
-(make-variable-buffer-local 'notmuch-show-elide-non-matching-messages)
+(defvar-local notmuch-show-process-crypto nil)
 
-(defvar notmuch-show-indent-content t)
-(make-variable-buffer-local 'notmuch-show-indent-content)
+(defvar-local notmuch-show-elide-non-matching-messages nil)
+
+(defvar-local notmuch-show-indent-content t)
 
 (defvar notmuch-show-attachment-debug nil
   "If t log stdout and stderr from attachment handlers.
@@ -186,8 +188,9 @@ indentation."
 When set to nil (the default) stdout and stderr from attachment
 handlers is discarded. When set to t the stdout and stderr from
 each attachment handler is logged in buffers with names beginning
-\" *notmuch-part*\". This option requires emacs version at least
-24.3 to work.")
+\" *notmuch-part*\".")
+
+;;; Options
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
   '(("Gmane" . "https://mid.gmane.org/")
@@ -267,6 +270,8 @@ position of the message in the thread."
   :type 'boolean
   :group 'notmuch-show)
 
+;;; Utilities
+
 (defmacro with-current-notmuch-show-message (&rest body)
   "Evaluate body with current buffer set to the text of current message."
   `(save-excursion
@@ -281,6 +286,8 @@ position of the message in the thread."
 (defun notmuch-show-turn-on-visual-line-mode ()
   "Enable Visual Line mode."
   (visual-line-mode t))
+
+;;; Commands
 
 ;; DEPRECATED in Notmuch 0.16 since we now have convenient part
 ;; commands.  We'll keep the command around for a version or two in
@@ -361,6 +368,8 @@ operation on the contents of the current buffer."
   "Print the current message."
   (interactive)
   (notmuch-show-with-message-as-text 'notmuch-print-message))
+
+;;; Headers
 
 (defun notmuch-show-fontify-header ()
   (let ((face (cond
@@ -500,13 +509,15 @@ message at DEPTH in the current thread."
 	(narrow-to-region start (point-max))
 	(run-hooks 'notmuch-show-markup-headers-hook)))))
 
+;;; Parts
+
 (define-button-type 'notmuch-show-part-button-type
   'action 'notmuch-show-part-button-default
   'follow-link t
   'face 'message-mml
   :supertype 'notmuch-button-type)
 
-(defun notmuch-show-insert-part-header (nth content-type declared-type
+(defun notmuch-show-insert-part-header (_nth content-type declared-type
 					    &optional name comment)
   (let ((base-label (concat (and name (concat name ": "))
 			    declared-type
@@ -555,7 +566,7 @@ message at DEPTH in the current thread."
 	      (overlay-put overlay 'invisible (not show))
 	      t)))))))
 
-;; Part content ID handling
+;;; Part content ID handling
 
 (defvar notmuch-show--cids nil
   "Alist from raw content ID to (MSG PART).")
@@ -574,12 +585,13 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (let ((ctype (notmuch-split-content-type
-		(downcase (plist-get part :content-type)))))
-    (cond ((equal (car ctype) "multipart")
+  (pcase-let ((`(,content ,type)
+	       (split-string (downcase (plist-get part :content-type)) "/")))
+    (cond ((equal content "multipart")
 	   (mapc (apply-partially #'notmuch-show--register-cids msg)
 		 (plist-get part :content)))
-	  ((equal ctype '("message" "rfc822"))
+	  ((and (equal content "message")
+		(equal type "rfc822"))
 	   (notmuch-show--register-cids
 	    msg
 	    (car (plist-get (car (plist-get part :content)) :body)))))))
@@ -612,7 +624,7 @@ will return nil if the CID is unknown or cannot be retrieved."
   (setq mm-html-inhibit-images nil))
 
 (defvar w3m-current-buffer) ;; From `w3m.el'.
-(defun notmuch-show--cid-w3m-retrieve (url &rest args)
+(defun notmuch-show--cid-w3m-retrieve (url &rest _args)
   ;; url includes the cid: prefix and is URL encoded (see RFC 2392).
   (let* ((cid (url-unhex-string (substring url 4)))
 	 (content-and-type
@@ -628,7 +640,7 @@ will return nil if the CID is unknown or cannot be retrieved."
   (mapcar (lambda (inner-part) (plist-get inner-part :content-type))
 	  (plist-get part :content)))
 
-(defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/alternative (msg part _content-type _nth depth _button)
   (let ((chosen-type (car (notmuch-multipart/alternative-choose
 			   msg (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
@@ -647,7 +659,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/related (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/related (msg part _content-type _nth depth _button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
     ;; Render the primary part.  FIXME: Support RFC 2387 Start header.
@@ -660,7 +672,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/signed (msg part _content-type _nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
   ;; Insert a button detailing the signature status.
@@ -676,7 +688,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/encrypted (msg part _content-type _nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
   ;; Insert a button detailing the encryption status.
@@ -694,10 +706,10 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-application/pgp-encrypted (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-application/pgp-encrypted (_msg _part _content-type _nth _depth _button)
   t)
 
-(defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-multipart/* (msg part _content-type _nth depth _button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
     ;; Show all of the parts.
@@ -708,7 +720,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-message/rfc822 (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-message/rfc822 (msg part _content-type _nth depth _button)
   (let* ((message (car (plist-get part :content)))
 	 (body (car (plist-get message :body)))
 	 (start (point)))
@@ -725,7 +737,7 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
-(defun notmuch-show-insert-part-text/plain (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-text/plain (msg part _content-type _nth depth button)
   ;; For backward compatibility we want to apply the text/plain hook
   ;; to the whole of the part including the part button if there is
   ;; one.
@@ -739,7 +751,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	(run-hook-with-args 'notmuch-show-insert-text/plain-hook msg depth))))
   t)
 
-(defun notmuch-show-insert-part-text/calendar (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-text/calendar (msg part _content-type _nth _depth _button)
   (insert (with-temp-buffer
 	    (insert (notmuch-get-bodypart-text msg part notmuch-show-process-crypto))
 	    ;; notmuch-get-bodypart-text does no newline conversion.
@@ -763,8 +775,8 @@ will return nil if the CID is unknown or cannot be retrieved."
   t)
 
 ;; For backwards compatibility.
-(defun notmuch-show-insert-part-text/x-vcalendar (msg part content-type nth depth button)
-  (notmuch-show-insert-part-text/calendar msg part content-type nth depth button))
+(defun notmuch-show-insert-part-text/x-vcalendar (msg part _content-type _nth depth _button)
+  (notmuch-show-insert-part-text/calendar msg part nil nil depth nil))
 
 (when (version< emacs-version "25.3")
   ;; https://bugs.gnu.org/28350
@@ -780,7 +792,7 @@ will return nil if the CID is unknown or cannot be retrieved."
     ;; the first time).
     (require 'enriched)
     (cl-letf (((symbol-function 'enriched-decode-display-prop)
-	       (lambda (start end &optional param) (list start end))))
+	       (lambda (start end &optional _param) (list start end))))
       (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
 (defun notmuch-show-get-mime-type-of-application/octet-stream (part)
@@ -817,7 +829,8 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  (gnus-blocked-images notmuch-show-text/html-blocked-images))
       (notmuch-show-insert-part-*/* msg part content-type nth depth button))))
 
-;; These functions are used by notmuch-show--insert-part-text/html-shr
+;;; Functions used by notmuch-show--insert-part-text/html-shr
+
 (declare-function libxml-parse-html-region "xml.c")
 (declare-function shr-insert-document "shr")
 
@@ -837,12 +850,12 @@ will return nil if the CID is unknown or cannot be retrieved."
     (shr-insert-document dom)
     t))
 
-(defun notmuch-show-insert-part-*/* (msg part content-type nth depth button)
+(defun notmuch-show-insert-part-*/* (msg part content-type _nth _depth _button)
   ;; This handler _must_ succeed - it is the handler of last resort.
   (notmuch-mm-display-part-inline msg part content-type notmuch-show-process-crypto)
   t)
 
-;; Functions for determining how to handle MIME parts.
+;;; Functions for determining how to handle MIME parts.
 
 (defun notmuch-show-handlers-for (content-type)
   "Return a list of content handlers for a part of type CONTENT-TYPE."
@@ -852,14 +865,13 @@ will return nil if the CID is unknown or cannot be retrieved."
 	      (push func result)))
 	  ;; Reverse order of prefrence.
 	  (list (intern (concat "notmuch-show-insert-part-*/*"))
-		(intern (concat
-			 "notmuch-show-insert-part-"
-			 (car (notmuch-split-content-type content-type))
-			 "/*"))
+		(intern (concat "notmuch-show-insert-part-"
+				(car (split-string content-type "/"))
+				"/*"))
 		(intern (concat "notmuch-show-insert-part-" content-type))))
     result))
 
-;; 
+;;; Parts
 
 (defun notmuch-show-insert-bodypart-internal (msg part content-type nth depth button)
   ;; Run the handlers until one of them succeeds.
@@ -958,13 +970,13 @@ The function should take two parameters, PART and HIDE, and
 should return non-NIL if a header button should be inserted for
 this part.")
 
-(defun notmuch-show-insert-header-p (part hide)
+(defun notmuch-show-insert-header-p (part _hide)
   ;; Show all part buttons except for the first part if it is text/plain.
   (let ((mime-type (notmuch-show-mime-type part)))
     (not (and (string= mime-type "text/plain")
 	      (<= (plist-get part :id) 1)))))
 
-(defun notmuch-show-reply-insert-header-p-never (part hide)
+(defun notmuch-show-reply-insert-header-p-never (_part _hide)
   nil)
 
 (defun notmuch-show-reply-insert-header-p-trimmed (part hide)
@@ -1105,6 +1117,8 @@ is t, hide the part initially and show the button."
     (notmuch-show-message-visible msg (and (plist-get msg :match)
 					   (not (plist-get msg :excluded))))))
 
+;;; Toggle commands
+
 (defun notmuch-show-toggle-process-crypto ()
   "Toggle the processing of cryptographic MIME parts."
   (interactive)
@@ -1133,6 +1147,8 @@ is t, hide the part initially and show the button."
 	     "Content is not indented."))
   (notmuch-show-refresh-view))
 
+;;; Main insert functions
+
 (defun notmuch-show-insert-tree (tree depth)
   "Insert the message tree TREE at depth DEPTH in the current thread."
   (let ((msg (car tree))
@@ -1149,6 +1165,8 @@ is t, hide the part initially and show the button."
 (defun notmuch-show-insert-forest (forest)
   "Insert the forest of threads FOREST."
   (mapc (lambda (thread) (notmuch-show-insert-thread thread 0)) forest))
+
+;;; Link buttons
 
 (defvar notmuch-id-regexp
   (concat
@@ -1209,6 +1227,8 @@ buttons for a corresponding notmuch search."
 			  'follow-link t
 			  'help-echo "Mouse-1, RET: search for this message"
 			  'face goto-address-mail-face)))))
+
+;;; Show command
 
 ;;;###autoload
 (defun notmuch-show (thread-id &optional elide-toggle parent-buffer query-context buffer-name)
@@ -1332,6 +1352,8 @@ If no messages match the query return NIL."
     ;; Report back to the caller whether any messages matched.
     forest))
 
+;;; Refresh command
+
 (defun notmuch-show-capture-state ()
   "Capture the state of the current buffer.
 
@@ -1405,6 +1427,8 @@ reset based on the original query."
       (kill-buffer (current-buffer))
       (ding)
       (message "Refreshing the buffer resulted in no messages!"))))
+
+;;; Keymaps
 
 (defvar notmuch-show-stash-map
   (let ((map (make-sparse-keymap)))
@@ -1485,7 +1509,8 @@ reset based on the original query."
     (define-key map "B" 'notmuch-show-browse-urls)
     map)
   "Keymap for \"notmuch show\" buffers.")
-(fset 'notmuch-show-mode-map notmuch-show-mode-map)
+
+;;; Mode
 
 (define-derived-mode notmuch-show-mode fundamental-mode "notmuch-show"
   "Major mode for viewing a thread with notmuch.
@@ -1523,6 +1548,8 @@ All currently available key bindings:
   (setq imenu-extract-index-name-function
 	#'notmuch-show-imenu-extract-index-name-function))
 
+;;; Tree commands
+
 (defun notmuch-tree-from-show-current-query ()
   "Call notmuch tree with the current query."
   (interactive)
@@ -1537,16 +1564,13 @@ All currently available key bindings:
 		      notmuch-show-query-context
 		      (notmuch-show-get-message-id)))
 
+;;; Movement related functions.
+
 (defun notmuch-show-move-to-message-top ()
   (goto-char (notmuch-show-message-top)))
 
 (defun notmuch-show-move-to-message-bottom ()
   (goto-char (notmuch-show-message-bottom)))
-
-(defun notmuch-show-message-adjust ()
-  (recenter 0))
-
-;; Movement related functions.
 
 ;; There's some strangeness here where a text property applied to a
 ;; region a->b is not found when point is at b. We walk backwards
@@ -1591,8 +1615,7 @@ effects."
     (cl-loop do (funcall function)
 	     while (notmuch-show-goto-message-next))))
 
-;; Functions relating to the visibility of messages and their
-;; components.
+;;; Functions relating to the visibility of messages and their components.
 
 (defun notmuch-show-message-visible (props visible-p)
   (overlay-put (plist-get props :message-overlay) 'invisible (not visible-p))
@@ -1602,8 +1625,7 @@ effects."
   (overlay-put (plist-get props :headers-overlay) 'invisible (not visible-p))
   (notmuch-show-set-prop :headers-visible visible-p props))
 
-;; Functions for setting and getting attributes of the current
-;; message.
+;;; Functions for setting and getting attributes of the current message.
 
 (defun notmuch-show-set-message-properties (props)
   (save-excursion
@@ -1737,7 +1759,7 @@ marked as unread, i.e. the tag changes in
     (apply 'notmuch-show-tag-message
 	   (notmuch-tag-change-list notmuch-show-mark-read-tags unread))))
 
-(defun notmuch-show-seen-current-message (start end)
+(defun notmuch-show-seen-current-message (_start _end)
   "Mark the current message read if it is open.
 
 We only mark it read once: if it is changed back then that is a
@@ -1755,11 +1777,11 @@ user decision and we should not override it."
     ;; We need to redisplay to get window-start and window-end correct.
     (redisplay)
     (save-excursion
-      (condition-case err
+      (condition-case nil
 	  (funcall notmuch-show-mark-read-function (window-start) (window-end))
 	((debug error)
 	 (unless notmuch-show--seen-has-errored
-	   (setq notmuch-show--seen-has-errored 't)
+	   (setq notmuch-show--seen-has-errored t)
 	   (setq header-line-format
 		 (concat header-line-format
 			 (propertize
@@ -1776,8 +1798,7 @@ Reshows the current thread with matches defined by the new query-string."
     (notmuch-show-refresh-view t)
     (notmuch-show-goto-message msg-id)))
 
-;; Functions for getting attributes of several messages in the current
-;; thread.
+;;; Functions for getting attributes of several messages in the current thread.
 
 (defun notmuch-show-get-message-ids-for-open-messages ()
   "Return a list of all id: queries for open messages in the current thread."
@@ -1791,7 +1812,7 @@ Reshows the current thread with matches defined by the new query-string."
 	(setq done (not (notmuch-show-goto-message-next))))
       message-ids)))
 
-;; Commands typically bound to keys.
+;;; Commands typically bound to keys.
 
 (defun notmuch-show-advance ()
   "Advance through thread.
@@ -1918,6 +1939,9 @@ any effects from previous calls to
     (notmuch-show-view-raw-message)
     (message-resend addresses)
     (notmuch-bury-or-kill-this-buffer)))
+
+(defun notmuch-show-message-adjust ()
+  (recenter 0))
 
 (defun notmuch-show-next-message (&optional pop-at-end)
   "Show the next message.
@@ -2349,7 +2373,9 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
   (browse-url (current-kill 0 t)))
 
 (defun notmuch-show-stash-git-helper (addresses prefix)
-  "Escape, trim, quote, and add PREFIX to each address in list of ADDRESSES, and return the result as a single string."
+  "Normalize all ADDRESSES while adding PREFIX.
+Escape, trim, quote and add PREFIX to each address in list
+of ADDRESSES, and return the result as a single string."
   (mapconcat (lambda (x)
 	       (concat prefix "\""
 		       ;; escape double-quotes
@@ -2362,10 +2388,12 @@ the user (see `notmuch-show-stash-mlarchive-link-alist')."
 	     addresses " "))
 
 (put 'notmuch-show-stash-git-send-email 'notmuch-prefix-doc
-     "Copy From/To/Cc of current message to kill-ring in a form suitable for pasting to git send-email command line.")
+     "Copy From/To/Cc of current message to kill-ring.
+Use a form suitable for pasting to git send-email command line.")
 
 (defun notmuch-show-stash-git-send-email (&optional no-in-reply-to)
-  "Copy From/To/Cc/Message-Id of current message to kill-ring in a form suitable for pasting to git send-email command line.
+  "Copy From/To/Cc/Message-Id of current message to kill-ring.
+Use a form suitable for pasting to git send-email command line.
 
 If invoked with a prefix argument (or NO-IN-REPLY-TO is non-nil),
 omit --in-reply-to=<Message-Id>."
@@ -2385,7 +2413,7 @@ omit --in-reply-to=<Message-Id>."
 			  (list (notmuch-show-get-message-id t)) "--in-reply-to="))))
 	      " ")))
 
-;; Interactive part functions and their helpers
+;;; Interactive part functions and their helpers
 
 (defun notmuch-show-generate-part-buffer (msg part)
   "Return a temporary buffer containing the specified part's content."
@@ -2418,10 +2446,9 @@ This ensures that the temporary buffer created for the mm-handle
 is destroyed when FN returns. If MIME-TYPE is given then force
 part to be treated as if it had that mime-type."
   (let ((handle (notmuch-show-current-part-handle mime-type)))
-    ;; emacs 24.3+ puts stdout/stderr into the calling buffer so we
-    ;; call it from a temp-buffer, unless
-    ;; notmuch-show-attachment-debug is non-nil in which case we put
-    ;; it in " *notmuch-part*".
+    ;; Emacs puts stdout/stderr into the calling buffer so we call
+    ;; it from a temp-buffer, unless notmuch-show-attachment-debug
+    ;; is non-nil, in which case we put it in " *notmuch-part*".
     (unwind-protect
 	(if notmuch-show-attachment-debug
 	    (with-current-buffer (generate-new-buffer " *notmuch-part*")
@@ -2532,6 +2559,8 @@ browsing."
     (if urls
 	(funcall fn (completing-read prompt urls nil nil nil nil (car urls)))
       (message "No URLs found."))))
+
+;;; _
 
 (provide 'notmuch-show)
 

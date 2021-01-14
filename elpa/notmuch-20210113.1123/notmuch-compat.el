@@ -1,4 +1,4 @@
-;;; notmuch-compat.el --- compatibility functions for earlier versions of emacs
+;;; notmuch-compat.el --- compatibility functions for earlier versions of emacs  -*- lexical-binding: t -*-
 ;;
 ;; The functions in this file are copied from more modern versions of
 ;; emacs and are Copyright (C) 1985-1986, 1992, 1994-1995, 1999-2017
@@ -21,10 +21,11 @@
 
 ;;; Code:
 
-;; emacs master has a bugfix for folding long headers when sending
-;; messages. Include the fix for earlier versions of emacs. To avoid
-;; interfering with gnus we only run the hook when called from
-;; notmuch-message-mode.
+;; Before Emacs 26.1 lines that are longer than 998 octets were not.
+;; folded. Commit 77bbca8c82f6e553c42abbfafca28f55fc995d00 fixed
+;; that. Until we drop support for Emacs 25 we have to backport that
+;; fix. To avoid interfering with Gnus we only run the hook when
+;; called from notmuch-message-mode.
 
 (declare-function mail-header-fold-field "mail-parse" nil)
 
@@ -39,8 +40,6 @@
 
 (unless (fboundp 'message--fold-long-headers)
   (add-hook 'message-header-hook 'notmuch-message--fold-long-headers))
-
-;; End of compatibility functions
 
 (provide 'notmuch-compat)
 

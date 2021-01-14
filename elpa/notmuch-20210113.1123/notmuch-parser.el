@@ -1,4 +1,4 @@
-;;; notmuch-parser.el --- streaming S-expression parser
+;;; notmuch-parser.el --- streaming S-expression parser  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Austin Clements
 ;;
@@ -140,15 +140,6 @@ beginning of a list, throw invalid-read-syntax."
 	 (forward-char)
 	 (signal 'invalid-read-syntax (list (string (char-before)))))))
 
-(defun notmuch-sexp-eof (sp)
-  "Signal an error if there is more data in SP's buffer.
-
-Moves point to the beginning of any trailing data or to the end
-of the buffer if there is only trailing whitespace."
-  (skip-chars-forward " \n\r\t")
-  (unless (eobp)
-    (error "Trailing garbage following expression")))
-
 (defvar notmuch-sexp--parser nil
   "The buffer-local notmuch-sexp-parser instance.
 
@@ -168,9 +159,8 @@ additional data.  The caller just needs to ensure it does not
 move point in the input buffer."
   ;; Set up the initial state
   (unless (local-variable-p 'notmuch-sexp--parser)
-    (set (make-local-variable 'notmuch-sexp--parser)
-	 (notmuch-sexp-create-parser))
-    (set (make-local-variable 'notmuch-sexp--state) 'begin))
+    (setq-local notmuch-sexp--parser (notmuch-sexp-create-parser))
+    (setq-local notmuch-sexp--state 'begin))
   (let (done)
     (while (not done)
       (cl-case notmuch-sexp--state
@@ -188,8 +178,11 @@ move point in the input buffer."
 	     (t     (with-current-buffer result-buffer
 		      (funcall result-function result))))))
 	(end
-	 ;; Any trailing data is unexpected
-	 (notmuch-sexp-eof notmuch-sexp--parser)
+	 ;; Skip over trailing whitespace.
+	 (skip-chars-forward " \n\r\t")
+	 ;; Any trailing data is unexpected.
+	 (unless (eobp)
+	   (error "Trailing garbage following expression"))
 	 (setq done t)))))
   ;; Clear out what we've parsed
   (delete-region (point-min) (point)))

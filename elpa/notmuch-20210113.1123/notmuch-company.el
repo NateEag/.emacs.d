@@ -36,8 +36,8 @@
 
 (require 'notmuch-lib)
 
-(defvar notmuch-company-last-prefix nil)
-(make-variable-buffer-local 'notmuch-company-last-prefix)
+(defvar-local notmuch-company-last-prefix nil)
+
 (declare-function company-begin-backend "company")
 (declare-function company-grab "company")
 (declare-function company-mode "company")
@@ -55,8 +55,7 @@
 ;;;###autoload
 (defun notmuch-company-setup ()
   (company-mode)
-  (make-local-variable 'company-backends)
-  (setq company-backends '(notmuch-company))
+  (setq-local company-backends '(notmuch-company))
   ;; Disable automatic company completion unless an internal
   ;; completion method is configured. Company completion (using
   ;; internal completion) can still be accessed via standard company
@@ -102,7 +101,6 @@
       (post-completion
        (run-hook-with-args 'notmuch-address-post-completion-functions arg))
       (no-cache t))))
-
 
 (provide 'notmuch-company)
 

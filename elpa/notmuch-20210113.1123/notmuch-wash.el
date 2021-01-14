@@ -1,4 +1,4 @@
-;;; notmuch-wash.el --- cleaning up message bodies
+;;; notmuch-wash.el --- cleaning up message bodies  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -24,13 +24,14 @@
 ;;; Code:
 
 (require 'coolj)
+(require 'diff-mode)
 (require 'notmuch-lib)
 
 (declare-function notmuch-show-insert-bodypart "notmuch-show"
 		  (msg part depth &optional hide))
 (defvar notmuch-show-indent-messages-width)
 
-;;
+;;; Options
 
 (defgroup notmuch-wash nil
   "Cleaning up messages for display."
@@ -130,6 +131,8 @@ or at the window width (whichever one is lower)."
 		 (integer :tag "number of characters"))
   :group 'notmuch-wash)
 
+;;; Faces
+
 (defface notmuch-wash-toggle-button
   '((t (:inherit font-lock-comment-face)))
   "Face used for buttons toggling the visibility of washed away
@@ -142,6 +145,8 @@ message parts."
   "Face used for cited text."
   :group 'notmuch-wash
   :group 'notmuch-faces)
+
+;;; Buttons
 
 (defun notmuch-wash-toggle-invisible-action (cite-button)
   ;; Toggle overlay visibility
@@ -196,7 +201,7 @@ message parts."
 				   (overlay-end overlay))))
     (format label-format lines-count)))
 
-(defun notmuch-wash-region-to-button (msg beg end type &optional prefix)
+(defun notmuch-wash-region-to-button (beg end type &optional prefix)
   "Auxiliary function to do the actual making of overlays and buttons.
 
 BEG and END are buffer locations. TYPE should a string, either
@@ -225,17 +230,17 @@ that PREFIX should not include a newline."
 				   :type button-type)))
 	  (overlay-put overlay 'notmuch-wash-button button))))))
 
-(defun notmuch-wash-excerpt-citations (msg depth)
+;;; Hook functions
+
+(defun notmuch-wash-excerpt-citations (_msg _depth)
   "Excerpt citations and up to one signature."
   (goto-char (point-min))
   (beginning-of-line)
   (when (and (< (point) (point-max))
 	     (re-search-forward notmuch-wash-original-regexp nil t))
-    (let* ((msg-start (match-beginning 0))
-	   (msg-end (point-max))
-	   (msg-lines (count-lines msg-start msg-end)))
-      (notmuch-wash-region-to-button
-       msg msg-start msg-end "original")))
+    (notmuch-wash-region-to-button (match-beginning 0)
+				   (point-max)
+				   "original"))
   (while (and (< (point) (point-max))
 	      (re-search-forward notmuch-wash-citation-regexp nil t))
     (let* ((cite-start (match-beginning 0))
@@ -252,14 +257,13 @@ that PREFIX should not include a newline."
 	  (goto-char cite-end)
 	  (forward-line (- notmuch-wash-citation-lines-suffix))
 	  (notmuch-wash-region-to-button
-	   msg hidden-start (point-marker)
+	   hidden-start (point-marker)
 	   "citation")))))
   (when (and (not (eobp))
 	     (re-search-forward notmuch-wash-signature-regexp nil t))
-    (let* ((sig-start (match-beginning 0))
-	   (sig-end (match-end 0))
-	   (sig-lines (count-lines sig-start (point-max))))
-      (when (<= sig-lines notmuch-wash-signature-lines-max)
+    (let ((sig-start (match-beginning 0)))
+      (when (<= (count-lines sig-start (point-max))
+		notmuch-wash-signature-lines-max)
 	(let ((sig-start-marker (make-marker))
 	      (sig-end-marker (make-marker)))
 	  (set-marker sig-start-marker sig-start)
@@ -267,12 +271,10 @@ that PREFIX should not include a newline."
 	  (overlay-put (make-overlay sig-start-marker sig-end-marker)
 		       'face 'message-cited-text)
 	  (notmuch-wash-region-to-button
-	   msg sig-start-marker sig-end-marker
+	   sig-start-marker sig-end-marker
 	   "signature"))))))
 
-;;
-
-(defun notmuch-wash-elide-blank-lines (msg depth)
+(defun notmuch-wash-elide-blank-lines (_msg _depth)
   "Elide leading, trailing and successive blank lines."
   ;; Algorithm derived from `article-strip-multiple-blank-lines' in
   ;; `gnus-art.el'.
@@ -293,9 +295,7 @@ that PREFIX should not include a newline."
   (when (looking-at "\n")
     (delete-region (match-beginning 0) (match-end 0))))
 
-;;
-
-(defun notmuch-wash-tidy-citations (msg depth)
+(defun notmuch-wash-tidy-citations (_msg _depth)
   "Improve the display of cited regions of a message.
 
 Perform several transformations on the message body:
@@ -319,9 +319,7 @@ Perform several transformations on the message body:
   (while (re-search-forward "\\(^>[> ]*\n\\)\\(^$\\|^[^>].*\\)" nil t)
     (replace-match "\\2")))
 
-;;
-
-(defun notmuch-wash-wrap-long-lines (msg depth)
+(defun notmuch-wash-wrap-long-lines (_msg depth)
   "Wrap long lines in the message.
 
 If `notmuch-wash-wrap-lines-length' is a number, this will wrap
@@ -342,11 +340,7 @@ the wrapped text are maintained."
 			 2)))
     (coolj-wrap-region (point-min) (point-max))))
 
-;;
-
-(require 'diff-mode)
-
-(defvar diff-file-header-re) ; From `diff-mode.el'.
+;;;; Convert Inline Patches
 
 (defun notmuch-wash-subject-to-filename (subject &optional maxlen)
   "Convert a mail SUBJECT into a filename.
@@ -417,7 +411,7 @@ for error."
 	(delete-region (point-min) (point-max))
 	(notmuch-show-insert-bodypart nil part depth)))))
 
-;;
+;;; _
 
 (provide 'notmuch-wash)
 

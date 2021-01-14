@@ -1,4 +1,4 @@
-;;; notmuch-print.el --- printing messages from notmuch
+;;; notmuch-print.el --- printing messages from notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -25,6 +25,8 @@
 
 (declare-function notmuch-show-get-prop "notmuch-show" (prop &optional props))
 
+;;; Options
+
 (defcustom notmuch-print-mechanism 'notmuch-print-lpr
   "How should printing be done?"
   :group 'notmuch-show
@@ -36,7 +38,7 @@
 	  (function :tag "Use muttprint then evince" notmuch-print-muttprint/evince)
 	  (function :tag "Using a custom function")))
 
-;; Utility functions:
+;;; Utility functions
 
 (defun notmuch-print-run-evince (file)
   "View FILE using 'evince'."
@@ -54,9 +56,9 @@ Optional OUTPUT allows passing a list of flags to muttprint."
 	 "--printed-headers" "Date_To_From_CC_Newsgroups_*Subject*_/Tags/"
 	 output))
 
-;; User-visible functions:
+;;; User-visible functions
 
-(defun notmuch-print-lpr (msg)
+(defun notmuch-print-lpr (_msg)
   "Print a message buffer using lpr."
   (lpr-buffer))
 
@@ -76,11 +78,11 @@ Optional OUTPUT allows passing a list of flags to muttprint."
     (ps-print-buffer ps-file)
     (notmuch-print-run-evince ps-file)))
 
-(defun notmuch-print-muttprint (msg)
+(defun notmuch-print-muttprint (_msg)
   "Print a message using muttprint."
   (notmuch-print-run-muttprint))
 
-(defun notmuch-print-muttprint/evince (msg)
+(defun notmuch-print-muttprint/evince (_msg)
   "Preview a message buffer using muttprint and evince."
   (let ((ps-file (make-temp-file "notmuch" nil ".ps")))
     (notmuch-print-run-muttprint (list "--printer" (concat "TO_FILE:" ps-file)))
@@ -90,6 +92,8 @@ Optional OUTPUT allows passing a list of flags to muttprint."
   "Print a message using the user-selected mechanism."
   (set-buffer-modified-p nil)
   (funcall notmuch-print-mechanism msg))
+
+;;; _
 
 (provide 'notmuch-print)
 

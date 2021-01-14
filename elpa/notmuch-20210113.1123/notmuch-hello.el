@@ -1,4 +1,4 @@
-;;; notmuch-hello.el --- welcome to notmuch, a frontend
+;;; notmuch-hello.el --- welcome to notmuch, a frontend  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -21,8 +21,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
+(require 'cl-lib)
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
 
@@ -37,6 +36,8 @@
 (declare-function notmuch-unthreaded
 		  (&optional query query-context target buffer-name open-target))
 
+
+;;; Options
 
 (defun notmuch-saved-search-get (saved-search field)
   "Get FIELD from SAVED-SEARCH.
@@ -138,8 +139,8 @@ a plist. Supported properties are
                    shown. If not present then the :query property
                    is used.
   :sort-order      Specify the sort order to be used for the search.
-                   Possible values are 'oldest-first 'newest-first or
-                   nil. Nil means use the default sort order.
+                   Possible values are `oldest-first', `newest-first'
+                   or nil. Nil means use the default sort order.
   :search-type     Specify whether to run the search in search-mode,
                    tree mode or unthreaded mode. Set to 'tree to specify tree
                    mode, 'unthreaded to specify unthreaded mode, and set to nil
@@ -192,6 +193,8 @@ fields of the search."
 
 (defvar notmuch-hello-indent 4
   "How much to indent non-headers.")
+
+(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
 (defcustom notmuch-show-logo t
   "Should the notmuch logo be shown?"
@@ -282,7 +285,7 @@ International Bureau of Weights and Measures."
   :group 'notmuch-hello
   :group 'notmuch-hooks)
 
-(defvar notmuch-hello-url "https://notmuchmail.org"
+(defconst notmuch-hello-url "https://notmuchmail.org"
   "The `notmuch' web site.")
 
 (defvar notmuch-hello-custom-section-options
@@ -368,43 +371,62 @@ supported for \"Customized queries section\" items."
   :group 'notmuch-hello
   :type 'boolean)
 
+;;; Internal variables
+
 (defvar notmuch-hello-hidden-sections nil
   "List of sections titles whose contents are hidden.")
 
 (defvar notmuch-hello-first-run t
-  "True if `notmuch-hello' is run for the first time, set to nil
-afterwards.")
+  "True if `notmuch-hello' is run for the first time, set to nil afterwards.")
 
-(defun notmuch-hello-nice-number (n)
-  (let (result)
-    (while (> n 0)
-      (push (% n 1000) result)
-      (setq n (/ n 1000)))
-    (setq result (or result '(0)))
-    (apply #'concat
-	   (number-to-string (car result))
-	   (mapcar (lambda (elem)
-		     (format "%s%03d" notmuch-hello-thousands-separator elem))
-		   (cdr result)))))
+;;; Widgets for inserters
 
-(defun notmuch-hello-trim (search)
-  "Trim whitespace."
-  (if (string-match "^[[:space:]]*\\(.*[^[:space:]]\\)[[:space:]]*$" search)
-      (match-string 1 search)
-    search))
+(define-widget 'notmuch-search-item 'item
+  "A recent search."
+  :format "%v\n"
+  :value-create 'notmuch-search-item-value-create)
 
-(defun notmuch-hello-search (&optional search)
-  (unless (null search)
-    (setq search (notmuch-hello-trim search))
-    (let ((history-delete-duplicates t))
-      (add-to-history 'notmuch-search-history search)))
-  (notmuch-search search notmuch-search-oldest-first))
+(defun notmuch-search-item-value-create (widget)
+  (let ((value (widget-get widget :value)))
+    (widget-insert (make-string notmuch-hello-indent ?\s))
+    (widget-create 'editable-field
+		   :size (widget-get widget :size)
+		   :parent widget
+		   :action #'notmuch-hello-search
+		   value)
+    (widget-insert " ")
+    (widget-create 'push-button
+		   :parent widget
+		   :notify #'notmuch-hello-add-saved-search
+		   "save")
+    (widget-insert " ")
+    (widget-create 'push-button
+		   :parent widget
+		   :notify #'notmuch-hello-delete-search-from-history
+		   "del")))
 
-(defun notmuch-hello-add-saved-search (widget)
-  (interactive)
-  (let ((search (widget-value
-		 (symbol-value
-		  (widget-get widget :notmuch-saved-search-widget))))
+(defun notmuch-search-item-field-width ()
+  (max 8 ; Don't let the search boxes be less than 8 characters wide.
+       (- (window-width)
+	  notmuch-hello-indent ; space at bol
+	  notmuch-hello-indent ; space at eol
+	  1    ; for the space before the [save] button
+	  6    ; for the [save] button
+	  1    ; for the space before the [del] button
+	  5))) ; for the [del] button
+
+;;; Widget actions
+
+(defun notmuch-hello-search (widget &rest _event)
+  (let ((search (widget-value widget)))
+    (when search
+      (setq search (string-trim search))
+      (let ((history-delete-duplicates t))
+	(add-to-history 'notmuch-search-history search)))
+    (notmuch-search search notmuch-search-oldest-first)))
+
+(defun notmuch-hello-add-saved-search (widget &rest _event)
+  (let ((search (widget-value (widget-get widget :parent)))
 	(name (completing-read "Name for saved search: "
 			       notmuch-saved-searches)))
     ;; If an existing saved search with this name exists, remove it.
@@ -420,14 +442,19 @@ afterwards.")
     (message "Saved '%s' as '%s'." search name)
     (notmuch-hello-update)))
 
-(defun notmuch-hello-delete-search-from-history (widget)
-  (interactive)
-  (let ((search (widget-value
-		 (symbol-value
-		  (widget-get widget :notmuch-saved-search-widget)))))
-    (setq notmuch-search-history (delete search
-					 notmuch-search-history))
+(defun notmuch-hello-delete-search-from-history (widget &rest _event)
+  (when (y-or-n-p "Are you sure you want to delete this search? ")
+    (let ((search (widget-value (widget-get widget :parent))))
+      (setq notmuch-search-history
+	    (delete search notmuch-search-history)))
     (notmuch-hello-update)))
+
+;;; Button utilities
+
+;; `notmuch-hello-query-counts', `notmuch-hello-nice-number' and
+;; `notmuch-hello-insert-buttons' are used outside this section.
+;; All other functions that are defined in this section are only
+;; used by these two functions.
 
 (defun notmuch-hello-longest-label (searches-alist)
   (or (cl-loop for elem in searches-alist
@@ -453,7 +480,7 @@ diagonal."
     (cl-loop for row from 0 to (- nrows 1)
 	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
-(defun notmuch-hello-widget-search (widget &rest ignore)
+(defun notmuch-hello-widget-search (widget &rest _ignore)
   (cond
    ((eq (widget-get widget :notmuch-search-type) 'tree)
     (notmuch-tree (widget-get widget
@@ -549,21 +576,31 @@ options will be handled as specified for
 --batch'. In general we recommend running matching versions of
 the CLI and emacs interface."))
     (goto-char (point-min))
-    (notmuch-remove-if-not
-     #'identity
-     (mapcar
-      (lambda (elem)
-	(let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
-	       (search-query (plist-get elem-plist :query))
-	       (filtered-query (notmuch-hello-filtered-query
-				search-query (plist-get options :filter)))
-	       (message-count (prog1 (read (current-buffer))
-				(forward-line 1))))
-	  (when (and filtered-query (or (plist-get options :show-empty-searches)
-					(> message-count 0)))
-	    (setq elem-plist (plist-put elem-plist :query filtered-query))
-	    (plist-put elem-plist :count message-count))))
-      query-list))))
+    (cl-mapcan
+     (lambda (elem)
+       (let* ((elem-plist (notmuch-hello-saved-search-to-plist elem))
+	      (search-query (plist-get elem-plist :query))
+	      (filtered-query (notmuch-hello-filtered-query
+			       search-query (plist-get options :filter)))
+	      (message-count (prog1 (read (current-buffer))
+			       (forward-line 1))))
+	 (when (and filtered-query (or (plist-get options :show-empty-searches)
+				       (> message-count 0)))
+	   (setq elem-plist (plist-put elem-plist :query filtered-query))
+	   (list (plist-put elem-plist :count message-count)))))
+     query-list)))
+
+(defun notmuch-hello-nice-number (n)
+  (let (result)
+    (while (> n 0)
+      (push (% n 1000) result)
+      (setq n (/ n 1000)))
+    (setq result (or result '(0)))
+    (apply #'concat
+	   (number-to-string (car result))
+	   (mapcar (lambda (elem)
+		     (format "%s%03d" notmuch-hello-thousands-separator elem))
+		   (cdr result)))))
 
 (defun notmuch-hello-insert-buttons (searches)
   "Insert buttons for SEARCHES.
@@ -619,7 +656,7 @@ with `notmuch-hello-query-counts'."
     (unless (eq (% count tags-per-line) 0)
       (widget-insert "\n"))))
 
-(defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
+;;; Mode
 
 (defun notmuch-hello-update ()
   "Update the notmuch-hello buffer."
@@ -651,39 +688,19 @@ with `notmuch-hello-query-counts'."
       ;; Refresh hello as soon as we get back to redisplay.  On Emacs
       ;; 24, we can't do it right here because something in this
       ;; hook's call stack overrides hello's point placement.
+      ;; FIXME And on Emacs releases that we still support?
       (run-at-time nil nil #'notmuch-hello t))
     (unless hello-buf
       ;; Clean up hook
       (remove-hook 'window-configuration-change-hook
 		   #'notmuch-hello-window-configuration-change))))
 
-;; the following variable is defined as being defconst in notmuch-version.el
-(defvar notmuch-emacs-version)
-
-(defun notmuch-hello-versions ()
-  "Display the notmuch version(s)."
-  (interactive)
-  (let ((notmuch-cli-version (notmuch-cli-version)))
-    (message "notmuch version %s"
-	     (if (string= notmuch-emacs-version notmuch-cli-version)
-		 notmuch-cli-version
-	       (concat notmuch-cli-version
-		       " (emacs mua version " notmuch-emacs-version ")")))))
-
 (defvar notmuch-hello-mode-map
-  (let ((map (if (fboundp 'make-composed-keymap)
-		 ;; Inherit both widget-keymap and
-		 ;; notmuch-common-keymap. We have to use
-		 ;; make-sparse-keymap to force this to be a new
-		 ;; keymap (so that when we modify map it does not
-		 ;; modify widget-keymap).
-		 (make-composed-keymap (list (make-sparse-keymap) widget-keymap))
-	       ;; Before Emacs 24, keymaps didn't support multiple
-	       ;; inheritance,, so just copy the widget keymap since
-	       ;; it's unlikely to change.
-	       (copy-keymap widget-keymap))))
+  ;; Inherit both widget-keymap and notmuch-common-keymap.  We have
+  ;; to use make-sparse-keymap to force this to be a new keymap (so
+  ;; that when we modify map it does not modify widget-keymap).
+  (let ((map (make-composed-keymap (list (make-sparse-keymap) widget-keymap))))
     (set-keymap-parent map notmuch-common-keymap)
-    (define-key map "v" 'notmuch-hello-versions)
     (define-key map (kbd "<C-tab>") 'widget-backward)
     map)
   "Keymap for \"notmuch hello\" buffers.")
@@ -723,14 +740,16 @@ Complete list of currently available key bindings:
   ;;(setq buffer-read-only t)
   )
 
+;;; Inserters
+
 (defun notmuch-hello-generate-tag-alist (&optional hide-tags)
   "Return an alist from tags to queries to display in the all-tags section."
-  (mapcar (lambda (tag)
-	    (cons tag (concat "tag:" (notmuch-escape-boolean-term tag))))
-	  (notmuch-remove-if-not
-	   (lambda (tag)
-	     (not (member tag hide-tags)))
-	   (process-lines notmuch-command "search" "--output=tags" "*"))))
+  (cl-mapcan (lambda (tag)
+	       (and (not (member tag hide-tags))
+		    (list (cons tag
+				(concat "tag:"
+					(notmuch-escape-boolean-term tag))))))
+	     (process-lines notmuch-command "search" "--output=tags" "*")))
 
 (defun notmuch-hello-insert-header ()
   "Insert the default notmuch-hello header."
@@ -756,14 +775,14 @@ Complete list of currently available key bindings:
   (let ((widget-link-prefix "")
 	(widget-link-suffix ""))
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (browse-url notmuch-hello-url))
 		   :help-echo "Visit the notmuch website."
 		   "notmuch")
     (widget-insert ". ")
     (widget-insert "You have ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (notmuch-hello-update))
 		   :help-echo "Refresh"
 		   (notmuch-hello-nice-number
@@ -782,7 +801,7 @@ Complete list of currently available key bindings:
     (when searches
       (widget-insert "Saved searches: ")
       (widget-create 'push-button
-		     :notify (lambda (&rest ignore)
+		     :notify (lambda (&rest _ignore)
 			       (customize-variable 'notmuch-saved-searches))
 		     "edit")
       (widget-insert "\n\n")
@@ -798,8 +817,7 @@ Complete list of currently available key bindings:
 		 ;; search boxes.
 		 :size (max 8 (- (window-width) notmuch-hello-indent
 				 (length "Search: ")))
-		 :action (lambda (widget &rest ignore)
-			   (notmuch-hello-search (widget-value widget))))
+		 :action #'notmuch-hello-search)
   ;; Add an invisible dot to make `widget-end-of-line' ignore
   ;; trailing spaces in the search widget field.  A dot is used
   ;; instead of a space to make `show-trailing-whitespace'
@@ -813,58 +831,18 @@ Complete list of currently available key bindings:
   "Insert recent searches."
   (when notmuch-search-history
     (widget-insert "Recent searches: ")
-    (widget-create 'push-button
-		   :notify (lambda (&rest ignore)
-			     (when (y-or-n-p "Are you sure you want to clear the searches? ")
-			       (setq notmuch-search-history nil)
-			       (notmuch-hello-update)))
-		   "clear")
+    (widget-create
+     'push-button
+     :notify (lambda (&rest _ignore)
+	       (when (y-or-n-p "Are you sure you want to clear the searches? ")
+		 (setq notmuch-search-history nil)
+		 (notmuch-hello-update)))
+     "clear")
     (widget-insert "\n\n")
-    (let ((start (point)))
-      (cl-loop for i from 1 to notmuch-hello-recent-searches-max
-	       for search in notmuch-search-history do
-	       (let ((widget-symbol (intern (format "notmuch-hello-search-%d" i))))
-		 (set widget-symbol
-		      (widget-create 'editable-field
-				     ;; Don't let the search boxes be
-				     ;; less than 8 characters wide.
-				     :size (max 8
-						(- (window-width)
-						   ;; Leave some space
-						   ;; at the start and
-						   ;; end of the
-						   ;; boxes.
-						   (* 2 notmuch-hello-indent)
-						   ;; 1 for the space
-						   ;; before the
-						   ;; `[save]' button. 6
-						   ;; for the `[save]'
-						   ;; button.
-						   1 6
-						   ;; 1 for the space
-						   ;; before the `[del]'
-						   ;; button. 5 for the
-						   ;; `[del]' button.
-						   1 5))
-				     :action (lambda (widget &rest ignore)
-					       (notmuch-hello-search (widget-value widget)))
-				     search))
-		 (widget-insert " ")
-		 (widget-create 'push-button
-				:notify (lambda (widget &rest ignore)
-					  (notmuch-hello-add-saved-search widget))
-				:notmuch-saved-search-widget widget-symbol
-				"save")
-		 (widget-insert " ")
-		 (widget-create 'push-button
-				:notify (lambda (widget &rest ignore)
-					  (when (y-or-n-p "Are you sure you want to delete this search? ")
-					    (notmuch-hello-delete-search-from-history widget)))
-				:notmuch-saved-search-widget widget-symbol
-				"del"))
-	       (widget-insert "\n"))
-      (indent-rigidly start (point) notmuch-hello-indent))
-    nil))
+    (let ((width (notmuch-search-item-field-width)))
+      (dolist (search (seq-take notmuch-search-history
+				notmuch-hello-recent-searches-max))
+	(widget-create 'notmuch-search-item :value search :size width)))))
 
 (defun notmuch-hello-insert-searches (title query-list &rest options)
   "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
@@ -895,13 +873,13 @@ Supports the following entries in OPTIONS as a plist:
 	(start (point)))
     (if is-hidden
 	(widget-create 'push-button
-		       :notify `(lambda (widget &rest ignore)
+		       :notify `(lambda (widget &rest _ignore)
 				  (setq notmuch-hello-hidden-sections
 					(delete ,title notmuch-hello-hidden-sections))
 				  (notmuch-hello-update))
 		       "show")
       (widget-create 'push-button
-		     :notify `(lambda (widget &rest ignore)
+		     :notify `(lambda (widget &rest _ignore)
 				(add-to-list 'notmuch-hello-hidden-sections
 					     ,title)
 				(notmuch-hello-update))
@@ -950,18 +928,20 @@ following:
     (widget-insert "Hit `?' for context-sensitive help in any Notmuch screen.\n")
     (widget-insert "Customize ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (customize-group 'notmuch))
 		   :button-prefix "" :button-suffix ""
 		   "Notmuch")
     (widget-insert " or ")
     (widget-create 'link
-		   :notify (lambda (&rest ignore)
+		   :notify (lambda (&rest _ignore)
 			     (customize-variable 'notmuch-hello-sections))
 		   :button-prefix "" :button-suffix ""
 		   "this page.")
     (let ((fill-column (- (window-width) notmuch-hello-indent)))
       (center-region start (point)))))
+
+;;; Hello!
 
 ;;;###autoload
 (defun notmuch-hello (&optional no-display)
@@ -1014,12 +994,7 @@ following:
   (run-hooks 'notmuch-hello-refresh-hook)
   (setq notmuch-hello-first-run nil))
 
-(defun notmuch-folder ()
-  "Deprecated function for invoking notmuch---calling `notmuch' is preferred now."
-  (interactive)
-  (notmuch-hello))
-
-;;
+;;; _
 
 (provide 'notmuch-hello)
 

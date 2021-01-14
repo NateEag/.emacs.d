@@ -1,4 +1,4 @@
-;;; notmuch-tree.el --- displaying notmuch forests
+;;; notmuch-tree.el --- displaying notmuch forests  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -42,13 +42,19 @@
 (declare-function notmuch-search-find-thread-id "notmuch" (&optional bare))
 (declare-function notmuch-search-find-subject "notmuch" ())
 
+;; For `notmuch-tree-next-thread-from-search'.
+(declare-function notmuch-search-next-thread "notmuch" ())
+(declare-function notmuch-search-previous-thread "notmuch" ())
+(declare-function notmuch-tree-from-search-thread "notmuch" ())
+
 ;; the following variable is defined in notmuch.el
 (defvar notmuch-search-query-string)
 
 ;; this variable distinguishes the unthreaded display from the normal tree display
-(defvar notmuch-tree-unthreaded nil
+(defvar-local notmuch-tree-unthreaded nil
   "A buffer local copy of argument unthreaded to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-unthreaded)
+
+;;; Options
 
 (defgroup notmuch-tree nil
   "Showing message and thread structure."
@@ -114,7 +120,9 @@ For example:
       notmuch-unthreaded-result-format
     notmuch-tree-result-format))
 
-;; Faces for messages that match the query.
+;;; Faces
+;;;; Faces for messages that match the query
+
 (defface notmuch-tree-match-face
   '((t :inherit default))
   "Default face used in tree mode face for matching messages"
@@ -165,7 +173,8 @@ For example:
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
-;; Faces for messages that do not match the query.
+;;;; Faces for messages that do not match the query
+
 (defface notmuch-tree-no-match-face
   '((t (:foreground "gray")))
   "Default face used in tree mode face for non-matching messages."
@@ -202,105 +211,121 @@ For example:
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
-(defvar notmuch-tree-previous-subject
+;;; Variables
+
+(defvar-local notmuch-tree-previous-subject
   "The subject of the most recent result shown during the async display.")
-(make-variable-buffer-local 'notmuch-tree-previous-subject)
 
-(defvar notmuch-tree-basic-query nil
+(defvar-local notmuch-tree-basic-query nil
   "A buffer local copy of argument query to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-basic-query)
 
-(defvar notmuch-tree-query-context nil
+(defvar-local notmuch-tree-query-context nil
   "A buffer local copy of argument query-context to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-query-context)
 
-(defvar notmuch-tree-target-msg nil
+(defvar-local notmuch-tree-target-msg nil
   "A buffer local copy of argument target to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-target-msg)
 
-(defvar notmuch-tree-open-target nil
+(defvar-local notmuch-tree-open-target nil
   "A buffer local copy of argument open-target to the function notmuch-tree.")
-(make-variable-buffer-local 'notmuch-tree-open-target)
 
-(defvar notmuch-tree-parent-buffer nil)
-(make-variable-buffer-local 'notmuch-tree-parent-buffer)
+(defvar-local notmuch-tree-parent-buffer nil)
 
-(defvar notmuch-tree-message-window nil
+(defvar-local notmuch-tree-message-window nil
   "The window of the message pane.
 
 It is set in both the tree buffer and the child show buffer. It
 is used to try and close the message pane when quitting tree view
 or the child show buffer.")
-(make-variable-buffer-local 'notmuch-tree-message-window)
 (put 'notmuch-tree-message-window 'permanent-local t)
 
-(defvar notmuch-tree-message-buffer nil
+(defvar-local notmuch-tree-message-buffer nil
   "The buffer name of the show buffer in the message pane.
 
 This is used to try and make sure we don't close the message pane
 if the user has loaded a different buffer in that window.")
-(make-variable-buffer-local 'notmuch-tree-message-buffer)
 (put 'notmuch-tree-message-buffer 'permanent-local t)
 
-(defun notmuch-tree-to-message-pane (func)
-  "Execute FUNC in message pane.
+;;; Tree wrapper commands
 
-This function returns a function (so can be used as a keybinding)
-which executes function FUNC in the message pane if it is
-open (if the message pane is closed it does nothing)."
-  `(lambda ()
-     ,(concat "(In message pane) " (documentation func t))
+(defmacro notmuch-tree--define-do-in-message-window (name cmd)
+  "Define NAME as a command that calls CMD interactively in the message window.
+If the message pane is closed then this command does nothing.
+Avoid using this macro in new code; it will be removed."
+  `(defun ,name ()
+     ,(concat "(In message window) " (documentation cmd t))
      (interactive)
      (when (window-live-p notmuch-tree-message-window)
        (with-selected-window notmuch-tree-message-window
-	 (call-interactively #',func)))))
+	 (call-interactively #',cmd)))))
 
-(defun notmuch-tree-inherit-from-message-pane (sym)
-  "Return value of SYM in message-pane if open, or tree-pane if not."
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-previous-message-button
+ notmuch-show-previous-button)
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-next-message-button
+ notmuch-show-next-button)
+(notmuch-tree--define-do-in-message-window
+ notmuch-tree-toggle-message-process-crypto
+ notmuch-show-toggle-process-crypto)
+
+(defun notmuch-tree--message-process-crypto ()
+  "Return value of `notmuch-show-process-crypto' in the message window.
+If that window isn't alive, then return the current value.
+Avoid using this function in new code; it will be removed."
   (if (window-live-p notmuch-tree-message-window)
       (with-selected-window notmuch-tree-message-window
-	(symbol-value sym))
-    (symbol-value sym)))
+	notmuch-show-process-crypto)
+    notmuch-show-process-crypto))
 
-(defun notmuch-tree-button-activate (&optional button)
-  "Activate BUTTON or button at point.
+(defmacro notmuch-tree--define-close-message-window-and (name cmd)
+  "Define NAME as a variant of CMD.
 
-This function does not give an error if there is no button."
-  (interactive)
-  (let ((button (or button (button-at (point)))))
-    (when button (button-activate button))))
-
-(defun notmuch-tree-close-message-pane-and (func)
-  "Close message pane and execute FUNC.
-
-This function returns a function (so can be used as a keybinding)
-which closes the message pane if open and then executes function
-FUNC."
-  `(lambda ()
-     ,(concat "(Close message pane and) " (documentation func t))
+NAME determines the value of `notmuch-show-process-crypto' in the
+message window, closes the window, and then call CMD interactively
+with that value let-bound.  If the message window does not exist,
+then NAME behaves like CMD."
+  `(defun ,name ()
+     ,(concat "(Close message pane and) " (documentation cmd t))
      (interactive)
      (let ((notmuch-show-process-crypto
-	    (notmuch-tree-inherit-from-message-pane 'notmuch-show-process-crypto)))
+	    (notmuch-tree--message-process-crypto)))
        (notmuch-tree-close-message-window)
-       (call-interactively #',func))))
+       (call-interactively #',cmd))))
+
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-help
+ notmuch-help)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-new-mail
+ notmuch-mua-new-mail)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-jump-search
+ notmuch-jump-search)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-forward-message
+ notmuch-show-forward-message)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-reply-sender
+ notmuch-show-reply-sender)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-reply
+ notmuch-show-reply)
+(notmuch-tree--define-close-message-window-and
+ notmuch-tree-view-raw-message
+ notmuch-show-view-raw-message)
+
+;;; Keymap
 
 (defvar notmuch-tree-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map notmuch-common-keymap)
-    ;; The following override the global keymap.
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-help]
-      (notmuch-tree-close-message-pane-and #'notmuch-help))
-    ;; Override because we first close message pane and then close tree buffer.
+    ;; These bindings shadow common bindings with variants
+    ;; that additionally close the message window.
     (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
-    ;; Override because we close message pane after the search query is entered.
-    (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-mua-new-mail]
-      (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
-    ;; Override because we want to close message pane first.
-    (define-key map [remap notmuch-jump-search]
-      (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
+    (define-key map [remap notmuch-search]       'notmuch-tree-to-search)
+    (define-key map [remap notmuch-help]         'notmuch-tree-help)
+    (define-key map [remap notmuch-mua-new-mail] 'notmuch-tree-new-mail)
+    (define-key map [remap notmuch-jump-search]  'notmuch-tree-jump-search)
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
     (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
@@ -314,24 +339,16 @@ FUNC."
     (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
-    (define-key map (kbd "M-TAB")
-      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "<backtab>")
-      (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
-    (define-key map (kbd "TAB")
-      (notmuch-tree-to-message-pane #'notmuch-show-next-button))
-    (define-key map "$"
-      (notmuch-tree-to-message-pane #'notmuch-show-toggle-process-crypto))
+    (define-key map (kbd "M-TAB")     'notmuch-tree-previous-message-button)
+    (define-key map (kbd "<backtab>") 'notmuch-tree-previous-message-button)
+    (define-key map (kbd "TAB")       'notmuch-tree-next-message-button)
+    (define-key map "$" 'notmuch-tree-toggle-message-process-crypto)
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
-    (define-key map "f"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-forward-message))
-    (define-key map "r"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-reply-sender))
-    (define-key map "R"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-reply))
-    (define-key map "V"
-      (notmuch-tree-close-message-pane-and #'notmuch-show-view-raw-message))
+    (define-key map "f" 'notmuch-tree-forward-message)
+    (define-key map "r" 'notmuch-tree-reply-sender)
+    (define-key map "R" 'notmuch-tree-reply)
+    (define-key map "V" 'notmuch-tree-view-raw-message)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -354,8 +371,10 @@ FUNC."
     (define-key map " " 'notmuch-tree-scroll-or-next)
     (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
     (define-key map "e" 'notmuch-tree-resume-message)
-    map))
-(fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
+    map)
+  "Keymap for \"notmuch tree\" buffers.")
+
+;;; Message properties
 
 (defun notmuch-tree-get-message-properties ()
   "Return the properties of the current message as a plist.
@@ -408,6 +427,8 @@ Some useful entries are:
   (interactive)
   (notmuch-tree-get-prop :match))
 
+;;; Update display
+
 (defun notmuch-tree-refresh-result ()
   "Redisplay the current message line.
 
@@ -449,6 +470,8 @@ NOT change the database."
 	(with-selected-window notmuch-tree-message-window
 	  (when (string= tree-msg-id (notmuch-show-get-message-id))
 	    (notmuch-show-update-tags new-tags)))))))
+
+;;; Commands (and some helper functions used by them)
 
 (defun notmuch-tree-tag (tag-changes)
   "Change tags for the current message."
@@ -526,9 +549,10 @@ NOT change the database."
   (let ((buffer (current-buffer)))
     (when (and (window-live-p notmuch-tree-message-window)
 	       (eq (window-buffer notmuch-tree-message-window) buffer))
-      ;; We do not want an error if this is the sole window in the
-      ;; frame and I do not know how to test for that in emacs pre
-      ;; 24. Hence we just ignore-errors.
+      ;; We could check whether this is the only window in its frame,
+      ;; but simply ignoring the error that is thrown otherwise is
+      ;; what we had to do for Emacs 24 and we stick to that because
+      ;; it is still the simplest approach.
       (ignore-errors
 	(delete-window notmuch-tree-message-window)))))
 
@@ -574,8 +598,7 @@ NOT change the database."
   "Show the current message (in whole window)."
   (interactive)
   (let ((id (notmuch-tree-get-message-id))
-	(inhibit-read-only t)
-	buffer)
+	(inhibit-read-only t))
     (when id
       ;; We close the window to kill off un-needed buffers.
       (notmuch-tree-close-message-window)
@@ -828,7 +851,7 @@ buffer."
     (notmuch-tree-tag-thread
      (notmuch-tag-change-list notmuch-archive-tags unarchive))))
 
-;; Functions below here display the tree buffer itself.
+;;; Functions for displaying the tree buffer itself
 
 (defun notmuch-tree-clean-address (address)
   "Try to clean a single email ADDRESS for display. Return
@@ -1009,19 +1032,17 @@ Complete list of currently available key bindings:
   (setq buffer-read-only t)
   (setq truncate-lines t))
 
-(defun notmuch-tree-process-sentinel (proc msg)
+(defun notmuch-tree-process-sentinel (proc _msg)
   "Add a message to let user know when \"notmuch tree\" exits."
   (let ((buffer (process-buffer proc))
 	(status (process-status proc))
-	(exit-status (process-exit-status proc))
-	(never-found-target-thread nil))
+	(exit-status (process-exit-status proc)))
     (when (memq status '(exit signal))
       (kill-buffer (process-get proc 'parse-buf))
       (when (buffer-live-p buffer)
 	(with-current-buffer buffer
 	  (save-excursion
-	    (let ((inhibit-read-only t)
-		  (atbob (bobp)))
+	    (let ((inhibit-read-only t))
 	      (goto-char (point-max))
 	      (when (eq status 'signal)
 		(insert "Incomplete search results (tree view process was killed).\n"))
@@ -1035,8 +1056,7 @@ Complete list of currently available key bindings:
   "Process and filter the output of \"notmuch show\" for tree view."
   (let ((results-buf (process-buffer proc))
 	(parse-buf (process-get proc 'parse-buf))
-	(inhibit-read-only t)
-	done)
+	(inhibit-read-only t))
     (if (not (buffer-live-p results-buf))
 	(delete-process proc)
       (with-current-buffer parse-buf
@@ -1126,7 +1146,7 @@ The arguments are:
 	(inhibit-read-only t))
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
-  (set 'buffer-undo-list t)
+  (setq buffer-undo-list t)
   (notmuch-tree-worker query query-context target open-target unthreaded)
   (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))
@@ -1135,7 +1155,7 @@ The arguments are:
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
 
-;;
+;;; _
 
 (provide 'notmuch-tree)
 

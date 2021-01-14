@@ -1,4 +1,4 @@
-;;; notmuch-message.el --- message-mode functions specific to notmuch
+;;; notmuch-message.el --- message-mode functions specific to notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Jesse Rosenthal
 ;;
@@ -50,21 +50,20 @@ the \"inbox\" tag, you would set:
   :type '(repeat string)
   :group 'notmuch-send)
 
-(defconst notmuch-message-queued-tag-changes nil
-  "List of messages and corresponding tag-changes to be applied when sending a message.
+(defvar-local notmuch-message-queued-tag-changes nil
+  "List of tag changes to be applied when sending a message.
 
-This variable is overridden by buffer-local versions in message
-buffers where tag changes should be triggered when sending off
-the message.  Each item in this list is a list of strings, where
-the first is a notmuch query and the rest are the tag changes to
-be applied to the matching messages.")
+A list of queries and tag changes that are to be applied to them
+when the message that was composed in the current buffer is being
+send.  Each item in this list is a list of strings, where the
+first is a notmuch query and the rest are the tag changes to be
+applied to the matching messages.")
 
 (defun notmuch-message-apply-queued-tag-changes ()
   ;; Apply the tag changes queued in the buffer-local variable
   ;; notmuch-message-queued-tag-changes.
-  (dolist (query-and-tags notmuch-message-queued-tag-changes)
-    (notmuch-tag (car query-and-tags)
-		 (cdr query-and-tags))))
+  (pcase-dolist (`(,query . ,tags) notmuch-message-queued-tag-changes)
+    (notmuch-tag query tags)))
 
 (add-hook 'message-send-hook 'notmuch-message-apply-queued-tag-changes)
 

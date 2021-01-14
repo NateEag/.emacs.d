@@ -150,7 +150,7 @@ not appear in the pop-up buffer.
 ;;;### (autoloads nil "notmuch-lib" "notmuch-lib.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-lib.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("mm-shr" "notmuch-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("notmuch-")))
 
 ;;;***
 

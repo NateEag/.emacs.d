@@ -1,4 +1,4 @@
-;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata
+;;; notmuch-crypto.el --- functions for handling display of cryptographic metadata  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Jameson Rollins
 ;;
@@ -26,8 +26,10 @@
 
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
+;;; Options
+
 (defcustom notmuch-crypto-process-mime t
-  "Should cryptographic MIME parts be processed?
+  "Whether to process cryptographic MIME parts.
 
 If this variable is non-nil signatures in multipart/signed
 messages will be verified and multipart/encrypted parts will be
@@ -46,7 +48,7 @@ mode."
   :group 'notmuch-crypto)
 
 (defcustom notmuch-crypto-get-keys-asynchronously t
-  "Retrieve gpg keys asynchronously."
+  "Whether to retrieve openpgp keys asynchronously."
   :type 'boolean
   :group 'notmuch-crypto)
 
@@ -54,6 +56,8 @@ mode."
   "The gpg executable."
   :type 'string
   :group 'notmuch-crypto)
+
+;;; Faces
 
 (defface notmuch-crypto-part-header
   '((((class color)
@@ -96,15 +100,16 @@ mode."
   :group 'notmuch-crypto
   :group 'notmuch-faces)
 
+;;; Functions
+
 (define-button-type 'notmuch-crypto-status-button-type
-  'action (lambda (button) (message (button-get button 'help-echo)))
+  'action (lambda (button) (message "%s" (button-get button 'help-echo)))
   'follow-link t
   'help-echo "Set notmuch-crypto-process-mime to process cryptographic mime parts."
   :supertype 'notmuch-button-type)
 
 (defun notmuch-crypto-insert-sigstatus-button (sigstatus from)
-  "Insert a button describing the signature status SIGSTATUS sent
-by user FROM."
+  "Insert a button describing the signature status SIGSTATUS sent by user FROM."
   (let* ((status (plist-get sigstatus :status))
 	 (show-button t)
 	 (face 'notmuch-crypto-signature-unknown)
@@ -166,7 +171,7 @@ by user FROM."
 (declare-function notmuch-show-refresh-view "notmuch-show" (&optional reset-state))
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 
-(defun notmuch-crypto--async-key-sentinel (process event)
+(defun notmuch-crypto--async-key-sentinel (process _event)
   "When the user asks for a GPG key to be retrieved
 asynchronously, handle completion of that task.
 
@@ -260,7 +265,7 @@ corresponding key when the status button is pressed."
    'mouse-face 'notmuch-crypto-decryption)
   (insert "\n"))
 
-;;
+;;; _
 
 (provide 'notmuch-crypto)
 

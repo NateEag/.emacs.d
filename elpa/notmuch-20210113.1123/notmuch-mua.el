@@ -1,4 +1,4 @@
-;;; notmuch-mua.el --- emacs style mail-user-agent
+;;; notmuch-mua.el --- emacs style mail-user-agent  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -38,7 +38,12 @@
 (declare-function notmuch-draft-postpone "notmuch-draft" ())
 (declare-function notmuch-draft-save "notmuch-draft" ())
 
-;;
+(defvar notmuch-show-indent-multipart)
+(defvar notmuch-show-insert-header-p-function)
+(defvar notmuch-show-max-text-part-size)
+(defvar notmuch-show-insert-text/plain-hook)
+
+;;; Options
 
 (defcustom notmuch-mua-send-hook nil
   "Hook run before sending messages."
@@ -47,8 +52,7 @@
   :group 'notmuch-hooks)
 
 (defcustom notmuch-mua-compose-in 'current-window
-  (concat
-   "Where to create the mail buffer used to compose a new message.
+  "Where to create the mail buffer used to compose a new message.
 Possible values are `current-window' (default), `new-window' and
 `new-frame'. If set to `current-window', the mail buffer will be
 displayed in the current window, so the old buffer will be
@@ -57,18 +61,14 @@ or `new-frame', the mail buffer will be displayed in a new
 window/frame that will be destroyed when the buffer is killed.
 You may want to customize `message-kill-buffer-on-exit'
 accordingly."
-   (when (< emacs-major-version 24)
-     " Due to a known bug in Emacs 23, you should not set
-this to `new-window' if `message-kill-buffer-on-exit' is
-disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send
   :type '(choice (const :tag "Compose in the current window" current-window)
 		 (const :tag "Compose mail in a new window"  new-window)
 		 (const :tag "Compose mail in a new frame"   new-frame)))
 
 (defcustom notmuch-mua-user-agent-function nil
-  "Function used to generate a `User-Agent:' string. If this is
-`nil' then no `User-Agent:' will be generated."
+  "Function used to generate a `User-Agent:' string.
+If this is `nil' then no `User-Agent:' will be generated."
   :type '(choice (const :tag "No user agent string" nil)
 		 (const :tag "Full" notmuch-mua-user-agent-full)
 		 (const :tag "Notmuch" notmuch-mua-user-agent-notmuch)
@@ -78,9 +78,24 @@ disabled: this would result in an incorrect behavior."))
   :group 'notmuch-send)
 
 (defcustom notmuch-mua-hidden-headers nil
-  "Headers that are added to the `message-mode' hidden headers
-list."
+  "Headers that are added to the `message-mode' hidden headers list."
   :type '(repeat string)
+  :group 'notmuch-send)
+
+(defcustom notmuch-identities nil
+  "Identities that can be used as the From: address when composing a new message.
+
+If this variable is left unset, then a list will be constructed from the
+name and addresses configured in the notmuch configuration file."
+  :type '(repeat string)
+  :group 'notmuch-send)
+
+(defcustom notmuch-always-prompt-for-sender nil
+  "Always prompt for the From: address when composing or forwarding a message.
+
+This is not taken into account when replying to a message, because in that case
+the From: header is already filled in by notmuch."
+  :type 'boolean
   :group 'notmuch-send)
 
 (defgroup notmuch-reply nil
@@ -88,10 +103,11 @@ list."
   :group 'notmuch)
 
 (defcustom notmuch-mua-cite-function 'message-cite-original
-  "*Function for citing an original message.
+  "Function for citing an original message.
+
 Predefined functions include `message-cite-original' and
-`message-cite-original-without-signature'.
-Note that these functions use `mail-citation-hook' if that is non-nil."
+`message-cite-original-without-signature'.  Note that these
+functions use `mail-citation-hook' if that is non-nil."
   :type '(radio (function-item message-cite-original)
 		(function-item message-cite-original-without-signature)
 		(function-item sc-cite-original)
@@ -125,7 +141,7 @@ to `notmuch-mua-send-hook'."
   :type 'regexp
   :group 'notmuch-send)
 
-;;
+;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
   "Signal an error if the message text indicates that an
@@ -172,8 +188,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
 
 (defun notmuch-mua-maybe-set-window-dedicated ()
-  "Set the selected window as dedicated according to
-`notmuch-mua-compose-in'."
+  "Set the selected window as dedicated according to `notmuch-mua-compose-in'."
   (when (or (eq notmuch-mua-compose-in 'new-frame)
 	    (eq notmuch-mua-compose-in 'new-window))
     (set-window-dedicated-p (selected-window) t)))
@@ -212,7 +227,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 					       "multipart/*")
 	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
-;; There is a bug in emacs 23's message.el that results in a newline
+;; There is a bug in Emacs' message.el that results in a newline
 ;; not being inserted after the References header, so the next header
 ;; is concatenated to the end of it. This function fixes the problem,
 ;; while guarding against the possibility that some current or future
@@ -220,6 +235,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-insert-references (original-func header references)
   (funcall original-func header references)
   (unless (bolp) (insert "\n")))
+
+;;; Mua reply
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
   (let ((args '("reply" "--format=sexp" "--format-version=4"))
@@ -265,8 +282,8 @@ Typically this is added to `notmuch-mua-send-hook'."
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the reply.
       (when notmuch-message-replied-tags
-	(setq-local notmuch-message-queued-tag-changes
-		    (list (cons query-string notmuch-message-replied-tags))))
+	(setq notmuch-message-queued-tag-changes
+	      (list (cons query-string notmuch-message-replied-tags))))
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
       ;; message*setup-hooks may have added to the message body already.
@@ -324,21 +341,29 @@ Typically this is added to `notmuch-mua-send-hook'."
   (message-goto-body)
   (set-buffer-modified-p nil))
 
+;;; Mode and keymap
+
+(defvar notmuch-message-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
+    (define-key map (kbd "C-c C-s") #'notmuch-mua-send)
+    (define-key map (kbd "C-c C-p") #'notmuch-draft-postpone)
+    (define-key map (kbd "C-x C-s") #'notmuch-draft-save)
+    map)
+  "Keymap for `notmuch-message-mode'.")
+
 (define-derived-mode notmuch-message-mode message-mode "Message[Notmuch]"
   "Notmuch message composition mode. Mostly like `message-mode'."
   (notmuch-address-setup))
 
 (put 'notmuch-message-mode 'flyspell-mode-predicate 'mail-mode-flyspell-verify)
 
-(define-key notmuch-message-mode-map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
-(define-key notmuch-message-mode-map (kbd "C-c C-s") #'notmuch-mua-send)
-(define-key notmuch-message-mode-map (kbd "C-c C-p") #'notmuch-draft-postpone)
-(define-key notmuch-message-mode-map (kbd "C-x C-s") #'notmuch-draft-save)
+;;; New messages
 
 (defun notmuch-mua-pop-to-buffer (name switch-function)
-  "Pop to buffer NAME, and warn if it already exists and is
-modified. This function is notmuch adaptation of
-`message-pop-to-buffer'."
+  "Pop to buffer NAME, and warn if it already exists and is modified.
+Like `message-pop-to-buffer' but enable `notmuch-message-mode'
+instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (let ((buffer (get-buffer name)))
     (if (and buffer
 	     (buffer-name buffer))
@@ -361,7 +386,7 @@ modified. This function is notmuch adaptation of
     (erase-buffer)
     (notmuch-message-mode)))
 
-(defun notmuch-mua-mail (&optional to subject other-headers continue
+(defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
 				   return-action &rest ignored)
   "Invoke the notmuch mail composition window."
@@ -390,16 +415,10 @@ modified. This function is notmuch adaptation of
 	  (dolist (h other-headers other-headers)
 	    (when (stringp (car h))
 	      (setcar h (intern (capitalize (car h))))))))
-	(args (list yank-action send-actions))
 	;; Cause `message-setup-1' to do things relevant for mail,
 	;; such as observe `message-default-mail-headers'.
 	(message-this-is-mail t))
-    ;; message-setup-1 in Emacs 23 does not accept return-action
-    ;; argument. Pass it only if it is supplied by the caller. This
-    ;; will never be the case when we're called by `compose-mail' in
-    ;; Emacs 23.
-    (when return-action (nconc args '(return-action)))
-    (apply 'message-setup-1 headers args))
+    (message-setup-1 headers yank-action send-actions return-action))
   (notmuch-fcc-header-setup)
   (message-sort-headers)
   (message-hide-headers)
@@ -407,37 +426,21 @@ modified. This function is notmuch adaptation of
   (notmuch-mua-maybe-set-window-dedicated)
   (message-goto-to))
 
-(defcustom notmuch-identities nil
-  "Identities that can be used as the From: address when composing a new message.
-
-If this variable is left unset, then a list will be constructed from the
-name and addresses configured in the notmuch configuration file."
-  :type '(repeat string)
-  :group 'notmuch-send)
-
-(defcustom notmuch-always-prompt-for-sender nil
-  "Always prompt for the From: address when composing or forwarding a message.
-
-This is not taken into account when replying to a message, because in that case
-the From: header is already filled in by notmuch."
-  :type 'boolean
-  :group 'notmuch-send)
-
 (defvar notmuch-mua-sender-history nil)
 
 (defun notmuch-mua-prompt-for-sender ()
   "Prompt for a sender from the user's configured identities."
   (if notmuch-identities
-      (ido-completing-read "Send mail from: " notmuch-identities
-			   nil nil nil 'notmuch-mua-sender-history
-			   (car notmuch-identities))
+      (completing-read "Send mail from: " notmuch-identities
+		       nil nil nil 'notmuch-mua-sender-history
+		       (car notmuch-identities))
     (let* ((name (notmuch-user-name))
 	   (addrs (cons (notmuch-user-primary-email)
 			(notmuch-user-other-email)))
 	   (address
-	    (ido-completing-read (concat "Sender address for " name ": ") addrs
-				 nil nil nil 'notmuch-mua-sender-history
-				 (car addrs))))
+	    (completing-read (concat "Sender address for " name ": ") addrs
+			     nil nil nil 'notmuch-mua-sender-history
+			     (car addrs))))
       (message-make-from name address))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
@@ -504,10 +507,10 @@ the From: address."
       ;; Create a buffer-local queue for tag changes triggered when
       ;; sending the message.
       (when notmuch-message-forwarded-tags
-	(setq-local notmuch-message-queued-tag-changes
-		    (cl-loop for id in forward-queries
-			     collect
-			     (cons id notmuch-message-forwarded-tags))))
+	(setq notmuch-message-queued-tag-changes
+	      (cl-loop for id in forward-queries
+		       collect
+		       (cons id notmuch-message-forwarded-tags))))
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.
       (message-hide-headers)
@@ -519,10 +522,10 @@ the From: address."
 If PROMPT-FOR-SENDER is non-nil, the user will be prompted for
 the From: address first.  If REPLY-ALL is non-nil, the message
 will be addressed to all recipients of the source message."
-  ;; In current emacs (24.3) select-active-regions is set to t by
-  ;; default. The reply insertion code sets the region to the quoted
-  ;; message to make it easy to delete (kill-region or C-w). These two
-  ;; things combine to put the quoted message in the primary selection.
+  ;; `select-active-regions' is t by default. The reply insertion code
+  ;; sets the region to the quoted message to make it easy to delete
+  ;; (kill-region or C-w). These two things combine to put the quoted
+  ;; message in the primary selection.
   ;;
   ;; This is not what the user wanted and is a privacy risk (accidental
   ;; pasting of the quoted message). We can avoid some of the problems
@@ -536,6 +539,8 @@ will be addressed to all recipients of the source message."
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
 
+;;; Checks
+
 (defun notmuch-mua-check-no-misplaced-secure-tag ()
   "Query user if there is a misplaced secure mml tag.
 
@@ -547,11 +552,11 @@ tag, or the user confirms they mean it."
       (goto-char (point-max))
       (or
        ;; We are always fine if there is no secure tag.
-       (not (search-backward "<#secure" nil 't))
+       (not (search-backward "<#secure" nil t))
        ;; There is a secure tag, so it must be at the start of the
        ;; body, with no secure tag earlier (i.e., in the headers).
        (and (= (point) body-start)
-	    (not (search-backward "<#secure" nil 't)))
+	    (not (search-backward "<#secure" nil t)))
        ;; The user confirms they means it.
        (yes-or-no-p "\
 There is a <#secure> tag not at the start of the body. It is
@@ -578,6 +583,8 @@ The <#secure> tag at the start of the body is not followed by a
 newline. It is likely that the message will be sent unsigned and
 unencrypted.  Really send? "))))
 
+;;; Finishing commands
+
 (defun notmuch-mua-send-common (arg &optional exit)
   (interactive "P")
   (run-hooks 'notmuch-mua-send-hook)
@@ -591,7 +598,7 @@ unencrypted.  Really send? "))))
 
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (notmuch-mua-send-common arg 't))
+  (notmuch-mua-send-common arg t))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
@@ -601,7 +608,7 @@ unencrypted.  Really send? "))))
   (interactive)
   (message-kill-buffer))
 
-;;
+;;; _
 
 (define-mail-user-agent 'notmuch-user-agent
   'notmuch-mua-mail 'notmuch-mua-send-and-exit
@@ -610,8 +617,6 @@ unencrypted.  Really send? "))))
 ;; Add some more headers to the list that `message-mode' hides when
 ;; composing a message.
 (notmuch-mua-add-more-hidden-headers)
-
-;;
 
 (provide 'notmuch-mua)
 

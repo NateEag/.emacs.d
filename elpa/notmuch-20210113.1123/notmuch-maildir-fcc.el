@@ -1,4 +1,4 @@
-;;; notmuch-maildir-fcc.el --- inserting using a fcc handler
+;;; notmuch-maildir-fcc.el --- inserting using a fcc handler  -*- lexical-binding: t -*-
 
 ;; Copyright © Jesse Rosenthal
 ;;
@@ -28,6 +28,8 @@
 (require 'notmuch-lib)
 
 (defvar notmuch-maildir-fcc-count 0)
+
+;;; Options
 
 (defcustom notmuch-fcc-dirs "sent"
   "Determines the Fcc Header which says where to save outgoing mail.
@@ -76,15 +78,14 @@ directory if it does not exist yet when sending a mail."
   :require 'notmuch-fcc-initialization
   :group 'notmuch-send)
 
-(defcustom notmuch-maildir-use-notmuch-insert 't
+(defcustom notmuch-maildir-use-notmuch-insert t
   "Should fcc use notmuch insert instead of simple fcc."
   :type '(choice :tag "Fcc Method"
 		 (const :tag "Use notmuch insert" t)
 		 (const :tag "Use simple fcc" nil))
   :group 'notmuch-send)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions which set up the fcc header in the message buffer.
+;;; Functions which set up the fcc header in the message buffer.
 
 (defun notmuch-fcc-header-setup ()
   "Add an Fcc header to the current message buffer.
@@ -142,9 +143,7 @@ Insert header anyway? " subdir)))
 		subdir
 	      (concat (notmuch-database-path) "/" subdir))))))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message either using notmuch insert or file
-;; fcc. First functions common to the two cases.
+;;; Functions for saving a message using either method.
 
 (defmacro with-temporary-notmuch-message-buffer (&rest body)
   "Set-up a temporary copy of the current message-mode buffer."
@@ -196,7 +195,7 @@ This is a rearranged version of message mode's message-do-fcc."
 (defun notmuch-fcc-handler (fcc-header)
   "Store message with notmuch insert or normal (file) fcc.
 
-If `notmuch-maildir-use-notmuch-insert` is set then store the
+If `notmuch-maildir-use-notmuch-insert' is set then store the
 message using notmuch insert. Otherwise store the message using
 normal fcc."
   (message "Doing Fcc...")
@@ -204,8 +203,7 @@ normal fcc."
       (notmuch-maildir-fcc-with-notmuch-insert fcc-header)
     (notmuch-maildir-fcc-file-fcc fcc-header)))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message using notmuch insert.
+;;; Functions for saving a message using notmuch insert.
 
 (defun notmuch-maildir-notmuch-insert-current-buffer (folder &optional create tags)
   "Use notmuch insert to put the current buffer in the database.
@@ -246,14 +244,12 @@ If CREATE is non-nil then create the folder if necessary."
 \(r)etry, (c)reate folder, (i)gnore, or (e)dit the header? " '(?r ?c ?i ?e))))
 	 (cl-case response
 	   (?r (notmuch-maildir-fcc-with-notmuch-insert fcc-header))
-	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header 't))
-	   (?i 't)
+	   (?c (notmuch-maildir-fcc-with-notmuch-insert fcc-header t))
+	   (?i t)
 	   (?e (notmuch-maildir-fcc-with-notmuch-insert
 		(read-from-minibuffer "Fcc header: " fcc-header)))))))))
 
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Functions for saving a message using file fcc.
+;;; Functions for saving a message using file fcc.
 
 (defun notmuch-maildir-fcc-host-fixer (hostname)
   (replace-regexp-in-string "/\\|:"
@@ -322,7 +318,7 @@ if successful, nil if not."
 It offers the user a chance to correct the header, or filesystem,
 if needed."
   (if (notmuch-maildir-fcc-dir-is-maildir-p fcc-header)
-      (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header 't)
+      (notmuch-maildir-fcc-write-buffer-to-maildir fcc-header t)
     ;; The fcc-header is not a valid maildir see if the user wants to
     ;; fix it in some way.
     (let* ((prompt (format "Fcc %s is not a maildir: \
@@ -335,7 +331,7 @@ if needed."
 	      (message "No permission to create %s." fcc-header)
 	      (sit-for 2))
 	    (notmuch-maildir-fcc-file-fcc fcc-header))
-	(?i 't)
+	(?i t)
 	(?e (notmuch-maildir-fcc-file-fcc
 	     (read-from-minibuffer "Fcc header: " fcc-header)))))))
 
@@ -350,17 +346,19 @@ return t if successful, and nil otherwise."
 	(let ((msg-id (notmuch-maildir-fcc-save-buffer-to-tmp destdir)))
 	  (when msg-id
 	    (cond (mark-seen
-		   (condition-case err
+		   (condition-case nil
 		       (notmuch-maildir-fcc-move-tmp-to-cur destdir msg-id t)
 		     (file-already-exists
 		      (throw 'link-error nil))))
 		  (t
-		   (condition-case err
+		   (condition-case nil
 		       (notmuch-maildir-fcc-move-tmp-to-new destdir msg-id)
 		     (file-already-exists
 		      (throw 'link-error nil))))))
 	  (delete-file (concat destdir "/tmp/" msg-id))))
       t)))
+
+;;; _
 
 (provide 'notmuch-maildir-fcc)
 

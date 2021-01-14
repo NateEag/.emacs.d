@@ -1,4 +1,4 @@
-;;; coolj.el --- automatically wrap long lines  -*- coding:utf-8 -*-
+;;; coolj.el --- automatically wrap long lines  -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2000, 2001, 2004-2009 Free Software Foundation, Inc.
 
@@ -25,13 +25,13 @@
 
 ;;; Commentary:
 
-;;; This is a simple derivative of some functionality from
-;;; `longlines.el'. The key difference is that this version will
-;;; insert a prefix at the head of each wrapped line. The prefix is
-;;; calculated from the originating long line.
+;; This is a simple derivative of some functionality from
+;; `longlines.el'. The key difference is that this version will
+;; insert a prefix at the head of each wrapped line. The prefix is
+;; calculated from the originating long line.
 
-;;; No minor-mode is provided, the caller is expected to call
-;;; `coolj-wrap-region' to wrap the region of interest.
+;; No minor-mode is provided, the caller is expected to call
+;; `coolj-wrap-region' to wrap the region of interest.
 
 ;;; Code:
 
@@ -50,9 +50,7 @@ Otherwise respect `fill-column'."
   :group 'coolj
   :type 'regexp)
 
-(defvar coolj-wrap-point nil)
-
-(make-variable-buffer-local 'coolj-wrap-point)
+(defvar-local coolj-wrap-point nil)
 
 (defun coolj-determine-prefix ()
   "Determine the prefix for the current line."

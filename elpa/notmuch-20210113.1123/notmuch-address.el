@@ -1,4 +1,4 @@
-;;; notmuch-address.el --- address completion with notmuch
+;;; notmuch-address.el --- address completion with notmuch  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -25,8 +25,10 @@
 (require 'notmuch-parser)
 (require 'notmuch-lib)
 (require 'notmuch-company)
-;;
+
 (declare-function company-manual-begin "company")
+
+;;; Cache internals
 
 (defvar notmuch-address-last-harvest 0
   "Time of last address harvest.")
@@ -36,9 +38,9 @@
 This variable is set by calling `notmuch-address-harvest'.")
 
 (defvar notmuch-address-full-harvest-finished nil
-  "t indicates that full completion address harvesting has been finished.
-Use notmuch-address--harvest-ready to access as that will load a
-saved hash if necessary (and available).")
+  "Whether full completion address harvesting has finished.
+Use `notmuch-address--harvest-ready' to access as that will load
+a saved hash if necessary (and available).")
 
 (defun notmuch-address--harvest-ready ()
   "Return t if there is a full address hash available.
@@ -46,6 +48,8 @@ saved hash if necessary (and available).")
 If the hash is not present it attempts to load a saved hash."
   (or notmuch-address-full-harvest-finished
       (notmuch-address--load-address-hash)))
+
+;;; Options
 
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
@@ -133,6 +137,14 @@ matching `notmuch-address-completion-headers-regexp'."
   :group 'notmuch-address
   :group 'notmuch-hooks)
 
+(defcustom notmuch-address-use-company t
+  "If available, use company mode for address completion."
+  :type 'boolean
+  :group 'notmuch-send
+  :group 'notmuch-address)
+
+;;; Setup
+
 (defun notmuch-address-selection-function (prompt collection initial-input)
   "Call (`completing-read'
       PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
@@ -146,12 +158,6 @@ matching `notmuch-address-completion-headers-regexp'."
 
 (defun notmuch-address-message-insinuate ()
   (message "calling notmuch-address-message-insinuate is no longer needed"))
-
-(defcustom notmuch-address-use-company t
-  "If available, use company mode for address completion."
-  :type 'boolean
-  :group 'notmuch-send
-  :group 'notmuch-address)
 
 (defun notmuch-address-setup ()
   (let* ((setup-company (and notmuch-address-use-company
@@ -178,12 +184,14 @@ toggles the setting in this buffer."
 	(kill-local-variable 'company-idle-delay)
       (setq-local company-idle-delay nil))))
 
+;;; Completion
+
 (defun notmuch-address-matching (substring)
   "Returns a list of completion candidates matching SUBSTRING.
 The candidates are taken from `notmuch-address-completions'."
   (let ((candidates)
 	(re (regexp-quote substring)))
-    (maphash (lambda (key val)
+    (maphash (lambda (key _val)
 	       (when (string-match re key)
 		 (push key candidates)))
 	     notmuch-address-completions)
@@ -250,24 +258,7 @@ requiring external commands."
 	(ding))))
    (t nil)))
 
-;; Copied from `w3m-which-command'.
-(defun notmuch-address-locate-command (command)
-  "Return non-nil if `command' is an executable either on
-`exec-path' or an absolute pathname."
-  (and (stringp command)
-       (if (and (file-name-absolute-p command)
-		(file-executable-p command))
-	   command
-	 (setq command (file-name-nondirectory command))
-	 (catch 'found-command
-	   (let (bin)
-	     (dolist (dir exec-path)
-	       (setq bin (expand-file-name command dir))
-	       (when (or (and (file-executable-p bin)
-			      (not (file-directory-p bin)))
-			 (and (file-executable-p (setq bin (concat bin ".exe")))
-			      (not (file-directory-p bin))))
-		 (throw 'found-command bin))))))))
+;;; Harvest
 
 (defun notmuch-address-harvest-addr (result)
   (let ((name-addr (plist-get result :name-addr)))
@@ -294,7 +285,7 @@ The car is a partial harvest, and the cdr is a full harvest.")
   "Collect addresses completion candidates.
 
 It queries the notmuch database for messages sent/received (as
-configured with `notmuch-address-command`) by the user, collects
+configured with `notmuch-address-command') by the user, collects
 destination/source addresses from those messages and stores them
 in `notmuch-address-completions'.
 
@@ -415,7 +406,7 @@ appear to be an address savefile.  Not overwriting."
       (setq notmuch-address-last-harvest now)
       (notmuch-address-harvest
        nil nil
-       (lambda (proc event)
+       (lambda (_proc event)
 	 ;; If harvest fails, we want to try
 	 ;; again when the trigger is next
 	 ;; called
@@ -425,7 +416,7 @@ appear to be an address savefile.  Not overwriting."
 	       (setq notmuch-address-full-harvest-finished t))
 	   (setq notmuch-address-last-harvest 0)))))))
 
-;;
+;;; Standalone completion
 
 (defun notmuch-address-from-minibuffer (prompt)
   (if (not notmuch-address-command)
@@ -444,7 +435,7 @@ appear to be an address savefile.  Not overwriting."
       (let ((minibuffer-local-map rmap))
 	(read-string prompt)))))
 
-;;
+;;; _
 
 (provide 'notmuch-address)
 

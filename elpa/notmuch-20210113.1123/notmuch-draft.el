@@ -1,4 +1,4 @@
-;;; notmuch-draft.el --- functions for postponing and editing drafts
+;;; notmuch-draft.el --- functions for postponing and editing drafts  -*- lexical-binding: t -*-
 ;;
 ;; Copyright © Mark Walters
 ;; Copyright © David Bremner
@@ -30,6 +30,8 @@
 
 (declare-function notmuch-show-get-message-id "notmuch-show" (&optional bare))
 (declare-function notmuch-message-mode "notmuch-mua")
+
+;;; Options
 
 (defgroup notmuch-draft nil
   "Saving and editing drafts in Notmuch."
@@ -85,13 +87,14 @@ like they are intended to be sent encrypted
   :group 'notmuch-draft
   :group 'notmuch-crypto)
 
+;;; Internal
+
 (defvar notmuch-draft-encryption-tag-regex
   "<#\\(part encrypt\\|secure.*mode=.*encrypt>\\)"
   "Regular expression matching mml tags indicating encryption of part or message.")
 
-(defvar notmuch-draft-id nil
+(defvar-local notmuch-draft-id nil
   "Message-id of the most recent saved draft of this message.")
-(make-variable-buffer-local 'notmuch-draft-id)
 
 (defun notmuch-draft--mark-deleted ()
   "Tag the last saved draft deleted.
@@ -101,7 +104,7 @@ Used when a new version is saved, or the message is sent."
     (notmuch-tag notmuch-draft-id '("+deleted"))))
 
 (defun notmuch-draft-quote-some-mml ()
-  "Quote the mml tags in `notmuch-draft-quoted-tags`."
+  "Quote the mml tags in `notmuch-draft-quoted-tags'."
   (save-excursion
     ;; First we deal with any secure tag separately.
     (message-goto-body)
@@ -122,7 +125,7 @@ Used when a new version is saved, or the message is sent."
 	  (insert "!"))))))
 
 (defun notmuch-draft-unquote-some-mml ()
-  "Unquote the mml tags in `notmuch-draft-quoted-tags`."
+  "Unquote the mml tags in `notmuch-draft-quoted-tags'."
   (save-excursion
     (when notmuch-draft-quoted-tags
       (let ((re (concat "<#!+/?\\("
@@ -136,7 +139,7 @@ Used when a new version is saved, or the message is sent."
     (let (secure-tag)
       (save-restriction
 	(message-narrow-to-headers)
-	(setq secure-tag (message-fetch-field "X-Notmuch-Emacs-Secure" 't))
+	(setq secure-tag (message-fetch-field "X-Notmuch-Emacs-Secure" t))
 	(message-remove-header "X-Notmuch-Emacs-Secure"))
       (message-goto-body)
       (when secure-tag
@@ -146,7 +149,7 @@ Used when a new version is saved, or the message is sent."
   "Returns t if there is an mml secure tag."
   (save-excursion
     (message-goto-body)
-    (re-search-forward notmuch-draft-encryption-tag-regex nil 't)))
+    (re-search-forward notmuch-draft-encryption-tag-regex nil t)))
 
 (defun notmuch-draft--query-encryption ()
   "Checks if we should save a message that should be encrypted.
@@ -170,11 +173,13 @@ Really save and index an unencrypted copy? ")
   ;; but notmuch doesn't want that form, so remove them.
   (concat "draft-" (substring (message-make-message-id) 1 -1)))
 
+;;; Commands
+
 (defun notmuch-draft-save ()
   "Save the current draft message in the notmuch database.
 
 This saves the current message in the database with tags
-`notmuch-draft-tags` (in addition to any default tags
+`notmuch-draft-tags' (in addition to any default tags
 applied to newly inserted messages)."
   (interactive)
   (when (notmuch-draft--has-encryption-tag)
@@ -185,7 +190,7 @@ applied to newly inserted messages)."
      ;; so that it is easier to search for the message, and the
      ;; latter so we have a way of accessing the saved message (for
      ;; example to delete it at a later time). We check that the
-     ;; user has these in `message-deletable-headers` (the default)
+     ;; user has these in `message-deletable-headers' (the default)
      ;; as otherwise they are doing something strange and we
      ;; shouldn't interfere. Note, since we are doing this in a new
      ;; buffer we don't change the version in the compose buffer.
@@ -208,7 +213,7 @@ applied to newly inserted messages)."
      (notmuch-draft-quote-some-mml)
      (notmuch-maildir-setup-message-for-saving)
      (notmuch-maildir-notmuch-insert-current-buffer
-      notmuch-draft-folder 't notmuch-draft-tags))
+      notmuch-draft-folder t notmuch-draft-tags))
     ;; We are now back in the original compose buffer. Note the
     ;; function notmuch-call-notmuch-process (called by
     ;; notmuch-maildir-notmuch-insert-current-buffer) signals an error
@@ -227,6 +232,7 @@ applied to newly inserted messages)."
 
 (defun notmuch-draft-resume (id)
   "Resume editing of message with id ID."
+  ;; Used by command `notmuch-show-resume-message'.
   (let* ((tags (process-lines notmuch-command "search" "--output=tags"
 			      "--exclude=false" id))
 	 (draft (equal tags (notmuch-update-tags tags notmuch-draft-tags))))
@@ -266,9 +272,9 @@ applied to newly inserted messages)."
       ;; message is resaved or sent.
       (setq notmuch-draft-id (and draft id)))))
 
+;;; _
 
 (add-hook 'message-send-hook 'notmuch-draft--mark-deleted)
-
 
 (provide 'notmuch-draft)
 

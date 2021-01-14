@@ -4,10 +4,11 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net
 ;; URL: http://github.com/alphapapa/ts.el
-;; Package-Version: 20191010.210
+;; Package-Version: 20201212.1041
+;; Package-Commit: b7ca357a0ed57694e0b25ec1b1ca12e24a4ce541
 ;; Version: 0.2
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (s "1.12.0"))
-;; Keywords: date time timestamp
+;; Keywords: calendar, lisp
 
 ;; This file is not part of GNU Emacs.
 
@@ -18,11 +19,12 @@
 
 ;; A struct `ts' is defined, which represents a timestamp.  All
 ;; manipulation is done internally using Unix timestamps.  Accessors
-;; are used to retrieve values such as month, day, year, etc. from a
-;; timestamp, and these values are cached in the struct once accessed,
-;; to avoid repeatedly calling `format-time-string', which is
-;; expensive.  Function arguments are designed to work well with the
-;; `thread-last' macro, to make sequential operations easy to follow.
+;; are used to retrieve calendar values such as month, day, year from
+;; a timestamp, and these values are cached in the struct once
+;; accessed, to avoid repeatedly calling `format-time-string', which
+;; is expensive.  Function arguments are designed to work well with
+;; the `thread-last' macro, to make sequential operations easy to
+;; follow.
 
 ;; The current timestamp is retrieved with `ts-now'.
 

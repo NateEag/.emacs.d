@@ -2,10 +2,10 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20201005.809
-;; Package-Commit: ff7a36b81047892240d70fddd25e4e36d3434345
+;; Package-Version: 20201121.544
+;; Package-Commit: 21c966a02cdd4783dc6ea50b807589abc405d929
 ;; Version: 1.3.0
-;; Package-Requires: ((emacs "25.1") (helm "3.2"))
+;; Package-Requires: ((emacs "25.1"))
 
 ;; Copyright 2019 Nicolas Martyanoff <khaelin@gmail.com>
 ;;
@@ -28,7 +28,11 @@
 ;;; Code:
 
 (require 'helm nil t)
+(require 'pcase)
 (require 'seq)
+
+(declare-function helm-build-sync-source "helm-source")
+(declare-function helm-make-actions "helm-lib")
 
 ;;; Configuration:
 
@@ -71,6 +75,23 @@
   "A `format'able URL for fetching arbitrary RFC documents.
 Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   :type 'string)
+
+(defcustom rfc-mode-browse-input-function
+  (if (require 'helm nil t) 'helm 'completing-read)
+  "Function used by `rfc-mode-browse' to read user input.
+
+Only `read-number', `completing-read' and `helm' are explicitly
+supported.  Any other function is called with no arguments and
+must return an integer.
+
+Here `completion-read' works best if you use some completion
+mode that displays candidates \"vertically\" like `helm' does.
+`ivy-mode' is a popular choice.  `fido-mode' in combination
+with `icomplete-vertical-mode' should also work well."
+  :type '(choice (const read-number)
+		 (const completing-read)
+		 (const helm)
+		 function))
 
 (defcustom rfc-mode-use-original-buffer-names nil
   "Whether RFC document buffers should have the name of the document file.
@@ -203,19 +224,7 @@ Offer the number at point as default."
   (interactive
    (if (and current-prefix-arg (not (consp current-prefix-arg)))
        (list (prefix-numeric-value current-prefix-arg))
-     (let ((default
-             ;; Note that we don't use `number-at-point' as it will
-             ;; match number formats that make no sense as RFC numbers
-             ;; (floating point, hexadecimal, etc.).
-	     (save-excursion
-	       (skip-chars-backward "0-9")
-	       (if (looking-at "[0-9]")
-		   (string-to-number
-		    (buffer-substring-no-properties
-		     (point)
-		     (progn (skip-chars-forward "0-9")
-			    (point))))))))
-       (list (read-number "RFC number: " default)))))
+     (list (read-number "RFC number: " (rfc-mode--integer-at-point)))))
   (display-buffer (rfc-mode--document-buffer number)))
 
 (defun rfc-mode-reload-index ()
@@ -226,14 +235,43 @@ Offer the number at point as default."
 
 ;;;###autoload
 (defun rfc-mode-browse ()
-  "Browse through all RFC documents referenced in the index using Helm."
+  "Browse through all RFC documents referenced in the index."
   (interactive)
   (rfc-mode--fetch-document "-index" (rfc-mode-index-path))
   (unless rfc-mode-index-entries
     (setq rfc-mode-index-entries
           (rfc-mode-read-index-file (rfc-mode-index-path))))
-  (helm :buffer "*helm rfc browser*"
-        :sources (rfc-mode-browser-helm-sources rfc-mode-index-entries)))
+  (pcase rfc-mode-browse-input-function
+    ('read-number
+     (display-buffer (rfc-mode--document-buffer
+		      (read-number "View RFC document: "
+				   (rfc-mode--integer-at-point)))))
+    ('helm
+     (if (and (require 'helm nil t)
+	      (fboundp 'helm))
+	 (helm :buffer "*helm rfc browser*"
+	       :sources (rfc-mode-browser-helm-sources
+			 rfc-mode-index-entries))
+       (user-error "Helm has to be installed explicitly")))
+    ('completing-read
+     (let* ((default (rfc-mode--integer-at-point))
+	    (choice (completing-read
+		     "View RFC document: "
+		     (mapcar #'rfc-mode-browser-format-candidate
+			     rfc-mode-index-entries)
+		     nil nil nil nil
+		     (and default
+			  (rfc-mode-browser-format-candidate default))))
+	    (number (or (and (string-match "\\`RFC\\([0-9]+\\)" choice)
+			     (string-to-number (match-string 1 choice)))
+			(ignore-errors (string-to-number choice)))))
+       (unless number
+	 (user-error
+	  "%s doesn't match a complication candidate and is not a number"
+	  choice))
+       (display-buffer (rfc-mode--document-buffer number))))
+    (_ (display-buffer (rfc-mode--document-buffer
+			(funcall rfc-mode-browse-input-function))))))
 
 ;;;###autoload
 (define-derived-mode rfc-mode special-mode "rfc-mode"
@@ -327,11 +365,11 @@ no next header is found."
 
 ENTRIES is a list of RFC index entries in the browser."
   (helm-build-sync-source "RFC documents"
-    :candidates (mapcar #'rfc-mode-browser-helm-candidate entries)
+    :candidates (mapcar #'rfc-mode-browser-format-candidate entries)
     :action (helm-make-actions
              "Read" #'rfc-mode-browser-helm-entry-read)))
 
-(defun rfc-mode-browser-helm-candidate (entry)
+(defun rfc-mode-browser-format-candidate (entry)
   "Create a Helm candidate for ENTRY.
 
 ENTRY is a RFC index entry in the browser."
@@ -437,6 +475,19 @@ The buffer is created if it does not exist."
       (current-buffer))))
 
 ;;; Misc utils:
+
+(defun rfc-mode--integer-at-point ()
+  ;; Note that we don't use `number-at-point' as it will match
+  ;; number formats that make no sense as RFC numbers (floating
+  ;; point, hexadecimal, etc.).
+  (save-excursion
+    (skip-chars-backward "0-9")
+    (and (looking-at "[0-9]")
+	 (string-to-number
+	  (buffer-substring-no-properties
+	   (point)
+	   (progn (skip-chars-forward "0-9")
+		  (point)))))))
 
 (defun rfc-mode--fetch-document (suffix document-path)
   "Ensure an RFC document with SUFFIX exists at DOCUMENT-PATH.

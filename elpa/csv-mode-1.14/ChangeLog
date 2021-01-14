@@ -1,3 +1,7 @@
+2020-11-29  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* .gitignore: New file
+
 2020-02-16  Simen Heggestøyl  <simenheg@gmail.com>
 
 	* packages/csv-mode/csv-mode.el: Bump version number

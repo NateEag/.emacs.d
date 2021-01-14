@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20201018.1607
-;; Package-Commit: 94f87a84fd3c643bd85638e667f01513c9223ea5
+;; Package-Version: 20201026.2324
+;; Package-Commit: 0183da84cb45eb94da996cd2eab714ef0d7504cc
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.2
 
@@ -1218,7 +1218,8 @@ START-URL is the URL requested."
   (let ((desc auto-revert-notify-watch-descriptor)
         (table (if (boundp 'auto-revert--buffers-by-watch-descriptor)
                    auto-revert--buffers-by-watch-descriptor
-                 auto-revert-notify-watch-descriptor-hash-list)))
+                 (when (boundp 'auto-revert-notify-watch-descriptor-hash-list)
+                   auto-revert-notify-watch-descriptor-hash-list))))
     (when desc
       (let ((buffers (delq (current-buffer) (gethash desc table))))
         (if buffers

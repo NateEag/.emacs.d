@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.1 (unreleased)
-;; Package-Version: 20200827.2326
-;; Package-Commit: 7109c36c82496d6954dcf2b0b9c622b26e6ac75d
+;; Version: 0.8.2
+;; Package-Version: 20201214.2330
+;; Package-Commit: 9a3e893751791b17db85d691444e50e346cb2bd3
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -37,6 +37,14 @@
 
 ;;; Change Log:
 
+;; 2020-12-14 - v0.8.2
+;; * Fix sourcehut URL, don't link to raw version (Issue #77)
+;; * Fix sourcehut multi-line URLs
+;;
+;; 2020-11-23 - v0.8.1
+;; * Fix URL casing (Issue #57)
+;; * Fix byte-compile warnings (Issue #75 thanks Brian Leung)
+;;
 ;; 2020-07-21 - v0.8.0
 ;; * Add `-' prefix argument to git-link to generate links without line numbers
 ;; * Add git-link-use-single-line-number
@@ -185,7 +193,7 @@ See its docs."
   :group 'git-link)
 
 (defcustom git-link-remote-alist
-  '(("git.sr.ht" git-link-github)
+  '(("git.sr.ht" git-link-sourcehut)
     ("github" git-link-github)
     ("bitbucket" git-link-bitbucket)
     ("gitorious" git-link-gitorious)
@@ -240,6 +248,8 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 (defun git-link--last-commit ()
   (car (git-link--exec "--no-pager" "log" "-n1" "--pretty=format:%H")))
 
+(defvar magit-buffer-revision)
+
 (defun git-link--commit ()
   (cond
    ((git-link--using-git-timemachine)
@@ -262,6 +272,8 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 
 (defun git-link--branch-remote (branch)
   (git-link--get-config (format "branch.%s.remote" branch)))
+
+(declare-function magit-rev-branch "ext:magit-git")
 
 (defun git-link--branch ()
   (or (git-link--get-config "git-link.branch")
@@ -312,6 +324,8 @@ return (FILENAME . REVISION) otherwise nil."
     (cons (match-string 1 filename)
           (match-string 2 filename))))
 
+(defvar magit-buffer-file-name)
+
 (defun git-link--relative-filename ()
   (let* ((filename (buffer-file-name))
 	 (dir      (git-link--repo-root)))
@@ -334,15 +348,15 @@ return (FILENAME . REVISION) otherwise nil."
 
 (defun git-link--parse-remote (url)
   "Parse URL and return a list as (HOST DIR).  DIR has no leading slash or `git' extension."
-  (let (host path)
+  (let (host path parsed)
     (unless (string-match "^[a-zA-Z0-9]+://" url)
       (setq url (concat "ssh://" url)))
 
-    (setq url  (url-generic-parse-url url)
+    (setq parsed (url-generic-parse-url url)
           ;; Normalize path.
-          ;; If none, will nil on Emacs < 25. Later versions return "".
-          path (or (car (url-path-and-query url)) "")
-          host (url-host url))
+          ;; If none, will be nil on Emacs < 25. Later versions return "".
+          path (or (car (url-path-and-query parsed)) "")
+          host (url-host parsed))
 
     (when host
       (when (and (not (string= "/" path))
@@ -353,11 +367,15 @@ return (FILENAME . REVISION) otherwise nil."
                       path)
                     1)))
 
-      ;; Fix-up scp style URLs
+      ;; Fix-up scp style URLs.
+      ;; git@foo:UsEr/repo gives a host of foo:user
+      ;; We also need to preserve case so we take UsEr from the original url
       (when (string-match ":" host)
-        (let ((parts (split-string host ":" t)))
+        (let ((parts (split-string host ":" t))
+              (case-fold-search t))
+          (string-match (concat (car parts) ":\\(" (cadr parts) "\\)/") url)
           (setq host (car parts)
-                path (concat (cadr parts) "/" path))))
+                path (concat (match-string 1 url) "/" path))))
 
       ;; Fix-up Azure SSH URLs
       (when (string= "ssh.dev.azure.com" host)
@@ -367,9 +385,9 @@ return (FILENAME . REVISION) otherwise nil."
                     "\\1/\\2/_git/\\3"
                     path)))
       (when (string= "vs-ssh.visualstudio.com" host)
-        (setq host (concat (url-user url) ".visualstudio.com"))
+        (setq host (concat (url-user parsed) ".visualstudio.com"))
         (setq path (replace-regexp-in-string
-                    (concat "^v3/" (url-user url) "/\\([^/]+\\)/")
+                    (concat "^v3/" (url-user parsed) "/\\([^/]+\\)/")
                     "\\1/_git/"
                     path)))
 
@@ -462,6 +480,19 @@ return (FILENAME . REVISION) otherwise nil."
       (or start "")
       (or end start "")))
 
+(defun git-link-sourcehut (hostname dirname filename branch commit start end)
+  (format "https://%s/%s/tree/%s/%s"
+	  hostname
+	  dirname
+	  (or branch commit)
+	  (concat filename
+                  (when start
+                    (concat "#"
+                            (if end
+                                (format "L%s-%s" start end)
+                              (format "L%s" start)))))))
+
+
 (defun git-link-commit-github (hostname dirname commit)
   (format "https://%s/%s/commit/%s"
 	  hostname
@@ -469,7 +500,7 @@ return (FILENAME . REVISION) otherwise nil."
 	  commit))
 
 (defun git-link-commit-azure (hostname dirname commit)
-  (format "https://%s/%s/commit/%s"
+ (format "https://%s/%s/commit/%s"
 	  hostname
 	  dirname
 
@@ -532,7 +563,6 @@ return (FILENAME . REVISION) otherwise nil."
             hostname
             dir-file-name
             commit)))
-
 
 (defun git-link--select-remote ()
   (if current-prefix-arg

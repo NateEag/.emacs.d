@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.7.2
-;; Package-Requires: ((emacs "25.1") (tree-sitter "0.9.2"))
+;; Version: 0.9.0
+;; Package-Requires: ((emacs "25.1") (tree-sitter "0.12.2"))
 ;; License: MIT
 
 ;;; Commentary:
@@ -16,7 +16,7 @@
 ;; `tree-sitter' is widespread enough for language major modes to include these
 ;; definitions on their own.
 ;;
-;; Basically it's a multi-step process:
+;; Basically it's a multi-phase adoption process:
 ;;
 ;; 1. `tree-sitter-langs' populates global registries of grammars and queries.
 ;;    These global registries are defined by `tree-sitter-mode' and other
@@ -81,8 +81,10 @@ See `tree-sitter-langs-repos'."
      (reverse '((agda-mode       . agda)
                 (sh-mode         . bash)
                 (c-mode          . c)
+                (csharp-mode     . c-sharp)
                 (c++-mode        . cpp)
                 (css-mode        . css)
+                (elm-mode        . elm)
                 (go-mode         . go)
                 (haskell-mode    . haskell)
                 (html-mode       . html)
@@ -101,6 +103,7 @@ See `tree-sitter-langs-repos'."
                 (rustic-mode     . rust)
                 (scala-mode      . scala)
                 (swift-mode      . swift)
+                (tuareg-mode     . ocaml)
                 (typescript-mode . typescript))))
   (setf (map-elt tree-sitter-major-mode-language-alist major-mode)
         lang-symbol))

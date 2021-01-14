@@ -6,7 +6,7 @@
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 ;; Keywords: languages tools parsers dynamic-modules tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.12.0
+;; Version: 0.13.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: MIT
 
@@ -24,7 +24,7 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tsc--dyn-version "0.12.0"
+  (defconst tsc--dyn-version "0.13.0"
     "Required version of the dynamic module `tsc-dyn'.")
   (require 'tsc-dyn-get)
   (tsc-dyn-get-ensure tsc--dyn-version))
@@ -129,14 +129,16 @@ This function must be called with narrowing disabled, e.g. within a
 ;;; Convenient versions of some functions.
 
 (defun tsc-get-descendant-for-position-range (node beg end)
-  "Return the smallest node within NODE that spans the range (BEG . END)."
+  "Return the smallest node within NODE that spans the range (BEG . END).
+This function must be called in NODE's source buffer."
   (tsc-get-descendant-for-byte-range
    node
    (position-bytes beg)
    (position-bytes end)))
 
 (defun tsc-get-named-descendant-for-position-range (node beg end)
-  "Return the smallest named node within NODE that spans the range (BEG . END)."
+  "Return the smallest named node within NODE that spans the range (BEG . END).
+This function must be called in NODE's source buffer."
   (tsc-get-named-descendant-for-byte-range
    node
    (position-bytes beg)
@@ -149,15 +151,18 @@ This function must be called with narrowing disabled, e.g. within a
   (tsc--get-child-by-field-name node (substring (symbol-name field) 1)))
 
 (defun tsc-node-start-position (node)
-  "Return NODE's start position."
+  "Return NODE's start position.
+This function must be called in NODE's source buffer."
   (byte-to-position (tsc-node-start-byte node)))
 
 (defun tsc-node-end-position (node)
-  "Return NODE's end position."
+  "Return NODE's end position.
+This function must be called in NODE's source buffer."
   (byte-to-position (tsc-node-end-byte node)))
 
 (defun tsc-node-position-range (node)
-  "Return NODE's (START-POSITION . END-POSITION)."
+  "Return NODE's (START-POSITION . END-POSITION).
+This function must be called in NODE's source buffer."
   (let ((range (tsc-node-byte-range node)))
     (cl-callf byte-to-position (car range))
     (cl-callf byte-to-position (cdr range))

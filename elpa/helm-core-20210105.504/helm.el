@@ -5,7 +5,7 @@
 
 ;; Copyright (C) 2007         Tamas Patrovics
 ;;               2008 ~ 2011  rubikitch <rubikitch@ruby-lang.org>
-;;               2011 ~ 2019  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;;               2011 ~ 2020  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; This is a fork of anything.el wrote by Tamas Patrovics.
 
@@ -306,7 +306,7 @@ and vectors, so don't use strings to define them."
 
 Default to Helm group when group is not defined in source."
   (interactive)
-  (helm-run-after-exit 'helm-customize-group-1 (helm-attr 'group)))
+  (helm-run-after-exit 'helm-customize-group-1 (helm-get-attr 'group)))
 (put 'helm-customize-group 'helm-only t)
 
 (defun helm--action-at-nth-set-fn-1 (value &optional negative)
@@ -1089,7 +1089,8 @@ minibuffer abnormally (e.g. via `helm-keyboard-quit').")
   "Runs after pre-selection in `helm-buffer'.")
 
 (defvar helm-window-configuration-hook nil
-  "Runs when switching to and from the action buffer.")
+  "Runs when switching to and from the action buffer.
+Should run also at end of `helm-display-function'.")
 
 (defvar helm-execute-action-at-once-if-one nil
   "When non-nil execute the default action and then exit if only one candidate.
@@ -1154,9 +1155,7 @@ be negated with \"!\".
 
 Helm also supports fuzzy matching in some places when specified,
 you will find several variables to enable fuzzy matching in
-diverse [[Helm sources][sources]], see
-[[https://github.com/emacs-helm/helm/wiki/Fuzzy-matching][fuzzy-matching]]
-in helm-wiki for more infos.
+diverse [[Helm sources][sources]], see [[https://github.com/emacs-helm/helm/wiki/Fuzzy-matching][fuzzy-matching]] in helm-wiki for more infos.
 
 Helm generally uses familiar Emacs keys to navigate the list.
 Here follow some of the less obvious bindings:
@@ -1173,9 +1172,7 @@ sources support this.
 available on current candidate or all marked candidates.  The
 default binding <tab> is ordinarily used for completion, but that
 would be redundant since Helm completes upon every character
-entered in the prompt.  See
-[[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm
-wiki]].
+entered in the prompt.  See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]].
 
 Note: In addition to the default actions list, additional actions
 appear depending on the type of the selected candidate(s).  They
@@ -1195,8 +1192,8 @@ wiki]] for more infos.
 You will find in Helm sources already built and bound to a
 variable called generally `helm-source-<something>'.  In this case
 it is an alist and you can change the attributes (keys) values
-using `helm-attrset' function in your configuration.  Of course
-you have to ensure before calling `helm-attrset' that the file
+using `helm-set-attr' function in your configuration.  Of course
+you have to ensure before calling `helm-set-attr' that the file
 containing source is loaded, e.g. with `with-eval-after-load'.  Of
 course you can also completely redefine the source but this is
 generally not elegant as it duplicate for its most part code
@@ -1460,6 +1457,19 @@ more infos.
 NOTE: Any of these bindings are from `helm-map' and may be
 overriten by the map specific to the current source in use (each
 source can have its own keymap).
+
+** The actions menu
+
+You can display the action menu in the same window
+as helm candidates (default) or in a side window according to
+`helm-show-action-window-other-window' value.
+
+When the action menu popup, the helm prompt is used to narrow
+down this menu, no more candidates.
+
+When `helm-allow-mouse' is non nil, you can use as well
+mouse-3 (right click) in the candidate zone to select actions
+with the mouse once your candidate is selected.
 
 ** Action transformers
 
@@ -2030,7 +2040,7 @@ End:")
 
 ;;; helm-attributes
 ;;
-(defun helm-attr (attribute-name &optional source compute)
+(defun helm-get-attr (attribute-name &optional source compute)
   "Get the value of ATTRIBUTE-NAME of SRC.
 
 If SRC is omitted, use current source.
@@ -2043,7 +2053,7 @@ value unchanged, but will eval a symbol which is bound.
 You can use `setf' to modify value of ATTRIBUTE-NAME unless
 COMPUTE is specified, if attribute ATTRIBUTE-NAME is not found in
 SOURCE `setf' will create new attribute ATTRIBUTE-NAME with
-specified value.  You can also use `helm-attrset' to modify
+specified value.  You can also use `helm-set-attr' to modify
 ATTRIBUTE-NAME."
   (declare (gv-setter
             (lambda (val)
@@ -2063,17 +2073,10 @@ ATTRIBUTE-NAME."
             (helm-interpret-value (cdr it) src compute)
           (cdr it)))))
 
-;; (helm-aif (assq attribute-name src)
-;; (let* ((val     (cdr it))
-;; When attr exists but have no cdr it is equal to `t'.
-;; (attrval (or val t)))
-;; Attributes with a boolean value have no cdr, so no need
-;; to compute a value == to t.
-;; (if (and compute val)
-;; (helm-interpret-value val src compute)
-;; attrval)))))
+(defalias 'helm-attr 'helm-get-attr)
+(make-obsolete 'helm-attr 'helm-get-attr "3.7.0")
 
-(cl-defun helm-attrset (attribute-name value
+(cl-defun helm-set-attr (attribute-name value
                                        &optional
                                        (src (helm-get-current-source)))
   "Set the value of ATTRIBUTE-NAME of source SRC to VALUE.
@@ -2082,9 +2085,11 @@ If ATTRIBUTE-NAME doesn't exists in source it is created with
 value VALUE.  If SRC is omitted, use current source.  If operation
 succeed, return value, otherwise nil.
 
-Note that `setf' on `helm-attr' can be used instead of this
-function."
-  (setf (helm-attr attribute-name src) value))
+Using this function is same as using `setf' on `helm-get-attr'."
+  (setf (helm-get-attr attribute-name src) value))
+
+(defalias 'helm-attrset 'helm-set-attr)
+(make-obsolete 'helm-attrset 'helm-set-attr "3.7.0")
 
 (defun helm-add-action-to-source (name fn source &optional index)
   "Add new action NAME linked to function FN to SOURCE.
@@ -2095,11 +2100,11 @@ If INDEX is specified, action is added to the action list at INDEX,
 otherwise added at end.
 This allows users to add specific actions to an existing source
 without modifying source code."
-  (let ((actions    (helm-attr 'action source 'ignorefn))
+  (let ((actions    (helm-get-attr 'action source 'ignorefn))
         (new-action (list (cons name fn))))
     (when (functionp actions)
       (setq actions (list (cons "Default action" actions))))
-    (helm-attrset 'action
+    (helm-set-attr 'action
                   (if index
                       (helm-append-at-nth actions new-action index)
                     (append actions new-action))
@@ -2109,11 +2114,11 @@ without modifying source code."
   "Delete ACTION-OR-NAME from SOURCE.
 ACTION-OR-NAME can either be the name of action or the symbol
 function associated to name."
-  (let* ((actions    (helm-attr 'action source 'ignorefn))
+  (let* ((actions    (helm-get-attr 'action source 'ignorefn))
          (del-action (if (symbolp action-or-name)
                          (rassoc action-or-name actions)
                        (assoc action-or-name actions))))
-    (helm-attrset 'action (delete del-action actions) source)))
+    (helm-set-attr 'action (delete del-action actions) source)))
 
 (cl-defun helm-add-action-to-source-if (name fn source predicate
                                              &optional (index 4) test-only)
@@ -2141,8 +2146,8 @@ when predicate helm-ff-candidates-lisp-p returns non-nil:
                               'async-byte-compile-file
                               helm-source-find-files
                               'helm-ff-candidates-lisp-p\)."
-  (let* ((actions     (helm-attr 'action source 'ignorefn))
-         (action-transformers (helm-attr 'action-transformer source))
+  (let* ((actions     (helm-get-attr 'action source 'ignorefn))
+         (action-transformers (helm-get-attr 'action-transformer source))
          (new-action  (list (cons name fn)))
          (transformer (lambda (actions candidate)
                         (cond ((funcall predicate candidate)
@@ -2150,12 +2155,12 @@ when predicate helm-ff-candidates-lisp-p returns non-nil:
                                 actions new-action index))
                               (t actions)))))
     (when (functionp actions)
-      (helm-attrset 'action (list (cons "Default action" actions)) source))
+      (helm-set-attr 'action (list (cons "Default action" actions)) source))
     (when (or (symbolp action-transformers) (functionp action-transformers))
       (setq action-transformers (list action-transformers)))
     (if test-only                       ; debug
         (delq nil (append (list transformer) action-transformers))
-      (helm-attrset 'action-transformer
+      (helm-set-attr 'action-transformer
                     (helm-fast-remove-dups
                      (delq nil (append (list transformer) action-transformers))
                      :test 'equal)
@@ -2266,10 +2271,10 @@ It is a function symbol (sole action) or list
 of (action-display . function)."
   (unless (helm-empty-buffer-p (helm-buffer-get))
     (let ((src (helm-get-current-source)))
-      (helm-aif (helm-attr 'action-transformer)
+      (helm-aif (helm-get-attr 'action-transformer)
           (helm-apply-functions-from-source
            (or source src) it
-           (helm-attr 'action nil 'ignorefn)
+           (helm-get-attr 'action nil 'ignorefn)
            ;; Check if the first given transformer
            ;; returns the same set of actions for each
            ;; candidate in marked candidates.
@@ -2282,7 +2287,7 @@ of (action-display . function)."
                         always (equal (funcall act nil c) acts))
                (car (helm-marked-candidates))
              (helm-get-selection nil nil src)))
-        (helm-attr 'action nil 'ignorefn)))))
+        (helm-get-attr 'action nil 'ignorefn)))))
 
 (defun helm-get-current-source ()
   "Return the source for the current selection.
@@ -2307,7 +2312,7 @@ Return nil when `helm-buffer' is empty."
 (defun helm-buffer-is-modified (buffer)
   "Return non-nil when BUFFER is modified since Helm was invoked."
   (let* ((buf         (get-buffer buffer))
-         (key         (concat (buffer-name buf) "/" (helm-attr 'name)))
+         (key         (concat (buffer-name buf) "/" (helm-get-attr 'name)))
          (source-tick (or (gethash key helm-tick-hash) 0))
          (buffer-tick (buffer-chars-modified-tick buf))
          (modifiedp   (/= source-tick buffer-tick)))
@@ -2849,7 +2854,7 @@ HISTORY args see `helm'."
               ;; only one candidate (this avoid having the helm frame
               ;; flashing), lets first compute candidates and if more
               ;; than one display helm-buffer (this is done later in
-              ;; helm-read-pattern-maybe).
+              ;; helm-read-from-minibuffer).
               (unless helm-execute-action-at-once-if-one
                 (helm-display-buffer helm-buffer resume)
                 (select-window (helm-window)))
@@ -2863,7 +2868,7 @@ HISTORY args see `helm'."
               (add-hook 'post-command-hook 'helm--update-header-line)
               (helm-log "show prompt")
               (unwind-protect
-                  (helm-read-pattern-maybe
+                  (helm-read-from-minibuffer
                    prompt input preselect
                    resume keymap default history)
                 (helm-cleanup))
@@ -3515,47 +3520,6 @@ For RESUME INPUT DEFAULT and SOURCES see `helm'."
     (overlay-put helm-selection-overlay 'face 'helm-selection)
     (overlay-put helm-selection-overlay 'priority 1)))
 
-(defun helm-restore-position-on-quit ()
-  "Restore position in `helm-current-buffer' when quitting."
-  (helm-current-position 'restore))
-
-(defun helm--push-and-remove-dups (elm sym)
-  "Move ELM of SYM value on top and set SYM to this new value."
-  (set sym (cons elm (delete elm (symbol-value sym)))))
-
-(defun helm--current-buffer ()
-  "[INTERNAL] Return `current-buffer' BEFORE `helm-buffer' is initialized.
-Note that it returns the minibuffer in use after Helm has started
-and is intended for `helm-initial-setup'.  To get the buffer where
-Helm was started, use `helm-current-buffer' instead."
-  (if (minibuffer-window-active-p (minibuffer-window))
-      ;; If minibuffer is active be sure to use it's buffer
-      ;; as `helm-current-buffer', this allow to use helm
-      ;; from an already active minibuffer (M-: etc...)
-      (window-buffer (active-minibuffer-window))
-    ;; Fix Issue #456
-    ;; Use this instead of `current-buffer' to ensure
-    ;; helm session started in helm-mode from a completing-read
-    ;; Use really the buffer where we started and not the one
-    ;; where the completing-read is wrapped. i.e
-    ;; (with-current-buffer SOME-OTHER-BUFFER (completing-read [...])
-    (window-buffer (with-selected-window (minibuffer-window)
-                     (minibuffer-selected-window)))))
-
-(defun helm--run-init-hooks (hook sources)
-  "Run after and before init hooks local to source.
-See :after-init-hook and :before-init-hook in `helm-source'."
-  (cl-loop with sname = (cl-ecase hook
-                          (before-init-hook "h-before-init-hook")
-                          (after-init-hook "h-after-init-hook"))
-           with h = (cl-gensym sname)
-           for s in sources
-           for hv = (assoc-default hook s)
-           if (and hv (not (symbolp hv)))
-           do (set h hv)
-           and do (helm-log-run-hook h)
-           else do (helm-log-run-hook hv)))
-
 (defun helm-initial-setup (default sources)
   "Initialize Helm settings and set up the Helm buffer."
   ;; Run global hook.
@@ -3608,6 +3572,47 @@ See :after-init-hook and :before-init-hook in `helm-source'."
   (helm-log-run-hook 'helm-after-initialize-hook)
   ;; Run local source hook.
   (helm--run-init-hooks 'after-init-hook sources))
+
+(defun helm--run-init-hooks (hook sources)
+  "Run after and before init hooks local to source.
+See :after-init-hook and :before-init-hook in `helm-source'."
+  (cl-loop with sname = (cl-ecase hook
+                          (before-init-hook "h-before-init-hook")
+                          (after-init-hook "h-after-init-hook"))
+           with h = (cl-gensym sname)
+           for s in sources
+           for hv = (assoc-default hook s)
+           if (and hv (not (symbolp hv)))
+           do (set h hv)
+           and do (helm-log-run-hook h)
+           else do (helm-log-run-hook hv)))
+
+(defun helm-restore-position-on-quit ()
+  "Restore position in `helm-current-buffer' when quitting."
+  (helm-current-position 'restore))
+
+(defun helm--push-and-remove-dups (elm sym)
+  "Move ELM of SYM value on top and set SYM to this new value."
+  (set sym (cons elm (delete elm (symbol-value sym)))))
+
+(defun helm--current-buffer ()
+  "[INTERNAL] Return `current-buffer' BEFORE `helm-buffer' is initialized.
+Note that it returns the minibuffer in use after Helm has started
+and is intended for `helm-initial-setup'.  To get the buffer where
+Helm was started, use `helm-current-buffer' instead."
+  (if (minibuffer-window-active-p (minibuffer-window))
+      ;; If minibuffer is active be sure to use it's buffer
+      ;; as `helm-current-buffer', this allow to use helm
+      ;; from an already active minibuffer (M-: etc...)
+      (window-buffer (active-minibuffer-window))
+    ;; Fix Issue #456
+    ;; Use this instead of `current-buffer' to ensure
+    ;; helm session started in helm-mode from a completing-read
+    ;; Use really the buffer where we started and not the one
+    ;; where the completing-read is wrapped. i.e
+    ;; (with-current-buffer SOME-OTHER-BUFFER (completing-read [...])
+    (window-buffer (with-selected-window (minibuffer-window)
+                     (minibuffer-selected-window)))))
 
 (define-derived-mode helm-major-mode
   fundamental-mode "Hmm"
@@ -3664,7 +3669,7 @@ please don't use it outside of Helm.
   (setq helm-pattern "")
   (setq helm-maybe-use-default-as-input nil))
 
-(defun helm-read-pattern-maybe (prompt
+(defun helm-read-from-minibuffer (prompt
                                 input preselect resume
                                 keymap default history)
   "Read pattern with prompt PROMPT and initial input INPUT.
@@ -4508,7 +4513,7 @@ emacs-27 to provide such scoring in emacs<27."
                           for dup = (gethash c hash)
                           for disp = (helm-candidate-get-display c)
                           while (< count limit)
-                          for target = (if (helm-attr 'match-on-real source)
+                          for target = (if (helm-get-attr 'match-on-real source)
                                            (or (cdr-safe c)
                                                (get-text-property 0 'helm-realvalue disp))
                                          disp)
@@ -4803,7 +4808,7 @@ passed as argument to `recenter'."
   "Reinit SOURCE by calling its update and init functions."
   ;; When using a specific buffer as cache, don't kill it.
   (helm-aif (and (null (bufferp (assoc-default
-                                 (helm-attr 'name source)
+                                 (helm-get-attr 'name source)
                                  helm--candidate-buffer-alist)))
                  (helm-apply-functions-from-source
                   source 'helm-candidate-buffer))
@@ -5505,7 +5510,7 @@ It has no effect if `helm-echo-input-in-header-line' is nil."
     (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
       (overlay-put ov 'window (selected-window))
       (helm-aif (and helm-display-header-line
-                     (helm-attr 'persistent-help))
+                     (helm-get-attr 'persistent-help))
           (progn
             (overlay-put ov 'display
                          (truncate-string-to-width
@@ -5782,6 +5787,17 @@ If SOURCE-OR-NAME is empty string or nil go to the first
 candidate of first source."
   (helm-move-selection-common :where 'source :direction source-or-name))
 
+(defvar helm-follow-action-white-list-commands
+  '(helm-ff-decrease-image-size-persistent
+    helm-ff-increase-image-size-persistent
+    helm-ff-rotate-left-persistent
+    helm-ff-rotate-right-persistent)
+  "Allow `helm-follow-action-forward/backward' switching to next file
+when one of these commands is the `last-command'.
+
+For example when browsing files with `C-<down>` and rotate the current file,
+hitting `C-<down>` again will not switch to next file but kill its buffer.")
+
 (defun helm--follow-action (arg)
   (let ((helm--temp-follow-flag t) ; Needed in HFF.
         (in-follow-mode (helm-follow-mode-p)))
@@ -5790,6 +5806,7 @@ candidate of first source."
     (when (or (eq last-command 'helm-follow-action-forward)
               (eq last-command 'helm-follow-action-backward)
               (eq last-command 'helm-execute-persistent-action)
+              (memq last-command helm-follow-action-white-list-commands)
               in-follow-mode)
       (if (> arg 0)
           (helm-move-selection-common :where 'line
@@ -5903,7 +5920,7 @@ message 'no match'."
 
 (defun helm--set-minibuffer-completion-confirm (src)
   (with-helm-buffer
-    (helm-aif (helm-attr 'must-match src)
+    (helm-aif (helm-get-attr 'must-match src)
         (setq minibuffer-completion-confirm it))))
 
 (defun helm-read-string (prompt &optional initial-input history
@@ -6239,7 +6256,7 @@ To customize `helm-candidates-in-buffer' behaviour, use `search',
      (or (assoc-default 'search src)
          '(helm-candidates-in-buffer-search-default-fn))
      (helm-candidate-number-limit src)
-     (helm-attr 'match-part)
+     (helm-get-attr 'match-part)
      src)))
 
 (defun helm-candidates-in-buffer-search-default-fn (pattern)
@@ -6906,7 +6923,7 @@ Meaning of prefix ARG is the same as in `reposition-window'."
 (defun helm-make-visible-mark (&optional src selection)
   (let* ((source (or src  (helm-get-current-source)))
          (sel    (or selection (helm-get-selection
-                                nil (helm-attr 'marked-with-props source)
+                                nil (helm-get-attr 'marked-with-props source)
                                 source)))
          (selection-end (if (helm-pos-multiline-p)
                             ;; Stays within source
@@ -7024,7 +7041,7 @@ starting it is not needed."
                   (helm-mark-current-line)
                   (let* ((prefix (get-text-property (point-at-bol) 'display))
                          (cand   (helm-get-selection
-                                  nil (helm-attr 'marked-with-props src)
+                                  nil (helm-get-attr 'marked-with-props src)
                                   src))
                          (bn     (and filecomp-p (helm-basename cand))))
                     ;; Don't mark possibles directories ending with . or ..
@@ -7119,7 +7136,7 @@ sources."
            sel)
       (unless candidates
         (setq sel (helm-get-selection
-                   nil (helm-attr 'marked-with-props
+                   nil (helm-get-attr 'marked-with-props
                                   current-src)
                    current-src))
         (setq candidates
@@ -7366,11 +7383,11 @@ source or `helm-follow-input-idle-delay' or
 
 (defun helm-follow-mode-p (&optional source)
   (with-helm-buffer
-    (eq (helm-attr 'follow (or source (helm-get-current-source))) 1)))
+    (eq (helm-get-attr 'follow (or source (helm-get-current-source))) 1)))
 
 (defun helm-follow-mode-set-source (value &optional source)
   (with-helm-buffer
-    (helm-attrset 'follow value (or source (helm-get-current-source)))))
+    (helm-set-attr 'follow value (or source (helm-get-current-source)))))
 
 ;;; Auto-resize mode
 ;;

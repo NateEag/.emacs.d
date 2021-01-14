@@ -1,6 +1,6 @@
 ;;; helm-lib.el --- Helm routines. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 ~ 2019  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Copyright (C) 2015 ~ 2020  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; URL: http://github.com/emacs-helm/helm
@@ -32,8 +32,8 @@
 (declare-function dired-mark-remembered "dired.el")
 (declare-function ffap-file-remote-p "ffap.el")
 (declare-function ffap-url-p "ffap.el")
-(declare-function helm-attr "helm.el")
-(declare-function helm-attrset "helm.el")
+(declare-function helm-get-attr "helm.el")
+(declare-function helm-set-attr "helm.el")
 (declare-function helm-follow-mode-p "helm.el")
 (declare-function helm-get-current-source "helm.el")
 (declare-function helm-get-selection "helm.el")
@@ -961,6 +961,15 @@ If NAME returns nil the pair is skipped.
            do (setq name (funcall name))
            when name
            collect (cons name fn)))
+
+(defun helm-closest-number-in-list (num list)
+  "Return closest number to NUM found in LIST.
+LIST is a list of numbers and NUM a number."
+  (cl-loop for i in list
+           for diff = (if (> num i) (- num i) (- i num))
+           collect (cons diff i) into res
+           minimize diff into min
+           finally return (cdr (assq min res))))
 
 ;;; Strings processing.
 ;;
@@ -1169,8 +1178,8 @@ See `helm-elisp-show-help'."
             (if name
                 (funcall fun candidate name)
                 (funcall fun candidate)))
-           ((or (and (helm-attr 'help-running-p)
-                     (string= candidate (helm-attr 'help-current-symbol))))
+           ((or (and (helm-get-attr 'help-running-p)
+                     (string= candidate (helm-get-attr 'help-current-symbol))))
             (progn
               ;; When started from a help buffer,
               ;; Don't kill this buffer as it is helm-current-buffer.
@@ -1184,7 +1193,7 @@ See `helm-elisp-show-help'."
                                    (if helm--buffer-in-new-frame-p
                                        helm-current-buffer
                                      helm-persistent-action-window-buffer)))
-              (helm-attrset 'help-running-p nil))
+              (helm-set-attr 'help-running-p nil))
             ;; Force running update hook to may be delete
             ;; helm-persistent-action-display-window, this is done in
             ;; helm-persistent-action-display-window (the function).
@@ -1194,8 +1203,8 @@ See `helm-elisp-show-help'."
             (if name
                 (funcall fun candidate name)
                 (funcall fun candidate))
-            (helm-attrset 'help-running-p t)))
-    (helm-attrset 'help-current-symbol candidate)))
+            (helm-set-attr 'help-running-p t)))
+    (helm-set-attr 'help-current-symbol candidate)))
 
 (defun helm-find-function (func)
   "FUNC is symbol or string."

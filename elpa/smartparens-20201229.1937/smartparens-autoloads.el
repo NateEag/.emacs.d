@@ -284,7 +284,7 @@ Turn off `show-smartparens-mode'." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from smartparens-python.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-python" '("sp-python-fix-tripple-quotes")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-python" '("sp-python-")))
 
 ;;;***
 
@@ -325,6 +325,14 @@ Turn off `show-smartparens-mode'." t nil)
 ;;; Generated autoloads from smartparens-text.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-text" '("sp-text-mode-")))
+
+;;;***
+
+;;;### (autoloads nil "sp-sublimetext-like" "sp-sublimetext-like.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from sp-sublimetext-like.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sp-sublimetext-like" '("sp-point-not-before-word")))
 
 ;;;***
 

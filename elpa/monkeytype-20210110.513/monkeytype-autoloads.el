@@ -21,11 +21,6 @@ Repeat run.
 
 \\[monkeytype-repeat]" t nil)
 
-(autoload 'monkeytype-dummy-text "monkeytype" "\
-Dummy text.
-
-\\[monkeytype-dummy-text]" t nil)
-
 (autoload 'monkeytype-fortune "monkeytype" "\
 Type fortune.
 
@@ -115,6 +110,22 @@ Type most mistyped words from all word-files in `monkeytype-directory'.
 See: `monkeytype-save-mistyped-words' for how word-files are saved.
 
 \\[monkeytype-most-mistyped-words]" t nil)
+
+(autoload 'monkeytype-save-text-from-url "monkeytype" "\
+Download URL to `monketype-directory', naming it FILE-NAME.
+
+This function shells out to pandoc(1) which character-encodes in UTF-8
+so some characters might not be desirable for monkeytyping, so the custom
+`monkeytype-asciify' option has be given to optionally allow for
+further character encoding to ASCII (using iconv(1)).
+
+\(fn URL FILE-NAME)" t nil)
+
+(autoload 'monkeytype-toggle-mode-line "monkeytype" "\
+Hide or show WPM results in mode-line." t nil)
+
+(autoload 'monkeytype-wpm-peek "monkeytype" "\
+Hide/Show overlay with WPM info." t nil)
 
 (autoload 'monkeytype-mode "monkeytype" "\
 Monkeytype mode is a minor mode for speed/touch typing.

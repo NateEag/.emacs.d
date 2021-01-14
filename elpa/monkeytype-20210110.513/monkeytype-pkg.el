@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/monkeytype-20210110.513/monkeytype.el  -*- no-byte-compile: t -*-
+(define-package "monkeytype" "20210110.513" "Mode for speed typing" '((emacs "25.1") (scrollable-quick-peek "0.1.0")) :commit "0e949d08198c0bd003f1d5c8cdceb7e36bef22f7" :authors '(("Pablo Barrantes" . "xjpablobrx@gmail.com")) :maintainer '("Pablo Barrantes" . "xjpablobrx@gmail.com") :keywords '("games") :url "https://github.com/jpablobr/emacs-monkeytype")

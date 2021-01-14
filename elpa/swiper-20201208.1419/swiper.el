@@ -1,11 +1,11 @@
 ;;; swiper.el --- Isearch with an overview. Oh, man! -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2020  Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200503.1102
-;; Package-Commit: 544e7de63a4543a74596c5d95efa0bb9da25791e
+;; Package-Version: 20201208.1419
+;; Package-Commit: 8f2abd397dba7205806cfa1615624adc8cd5145f
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.0"))
 ;; Keywords: matching
@@ -44,47 +44,47 @@
   :prefix "swiper-")
 
 (defface swiper-match-face-1
-  '((t (:inherit lazy-highlight)))
+  '((t :inherit lazy-highlight))
   "The background face for `swiper' matches."
   :group 'ivy-faces)
 
 (defface swiper-match-face-2
-  '((t (:inherit isearch)))
+  '((t :inherit isearch))
   "Face for `swiper' matches modulo 1."
   :group 'ivy-faces)
 
 (defface swiper-match-face-3
-  '((t (:inherit match)))
+  '((t :inherit match))
   "Face for `swiper' matches modulo 2."
   :group 'ivy-faces)
 
 (defface swiper-match-face-4
-  '((t (:inherit isearch-fail)))
+  '((t :inherit isearch-fail))
   "Face for `swiper' matches modulo 3."
   :group 'ivy-faces)
 
 (defface swiper-background-match-face-1
-  '((t (:inherit swiper-match-face-1)))
+  '((t :inherit swiper-match-face-1))
   "The background face for non-current `swiper' matches."
   :group 'ivy-faces)
 
 (defface swiper-background-match-face-2
-  '((t (:inherit swiper-match-face-2)))
+  '((t :inherit swiper-match-face-2))
   "Face for non-current `swiper' matches modulo 1."
   :group 'ivy-faces)
 
 (defface swiper-background-match-face-3
-  '((t (:inherit swiper-match-face-3)))
+  '((t :inherit swiper-match-face-3))
   "Face for non-current `swiper' matches modulo 2."
   :group 'ivy-faces)
 
 (defface swiper-background-match-face-4
-  '((t (:inherit swiper-match-face-4)))
+  '((t :inherit swiper-match-face-4))
   "Face for non-current `swiper' matches modulo 3."
   :group 'ivy-faces)
 
 (defface swiper-line-face
-  '((t (:inherit highlight)))
+  '((t :inherit highlight))
   "Face for current `swiper' line."
   :group 'ivy-faces)
 
@@ -110,13 +110,12 @@
                  swiper-background-match-face-4))
         (colir-compose-method #'colir-compose-soft-light))
     (cl-mapc (lambda (f1 f2)
-               (let ((bg (face-background f1)))
+               (let* ((bg (face-background f1))
+                      ;; FIXME: (colir-color-parse "color-22") is nil.
+                      (bg (and bg (colir-color-parse bg))))
                  (when bg
-                   (set-face-background
-                    f2
-                    (colir-blend
-                     (colir-color-parse bg)
-                     (colir-color-parse "#ffffff"))))))
+                   (setq bg (colir-blend bg (colir-color-parse "#ffffff")))
+                   (set-face-background f2 bg))))
              swiper-faces
              faces)))
 (swiper--recompute-background-faces)
@@ -966,8 +965,9 @@ the face, window and priority of the overlay."
                     (setq swiper--current-line num))
                   (when (re-search-forward re (line-end-position) t)
                     (setq swiper--current-match-start (match-beginning 0))))
-                (isearch-range-invisible (line-beginning-position)
-                                         (line-end-position))
+                (funcall isearch-filter-predicate
+                         (line-beginning-position)
+                         (line-end-position))
                 (swiper--maybe-recenter)))
             (swiper--add-overlays
              re
@@ -1216,8 +1216,9 @@ otherwise continue prompting for buffers."
           (re-search-forward
            (ivy--regex ivy-text)
            (line-end-position) t)
-          (isearch-range-invisible (line-beginning-position)
-                                   (line-end-position))
+          (funcall isearch-filter-predicate
+                   (line-beginning-position)
+                   (line-end-position))
           (unless (eq ivy-exit 'done)
             (swiper--cleanup)
             (swiper--add-overlays (ivy--regex ivy-text))))))))
@@ -1340,8 +1341,9 @@ See `ivy-format-functions-alist' for further information."
         (with-ivy-window
           (switch-to-buffer buffer-name)
           (goto-char (get-text-property 0 'point x))
-          (isearch-range-invisible (line-beginning-position)
-                                   (line-end-position))
+          (funcall isearch-filter-predicate
+                   (line-beginning-position)
+                   (line-end-position))
           (unless (eq ivy-exit 'done)
             (swiper--cleanup)
             (swiper--add-overlays (ivy--regex ivy-text))))))))
@@ -1485,7 +1487,7 @@ that we search only for one character."
                             (eq last-command 'ivy-previous-line-or-history)))
                    (looking-back ivy-regex (line-beginning-position)))
           (goto-char (match-beginning 0)))
-        (isearch-range-invisible (point) (1+ (point)))
+        (funcall isearch-filter-predicate (point) (1+ (point)))
         (swiper--maybe-recenter)
         (if (eq ivy-exit 'done)
             (progn

@@ -2,9 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20200929.1339
-;; Package-Commit: 4bfda9f6351f8327024551c20fe882384941214b
-;; Version: 0.8
+;; Package-Version: 20201217.1633
+;; Package-Commit: 3f0ad28202207c266bd8fc7904b224db69ceccf6
+;; Version: 0.10
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -36,48 +36,58 @@
 (defconst language-id--definitions
   '(
 
-    ;; JSON needs to come before JavaScript. Since json-mode is
-    ;; derived from javascript-mode, having JavaScript before JSON
-    ;; would cause JSON to be detected as JavaScript.
+    ;;; Definitions that need special attention to precedence order.
+
+    ;; json-mode is derived from javascript-mode.
     ("JSON"
      json-mode
      (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
 
-    ;; PHP needs to come before C because php-mode is derived from
-    ;; c-mode.
+    ;; php-mode is derived from c-mode.
     ("PHP" php-mode)
 
-    ;; Terraform needs to come before HCL because terraform-mode is
-    ;; derived from hcl-mode.
+    ;; scss-mode is derived from css-mode.
+    ("SCSS" scss-mode)
+
+    ;; terraform-mode is derived from hcl-mode.
     ("Terraform" terraform-mode)
 
     ;; TypeScript/TSX need to come before JavaScript/JSX because in
     ;; web-mode we can tell them apart by file name extension only.
-    ;; This implies that unsaved temp buffers using TypeScript/TSX in
-    ;; web-mode are classified as JavaScript/JSX.
-    ("TypeScript"
-     typescript-mode
-     (web-mode
-      (web-mode-content-type "javascript")
-      (web-mode-engine "none")
-      (language-id--file-name-extension ".ts")))
+    ;;
+    ;; This implies that we inconsistently classify unsaved temp
+    ;; buffers using TypeScript/TSX as JavaScript/JSX.
     ("TSX"
      typescript-tsx-mode
      (web-mode
       (web-mode-content-type "jsx")
       (web-mode-engine "none")
       (language-id--file-name-extension ".tsx")))
+    ("TypeScript"
+     typescript-mode
+     (web-mode
+      (web-mode-content-type "javascript")
+      (web-mode-engine "none")
+      (language-id--file-name-extension ".ts")))
 
-    ;; The rest of the definitions are in alphabetical order.
+    ;; vue-html-mode is derived from html-mode.
+    ("Vue"
+     vue-mode
+     vue-html-mode
+     (web-mode (web-mode-content-type "html") (web-mode-engine "vue")))
+
+    ;;; The rest of the definitions are in alphabetical order.
 
     ("Assembly" asm-mode nasm-mode)
+    ("ATS" ats-mode)
     ("Bazel" bazel-mode)
     ("BibTeX" bibtex-mode)
     ("C" c-mode)
     ("C++" c++-mode)
     ("Cabal Config" haskell-cabal-mode)
-    ("Clojure" clojure-mode clojurec-mode clojurescript-mode)
+    ("Clojure" clojurescript-mode clojurec-mode clojure-mode)
     ("CMake" cmake-mode)
+    ("Common Lisp" lisp-mode)
     ("Crystal" crystal-mode)
     ("CSS"
      css-mode
@@ -96,7 +106,7 @@
     ("Haskell" haskell-mode)
     ("HCL" hcl-mode)
     ("HTML"
-     html-helper-mode html-mode mhtml-mode nxhtml-mode
+     html-helper-mode mhtml-mode html-mode nxhtml-mode
      (web-mode (web-mode-content-type "html") (web-mode-engine "none")))
     ("Java" java-mode)
     ("JavaScript"
@@ -125,20 +135,18 @@
     ("PureScript" purescript-mode)
     ("Python" python-mode)
     ("R" ess-r-mode (ess-mode (ess-dialect "R")))
+    ("Racket" racket-mode)
     ("Reason" reason-mode)
     ("Ruby" enh-ruby-mode ruby-mode)
     ("Rust" rust-mode rustic-mode)
     ("Scala" scala-mode)
-    ("SCSS" scss-mode)
+    ("Scheme" scheme-mode)
     ("Shell" sh-mode)
     ("Solidity" solidity-mode)
     ("SQL" sql-mode)
     ("Swift" swift-mode swift3-mode)
     ("TOML" toml-mode conf-toml-mode)
     ("Verilog" verilog-mode)
-    ("Vue"
-     vue-mode
-     (web-mode (web-mode-content-type "html") (web-mode-engine "vue")))
     ("XML"
      nxml-mode xml-mode
      (web-mode (web-mode-content-type "xml") (web-mode-engine "none")))

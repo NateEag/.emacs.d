@@ -4,8 +4,8 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20200604.110
-;; Package-Commit: 88dc26ce59dbf4acb4e2891c79c4bd329553ba56
+;; Package-Version: 20201107.1529
+;; Package-Commit: f4a8c8d3a5a699baea9356be7c1c5fd8867f610c
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -151,8 +151,7 @@ should be a string suitable for `kbd'."
   ;; TODO do something here
   '(git-popup-mode
     magit-blame-mode
-    magit-blame-read-only-mode
-    magit-file-mode)
+    magit-blame-read-only-mode)
   "Modes whose evil states are unchanged")
 
 (defvar evil-magit-ignored-modes
@@ -163,7 +162,6 @@ should be a string suitable for `kbd'."
     magit-merge-preview-mode
     transient-resume-mode
     magit-rebase-mode
-    magit-file-mode-major-mode
     magit-wip-after-save-mode
     magit-wip-after-save-local-mode-major-mode
     magit-wip-after-save-local-mode
@@ -438,7 +436,6 @@ denotes the original magit key for this command.")
                    magit-log-select-mode-map
                    magit-reflog-mode-map
                    magit-status-mode-map
-                   magit-file-mode-map
                    magit-log-read-revs-map
                    magit-process-mode-map
                    magit-refs-mode-map))

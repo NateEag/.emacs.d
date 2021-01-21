@@ -47,6 +47,14 @@
       (forward-line))
     (evil-range (region-beginning) (region-end) type :expanded t)))
 
+;; Let me talk about URLs using vim operators.
+;;
+;; FIXME Make this actually work.
+(evil-define-text-object ne/textobj-url (count &optional beg end type)
+  (save-excursion
+    (let* ((bounds (thing-at-point-bounds-of-url-at-point)))
+      (list (car bounds) (cdr bounds)))))
+
 (defun ne/install-textobjects ()
   "Install my custom textobjects into evil's keymaps."
 
@@ -55,6 +63,7 @@
   (define-key evil-inner-text-objects-map "d" 'ne/textobj-inner-c-defun)
   (define-key evil-outer-text-objects-map "d" 'ne/textobj-outer-c-defun)
 
+  (define-key evil-inner-text-objects-map "U" 'ne/textobj-url)
   )
 
 (provide 'ne-evil-textobjects)

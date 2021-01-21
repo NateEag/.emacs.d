@@ -13,6 +13,11 @@
   right approach to general ivy-based keybinds, as it works in projectile file
   search, but not in buffer switching.
 
+- Add a vim textobject for URL. I attempted this as ne/textobj-url, but it
+  definitely doesn't work. Gotta understand evil-define-text-object better, I
+  think? The issue here may have just been a poor keybinding - should take like
+  5 minutes to look more closely.
+
 - Submit bugfix for notmuch-address-selection-function upstream. See my
   override of notmuch-address-selection-function in
   site-lisp/config-packages.el.
@@ -97,6 +102,10 @@
   for securely retrieving SMTP credentials. It would clean things up slightly,
   by letting me avoid configuring a .authinfo file by hand on each machine I
   use.
+
+- Try out emacs-dashboard package
+
+- Try out highlight-indent-guides.el
 
 - Activate so-long-mode, as it's built-in now.
 

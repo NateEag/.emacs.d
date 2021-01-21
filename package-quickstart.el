@@ -69,10 +69,10 @@ See `yas-minor-mode' for more information on Yas minor mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-mode-20200725.1836/yaml-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-mode-20201109.1026/yaml-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-mode-20200725.1836/yaml-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-mode-20201109.1026/yaml-mode-autoloads.el") (car load-path))))
 
 
 
@@ -162,10 +162,10 @@ comparisons/benchmarks with libraries that offer similar functionality." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/visual-fill-column-20201008.919/visual-fill-column-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/visual-fill-column-20201229.2303/visual-fill-column-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/visual-fill-column-20201008.919/visual-fill-column-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/visual-fill-column-20201229.2303/visual-fill-column-autoloads.el") (car load-path))))
 
 
 
@@ -208,11 +208,11 @@ Split WINDOW sensibly, unsetting its margins first.
 This function unsets the window margins and calls
 `split-window-sensibly'.
 
-By default, `split-window-sensibly' does not split a window
-vertically if it has wide margins, even if there is enough space
-for a vertical split.  This function can be used as the value of
-`split-window-preferred-function' to enable vertically splitting
-windows with wide margins.
+By default, `split-window-sensibly' does not split a window in
+two side-by-side windows if it has wide margins, even if there is
+enough space for a vertical split.  This function is used as the
+value of `split-window-preferred-function' to allow
+`display-buffer' to split such windows.
 
 \(fn &optional WINDOW)" nil nil)
 
@@ -220,10 +220,10 @@ windows with wide margins.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201008.918/writeroom-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242/writeroom-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201008.918/writeroom-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242/writeroom-mode-autoloads.el") (car load-path))))
 
 
 
@@ -438,10 +438,10 @@ Run ‘dired-do-rename’ asynchronously.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20200930.1912/with-editor-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20210110.1545/with-editor-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20200930.1912/with-editor-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20210110.1545/with-editor-autoloads.el") (car load-path))))
 
 
 
@@ -452,7 +452,8 @@ Set and export the environment variable ENVVAR, by default
 \"EDITOR\".  The value is automatically generated to teach
 commands to use the current Emacs instance as \"the editor\".
 
-This works in `shell-mode', `term-mode' and `eshell-mode'.
+This works in `shell-mode', `term-mode', `eshell-mode' and
+`vterm'.
 
 \(fn &optional (ENVVAR \"EDITOR\"))" t nil)
 
@@ -525,10 +526,10 @@ else like the former.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/websocket-20200419.2124/websocket-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/websocket-20210110.17/websocket-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/websocket-20200419.2124/websocket-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/websocket-20210110.17/websocket-autoloads.el") (car load-path))))
 
 
 
@@ -536,10 +537,10 @@ else like the former.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20201009.1633/web-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20201227.1048/web-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20201009.1633/web-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20201227.1048/web-mode-autoloads.el") (car load-path))))
 
 
 
@@ -588,12 +589,60 @@ Minor mode to provide key-bindings for web-mode-edit-element functions
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20200803.1520/dash-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210111.1247/dash-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20200803.1520/dash-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210111.1247/dash-autoloads.el") (car load-path))))
 
 
+
+(autoload 'dash-fontify-mode "dash" "\
+Toggle fontification of Dash special variables.
+
+If called interactively, enable Dash-Fontify mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+Dash-Fontify mode is a buffer-local minor mode intended for Emacs
+Lisp buffers.  Enabling it causes the special variables bound in
+anaphoric Dash macros to be fontified.  These anaphoras include
+`it', `it-index', `acc', and `other'.  In older Emacs versions
+which do not dynamically detect macros, Dash-Fontify mode
+additionally fontifies Dash macro calls.
+
+See also `dash-fontify-mode-lighter' and
+`global-dash-fontify-mode'.
+
+\(fn &optional ARG)" t nil)
+
+(put 'global-dash-fontify-mode 'globalized-minor-mode t)
+
+(defvar global-dash-fontify-mode nil "\
+Non-nil if Global Dash-Fontify mode is enabled.
+See the `global-dash-fontify-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `global-dash-fontify-mode'.")
+
+(custom-autoload 'global-dash-fontify-mode "dash" nil)
+
+(autoload 'global-dash-fontify-mode "dash" "\
+Toggle Dash-Fontify mode in all buffers.
+With prefix ARG, enable Global Dash-Fontify mode if ARG is positive;
+otherwise, disable it.  If called from Lisp, enable the mode if
+ARG is omitted or nil.
+
+Dash-Fontify mode is enabled in all buffers where
+`dash--turn-on-fontify-mode' would do it.
+See `dash-fontify-mode' for more information on Dash-Fontify mode.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dash-register-info-lookup "dash" "\
+Register the Dash Info manual with `info-lookup-symbol'.
+This allows Dash symbols to be looked up with \\[info-lookup-symbol]." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dash" '("!cdr" "!cons" "--" "->" "-a" "-butlast" "-c" "-d" "-e" "-f" "-gr" "-i" "-keep" "-l" "-m" "-non" "-only-some" "-p" "-r" "-s" "-t" "-u" "-value-to-list" "-when-let" "-zip" "dash-")))
 
@@ -698,10 +747,10 @@ Configure eshell for use with virtualenvwrapper.el.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.1/vcard-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.2.1/vcard-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vcard-0.1/vcard-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vcard-0.2.1/vcard-autoloads.el") (car load-path))))
 
 
 
@@ -731,10 +780,10 @@ Returns a list of contact objects." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/popup-20200610.317/popup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/popup-20210108.1821/popup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/popup-20200610.317/popup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/popup-20210108.1821/popup-autoloads.el") (car load-path))))
 
 
 
@@ -742,10 +791,10 @@ Returns a list of contact objects." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20191128.1010/vc-msg-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20201210.157/vc-msg-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20191128.1010/vc-msg-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20201210.157/vc-msg-autoloads.el") (car load-path))))
 
 
 
@@ -909,10 +958,10 @@ Display all the personal keybindings defined by `bind-key'." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/use-package-20200721.2156/use-package-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/use-package-20210106.2145/use-package-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/use-package-20200721.2156/use-package-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/use-package-20210106.2145/use-package-autoloads.el") (car load-path))))
 
 
 
@@ -1202,10 +1251,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20201014.1431/tsc-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20201229.1403/tsc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20201014.1431/tsc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20201229.1403/tsc-autoloads.el") (car load-path))))
 
 
 
@@ -1219,10 +1268,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ts-20191010.210/ts-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ts-20201212.1041/ts-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ts-20191010.210/ts-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ts-20201212.1041/ts-autoloads.el") (car load-path))))
 
 
 
@@ -1265,10 +1314,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/avy-20200624.1148/avy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/avy-20201226.1734/avy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/avy-20200624.1148/avy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/avy-20201226.1734/avy-autoloads.el") (car load-path))))
 
 
 
@@ -1522,6 +1571,9 @@ The window scope is determined by `avy-all-windows' (ARG negates it).
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'avy-transpose-lines-in-region "avy" "\
+Transpose lines in the active region." t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "avy" '("avy-")))
 
 
@@ -1629,10 +1681,10 @@ this is right: (pfuture-new \"git\" \"status\")
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/hydra-20200711.1210/hydra-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/hydra-20201115.1055/hydra-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/hydra-20200711.1210/hydra-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/hydra-20201115.1055/hydra-autoloads.el") (car load-path))))
 
 
 
@@ -1708,10 +1760,10 @@ result of `defhydra'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ht-20200217.2331/ht-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ht-20210113.822/ht-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ht-20200217.2331/ht-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ht-20210113.822/ht-autoloads.el") (car load-path))))
 
 
 
@@ -1719,10 +1771,169 @@ result of `defhydra'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20201004.1125/treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210113.314/posframe-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20201004.1125/treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210113.314/posframe-autoloads.el") (car load-path))))
+
+
+
+(autoload 'posframe-workable-p "posframe" "\
+Test posframe workable status." nil nil)
+
+(autoload 'posframe-show "posframe" "\
+Pop up a posframe and show STRING at POSITION.
+
+POSITION can be:
+1. An integer, meaning point position.
+2. A cons of two integers, meaning absolute X and Y coordinates.
+3. Other type, in which case the corresponding POSHANDLER should be
+   provided.
+
+POSHANDLER is a function of one argument returning an actual
+position.  Its argument is a plist of the following form:
+
+  (:position xxx
+   :position-info xxx
+   :poshandler xxx
+   :font-height xxx
+   :font-width xxx
+   :posframe xxx
+   :posframe-width xxx
+   :posframe-height xxx
+   :posframe-buffer xxx
+   :parent-frame xxx
+   :parent-window-left xxx
+   :parent-window-top xxx
+   :parent-frame-width xxx
+   :parent-frame-height xxx
+   :parent-window xxx
+   :parent-window-width  xxx
+   :parent-window-height xxx
+   :minibuffer-height xxx
+   :mode-line-height  xxx
+   :header-line-height xxx
+   :tab-line-height xxx
+   :x-pixel-offset xxx
+   :y-pixel-offset xxx)
+
+By default, poshandler is auto-selected based on the type of POSITION,
+but the selection can be overridden using the POSHANDLER argument.
+The builtin poshandler functions are listed below:
+
+1.  `posframe-poshandler-frame-center'
+2.  `posframe-poshandler-frame-top-center'
+3.  `posframe-poshandler-frame-top-left-corner'
+4.  `posframe-poshandler-frame-top-right-corner'
+5.  `posframe-poshandler-frame-bottom-center'
+6.  `posframe-poshandler-frame-bottom-left-corner'
+7.  `posframe-poshandler-frame-bottom-right-corner'
+8.  `posframe-poshandler-window-center'
+9.  `posframe-poshandler-window-top-center'
+10. `posframe-poshandler-window-top-left-corner'
+11. `posframe-poshandler-window-top-right-corner'
+12. `posframe-poshandler-window-bottom-center'
+13. `posframe-poshandler-window-bottom-left-corner'
+14. `posframe-poshandler-window-bottom-right-corner'
+15. `posframe-poshandler-point-top-left-corner'
+16. `posframe-poshandler-point-bottom-left-corner'
+17. `posframe-poshandler-point-bottom-left-corner-upward'
+
+This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
+or a name of a (possibly nonexistent) buffer.
+
+If NO-PROPERTIES is non-nil, The STRING's properties will
+be removed before being shown in posframe.
+
+WIDTH, MIN-WIDTH, HEIGHT and MIN-HEIGHT, specify bounds on the
+new total size of posframe.  MIN-HEIGHT and MIN-WIDTH default to
+the values of ‘window-min-height’ and ‘window-min-width’
+respectively.  These arguments are specified in the canonical
+character width and height of posframe.
+
+If LEFT-FRINGE or RIGHT-FRINGE is a number, left fringe or
+right fringe with be shown with the specified width.
+
+By default, posframe shows no borders, but users can specify
+borders by setting INTERNAL-BORDER-WIDTH to a positive number.
+Border color can be specified by INTERNAL-BORDER-COLOR
+or via the ‘internal-border’ face.
+
+Posframe's font as well as foreground and background colors are
+derived from the current frame by default, but can be overridden
+using the FONT, FOREGROUND-COLOR and BACKGROUND-COLOR arguments,
+respectively.
+
+By default, posframe will display no header-line, mode-line and
+tab-line.  In case a header-line, mode-line or tab-line is
+desired, users can set RESPECT-HEADER-LINE and RESPECT-MODE-LINE
+to t.
+
+INITIALIZE is a function with no argument.  It will run when
+posframe buffer is first selected with `with-current-buffer'
+in `posframe-show', and only run once (for performance reasons).
+
+If LINES-TRUNCATE is non-nil, then lines will truncate in the
+posframe instead of wrap.
+
+OVERRIDE-PARAMETERS is very powful, *all* the frame parameters
+used by posframe's frame can be overridden by it.
+
+TIMEOUT can specify the number of seconds after which the posframe
+will auto-hide.
+
+If REFRESH is a number, posframe's frame-size will be re-adjusted
+every REFRESH seconds.
+
+When ACCEPT-FOCUS is non-nil, posframe will accept focus.
+be careful, you may face some bugs when set it to non-nil.
+
+HIDEHANDLER is a function, when it return t, posframe will be
+hide when `post-command-hook' is executed, this function has a
+plist argument:
+
+  (:posframe-buffer xxx
+   :posframe-parent-buffer xxx)
+
+The builtin hidehandler functions are listed below:
+
+1. `posframe-hidehandler-when-buffer-switch'
+
+
+You can use `posframe-delete-all' to delete all posframes.
+
+\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER &allow-other-keys)" nil nil)
+
+(autoload 'posframe-hide-all "posframe" "\
+Hide all posframe frames." t nil)
+
+(autoload 'posframe-delete-all "posframe" "\
+Delete all posframe frames and buffers." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe" '("posframe-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cfrs-20210108.1152/cfrs-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cfrs-20210108.1152/cfrs-autoloads.el") (car load-path))))
+
+
+
+(autoload 'cfrs-read "cfrs" "\
+Read a string using a pos-frame with given PROMPT and INITIAL-INPUT.
+
+\(fn PROMPT &optional INITIAL-INPUT)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cfrs" '("cfrs-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210108.1145/treemacs-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210108.1145/treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -1854,6 +2065,30 @@ treemacs node is pointing to a valid buffer position." t nil)
 
 
 
+(autoload 'treemacs-common-helpful-hydra "treemacs-hydras" "\
+Summon a helpful hydra to show you the treemacs keymap.
+
+This hydra will show the most commonly used keybinds for treemacs.  For the more
+advanced (probably rarely used keybinds) see `treemacs-advanced-helpful-hydra'.
+
+The keybinds shown in this hydra are not static, but reflect the actual
+keybindings currently in use (including evil mode).  If the hydra is unable to
+find the key a command is bound to it will show a blank instead." t nil)
+
+(autoload 'treemacs-advanced-helpful-hydra "treemacs-hydras" "\
+Summon a helpful hydra to show you the treemacs keymap.
+
+This hydra will show the more advanced (rarely used) keybinds for treemacs.  For
+the more commonly used keybinds see `treemacs-common-helpful-hydra'.
+
+The keybinds shown in this hydra are not static, but reflect the actual
+keybindings currently in use (including evil mode).  If the hydra is unable to
+find the key a command is bound to it will show a blank instead." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-hydras" '("treemacs-helpful-hydra")))
+
+
+
 (autoload 'treemacs-resize-icons "treemacs-icons" "\
 Resize the current theme's icons to the given SIZE.
 
@@ -1917,9 +2152,53 @@ A major mode for displaying the file system in a tree layout.
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mode" '("treemacs-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mode" '("treemacs--")))
 
 
+
+(autoload 'treemacs-leftclick-action "treemacs-mouse-interface" "\
+Move focus to the clicked line.
+Must be bound to a mouse click, or EVENT will not be supplied.
+
+\(fn EVENT)" t nil)
+
+(autoload 'treemacs-doubleclick-action "treemacs-mouse-interface" "\
+Run the appropriate double-click action for the current node.
+In the default configuration this means to do the same as `treemacs-RET-action'.
+
+This function's exact configuration is stored in
+`treemacs-doubleclick-actions-config'.
+
+Must be bound to a mouse click, or EVENT will not be supplied.
+
+\(fn EVENT)" t nil)
+
+(autoload 'treemacs-single-click-expand-action "treemacs-mouse-interface" "\
+A modified single-leftclick action that expands the clicked nodes.
+Can be bound to <mouse1> if you prefer to expand nodes with a single click
+instead of a double click.  Either way it must be bound to a mouse click, or
+EVENT will not be supplied.
+
+Clicking on icons will expand a file's tags, just like
+`treemacs-leftclick-action'.
+
+\(fn EVENT)" t nil)
+
+(autoload 'treemacs-dragleftclick-action "treemacs-mouse-interface" "\
+Drag a file/dir node to be opened in a window.
+Must be bound to a mouse click, or EVENT will not be supplied.
+
+\(fn EVENT)" t nil)
+
+(autoload 'treemacs-define-doubleclick-action "treemacs-mouse-interface" "\
+Define the behaviour of `treemacs-doubleclick-action'.
+Determines that a button with a given STATE should lead to the execution of
+ACTION.
+
+The list of possible states can be found in `treemacs-valid-button-states'.
+ACTION should be one of the `treemacs-visit-node-*' commands.
+
+\(fn STATE ACTION)" nil nil)
 
 (autoload 'treemacs-node-buffer-and-position "treemacs-mouse-interface" "\
 Return source buffer or list of buffer and position for the current node.
@@ -1928,7 +2207,12 @@ and ignore any prefix argument.
 
 \(fn &optional _)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mouse-interface" '("treemacs-")))
+(autoload 'treemacs-rightclick-menu "treemacs-mouse-interface" "\
+Show a contextual right click menu based on click EVENT.
+
+\(fn EVENT)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mouse-interface" '("treemacs--")))
 
 
 
@@ -1944,9 +2228,101 @@ and ignore any prefix argument.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-tag-follow-mode" '("treemacs-")))
+(defvar treemacs-tag-follow-mode nil "\
+Non-nil if Treemacs-Tag-Follow mode is enabled.
+See the `treemacs-tag-follow-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `treemacs-tag-follow-mode'.")
+
+(custom-autoload 'treemacs-tag-follow-mode "treemacs-tag-follow-mode" nil)
+
+(autoload 'treemacs-tag-follow-mode "treemacs-tag-follow-mode" "\
+Toggle `treemacs-tag-follow-mode'.
+
+If called interactively, enable Treemacs-Tag-Follow mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+This acts as more fine-grained alternative to `treemacs-follow-mode' and will
+thus disable `treemacs-follow-mode' on activation. When enabled treemacs will
+focus not only the file of the current buffer, but also the tag at point.
+
+The follow action is attached to Emacs' idle timer and will run
+`treemacs-tag-follow-delay' seconds of idle time. The delay value is not an
+integer, meaning it accepts floating point values like 1.5.
+
+Every time a tag is followed a rescan of the imenu index is forced by
+temporarily setting `imenu-auto-rescan' to t (though a cache is applied as long
+as the buffer is unmodified). This is necessary to assure that creation or
+deletion of tags does not lead to errors and guarantees an always up-to-date tag
+view.
+
+Note that in order to move to a tag in treemacs the treemacs buffer's window
+needs to be temporarily selected, which will reset `blink-cursor-mode's timer if
+it is enabled. This will result in the cursor blinking seemingly pausing for a
+short time and giving the appereance of the tag follow action lasting much
+longer than it really does.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-tag-follow-mode" '("treemacs--")))
 
 
+
+(autoload 'treemacs--expand-file-node "treemacs-tags" "\
+Open tag items for file BTN.
+Recursively open all tags below BTN when RECURSIVE is non-nil.
+
+\(fn BTN &optional RECURSIVE)" nil nil)
+
+(autoload 'treemacs--collapse-file-node "treemacs-tags" "\
+Close node given by BTN.
+Remove all open tag entries under BTN when RECURSIVE.
+
+\(fn BTN &optional RECURSIVE)" nil nil)
+
+(autoload 'treemacs--visit-or-expand/collapse-tag-node "treemacs-tags" "\
+Visit tag section BTN if possible, expand or collapse it otherwise.
+Pass prefix ARG on to either visit or toggle action.
+
+FIND-WINDOW is a special provision depending on this function's invocation
+context and decides whether to find the window to display in (if the tag is
+visited instead of the node being expanded).
+
+On the one hand it can be called based on `treemacs-RET-actions-config' (or
+TAB).  The functions in these configs are expected to find the windows they need
+to display in themselves, so FIND-WINDOW must be t. On the other hand this
+function is also called from the top level vist-node functions like
+`treemacs-visit-node-vertical-split' which delegates to the
+`treemacs--execute-button-action' macro which includes the determination of
+the display window.
+
+\(fn BTN ARG FIND-WINDOW)" nil nil)
+
+(autoload 'treemacs--expand-tag-node "treemacs-tags" "\
+Open tags node items for BTN.
+Open all tag section under BTN when call is RECURSIVE.
+
+\(fn BTN &optional RECURSIVE)" nil nil)
+
+(autoload 'treemacs--collapse-tag-node "treemacs-tags" "\
+Close tags node at BTN.
+Remove all open tag entries under BTN when RECURSIVE.
+
+\(fn BTN &optional RECURSIVE)" nil nil)
+
+(autoload 'treemacs--goto-tag "treemacs-tags" "\
+Go to the tag at BTN.
+
+\(fn BTN)" nil nil)
+
+(autoload 'treemacs--create-imenu-index-function "treemacs-tags" "\
+The `imenu-create-index-function' for treemacs buffers." nil nil)
+
+(function-put 'treemacs--create-imenu-index-function 'side-effect-free 't)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-tags" '("treemacs--")))
 
@@ -1966,10 +2342,10 @@ and ignore any prefix argument.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201029.1200/tree-sitter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201229.1403/tree-sitter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201029.1200/tree-sitter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-20201229.1403/tree-sitter-autoloads.el") (car load-path))))
 
 
 
@@ -2049,7 +2425,7 @@ build queries and cursors once, then reuse them.
 
 \(fn PATTERNS &optional MATCHES TAG-ASSIGNER)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-debug" '("tree-sitter-debug--")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-debug" '("tree-sitter-debug-")))
 
 
 
@@ -2139,10 +2515,10 @@ The buffer on focus when the command is called is set as the target buffer." t n
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20201026.602/tree-sitter-langs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210106.1552/tree-sitter-langs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20201026.602/tree-sitter-langs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210106.1552/tree-sitter-langs-autoloads.el") (car load-path))))
 
 
 
@@ -2169,6 +2545,37 @@ non-nil.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/seq-2.22/seq-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/seq-2.22/seq-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "seq-24" '("seq")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "seq-25" '("seq--when-emacs-25-p")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20201231.1842/tree-sitter-indent-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20201231.1842/tree-sitter-indent-autoloads.el") (car load-path))))
+
+
+
+(autoload 'tree-sitter-indent-line "tree-sitter-indent" "\
+Use Tree-sitter as backend to indent current line." nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-indent" '("tree-sitter-indent-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-mode-20151104.1331/tree-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -2192,10 +2599,10 @@ if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20201016.1936/transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210103.1546/transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20201016.1936/transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210103.1546/transient-autoloads.el") (car load-path))))
 
 
 
@@ -2419,10 +2826,10 @@ version.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20200928.1705/flycheck-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20201228.2104/flycheck-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-20200928.1705/flycheck-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-20201228.2104/flycheck-autoloads.el") (car load-path))))
 
 
 
@@ -2705,10 +3112,10 @@ SYMBOL with `flycheck-def-executable-var'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tide-20201017.632/tide-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tide-20210105.812/tide-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tide-20201017.632/tide-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tide-20210105.812/tide-autoloads.el") (car load-path))))
 
 
 
@@ -2784,10 +3191,10 @@ Minor mode binding to the Tern JavaScript analyzer
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-complete-20201011.1341/auto-complete-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-complete-20201213.1255/auto-complete-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-complete-20201011.1341/auto-complete-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-complete-20201213.1255/auto-complete-autoloads.el") (car load-path))))
 
 
 
@@ -2871,10 +3278,10 @@ Setup auto-complete for tern-mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20201011.657/projectile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20210104.1216/projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20201011.657/projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20210104.1216/projectile-autoloads.el") (car load-path))))
 
 
 
@@ -3192,7 +3599,7 @@ Switch to the project specific shell buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead.
 
-\(fn ARG)" t nil)
+\(fn &optional ARG)" t nil)
 
 (autoload 'projectile-run-eshell "projectile" "\
 Invoke `eshell' in the project's root.
@@ -3201,7 +3608,7 @@ Switch to the project specific eshell buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead.
 
-\(fn ARG)" t nil)
+\(fn &optional ARG)" t nil)
 
 (autoload 'projectile-run-ielm "projectile" "\
 Invoke `ielm' in the project's root.
@@ -3210,7 +3617,7 @@ Switch to the project specific ielm buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead.
 
-\(fn ARG)" t nil)
+\(fn &optional ARG)" t nil)
 
 (autoload 'projectile-run-term "projectile" "\
 Invoke `term' in the project's root.
@@ -3219,7 +3626,7 @@ Switch to the project specific term buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead.
 
-\(fn ARG)" t nil)
+\(fn &optional ARG)" t nil)
 
 (autoload 'projectile-run-vterm "projectile" "\
 Invoke `vterm' in the project's root.
@@ -3737,10 +4144,10 @@ The thesaurus backend can be configured with
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20200828.1129/iedit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20210113.1523/iedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20200828.1129/iedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20210113.1523/iedit-autoloads.el") (car load-path))))
 
 
 
@@ -3831,10 +4238,10 @@ Commands:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20200826.955/ivy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20210109.1619/ivy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20200826.955/ivy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20210109.1619/ivy-autoloads.el") (car load-path))))
 
 
 
@@ -3977,10 +4384,10 @@ Switch to another buffer in another window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20200503.1102/swiper-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20201208.1419/swiper-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20200503.1102/swiper-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20201208.1419/swiper-autoloads.el") (car load-path))))
 
 
 
@@ -4024,10 +4431,10 @@ Like `swiper-isearch' but the first result is before the point.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20200922.1006/counsel-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20210109.1641/counsel-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20200922.1006/counsel-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20210109.1641/counsel-autoloads.el") (car load-path))))
 
 
 
@@ -4147,7 +4554,7 @@ Call the \"git log --grep\" shell command." t nil)
 Forward to `find-file'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion.
 
-\(fn &optional INITIAL-INPUT)" t nil)
+\(fn &optional INITIAL-INPUT INITIAL-DIRECTORY)" t nil)
 
 (autoload 'counsel-dired "counsel" "\
 Forward to `dired'.
@@ -4184,7 +4591,7 @@ Pass X to `xdg-open' or equivalent command via the shell.
 \(fn X)" t nil)
 
 (autoload 'counsel-locate "counsel" "\
-Call the \"locate\" shell command.
+Call a \"locate\" style shell command.
 INITIAL-INPUT can be given as the initial minibuffer input.
 
 \(fn &optional INITIAL-INPUT)" t nil)
@@ -4531,10 +4938,10 @@ Local bindings (`counsel-mode-map'):
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lispy-20201013.1250/lispy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lispy-20201226.1746/lispy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lispy-20201013.1250/lispy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lispy-20201226.1746/lispy-autoloads.el") (car load-path))))
 
 
 
@@ -4599,7 +5006,7 @@ backward through lists, which is useful to move into special.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "eval-error" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
 
 
 
@@ -4643,10 +5050,10 @@ Turn on pseudo-structural editing of Lisp code." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20201008.1110/goto-chg-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20201101.1029/goto-chg-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-chg-20201008.1110/goto-chg-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-chg-20201101.1029/goto-chg-autoloads.el") (car load-path))))
 
 
 
@@ -4687,10 +5094,10 @@ See `goto-last-change' for use of prefix argument.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-20201014.2043/evil-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-20210109.807/evil-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-20201014.2043/evil-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-20210109.807/evil-autoloads.el") (car load-path))))
 
 
 
@@ -4757,10 +5164,10 @@ See `goto-last-change' for use of prefix argument.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20201007.1753/smartparens-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20201229.1937/smartparens-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smartparens-20201007.1753/smartparens-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smartparens-20201229.1937/smartparens-autoloads.el") (car load-path))))
 
 
 
@@ -4991,7 +5398,7 @@ Turn off `show-smartparens-mode'." t nil)
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-python" '("sp-python-fix-tripple-quotes")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-python" '("sp-python-")))
 
 
 
@@ -5012,6 +5419,10 @@ Turn off `show-smartparens-mode'." t nil)
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-text" '("sp-text-mode-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sp-sublimetext-like" '("sp-point-not-before-word")))
 
 
 
@@ -5070,813 +5481,14 @@ for an advanced modal structural editing experience.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-functional-20200617.702/dash-functional-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-functional-20210103.1524/dash-functional-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-functional-20200617.702/dash-functional-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-functional-20210103.1524/dash-functional-autoloads.el") (car load-path))))
 
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dash-functional" '("-a" "-c" "-f" "-iteratefn" "-juxt" "-not" "-o" "-prodfn" "-rpartial")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el") (car load-path))))
-
-
-
-(autoload 'faceup-view-buffer "faceup" "\
-Display the faceup representation of the current buffer.
-
-\(fn)" t nil)
-
-(autoload 'faceup-write-file "faceup" "\
-Save the faceup representation of the current buffer to the file FILE-NAME.
-
-Unless a name is given, the file will be named xxx.faceup, where
-xxx is the file name associated with the buffer.
-
-If optional second arg CONFIRM is non-nil, this function
-asks for confirmation before overwriting an existing file.
-Interactively, confirmation is required unless you supply a prefix argument.
-
-\(fn &optional FILE-NAME CONFIRM)" t nil)
-
-(autoload 'faceup-render-view-buffer "faceup" "\
-Convert BUFFER containing Faceup markup to a new buffer and display it.
-
-\(fn &optional BUFFER)" t nil)
-
-(autoload 'faceup-clean-buffer "faceup" "\
-Remove faceup markup from buffer.
-
-\(fn)" t nil)
-
-(autoload 'faceup-defexplainer "faceup" "\
-Defines an Ert explainer function for FUNCTION.
-
-FUNCTION must return an explanation when the test fails and
-`faceup-test-explain' is set.
-
-\(fn FUNCTION)" nil t)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "faceup" '("faceup-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pos-tip" '("pos-tip-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20201016.1629/racket-mode-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20201016.1629/racket-mode-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-url")))
-
-
-
-(autoload 'racket-bug-report "racket-bug-report" "\
-Fill a buffer with data to make a Racket Mode bug report." t nil)
-
-
-
-(autoload 'racket-start-back-end "racket-cmd" "\
-Start the back end process used by Racket Mode.
-
-If the process is already started, this command will stop and restart it." t nil)
-
-(autoload 'racket-stop-back-end "racket-cmd" "\
-Stop the back end process used by Racket Mode.
-
-If the process is not already started, this does nothing." t nil)
-
-(autoload 'racket-toggle-display-back-end-stderr "racket-cmd" "\
-Toggle whether the Racket Mode back end stderr buffer displays automatically.
-
-If you toggle this off, the buffer will still accumulate error
-messages -- it just won't `display-buffer' every time it is
-updated. You might prefer this if you are hacking on Racket or
-Racket Mode, temporarily have things in a state where the back
-end cannot start, and don't need to be notified repeatedly." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-collection" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-common" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-complete" '("racket--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-custom" '("defface-racket" "racket-")))
-
-
-
-(autoload 'racket--debug-send-definition "racket-debug" "\
-
-
-\(fn BEG END)" nil nil)
-
-(autoload 'racket--debug-on-break "racket-debug" "\
-
-
-\(fn RESPONSE)" nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-debug" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-describe" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-doc" '("racket--")))
-
-
-
-(add-to-list 'hs-special-modes-alist '(racket-mode "(" ")" ";" nil nil))
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-edit" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-eldoc" '("racket--do-eldoc")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-font-lock" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-imenu" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-indent" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-keywords-and-builtins" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-logger" '("racket-")))
-
-
-
-(autoload 'racket-mode "racket-mode" "\
-Major mode for editing Racket.
-\\{racket-mode-map}
-
-\(fn)" t nil)
-
-(add-to-list 'auto-mode-alist '("\\.rkt[dl]?\\'" . racket-mode))
-
-(modify-coding-system-alist 'file "\\.rkt[dl]?\\'" 'utf-8)
-
-(add-to-list 'interpreter-mode-alist '("racket" . racket-mode))
-
-(autoload 'racket-mode-start-faster "racket-mode" "\
-Compile Racket Mode's .rkt files for faster startup.
-
-Racket Mode is implemented as an Emacs Lisp \"front end\" that
-talks to a Racket process \"back end\". Because Racket Mode is
-delivered as an Emacs package instead of a Racket package,
-installing it does not do the `raco setup` that is normally done
-for Racket packages.
-
-This command will do a `raco make` of Racket Mode's .rkt files,
-creating bytecode files in `compiled/` subdirectories. As a
-result, when a `racket-run' or `racket-repl' command must start
-the Racket process, it will start faster.
-
-If you run this command, ever, you should run it again after:
-
-- Installing an updated version of Racket Mode. Otherwise, you
-  might lose some of the speed-up.
-
-- Installing a new version of Racket and/or changing the value of
-  the variable `racket-program'. Otherwise, you might get an
-  error message due to the bytecode being different versions." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-mode" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-parens" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-ppss" '("racket--ppss-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-profile" '("racket-")))
-
-
-
-(autoload 'racket-repl "racket-repl" "\
-Show a Racket REPL buffer in some window.
-
-*IMPORTANT*
-
-The main, intended use of Racket Mode's REPL is that you
-`find-file' some specific .rkt file, then `racket-run' it. The
-REPL will then match that file.
-
-If the REPL isn't running, and you want to start it for no file
-in particular? Then you could use this command. But the resulting
-REPL will have a minimal \"#lang racket/base\" namespace. You
-could enter \"(require racket)\" if you want the equivalent of
-\"#lang racket\". You could also \"(require racket/enter)\" if
-you want things like \"enter!\". But in some sense you'd be
-\"using it wrong\". If you really don't want to use Racket Mode's
-REPL as intended, then you might as well use a plain Emacs shell
-buffer to run command-line Racket.
-
-\(fn &optional NOSELECT)" t nil)
-
-(autoload 'racket-run "racket-repl" "\
-Save the buffer in REPL and run your program.
-
-As well as evaluating the outermost, file module, automatically
-runs the submodules specified by the customization variable
-`racket-submodules-to-run'.
-
-See also `racket-run-module-at-point', which runs just the
-specific module at point.
-
-With \\[universal-argument] uses errortrace for improved stack traces.
-Otherwise follows the `racket-error-context' setting.
-
-With \\[universal-argument] \\[universal-argument] instruments
-code for step debugging. See `racket-debug-mode' and the variable
-`racket-debuggable-files'.
-
-Each run occurs within a Racket custodian. Any prior run's
-custodian is shut down, releasing resources like threads and
-ports. Each run's evaluation environment is reset to the contents
-of the source file. In other words, like Dr Racket, this provides
-the benefit that your source file is the \"single source of
-truth\". At the same time, the run gives you a REPL inside the
-namespace of the module, giving you the ability to explore it
-interactively. Any explorations are temporary, unless you also
-make them to your source file, they will be lost on the next run.
-
-See also `racket-run-and-switch-to-repl', which is even more like
-Dr Racket's Run command because it selects the REPL window after
-running.
-
-In the `racket-repl-mode' buffer, output that describes a file
-and position is automatically \"linkified\". Examples of such
-text include:
-
-- Racket error messages.
-- rackunit test failure location messages.
-- print representation of path objects.
-
-To visit these locations, move point there and press RET or mouse
-click. Or, use the standard `next-error' and `previous-error'
-commands.
-
-\(fn &optional PREFIX)" t nil)
-
-(autoload 'racket-run-module-at-point "racket-repl" "\
-Save the buffer and run the module at point.
-
-Like `racket-run' but runs the innermost module around point,
-which is determined textually by looking for \"module\",
-\"module*\", or \"module+\" forms nested to any depth, else
-simply the outermost, file module.
-
-\(fn &optional PREFIX)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl" '("racket-" "with-racket-repl-buffer")))
-
-
-
-(autoload 'racket-repl-buffer-name-shared "racket-repl-buffer-name" "\
-All `racket-mode' edit buffers share one `racket-repl-mode' buffer.
-
-A value for the variable `racket-repl-buffer-name-function'." t nil)
-
-(autoload 'racket-repl-buffer-name-unique "racket-repl-buffer-name" "\
-Each `racket-mode' edit buffer gets its own `racket-repl-mode' buffer.
-
-A value for the variable `racket-repl-buffer-name-function'." t nil)
-
-(autoload 'racket-repl-buffer-name-project "racket-repl-buffer-name" "\
-All `racket-mode' buffers in a project share a `racket-repl-mode' buffer.
-
-A value for the variable `racket-repl-buffer-name-function'.
-
-The \"project\" is determined by `racket-project-root'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl-buffer-name" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-show" '("racket-")))
-
-
-
-(autoload 'racket-smart-open-bracket-mode "racket-smart-open" "\
-Minor mode to let you always type `[`' to insert `(` or `[` automatically.
-
-If called interactively, enable Racket-Smart-Open-Bracket mode if
-ARG is positive, and disable it if ARG is zero or negative.  If
-called from Lisp, also enable the mode if ARG is omitted or nil,
-and toggle it if ARG is `toggle'; disable the mode otherwise.
-
-Behaves like the \"Automatically adjust opening square brackets\"
-feature in Dr. Racket.
-
-By default, inserts a `(`. Inserts a `[` in the following cases:
-
-  - `let`-like bindings -- forms with `let` in the name as well
-    as things like `parameterize`, `with-handlers`, and
-    `with-syntax`.
-
-  - `case`, `cond`, `match`, `syntax-case`, `syntax-parse`, and
-    `syntax-rules` clauses.
-
-  - `for`-like bindings and `for/fold` accumulators.
-
-  - `class` declaration syntax, such as `init` and `inherit`.
-
-When the previous s-expression in a sequence is a compound
-expression, uses the same kind of delimiter.
-
-To force insert `[`, use `quoted-insert'.
-
-Combined with `racket-insert-closing' this means that you can
-press the unshifted `[` and `]` keys to get whatever delimiters
-follow the Racket conventions for these forms. When something
-like `electric-pair-mode' or `paredit-mode' is active, you need
-not even press `]`.
-
-Tip: When also using `paredit-mode', enable that first so that
-the binding for the `[`' key in the map for
-`racket-smart-open-bracket-mode' has higher priority. See also
-the variable `minor-mode-map-alist'.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-smart-open" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-stepper" '("racket-")))
-
-
-
-(autoload 'racket-unicode-input-method-enable "racket-unicode-input-method" "\
-Set input method to racket-unicode.
-
-The racket-unicode input method lets you easily type various
-Unicode symbols that might be useful when writing Racket code.
-
-To automatically enable the racket-unicode input method in
-racket-mode and racket-repl-mode buffers, put the following code
-in your Emacs init file:
-
-#+BEGIN_SRC elisp
-    (add-hook 'racket-mode-hook #'racket-unicode-input-method-enable)
-    (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
-#+END_SRC
-
-To temporarily enable this input method for a single buffer you
-can use \"M-x racket-unicode-input-method-enable\".
-
-Use the standard Emacs key C-\\ to toggle the input method.
-
-When the racket-unicode input method is active, you can for
-example type \"All\" and it is immediately replaced with \"∀\". A
-few other examples:
-
-| omega     | ω                        |
-| x_1       | x₁                       |
-| x^1       | x¹                       |
-| A         | 𝔸                        |
-| test-->>E | test-->>∃ (racket/redex) |
-| vdash     | ⊢                        |
-
-To see a table of all key sequences use \"M-x
-describe-input-method <RET> racket-unicode\".
-
-If you want to add your own mappings to the \"racket-unicode\"
-input method, you may add code like the following example in your
-Emacs init file:
-
-#+BEGIN_SRC elisp
-    ;; Either (require 'racket-mode) here, or, if you use
-    ;; use-package, put the code below in the :config section.
-    (with-temp-buffer
-      (racket-unicode-input-method-enable)
-      (set-input-method \"racket-unicode\")
-      (let ((quail-current-package (assoc \"racket-unicode\"
-                                          quail-package-alist)))
-        (quail-define-rules ((append . t))
-                            (\"^o\" [\"ᵒ\"]))))
-#+END_SRC
-
-If you don’t like the highlighting of partially matching tokens you
-can turn it off by setting `input-method-highlight-flag' to nil." t nil)
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-util" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-visit" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-wsl" '("racket-")))
-
-
-
-(autoload 'racket-xp-mode "racket-xp" "\
-A minor mode that analyzes expanded code to explain and explore.
-
-If called interactively, enable Racket-Xp mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-This minor mode is an optional enhancement to `racket-mode' edit
-buffers. Like any minor mode, you can turn it on or off for a
-specific buffer. If you always want to use it, put the following
-code in your Emacs init file:
-
-#+BEGIN_SRC elisp
-    (require 'racket-xp)
-    (add-hook 'racket-mode-hook #'racket-xp-mode)
-#+END_SRC
-
-Note: This mode won't do anything unless/until the Racket Mode
-back end is running. It will try to start the back end
-automatically. You do /not/ need to `racket-run' the buffer you
-are editing.
-
-This mode uses the drracket/check-syntax package to analyze
-fully-expanded programs, without needing to evaluate a.k.a.
-\"run\" them. The resulting analysis provides information for:
-
-- Visually annotating bindings -- local or imported definitions
-  and references to them.
-
-- Completion candidates.
-
-- Defintions' source and documentation.
-
-When point is on a definition or use, related items are
-highlighted using `racket-xp-def-face' and `racket-xp-use-face'
--- instead of drawing arrows as in Dr Racket. Information is
-displayed using the function(s) in the hook variable
-`racket-show-functions'; it is also available when hovering the
-mouse cursor.
-
-Note: If you find these point-motion features too distracting
-and/or slow, in your `racket-xp-mode-hook' you may disable them:
-
-#+BEGIN_SRC elisp
-  (require 'racket-xp)
-  (add-hook 'racket-xp-mode-hook
-            (lambda ()
-              (remove-hook 'pre-redisplay-functions
-                           #'racket-xp-pre-redisplay
-                           t)))
-#+END_SRC
-
-The remaining features discussed below will still work.
-
-You may also use commands to navigate among a definition and its
-uses, or to rename a local definitions and all its uses.
-
-In the following little example, not only does
-drracket/check-syntax distinguish the various \"x\" bindings, it
-understands the two different imports of \"define\":
-
-#+BEGIN_SRC racket
-  #lang racket/base
-  (define x 1)
-  x
-  (let ([x x])
-    (+ x 1))
-  (module m typed/racket/base
-    (define x 2)
-    x)
-#+END_SRC
-
-The function `racket-xp-complete-at-point' is added to the
-variable `completion-at-point-functions'. Note that in this case,
-it is not smart about submodules; identifiers are assumed to be
-definitions from the file's module or its imports. In addition to
-supplying completion candidates, it supports the
-\":company-location\" property to inspect the definition of a
-candidate and the \":company-doc-buffer\" property to view its
-documentation.
-
-When you edit the buffer, existing annotations are retained;
-their positions are updated to reflect the edit. Annotations for
-new or deleted text are not requested until after
-`racket-xp-after-change-refresh-delay' seconds. The request is
-made asynchronously so that Emacs will not block -- for
-moderately complex source files, it can take some seconds simply
-to fully expand them, as well as a little more time for the
-drracket/check-syntax analysis. When the results are ready, all
-annotations for the buffer are completely refreshed.
-
-You may also set `racket-xp-after-change-refresh-delay' to nil
-and use the `racket-xp-annotate' command manually.
-
-The mode line changes to reflect the current status of
-annotations, and whether or not you had a syntax error.
-
-If you have one or more syntax errors, `racket-xp-next-error' and
-`racket-xp-previous-error' to navigate among them. Although most
-languages will stop after the first syntax error, some like Typed
-Racket will try to collect and report multiple errors.
-
-Tip: This mode follows the convention that a minor mode may only
-use a prefix key consisting of \"C-c\" followed by a punctuation
-key. As a result, `racket-xp-control-c-hash-keymap' is bound to
-\"C-c #\" by default. Although you might find this awkward to
-type, remember that as an Emacs user, you are free to bind this
-map to a more convenient prefix, and/or bind any individual
-commands directly to whatever keys you prefer.
-
-\\{racket-xp-mode-map}
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-xp" '("racket-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-xp-complete" '("racket-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20200826.2018/geiser-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20200826.2018/geiser-autoloads.el") (car load-path))))
-
-
-
-(defconst geiser-elisp-dir (file-name-directory load-file-name) "\
-Directory containing Geiser's Elisp files.")
-
-(defconst geiser-scheme-dir (let ((d (expand-file-name "./scheme/" geiser-elisp-dir))) (if (file-directory-p d) d (expand-file-name "../scheme/" geiser-elisp-dir))) "\
-Directory containing Geiser's Scheme files.")
-
-(add-to-list 'load-path (directory-file-name geiser-elisp-dir))
-
-(autoload 'geiser-version "geiser-version" "\
-Echo Geiser's version." t)
-
-(autoload 'geiser-unload "geiser-reload" "\
-Unload all Geiser code." t)
-
-(autoload 'geiser-reload "geiser-reload" "\
-Reload Geiser code." t)
-
-(autoload 'geiser "geiser-repl" "\
-Start a Geiser REPL, or switch to a running one." t)
-
-(autoload 'run-geiser "geiser-repl" "\
-Start a Geiser REPL." t)
-
-(autoload 'geiser-connect "geiser-repl" "\
-Start a Geiser REPL connected to a remote server." t)
-
-(autoload 'geiser-connect-local "geiser-repl" "\
-Start a Geiser REPL connected to a remote server over a Unix-domain socket." t)
-
-(autoload 'switch-to-geiser "geiser-repl" "\
-Switch to a running one Geiser REPL." t)
-
-(autoload 'run-chez "geiser-chez" "\
-Start a Geiser Chez REPL." t)
-
-(autoload 'switch-to-chez "geiser-chez" "\
-Start a Geiser Chez REPL, or switch to a running one." t)
-
-(autoload 'run-guile "geiser-guile" "\
-Start a Geiser Guile REPL." t)
-
-(autoload 'switch-to-guile "geiser-guile" "\
-Start a Geiser Guile REPL, or switch to a running one." t)
-
-(autoload 'connect-to-guile "geiser-guile" "\
-Connect to a remote Geiser Guile REPL." t)
-
-(autoload 'run-gambit "geiser-gambit" "\
-Start a Geiser Gambit REPL." t)
-
-(autoload 'switch-to-gambit "geiser-gambit" "\
-Start a Geiser Gambit REPL, or switch to a running one." t)
-
-(autoload 'connect-to-gambit "geiser-gambit" "\
-Connect to a remote Geiser Gambit REPL." t)
-
-(autoload 'run-racket "geiser-racket" "\
-Start a Geiser Racket REPL." t)
-
-(autoload 'run-gracket "geiser-racket" "\
-Start a Geiser GRacket REPL." t)
-
-(autoload 'switch-to-racket "geiser-racket" "\
-Start a Geiser Racket REPL, or switch to a running one." t)
-
-(autoload 'connect-to-racket "geiser-racket" "\
-Connect to a remote Geiser Racket REPL." t)
-
-(autoload 'run-chicken "geiser-chicken" "\
-Start a Geiser Chicken REPL." t)
-
-(autoload 'switch-to-chicken "geiser-chicken" "\
-Start a Geiser Chicken REPL, or switch to a running one." t)
-
-(autoload 'connect-to-chicken "geiser-chicken" "\
-Connect to a remote Geiser Chicken REPL." t)
-
-(autoload 'run-mit "geiser-mit" "\
-Start a Geiser MIT/GNU Scheme REPL." t)
-
-(autoload 'switch-to-mit "geiser-mit" "\
-Start a Geiser MIT/GNU Scheme REPL, or switch to a running one." t)
-
-(autoload 'run-chibi "geiser-chibi" "\
-Start a Geiser Chibi Scheme REPL." t)
-
-(autoload 'switch-to-chibi "geiser-chibi" "\
-Start a Geiser Chibi Scheme REPL, or switch to a running one." t)
-
-(autoload 'geiser-mode "geiser-mode" "\
-Minor mode adding Geiser REPL interaction to Scheme buffers." t)
-
-(autoload 'turn-on-geiser-mode "geiser-mode" "\
-Enable Geiser's mode (useful in Scheme buffers)." t)
-
-(autoload 'turn-off-geiser-mode "geiser-mode" "\
-Disable Geiser's mode (useful in Scheme buffers)." t)
-
-(autoload 'geiser-mode--maybe-activate "geiser-mode")
-
-(mapc (lambda (group) (custom-add-load group (symbol-name group)) (custom-add-load 'geiser (symbol-name group))) '(geiser geiser-repl geiser-autodoc geiser-doc geiser-debug geiser-faces geiser-mode geiser-guile geiser-gambit geiser-image geiser-racket geiser-chicken geiser-chez geiser-chibi geiser-mit geiser-implementation geiser-xref))
-
-(add-hook 'scheme-mode-hook 'geiser-mode--maybe-activate)
-
-(add-to-list 'auto-mode-alist '("\\.rkt\\'" . scheme-mode))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-autodoc" '("geiser-autodoc-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-base" '("geiser--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chez" '("chez" "geiser-chez-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chibi" '("chibi" "geiser-chibi-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chicken" '("chicken" "connect-to-chicken" "geiser-chicken")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-company" '("geiser-company--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-compile" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-completion" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-connection" '("geiser-con")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-custom" '("geiser-custom-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-debug" '("geiser-debug-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-doc" '("geiser-doc-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-edit" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-eval" '("geiser-eval--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-gambit" '("connect-to-gambit" "gambit" "geiser-gambit-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-guile" '("connect-to-guile" "geiser-guile-" "guile")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-image" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-impl" '("define-geiser-implementation" "geiser-" "with--geiser-implementation")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-log" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-menu" '("geiser-menu--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-mit" '("geiser-mit-" "mit")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-mode" '("geiser-" "turn-o")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-popup" '("geiser-popup-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-racket" '("connect-to-racket" "geiser-racket-" "racket" "run-gracket")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-reload" '("geiser-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-repl" '("geiser" "run-geiser" "switch-to-geiser")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-syntax" '("geiser-syntax--")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-table" '("geiser-table-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-version" '("geiser-version")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-xref" '("geiser-xref-")))
-
-
 
 
 )
@@ -5947,1063 +5559,10 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20201001.1449/clojure-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20210113.1943/symex-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20201001.1449/clojure-mode-autoloads.el") (car load-path))))
-
-
-
-(autoload 'clojure-mode "clojure-mode" "\
-Major mode for editing Clojure code.
-
-\\{clojure-mode-map}
-
-\(fn)" t nil)
-
-(autoload 'clojure-unwind "clojure-mode" "\
-Unwind thread at point or above point by N levels.
-With universal argument \\[universal-argument], fully unwind thread.
-
-\(fn &optional N)" t nil)
-
-(autoload 'clojure-unwind-all "clojure-mode" "\
-Fully unwind thread at point or above point." t nil)
-
-(autoload 'clojure-thread "clojure-mode" "\
-Thread by one more level an existing threading macro." t nil)
-
-(autoload 'clojure-thread-first-all "clojure-mode" "\
-Fully thread the form at point using ->.
-
-When BUT-LAST is non-nil, the last expression is not threaded.
-Default value is `clojure-thread-all-but-last'.
-
-\(fn BUT-LAST)" t nil)
-
-(autoload 'clojure-thread-last-all "clojure-mode" "\
-Fully thread the form at point using ->>.
-
-When BUT-LAST is non-nil, the last expression is not threaded.
-Default value is `clojure-thread-all-but-last'.
-
-\(fn BUT-LAST)" t nil)
-
-(autoload 'clojure-cycle-privacy "clojure-mode" "\
-Make public the current private def, or vice-versa.
-See: https://github.com/clojure-emacs/clj-refactor.el/wiki/cljr-cycle-privacy" t nil)
-
-(autoload 'clojure-convert-collection-to-list "clojure-mode" "\
-Convert collection at (point) to list." t nil)
-
-(autoload 'clojure-convert-collection-to-quoted-list "clojure-mode" "\
-Convert collection at (point) to quoted list." t nil)
-
-(autoload 'clojure-convert-collection-to-map "clojure-mode" "\
-Convert collection at (point) to map." t nil)
-
-(autoload 'clojure-convert-collection-to-vector "clojure-mode" "\
-Convert collection at (point) to vector." t nil)
-
-(autoload 'clojure-convert-collection-to-set "clojure-mode" "\
-Convert collection at (point) to set." t nil)
-
-(autoload 'clojure-cycle-if "clojure-mode" "\
-Change a surrounding if to if-not, or vice-versa.
-
-See: https://github.com/clojure-emacs/clj-refactor.el/wiki/cljr-cycle-if" t nil)
-
-(autoload 'clojure-cycle-when "clojure-mode" "\
-Change a surrounding when to when-not, or vice-versa." t nil)
-
-(autoload 'clojure-let-backward-slurp-sexp "clojure-mode" "\
-Slurp the s-expression before the let form into the let form.
-With a numeric prefix argument slurp the previous N s-expressions
-into the let form.
-
-\(fn &optional N)" t nil)
-
-(autoload 'clojure-let-forward-slurp-sexp "clojure-mode" "\
-Slurp the next s-expression after the let form into the let form.
-With a numeric prefix argument slurp the next N s-expressions
-into the let form.
-
-\(fn &optional N)" t nil)
-
-(autoload 'clojure-introduce-let "clojure-mode" "\
-Create a let form, binding the form at point.
-With a numeric prefix argument the let is introduced N lists up.
-
-\(fn &optional N)" t nil)
-
-(autoload 'clojure-move-to-let "clojure-mode" "\
-Move the form at point to a binding in the nearest let." t nil)
-
-(autoload 'clojure-rename-ns-alias "clojure-mode" "\
-Rename a namespace alias." t nil)
-
-(autoload 'clojure-add-arity "clojure-mode" "\
-Add an arity to a function." t nil)
-
-(autoload 'clojurescript-mode "clojure-mode" "\
-Major mode for editing ClojureScript code.
-
-\\{clojurescript-mode-map}
-
-\(fn)" t nil)
-
-(autoload 'clojurec-mode "clojure-mode" "\
-Major mode for editing ClojureC code.
-
-\\{clojurec-mode-map}
-
-\(fn)" t nil)
-
-(add-to-list 'auto-mode-alist '("\\.\\(clj\\|dtm\\|edn\\)\\'" . clojure-mode))
-
-(add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojurec-mode))
-
-(add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojurescript-mode))
-
-(add-to-list 'auto-mode-alist '("\\(?:build\\|profile\\)\\.boot\\'" . clojure-mode))
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/a-20180907.953/a-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/a-20180907.953/a-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "a" '("a-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj" '("parseclj-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-ast" '("parseclj-ast-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-lex" '("parseclj-lex-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-parser" '("parseclj-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseedn-20200419.1124/parseedn-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseedn-20200419.1124/parseedn-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseedn" '("parseedn-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/queue-0.2/queue-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/queue-0.2/queue-autoloads.el") (car load-path))))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/spinner-1.7.3/spinner-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/spinner-1.7.3/spinner-autoloads.el") (car load-path))))
-
-
-(autoload 'spinner-create "spinner" "\
-Create a spinner of the given TYPE.
-The possible TYPEs are described in `spinner--type-to-frames'.
-
-FPS, if given, is the number of desired frames per second.
-Default is `spinner-frames-per-second'.
-
-If BUFFER-LOCAL is non-nil, the spinner will be automatically
-deactivated if the buffer is killed.  If BUFFER-LOCAL is a
-buffer, use that instead of current buffer.
-
-When started, in order to function properly, the spinner runs a
-timer which periodically calls `force-mode-line-update' in the
-curent buffer.  If BUFFER-LOCAL was set at creation time, then
-`force-mode-line-update' is called in that buffer instead.  When
-the spinner is stopped, the timer is deactivated.
-
-DELAY, if given, is the number of seconds to wait after starting
-the spinner before actually displaying it. It is safe to cancel
-the spinner before this time, in which case it won't display at
-all.
-
-\(fn &optional TYPE BUFFER-LOCAL FPS DELAY)" nil nil)
-
-(autoload 'spinner-start "spinner" "\
-Start a mode-line spinner of given TYPE-OR-OBJECT.
-If TYPE-OR-OBJECT is an object created with `make-spinner',
-simply activate it.  This method is designed for minor modes, so
-they can use the spinner as part of their lighter by doing:
-    \\='(:eval (spinner-print THE-SPINNER))
-To stop this spinner, call `spinner-stop' on it.
-
-If TYPE-OR-OBJECT is anything else, a buffer-local spinner is
-created with this type, and it is displayed in the
-`mode-line-process' of the buffer it was created it.  Both
-TYPE-OR-OBJECT and FPS are passed to `make-spinner' (which see).
-To stop this spinner, call `spinner-stop' in the same buffer.
-
-Either way, the return value is a function which can be called
-anywhere to stop this spinner.  You can also call `spinner-stop'
-in the same buffer where the spinner was created.
-
-FPS, if given, is the number of desired frames per second.
-Default is `spinner-frames-per-second'.
-
-DELAY, if given, is the number of seconds to wait until actually
-displaying the spinner. It is safe to cancel the spinner before
-this time, in which case it won't display at all.
-
-\(fn &optional TYPE-OR-OBJECT FPS DELAY)" nil nil)
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el") (car load-path))))
-
-
-
-(autoload 'sesman-start "sesman" "\
-Start a Sesman session." t nil)
-
-(autoload 'sesman-restart "sesman" "\
-Restart sesman session.
-When WHICH is nil, restart the current session; when a single universal
-argument or 'linked, restart all linked sessions; when a double universal
-argument, t or 'all, restart all sessions. For programmatic use, WHICH can also
-be a session or a name of the session, in which case that session is restarted.
-
-\(fn &optional WHICH)" t nil)
-
-(autoload 'sesman-quit "sesman" "\
-Terminate a Sesman session.
-When WHICH is nil, kill only the current session; when a single universal
-argument or 'linked, kill all linked sessions; when a double universal argument,
-t or 'all, kill all sessions. For programmatic use, WHICH can also be a session
-or a name of the session, in which case that session is killed.
-
-\(fn &optional WHICH)" t nil)
-
-(autoload 'sesman-info "sesman" "\
-Display info for all current sessions (`sesman-current-sessions').
-In the resulting minibuffer display linked sessions are numbered and the
-other (friendly) sessions are not. When ALL is non-nil, show info for all
-sessions.
-
-\(fn &optional ALL)" t nil)
-
-(autoload 'sesman-link-with-buffer "sesman" "\
-Ask for SESSION and link with BUFFER.
-BUFFER defaults to current buffer. On universal argument, or if BUFFER is 'ask,
-ask for buffer.
-
-\(fn &optional BUFFER SESSION)" t nil)
-
-(autoload 'sesman-link-with-directory "sesman" "\
-Ask for SESSION and link with DIR.
-DIR defaults to `default-directory'. On universal argument, or if DIR is 'ask,
-ask for directory.
-
-\(fn &optional DIR SESSION)" t nil)
-
-(autoload 'sesman-link-with-project "sesman" "\
-Ask for SESSION and link with PROJECT.
-PROJECT defaults to current project. On universal argument, or if PROJECT is
-'ask, ask for the project. SESSION defaults to the current session.
-
-\(fn &optional PROJECT SESSION)" t nil)
-
-(autoload 'sesman-link-with-least-specific "sesman" "\
-Ask for SESSION and link with the least specific context available.
-Normally the least specific context is the project. If not in a project, link
-with the `default-directory'. If `default-directory' is nil, link with current
-buffer.
-
-\(fn &optional SESSION)" t nil)
-
-(autoload 'sesman-unlink "sesman" "\
-Break any of the previously created links." t nil)
- (autoload 'sesman-map "sesman" "Session management prefix keymap." t 'keymap)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman" '("sesman-")))
-
-
-
-(autoload 'sesman-browser "sesman-browser" "\
-Display an interactive session browser.
-See `sesman-browser-mode' for more details." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman-browser" '("sesman-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20201018.1453/cider-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20201018.1453/cider-autoloads.el") (car load-path))))
-
-
-
-(autoload 'cider-version "cider" "\
-Display CIDER's version." t nil)
- (autoload 'cider-start-map "cider" "CIDER jack-in and connect keymap." t 'keymap)
-
-(autoload 'cider-jack-in-clj "cider" "\
-Start an nREPL server for the current project and connect to it.
-PARAMS is a plist optionally containing :project-dir and :jack-in-cmd.
-With the prefix argument, allow editing of the jack in command; with a
-double prefix prompt for all these parameters.
-
-\(fn PARAMS)" t nil)
-
-(autoload 'cider-jack-in-cljs "cider" "\
-Start an nREPL server for the current project and connect to it.
-PARAMS is a plist optionally containing :project-dir, :jack-in-cmd and
-:cljs-repl-type (e.g. Node, Figwheel, etc).  With the prefix argument,
-allow editing of the jack in command; with a double prefix prompt for all
-these parameters.
-
-\(fn PARAMS)" t nil)
-
-(autoload 'cider-jack-in-clj&cljs "cider" "\
-Start an nREPL server and connect with clj and cljs REPLs.
-PARAMS is a plist optionally containing :project-dir, :jack-in-cmd and
-:cljs-repl-type (e.g. Node, Figwheel, etc).  With the prefix argument,
-allow for editing of the jack in command; with a double prefix prompt for
-all these parameters.  When SOFT-CLJS-START is non-nil, start cljs REPL
-only when the ClojureScript dependencies are met.
-
-\(fn &optional PARAMS SOFT-CLJS-START)" t nil)
-
-(autoload 'cider-connect-sibling-clj "cider" "\
-Create a Clojure REPL with the same server as OTHER-REPL.
-PARAMS is for consistency with other connection commands and is currently
-ignored.  OTHER-REPL defaults to `cider-current-repl' and in programs can
-also be a server buffer, in which case a new session with a REPL for that
-server is created.
-
-\(fn PARAMS &optional OTHER-REPL)" t nil)
-
-(autoload 'cider-connect-sibling-cljs "cider" "\
-Create a ClojureScript REPL with the same server as OTHER-REPL.
-PARAMS is a plist optionally containing :cljs-repl-type (e.g. Node,
-Figwheel, etc).  All other parameters are inferred from the OTHER-REPL.
-OTHER-REPL defaults to `cider-current-repl' but in programs can also be a
-server buffer, in which case a new session for that server is created.
-
-\(fn PARAMS &optional OTHER-REPL)" t nil)
-
-(autoload 'cider-connect-clj "cider" "\
-Initialize a Clojure connection to an nREPL server.
-PARAMS is a plist optionally containing :host, :port and :project-dir.  On
-prefix argument, prompt for all the parameters.
-
-\(fn &optional PARAMS)" t nil)
-
-(autoload 'cider-connect-cljs "cider" "\
-Initialize a ClojureScript connection to an nREPL server.
-PARAMS is a plist optionally containing :host, :port, :project-dir and
-:cljs-repl-type (e.g. Node, Figwheel, etc).  On prefix, prompt for all the
-parameters regardless of their supplied or default values.
-
-\(fn &optional PARAMS)" t nil)
-
-(autoload 'cider-connect-clj&cljs "cider" "\
-Initialize a Clojure and ClojureScript connection to an nREPL server.
-PARAMS is a plist optionally containing :host, :port, :project-dir and
-:cljs-repl-type (e.g. Node, Figwheel, etc).  When SOFT-CLJS-START is
-non-nil, don't start if ClojureScript requirements are not met.
-
-\(fn PARAMS &optional SOFT-CLJS-START)" t nil)
-
-(autoload 'cider "cider" "\
-Start a connection of any type interactively." t nil)
-
-(defalias 'cider-jack-in #'cider-jack-in-clj)
-
-(define-obsolete-function-alias 'cider-jack-in-clojure 'cider-jack-in-clj "0.22")
-
-(define-obsolete-function-alias 'cider-jack-in-clojurescript 'cider-jack-in-cljs "0.22")
-
-(defalias 'cider-connect #'cider-connect-clj)
-
-(define-obsolete-function-alias 'cider-connect-clojure 'cider-connect-clj "0.22")
-
-(define-obsolete-function-alias 'cider-connect-clojurescript 'cider-connect-cljs "0.22")
-
-(define-obsolete-function-alias 'cider-connect-sibling-clojure 'cider-connect-sibling-clj "0.22")
-
-(define-obsolete-function-alias 'cider-connect-sibling-clojurescript 'cider-connect-sibling-cljs "0.22")
-
-(with-eval-after-load 'clojure-mode (define-key clojure-mode-map (kbd "C-c M-x") #'cider) (define-key clojure-mode-map (kbd "C-c M-j") #'cider-jack-in-clj) (define-key clojure-mode-map (kbd "C-c M-J") #'cider-jack-in-cljs) (define-key clojure-mode-map (kbd "C-c M-c") #'cider-connect-clj) (define-key clojure-mode-map (kbd "C-c M-C") #'cider-connect-cljs) (define-key clojure-mode-map (kbd "C-c C-x") 'cider-start-map) (define-key clojure-mode-map (kbd "C-c C-s") 'sesman-map) (require 'sesman) (sesman-install-menu clojure-mode-map) (add-hook 'clojure-mode-hook (lambda nil (setq-local sesman-system 'CIDER))))
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider" '("cider-")))
-
-
-
-(autoload 'cider-apropos "cider-apropos" "\
-Show all symbols whose names match QUERY, a regular expression.
-QUERY can also be a list of space-separated words (e.g. take while) which
-will be converted to a regular expression (like take.+while) automatically
-behind the scenes.  The search may be limited to the namespace NS, and may
-optionally search doc strings (based on DOCS-P), include private vars
-\(based on PRIVATES-P), and be case-sensitive (based on CASE-SENSITIVE-P).
-
-\(fn QUERY &optional NS DOCS-P PRIVATES-P CASE-SENSITIVE-P)" t nil)
-
-(autoload 'cider-apropos-documentation "cider-apropos" "\
-Shortcut for (cider-apropos <query> nil t)." t nil)
-
-(autoload 'cider-apropos-select "cider-apropos" "\
-Similar to `cider-apropos', but presents the results in a completing read.
-Show all symbols whose names match QUERY, a regular expression.
-QUERY can also be a list of space-separated words (e.g. take while) which
-will be converted to a regular expression (like take.+while) automatically
-behind the scenes.  The search may be limited to the namespace NS, and may
-optionally search doc strings (based on DOCS-P), include private vars
-\(based on PRIVATES-P), and be case-sensitive (based on CASE-SENSITIVE-P).
-
-\(fn QUERY &optional NS DOCS-P PRIVATES-P CASE-SENSITIVE-P)" t nil)
-
-(autoload 'cider-apropos-documentation-select "cider-apropos" "\
-Shortcut for (cider-apropos-select <query> nil t)." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-apropos" '("apropos-special-form" "cider-")))
-
-
-
-(autoload 'cider-browse-ns "cider-browse-ns" "\
-List all NAMESPACE's vars in BUFFER.
-
-\(fn NAMESPACE)" t nil)
-
-(autoload 'cider-browse-ns-all "cider-browse-ns" "\
-List all loaded namespaces in BUFFER." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-browse-ns" '("cider-browse-ns-")))
-
-
-
-(autoload 'cider-browse-spec "cider-browse-spec" "\
-Browse SPEC definition.
-
-\(fn SPEC)" t nil)
-
-(autoload 'cider-browse-spec-all "cider-browse-spec" "\
-Open list of specs in a popup buffer.
-
-With a prefix argument ARG, prompts for a regexp to filter specs.
-No filter applied if the regexp is the empty string.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-browse-spec" '("cider-")))
-
-
-
-(autoload 'cider-cheatsheet "cider-cheatsheet" "\
-Navigate `cider-cheatsheet-hierarchy' with `completing-read'.
-
-When you make it to a Clojure var its doc buffer gets displayed." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-cheatsheet" '("cider-cheatsheet-")))
-
-
-
-(autoload 'cider-classpath "cider-classpath" "\
-List all classpath entries." t nil)
-
-(autoload 'cider-open-classpath-entry "cider-classpath" "\
-Open a classpath entry." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-classpath" '("cider-classpath-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-client" '("cider-")))
-
-
-
-(autoload 'cider-clojuredocs-web "cider-clojuredocs" "\
-Open ClojureDocs documentation in the default web browser.
-
-Prompts for the symbol to use, or uses the symbol at point, depending on
-the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
-opposite of what that option dictates.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'cider-clojuredocs-refresh-cache "cider-clojuredocs" "\
-Refresh the ClojureDocs cache." t nil)
-
-(autoload 'cider-clojuredocs "cider-clojuredocs" "\
-Open ClojureDocs documentation in a popup buffer.
-
-Prompts for the symbol to use, or uses the symbol at point, depending on
-the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
-opposite of what that option dictates.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-clojuredocs" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-common" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-completion" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-connection" '("cider-")))
-
-
-
-(autoload 'cider-debug-defun-at-point "cider-debug" "\
-Instrument the \"top-level\" expression at point.
-If it is a defn, dispatch the instrumented definition.  Otherwise,
-immediately evaluate the instrumented expression.
-
-While debugged code is being evaluated, the user is taken through the
-source code and displayed the value of various expressions.  At each step,
-a number of keys will be prompted to the user." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-debug" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-doc" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-eldoc" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-eval" '("cider-")))
-
-
-
-(autoload 'cider-find-var "cider-find" "\
-Find definition for VAR at LINE.
-Prompt according to prefix ARG and `cider-prompt-for-symbol'.
-A single or double prefix argument inverts the meaning of
-`cider-prompt-for-symbol'.  A prefix of `-` or a double prefix argument causes
-the results to be displayed in a different window.  The default value is
-thing at point.
-
-\(fn &optional ARG VAR LINE)" t nil)
-
-(autoload 'cider-find-dwim-at-mouse "cider-find" "\
-Find and display variable or resource at mouse EVENT.
-
-\(fn EVENT)" t nil)
-
-(autoload 'cider-find-dwim "cider-find" "\
-Find and display the SYMBOL-FILE at point.
-SYMBOL-FILE could be a var or a resource.  If thing at point is empty then
-show dired on project.  If var is not found, try to jump to resource of the
-same name.  When called interactively, a prompt is given according to the
-variable `cider-prompt-for-symbol'.  A single or double prefix argument
-inverts the meaning.  A prefix of `-' or a double prefix argument causes
-the results to be displayed in a different window.  A default value of thing
-at point is given when prompted.
-
-\(fn SYMBOL-FILE)" t nil)
-
-(autoload 'cider-find-resource "cider-find" "\
-Find the resource at PATH.
-Prompt for input as indicated by the variable `cider-prompt-for-symbol'.
-A single or double prefix argument inverts the meaning of
-`cider-prompt-for-symbol'.  A prefix argument of `-` or a double prefix
-argument causes the results to be displayed in other window.  The default
-value is thing at point.
-
-\(fn PATH)" t nil)
-
-(autoload 'cider-find-ns "cider-find" "\
-Find the file containing NS.
-A prefix ARG of `-` or a double prefix argument causes
-the results to be displayed in a different window.
-
-\(fn &optional ARG NS)" t nil)
-
-(autoload 'cider-find-keyword "cider-find" "\
-Find the namespace of the keyword at point and its first occurrence there.
-
-For instance - if the keyword at point is \":cider.demo/keyword\", this command
-would find the namespace \"cider.demo\" and afterwards find the first mention
-of \"::keyword\" there.
-
-Prompt according to prefix ARG and `cider-prompt-for-symbol'.
-A single or double prefix argument inverts the meaning of
-`cider-prompt-for-symbol'.  A prefix of `-` or a double prefix argument causes
-the results to be displayed in a different window.  The default value is
-thing at point.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-find" '("cider-")))
-
-
-
-(autoload 'cider-format-region "cider-format" "\
-Format the Clojure code in the current region.
-START and END represent the region's boundaries.
-
-\(fn START END)" t nil)
-
-(autoload 'cider-format-defun "cider-format" "\
-Format the code in the current defun." t nil)
-
-(autoload 'cider-format-buffer "cider-format" "\
-Format the Clojure code in the current buffer." t nil)
-
-(autoload 'cider-format-edn-buffer "cider-format" "\
-Format the EDN data in the current buffer." t nil)
-
-(autoload 'cider-format-edn-region "cider-format" "\
-Format the EDN data in the current region.
-START and END represent the region's boundaries.
-
-\(fn START END)" t nil)
-
-(autoload 'cider-format-edn-last-sexp "cider-format" "\
-Format the EDN data of the last sexp." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-format" '("cider--format-")))
-
-
-
-(autoload 'cider-inspect-last-sexp "cider-inspector" "\
-Inspect the result of the the expression preceding point." t nil)
-
-(autoload 'cider-inspect-defun-at-point "cider-inspector" "\
-Inspect the result of the \"top-level\" expression at point." t nil)
-
-(autoload 'cider-inspect-last-result "cider-inspector" "\
-Inspect the most recent eval result." t nil)
-
-(autoload 'cider-inspect "cider-inspector" "\
-Inspect the result of the preceding sexp.
-
-With a prefix argument ARG it inspects the result of the \"top-level\" form.
-With a second prefix argument it prompts for an expression to eval and inspect.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'cider-inspect-expr "cider-inspector" "\
-Evaluate EXPR in NS and inspect its value.
-Interactively, EXPR is read from the minibuffer, and NS the
-current buffer's namespace.
-
-\(fn EXPR NS)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-inspector" '("cider-")))
-
-
-
-(autoload 'cider-macroexpand-1 "cider-macroexpansion" "\
-Invoke \\=`macroexpand-1\\=` on the expression preceding point.
-If invoked with a PREFIX argument, use \\=`macroexpand\\=` instead of
-\\=`macroexpand-1\\=`.
-
-\(fn &optional PREFIX)" t nil)
-
-(autoload 'cider-macroexpand-all "cider-macroexpansion" "\
-Invoke \\=`macroexpand-all\\=` on the expression preceding point." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-macroexpansion" '("cider-")))
-
-
-
-(defvar cider-mode-line '(:eval (format " cider[%s]" (cider--modeline-info))) "\
-Mode line lighter for cider mode.
-
-The value of this variable is a mode line template as in
-`mode-line-format'.  See Info Node `(elisp)Mode Line Format' for details
-about mode line templates.
-
-Customize this variable to change how cider mode displays its status in the
-mode line.  The default value displays the current connection.  Set this
-variable to nil to disable the mode line entirely.")
-
-(custom-autoload 'cider-mode-line "cider-mode" t)
-
-(with-eval-after-load 'clojure-mode (easy-menu-define cider-clojure-mode-menu-open clojure-mode-map "Menu for Clojure mode.\n  This is displayed in `clojure-mode' buffers, if `cider-mode' is not active." `("CIDER" :visible (not cider-mode) ["Start a Clojure REPL" cider-jack-in-clj :help "Starts an nREPL server and connects a Clojure REPL to it."] ["Connect to a Clojure REPL" cider-connect-clj :help "Connects to a REPL that's already running."] ["Start a ClojureScript REPL" cider-jack-in-cljs :help "Starts an nREPL server and connects a ClojureScript REPL to it."] ["Connect to a ClojureScript REPL" cider-connect-cljs :help "Connects to a ClojureScript REPL that's already running."] ["Start a Clojure REPL, and a ClojureScript REPL" cider-jack-in-clj&cljs :help "Starts an nREPL server, connects a Clojure REPL to it, and then a ClojureScript REPL."] "--" ["View manual online" cider-view-manual])))
-
-(autoload 'cider-mode "cider-mode" "\
-Minor mode for REPL interaction from a Clojure buffer.
-
-If called interactively, enable Cider mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
-
-\\{cider-mode-map}
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-mode" '("cider-")))
-
-
-
-(autoload 'cider-ns-reload "cider-ns" "\
-Send a (require 'ns :reload) to the REPL.
-
-With an argument PROMPT, it prompts for a namespace name.  This is the
-Clojure out of the box reloading experience and does not rely on
-org.clojure/tools.namespace.  See Commentary of this file for a longer list
-of differences.  From the Clojure doc: \":reload forces loading of all the
-identified libs even if they are already loaded\".
-
-\(fn &optional PROMPT)" t nil)
-
-(autoload 'cider-ns-reload-all "cider-ns" "\
-Send a (require 'ns :reload-all) to the REPL.
-
-With an argument PROMPT, it prompts for a namespace name.  This is the
-Clojure out of the box reloading experience and does not rely on
-org.clojure/tools.namespace.  See Commentary of this file for a longer list
-of differences.  From the Clojure doc: \":reload-all implies :reload and
-also forces loading of all libs that the identified libs directly or
-indirectly load via require\".
-
-\(fn &optional PROMPT)" t nil)
-
-(autoload 'cider-ns-refresh "cider-ns" "\
-Reload modified and unloaded namespaces on the classpath.
-
-With a single prefix argument, or if MODE is `refresh-all', reload all
-namespaces on the classpath unconditionally.
-
-With a double prefix argument, or if MODE is `clear', clear the state of
-the namespace tracker before reloading.  This is useful for recovering from
-some classes of error (for example, those caused by circular dependencies)
-that a normal reload would not otherwise recover from.  The trade-off of
-clearing is that stale code from any deleted files may not be completely
-unloaded.
-
-With a negative prefix argument, or if MODE is `inhibit-fns', prevent any
-refresh functions (defined in `cider-ns-refresh-before-fn' and
-`cider-ns-refresh-after-fn') from being invoked.
-
-\(fn &optional MODE)" t nil)
-
-(define-obsolete-function-alias 'cider-refresh 'cider-ns-refresh "0.18")
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-ns" '("cider-ns-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-overlays" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-popup" '("cider-")))
-
-
-
-(autoload 'cider-profile-samples "cider-profile" "\
-Displays current max-sample-count.
-If optional QUERY is specified, set max-sample-count and display new value.
-
-\(fn &optional QUERY)" t nil)
-
-(autoload 'cider-profile-var-profiled-p "cider-profile" "\
-Displays the profiling status of var under point.
-Prompts for var if none under point or QUERY is present.
-
-\(fn QUERY)" t nil)
-
-(autoload 'cider-profile-ns-toggle "cider-profile" "\
-Toggle profiling for the ns associated with optional QUERY.
-
-If optional argument QUERY is non-nil, prompt for ns.  Otherwise use
-current ns.
-
-\(fn &optional QUERY)" t nil)
-
-(autoload 'cider-profile-toggle "cider-profile" "\
-Toggle profiling for the given QUERY.
-Defaults to the symbol at point.
-With prefix arg or no symbol at point, prompts for a var.
-
-\(fn QUERY)" t nil)
-
-(autoload 'cider-profile-summary "cider-profile" "\
-Display a summary of currently collected profile data." t nil)
-
-(autoload 'cider-profile-var-summary "cider-profile" "\
-Display profile data for var under point QUERY.
-Defaults to the symbol at point.  With prefix arg or no symbol at point,
-prompts for a var.
-
-\(fn QUERY)" t nil)
-
-(autoload 'cider-profile-clear "cider-profile" "\
-Clear any collected profile data." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-profile" '("cider-profile-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-repl" '("cider-")))
-
-
-
-(autoload 'cider-repl-history "cider-repl-history" "\
-Display items in the CIDER command history in another buffer." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-repl-history" '("cider-repl-history-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-resolve" '("cider-resolve-")))
-
-
-
-(autoload 'cider-scratch "cider-scratch" "\
-Go to the scratch buffer named `cider-scratch-buffer-name'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-scratch" '("cider-")))
-
-
-
-(autoload 'cider-selector "cider-selector" "\
-Select a new buffer by type, indicated by a single character.
-The user is prompted for a single character indicating the method by
-which to choose a new buffer.  The `?' character describes the
-available methods.  OTHER-WINDOW provides an optional target.
-See `def-cider-selector-method' for defining new methods.
-
-\(fn &optional OTHER-WINDOW)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-selector" '("??" "?c" "?d" "?e" "?m" "?p" "?q" "?r" "?s" "?x" "cider-selector-" "def-cider-selector-method")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-stacktrace" '("cider-")))
-
-
-
-(defvar cider-auto-test-mode nil "\
-Non-nil if Cider-Auto-Test mode is enabled.
-See the `cider-auto-test-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `cider-auto-test-mode'.")
-
-(custom-autoload 'cider-auto-test-mode "cider-test" nil)
-
-(autoload 'cider-auto-test-mode "cider-test" "\
-Toggle automatic testing of Clojure files.
-
-If called interactively, enable Cider-Auto-Test mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-When enabled this reruns tests every time a Clojure file is loaded.
-Only runs tests corresponding to the loaded file's namespace and does
-nothing if no tests are defined or if the file failed to load.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-test" '("cider-")))
-
-
-
-(autoload 'cider-toggle-trace-var "cider-tracing" "\
-Toggle var tracing.
-Prompts for the symbol to use, or uses the symbol at point, depending on
-the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
-opposite of what that option dictates.
-
-\(fn ARG)" t nil)
-
-(autoload 'cider-toggle-trace-ns "cider-tracing" "\
-Toggle ns tracing.
-Defaults to the current ns.  With prefix arg QUERY, prompts for a ns.
-
-\(fn QUERY)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-tracing" '("cider-")))
-
-
-
-(autoload 'cider-view-manual "cider-util" "\
-View the manual in your default browser." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-util" '("cider-")))
-
-
-
-(autoload 'cider-xref-fn-refs "cider-xref" "\
-Show all functions that reference the var matching NS and SYMBOL.
-
-\(fn &optional NS SYMBOL)" t nil)
-
-(autoload 'cider-xref-fn-deps "cider-xref" "\
-Show all functions referenced by the var matching NS and SYMBOL.
-
-\(fn &optional NS SYMBOL)" t nil)
-
-(autoload 'cider-xref-fn-refs-select "cider-xref" "\
-Displays the references for NS and SYMBOL using completing read.
-
-\(fn &optional NS SYMBOL)" t nil)
-
-(autoload 'cider-xref-fn-deps-select "cider-xref" "\
-Displays the function dependencies for  NS and SYMBOL using completing read.
-
-\(fn &optional NS SYMBOL)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-xref" '("cider-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nrepl-client" '("cider-enlighten-mode" "nrepl-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nrepl-dict" '("nrepl-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el") (car load-path))))
-
-
-(autoload 'macrostep-mode "macrostep" "\
-Minor mode for inline expansion of macros in Emacs Lisp source buffers.
-
-\\<macrostep-keymap>Progressively expand macro forms with \\[macrostep-expand], collapse them with \\[macrostep-collapse],
-and move back and forth with \\[macrostep-next-macro] and \\[macrostep-prev-macro].
-Use \\[macrostep-collapse-all] or collapse all visible expansions to
-quit and return to normal editing.
-
-\\{macrostep-keymap}
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'macrostep-expand "macrostep" "\
-Expand the macro form following point by one step.
-
-Enters `macrostep-mode' if it is not already active, making the
-buffer temporarily read-only. If macrostep-mode is active and the
-form following point is not a macro form, search forward in the
-buffer and expand the next macro form found, if any.
-
-With a prefix argument, the expansion is displayed in a separate
-buffer instead of inline in the current buffer.  Setting
-`macrostep-expand-in-separate-buffer' to non-nil swaps these two
-behaviors.
-
-\(fn &optional TOGGLE-SEPARATE-BUFFER)" t nil)
-
-
-
-(autoload 'macrostep-c-mode-hook "macrostep-c" "\
-
-
-\(fn)" nil nil)
-
-(add-hook 'c-mode-hook #'macrostep-c-mode-hook)
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/slime-20200810.224/slime-autoloads.el"))
-
-
-
-
-
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/slime-20200810.224/slime-autoloads.el") (car load-path))))
-
-(autoload 'slime "slime"
-  "Start a Lisp subprocess and connect to its Swank server." t)
-
-(autoload 'slime-mode "slime"
-  "SLIME: The Superior Lisp Interaction (Minor) Mode for Emacs." t)
-
-(autoload 'slime-connect "slime"
-  "Connect to a running Swank server." t)
-
-(autoload 'slime-selector "slime"
-  "Select a new by type, indicated by a single character." t)
-
-(autoload 'hyperspec-lookup "lib/hyperspec" nil t)
-
-(autoload 'slime-lisp-mode-hook "slime")
-
-(autoload 'slime-scheme-mode-hook "slime")
-
-(defvar slime-contribs '(slime-fancy)
-  "A list of contrib packages to load with SLIME.")
-
-(autoload 'slime-setup "slime"
-  "Setup some SLIME contribs.")
-
-(define-obsolete-variable-alias 'slime-setup-contribs
-  'slime-contribs "2.3.2")
-
-(add-hook 'lisp-mode-hook 'slime-lisp-mode-hook)
-
-(provide 'slime-autoloads)
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime" '("??" "?c" "?d" "?e" "?i" "?l" "?n" "?p" "?q" "?t" "?v" "def-slime-selector-method" "define-sl" "defslimefun" "inferior-lisp-program" "make-slime-" "sldb-" "slime")))
-
-
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime-tests" '("arglist" "async-eval-debugging" "break" "comp" "def-slime-test" "dis" "end-of-file" "find-definition" "flow-control" "indentation" "inspector" "inter" "locally-bound-debugger-hook" "loop-interrupt-" "macroexpand" "narrowing" "read" "report-condition-with-circular-list" "sbcl-world-lock" "sexp-at-point.1" "symbol-at-point." "traditional-recipe" "unwind-to-previous-sldb-level" "utf-8-source")))
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20200928.1424/symex-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20200928.1424/symex-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20210113.1943/symex-autoloads.el") (car load-path))))
 
 
 
@@ -7043,6 +5602,10 @@ features." t nil)
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-arc" '("symex-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-clojure" '("symex-")))
 
 
@@ -7063,7 +5626,7 @@ features." t nil)
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-e")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-")))
 
 
 
@@ -7134,10 +5697,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/list-utils-20200502.1309/list-utils-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/list-utils-20210111.1522/list-utils-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/list-utils-20200502.1309/list-utils-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/list-utils-20210111.1522/list-utils-autoloads.el") (car load-path))))
 
 
 
@@ -7988,6 +6551,63 @@ Get the base directory for the current user's video files." nil nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/spinner-1.7.3/spinner-autoloads.el"))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/spinner-1.7.3/spinner-autoloads.el") (car load-path))))
+
+
+(autoload 'spinner-create "spinner" "\
+Create a spinner of the given TYPE.
+The possible TYPEs are described in `spinner--type-to-frames'.
+
+FPS, if given, is the number of desired frames per second.
+Default is `spinner-frames-per-second'.
+
+If BUFFER-LOCAL is non-nil, the spinner will be automatically
+deactivated if the buffer is killed.  If BUFFER-LOCAL is a
+buffer, use that instead of current buffer.
+
+When started, in order to function properly, the spinner runs a
+timer which periodically calls `force-mode-line-update' in the
+curent buffer.  If BUFFER-LOCAL was set at creation time, then
+`force-mode-line-update' is called in that buffer instead.  When
+the spinner is stopped, the timer is deactivated.
+
+DELAY, if given, is the number of seconds to wait after starting
+the spinner before actually displaying it. It is safe to cancel
+the spinner before this time, in which case it won't display at
+all.
+
+\(fn &optional TYPE BUFFER-LOCAL FPS DELAY)" nil nil)
+
+(autoload 'spinner-start "spinner" "\
+Start a mode-line spinner of given TYPE-OR-OBJECT.
+If TYPE-OR-OBJECT is an object created with `make-spinner',
+simply activate it.  This method is designed for minor modes, so
+they can use the spinner as part of their lighter by doing:
+    \\='(:eval (spinner-print THE-SPINNER))
+To stop this spinner, call `spinner-stop' on it.
+
+If TYPE-OR-OBJECT is anything else, a buffer-local spinner is
+created with this type, and it is displayed in the
+`mode-line-process' of the buffer it was created it.  Both
+TYPE-OR-OBJECT and FPS are passed to `make-spinner' (which see).
+To stop this spinner, call `spinner-stop' in the same buffer.
+
+Either way, the return value is a function which can be called
+anywhere to stop this spinner.  You can also call `spinner-stop'
+in the same buffer where the spinner was created.
+
+FPS, if given, is the number of desired frames per second.
+Default is `spinner-frames-per-second'.
+
+DELAY, if given, is the number of seconds to wait until actually
+displaying the spinner. It is safe to cancel the spinner before
+this time, in which case it won't display at all.
+
+\(fn &optional TYPE-OR-OBJECT FPS DELAY)" nil nil)
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/speed-type-20191204.1107/speed-type-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8026,10 +6646,10 @@ Setup a new text sample to practice touch or speed typing." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20200913.2046/solarized-theme-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20210112.1050/solarized-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20200913.2046/solarized-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20210112.1050/solarized-theme-autoloads.el") (car load-path))))
 
 
 
@@ -8190,6 +6810,102 @@ Add support for a language not already in the `smart-tabs-insinuate-alist'.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el"))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el") (car load-path))))
+
+
+(autoload 'macrostep-mode "macrostep" "\
+Minor mode for inline expansion of macros in Emacs Lisp source buffers.
+
+\\<macrostep-keymap>Progressively expand macro forms with \\[macrostep-expand], collapse them with \\[macrostep-collapse],
+and move back and forth with \\[macrostep-next-macro] and \\[macrostep-prev-macro].
+Use \\[macrostep-collapse-all] or collapse all visible expansions to
+quit and return to normal editing.
+
+\\{macrostep-keymap}
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'macrostep-expand "macrostep" "\
+Expand the macro form following point by one step.
+
+Enters `macrostep-mode' if it is not already active, making the
+buffer temporarily read-only. If macrostep-mode is active and the
+form following point is not a macro form, search forward in the
+buffer and expand the next macro form found, if any.
+
+With a prefix argument, the expansion is displayed in a separate
+buffer instead of inline in the current buffer.  Setting
+`macrostep-expand-in-separate-buffer' to non-nil swaps these two
+behaviors.
+
+\(fn &optional TOGGLE-SEPARATE-BUFFER)" t nil)
+
+
+
+(autoload 'macrostep-c-mode-hook "macrostep-c" "\
+
+
+\(fn)" nil nil)
+
+(add-hook 'c-mode-hook #'macrostep-c-mode-hook)
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/slime-20210105.2148/slime-autoloads.el"))
+
+
+
+
+
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/slime-20210105.2148/slime-autoloads.el") (car load-path))))
+
+(autoload 'slime "slime"
+  "Start a Lisp subprocess and connect to its Swank server." t)
+
+(autoload 'slime-mode "slime"
+  "SLIME: The Superior Lisp Interaction (Minor) Mode for Emacs." t)
+
+(autoload 'slime-connect "slime"
+  "Connect to a running Swank server." t)
+
+(autoload 'slime-selector "slime"
+  "Select a new by type, indicated by a single character." t)
+
+(autoload 'hyperspec-lookup "lib/hyperspec" nil t)
+
+(autoload 'slime-lisp-mode-hook "slime")
+
+(autoload 'slime-scheme-mode-hook "slime")
+
+(defvar slime-contribs '(slime-fancy)
+  "A list of contrib packages to load with SLIME.")
+
+(autoload 'slime-setup "slime"
+  "Setup some SLIME contribs.")
+
+(define-obsolete-variable-alias 'slime-setup-contribs
+  'slime-contribs "2.3.2")
+
+(add-hook 'lisp-mode-hook 'slime-lisp-mode-hook)
+
+(provide 'slime-autoloads)
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime" '("??" "?c" "?d" "?e" "?i" "?l" "?n" "?p" "?q" "?t" "?v" "def-slime-selector-method" "define-sl" "defslimefun" "inferior-lisp-program" "make-slime-" "sldb-" "slime")))
+
+
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime-tests" '("arglist" "async-eval-debugging" "break" "comp" "def-slime-test" "dis" "end-of-file" "find-definition" "flow-control" "indentation" "inspector" "inter" "locally-bound-debugger-hook" "loop-interrupt-" "macroexpand" "narrowing" "read" "report-condition-with-circular-list" "sbcl-world-lock" "sexp-at-point.1" "symbol-at-point." "traditional-recipe" "unwind-to-previous-sldb-level" "utf-8-source")))
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/simple-httpd-20191103.1446/simple-httpd-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8217,10 +6933,10 @@ Start the web server with given `directory' as `httpd-root'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20200725.112/js2-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20201220.1718/js2-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20200725.112/js2-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20201220.1718/js2-mode-autoloads.el") (car load-path))))
 
 
 
@@ -8662,6 +7378,89 @@ The input format is the same as that of `kbd'.")
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el") (car load-path))))
+
+
+
+(autoload 'sesman-start "sesman" "\
+Start a Sesman session." t nil)
+
+(autoload 'sesman-restart "sesman" "\
+Restart sesman session.
+When WHICH is nil, restart the current session; when a single universal
+argument or 'linked, restart all linked sessions; when a double universal
+argument, t or 'all, restart all sessions. For programmatic use, WHICH can also
+be a session or a name of the session, in which case that session is restarted.
+
+\(fn &optional WHICH)" t nil)
+
+(autoload 'sesman-quit "sesman" "\
+Terminate a Sesman session.
+When WHICH is nil, kill only the current session; when a single universal
+argument or 'linked, kill all linked sessions; when a double universal argument,
+t or 'all, kill all sessions. For programmatic use, WHICH can also be a session
+or a name of the session, in which case that session is killed.
+
+\(fn &optional WHICH)" t nil)
+
+(autoload 'sesman-info "sesman" "\
+Display info for all current sessions (`sesman-current-sessions').
+In the resulting minibuffer display linked sessions are numbered and the
+other (friendly) sessions are not. When ALL is non-nil, show info for all
+sessions.
+
+\(fn &optional ALL)" t nil)
+
+(autoload 'sesman-link-with-buffer "sesman" "\
+Ask for SESSION and link with BUFFER.
+BUFFER defaults to current buffer. On universal argument, or if BUFFER is 'ask,
+ask for buffer.
+
+\(fn &optional BUFFER SESSION)" t nil)
+
+(autoload 'sesman-link-with-directory "sesman" "\
+Ask for SESSION and link with DIR.
+DIR defaults to `default-directory'. On universal argument, or if DIR is 'ask,
+ask for directory.
+
+\(fn &optional DIR SESSION)" t nil)
+
+(autoload 'sesman-link-with-project "sesman" "\
+Ask for SESSION and link with PROJECT.
+PROJECT defaults to current project. On universal argument, or if PROJECT is
+'ask, ask for the project. SESSION defaults to the current session.
+
+\(fn &optional PROJECT SESSION)" t nil)
+
+(autoload 'sesman-link-with-least-specific "sesman" "\
+Ask for SESSION and link with the least specific context available.
+Normally the least specific context is the project. If not in a project, link
+with the `default-directory'. If `default-directory' is nil, link with current
+buffer.
+
+\(fn &optional SESSION)" t nil)
+
+(autoload 'sesman-unlink "sesman" "\
+Break any of the previously created links." t nil)
+ (autoload 'sesman-map "sesman" "Session management prefix keymap." t 'keymap)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman" '("sesman-")))
+
+
+
+(autoload 'sesman-browser "sesman-browser" "\
+Display an interactive session browser.
+See `sesman-browser-mode' for more details." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman-browser" '("sesman-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20200805.1840/edit-indirect-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8748,6 +7547,63 @@ Special commands:
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el") (car load-path))))
+
+
+
+(autoload 'quick-peek-overlay-at "quick-peek" "\
+Find overlay for line at POS.
+
+\(fn POS)" nil nil)
+
+(autoload 'quick-peek-show "quick-peek" "\
+Show STR in an inline window at POS.
+MIN-H (default: 4) and MAX-H (default: 16) are bounds on the
+height of the window.  Setting MAX-H to `none' allows the inline
+window to expand past the bottom of the current Emacs window.
+
+\(fn STR &optional POS MIN-H MAX-H)" nil nil)
+
+(autoload 'quick-peek-hide "quick-peek" "\
+Hide inline windows.
+With non-nil POS, clear only overlays on line of POS.
+Return the number of overlays hidden.
+
+\(fn &optional POS)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "quick-peek" '("quick-peek-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/scrollable-quick-peek-20201224.329/scrollable-quick-peek-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/scrollable-quick-peek-20201224.329/scrollable-quick-peek-autoloads.el") (car load-path))))
+
+
+
+(autoload 'scrollable-quick-peek-scroll-up "scrollable-quick-peek" "\
+Scroll up in the currently displayed overlay." t nil)
+
+(autoload 'scrollable-quick-peek-scroll-down "scrollable-quick-peek" "\
+Scroll down in the currently displayed overlay." t nil)
+
+(autoload 'scrollable-quick-peek-show "scrollable-quick-peek" "\
+Show STR in an inline scrollable window at POS.
+MIN-H (default: 4) and MAX-H (default: 16) are passed directly to
+`quick-peek'. `quick-peek' also accepts a `'none' option for MIN-H
+and MAX-H but these will not get passed given these don't make
+sense for `scrollale-quick-peek'.
+
+\(fn STR &optional POS MIN-H MAX-H)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "scrollable-quick-peek" '("scrollable-quick-peek")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/scratch-comment-20200812.1025/scratch-comment-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8821,1186 +7677,10 @@ instead.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-core-20200905.1311/helm-core-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/rfc-mode-20201121.544/rfc-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-core-20200905.1311/helm-core-autoloads.el") (car load-path))))
-
-
-
-(autoload 'helm-configuration "helm" "\
-Customize Helm." t nil)
-
-(autoload 'helm-define-multi-key "helm" "\
-In KEYMAP, define key sequence KEY for function list FUNCTIONS.
-Each function runs sequentially for each KEY press.
-If DELAY is specified, switch back to initial function of FUNCTIONS list
-after DELAY seconds.
-The functions in FUNCTIONS list take no args.
-E.g.
-    (defun foo ()
-      (interactive)
-      (message \"Run foo\"))
-    (defun bar ()
-      (interactive)
-      (message \"Run bar\"))
-    (defun baz ()
-      (interactive)
-      (message \"Run baz\"))
-
-\(helm-define-multi-key global-map (kbd \"<f5> q\") '(foo bar baz) 2)
-
-Each time \"<f5> q\" is pressed, the next function is executed.
-Waiting more than 2 seconds between key presses switches back to
-executing the first function on the next hit.
-
-\(fn KEYMAP KEY FUNCTIONS &optional DELAY)" nil nil)
-
-(autoload 'helm-multi-key-defun "helm" "\
-Define NAME as a multi-key command running FUNS.
-After DELAY seconds, the FUNS list is reinitialized.
-See `helm-define-multi-key'.
-
-\(fn NAME DOCSTRING FUNS &optional DELAY)" nil t)
-
-(function-put 'helm-multi-key-defun 'lisp-indent-function '2)
-
-(autoload 'helm-define-key-with-subkeys "helm" "\
-Define in MAP a KEY and SUBKEY to COMMAND.
-
-This allows typing KEY to call COMMAND the first time and
-type only SUBKEY on subsequent calls.
-
-Arg MAP is the keymap to use, SUBKEY is the initial short
-key binding to call COMMAND.
-
-Arg OTHER-SUBKEYS is an alist specifying other short key bindings
-to use once started, e.g.:
-
-    (helm-define-key-with-subkeys global-map
-       (kbd \"C-x v n\") ?n 'git-gutter:next-hunk
-       '((?p . git-gutter:previous-hunk)))
-
-In this example, `C-x v n' will run `git-gutter:next-hunk'
-subsequent \"n\" will run this command again and subsequent \"p\"
-will run `git-gutter:previous-hunk'.
-
-If specified PROMPT can be displayed in minibuffer to describe
-SUBKEY and OTHER-SUBKEYS.  Arg EXIT-FN specifies a function to run
-on exit.
-
-For any other key pressed, run their assigned command as defined
-in MAP and then exit the loop running EXIT-FN, if specified.
-
-NOTE: SUBKEY and OTHER-SUBKEYS bindings support only char syntax
-and vectors, so don't use strings to define them.
-
-\(fn MAP KEY SUBKEY COMMAND &optional OTHER-SUBKEYS PROMPT EXIT-FN)" nil nil)
-
-(function-put 'helm-define-key-with-subkeys 'lisp-indent-function '1)
-
-(autoload 'helm-debug-open-last-log "helm" "\
-Open Helm log file or buffer of last Helm session." t nil)
-
-(autoload 'helm "helm" "\
-Main function to execute helm sources.
-
-PLIST is a list like
-
-\(:key1 val1 :key2 val2 ...)
-
- or
-
-\(&optional sources input prompt resume preselect
-            buffer keymap default history allow-nest).
-
-** Keywords
-
-Keywords supported:
-
-- :sources
-- :input
-- :prompt
-- :resume
-- :preselect
-- :buffer
-- :keymap
-- :default
-- :history
-- :allow-nest
-
-Extra LOCAL-VARS keywords are supported, see the \"** Other
-keywords\" section below.
-
-Basic keywords are the following:
-
-*** :sources
-
-One of the following:
-
-- List of sources
-- Symbol whose value is a list of sources
-- Alist representing a Helm source.
-  - In this case the source has no name and is referenced in
-    `helm-sources' as a whole alist.
-
-*** :input
-
-Initial input of minibuffer (temporary value of `helm-pattern')
-
-*** :prompt
-
-Minibuffer prompt. Default value is `helm--prompt'.
-
-*** :resume
-
-If t, allow resumption of the previous session of this Helm
-command, skipping initialization.
-
-If 'noresume, this instance of `helm' cannot be resumed.
-
-*** :preselect
-
-Initially selected candidate (string or regexp).
-
-*** :buffer
-
-Buffer name for this Helm session. `helm-buffer' will take this value.
-
-*** :keymap
-
-\[Obsolete]
-
-Keymap used at the start of this Helm session.
-
-It is overridden by keymaps specified in sources, and is kept
-only for backward compatibility.
-
-Keymaps should be specified in sources using the :keymap slot
-instead. See `helm-source'.
-
-This keymap is not restored by `helm-resume'.
-
-*** :default
-
-Default value inserted into the minibuffer with
-\\<minibuffer-local-map>\\[next-history-element].
-
-It can be a string or a list of strings, in this case
-\\<minibuffer-local-map>\\[next-history-element] cycles through
-the list items, starting with the first.
-
-If nil, `thing-at-point' is used.
-
-If `helm-maybe-use-default-as-input' is non-nil, display is
-updated using this value if this value matches, otherwise it is
-ignored. If :input is specified, it takes precedence on :default.
-
-*** :history
-
-Minibuffer input, by default, is pushed to `minibuffer-history'.
-
-When an argument HISTORY is provided, input is pushed to
-HISTORY. HISTORY should be a valid symbol.
-
-*** :allow-nest
-
-Allow running this Helm command in a running Helm session.
-
-** Other keywords
-
-Other keywords are interpreted as local variables of this Helm
-session. The `helm-' prefix can be omitted. For example,
-
-\(helm :sources 'helm-source-buffers-list
-       :buffer \"*helm buffers*\"
-       :candidate-number-limit 10)
-
-Starts a Helm session with the variable
-`helm-candidate-number-limit' set to 10.
-
-** Backward compatibility
-
-For backward compatibility, positional parameters are
-supported:
-
-\(helm sources input prompt resume preselect
-       buffer keymap default history allow-nest)
-
-However, the use of non-keyword args is deprecated.
-
-\(fn &key SOURCES INPUT PROMPT RESUME PRESELECT BUFFER KEYMAP DEFAULT HISTORY ALLOW-NEST OTHER-LOCAL-VARS)" nil nil)
-
-(autoload 'helm-cycle-resume "helm" "\
-Cycle in `helm-buffers' list and resume when waiting more than 1.2s." t nil)
-
-(autoload 'helm-other-buffer "helm" "\
-Simplified Helm interface with other `helm-buffer'.
-Call `helm' only with SOURCES and BUFFER as args.
-
-\(fn SOURCES BUFFER)" nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm" '("helm-" "with-helm-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-lib" '("helm-" "with-helm-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-multi-match" '("helm-m")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-source" '("helm-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-20200910.1036/helm-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-20200910.1036/helm-autoloads.el") (car load-path))))
-
-
-
-(defvar helm-adaptive-mode nil "\
-Non-nil if Helm-Adaptive mode is enabled.
-See the `helm-adaptive-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-adaptive-mode'.")
-
-(custom-autoload 'helm-adaptive-mode "helm-adaptive" nil)
-
-(autoload 'helm-adaptive-mode "helm-adaptive" "\
-Toggle adaptive sorting in all sources.
-
-If called interactively, enable Helm-Adaptive mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'helm-reset-adaptive-history "helm-adaptive" "\
-Delete all `helm-adaptive-history' and his file.
-Useful when you have a old or corrupted
-`helm-adaptive-history-file'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-adaptive" '("helm-adapt")))
-
-
-
-(autoload 'helm-bookmarks "helm-bookmark" "\
-Preconfigured `helm' for bookmarks." t nil)
-
-(autoload 'helm-filtered-bookmarks "helm-bookmark" "\
-Preconfigured `helm' for bookmarks (filtered by category).
-Optional source `helm-source-bookmark-addressbook' is loaded only
-if external addressbook-bookmark package is installed." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-bookmark" '("bmkext-jump-" "bookmark" "helm-")))
-
-
-
-(autoload 'helm-buffers-list "helm-buffers" "\
-Preconfigured `helm' to list buffers." t nil)
-
-(autoload 'helm-mini "helm-buffers" "\
-Preconfigured `helm' displaying `helm-mini-default-sources'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-buffers" '("helm-")))
-
-
-
-(autoload 'helm-colors "helm-color" "\
-Preconfigured `helm' for color." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-color" '("helm-")))
-
-
-
-(autoload 'helm-comint-prompts "helm-comint" "\
-Pre-configured `helm' to browse the prompts of the current comint buffer." t nil)
-
-(autoload 'helm-comint-prompts-all "helm-comint" "\
-Pre-configured `helm' to browse the prompts of all comint sessions." t nil)
-
-(autoload 'helm-comint-input-ring "helm-comint" "\
-Preconfigured `helm' that provide completion of `comint' history." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-comint" '("helm-")))
-
-
-
-(autoload 'helm-M-x "helm-command" "\
-Preconfigured `helm' for Emacs commands.
-It is `helm' replacement of regular `M-x'
-`execute-extended-command'.
-
-Unlike regular `M-x' Emacs vanilla `execute-extended-command'
-command, the prefix args if needed, can be passed AFTER starting
-`helm-M-x'.  When a prefix arg is passed BEFORE starting
-`helm-M-x', the first `C-u' while in `helm-M-x' session will
-disable it.
-
-You can get help on each command by persistent action.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-command" '("helm-")))
-
-
-
-(autoload 'helm-dabbrev "helm-dabbrev" "\
-Preconfigured helm for dynamic abbreviations." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-dabbrev" '("helm-dabbrev-")))
-
-
-
-(autoload 'helm-lisp-completion-at-point "helm-elisp" "\
-Preconfigured Helm for Lisp symbol completion at point." t nil)
-
-(autoload 'helm-complete-file-name-at-point "helm-elisp" "\
-Preconfigured Helm to complete file name at point.
-
-\(fn &optional FORCE)" t nil)
-
-(autoload 'helm-lisp-indent "helm-elisp" nil t nil)
-
-(autoload 'helm-lisp-completion-or-file-name-at-point "helm-elisp" "\
-Preconfigured Helm to complete Lisp symbol or filename at point.
-Filename completion happens if string start after or between a
-double quote." t nil)
-
-(autoload 'helm-apropos "helm-elisp" "\
-Preconfigured Helm to describe commands, functions, variables and faces.
-In non interactives calls DEFAULT argument should be provided as
-a string, i.e. the `symbol-name' of any existing symbol.
-
-\(fn DEFAULT)" t nil)
-
-(autoload 'helm-manage-advice "helm-elisp" "\
-Preconfigured `helm' to disable/enable function advices." t nil)
-
-(autoload 'helm-locate-library "helm-elisp" "\
-Preconfigured helm to locate elisp libraries." t nil)
-
-(autoload 'helm-timers "helm-elisp" "\
-Preconfigured `helm' for timers." t nil)
-
-(autoload 'helm-complex-command-history "helm-elisp" "\
-Preconfigured `helm' for complex command history." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-elisp" '("helm-" "with-helm-show-completion")))
-
-
-
-(autoload 'helm-list-elisp-packages "helm-elisp-package" "\
-Preconfigured `helm' for listing and handling Emacs packages.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-list-elisp-packages-no-fetch "helm-elisp-package" "\
-Preconfigured Helm for Emacs packages.
-
-Same as `helm-list-elisp-packages' but don't fetch packages on
-remote.  Called with a prefix ARG always fetch packages on
-remote.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-elisp-package" '("helm-")))
-
-
-
-(autoload 'helm-esh-pcomplete "helm-eshell" "\
-Preconfigured `helm' to provide Helm completion in Eshell." t nil)
-
-(autoload 'helm-eshell-history "helm-eshell" "\
-Preconfigured Helm for Eshell history." t nil)
-
-(autoload 'helm-eshell-prompts "helm-eshell" "\
-Pre-configured `helm' to browse the prompts of the current Eshell." t nil)
-
-(autoload 'helm-eshell-prompts-all "helm-eshell" "\
-Pre-configured `helm' to browse the prompts of all Eshell sessions." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-eshell" '("helm-e")))
-
-
-
-(autoload 'helm-eval-expression "helm-eval" "\
-Preconfigured `helm' for `helm-source-evaluation-result'.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-eval-expression-with-eldoc "helm-eval" "\
-Preconfigured `helm' for `helm-source-evaluation-result' with `eldoc' support." t nil)
-
-(autoload 'helm-calcul-expression "helm-eval" "\
-Preconfigured `helm' for `helm-source-calculation-result'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-eval" '("helm-")))
-
-
-
-(autoload 'helm-run-external-command "helm-external" "\
-Preconfigured `helm' to run External PROGRAM asyncronously from Emacs.
-If program is already running exit with error.
-You can set your own list of commands with
-`helm-external-commands-list'.
-
-\(fn PROGRAM)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-external" '("helm-")))
-
-
-
-(defvar helm-ff-cache-mode nil "\
-Non-nil if Helm-Ff-Cache mode is enabled.
-See the `helm-ff-cache-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-ff-cache-mode'.")
-
-(custom-autoload 'helm-ff-cache-mode "helm-files" nil)
-
-(autoload 'helm-ff-cache-mode "helm-files" "\
-Auto refresh `helm-find-files' cache when emacs is idle.
-
-If called interactively, enable Helm-Ff-Cache mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-You probably don't want to start this mode directly.  Instead you
-should customize `helm-ff-keep-cached-candidates' to a non nil
-value to enable it.
-
-With `helm-ff-keep-cached-candidates' set to a nil value the mode
-will disable itself.
-
-When Emacs is idle, refresh the cache all the
-`helm-ff-refresh-cache-delay' seconds then stop when done or after
-`helm-ff-cache-mode-max-idle-time' if emacs is still idle.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'helm-projects-history "helm-files" "\
-
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-browse-project "helm-files" "\
-Preconfigured helm to browse projects.
-Browse files and see status of project with its VCS.
-Only HG and GIT are supported for now.
-Fall back to `helm-browse-project-find-files' if current
-directory is not under control of one of those VCS.
-With a prefix ARG browse files recursively, with two prefix ARG
-rebuild the cache.
-If the current directory is found in the cache, start
-`helm-browse-project-find-files' even with no prefix ARG.
-NOTE: The prefix ARG have no effect on the VCS controlled
-directories.
-
-Needed dependencies for VCS:
-<https://github.com/emacs-helm/helm-ls-git>
-and
-<https://github.com/emacs-helm/helm-ls-hg>.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-find-files "helm-files" "\
-Preconfigured `helm' for helm implementation of `find-file'.
-Called with a prefix arg show history if some.
-Don't call it from programs, use `helm-find-files-1' instead.
-This is the starting point for nearly all actions you can do on
-files.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-delete-tramp-connection "helm-files" "\
-Allow deleting tramp connection or marked tramp connections at once.
-
-This replace `tramp-cleanup-connection' which is partially broken
-in Emacs < to 25.1.50.1 (See Emacs Bug#24432).
-
-It allows additionally to delete more than one connection at
-once." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-files" '("eshell-command-aliases-list" "helm-")))
-
-
-
-(autoload 'helm-find "helm-find" "\
-Preconfigured `helm' for the find shell command.
-
-Recursively find files whose names are matched by all specified
-globbing PATTERNs under the current directory using the external
-program specified in `find-program' (usually \"find\").  Every
-input PATTERN is silently wrapped into two stars: *PATTERN*.
-
-With prefix argument, prompt for a directory to search.
-
-When user option `helm-findutils-search-full-path' is non-nil,
-match against complete paths, otherwise, against file names
-without directory part.
-
-The (possibly empty) list of globbing PATTERNs can be followed by
-the separator \"*\" plus any number of additional arguments that
-are passed to \"find\" literally.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-find" '("helm-")))
-
-
-
-(autoload 'helm-select-xfont "helm-font" "\
-Preconfigured `helm' to select Xfont." t nil)
-
-(autoload 'helm-ucs "helm-font" "\
-Preconfigured `helm' for `ucs-names'.
-
-Called with a prefix arg force reloading cache.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-font" '("helm-")))
-
-
-
-(autoload 'helm-for-files "helm-for-files" "\
-Preconfigured `helm' for opening files.
-Run all sources defined in `helm-for-files-preferred-list'." t nil)
-
-(autoload 'helm-multi-files "helm-for-files" "\
-Preconfigured helm like `helm-for-files' but running locate only on demand.
-
-Allow toggling back and forth from locate to others sources with
-`helm-multi-files-toggle-locate-binding' key.
-This avoids launching locate needlessly when what you are
-searching for is already found." t nil)
-
-(autoload 'helm-recentf "helm-for-files" "\
-Preconfigured `helm' for `recentf'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-for-files" '("helm-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-global-bindings" '("helm-")))
-
-
-
-(autoload 'helm-goto-precedent-file "helm-grep" "\
-Go to previous file in Helm grep/etags buffers." t nil)
-
-(autoload 'helm-goto-next-file "helm-grep" "\
-Go to previous file in Helm grep/etags buffers." t nil)
-
-(autoload 'helm-do-grep-ag "helm-grep" "\
-Preconfigured `helm' for grepping with AG in `default-directory'.
-With prefix arg prompt for type if available with your AG
-version.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-grep-do-git-grep "helm-grep" "\
-Preconfigured `helm' for git-grepping `default-directory'.
-With a prefix arg ARG git-grep the whole repository.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-grep" '("helm-")))
-
-
-
-(autoload 'helm-documentation "helm-help" "\
-Preconfigured `helm' for Helm documentation.
-With a prefix arg refresh the documentation.
-
-Find here the documentation of all documented sources." t nil)
-
-(defvar helm-comp-read-mode-line "\\<helm-comp-read-map>C/\\[helm-cr-empty-string]:Empty \\<helm-map>\\[helm-help]:Help \\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf")
-
-(defvar helm-read-file-name-mode-line-string "\\<helm-read-file-map>\\[helm-help]:Help C/\\[helm-cr-empty-string]:Empty \\<helm-map>\\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf" "\
-String displayed in mode-line in `helm-source-find-files'.")
-
-(defvar helm-top-mode-line "\\<helm-top-map>\\[helm-help]:Help \\<helm-map>\\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf")
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-help" '("helm-")))
-
-
-
-(autoload 'helm-gid "helm-id-utils" "\
-Preconfigured `helm' for `gid' command line of `ID-Utils'.
-Need A database created with the command `mkid' above
-`default-directory'.
-Need id-utils as dependency which provide `mkid', `gid' etc..
-See <https://www.gnu.org/software/idutils/>." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-id-utils" '("helm-gid-")))
-
-
-
-(autoload 'helm-imenu "helm-imenu" "\
-Preconfigured `helm' for `imenu'." t nil)
-
-(autoload 'helm-imenu-in-all-buffers "helm-imenu" "\
-Preconfigured `helm' for fetching imenu entries in all buffers with similar mode as current.
-A mode is similar as current if it is the same, it is derived
-i.e. `derived-mode-p' or it have an association in
-`helm-imenu-all-buffer-assoc'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-imenu" '("helm-")))
-
-
-
-(autoload 'helm-info "helm-info" "\
-Preconfigured `helm' for searching Info files' indices.
-
-With a prefix argument \\[universal-argument], set REFRESH to
-non-nil.
-
-Optional parameter REFRESH, when non-nil, re-evaluates
-`helm-default-info-index-list'.  If the variable has been
-customized, set it to its saved value.  If not, set it to its
-standard value. See `custom-reevaluate-setting' for more.
-
-REFRESH is useful when new Info files are installed.  If
-`helm-default-info-index-list' has not been customized, the new
-Info files are made available.
-
-\(fn &optional REFRESH)" t nil)
-
-(autoload 'helm-info-at-point "helm-info" "\
-Preconfigured `helm' for searching info at point." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-info" '("helm-")))
-
-
-
-(autoload 'helm-projects-find-files "helm-locate" "\
-Find files with locate in `helm-locate-project-list'.
-With a prefix arg refresh the database in each project.
-
-\(fn UPDATE)" t nil)
-
-(autoload 'helm-locate "helm-locate" "\
-Preconfigured `helm' for Locate.
-Note: you can add locate options after entering pattern.
-See 'man locate' for valid options and also `helm-locate-command'.
-
-You can specify a local database with prefix argument ARG.
-With two prefix arg, refresh the current local db or create it if
-it doesn't exists.
-
-To create a user specific db, use
-\"updatedb -l 0 -o db_path -U directory\".
-Where db_path is a filename matched by
-`helm-locate-db-file-regexp'.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-locate" '("helm-")))
-
-
-
-(autoload 'helm-man-woman "helm-man" "\
-Preconfigured `helm' for Man and Woman pages.
-With a prefix arg reinitialize the cache.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-man" '("helm-")))
-
-
-
-(autoload 'helm-world-time "helm-misc" "\
-Preconfigured `helm' to show world time.
-Default action change TZ environment variable locally to emacs." t nil)
-
-(autoload 'helm-insert-latex-math "helm-misc" "\
-Preconfigured helm for latex math symbols completion." t nil)
-
-(autoload 'helm-ratpoison-commands "helm-misc" "\
-Preconfigured `helm' to execute ratpoison commands." t nil)
-
-(autoload 'helm-stumpwm-commands "helm-misc" "\
-Preconfigured helm for stumpwm commands." t nil)
-
-(autoload 'helm-minibuffer-history "helm-misc" "\
-Preconfigured `helm' for `minibuffer-history'." t nil)
-
-(defvar helm-epa-mode nil "\
-Non-nil if Helm-Epa mode is enabled.
-See the `helm-epa-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-epa-mode'.")
-
-(custom-autoload 'helm-epa-mode "helm-misc" nil)
-
-(autoload 'helm-epa-mode "helm-misc" "\
-Enable helm completion on gpg keys in epa functions.
-
-If called interactively, enable Helm-Epa mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'helm-epa-list-keys "helm-misc" "\
-List all gpg keys.
-This is the helm interface for `epa-list-keys'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-misc" '("helm-")))
-
-
-
-(autoload 'helm-comp-read "helm-mode" "\
-Read a string in the minibuffer, with helm completion.
-
-It is helm `completing-read' equivalent.
-
-- PROMPT is the prompt name to use.
-
-- COLLECTION can be a list, vector, obarray or hash-table.
-  It can be also a function that receives three arguments:
-  the values string, predicate and t. See `all-completions' for more details.
-
-Keys description:
-
-- TEST: A predicate called with one arg i.e candidate.
-
-- INITIAL-INPUT: Same as input arg in `helm'.
-
-- PRESELECT: See preselect arg of `helm'.
-
-- DEFAULT: This option is used only for compatibility with regular
-  Emacs `completing-read' (Same as DEFAULT arg of `completing-read').
-
-- BUFFER: Name of helm-buffer.
-
-- MUST-MATCH: Candidate selected must be one of COLLECTION.
-
-- FUZZY: Enable fuzzy matching.
-
-- REVERSE-HISTORY: When non--nil display history source after current
-  source completion.
-
-- REQUIRES-PATTERN: Same as helm attribute, default is 0.
-
-- HISTORY: A list containing specific history, default is nil.
-  When it is non--nil, all elements of HISTORY are displayed in
-  a special source before COLLECTION.
-
-- INPUT-HISTORY: A symbol. The minibuffer input history will be
-  stored there, if nil or not provided, `minibuffer-history'
-  will be used instead.
-
-- CASE-FOLD: Same as `helm-case-fold-search'.
-
-- DEL-INPUT: Boolean, when non--nil (default) remove the partial
-  minibuffer input from HISTORY is present.
-
-- PERSISTENT-ACTION: A function called with one arg i.e candidate.
-
-- PERSISTENT-HELP: A string to document PERSISTENT-ACTION.
-
-- MODE-LINE: A string or list to display in mode line.
-  Default is `helm-comp-read-mode-line'.
-
-- KEYMAP: A keymap to use in this `helm-comp-read'.
-  (the keymap will be shared with history source)
-
-- NAME: The name related to this local source.
-
-- HEADER-NAME: A function to alter NAME, see `helm'.
-
-- EXEC-WHEN-ONLY-ONE: Bound `helm-execute-action-at-once-if-one'
-  to non--nil. (possibles values are t or nil).
-
-- VOLATILE: Use volatile attribute.
-
-- SORT: A predicate to give to `sort' e.g `string-lessp'
-  Use this only on small data as it is inefficient.
-  If you want to sort faster add a sort function to
-  FC-TRANSFORMER.
-  Note that FUZZY when enabled is already providing a sort function.
-
-- FC-TRANSFORMER: A `filtered-candidate-transformer' function
-  or a list of functions.
-
-- HIST-FC-TRANSFORMER: A `filtered-candidate-transformer'
-  function for the history source.
-
-- MARKED-CANDIDATES: If non--nil return candidate or marked candidates as a list.
-
-- NOMARK: When non--nil don't allow marking candidates.
-
-- ALISTP: (default is non--nil) See `helm-comp-read-get-candidates'.
-
-- CANDIDATES-IN-BUFFER: when non--nil use a source build with
-  `helm-source-in-buffer' which is much faster.
-  Argument VOLATILE have no effect when CANDIDATES-IN-BUFFER is non--nil.
-
-- MATCH-PART: Allow matching only one part of candidate.
-  See match-part documentation in `helm-source'.
-
-- MATCH-DYNAMIC: See match-dynamic in `helm-source-sync'
-  It has no effect when used with CANDIDATES-IN-BUFFER.
-
-- ALLOW-NEST: Allow nesting this `helm-comp-read' in a helm session.
-  See `helm'.
-
-- MULTILINE: See multiline in `helm-source'.
-
-- COERCE: See coerce in `helm-source'.
-
-- GROUP: See group in `helm-source'.
-
-Any prefix args passed during `helm-comp-read' invocation will be recorded
-in `helm-current-prefix-arg', otherwise if prefix args were given before
-`helm-comp-read' invocation, the value of `current-prefix-arg' will be used.
-That means you can pass prefix args before or after calling a command
-that use `helm-comp-read'.  See `helm-M-x' for example.
-
-\(fn PROMPT COLLECTION &key TEST INITIAL-INPUT DEFAULT PRESELECT (BUFFER \"*Helm Completions*\") MUST-MATCH FUZZY REVERSE-HISTORY (REQUIRES-PATTERN 0) HISTORY INPUT-HISTORY (CASE-FOLD helm-comp-read-case-fold-search) (DEL-INPUT t) (PERSISTENT-ACTION nil) (PERSISTENT-HELP \"DoNothing\") (MODE-LINE helm-comp-read-mode-line) HELP-MESSAGE (KEYMAP helm-comp-read-map) (NAME \"Helm Completions\") HEADER-NAME CANDIDATES-IN-BUFFER MATCH-PART MATCH-DYNAMIC EXEC-WHEN-ONLY-ONE QUIT-WHEN-NO-CAND (VOLATILE t) SORT FC-TRANSFORMER HIST-FC-TRANSFORMER (MARKED-CANDIDATES helm-comp-read-use-marked) NOMARK (ALISTP t) (CANDIDATE-NUMBER-LIMIT helm-candidate-number-limit) MULTILINE ALLOW-NEST COERCE (GROUP \\='helm))" nil nil)
-
-(autoload 'helm-read-file-name "helm-mode" "\
-Read a file name with helm completion.
-It is helm `read-file-name' emulation.
-
-Argument PROMPT is the default prompt to use.
-
-Keys description:
-
-- NAME: Source name, default to \"Read File Name\".
-
-- INITIAL-INPUT: Where to start reading file name, default to `default-directory'.
-
-- BUFFER: `helm-buffer' name, defaults to \"*Helm Completions*\".
-
-- TEST: A predicate called with one arg 'candidate'.
-
-- NORET: Allow disabling helm-ff-RET (have no effect if helm-ff-RET
-                                      isn't bound to RET).
-
-- CASE-FOLD: Same as `helm-case-fold-search'.
-
-- PRESELECT: helm preselection.
-
-- HISTORY: Display HISTORY in a special source.
-
-- MUST-MATCH: Can be 'confirm, nil, or t.
-
-- FUZZY: Enable fuzzy matching when non-nil (Enabled by default).
-
-- MARKED-CANDIDATES: When non--nil return a list of marked candidates.
-
-- NOMARK: When non--nil don't allow marking candidates.
-
-- ALISTP: Don't use `all-completions' in history (take effect only on history).
-
-- PERSISTENT-ACTION-IF: a persistent if action function.
-
-- PERSISTENT-HELP: persistent help message.
-
-- MODE-LINE: A mode line message, default is `helm-read-file-name-mode-line-string'.
-
-\(fn PROMPT &key (NAME \"Read File Name\") (INITIAL-INPUT default-directory) (BUFFER \"*Helm file completions*\") TEST NORET (CASE-FOLD helm-file-name-case-fold-search) PRESELECT HISTORY MUST-MATCH (FUZZY t) DEFAULT MARKED-CANDIDATES (CANDIDATE-NUMBER-LIMIT helm-ff-candidate-number-limit) NOMARK (ALISTP t) (PERSISTENT-ACTION-IF \\='helm-find-files-persistent-action-if) (PERSISTENT-HELP \"Hit1 Expand Candidate, Hit2 or (C-u) Find file\") (MODE-LINE helm-read-file-name-mode-line-string))" nil nil)
-
-(defvar helm-mode nil "\
-Non-nil if Helm mode is enabled.
-See the `helm-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-mode'.")
-
-(custom-autoload 'helm-mode "helm-mode" nil)
-
-(autoload 'helm-mode "helm-mode" "\
-Toggle generic helm completion.
-
-All functions in Emacs that use `completing-read',
-`read-file-name', `completion-in-region' and friends will use helm
-interface when this mode is turned on.
-
-However you can modify this behavior for functions of your choice
-with `helm-completing-read-handlers-alist'.
-
-Called with a positive arg, turn on unconditionally, with a
-negative arg turn off.
-You can toggle it with M-x `helm-mode'.
-
-About `ido-mode':
-DO NOT enable `ido-everywhere' when using `helm-mode'.  Instead of
-using `ido-mode', add the commands where you want to use ido to
-`helm-completing-read-handlers-alist' with `ido' as value.
-
-Note: This mode is incompatible with Emacs23.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-mode" '("helm-")))
-
-
-
-(autoload 'helm-browse-url-firefox "helm-net" "\
-Same as `browse-url-firefox' but detach from Emacs.
-
-So when you quit Emacs you can keep your Firefox session open and
-not be prompted to kill the Firefox process.
-
-NOTE: Probably not supported on some systems (e.g., Windows).
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-browse-url-opera "helm-net" "\
-Browse URL with Opera browser and detach from Emacs.
-
-So when you quit Emacs you can keep your Opera session open and
-not be prompted to kill the Opera process.
-
-NOTE: Probably not supported on some systems (e.g., Windows).
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-browse-url-chromium "helm-net" "\
-Browse URL with Google Chrome browser.
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-browse-url-uzbl "helm-net" "\
-Browse URL with uzbl browser.
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-browse-url-conkeror "helm-net" "\
-Browse URL with conkeror browser.
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-browse-url-next "helm-net" "\
-Browse URL with next browser.
-
-\(fn URL &optional IGNORE)" t nil)
-
-(autoload 'helm-surfraw "helm-net" "\
-Preconfigured `helm' to search PATTERN with search ENGINE.
-
-\(fn PATTERN ENGINE)" t nil)
-
-(autoload 'helm-google-suggest "helm-net" "\
-Preconfigured `helm' for Google search with Google suggest." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-net" '("helm-")))
-
-
-
-(autoload 'helm-occur "helm-occur" "\
-Preconfigured helm for searching lines matching pattern in `current-buffer'.
-
-When `helm-source-occur' is member of
-`helm-sources-using-default-as-input' which is the default,
-symbol at point is searched at startup.
-
-When a region is marked search only in this region by narrowing.
-
-To search in multiples buffers start from one of the commands listing
-buffers (i.e. a helm command using `helm-source-buffers-list' like
-`helm-mini') and use the multi occur buffers action.
-
-This is the helm implementation that collect lines matching pattern
-like vanilla Emacs `occur' but have nothing to do with it, the search
-engine beeing completely different and also much faster." t nil)
-
-(autoload 'helm-occur-visible-buffers "helm-occur" "\
-Run helm-occur on all visible buffers in frame." t nil)
-
-(autoload 'helm-occur-from-isearch "helm-occur" "\
-Invoke `helm-occur' from isearch.
-
-To use this bind it to a key in `isearch-mode-map'." t nil)
-
-(autoload 'helm-multi-occur-from-isearch "helm-occur" "\
-Invoke `helm-multi-occur' from isearch.
-
-With a prefix arg, reverse the behavior of
-`helm-moccur-always-search-in-current'.
-The prefix arg can be set before calling
-`helm-multi-occur-from-isearch' or during the buffer selection.
-
-To use this bind it to a key in `isearch-mode-map'." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-occur" '("helm-")))
-
-
-
-(autoload 'helm-regexp "helm-regexp" "\
-Preconfigured helm to build regexps.
-`query-replace-regexp' can be run from there against found regexp." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-regexp" '("helm-")))
-
-
-
-(autoload 'helm-mark-ring "helm-ring" "\
-Preconfigured `helm' for `helm-source-mark-ring'." t nil)
-
-(autoload 'helm-global-mark-ring "helm-ring" "\
-Preconfigured `helm' for `helm-source-global-mark-ring'." t nil)
-
-(autoload 'helm-all-mark-rings "helm-ring" "\
-Preconfigured `helm' for `helm-source-global-mark-ring' and `helm-source-mark-ring'." t nil)
-
-(autoload 'helm-register "helm-ring" "\
-Preconfigured `helm' for Emacs registers." t nil)
-
-(autoload 'helm-show-kill-ring "helm-ring" "\
-Preconfigured `helm' for `kill-ring'.
-It is drop-in replacement of `yank-pop'.
-
-First call open the kill-ring browser, next calls move to next line." t nil)
-
-(autoload 'helm-execute-kmacro "helm-ring" "\
-Preconfigured helm for keyboard macros.
-Define your macros with `f3' and `f4'.
-See (info \"(emacs) Keyboard Macros\") for detailed infos.
-This command is useful when used with persistent action." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-ring" '("helm-")))
-
-
-
-(autoload 'helm-semantic "helm-semantic" "\
-Preconfigured `helm' for `semantic'.
-If ARG is supplied, pre-select symbol at point instead of current.
-
-\(fn ARG)" t nil)
-
-(autoload 'helm-semantic-or-imenu "helm-semantic" "\
-Preconfigured helm for `semantic' or `imenu'.
-If ARG is supplied, pre-select symbol at point instead of current
-semantic tag in scope.
-
-If `semantic-mode' is active in the current buffer, then use
-semantic for generating tags, otherwise fall back to `imenu'.
-Fill in the symbol at point by default.
-
-\(fn ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-semantic" '("helm-s")))
-
-
-
-(defalias 'helm-shell-prompts 'helm-comint-prompts)
-
-(defalias 'helm-shell-prompts-all 'helm-comint-prompts-all)
-
-
-
-(defvar helm-top-poll-mode nil "\
-Non-nil if Helm-Top-Poll mode is enabled.
-See the `helm-top-poll-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-top-poll-mode'.")
-
-(custom-autoload 'helm-top-poll-mode "helm-sys" nil)
-
-(autoload 'helm-top-poll-mode "helm-sys" "\
-Refresh automatically helm top buffer once enabled.
-
-If called interactively, enable Helm-Top-Poll mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'helm-top "helm-sys" "\
-Preconfigured `helm' for top command." t nil)
-
-(autoload 'helm-list-emacs-process "helm-sys" "\
-Preconfigured `helm' for Emacs process." t nil)
-
-(autoload 'helm-xrandr-set "helm-sys" "\
-Preconfigured helm for xrandr." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-sys" '("helm-")))
-
-
-
-(autoload 'helm-etags-select "helm-tags" "\
-Preconfigured helm for etags.
-If called with a prefix argument REINIT
-or if any of the tag files have been modified, reinitialize cache.
-
-This function aggregates three sources of tag files:
-
-  1) An automatically located file in the parent directories,
-     by `helm-etags-get-tag-file'.
-  2) `tags-file-name', which is commonly set by `find-tag' command.
-  3) `tags-table-list' which is commonly set by `visit-tags-table' command.
-
-\(fn REINIT)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-tags" '("helm-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-types" '("helm-")))
-
-
-
-(defvar helm-popup-tip-mode nil "\
-Non-nil if Helm-Popup-Tip mode is enabled.
-See the `helm-popup-tip-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `helm-popup-tip-mode'.")
-
-(custom-autoload 'helm-popup-tip-mode "helm-utils" nil)
-
-(autoload 'helm-popup-tip-mode "helm-utils" "\
-Show help-echo informations in a popup tip at end of line.
-
-If called interactively, enable Helm-Popup-Tip mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-utils" '("helm-" "with-helm-display-marked-candidates")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-x-files" '("helm-")))
-
-
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/rfc-mode-20201005.809/rfc-mode-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/rfc-mode-20201005.809/rfc-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/rfc-mode-20201121.544/rfc-mode-autoloads.el") (car load-path))))
 
 
 
@@ -10011,7 +7691,7 @@ Offer the number at point as default.
 \(fn NUMBER)" t nil)
 
 (autoload 'rfc-mode-browse "rfc-mode" "\
-Browse through all RFC documents referenced in the index using Helm." t nil)
+Browse through all RFC documents referenced in the index." t nil)
 
 (autoload 'rfc-mode "rfc-mode" "\
 Major mode to browse and read RFC documents.
@@ -10041,10 +7721,10 @@ In a dired buffer, it will open the current directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20200927.1310/reveal-in-folder-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20201224.1242/reveal-in-folder-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20200927.1310/reveal-in-folder-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20201224.1242/reveal-in-folder-autoloads.el") (car load-path))))
 
 
 
@@ -10061,10 +7741,10 @@ Reveal buffer/path depends on cursor condition." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/request-20201018.1607/request-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/request-20201026.2324/request-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20201018.1607/request-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20201026.2324/request-autoloads.el") (car load-path))))
 
 
 
@@ -10105,34 +7785,577 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el") (car load-path))))
 
 
 
-(autoload 'quick-peek-overlay-at "quick-peek" "\
-Find overlay for line at POS.
+(autoload 'faceup-view-buffer "faceup" "\
+Display the faceup representation of the current buffer.
 
-\(fn POS)" nil nil)
+\(fn)" t nil)
 
-(autoload 'quick-peek-show "quick-peek" "\
-Show STR in an inline window at POS.
-MIN-H (default: 4) and MAX-H (default: 16) are bounds on the
-height of the window.  Setting MAX-H to `none' allows the inline
-window to expand past the bottom of the current Emacs window.
+(autoload 'faceup-write-file "faceup" "\
+Save the faceup representation of the current buffer to the file FILE-NAME.
 
-\(fn STR &optional POS MIN-H MAX-H)" nil nil)
+Unless a name is given, the file will be named xxx.faceup, where
+xxx is the file name associated with the buffer.
 
-(autoload 'quick-peek-hide "quick-peek" "\
-Hide inline windows.
-With non-nil POS, clear only overlays on line of POS.
-Return the number of overlays hidden.
+If optional second arg CONFIRM is non-nil, this function
+asks for confirmation before overwriting an existing file.
+Interactively, confirmation is required unless you supply a prefix argument.
 
-\(fn &optional POS)" t nil)
+\(fn &optional FILE-NAME CONFIRM)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "quick-peek" '("quick-peek-")))
+(autoload 'faceup-render-view-buffer "faceup" "\
+Convert BUFFER containing Faceup markup to a new buffer and display it.
+
+\(fn &optional BUFFER)" t nil)
+
+(autoload 'faceup-clean-buffer "faceup" "\
+Remove faceup markup from buffer.
+
+\(fn)" t nil)
+
+(autoload 'faceup-defexplainer "faceup" "\
+Defines an Ert explainer function for FUNCTION.
+
+FUNCTION must return an explanation when the test fails and
+`faceup-test-explain' is set.
+
+\(fn FUNCTION)" nil t)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "faceup" '("faceup-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pos-tip" '("pos-tip-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20210110.1607/racket-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20210110.1607/racket-mode-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-url")))
+
+
+
+(autoload 'racket-bug-report "racket-bug-report" "\
+Fill a buffer with data to make a Racket Mode bug report." t nil)
+
+
+
+(autoload 'racket-start-back-end "racket-cmd" "\
+Start the back end process used by Racket Mode.
+
+If the process is already started, this command will stop and restart it." t nil)
+
+(autoload 'racket-stop-back-end "racket-cmd" "\
+Stop the back end process used by Racket Mode.
+
+If the process is not already started, this does nothing." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-collection" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-common" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-complete" '("racket--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-custom" '("defface-racket" "racket-")))
+
+
+
+(autoload 'racket--debug-send-definition "racket-debug" "\
+
+
+\(fn BEG END)" nil nil)
+
+(autoload 'racket--debug-on-break "racket-debug" "\
+
+
+\(fn RESPONSE)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-debug" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-describe" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-doc" '("racket--")))
+
+
+
+(add-to-list 'hs-special-modes-alist '(racket-mode "(" ")" ";" nil nil))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-edit" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-eldoc" '("racket--do-eldoc")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-font-lock" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-imenu" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-indent" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-keywords-and-builtins" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-logger" '("racket-")))
+
+
+
+(autoload 'racket-mode "racket-mode" "\
+Major mode for editing Racket source files.
+
+\\{racket-mode-map}
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . racket-mode))
+
+(add-to-list 'auto-mode-alist '("\\.rktd\\'" . racket-mode))
+
+(add-to-list 'auto-mode-alist '("\\.rktl\\'" . racket-mode))
+
+(modify-coding-system-alist 'file "\\.rkt[dl]?\\'" 'utf-8)
+
+(add-to-list 'interpreter-mode-alist '("racket" . racket-mode))
+
+(autoload 'racket-mode-start-faster "racket-mode" "\
+Compile Racket Mode's .rkt files for faster startup.
+
+Racket Mode is implemented as an Emacs Lisp \"front end\" that
+talks to a Racket process \"back end\". Because Racket Mode is
+delivered as an Emacs package instead of a Racket package,
+installing it does not do the `raco setup` that is normally done
+for Racket packages.
+
+This command will do a `raco make` of Racket Mode's .rkt files,
+creating bytecode files in `compiled/` subdirectories. As a
+result, when a `racket-run' or `racket-repl' command must start
+the Racket process, it will start faster.
+
+If you run this command, ever, you should run it again after:
+
+- Installing an updated version of Racket Mode. Otherwise, you
+  might lose some of the speed-up.
+
+- Installing a new version of Racket and/or changing the value of
+  the variable `racket-program'. Otherwise, you might get an
+  error message due to the bytecode being different versions." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-mode" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-parens" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-ppss" '("racket--ppss-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-profile" '("racket-")))
+
+
+
+(autoload 'racket-repl "racket-repl" "\
+Show a Racket REPL buffer in some window.
+
+*IMPORTANT*
+
+The main, intended use of Racket Mode's REPL is that you
+`find-file' some specific .rkt file, then `racket-run' it. The
+REPL will then match that file.
+
+If the REPL isn't running, and you want to start it for no file
+in particular? Then you could use this command. But the resulting
+REPL will have a minimal \"#lang racket/base\" namespace. You
+could enter \"(require racket)\" if you want the equivalent of
+\"#lang racket\". You could also \"(require racket/enter)\" if
+you want things like \"enter!\". But in some sense you'd be
+\"using it wrong\". If you really don't want to use Racket Mode's
+REPL as intended, then you might as well use a plain Emacs shell
+buffer to run command-line Racket.
+
+\(fn &optional NOSELECT)" t nil)
+
+(autoload 'racket-run "racket-repl" "\
+Save the buffer in REPL and run your program.
+
+As well as evaluating the outermost, file module, automatically
+runs the submodules specified by the customization variable
+`racket-submodules-to-run'.
+
+See also `racket-run-module-at-point', which runs just the
+specific module at point.
+
+With \\[universal-argument] uses errortrace for improved stack traces.
+Otherwise follows the `racket-error-context' setting.
+
+With \\[universal-argument] \\[universal-argument] instruments
+code for step debugging. See `racket-debug-mode' and the variable
+`racket-debuggable-files'.
+
+Each run occurs within a Racket custodian. Any prior run's
+custodian is shut down, releasing resources like threads and
+ports. Each run's evaluation environment is reset to the contents
+of the source file. In other words, like Dr Racket, this provides
+the benefit that your source file is the \"single source of
+truth\". At the same time, the run gives you a REPL inside the
+namespace of the module, giving you the ability to explore it
+interactively. Any explorations are temporary, unless you also
+make them to your source file, they will be lost on the next run.
+
+See also `racket-run-and-switch-to-repl', which is even more like
+Dr Racket's Run command because it selects the REPL window after
+running.
+
+In the `racket-repl-mode' buffer, output that describes a file
+and position is automatically \"linkified\". Examples of such
+text include:
+
+- Racket error messages.
+- rackunit test failure location messages.
+- print representation of path objects.
+
+To visit these locations, move point there and press RET or mouse
+click. Or, use the standard `next-error' and `previous-error'
+commands.
+
+\(fn &optional PREFIX)" t nil)
+
+(autoload 'racket-run-module-at-point "racket-repl" "\
+Save the buffer and run the module at point.
+
+Like `racket-run' but runs the innermost module around point,
+which is determined textually by looking for \"module\",
+\"module*\", or \"module+\" forms nested to any depth, else
+simply the outermost, file module.
+
+\(fn &optional PREFIX)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl" '("racket-" "with-racket-repl-buffer")))
+
+
+
+(autoload 'racket-repl-buffer-name-shared "racket-repl-buffer-name" "\
+All `racket-mode' edit buffers share one `racket-repl-mode' buffer.
+
+A value for the variable `racket-repl-buffer-name-function'." t nil)
+
+(autoload 'racket-repl-buffer-name-unique "racket-repl-buffer-name" "\
+Each `racket-mode' edit buffer gets its own `racket-repl-mode' buffer.
+
+A value for the variable `racket-repl-buffer-name-function'." t nil)
+
+(autoload 'racket-repl-buffer-name-project "racket-repl-buffer-name" "\
+All `racket-mode' buffers in a project share a `racket-repl-mode' buffer.
+
+A value for the variable `racket-repl-buffer-name-function'.
+
+The \"project\" is determined by `racket-project-root'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl-buffer-name" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-show" '("racket-")))
+
+
+
+(autoload 'racket-smart-open-bracket-mode "racket-smart-open" "\
+Minor mode to let you always type `[`' to insert `(` or `[` automatically.
+
+If called interactively, enable Racket-Smart-Open-Bracket mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+Behaves like the \"Automatically adjust opening square brackets\"
+feature in Dr. Racket.
+
+By default, inserts a `(`. Inserts a `[` in the following cases:
+
+  - `let`-like bindings -- forms with `let` in the name as well
+    as things like `parameterize`, `with-handlers`, and
+    `with-syntax`.
+
+  - `case`, `cond`, `match`, `syntax-case`, `syntax-parse`, and
+    `syntax-rules` clauses.
+
+  - `for`-like bindings and `for/fold` accumulators.
+
+  - `class` declaration syntax, such as `init` and `inherit`.
+
+When the previous s-expression in a sequence is a compound
+expression, uses the same kind of delimiter.
+
+To force insert `[`, use `quoted-insert'.
+
+Combined with `racket-insert-closing' this means that you can
+press the unshifted `[` and `]` keys to get whatever delimiters
+follow the Racket conventions for these forms. When something
+like `electric-pair-mode' or `paredit-mode' is active, you need
+not even press `]`.
+
+Tip: When also using `paredit-mode', enable that first so that
+the binding for the `[`' key in the map for
+`racket-smart-open-bracket-mode' has higher priority. See also
+the variable `minor-mode-map-alist'.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-smart-open" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-stepper" '("racket-")))
+
+
+
+(autoload 'racket-unicode-input-method-enable "racket-unicode-input-method" "\
+Set input method to racket-unicode.
+
+The racket-unicode input method lets you easily type various
+Unicode symbols that might be useful when writing Racket code.
+
+To automatically enable the racket-unicode input method in
+racket-mode and racket-repl-mode buffers, put the following code
+in your Emacs init file:
+
+#+BEGIN_SRC elisp
+    (add-hook 'racket-mode-hook #'racket-unicode-input-method-enable)
+    (add-hook 'racket-repl-mode-hook #'racket-unicode-input-method-enable)
+#+END_SRC
+
+To temporarily enable this input method for a single buffer you
+can use \"M-x racket-unicode-input-method-enable\".
+
+Use the standard Emacs key C-\\ to toggle the input method.
+
+When the racket-unicode input method is active, you can for
+example type \"All\" and it is immediately replaced with \"∀\". A
+few other examples:
+
+| omega     | ω                        |
+| x_1       | x₁                       |
+| x^1       | x¹                       |
+| A         | 𝔸                        |
+| test-->>E | test-->>∃ (racket/redex) |
+| vdash     | ⊢                        |
+
+To see a table of all key sequences use \"M-x
+describe-input-method <RET> racket-unicode\".
+
+If you want to add your own mappings to the \"racket-unicode\"
+input method, you may add code like the following example in your
+Emacs init file:
+
+#+BEGIN_SRC elisp
+    ;; Either (require 'racket-mode) here, or, if you use
+    ;; use-package, put the code below in the :config section.
+    (with-temp-buffer
+      (racket-unicode-input-method-enable)
+      (set-input-method \"racket-unicode\")
+      (let ((quail-current-package (assoc \"racket-unicode\"
+                                          quail-package-alist)))
+        (quail-define-rules ((append . t))
+                            (\"^o\" [\"ᵒ\"]))))
+#+END_SRC
+
+If you don’t like the highlighting of partially matching tokens you
+can turn it off by setting `input-method-highlight-flag' to nil." t nil)
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-util" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-visit" '("racket--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-wsl" '("racket-")))
+
+
+
+(autoload 'racket-xp-mode "racket-xp" "\
+A minor mode that analyzes expanded code to explain and explore.
+
+If called interactively, enable Racket-Xp mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+This minor mode is an optional enhancement to `racket-mode' edit
+buffers. Like any minor mode, you can turn it on or off for a
+specific buffer. If you always want to use it, put the following
+code in your Emacs init file:
+
+#+BEGIN_SRC elisp
+    (require 'racket-xp)
+    (add-hook 'racket-mode-hook #'racket-xp-mode)
+#+END_SRC
+
+Note: This mode won't do anything unless/until the Racket Mode
+back end is running. It will try to start the back end
+automatically. You do /not/ need to `racket-run' the buffer you
+are editing.
+
+This mode uses the drracket/check-syntax package to analyze
+fully-expanded programs, without needing to evaluate a.k.a.
+\"run\" them. The resulting analysis provides information for:
+
+- Visually annotating bindings -- local or imported definitions
+  and references to them.
+
+- Completion candidates.
+
+- Defintions' source and documentation.
+
+When point is on a definition or use, related items are
+highlighted using `racket-xp-def-face' and `racket-xp-use-face'
+-- instead of drawing arrows as in Dr Racket. Information is
+displayed using the function(s) in the hook variable
+`racket-show-functions'; it is also available when hovering the
+mouse cursor.
+
+Note: If you find these point-motion features too distracting
+and/or slow, in your `racket-xp-mode-hook' you may disable them:
+
+#+BEGIN_SRC elisp
+  (require 'racket-xp)
+  (add-hook 'racket-xp-mode-hook
+            (lambda ()
+              (remove-hook 'pre-redisplay-functions
+                           #'racket-xp-pre-redisplay
+                           t)))
+#+END_SRC
+
+The remaining features discussed below will still work.
+
+You may also use commands to navigate among a definition and its
+uses, or to rename a local definitions and all its uses.
+
+In the following little example, not only does
+drracket/check-syntax distinguish the various \"x\" bindings, it
+understands the two different imports of \"define\":
+
+#+BEGIN_SRC racket
+  #lang racket/base
+  (define x 1)
+  x
+  (let ([x x])
+    (+ x 1))
+  (module m typed/racket/base
+    (define x 2)
+    x)
+#+END_SRC
+
+The function `racket-xp-complete-at-point' is added to the
+variable `completion-at-point-functions'. Note that in this case,
+it is not smart about submodules; identifiers are assumed to be
+definitions from the file's module or its imports. In addition to
+supplying completion candidates, it supports the
+\":company-location\" property to inspect the definition of a
+candidate and the \":company-doc-buffer\" property to view its
+documentation.
+
+When you edit the buffer, existing annotations are retained;
+their positions are updated to reflect the edit. Annotations for
+new or deleted text are not requested until after
+`racket-xp-after-change-refresh-delay' seconds. The request is
+made asynchronously so that Emacs will not block -- for
+moderately complex source files, it can take some seconds simply
+to fully expand them, as well as a little more time for the
+drracket/check-syntax analysis. When the results are ready, all
+annotations for the buffer are completely refreshed.
+
+You may also set `racket-xp-after-change-refresh-delay' to nil
+and use the `racket-xp-annotate' command manually.
+
+The mode line changes to reflect the current status of
+annotations, and whether or not you had a syntax error.
+
+If you have one or more syntax errors, `racket-xp-next-error' and
+`racket-xp-previous-error' to navigate among them. Although most
+languages will stop after the first syntax error, some like Typed
+Racket will try to collect and report multiple errors.
+
+You may use `xref-find-definitions' \\[xref-find-definitions],
+`xref-pop-marker-stack' \\[xref-pop-marker-stack], and
+`xref-find-references': `racket-xp-mode' adds a backend to the
+variable `xref-backend-functions'. This backend uses information
+from the drracket/check-syntax static analysis. Its ability to
+find references is limited to the current file; when it finds
+none it will try the default xref backend implementation which is
+grep-based.
+
+Tip: This mode follows the convention that a minor mode may only
+use a prefix key consisting of \"C-c\" followed by a punctuation
+key. As a result, `racket-xp-control-c-hash-keymap' is bound to
+\"C-c #\" by default. Although you might find this awkward to
+type, remember that as an Emacs user, you are free to bind this
+map to a more convenient prefix, and/or bind any individual
+commands directly to whatever keys you prefer.
+
+\\{racket-xp-mode-map}
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-xp" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-xp-complete" '("racket-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/queue-0.2/queue-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/queue-0.2/queue-autoloads.el") (car load-path))))
 
 
 )
@@ -10155,30 +8378,12 @@ Deactivate python virtual environment." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20200608.737/python-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20201230.2132/python-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20200608.737/python-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20201230.2132/python-mode-autoloads.el") (car load-path))))
 
 
-
-(autoload 'py-backward-class "python-mode" "\
-Go to beginning of ‘class’.
-
-If already at beginning, go one ‘class’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
-
-(autoload 'py-backward-def "python-mode" "\
-Go to beginning of ‘def’.
-
-If already at beginning, go one ‘def’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
-
-(autoload 'py-backward-def-or-class "python-mode" "\
-Go to beginning of ‘def-or-class’.
-
-If already at beginning, go one ‘def-or-class’ backward.
-Return beginning of form if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-class-bol "python-mode" "\
 Go to beginning of ‘class’, go to BOL.
@@ -10261,7 +8466,7 @@ See available customizations listed in files variables-python-mode at directory 
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "eva" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ios" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pios" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-" "with-buffer-prepared-for-jit-lock")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-")))
 
 
 
@@ -10424,10 +8629,10 @@ Run PsySH interactive-shell in `BUFFER-NAME' and `PROCESS'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/project-shells-20191123.914/project-shells-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/project-shells-20201026.748/project-shells-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/project-shells-20191123.914/project-shells-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/project-shells-20201026.748/project-shells-autoloads.el") (car load-path))))
 
 
 
@@ -10452,14 +8657,16 @@ project-shells-setup.
 (autoload 'project-shells-mode "project-shells" "\
 Toggle Project-Shells mode on or off.
 
-If called interactively, enable Project-Shells mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Project-Shells mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \\{project-shells-mode-map}
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-project-shells-mode 'globalized-minor-mode t)
 
 (defvar global-project-shells-mode nil "\
 Non-nil if Global Project-Shells mode is enabled.
@@ -10618,10 +8825,10 @@ If buffer is not visiting a file, do nothing." nil nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/prettier-20200714.859/prettier-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/prettier-20201222.953/prettier-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/prettier-20200714.859/prettier-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/prettier-20201222.953/prettier-autoloads.el") (car load-path))))
 
 
 
@@ -10680,152 +8887,6 @@ See `prettier-mode' for more information on Prettier mode.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "prettier" '("prettier-")))
 
 
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20201009.946/posframe-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20201009.946/posframe-autoloads.el") (car load-path))))
-
-
-
-(autoload 'posframe-workable-p "posframe" "\
-Test posframe workable status." nil nil)
-
-(autoload 'posframe-show "posframe" "\
-Pop up a posframe and show STRING at POSITION.
-
-POSITION can be:
-1. An integer, meaning point position.
-2. A cons of two integers, meaning absolute X and Y coordinates.
-3. Other type, in which case the corresponding POSHANDLER should be
-   provided.
-
-POSHANDLER is a function of one argument returning an actual
-position.  Its argument is a plist of the following form:
-
-  (:position xxx
-   :position-info xxx
-   :poshandler xxx
-   :font-height xxx
-   :font-width xxx
-   :posframe xxx
-   :posframe-width xxx
-   :posframe-height xxx
-   :posframe-buffer xxx
-   :parent-frame xxx
-   :parent-window-left xxx
-   :parent-window-top xxx
-   :parent-frame-width xxx
-   :parent-frame-height xxx
-   :parent-window xxx
-   :parent-window-width  xxx
-   :parent-window-height xxx
-   :minibuffer-height
-   :mode-line-height
-   :header-line-height
-   :tab-line-height
-   :x-pixel-offset xxx
-   :y-pixel-offset xxx)
-
-By default, poshandler is auto-selected based on the type of POSITION,
-but the selection can be overridden using the POSHANDLER argument.
-The builtin poshandler functions are listed below:
-
-1.  `posframe-poshandler-frame-center'
-2.  `posframe-poshandler-frame-top-center'
-3.  `posframe-poshandler-frame-top-left-corner'
-4.  `posframe-poshandler-frame-top-right-corner'
-5.  `posframe-poshandler-frame-bottom-center'
-6.  `posframe-poshandler-frame-bottom-left-corner'
-7.  `posframe-poshandler-frame-bottom-right-corner'
-8.  `posframe-poshandler-window-center'
-9.  `posframe-poshandler-window-top-center'
-10. `posframe-poshandler-window-top-left-corner'
-11. `posframe-poshandler-window-top-right-corner'
-12. `posframe-poshandler-window-bottom-center'
-13. `posframe-poshandler-window-bottom-left-corner'
-14. `posframe-poshandler-window-bottom-right-corner'
-15. `posframe-poshandler-point-top-left-corner'
-16. `posframe-poshandler-point-bottom-left-corner'
-17. `posframe-poshandler-point-bottom-left-corner-upward'
-
-This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
-or a name of a (possibly nonexistent) buffer.
-
-If NO-PROPERTIES is non-nil, The STRING's properties will
-be removed before being shown in posframe.
-
-WIDTH, MIN-WIDTH, HEIGHT and MIN-HEIGHT, specify bounds on the
-new total size of posframe.  MIN-HEIGHT and MIN-WIDTH default to
-the values of ‘window-min-height’ and ‘window-min-width’
-respectively.  These arguments are specified in the canonical
-character width and height of posframe.
-
-If LEFT-FRINGE or RIGHT-FRINGE is a number, left fringe or
-right fringe with be shown with the specified width.
-
-By default, posframe shows no borders, but users can specify
-borders by setting INTERNAL-BORDER-WIDTH to a positive number.
-Border color can be specified by INTERNAL-BORDER-COLOR
-or via the ‘internal-border’ face.
-
-Posframe's font as well as foreground and background colors are
-derived from the current frame by default, but can be overridden
-using the FONT, FOREGROUND-COLOR and BACKGROUND-COLOR arguments,
-respectively.
-
-By default, posframe will display no header-line, mode-line and
-tab-line.  In case a header-line, mode-line or tab-line is
-desired, users can set RESPECT-HEADER-LINE, RESPECT-MODE-LINE or
-RESPECT-TAB-LINE to t.
-
-INITIALIZE is a function with no argument.  It will run when
-posframe buffer is first selected with `with-current-buffer'
-in `posframe-show', and only run once (for performance reasons).
-If INITIALIZE is nil, `posframe-default-initialize-function' will
-be used as fallback; this variable can be used to set posframe
-buffer gobally.
-
-If LINES-TRUNCATE is non-nil, then lines will truncate in the
-posframe instead of wrap.
-
-OVERRIDE-PARAMETERS is very powful, *all* the frame parameters
-used by posframe's frame can be overridden by it.
-
-TIMEOUT can specify the number of seconds after which the posframe
-will auto-hide.
-
-If REFRESH is a number, posframe's frame-size will be re-adjusted
-every REFRESH seconds.
-
-When ACCEPT-FOCUS is non-nil, posframe will accept focus.
-be careful, you may face some bugs when set it to non-nil.
-
-HIDEHANDLER is a function, when it return t, posframe will be
-hide when `post-command-hook' is executed, this function has a
-plist argument:
-
-  (:posframe-buffer xxx
-   :posframe-parent-buffer xxx)
-
-The builtin hidehandler functions are listed below:
-
-1. `posframe-hidehandler-when-buffer-switch'
-
-
-You can use `posframe-delete-all' to delete all posframes.
-
-\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE RESPECT-TAB-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER &allow-other-keys)" nil nil)
-
-(autoload 'posframe-hide-all "posframe" "\
-Hide all posframe frames." t nil)
-
-(autoload 'posframe-delete-all "posframe" "\
-Delete all posframe frames and buffers." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe" '("posframe-")))
 
 
 )
@@ -11136,10 +9197,10 @@ buffer, if 'message issue a message, if nil just return a list of values.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ansible-20201001.838/ansible-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ansible-20210103.543/ansible-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ansible-20201001.838/ansible-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ansible-20210103.543/ansible-autoloads.el") (car load-path))))
 
 
 
@@ -11266,10 +9327,10 @@ Major mode for editing pip requirements files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20200812.1129/php-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210103.1738/php-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20200812.1129/php-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210103.1738/php-mode-autoloads.el") (car load-path))))
 
 
 
@@ -11467,10 +9528,10 @@ Return path to current PHP project." nil nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/phpstan-20200807.1101/phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/phpstan-20201122.950/phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/phpstan-20200807.1101/phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/phpstan-20201122.950/phpstan-autoloads.el") (car load-path))))
 
 
 
@@ -12235,15 +10296,64 @@ See `rxt-mode' for more information on Rxt mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parse-it-20200720.1047/parse-it-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/a-20201203.1927/a-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parse-it-20200720.1047/parse-it-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/a-20201203.1927/a-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "a" '("a-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj" '("parseclj-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-ast" '("parseclj-ast-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-lex" '("parseclj-lex-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-parser" '("parseclj-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseedn-20200419.1124/parseedn-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseedn-20200419.1124/parseedn-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseedn" '("parseedn-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parse-it-20201103.1107/parse-it-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parse-it-20201103.1107/parse-it-autoloads.el") (car load-path))))
 
 
 
 (autoload 'parse-it "parse-it" "\
 Parse the PATH with symbol language LAN support.
+
+If optional argument is nil; then it will use current buffer instead.
 
 \(fn LAN &optional PATH)" nil nil)
 
@@ -12277,6 +10387,10 @@ Parse the PATH with symbol language LAN support.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-elisp" '("parse-it-elisp")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-go" '("parse-it-go")))
 
 
@@ -12302,6 +10416,10 @@ Parse the PATH with symbol language LAN support.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lex" '("parse-it-lex-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lisp" '("parse-it-lisp")))
 
 
 
@@ -12351,16 +10469,21 @@ Parse the PATH with symbol language LAN support.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/packed-20180318.1729/packed-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/packed-20180318.1729/packed-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/packed-20201120.2047/packed-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/packed-20201120.2047/packed-autoloads.el") (car load-path))))
+
 
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "packed" '("packed-")))
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/package-lint-20200906.512/package-lint-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/package-lint-20210111.341/package-lint-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/package-lint-20200906.512/package-lint-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/package-lint-20210111.341/package-lint-autoloads.el") (car load-path))))
 
 
 
@@ -12468,10 +10591,14 @@ See `origami-mode' for more information on Origami mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20201014.1607/csharp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210113.2130/csharp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20201014.1607/csharp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210113.2130/csharp-mode-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-compilation" '("csharp-")))
 
 
 
@@ -12493,11 +10620,25 @@ Key bindings:
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-mode" '("codedoc-font-lock-" "csharp-")))
 
 
+
+(autoload 'csharp-tree-sitter-mode "csharp-tree-sitter" "\
+Major mode for editing Csharp code.
+
+Key bindings:
+\\{csharp-tree-sitter-mode-map}
+
+\(fn)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-tree-sitter" '("csharp-")))
+
+
+
+
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/omnisharp-20201002.1600/omnisharp-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/omnisharp-20201220.906/omnisharp-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/omnisharp-20201002.1600/omnisharp-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/omnisharp-20201220.906/omnisharp-autoloads.el") (car load-path))))
 
 
 
@@ -12604,10 +10745,10 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20200919.949/notmuch-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20210113.1123/notmuch-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20200919.949/notmuch-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20210113.1123/notmuch-autoloads.el") (car load-path))))
 
 
 
@@ -12718,7 +10859,7 @@ not appear in the pop-up buffer.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("mm-shr" "notmuch-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("notmuch-")))
 
 
 
@@ -12875,10 +11016,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20200915.1537/nix-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20201229.138/nix-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20200915.1537/nix-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20201229.138/nix-mode-autoloads.el") (car load-path))))
 
 
 
@@ -13336,10 +11477,10 @@ Use the `names--inside-make-autoload' variable to indicate to
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20201018.538/multiple-cursors-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20201215.1559/multiple-cursors-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20201018.538/multiple-cursors-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20201215.1559/multiple-cursors-autoloads.el") (car load-path))))
 
 
 
@@ -13668,10 +11809,10 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20200514.1946/moody-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20210114.850/moody-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20200514.1946/moody-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20210114.850/moody-autoloads.el") (car load-path))))
 
 
 
@@ -13694,10 +11835,10 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/monkeytype-20201209.223/monkeytype-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/monkeytype-20210110.513/monkeytype-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/monkeytype-20201209.223/monkeytype-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/monkeytype-20210110.513/monkeytype-autoloads.el") (car load-path))))
 
 
 
@@ -13712,11 +11853,6 @@ Type marked region from START to END.
 Repeat run.
 
 \\[monkeytype-repeat]" t nil)
-
-(autoload 'monkeytype-dummy-text "monkeytype" "\
-Dummy text.
-
-\\[monkeytype-dummy-text]" t nil)
 
 (autoload 'monkeytype-fortune "monkeytype" "\
 Type fortune.
@@ -13808,6 +11944,22 @@ See: `monkeytype-save-mistyped-words' for how word-files are saved.
 
 \\[monkeytype-most-mistyped-words]" t nil)
 
+(autoload 'monkeytype-save-text-from-url "monkeytype" "\
+Download URL to `monketype-directory', naming it FILE-NAME.
+
+This function shells out to pandoc(1) which character-encodes in UTF-8
+so some characters might not be desirable for monkeytyping, so the custom
+`monkeytype-asciify' option has be given to optionally allow for
+further character encoding to ASCII (using iconv(1)).
+
+\(fn URL FILE-NAME)" t nil)
+
+(autoload 'monkeytype-toggle-mode-line "monkeytype" "\
+Hide or show WPM results in mode-line." t nil)
+
+(autoload 'monkeytype-wpm-peek "monkeytype" "\
+Hide/Show overlay with WPM info." t nil)
+
 (autoload 'monkeytype-mode "monkeytype" "\
 Monkeytype mode is a minor mode for speed/touch typing.
 
@@ -13824,10 +11976,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20191116.1107/eval-in-repl-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20201121.1341/eval-in-repl-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20191116.1107/eval-in-repl-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eval-in-repl-20201121.1341/eval-in-repl-autoloads.el") (car load-path))))
 
 
 
@@ -13943,7 +12095,7 @@ eval-in-repl for Scheme." t nil)
 (autoload 'eir-eval-in-shell "eval-in-repl-shell" "\
 eval-in-repl for shell." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-send-to-shell")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-")))
 
 
 
@@ -14066,10 +12218,10 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/markdown-mode-20201015.1327/markdown-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210112.1557/markdown-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/markdown-mode-20201015.1327/markdown-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210112.1557/markdown-mode-autoloads.el") (car load-path))))
 
 
 
@@ -14165,10 +12317,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20200828.1753/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210102.1242/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20200828.1753/git-commit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210102.1242/git-commit-autoloads.el") (car load-path))))
 
 
 
@@ -14206,10 +12358,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20201019.1115/magit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030/magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20201019.1115/magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030/magit-autoloads.el") (car load-path))))
 
 
 
@@ -14235,6 +12387,50 @@ running 'man git-rebase' at the command line) for details.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-rebase" '("git-rebase-")))
 
 
+
+(define-obsolete-variable-alias 'global-magit-file-mode 'magit-define-global-key-bindings "Magit 3.0.0")
+
+(defvar magit-define-global-key-bindings t "\
+Whether to bind some Magit commands in the global keymap.
+
+If this variable is non-nil, then the following bindings may
+be added to the global keymap.  The default is t.
+
+key             binding
+---             -------
+C-x g           magit-status
+C-x M-g         magit-dispatch
+C-c M-g         magit-file-dispatch
+
+These bindings may be added when `after-init-hook' is called.
+Each binding is added if and only if at that time no other key
+is bound to the same command and no other command is bound to
+the same key.  In other words we try to avoid adding bindings
+that are unnecessary, as well as bindings that conflict with
+other bindings.
+
+Adding the above bindings is delayed until `after-init-hook'
+is called to allow users to set the variable anywhere in their
+init file (without having to make sure to do so before `magit'
+is loaded or autoloaded) and to increase the likelihood that
+all the potentially conflicting user bindings have already
+been added.
+
+Setting this variable after the hook has already been called
+has no effect.
+
+We recommend that you bind \"C-c g\" instead of \"C-c M-g\" to
+`magit-file-dispatch'.  The former is a much better binding
+but the \"C-c <letter>\" namespace is strictly reserved for
+users; preventing Magit from using it by default.
+
+Also see info node `(magit)Commands for Buffers Visiting Files'.")
+
+(custom-autoload 'magit-define-global-key-bindings "magit" t)
+
+(defun magit-maybe-define-global-key-bindings nil (when magit-define-global-key-bindings (let ((map (current-global-map))) (dolist (elt '(("C-x g" . magit-status) ("C-x M-g" . magit-dispatch) ("C-c M-g" . magit-file-dispatch))) (let ((key (kbd (car elt))) (def (cdr elt))) (unless (or (lookup-key map key) (where-is-internal def (make-sparse-keymap) t)) (define-key map key def)))))))
+
+(if after-init-time (magit-maybe-define-global-key-bindings) (add-hook 'after-init-hook 'magit-maybe-define-global-key-bindings t))
  (autoload 'magit-dispatch "magit" nil t)
  (autoload 'magit-run "magit" nil t)
 
@@ -14355,11 +12551,11 @@ See `auto-revert-mode' for more information on Auto-Revert mode.
 Start a bisect session.
 
 Bisecting a bug means to find the commit that introduced it.
-This command starts such a bisect session by asking for a know
-good and a bad commit.  To move the session forward use the
+This command starts such a bisect session by asking for a known
+good and a known bad commit.  To move the session forward use the
 other actions from the bisect transient command (\\<magit-status-mode-map>\\[magit-bisect]).
 
-\(fn BAD GOOD)" t nil)
+\(fn BAD GOOD ARGS)" t nil)
 
 (autoload 'magit-bisect-reset "magit-bisect" "\
 After bisecting, cleanup bisection state and return to original `HEAD'." t nil)
@@ -14374,6 +12570,15 @@ While bisecting, mark the current commit as bad.
 Use this after you have asserted that the commit does contain the
 bug in question." t nil)
 
+(autoload 'magit-bisect-mark "magit-bisect" "\
+While bisecting, mark the current commit with a bisect term.
+During a bisect using alternate terms, commits can still be
+marked with `magit-bisect-good' and `magit-bisect-bad', as those
+commands map to the correct term (\"good\" to --term-old's value
+and \"bad\" to --term-new's).  However, in some cases, it can be
+difficult to keep that mapping straight in your head; this
+command provides an interface that exposes the underlying terms." t nil)
+
 (autoload 'magit-bisect-skip "magit-bisect" "\
 While bisecting, skip the current commit.
 Use this if for some reason the current commit is not a good one
@@ -14386,7 +12591,7 @@ Unlike `git bisect run' this can be used before bisecting has
 begun.  In that case it behaves like `git bisect start; git
 bisect run'.
 
-\(fn CMDLINE &optional BAD GOOD)" t nil)
+\(fn CMDLINE &optional BAD GOOD ARGS)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-bisect" '("magit-")))
 
@@ -14711,6 +12916,11 @@ that is you) or committer date is available as the previous
 history element.
 
 \(fn DATE)" t nil)
+
+(autoload 'magit-commit-absorb-modules "magit-commit" "\
+Spread modified modules across recent commits.
+
+\(fn PHASE COMMIT)" t nil)
  (autoload 'magit-commit-absorb "magit-commit" nil t)
  (autoload 'magit-commit-autofixup "magit-commit" nil t)
 
@@ -15089,8 +13299,12 @@ argument is used, then save the revision at its tip to the
 
 When the region is active, then save that to the `kill-ring',
 like `kill-ring-save' would, instead of behaving as described
-above.  If a prefix argument is used and the region is within a
-hunk, strip the outer diff marker column." t nil)
+above.  If a prefix argument is used and the region is within
+a hunk, then strip the diff marker column and keep only either
+the added or removed lines, depending on the sign of the prefix
+argument.
+
+\(fn ARG)" t nil)
 
 (autoload 'magit-copy-buffer-revision "magit-extras" "\
 Save the revision of the current buffer for later use.
@@ -15199,30 +13413,6 @@ the line and column corresponding to that location.
 
 \(fn REV FILE)" t nil)
  (autoload 'magit-file-dispatch "magit" nil t)
-
-(put 'global-magit-file-mode 'globalized-minor-mode t)
-
-(defvar global-magit-file-mode t "\
-Non-nil if Global Magit-File mode is enabled.
-See the `global-magit-file-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `global-magit-file-mode'.")
-
-(custom-autoload 'global-magit-file-mode "magit-files" nil)
-
-(autoload 'global-magit-file-mode "magit-files" "\
-Toggle Magit-File mode in all buffers.
-With prefix ARG, enable Global Magit-File mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
-
-Magit-File mode is enabled in all buffers where
-`magit-file-mode-turn-on' would do it.
-See `magit-file-mode' for more information on Magit-File mode.
-
-\(fn &optional ARG)" t nil)
 
 (autoload 'magit-blob-visit-file "magit-files" "\
 View the file from the worktree corresponding to the current blob.
@@ -15458,6 +13648,17 @@ https://github.com/mhagger/git-when-merged.
 Move to the Nth parent of the current commit.
 
 \(fn &optional N)" t nil)
+ (autoload 'magit-shortlog "magit-log" nil t)
+
+(autoload 'magit-shortlog-since "magit-log" "\
+Show a history summary for commits since REV.
+
+\(fn REV ARGS)" t nil)
+
+(autoload 'magit-shortlog-range "magit-log" "\
+Show a history summary for commit or range REV-OR-RANGE.
+
+\(fn REV-OR-RANGE ARGS)" t nil)
 
 (autoload 'magit-cherry "magit-log" "\
 Show commits in a branch that are not merged in the upstream branch.
@@ -15667,22 +13868,7 @@ Push a tag to another repository.
 Push a notes ref to another repository.
 
 \(fn REF REMOTE &optional ARGS)" t nil)
-
-(autoload 'magit-push-implicitly "magit-push" "\
-Push somewhere without using an explicit refspec.
-
-This command simply runs \"git push -v [ARGS]\".  ARGS are the
-arguments specified in the popup buffer.  No explicit refspec
-arguments are used.  Instead the behavior depends on at least
-these Git variables: `push.default', `remote.pushDefault',
-`branch.<branch>.pushRemote', `branch.<branch>.remote',
-`branch.<branch>.merge', and `remote.<remote>.push'.
-
-The function `magit-push-implicitly--desc' attempts to predict
-what this command will do.  The value it returns is displayed in
-the popup buffer.
-
-\(fn ARGS)" t nil)
+ (autoload 'magit-push-implicitly "magit-push" nil t)
 
 (autoload 'magit-push-to-remote "magit-push" "\
 Push to REMOTE without using an explicit refspec.
@@ -15863,7 +14049,7 @@ With a prefix argument reset the working tree otherwise don't.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-section" '("magit-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-section" '("isearch-clean-overlays@magit-mode" "magit-")))
 
 
 
@@ -16366,6 +14552,35 @@ See info node `(magit)Debugging Tools' for more information." t nil)
 
 
 
+(defvar magit-wip-mode nil "\
+Non-nil if Magit-Wip mode is enabled.
+See the `magit-wip-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `magit-wip-mode'.")
+
+(custom-autoload 'magit-wip-mode "magit-wip" nil)
+
+(autoload 'magit-wip-mode "magit-wip" "\
+Save uncommitted changes to work-in-progress refs.
+
+If called interactively, enable Magit-Wip mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+Whenever appropriate (i.e. when dataloss would be a possibility
+otherwise) this mode causes uncommitted changes to be committed
+to dedicated work-in-progress refs.
+
+For historic reasons this mode is implemented on top of four
+other `magit-wip-*' modes, which can also be used individually,
+if you want finer control over when the wip refs are updated;
+but that is discouraged.
+
+\(fn &optional ARG)" t nil)
+
 (put 'magit-wip-after-save-mode 'globalized-minor-mode t)
 
 (defvar magit-wip-after-save-mode nil "\
@@ -16551,14 +14766,14 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20200908.1021/magit-section-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631/magit-section-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20200908.1021/magit-section-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631/magit-section-autoloads.el") (car load-path))))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-section" '("magit-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-section" '("isearch-clean-overlays@magit-mode" "magit-")))
 
 
 
@@ -16596,10 +14811,10 @@ Limit patch to FILES, if non-nil.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-delta-20200929.1335/magit-delta-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-delta-20210104.1541/magit-delta-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-delta-20200929.1335/magit-delta-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-delta-20210104.1541/magit-delta-autoloads.el") (car load-path))))
 
 
 
@@ -16619,10 +14834,10 @@ https://github.com/dandavison/delta
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lua-mode-20200921.1745/lua-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lua-mode-20201110.1250/lua-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lua-mode-20200921.1745/lua-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lua-mode-20201110.1250/lua-mode-autoloads.el") (car load-path))))
 
 
 
@@ -16654,10 +14869,10 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20201018.509/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210113.2045/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20201018.509/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210113.2045/lsp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -16828,6 +15043,21 @@ Narrow to the symbol range on breadcrumb at SYMBOL-POSITION.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-icons" '("lsp-")))
+
+
+
+(autoload 'lsp-iedit-highlights "lsp-iedit" "\
+Start an `iedit' operation on the documentHighlights at point.
+This can be used as a primitive `lsp-rename' replacement if the
+language server doesn't support renaming.
+
+See also `lsp-enable-symbol-highlighting'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-iedit" '("lsp-iedit--on-ranges")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-javascript" '("lsp-")))
 
 
@@ -16839,6 +15069,9 @@ Narrow to the symbol range on breadcrumb at SYMBOL-POSITION.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-kotlin" '("lsp-")))
 
 
+
+(autoload 'lsp-lens--enable "lsp-lens" "\
+Enable lens mode." nil nil)
 
 (autoload 'lsp-lens-show "lsp-lens" "\
 Display lenses in the buffer." t nil)
@@ -16875,7 +15108,7 @@ When ARG is t the lsp mode will start new language server even if
 there is language server which can handle current language. When
 ARG is nil current file will be opened in multi folder language
 server if there is such. When `lsp' is called with prefix
-argument ask the user to select which language server to start. 
+argument ask the user to select which language server to start.
 
 \(fn &optional ARG)" t nil)
 
@@ -16979,11 +15212,54 @@ mode otherwise.
 
 
 
+(autoload 'lsp--semantic-tokens-initialize-buffer "lsp-semantic-tokens" "\
+Initialize the buffer for semantic tokens.
+IS-RANGE-PROVIDER is non-nil when server supports range requests.
+
+\(fn IS-RANGE-PROVIDER)" nil nil)
+
+(autoload 'lsp--semantic-tokens-initialize-workspace "lsp-semantic-tokens" "\
+Initialize semantic tokens for WORKSPACE.
+
+\(fn WORKSPACE)" nil nil)
+
+(autoload 'lsp-semantic-tokens--warn-about-deprecated-setting "lsp-semantic-tokens" "\
+Warn about deprecated semantic highlighting variable." nil nil)
+
+(autoload 'lsp-semantic-tokens--enable "lsp-semantic-tokens" "\
+Enable semantic tokens mode." nil nil)
+
+(autoload 'lsp-semantic-tokens-mode "lsp-semantic-tokens" "\
+Toggle semantic-tokens support.
+
+If called interactively, enable Lsp-Semantic-Tokens mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-semantic-tokens" '("lsp-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-solargraph" '("lsp-solargraph-")))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-sqls" '("lsp-sqls-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-sorbet" '("lsp-sorbet-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-sqls" '("lsp-sql")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-steep" '("lsp-steep-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-svelte" '("lsp-svelte-plugin-")))
 
 
 
@@ -16992,6 +15268,10 @@ mode otherwise.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-tex" '("lsp-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vala" '("lsp-clients-vala-ls-executable")))
 
 
 
@@ -17021,10 +15301,10 @@ mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ui-20201002.2002/lsp-ui-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210110.1507/lsp-ui-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ui-20201002.2002/lsp-ui-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210110.1507/lsp-ui-autoloads.el") (car load-path))))
 
 
 
@@ -17064,10 +15344,10 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20200919.632/lsp-treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20201230.2214/lsp-treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20200919.632/lsp-treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20201230.2214/lsp-treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -17154,21 +15434,28 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-latex-20200718.928/lsp-latex-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-latex-20210110.1914/lsp-latex-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-latex-20200718.928/lsp-latex-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-latex-20210110.1914/lsp-latex-autoloads.el") (car load-path))))
 
 
+
+(autoload 'lsp-latex-forward-search-with-pdf-tools "lsp-latex" "\
+Forward search with pdf-tools, from TEX-FILE line LINE to PDF-FILE.
+This function is partially copied from
+`pdf-sync-forward-search' and `pdf-sync-forward-correlate'.
+
+\(fn TEX-FILE PDF-FILE LINE)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-latex" '("lsp-latex-")))
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bui-20200426.2219/bui-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bui-20210108.1141/bui-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bui-20200426.2219/bui-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bui-20210108.1141/bui-autoloads.el") (car load-path))))
 
 
 
@@ -17206,10 +15493,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20201016.631/dap-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20201118.1304/dap-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20201016.631/dap-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20201118.1304/dap-mode-autoloads.el") (car load-path))))
 
 
 
@@ -17439,10 +15726,10 @@ evaluate python in the context of the debugee, ...." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-java-20201011.1349/lsp-java-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-java-20210105.1625/lsp-java-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-java-20201011.1349/lsp-java-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-java-20210105.1625/lsp-java-autoloads.el") (car load-path))))
 
 
 (with-eval-after-load 'lsp-java (require 'dap-java))
@@ -17662,10 +15949,10 @@ Special commands:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ledger-mode-20200530.1710/ledger-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227/ledger-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ledger-mode-20200530.1710/ledger-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227/ledger-mode-autoloads.el") (car load-path))))
 
 
 
@@ -17769,10 +16056,10 @@ A mode for editing ledger data files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20200929.1339/language-id-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20201217.1633/language-id-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20200929.1339/language-id-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20201217.1633/language-id-autoloads.el") (car load-path))))
 
 
 
@@ -17821,59 +16108,80 @@ Display the template of a media-type
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-chord-20160227.1238/key-chord-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/key-chord-20160227.1238/key-chord-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-chord-20201222.2030/key-chord-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/key-chord-20201222.2030/key-chord-autoloads.el") (car load-path))))
+
 
 
+(defvar key-chord-mode nil "\
+Non-nil if Key-Chord mode is enabled.
+See the `key-chord-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `key-chord-mode'.")
+
+(custom-autoload 'key-chord-mode "key-chord" nil)
+
 (autoload 'key-chord-mode "key-chord" "\
-Toggle key chord mode.
-With positive ARG enable the mode. With zero or negative arg disable the mode.
-A key chord is two keys that are pressed simultaneously, or one key quickly
-pressed twice.
+Map pairs of simultaneously pressed keys to commands.
 
-See functions `key-chord-define-global', `key-chord-define-local', and
-`key-chord-define' and variables `key-chord-two-keys-delay' and
-`key-chord-one-key-delay'.
+If called interactively, enable Key-Chord mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
-\(fn ARG)" t nil)
+See functions `key-chord-define-global', `key-chord-define-local',
+and `key-chord-define' and variables `key-chord-two-keys-delay'
+and `key-chord-one-key-delay'.
+
+\(fn &optional ARG)" t nil)
 
 (autoload 'key-chord-define-global "key-chord" "\
 Define a key-chord of the two keys in KEYS starting a COMMAND.
 
-KEYS can be a string or a vector of two elements. Currently only elements
-that corresponds to ascii codes in the range 32 to 126 can be used.
+KEYS can be a string or a vector of two elements. Currently only
+elements that corresponds to ascii codes in the range 32 to 126
+can be used.
 
 COMMAND can be an interactive function, a string, or nil.
 If COMMAND is nil, the key-chord is removed.
 
-Note that KEYS defined locally in the current buffer will have precedence.
+Note that KEYS defined locally in the current buffer will have
+precedence.
 
 \(fn KEYS COMMAND)" t nil)
 
 (autoload 'key-chord-define-local "key-chord" "\
 Locally define a key-chord of the two keys in KEYS starting a COMMAND.
 
-KEYS can be a string or a vector of two elements. Currently only elements
-that corresponds to ascii codes in the range 32 to 126 can be used.
+KEYS can be a string or a vector of two elements. Currently only
+elements that corresponds to ascii codes in the range 32 to 126
+can be used.
 
 COMMAND can be an interactive function, a string, or nil.
 If COMMAND is nil, the key-chord is removed.
 
-The binding goes in the current buffer's local map,
-which in most cases is shared with all other buffers in the same major mode.
+The binding goes in the current buffer's local map, which in most
+cases is shared with all other buffers in the same major mode.
 
 \(fn KEYS COMMAND)" t nil)
 
 (autoload 'key-chord-define "key-chord" "\
 Define in KEYMAP, a key-chord of the two keys in KEYS starting a COMMAND.
 
-KEYS can be a string or a vector of two elements. Currently only elements
-that corresponds to ascii codes in the range 32 to 126 can be used.
+KEYS can be a string or a vector of two elements. Currently only
+elements that corresponds to ascii codes in the range 32 to 126
+can be used.
 
 COMMAND can be an interactive function, a string, or nil.
 If COMMAND is nil, the key-chord is removed.
 
 \(fn KEYMAP KEYS COMMAND)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "key-chord" '("key-chord-")))
 
 
 )
@@ -18424,6 +16732,1159 @@ HTMLize dired-marked files.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-core-20210105.504/helm-core-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-core-20210105.504/helm-core-autoloads.el") (car load-path))))
+
+
+
+(autoload 'helm-configuration "helm" "\
+Customize Helm." t nil)
+
+(autoload 'helm-define-multi-key "helm" "\
+In KEYMAP, define key sequence KEY for function list FUNCTIONS.
+Each function runs sequentially for each KEY press.
+If DELAY is specified, switch back to initial function of FUNCTIONS list
+after DELAY seconds.
+The functions in FUNCTIONS list take no args.
+E.g.
+    (defun foo ()
+      (interactive)
+      (message \"Run foo\"))
+    (defun bar ()
+      (interactive)
+      (message \"Run bar\"))
+    (defun baz ()
+      (interactive)
+      (message \"Run baz\"))
+
+\(helm-define-multi-key global-map (kbd \"<f5> q\") '(foo bar baz) 2)
+
+Each time \"<f5> q\" is pressed, the next function is executed.
+Waiting more than 2 seconds between key presses switches back to
+executing the first function on the next hit.
+
+\(fn KEYMAP KEY FUNCTIONS &optional DELAY)" nil nil)
+
+(autoload 'helm-multi-key-defun "helm" "\
+Define NAME as a multi-key command running FUNS.
+After DELAY seconds, the FUNS list is reinitialized.
+See `helm-define-multi-key'.
+
+\(fn NAME DOCSTRING FUNS &optional DELAY)" nil t)
+
+(function-put 'helm-multi-key-defun 'lisp-indent-function '2)
+
+(autoload 'helm-define-key-with-subkeys "helm" "\
+Define in MAP a KEY and SUBKEY to COMMAND.
+
+This allows typing KEY to call COMMAND the first time and
+type only SUBKEY on subsequent calls.
+
+Arg MAP is the keymap to use, SUBKEY is the initial short
+key binding to call COMMAND.
+
+Arg OTHER-SUBKEYS is an alist specifying other short key bindings
+to use once started, e.g.:
+
+    (helm-define-key-with-subkeys global-map
+       (kbd \"C-x v n\") ?n 'git-gutter:next-hunk
+       '((?p . git-gutter:previous-hunk)))
+
+In this example, `C-x v n' will run `git-gutter:next-hunk'
+subsequent \"n\" will run this command again and subsequent \"p\"
+will run `git-gutter:previous-hunk'.
+
+If specified PROMPT can be displayed in minibuffer to describe
+SUBKEY and OTHER-SUBKEYS.  Arg EXIT-FN specifies a function to run
+on exit.
+
+For any other key pressed, run their assigned command as defined
+in MAP and then exit the loop running EXIT-FN, if specified.
+
+NOTE: SUBKEY and OTHER-SUBKEYS bindings support only char syntax
+and vectors, so don't use strings to define them.
+
+\(fn MAP KEY SUBKEY COMMAND &optional OTHER-SUBKEYS PROMPT EXIT-FN)" nil nil)
+
+(function-put 'helm-define-key-with-subkeys 'lisp-indent-function '1)
+
+(autoload 'helm-debug-open-last-log "helm" "\
+Open Helm log file or buffer of last Helm session." t nil)
+
+(autoload 'helm "helm" "\
+Main function to execute helm sources.
+
+PLIST is a list like
+
+\(:key1 val1 :key2 val2 ...)
+
+ or
+
+\(&optional sources input prompt resume preselect
+            buffer keymap default history allow-nest).
+
+** Keywords
+
+Keywords supported:
+
+- :sources
+- :input
+- :prompt
+- :resume
+- :preselect
+- :buffer
+- :keymap
+- :default
+- :history
+- :allow-nest
+
+Extra LOCAL-VARS keywords are supported, see the \"** Other
+keywords\" section below.
+
+Basic keywords are the following:
+
+*** :sources
+
+One of the following:
+
+- List of sources
+- Symbol whose value is a list of sources
+- Alist representing a Helm source.
+  - In this case the source has no name and is referenced in
+    `helm-sources' as a whole alist.
+
+*** :input
+
+Initial input of minibuffer (temporary value of `helm-pattern')
+
+*** :prompt
+
+Minibuffer prompt. Default value is `helm--prompt'.
+
+*** :resume
+
+If t, allow resumption of the previous session of this Helm
+command, skipping initialization.
+
+If 'noresume, this instance of `helm' cannot be resumed.
+
+*** :preselect
+
+Initially selected candidate (string or regexp).
+
+*** :buffer
+
+Buffer name for this Helm session. `helm-buffer' will take this value.
+
+*** :keymap
+
+\[Obsolete]
+
+Keymap used at the start of this Helm session.
+
+It is overridden by keymaps specified in sources, and is kept
+only for backward compatibility.
+
+Keymaps should be specified in sources using the :keymap slot
+instead. See `helm-source'.
+
+This keymap is not restored by `helm-resume'.
+
+*** :default
+
+Default value inserted into the minibuffer with
+\\<minibuffer-local-map>\\[next-history-element].
+
+It can be a string or a list of strings, in this case
+\\<minibuffer-local-map>\\[next-history-element] cycles through
+the list items, starting with the first.
+
+If nil, `thing-at-point' is used.
+
+If `helm-maybe-use-default-as-input' is non-nil, display is
+updated using this value if this value matches, otherwise it is
+ignored. If :input is specified, it takes precedence on :default.
+
+*** :history
+
+Minibuffer input, by default, is pushed to `minibuffer-history'.
+
+When an argument HISTORY is provided, input is pushed to
+HISTORY. HISTORY should be a valid symbol.
+
+*** :allow-nest
+
+Allow running this Helm command in a running Helm session.
+
+** Other keywords
+
+Other keywords are interpreted as local variables of this Helm
+session. The `helm-' prefix can be omitted. For example,
+
+\(helm :sources 'helm-source-buffers-list
+       :buffer \"*helm buffers*\"
+       :candidate-number-limit 10)
+
+Starts a Helm session with the variable
+`helm-candidate-number-limit' set to 10.
+
+** Backward compatibility
+
+For backward compatibility, positional parameters are
+supported:
+
+\(helm sources input prompt resume preselect
+       buffer keymap default history allow-nest)
+
+However, the use of non-keyword args is deprecated.
+
+\(fn &key SOURCES INPUT PROMPT RESUME PRESELECT BUFFER KEYMAP DEFAULT HISTORY ALLOW-NEST OTHER-LOCAL-VARS)" nil nil)
+
+(autoload 'helm-cycle-resume "helm" "\
+Cycle in `helm-buffers' list and resume when waiting more than 1.2s." t nil)
+
+(autoload 'helm-other-buffer "helm" "\
+Simplified Helm interface with other `helm-buffer'.
+Call `helm' only with SOURCES and BUFFER as args.
+
+\(fn SOURCES BUFFER)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm" '("helm-" "with-helm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-lib" '("helm-" "with-helm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-multi-match" '("helm-m")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-source" '("helm-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-20210111.2036/helm-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-20210111.2036/helm-autoloads.el") (car load-path))))
+
+
+
+(defvar helm-adaptive-mode nil "\
+Non-nil if Helm-Adaptive mode is enabled.
+See the `helm-adaptive-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-adaptive-mode'.")
+
+(custom-autoload 'helm-adaptive-mode "helm-adaptive" nil)
+
+(autoload 'helm-adaptive-mode "helm-adaptive" "\
+Toggle adaptive sorting in all sources.
+
+If called interactively, enable Helm-Adaptive mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'helm-reset-adaptive-history "helm-adaptive" "\
+Delete all `helm-adaptive-history' and his file.
+Useful when you have a old or corrupted
+`helm-adaptive-history-file'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-adaptive" '("helm-adapt")))
+
+
+
+(autoload 'helm-bookmarks "helm-bookmark" "\
+Preconfigured `helm' for bookmarks." t nil)
+
+(autoload 'helm-filtered-bookmarks "helm-bookmark" "\
+Preconfigured `helm' for bookmarks (filtered by category).
+Optional source `helm-source-bookmark-addressbook' is loaded only
+if external addressbook-bookmark package is installed." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-bookmark" '("bmkext-jump-" "bookmark" "helm-")))
+
+
+
+(autoload 'helm-buffers-list "helm-buffers" "\
+Preconfigured `helm' to list buffers." t nil)
+
+(autoload 'helm-mini "helm-buffers" "\
+Preconfigured `helm' displaying `helm-mini-default-sources'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-buffers" '("helm-")))
+
+
+
+(autoload 'helm-colors "helm-color" "\
+Preconfigured `helm' for color." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-color" '("helm-")))
+
+
+
+(autoload 'helm-comint-prompts "helm-comint" "\
+Pre-configured `helm' to browse the prompts of the current comint buffer." t nil)
+
+(autoload 'helm-comint-prompts-all "helm-comint" "\
+Pre-configured `helm' to browse the prompts of all comint sessions." t nil)
+
+(autoload 'helm-comint-input-ring "helm-comint" "\
+Preconfigured `helm' that provide completion of `comint' history." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-comint" '("helm-")))
+
+
+
+(autoload 'helm-M-x "helm-command" "\
+Preconfigured `helm' for Emacs commands.
+It is `helm' replacement of regular `M-x'
+`execute-extended-command'.
+
+Unlike regular `M-x' Emacs vanilla `execute-extended-command'
+command, the prefix args if needed, can be passed AFTER starting
+`helm-M-x'.  When a prefix arg is passed BEFORE starting
+`helm-M-x', the first `C-u' while in `helm-M-x' session will
+disable it.
+
+You can get help on each command by persistent action.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-command" '("helm-")))
+
+
+
+(autoload 'helm-dabbrev "helm-dabbrev" "\
+Preconfigured helm for dynamic abbreviations." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-dabbrev" '("helm-dabbrev-")))
+
+
+
+(autoload 'helm-lisp-completion-at-point "helm-elisp" "\
+Preconfigured Helm for Lisp symbol completion at point." t nil)
+
+(autoload 'helm-complete-file-name-at-point "helm-elisp" "\
+Preconfigured Helm to complete file name at point.
+
+\(fn &optional FORCE)" t nil)
+
+(autoload 'helm-lisp-indent "helm-elisp" nil t nil)
+
+(autoload 'helm-lisp-completion-or-file-name-at-point "helm-elisp" "\
+Preconfigured Helm to complete Lisp symbol or filename at point.
+Filename completion happens if string start after or between a
+double quote." t nil)
+
+(autoload 'helm-apropos "helm-elisp" "\
+Preconfigured Helm to describe commands, functions, variables and faces.
+In non interactives calls DEFAULT argument should be provided as
+a string, i.e. the `symbol-name' of any existing symbol.
+
+\(fn DEFAULT)" t nil)
+
+(autoload 'helm-manage-advice "helm-elisp" "\
+Preconfigured `helm' to disable/enable function advices." t nil)
+
+(autoload 'helm-locate-library "helm-elisp" "\
+Preconfigured helm to locate elisp libraries." t nil)
+
+(autoload 'helm-timers "helm-elisp" "\
+Preconfigured `helm' for timers." t nil)
+
+(autoload 'helm-complex-command-history "helm-elisp" "\
+Preconfigured `helm' for complex command history." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-elisp" '("helm-" "with-helm-show-completion")))
+
+
+
+(autoload 'helm-list-elisp-packages "helm-elisp-package" "\
+Preconfigured `helm' for listing and handling Emacs packages.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-list-elisp-packages-no-fetch "helm-elisp-package" "\
+Preconfigured Helm for Emacs packages.
+
+Same as `helm-list-elisp-packages' but don't fetch packages on
+remote.  Called with a prefix ARG always fetch packages on
+remote.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-elisp-package" '("helm-")))
+
+
+
+(defvar helm-epa-mode nil "\
+Non-nil if Helm-Epa mode is enabled.
+See the `helm-epa-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-epa-mode'.")
+
+(custom-autoload 'helm-epa-mode "helm-epa" nil)
+
+(autoload 'helm-epa-mode "helm-epa" "\
+Enable helm completion on gpg keys in epa functions.
+
+If called interactively, enable Helm-Epa mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'helm-epa-list-keys "helm-epa" "\
+List all gpg keys.
+This is the helm interface for `epa-list-keys'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-epa" '("helm-epa")))
+
+
+
+(autoload 'helm-esh-pcomplete "helm-eshell" "\
+Preconfigured `helm' to provide Helm completion in Eshell." t nil)
+
+(autoload 'helm-eshell-history "helm-eshell" "\
+Preconfigured Helm for Eshell history." t nil)
+
+(autoload 'helm-eshell-prompts "helm-eshell" "\
+Pre-configured `helm' to browse the prompts of the current Eshell." t nil)
+
+(autoload 'helm-eshell-prompts-all "helm-eshell" "\
+Pre-configured `helm' to browse the prompts of all Eshell sessions." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-eshell" '("helm-e")))
+
+
+
+(autoload 'helm-eval-expression "helm-eval" "\
+Preconfigured `helm' for `helm-source-evaluation-result'.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-eval-expression-with-eldoc "helm-eval" "\
+Preconfigured `helm' for `helm-source-evaluation-result' with `eldoc' support." t nil)
+
+(autoload 'helm-calcul-expression "helm-eval" "\
+Preconfigured `helm' for `helm-source-calculation-result'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-eval" '("helm-")))
+
+
+
+(autoload 'helm-run-external-command "helm-external" "\
+Preconfigured `helm' to run External PROGRAM asyncronously from Emacs.
+If program is already running exit with error.
+You can set your own list of commands with
+`helm-external-commands-list'.
+
+\(fn PROGRAM)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-external" '("helm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-fd" '("helm-fd-")))
+
+
+
+(autoload 'helm-projects-history "helm-files" "\
+
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-browse-project "helm-files" "\
+Preconfigured helm to browse projects.
+Browse files and see status of project with its VCS.
+Only HG and GIT are supported for now.
+Fall back to `helm-browse-project-find-files' if current
+directory is not under control of one of those VCS.
+With a prefix ARG browse files recursively, with two prefix ARG
+rebuild the cache.
+If the current directory is found in the cache, start
+`helm-browse-project-find-files' even with no prefix ARG.
+NOTE: The prefix ARG have no effect on the VCS controlled
+directories.
+
+Needed dependencies for VCS:
+<https://github.com/emacs-helm/helm-ls-git>
+and
+<https://github.com/emacs-helm/helm-ls-hg>.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-find-files "helm-files" "\
+Preconfigured `helm' for helm implementation of `find-file'.
+Called with a prefix arg show history if some.
+Don't call it from programs, use `helm-find-files-1' instead.
+This is the starting point for nearly all actions you can do on
+files.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-delete-tramp-connection "helm-files" "\
+Allow deleting tramp connection or marked tramp connections at once.
+
+This replace `tramp-cleanup-connection' which is partially broken
+in Emacs < to 25.1.50.1 (See Emacs Bug#24432).
+
+It allows additionally to delete more than one connection at
+once." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-files" '("eshell-command-aliases-list" "helm-")))
+
+
+
+(autoload 'helm-find "helm-find" "\
+Preconfigured `helm' for the find shell command.
+
+Recursively find files whose names are matched by all specified
+globbing PATTERNs under the current directory using the external
+program specified in `find-program' (usually \"find\").  Every
+input PATTERN is silently wrapped into two stars: *PATTERN*.
+
+With prefix argument, prompt for a directory to search.
+
+When user option `helm-findutils-search-full-path' is non-nil,
+match against complete paths, otherwise, against file names
+without directory part.
+
+The (possibly empty) list of globbing PATTERNs can be followed by
+the separator \"*\" plus any number of additional arguments that
+are passed to \"find\" literally.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-find" '("helm-")))
+
+
+
+(autoload 'helm-select-xfont "helm-font" "\
+Preconfigured `helm' to select Xfont." t nil)
+
+(autoload 'helm-ucs "helm-font" "\
+Preconfigured `helm' for `ucs-names'.
+
+Called with a prefix arg force reloading cache.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-font" '("helm-")))
+
+
+
+(autoload 'helm-for-files "helm-for-files" "\
+Preconfigured `helm' for opening files.
+Run all sources defined in `helm-for-files-preferred-list'." t nil)
+
+(autoload 'helm-multi-files "helm-for-files" "\
+Preconfigured helm like `helm-for-files' but running locate only on demand.
+
+Allow toggling back and forth from locate to others sources with
+`helm-multi-files-toggle-locate-binding' key.
+This avoids launching locate needlessly when what you are
+searching for is already found." t nil)
+
+(autoload 'helm-recentf "helm-for-files" "\
+Preconfigured `helm' for `recentf'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-for-files" '("helm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-global-bindings" '("helm-")))
+
+
+
+(autoload 'helm-goto-precedent-file "helm-grep" "\
+Go to previous file in Helm grep/etags buffers." t nil)
+
+(autoload 'helm-goto-next-file "helm-grep" "\
+Go to previous file in Helm grep/etags buffers." t nil)
+
+(autoload 'helm-do-grep-ag "helm-grep" "\
+Preconfigured `helm' for grepping with AG in `default-directory'.
+With prefix arg prompt for type if available with your AG
+version.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-grep-do-git-grep "helm-grep" "\
+Preconfigured `helm' for git-grepping `default-directory'.
+With a prefix arg ARG git-grep the whole repository.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-grep" '("helm-")))
+
+
+
+(autoload 'helm-documentation "helm-help" "\
+Preconfigured `helm' for Helm documentation.
+With a prefix arg refresh the documentation.
+
+Find here the documentation of all documented sources." t nil)
+
+(defvar helm-comp-read-mode-line "\\<helm-comp-read-map>C/\\[helm-cr-empty-string]:Empty \\<helm-map>\\[helm-help]:Help \\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf")
+
+(defvar helm-read-file-name-mode-line-string "\\<helm-read-file-map>\\[helm-help]:Help C/\\[helm-cr-empty-string]:Empty \\<helm-map>\\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf" "\
+String displayed in mode-line in `helm-source-find-files'.")
+
+(defvar helm-top-mode-line "\\<helm-top-map>\\[helm-help]:Help \\<helm-map>\\[helm-select-action]:Act \\[helm-maybe-exit-minibuffer]/f1/f2/f-n:NthAct \\[helm-toggle-suspend-update]:Tog.suspend \\[helm-customize-group]:Conf")
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-help" '("helm-")))
+
+
+
+(autoload 'helm-gid "helm-id-utils" "\
+Preconfigured `helm' for `gid' command line of `ID-Utils'.
+Need A database created with the command `mkid' above
+`default-directory'.
+Need id-utils as dependency which provide `mkid', `gid' etc..
+See <https://www.gnu.org/software/idutils/>." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-id-utils" '("helm-gid-")))
+
+
+
+(autoload 'helm-imenu "helm-imenu" "\
+Preconfigured `helm' for `imenu'." t nil)
+
+(autoload 'helm-imenu-in-all-buffers "helm-imenu" "\
+Preconfigured `helm' for fetching imenu entries in all buffers with similar mode as current.
+A mode is similar as current if it is the same, it is derived
+i.e. `derived-mode-p' or it have an association in
+`helm-imenu-all-buffer-assoc'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-imenu" '("helm-")))
+
+
+
+(autoload 'helm-info "helm-info" "\
+Preconfigured `helm' for searching Info files' indices.
+
+With a prefix argument \\[universal-argument], set REFRESH to
+non-nil.
+
+Optional parameter REFRESH, when non-nil, re-evaluates
+`helm-default-info-index-list'.  If the variable has been
+customized, set it to its saved value.  If not, set it to its
+standard value. See `custom-reevaluate-setting' for more.
+
+REFRESH is useful when new Info files are installed.  If
+`helm-default-info-index-list' has not been customized, the new
+Info files are made available.
+
+\(fn &optional REFRESH)" t nil)
+
+(autoload 'helm-info-at-point "helm-info" "\
+Preconfigured `helm' for searching info at point." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-info" '("helm-")))
+
+
+
+(autoload 'helm-projects-find-files "helm-locate" "\
+Find files with locate in `helm-locate-project-list'.
+With a prefix arg refresh the database in each project.
+
+\(fn UPDATE)" t nil)
+
+(autoload 'helm-locate "helm-locate" "\
+Preconfigured `helm' for Locate.
+Note: you can add locate options after entering pattern.
+See 'man locate' for valid options and also `helm-locate-command'.
+
+You can specify a local database with prefix argument ARG.
+With two prefix arg, refresh the current local db or create it if
+it doesn't exists.
+
+To create a user specific db, use
+\"updatedb -l 0 -o db_path -U directory\".
+Where db_path is a filename matched by
+`helm-locate-db-file-regexp'.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-locate" '("helm-")))
+
+
+
+(autoload 'helm-man-woman "helm-man" "\
+Preconfigured `helm' for Man and Woman pages.
+With a prefix arg reinitialize the cache.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-man" '("helm-")))
+
+
+
+(autoload 'helm-world-time "helm-misc" "\
+Preconfigured `helm' to show world time.
+Default action change TZ environment variable locally to emacs." t nil)
+
+(autoload 'helm-insert-latex-math "helm-misc" "\
+Preconfigured helm for latex math symbols completion." t nil)
+
+(autoload 'helm-ratpoison-commands "helm-misc" "\
+Preconfigured `helm' to execute ratpoison commands." t nil)
+
+(autoload 'helm-stumpwm-commands "helm-misc" "\
+Preconfigured helm for stumpwm commands." t nil)
+
+(autoload 'helm-minibuffer-history "helm-misc" "\
+Preconfigured `helm' for `minibuffer-history'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-misc" '("helm-")))
+
+
+
+(autoload 'helm-comp-read "helm-mode" "\
+Read a string in the minibuffer, with helm completion.
+
+It is helm `completing-read' equivalent.
+
+- PROMPT is the prompt name to use.
+
+- COLLECTION can be a list, vector, obarray or hash-table.
+  It can be also a function that receives three arguments:
+  the values string, predicate and t. See `all-completions' for more details.
+
+Keys description:
+
+- TEST: A predicate called with one arg i.e candidate.
+
+- INITIAL-INPUT: Same as input arg in `helm'.
+
+- PRESELECT: See preselect arg of `helm'.
+
+- DEFAULT: This option is used only for compatibility with regular
+  Emacs `completing-read' (Same as DEFAULT arg of `completing-read').
+
+- BUFFER: Name of helm-buffer.
+
+- MUST-MATCH: Candidate selected must be one of COLLECTION.
+
+- FUZZY: Enable fuzzy matching.
+
+- REVERSE-HISTORY: When non--nil display history source after current
+  source completion.
+
+- REQUIRES-PATTERN: Same as helm attribute, default is 0.
+
+- HISTORY: A list containing specific history, default is nil.
+  When it is non--nil, all elements of HISTORY are displayed in
+  a special source before COLLECTION.
+
+- INPUT-HISTORY: A symbol. The minibuffer input history will be
+  stored there, if nil or not provided, `minibuffer-history'
+  will be used instead.
+
+- CASE-FOLD: Same as `helm-case-fold-search'.
+
+- DEL-INPUT: Boolean, when non--nil (default) remove the partial
+  minibuffer input from HISTORY is present.
+
+- PERSISTENT-ACTION: A function called with one arg i.e candidate.
+
+- PERSISTENT-HELP: A string to document PERSISTENT-ACTION.
+
+- MODE-LINE: A string or list to display in mode line.
+  Default is `helm-comp-read-mode-line'.
+
+- KEYMAP: A keymap to use in this `helm-comp-read'.
+  (the keymap will be shared with history source)
+
+- NAME: The name related to this local source.
+
+- HEADER-NAME: A function to alter NAME, see `helm'.
+
+- EXEC-WHEN-ONLY-ONE: Bound `helm-execute-action-at-once-if-one'
+  to non--nil. (possibles values are t or nil).
+
+- VOLATILE: Use volatile attribute.
+
+- SORT: A predicate to give to `sort' e.g `string-lessp'
+  Use this only on small data as it is inefficient.
+  If you want to sort faster add a sort function to
+  FC-TRANSFORMER.
+  Note that FUZZY when enabled is already providing a sort function.
+
+- FC-TRANSFORMER: A `filtered-candidate-transformer' function
+  or a list of functions.
+
+- HIST-FC-TRANSFORMER: A `filtered-candidate-transformer'
+  function for the history source.
+
+- MARKED-CANDIDATES: If non--nil return candidate or marked candidates as a list.
+
+- NOMARK: When non--nil don't allow marking candidates.
+
+- ALISTP: (default is non--nil) See `helm-comp-read-get-candidates'.
+
+- CANDIDATES-IN-BUFFER: when non--nil use a source build with
+  `helm-source-in-buffer' which is much faster.
+  Argument VOLATILE have no effect when CANDIDATES-IN-BUFFER is non--nil.
+
+- MATCH-PART: Allow matching only one part of candidate.
+  See match-part documentation in `helm-source'.
+
+- MATCH-DYNAMIC: See match-dynamic in `helm-source-sync'
+  It has no effect when used with CANDIDATES-IN-BUFFER.
+
+- ALLOW-NEST: Allow nesting this `helm-comp-read' in a helm session.
+  See `helm'.
+
+- MULTILINE: See multiline in `helm-source'.
+
+- COERCE: See coerce in `helm-source'.
+
+- GROUP: See group in `helm-source'.
+
+Any prefix args passed during `helm-comp-read' invocation will be recorded
+in `helm-current-prefix-arg', otherwise if prefix args were given before
+`helm-comp-read' invocation, the value of `current-prefix-arg' will be used.
+That means you can pass prefix args before or after calling a command
+that use `helm-comp-read'.  See `helm-M-x' for example.
+
+\(fn PROMPT COLLECTION &key TEST INITIAL-INPUT DEFAULT PRESELECT (BUFFER \"*Helm Completions*\") MUST-MATCH FUZZY REVERSE-HISTORY (REQUIRES-PATTERN 0) HISTORY INPUT-HISTORY (CASE-FOLD helm-comp-read-case-fold-search) (DEL-INPUT t) (PERSISTENT-ACTION nil) (PERSISTENT-HELP \"DoNothing\") (MODE-LINE helm-comp-read-mode-line) HELP-MESSAGE (KEYMAP helm-comp-read-map) (NAME \"Helm Completions\") HEADER-NAME CANDIDATES-IN-BUFFER MATCH-PART MATCH-DYNAMIC EXEC-WHEN-ONLY-ONE QUIT-WHEN-NO-CAND (VOLATILE t) SORT FC-TRANSFORMER HIST-FC-TRANSFORMER (MARKED-CANDIDATES helm-comp-read-use-marked) NOMARK (ALISTP t) (CANDIDATE-NUMBER-LIMIT helm-candidate-number-limit) MULTILINE ALLOW-NEST COERCE (GROUP \\='helm))" nil nil)
+
+(autoload 'helm-read-file-name "helm-mode" "\
+Read a file name with helm completion.
+It is helm `read-file-name' emulation.
+
+Argument PROMPT is the default prompt to use.
+
+Keys description:
+
+- NAME: Source name, default to \"Read File Name\".
+
+- INITIAL-INPUT: Where to start reading file name, default to `default-directory'.
+
+- BUFFER: `helm-buffer' name, defaults to \"*Helm Completions*\".
+
+- TEST: A predicate called with one arg 'candidate'.
+
+- NORET: Allow disabling helm-ff-RET (have no effect if helm-ff-RET
+                                      isn't bound to RET).
+
+- CASE-FOLD: Same as `helm-case-fold-search'.
+
+- PRESELECT: helm preselection.
+
+- HISTORY: Display HISTORY in a special source.
+
+- MUST-MATCH: Can be 'confirm, nil, or t.
+
+- FUZZY: Enable fuzzy matching when non-nil (Enabled by default).
+
+- MARKED-CANDIDATES: When non--nil return a list of marked candidates.
+
+- NOMARK: When non--nil don't allow marking candidates.
+
+- ALISTP: Don't use `all-completions' in history (take effect only on history).
+
+- PERSISTENT-ACTION-IF: a persistent if action function.
+
+- PERSISTENT-HELP: persistent help message.
+
+- MODE-LINE: A mode line message, default is `helm-read-file-name-mode-line-string'.
+
+\(fn PROMPT &key (NAME \"Read File Name\") (INITIAL-INPUT default-directory) (BUFFER \"*Helm file completions*\") TEST NORET (CASE-FOLD helm-file-name-case-fold-search) PRESELECT HISTORY MUST-MATCH (FUZZY t) DEFAULT MARKED-CANDIDATES (CANDIDATE-NUMBER-LIMIT helm-ff-candidate-number-limit) NOMARK (ALISTP t) (PERSISTENT-ACTION-IF \\='helm-find-files-persistent-action-if) (PERSISTENT-HELP \"Hit1 Expand Candidate, Hit2 or (C-u) Find file\") (MODE-LINE helm-read-file-name-mode-line-string))" nil nil)
+
+(defvar helm-mode nil "\
+Non-nil if Helm mode is enabled.
+See the `helm-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-mode'.")
+
+(custom-autoload 'helm-mode "helm-mode" nil)
+
+(autoload 'helm-mode "helm-mode" "\
+Toggle generic helm completion.
+
+All functions in Emacs that use `completing-read',
+`read-file-name', `completion-in-region' and friends will use helm
+interface when this mode is turned on.
+
+However you can modify this behavior for functions of your choice
+with `helm-completing-read-handlers-alist'.
+
+Called with a positive arg, turn on unconditionally, with a
+negative arg turn off.
+You can toggle it with M-x `helm-mode'.
+
+About `ido-mode':
+DO NOT enable `ido-everywhere' when using `helm-mode'.  Instead of
+using `ido-mode', add the commands where you want to use ido to
+`helm-completing-read-handlers-alist' with `ido' as value.
+
+Note: This mode is incompatible with Emacs23.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-mode" '("helm-")))
+
+
+
+(autoload 'helm-browse-url-firefox "helm-net" "\
+Same as `browse-url-firefox' but detach from Emacs.
+
+So when you quit Emacs you can keep your Firefox session open and
+not be prompted to kill the Firefox process.
+
+NOTE: Probably not supported on some systems (e.g., Windows).
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-opera "helm-net" "\
+Browse URL with Opera browser and detach from Emacs.
+
+So when you quit Emacs you can keep your Opera session open and
+not be prompted to kill the Opera process.
+
+NOTE: Probably not supported on some systems (e.g., Windows).
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-chromium "helm-net" "\
+Browse URL with Google Chrome browser.
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-uzbl "helm-net" "\
+Browse URL with uzbl browser.
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-conkeror "helm-net" "\
+Browse URL with conkeror browser.
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-browse-url-next "helm-net" "\
+Browse URL with next browser.
+
+\(fn URL &optional IGNORE)" t nil)
+
+(autoload 'helm-surfraw "helm-net" "\
+Preconfigured `helm' to search PATTERN with search ENGINE.
+
+\(fn PATTERN ENGINE)" t nil)
+
+(autoload 'helm-google-suggest "helm-net" "\
+Preconfigured `helm' for Google search with Google suggest." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-net" '("helm-")))
+
+
+
+(autoload 'helm-occur "helm-occur" "\
+Preconfigured helm for searching lines matching pattern in `current-buffer'.
+
+When `helm-source-occur' is member of
+`helm-sources-using-default-as-input' which is the default,
+symbol at point is searched at startup.
+
+When a region is marked search only in this region by narrowing.
+
+To search in multiples buffers start from one of the commands listing
+buffers (i.e. a helm command using `helm-source-buffers-list' like
+`helm-mini') and use the multi occur buffers action.
+
+This is the helm implementation that collect lines matching pattern
+like vanilla Emacs `occur' but have nothing to do with it, the search
+engine beeing completely different and also much faster." t nil)
+
+(autoload 'helm-occur-visible-buffers "helm-occur" "\
+Run helm-occur on all visible buffers in frame." t nil)
+
+(autoload 'helm-occur-from-isearch "helm-occur" "\
+Invoke `helm-occur' from isearch.
+
+To use this bind it to a key in `isearch-mode-map'." t nil)
+
+(autoload 'helm-multi-occur-from-isearch "helm-occur" "\
+Invoke `helm-multi-occur' from isearch.
+
+With a prefix arg, reverse the behavior of
+`helm-moccur-always-search-in-current'.
+The prefix arg can be set before calling
+`helm-multi-occur-from-isearch' or during the buffer selection.
+
+To use this bind it to a key in `isearch-mode-map'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-occur" '("helm-")))
+
+
+
+(autoload 'helm-regexp "helm-regexp" "\
+Preconfigured helm to build regexps.
+`query-replace-regexp' can be run from there against found regexp." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-regexp" '("helm-")))
+
+
+
+(autoload 'helm-mark-ring "helm-ring" "\
+Preconfigured `helm' for `helm-source-mark-ring'." t nil)
+
+(autoload 'helm-global-mark-ring "helm-ring" "\
+Preconfigured `helm' for `helm-source-global-mark-ring'." t nil)
+
+(autoload 'helm-all-mark-rings "helm-ring" "\
+Preconfigured `helm' for `helm-source-global-mark-ring' and `helm-source-mark-ring'." t nil)
+
+(autoload 'helm-register "helm-ring" "\
+Preconfigured `helm' for Emacs registers." t nil)
+
+(autoload 'helm-show-kill-ring "helm-ring" "\
+Preconfigured `helm' for `kill-ring'.
+It is drop-in replacement of `yank-pop'.
+
+First call open the kill-ring browser, next calls move to next line." t nil)
+
+(autoload 'helm-execute-kmacro "helm-ring" "\
+Preconfigured helm for keyboard macros.
+Define your macros with `f3' and `f4'.
+See (info \"(emacs) Keyboard Macros\") for detailed infos.
+This command is useful when used with persistent action." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-ring" '("helm-")))
+
+
+
+(autoload 'helm-semantic "helm-semantic" "\
+Preconfigured `helm' for `semantic'.
+If ARG is supplied, pre-select symbol at point instead of current.
+
+\(fn ARG)" t nil)
+
+(autoload 'helm-semantic-or-imenu "helm-semantic" "\
+Preconfigured helm for `semantic' or `imenu'.
+If ARG is supplied, pre-select symbol at point instead of current
+semantic tag in scope.
+
+If `semantic-mode' is active in the current buffer, then use
+semantic for generating tags, otherwise fall back to `imenu'.
+Fill in the symbol at point by default.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-semantic" '("helm-s")))
+
+
+
+(defalias 'helm-shell-prompts 'helm-comint-prompts)
+
+(defalias 'helm-shell-prompts-all 'helm-comint-prompts-all)
+
+
+
+(defvar helm-top-poll-mode nil "\
+Non-nil if Helm-Top-Poll mode is enabled.
+See the `helm-top-poll-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-top-poll-mode'.")
+
+(custom-autoload 'helm-top-poll-mode "helm-sys" nil)
+
+(autoload 'helm-top-poll-mode "helm-sys" "\
+Refresh automatically helm top buffer once enabled.
+
+If called interactively, enable Helm-Top-Poll mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'helm-top "helm-sys" "\
+Preconfigured `helm' for top command." t nil)
+
+(autoload 'helm-list-emacs-process "helm-sys" "\
+Preconfigured `helm' for Emacs process." t nil)
+
+(autoload 'helm-xrandr-set "helm-sys" "\
+Preconfigured helm for xrandr." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-sys" '("helm-")))
+
+
+
+(autoload 'helm-etags-select "helm-tags" "\
+Preconfigured helm for etags.
+If called with a prefix argument REINIT
+or if any of the tag files have been modified, reinitialize cache.
+
+This function aggregates three sources of tag files:
+
+  1) An automatically located file in the parent directories,
+     by `helm-etags-get-tag-file'.
+  2) `tags-file-name', which is commonly set by `find-tag' command.
+  3) `tags-table-list' which is commonly set by `visit-tags-table' command.
+
+\(fn REINIT)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-tags" '("helm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-types" '("helm-")))
+
+
+
+(defvar helm-popup-tip-mode nil "\
+Non-nil if Helm-Popup-Tip mode is enabled.
+See the `helm-popup-tip-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `helm-popup-tip-mode'.")
+
+(custom-autoload 'helm-popup-tip-mode "helm-utils" nil)
+
+(autoload 'helm-popup-tip-mode "helm-utils" "\
+Show help-echo informations in a popup tip at end of line.
+
+If called interactively, enable Helm-Popup-Tip mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-utils" '("helm-" "with-helm-display-marked-candidates")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-x-files" '("helm-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-swoop-20200814.448/helm-swoop-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -18546,10 +18007,10 @@ Invoke `helm-rg' from isearch." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-projectile-20200625.443/helm-projectile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-projectile-20201217.908/helm-projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-projectile-20200625.443/helm-projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-projectile-20201217.908/helm-projectile-autoloads.el") (car load-path))))
 
 
 
@@ -18739,10 +18200,10 @@ Not documented, QUERY.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/haskell-mode-20200929.2119/haskell-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342/haskell-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/haskell-mode-20200929.2119/haskell-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342/haskell-mode-autoloads.el") (car load-path))))
 
 
 
@@ -19771,10 +19232,10 @@ process buffer for a list of commands.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-line-preview-20200927.252/goto-line-preview-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-line-preview-20210113.616/goto-line-preview-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-line-preview-20200927.252/goto-line-preview-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-line-preview-20210113.616/goto-line-preview-autoloads.el") (car load-path))))
 
 
 
@@ -19784,16 +19245,16 @@ Preview goto line." t nil)
 (autoload 'goto-line-preview-relative "goto-line-preview" "\
 Preview goto line relative." t nil)
 
-(define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview)
+(define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview "0.1.1")
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "goto-line-preview" '("goto-line-preview-")))
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20200822.1936/go-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20201204.1652/go-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20200822.1936/go-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20201204.1652/go-mode-autoloads.el") (car load-path))))
 
 
 
@@ -19925,10 +19386,10 @@ require buffer to be visiting a file.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gnuplot-20200322.53/gnuplot-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gnuplot-20210104.1052/gnuplot-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gnuplot-20200322.53/gnuplot-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gnuplot-20210104.1052/gnuplot-autoloads.el") (car load-path))))
 
 
 
@@ -20027,10 +19488,10 @@ A major mode for editing .gitignore files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ghub-20201016.927/ghub-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717/ghub-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ghub-20201016.927/ghub-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717/ghub-autoloads.el") (car load-path))))
 
 
 
@@ -20048,7 +19509,7 @@ asking the user for the correct information again.
 Set `url-http-real-basic-auth-storage' to nil
 and call `auth-source-forget+'." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ghub" '("auth-source-netrc-parse-next-interesting@save-match-data" "ghub-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ghub" '("ghub-" "url-http-handle-authentication@unauthorized-bugfix")))
 
 
 
@@ -20201,10 +19662,10 @@ Enable git timemachine for current buffer, switching to GIT-BRANCH.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20200827.2326/git-link-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20201214.2330/git-link-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20200827.2326/git-link-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20201214.2330/git-link-autoloads.el") (car load-path))))
 
 
 
@@ -20290,10 +19751,10 @@ Commit staged changes. If nothing is staged, ask to stage the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20200326.1814/git-gutter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20210109.640/git-gutter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20200326.1814/git-gutter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20210109.640/git-gutter-autoloads.el") (car load-path))))
 
 
 
@@ -20362,6 +19823,243 @@ Recalculate all blame information in the current buffer
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953/geiser-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953/geiser-autoloads.el") (car load-path))))
+
+
+
+(defconst geiser-elisp-dir (file-name-directory load-file-name) "\
+Directory containing Geiser's Elisp files.")
+
+(defconst geiser-scheme-dir (let ((d (expand-file-name "./scheme/" geiser-elisp-dir))) (if (file-directory-p d) d (expand-file-name "../scheme/" geiser-elisp-dir))) "\
+Directory containing Geiser's Scheme files.")
+
+(add-to-list 'load-path (directory-file-name geiser-elisp-dir))
+
+(autoload 'geiser-version "geiser-version" "\
+Echo Geiser's version." t)
+
+(autoload 'geiser-unload "geiser-reload" "\
+Unload all Geiser code." t)
+
+(autoload 'geiser-reload "geiser-reload" "\
+Reload Geiser code." t)
+
+(autoload 'geiser "geiser-repl" "\
+Start a Geiser REPL, or switch to a running one." t)
+
+(autoload 'run-geiser "geiser-repl" "\
+Start a Geiser REPL." t)
+
+(autoload 'geiser-connect "geiser-repl" "\
+Start a Geiser REPL connected to a remote server." t)
+
+(autoload 'geiser-connect-local "geiser-repl" "\
+Start a Geiser REPL connected to a remote server over a Unix-domain socket." t)
+
+(autoload 'switch-to-geiser "geiser-repl" "\
+Switch to a running one Geiser REPL." t)
+
+(autoload 'run-chez "geiser-chez" "\
+Start a Geiser Chez REPL." t)
+
+(autoload 'switch-to-chez "geiser-chez" "\
+Start a Geiser Chez REPL, or switch to a running one." t)
+
+(autoload 'run-guile "geiser-guile" "\
+Start a Geiser Guile REPL." t)
+
+(autoload 'switch-to-guile "geiser-guile" "\
+Start a Geiser Guile REPL, or switch to a running one." t)
+
+(autoload 'connect-to-guile "geiser-guile" "\
+Connect to a remote Geiser Guile REPL." t)
+
+(autoload 'run-gambit "geiser-gambit" "\
+Start a Geiser Gambit REPL." t)
+
+(autoload 'switch-to-gambit "geiser-gambit" "\
+Start a Geiser Gambit REPL, or switch to a running one." t)
+
+(autoload 'connect-to-gambit "geiser-gambit" "\
+Connect to a remote Geiser Gambit REPL." t)
+
+(autoload 'run-racket "geiser-racket" "\
+Start a Geiser Racket REPL." t)
+
+(autoload 'run-gracket "geiser-racket" "\
+Start a Geiser GRacket REPL." t)
+
+(autoload 'switch-to-racket "geiser-racket" "\
+Start a Geiser Racket REPL, or switch to a running one." t)
+
+(autoload 'connect-to-racket "geiser-racket" "\
+Connect to a remote Geiser Racket REPL." t)
+
+(autoload 'run-chicken "geiser-chicken" "\
+Start a Geiser Chicken REPL." t)
+
+(autoload 'switch-to-chicken "geiser-chicken" "\
+Start a Geiser Chicken REPL, or switch to a running one." t)
+
+(autoload 'connect-to-chicken "geiser-chicken" "\
+Connect to a remote Geiser Chicken REPL." t)
+
+(autoload 'run-mit "geiser-mit" "\
+Start a Geiser MIT/GNU Scheme REPL." t)
+
+(autoload 'switch-to-mit "geiser-mit" "\
+Start a Geiser MIT/GNU Scheme REPL, or switch to a running one." t)
+
+(autoload 'run-chibi "geiser-chibi" "\
+Start a Geiser Chibi Scheme REPL." t)
+
+(autoload 'switch-to-chibi "geiser-chibi" "\
+Start a Geiser Chibi Scheme REPL, or switch to a running one." t)
+
+(autoload 'geiser-mode "geiser-mode" "\
+Minor mode adding Geiser REPL interaction to Scheme buffers." t)
+
+(autoload 'turn-on-geiser-mode "geiser-mode" "\
+Enable Geiser's mode (useful in Scheme buffers)." t)
+
+(autoload 'turn-off-geiser-mode "geiser-mode" "\
+Disable Geiser's mode (useful in Scheme buffers)." t)
+
+(autoload 'geiser-mode--maybe-activate "geiser-mode")
+
+(mapc (lambda (group) (custom-add-load group (symbol-name group)) (custom-add-load 'geiser (symbol-name group))) '(geiser geiser-repl geiser-autodoc geiser-doc geiser-debug geiser-faces geiser-mode geiser-guile geiser-gambit geiser-image geiser-racket geiser-chicken geiser-chez geiser-chibi geiser-mit geiser-implementation geiser-xref))
+
+(add-hook 'scheme-mode-hook 'geiser-mode--maybe-activate)
+
+(add-to-list 'auto-mode-alist '("\\.rkt\\'" . scheme-mode))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-autodoc" '("geiser-autodoc-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-base" '("geiser--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chez" '("chez" "geiser-chez-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chibi" '("chibi" "geiser-chibi-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-chicken" '("chicken" "connect-to-chicken" "geiser-chicken")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-company" '("geiser-company--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-compile" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-completion" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-connection" '("geiser-con")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-custom" '("geiser-custom-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-debug" '("geiser-debug-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-doc" '("geiser-doc-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-edit" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-eval" '("geiser-eval--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-gambit" '("connect-to-gambit" "gambit" "geiser-gambit-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-guile" '("connect-to-guile" "geiser-guile-" "guile")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-image" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-impl" '("define-geiser-implementation" "geiser-" "with--geiser-implementation")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-log" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-menu" '("geiser-menu--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-mit" '("geiser-mit-" "mit")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-mode" '("geiser-" "turn-o")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-popup" '("geiser-popup-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-racket" '("connect-to-racket" "geiser-racket-" "racket" "run-gracket")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-reload" '("geiser-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-repl" '("geiser" "run-geiser" "switch-to-geiser")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-syntax" '("geiser-syntax--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-table" '("geiser-table-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-version" '("geiser-version")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-xref" '("geiser-xref-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/free-keys-20160726.2050/free-keys-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/free-keys-20160726.2050/free-keys-autoloads.el") (car load-path))))
 
@@ -20382,10 +20080,10 @@ format recognized by `kbd', for example \"C-x\".
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20201016.1041/format-all-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210107.1425/format-all-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20201016.1041/format-all-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210107.1425/format-all-autoloads.el") (car load-path))))
 
 
 
@@ -20405,10 +20103,18 @@ external program.
 A suitable formatter is selected according to the `major-mode' of
 the buffer.  Many popular programming languages are supported.
 It is fairly easy to add new languages that have an external
-formatter.
+formatter.  When called interactively or PROMPT-P is non-nil, a
+missing formatter is prompted in the minibuffer.
+
+If PROMPT is non-nil (or the function is called as an interactive
+command), a missing formatter is prompted in the minibuffer.  If
+PROMPT is the symbol `always' (or a prefix argument is given),
+the formatter is prompted for even if one has already been set.
 
 If any errors or warnings were encountered during formatting,
-they are shown in a buffer called *format-all-errors*." t nil)
+they are shown in a buffer called *format-all-errors*.
+
+\(fn &optional PROMPT)" t nil)
 
 (autoload 'format-all-mode "format-all" "\
 Toggle automatic source code formatting before save.
@@ -20418,26 +20124,15 @@ automatically called to format your code each time before you
 save the buffer.
 
 The mode is buffer-local and needs to be enabled separately each
-time a file is visited.  You may want to use `add-hook' to add a
-function to your personal `after-change-major-mode-hook' in your
-`user-init-file' to enable the mode based on the buffer's
-`major-mode' and some `buffer-file-name' patterns. For example:
+time a file is visited. You may want to use `add-hook' in your
+`user-init-file' to enable the mode based on buffer modes. E.g.:
 
-    (defvar my-auto-format-modes '(js-mode python-mode))
-    (defvar my-auto-format-dirs '(\"foo\" \"bar\"))
+    (add-hook 'prog-mode-hook 'format-all-mode)
 
-    (defun my-auto-format-buffer-p ()
-      (and (member major-mode my-auto-format-modes)
-           (buffer-file-name)
-           (save-match-data
-             (let ((dir (file-name-directory (buffer-file-name))))
-               (cl-some (lambda (regexp) (string-match regexp dir))
-                        my-auto-format-dirs)))))
+To use a default formatter for projects that don't have one, add
+this too:
 
-    (defun my-after-change-major-mode ()
-      (format-all-mode (if (my-auto-format-buffer-p) 1 0)))
-
-    (add-hook 'after-change-major-mode-hook 'my-after-change-major-mode)
+    (add-hook 'prog-mode-hook 'format-all-ensure-formatter)
 
 When `format-all-mode' is called as a Lisp function, the mode is
 toggled if ARG is ‘toggle’, disabled if ARG is a negative integer
@@ -20445,7 +20140,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("asmfmt" "bibtex-mode" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gleam" "gofmt" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nixfmt" "ocp-indent" "perltidy" "prettier" "purty" "rufo" "rustfmt" "scalafmt" "shfmt" "snakefmt" "sqlformat" "styler" "swiftformat" "terraform-fmt")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("asmfmt" "atsfmt" "beautysh" "bibtex-mode" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nixfmt" "ocp-indent" "perltidy" "pgformatter" "prettier" "purty" "rufo" "rustfmt" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
 
 
 )
@@ -20496,10 +20191,10 @@ A prefix argument causes the SQL to be printed into the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20201002.1420/forge-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148/forge-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20201002.1420/forge-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148/forge-autoloads.el") (car load-path))))
 
 
 
@@ -20616,7 +20311,7 @@ Please see the manual for more information.
 
 (autoload 'forge-checkout-worktree "forge-commands" "\
 Create, configure and checkout a new worktree from a pull-request.
-This is like `magit-checkout-pullreq', except that it also
+This is like `forge-checkout-pullreq', except that it also
 creates a new worktree. Please see the manual for more
 information.
 
@@ -20729,7 +20424,7 @@ List them in a separate buffer.
 
 (autoload 'forge-list-owned-issues "forge-list" "\
 List open issues from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 
@@ -20752,7 +20447,7 @@ List them in a separate buffer.
 
 (autoload 'forge-list-owned-pullreqs "forge-list" "\
 List open pull-requests from all your Github repositories.
-Options `forge-owned-accounts' and `forge-owned-blacklist'
+Options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 
@@ -20775,7 +20470,7 @@ Here \"known\" means that an entry exists in the local database." t nil)
 (autoload 'forge-list-owned-repositories "forge-list" "\
 List your own known repositories in a separate buffer.
 Here \"known\" means that an entry exists in the local database
-and options `forge-owned-accounts' and `forge-owned-blacklist'
+and options `forge-owned-accounts' and `forge-owned-ignored'
 controls which repositories are considered to be owned by you.
 Only Github is supported for now." t nil)
 
@@ -20839,10 +20534,10 @@ Automatically save this buffer when the frame loses its focus.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20200415.1637/flymake-phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20201122.950/flymake-phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20200415.1637/flymake-phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20201122.950/flymake-phpstan-autoloads.el") (car load-path))))
 
 
 
@@ -20853,10 +20548,10 @@ Enable `flymake-phpstan' as buffer-local Flymake backend." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20200411.531/flycheck-phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20201126.603/flycheck-phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20200411.531/flycheck-phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20201126.603/flycheck-phpstan-autoloads.el") (car load-path))))
 
 
 
@@ -21166,28 +20861,29 @@ Whether expand-region should use subword expansions.")
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20200526.324/exec-path-from-shell-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20201215.33/exec-path-from-shell-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20200526.324/exec-path-from-shell-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20201215.33/exec-path-from-shell-autoloads.el") (car load-path))))
 
 
 
 (autoload 'exec-path-from-shell-copy-envs "exec-path-from-shell" "\
 Set the environment variables with NAMES from the user's shell.
 
-As a special case, if the variable is $PATH, then `exec-path' and
-`eshell-path-env' are also set appropriately.  The result is an alist,
-as described by `exec-path-from-shell-getenvs'.
+As a special case, if the variable is $PATH, then the variables
+`exec-path' and `eshell-path-env' are also set appropriately.
+The result is an alist, as described by
+`exec-path-from-shell-getenvs'.
 
 \(fn NAMES)" nil nil)
 
 (autoload 'exec-path-from-shell-copy-env "exec-path-from-shell" "\
 Set the environment variable $NAME from the user's shell.
 
-As a special case, if the variable is $PATH, then `exec-path' and
-`eshell-path-env' are also set appropriately.  Return the value
-of the environment variable.
+As a special case, if the variable is $PATH, then the variables
+`exec-path' and `eshell-path-env' are also set appropriately.
+Return the value of the environment variable.
 
 \(fn NAME)" t nil)
 
@@ -21223,10 +20919,10 @@ Start a evil-tutor session.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20200906.255/evil-matchit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210110.1011/evil-matchit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20200906.255/evil-matchit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210110.1011/evil-matchit-autoloads.el") (car load-path))))
 
 
 
@@ -21415,6 +21111,18 @@ Return information of current tag: (list position-of-word word)." nil nil)
 
 
 
+(autoload 'evilmi-octave-get-tag "evil-matchit-octave" "\
+Get current tag info." nil nil)
+
+(autoload 'evilmi-octave-jump "evil-matchit-octave" "\
+Use INFO returned by `evilmi-octave-get-tag' and NUM to jump to matched tag.
+
+\(fn INFO NUM)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-octave" '("evilmi-octave-")))
+
+
+
 (autoload 'evilmi-org-get-tag "evil-matchit-org" "\
 Get current tag in org file." nil nil)
 
@@ -21577,10 +21285,10 @@ Use INFO returned by `evilmi-verlog-get-tag' and NUM to jump to matched tag.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-magit-20200604.110/evil-magit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-magit-20201107.1529/evil-magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-magit-20200604.110/evil-magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-magit-20201107.1529/evil-magit-autoloads.el") (car load-path))))
 
 
 
@@ -21725,10 +21433,10 @@ ARGS is a list of extra command line arguments to pass to Emacs.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/envrc-20201012.2234/envrc-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/envrc-20210106.2359/envrc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/envrc-20201012.2234/envrc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/envrc-20210106.2359/envrc-autoloads.el") (car load-path))))
 
 
 
@@ -21778,10 +21486,10 @@ Major mode for .envrc files as used by direnv.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/emojify-20200812.628/emojify-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/emojify-20210108.1111/emojify-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/emojify-20200812.628/emojify-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/emojify-20210108.1111/emojify-autoloads.el") (car load-path))))
 
 
 
@@ -22053,10 +21761,10 @@ Make a very basic dot file representation of all the top level definitions in a 
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-def-20200528.633/elisp-def-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-def-20201215.706/elisp-def-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-def-20200528.633/elisp-def-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-def-20201215.706/elisp-def-autoloads.el") (car load-path))))
 
 
 
@@ -22079,10 +21787,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-20200910.239/elfeed-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-20201220.1359/elfeed-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-20200910.239/elfeed-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-20201220.1359/elfeed-autoloads.el") (car load-path))))
 
 
 
@@ -22245,10 +21953,10 @@ Generate README.md, designed to be used in batch mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/editorconfig-20200730.1329/editorconfig-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901/editorconfig-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/editorconfig-20200730.1329/editorconfig-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901/editorconfig-autoloads.el") (car load-path))))
 
 
 
@@ -22424,10 +22132,10 @@ See `dynamic-spaces-mode' for more information on Dynamic-Spaces mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20200430.1023/dtrt-indent-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20201208.1925/dtrt-indent-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20200430.1023/dtrt-indent-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20201208.1925/dtrt-indent-autoloads.el") (car load-path))))
 
 
 
@@ -22654,10 +22362,10 @@ Cycle between string quote styles.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csv-mode-1.12/csv-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csv-mode-1.14/csv-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csv-mode-1.12/csv-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csv-mode-1.14/csv-mode-autoloads.el") (car load-path))))
 
 
 
@@ -22914,20 +22622,42 @@ counterparts.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/compact-docstrings-0.1/compact-docstrings-autoloads.el"))
-(add-to-list 'load-path (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/compact-docstrings-0.1/compact-docstrings-autoloads.el") (car load-path)))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-ag-popup-20210112.1320/counsel-ag-popup-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-ag-popup-20210112.1320/counsel-ag-popup-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "counsel-ag-popup" '("counsel-ag-popup-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/compact-docstrings-0.2/compact-docstrings-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/compact-docstrings-0.2/compact-docstrings-autoloads.el") (car load-path))))
+
 
 
 (autoload 'compact-docstrings-mode "compact-docstrings" "\
 Shrink empty lines in docstrings and doc comments.
 
+If called interactively, enable Compact-Docstrings mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (defalias 'shrink-docstrings #'compact-docstrings--mode-on)
 
+(put 'global-compact-docstrings-mode 'globalized-minor-mode t)
+
 (defvar global-compact-docstrings-mode nil "\
-Non-nil if Global-Compact-Docstrings mode is enabled.
-See the command `global-compact-docstrings-mode' for a description of this minor mode.
+Non-nil if Global Compact-Docstrings mode is enabled.
+See the `global-compact-docstrings-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `global-compact-docstrings-mode'.")
@@ -22936,7 +22666,7 @@ or call the function `global-compact-docstrings-mode'.")
 
 (autoload 'global-compact-docstrings-mode "compact-docstrings" "\
 Toggle Compact-Docstrings mode in all buffers.
-With prefix ARG, enable Global-Compact-Docstrings mode if ARG is positive;
+With prefix ARG, enable Global Compact-Docstrings mode if ARG is positive;
 otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 
@@ -22945,6 +22675,757 @@ Compact-Docstrings mode is enabled in all buffers where
 See `compact-docstrings-mode' for more information on Compact-Docstrings mode.
 
 \(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "compact-docstrings" '("compact-docstrings-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20201126.1558/clojure-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20201126.1558/clojure-mode-autoloads.el") (car load-path))))
+
+
+
+(autoload 'clojure-mode "clojure-mode" "\
+Major mode for editing Clojure code.
+
+\\{clojure-mode-map}
+
+\(fn)" t nil)
+
+(autoload 'clojure-unwind "clojure-mode" "\
+Unwind thread at point or above point by N levels.
+With universal argument \\[universal-argument], fully unwind thread.
+
+\(fn &optional N)" t nil)
+
+(autoload 'clojure-unwind-all "clojure-mode" "\
+Fully unwind thread at point or above point." t nil)
+
+(autoload 'clojure-thread "clojure-mode" "\
+Thread by one more level an existing threading macro." t nil)
+
+(autoload 'clojure-thread-first-all "clojure-mode" "\
+Fully thread the form at point using ->.
+
+When BUT-LAST is non-nil, the last expression is not threaded.
+Default value is `clojure-thread-all-but-last'.
+
+\(fn BUT-LAST)" t nil)
+
+(autoload 'clojure-thread-last-all "clojure-mode" "\
+Fully thread the form at point using ->>.
+
+When BUT-LAST is non-nil, the last expression is not threaded.
+Default value is `clojure-thread-all-but-last'.
+
+\(fn BUT-LAST)" t nil)
+
+(autoload 'clojure-cycle-privacy "clojure-mode" "\
+Make public the current private def, or vice-versa.
+See: https://github.com/clojure-emacs/clj-refactor.el/wiki/cljr-cycle-privacy" t nil)
+
+(autoload 'clojure-convert-collection-to-list "clojure-mode" "\
+Convert collection at (point) to list." t nil)
+
+(autoload 'clojure-convert-collection-to-quoted-list "clojure-mode" "\
+Convert collection at (point) to quoted list." t nil)
+
+(autoload 'clojure-convert-collection-to-map "clojure-mode" "\
+Convert collection at (point) to map." t nil)
+
+(autoload 'clojure-convert-collection-to-vector "clojure-mode" "\
+Convert collection at (point) to vector." t nil)
+
+(autoload 'clojure-convert-collection-to-set "clojure-mode" "\
+Convert collection at (point) to set." t nil)
+
+(autoload 'clojure-cycle-if "clojure-mode" "\
+Change a surrounding if to if-not, or vice-versa.
+
+See: https://github.com/clojure-emacs/clj-refactor.el/wiki/cljr-cycle-if" t nil)
+
+(autoload 'clojure-cycle-when "clojure-mode" "\
+Change a surrounding when to when-not, or vice-versa." t nil)
+
+(autoload 'clojure-let-backward-slurp-sexp "clojure-mode" "\
+Slurp the s-expression before the let form into the let form.
+With a numeric prefix argument slurp the previous N s-expressions
+into the let form.
+
+\(fn &optional N)" t nil)
+
+(autoload 'clojure-let-forward-slurp-sexp "clojure-mode" "\
+Slurp the next s-expression after the let form into the let form.
+With a numeric prefix argument slurp the next N s-expressions
+into the let form.
+
+\(fn &optional N)" t nil)
+
+(autoload 'clojure-introduce-let "clojure-mode" "\
+Create a let form, binding the form at point.
+With a numeric prefix argument the let is introduced N lists up.
+
+\(fn &optional N)" t nil)
+
+(autoload 'clojure-move-to-let "clojure-mode" "\
+Move the form at point to a binding in the nearest let." t nil)
+
+(autoload 'clojure-rename-ns-alias "clojure-mode" "\
+Rename a namespace alias." t nil)
+
+(autoload 'clojure-add-arity "clojure-mode" "\
+Add an arity to a function." t nil)
+
+(autoload 'clojurescript-mode "clojure-mode" "\
+Major mode for editing ClojureScript code.
+
+\\{clojurescript-mode-map}
+
+\(fn)" t nil)
+
+(autoload 'clojurec-mode "clojure-mode" "\
+Major mode for editing ClojureC code.
+
+\\{clojurec-mode-map}
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\.\\(clj\\|dtm\\|edn\\)\\'" . clojure-mode))
+
+(add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojurec-mode))
+
+(add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojurescript-mode))
+
+(add-to-list 'auto-mode-alist '("\\(?:build\\|profile\\)\\.boot\\'" . clojure-mode))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20210104.915/cider-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20210104.915/cider-autoloads.el") (car load-path))))
+
+
+
+(autoload 'cider-version "cider" "\
+Display CIDER's version." t nil)
+ (autoload 'cider-start-map "cider" "CIDER jack-in and connect keymap." t 'keymap)
+
+(autoload 'cider-jack-in-clj "cider" "\
+Start an nREPL server for the current project and connect to it.
+PARAMS is a plist optionally containing :project-dir and :jack-in-cmd.
+With the prefix argument, allow editing of the jack in command; with a
+double prefix prompt for all these parameters.
+
+\(fn PARAMS)" t nil)
+
+(autoload 'cider-jack-in-cljs "cider" "\
+Start an nREPL server for the current project and connect to it.
+PARAMS is a plist optionally containing :project-dir, :jack-in-cmd and
+:cljs-repl-type (e.g. Node, Figwheel, etc).  With the prefix argument,
+allow editing of the jack in command; with a double prefix prompt for all
+these parameters.
+
+\(fn PARAMS)" t nil)
+
+(autoload 'cider-jack-in-clj&cljs "cider" "\
+Start an nREPL server and connect with clj and cljs REPLs.
+PARAMS is a plist optionally containing :project-dir, :jack-in-cmd and
+:cljs-repl-type (e.g. Node, Figwheel, etc).  With the prefix argument,
+allow for editing of the jack in command; with a double prefix prompt for
+all these parameters.  When SOFT-CLJS-START is non-nil, start cljs REPL
+only when the ClojureScript dependencies are met.
+
+\(fn &optional PARAMS SOFT-CLJS-START)" t nil)
+
+(autoload 'cider-connect-sibling-clj "cider" "\
+Create a Clojure REPL with the same server as OTHER-REPL.
+PARAMS is for consistency with other connection commands and is currently
+ignored.  OTHER-REPL defaults to `cider-current-repl' and in programs can
+also be a server buffer, in which case a new session with a REPL for that
+server is created.
+
+\(fn PARAMS &optional OTHER-REPL)" t nil)
+
+(autoload 'cider-connect-sibling-cljs "cider" "\
+Create a ClojureScript REPL with the same server as OTHER-REPL.
+PARAMS is a plist optionally containing :cljs-repl-type (e.g. Node,
+Figwheel, etc).  All other parameters are inferred from the OTHER-REPL.
+OTHER-REPL defaults to `cider-current-repl' but in programs can also be a
+server buffer, in which case a new session for that server is created.
+
+\(fn PARAMS &optional OTHER-REPL)" t nil)
+
+(autoload 'cider-connect-clj "cider" "\
+Initialize a Clojure connection to an nREPL server.
+PARAMS is a plist optionally containing :host, :port and :project-dir.  On
+prefix argument, prompt for all the parameters.
+
+\(fn &optional PARAMS)" t nil)
+
+(autoload 'cider-connect-cljs "cider" "\
+Initialize a ClojureScript connection to an nREPL server.
+PARAMS is a plist optionally containing :host, :port, :project-dir and
+:cljs-repl-type (e.g. Node, Figwheel, etc).  On prefix, prompt for all the
+parameters regardless of their supplied or default values.
+
+\(fn &optional PARAMS)" t nil)
+
+(autoload 'cider-connect-clj&cljs "cider" "\
+Initialize a Clojure and ClojureScript connection to an nREPL server.
+PARAMS is a plist optionally containing :host, :port, :project-dir and
+:cljs-repl-type (e.g. Node, Figwheel, etc).  When SOFT-CLJS-START is
+non-nil, don't start if ClojureScript requirements are not met.
+
+\(fn PARAMS &optional SOFT-CLJS-START)" t nil)
+
+(autoload 'cider "cider" "\
+Start a connection of any type interactively." t nil)
+
+(defalias 'cider-jack-in #'cider-jack-in-clj)
+
+(defalias 'cider-connect #'cider-connect-clj)
+
+(with-eval-after-load 'clojure-mode (define-key clojure-mode-map (kbd "C-c M-x") #'cider) (define-key clojure-mode-map (kbd "C-c M-j") #'cider-jack-in-clj) (define-key clojure-mode-map (kbd "C-c M-J") #'cider-jack-in-cljs) (define-key clojure-mode-map (kbd "C-c M-c") #'cider-connect-clj) (define-key clojure-mode-map (kbd "C-c M-C") #'cider-connect-cljs) (define-key clojure-mode-map (kbd "C-c C-x") 'cider-start-map) (define-key clojure-mode-map (kbd "C-c C-s") 'sesman-map) (require 'sesman) (sesman-install-menu clojure-mode-map) (add-hook 'clojure-mode-hook (lambda nil (setq-local sesman-system 'CIDER))))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider" '("cider-")))
+
+
+
+(autoload 'cider-apropos "cider-apropos" "\
+Show all symbols whose names match QUERY, a regular expression.
+QUERY can also be a list of space-separated words (e.g. take while) which
+will be converted to a regular expression (like take.+while) automatically
+behind the scenes.  The search may be limited to the namespace NS, and may
+optionally search doc strings (based on DOCS-P), include private vars
+\(based on PRIVATES-P), and be case-sensitive (based on CASE-SENSITIVE-P).
+
+\(fn QUERY &optional NS DOCS-P PRIVATES-P CASE-SENSITIVE-P)" t nil)
+
+(autoload 'cider-apropos-documentation "cider-apropos" "\
+Shortcut for (cider-apropos <query> nil t)." t nil)
+
+(autoload 'cider-apropos-select "cider-apropos" "\
+Similar to `cider-apropos', but presents the results in a completing read.
+Show all symbols whose names match QUERY, a regular expression.
+QUERY can also be a list of space-separated words (e.g. take while) which
+will be converted to a regular expression (like take.+while) automatically
+behind the scenes.  The search may be limited to the namespace NS, and may
+optionally search doc strings (based on DOCS-P), include private vars
+\(based on PRIVATES-P), and be case-sensitive (based on CASE-SENSITIVE-P).
+
+\(fn QUERY &optional NS DOCS-P PRIVATES-P CASE-SENSITIVE-P)" t nil)
+
+(autoload 'cider-apropos-documentation-select "cider-apropos" "\
+Shortcut for (cider-apropos-select <query> nil t)." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-apropos" '("apropos-special-form" "cider-")))
+
+
+
+(autoload 'cider-browse-ns "cider-browse-ns" "\
+List all NAMESPACE's vars in BUFFER.
+
+\(fn NAMESPACE)" t nil)
+
+(autoload 'cider-browse-ns-all "cider-browse-ns" "\
+List all loaded namespaces in BUFFER." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-browse-ns" '("cider-browse-ns-")))
+
+
+
+(autoload 'cider-browse-spec "cider-browse-spec" "\
+Browse SPEC definition.
+
+\(fn SPEC)" t nil)
+
+(autoload 'cider-browse-spec-all "cider-browse-spec" "\
+Open list of specs in a popup buffer.
+
+With a prefix argument ARG, prompts for a regexp to filter specs.
+No filter applied if the regexp is the empty string.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-browse-spec" '("cider-")))
+
+
+
+(autoload 'cider-cheatsheet "cider-cheatsheet" "\
+Navigate `cider-cheatsheet-hierarchy' with `completing-read'.
+
+When you make it to a Clojure var its doc buffer gets displayed." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-cheatsheet" '("cider-cheatsheet-")))
+
+
+
+(autoload 'cider-classpath "cider-classpath" "\
+List all classpath entries." t nil)
+
+(autoload 'cider-open-classpath-entry "cider-classpath" "\
+Open a classpath entry." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-classpath" '("cider-classpath-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-client" '("cider-")))
+
+
+
+(autoload 'cider-clojuredocs-web "cider-clojuredocs" "\
+Open ClojureDocs documentation in the default web browser.
+
+Prompts for the symbol to use, or uses the symbol at point, depending on
+the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
+opposite of what that option dictates.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'cider-clojuredocs-refresh-cache "cider-clojuredocs" "\
+Refresh the ClojureDocs cache." t nil)
+
+(autoload 'cider-clojuredocs "cider-clojuredocs" "\
+Open ClojureDocs documentation in a popup buffer.
+
+Prompts for the symbol to use, or uses the symbol at point, depending on
+the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
+opposite of what that option dictates.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-clojuredocs" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-common" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-completion" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-connection" '("cider-")))
+
+
+
+(autoload 'cider-debug-defun-at-point "cider-debug" "\
+Instrument the \"top-level\" expression at point.
+If it is a defn, dispatch the instrumented definition.  Otherwise,
+immediately evaluate the instrumented expression.
+
+While debugged code is being evaluated, the user is taken through the
+source code and displayed the value of various expressions.  At each step,
+a number of keys will be prompted to the user." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-debug" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-doc" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-eldoc" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-eval" '("cider-")))
+
+
+
+(autoload 'cider-find-var "cider-find" "\
+Find definition for VAR at LINE.
+Prompt according to prefix ARG and `cider-prompt-for-symbol'.
+A single or double prefix argument inverts the meaning of
+`cider-prompt-for-symbol'.  A prefix of `-` or a double prefix argument causes
+the results to be displayed in a different window.  The default value is
+thing at point.
+
+\(fn &optional ARG VAR LINE)" t nil)
+
+(autoload 'cider-find-dwim-at-mouse "cider-find" "\
+Find and display variable or resource at mouse EVENT.
+
+\(fn EVENT)" t nil)
+
+(autoload 'cider-find-dwim "cider-find" "\
+Find and display the SYMBOL-FILE at point.
+SYMBOL-FILE could be a var or a resource.  If thing at point is empty then
+show dired on project.  If var is not found, try to jump to resource of the
+same name.  When called interactively, a prompt is given according to the
+variable `cider-prompt-for-symbol'.  A single or double prefix argument
+inverts the meaning.  A prefix of `-' or a double prefix argument causes
+the results to be displayed in a different window.  A default value of thing
+at point is given when prompted.
+
+\(fn SYMBOL-FILE)" t nil)
+
+(autoload 'cider-find-resource "cider-find" "\
+Find the resource at PATH.
+Prompt for input as indicated by the variable `cider-prompt-for-symbol'.
+A single or double prefix argument inverts the meaning of
+`cider-prompt-for-symbol'.  A prefix argument of `-` or a double prefix
+argument causes the results to be displayed in other window.  The default
+value is thing at point.
+
+\(fn PATH)" t nil)
+
+(autoload 'cider-find-ns "cider-find" "\
+Find the file containing NS.
+A prefix ARG of `-` or a double prefix argument causes
+the results to be displayed in a different window.
+
+\(fn &optional ARG NS)" t nil)
+
+(autoload 'cider-find-keyword "cider-find" "\
+Find the namespace of the keyword at point and its first occurrence there.
+
+For instance - if the keyword at point is \":cider.demo/keyword\", this command
+would find the namespace \"cider.demo\" and afterwards find the first mention
+of \"::keyword\" there.
+
+Prompt according to prefix ARG and `cider-prompt-for-symbol'.
+A single or double prefix argument inverts the meaning of
+`cider-prompt-for-symbol'.  A prefix of `-` or a double prefix argument causes
+the results to be displayed in a different window.  The default value is
+thing at point.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-find" '("cider-")))
+
+
+
+(autoload 'cider-format-region "cider-format" "\
+Format the Clojure code in the current region.
+START and END represent the region's boundaries.
+
+\(fn START END)" t nil)
+
+(autoload 'cider-format-defun "cider-format" "\
+Format the code in the current defun." t nil)
+
+(autoload 'cider-format-buffer "cider-format" "\
+Format the Clojure code in the current buffer." t nil)
+
+(autoload 'cider-format-edn-buffer "cider-format" "\
+Format the EDN data in the current buffer." t nil)
+
+(autoload 'cider-format-edn-region "cider-format" "\
+Format the EDN data in the current region.
+START and END represent the region's boundaries.
+
+\(fn START END)" t nil)
+
+(autoload 'cider-format-edn-last-sexp "cider-format" "\
+Format the EDN data of the last sexp." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-format" '("cider--format-")))
+
+
+
+(autoload 'cider-inspect-last-sexp "cider-inspector" "\
+Inspect the result of the the expression preceding point." t nil)
+
+(autoload 'cider-inspect-defun-at-point "cider-inspector" "\
+Inspect the result of the \"top-level\" expression at point." t nil)
+
+(autoload 'cider-inspect-last-result "cider-inspector" "\
+Inspect the most recent eval result." t nil)
+
+(autoload 'cider-inspect "cider-inspector" "\
+Inspect the result of the preceding sexp.
+
+With a prefix argument ARG it inspects the result of the \"top-level\" form.
+With a second prefix argument it prompts for an expression to eval and inspect.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'cider-inspect-expr "cider-inspector" "\
+Evaluate EXPR in NS and inspect its value.
+Interactively, EXPR is read from the minibuffer, and NS the
+current buffer's namespace.
+
+\(fn EXPR NS)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-inspector" '("cider-")))
+
+
+
+(autoload 'cider-macroexpand-1 "cider-macroexpansion" "\
+Invoke \\=`macroexpand-1\\=` on the expression preceding point.
+If invoked with a PREFIX argument, use \\=`macroexpand\\=` instead of
+\\=`macroexpand-1\\=`.
+
+\(fn &optional PREFIX)" t nil)
+
+(autoload 'cider-macroexpand-all "cider-macroexpansion" "\
+Invoke \\=`macroexpand-all\\=` on the expression preceding point." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-macroexpansion" '("cider-")))
+
+
+
+(defvar cider-mode-line '(:eval (format " cider[%s]" (cider--modeline-info))) "\
+Mode line lighter for cider mode.
+
+The value of this variable is a mode line template as in
+`mode-line-format'.  See Info Node `(elisp)Mode Line Format' for details
+about mode line templates.
+
+Customize this variable to change how cider mode displays its status in the
+mode line.  The default value displays the current connection.  Set this
+variable to nil to disable the mode line entirely.")
+
+(custom-autoload 'cider-mode-line "cider-mode" t)
+
+(with-eval-after-load 'clojure-mode (easy-menu-define cider-clojure-mode-menu-open clojure-mode-map "Menu for Clojure mode.\n  This is displayed in `clojure-mode' buffers, if `cider-mode' is not active." `("CIDER" :visible (not cider-mode) ["Start a Clojure REPL" cider-jack-in-clj :help "Starts an nREPL server and connects a Clojure REPL to it."] ["Connect to a Clojure REPL" cider-connect-clj :help "Connects to a REPL that's already running."] ["Start a ClojureScript REPL" cider-jack-in-cljs :help "Starts an nREPL server and connects a ClojureScript REPL to it."] ["Connect to a ClojureScript REPL" cider-connect-cljs :help "Connects to a ClojureScript REPL that's already running."] ["Start a Clojure REPL, and a ClojureScript REPL" cider-jack-in-clj&cljs :help "Starts an nREPL server, connects a Clojure REPL to it, and then a ClojureScript REPL."] "--" ["View manual online" cider-view-manual])))
+
+(autoload 'cider-mode "cider-mode" "\
+Minor mode for REPL interaction from a Clojure buffer.
+
+If called interactively, enable Cider mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
+
+\\{cider-mode-map}
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-mode" '("cider-")))
+
+
+
+(autoload 'cider-ns-reload "cider-ns" "\
+Send a (require 'ns :reload) to the REPL.
+
+With an argument PROMPT, it prompts for a namespace name.  This is the
+Clojure out of the box reloading experience and does not rely on
+org.clojure/tools.namespace.  See Commentary of this file for a longer list
+of differences.  From the Clojure doc: \":reload forces loading of all the
+identified libs even if they are already loaded\".
+
+\(fn &optional PROMPT)" t nil)
+
+(autoload 'cider-ns-reload-all "cider-ns" "\
+Send a (require 'ns :reload-all) to the REPL.
+
+With an argument PROMPT, it prompts for a namespace name.  This is the
+Clojure out of the box reloading experience and does not rely on
+org.clojure/tools.namespace.  See Commentary of this file for a longer list
+of differences.  From the Clojure doc: \":reload-all implies :reload and
+also forces loading of all libs that the identified libs directly or
+indirectly load via require\".
+
+\(fn &optional PROMPT)" t nil)
+
+(autoload 'cider-ns-refresh "cider-ns" "\
+Reload modified and unloaded namespaces on the classpath.
+
+With a single prefix argument, or if MODE is `refresh-all', reload all
+namespaces on the classpath unconditionally.
+
+With a double prefix argument, or if MODE is `clear', clear the state of
+the namespace tracker before reloading.  This is useful for recovering from
+some classes of error (for example, those caused by circular dependencies)
+that a normal reload would not otherwise recover from.  The trade-off of
+clearing is that stale code from any deleted files may not be completely
+unloaded.
+
+With a negative prefix argument, or if MODE is `inhibit-fns', prevent any
+refresh functions (defined in `cider-ns-refresh-before-fn' and
+`cider-ns-refresh-after-fn') from being invoked.
+
+\(fn &optional MODE)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-ns" '("cider-ns-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-overlays" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-popup" '("cider-")))
+
+
+
+(autoload 'cider-profile-samples "cider-profile" "\
+Displays current max-sample-count.
+If optional QUERY is specified, set max-sample-count and display new value.
+
+\(fn &optional QUERY)" t nil)
+
+(autoload 'cider-profile-var-profiled-p "cider-profile" "\
+Displays the profiling status of var under point.
+Prompts for var if none under point or QUERY is present.
+
+\(fn QUERY)" t nil)
+
+(autoload 'cider-profile-ns-toggle "cider-profile" "\
+Toggle profiling for the ns associated with optional QUERY.
+
+If optional argument QUERY is non-nil, prompt for ns.  Otherwise use
+current ns.
+
+\(fn &optional QUERY)" t nil)
+
+(autoload 'cider-profile-toggle "cider-profile" "\
+Toggle profiling for the given QUERY.
+Defaults to the symbol at point.
+With prefix arg or no symbol at point, prompts for a var.
+
+\(fn QUERY)" t nil)
+
+(autoload 'cider-profile-summary "cider-profile" "\
+Display a summary of currently collected profile data." t nil)
+
+(autoload 'cider-profile-var-summary "cider-profile" "\
+Display profile data for var under point QUERY.
+Defaults to the symbol at point.  With prefix arg or no symbol at point,
+prompts for a var.
+
+\(fn QUERY)" t nil)
+
+(autoload 'cider-profile-clear "cider-profile" "\
+Clear any collected profile data." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-profile" '("cider-profile-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-repl" '("cider-")))
+
+
+
+(autoload 'cider-repl-history "cider-repl-history" "\
+Display items in the CIDER command history in another buffer." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-repl-history" '("cider-repl-history-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-resolve" '("cider-resolve-")))
+
+
+
+(autoload 'cider-scratch "cider-scratch" "\
+Go to the scratch buffer named `cider-scratch-buffer-name'." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-scratch" '("cider-")))
+
+
+
+(autoload 'cider-selector "cider-selector" "\
+Select a new buffer by type, indicated by a single character.
+The user is prompted for a single character indicating the method by
+which to choose a new buffer.  The `?' character describes the
+available methods.  OTHER-WINDOW provides an optional target.
+See `def-cider-selector-method' for defining new methods.
+
+\(fn &optional OTHER-WINDOW)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-selector" '("??" "?c" "?d" "?e" "?m" "?p" "?q" "?r" "?s" "?x" "cider-selector-" "def-cider-selector-method")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-stacktrace" '("cider-")))
+
+
+
+(defvar cider-auto-test-mode nil "\
+Non-nil if Cider-Auto-Test mode is enabled.
+See the `cider-auto-test-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `cider-auto-test-mode'.")
+
+(custom-autoload 'cider-auto-test-mode "cider-test" nil)
+
+(autoload 'cider-auto-test-mode "cider-test" "\
+Toggle automatic testing of Clojure files.
+
+If called interactively, enable Cider-Auto-Test mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+When enabled this reruns tests every time a Clojure file is loaded.
+Only runs tests corresponding to the loaded file's namespace and does
+nothing if no tests are defined or if the file failed to load.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-test" '("cider-")))
+
+
+
+(autoload 'cider-toggle-trace-var "cider-tracing" "\
+Toggle var tracing.
+Prompts for the symbol to use, or uses the symbol at point, depending on
+the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
+opposite of what that option dictates.
+
+\(fn ARG)" t nil)
+
+(autoload 'cider-toggle-trace-ns "cider-tracing" "\
+Toggle ns tracing.
+Defaults to the current ns.  With prefix arg QUERY, prompts for a ns.
+
+\(fn QUERY)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-tracing" '("cider-")))
+
+
+
+(autoload 'cider-view-manual "cider-util" "\
+View the manual in your default browser." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-util" '("cider-")))
+
+
+
+(autoload 'cider-xref-fn-refs "cider-xref" "\
+Show all functions that reference the var matching NS and SYMBOL.
+
+\(fn &optional NS SYMBOL)" t nil)
+
+(autoload 'cider-xref-fn-deps "cider-xref" "\
+Show all functions referenced by the var matching NS and SYMBOL.
+
+\(fn &optional NS SYMBOL)" t nil)
+
+(autoload 'cider-xref-fn-refs-select "cider-xref" "\
+Displays the references for NS and SYMBOL using completing read.
+
+\(fn &optional NS SYMBOL)" t nil)
+
+(autoload 'cider-xref-fn-deps-select "cider-xref" "\
+Displays the function dependencies for  NS and SYMBOL using completing read.
+
+\(fn &optional NS SYMBOL)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-xref" '("cider-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nrepl-client" '("cider-enlighten-mode" "nrepl-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nrepl-dict" '("nrepl-")))
+
+
 
 
 )
@@ -23012,10 +23493,10 @@ for more details on the DSL accepted by Cask.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buttercup-20201016.2014/buttercup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buttercup-20210105.2255/buttercup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buttercup-20201016.2014/buttercup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buttercup-20210105.2255/buttercup-autoloads.el") (car load-path))))
 
 
 
@@ -23094,21 +23575,22 @@ ASSERTION.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bufler-20200409.1253/bufler-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149/bufler-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bufler-20200409.1253/bufler-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149/bufler-autoloads.el") (car load-path))))
 
 
 
 (autoload 'bufler-list "bufler" "\
 Show Bufler's list.
-With prefix argument FORCE-REFRESH, force refreshing of buffers'
-VC state, and clear `bufler-cache' and regenerate buffer
-groups (which can be useful after changing `bufler-groups' if the
-buffer list has not yet changed).
+With prefix argument ARG, force refreshing of buffers' VC state,
+clear `bufler-cache', and regenerate buffer groups (which can be
+useful after changing `bufler-groups' if the buffer list has not
+yet changed).  With two universal prefix args, also show buffers
+which are otherwise filtered by `bufler-filter-buffer-fns'.
 
-\(fn &optional FORCE-REFRESH)" t nil)
+\(fn &optional ARG)" t nil)
 
 (defalias 'bufler #'bufler-list)
 
@@ -23152,12 +23634,15 @@ Without any input, switch to the previous buffer, like
 `switch-to-buffer'.  If ALL-P (interactively, with universal
 prefix) or if the frame has no workspace, select from all
 buffers.  If SET-WORKSPACE-P (with two universal prefixes),
-select from all buffers and set the frame's workspace.
+select from all buffers and set the frame's workspace.  If
+NO-FILTER (with three universal prefixes), include buffers that
+would otherwise be filtered by
+`bufler-workspace-switch-buffer-filter-fns'.
 
 If `bufler-workspace-switch-buffer-sets-workspace' is non-nil,
 act as if SET-WORKSPACE-P is non-nil.
 
-\(fn &optional ALL-P SET-WORKSPACE-P)" t nil)
+\(fn &optional ALL-P SET-WORKSPACE-P NO-FILTER)" t nil)
 
 (autoload 'bufler-workspace-buffer-name-workspace "bufler-workspace" "\
 Set current buffer's workspace to NAME.
@@ -23180,7 +23665,7 @@ or call the function `bufler-workspace-mode'.")
 (custom-autoload 'bufler-workspace-mode "bufler-workspace" nil)
 
 (autoload 'bufler-workspace-mode "bufler-workspace" "\
-When active, set the frame title according to current Mr. Buffer group.
+When active, set the frame title according to current Bufler group.
 
 If called interactively, enable Bufler-Workspace mode if ARG is
 positive, and disable it if ARG is zero or negative.  If called
@@ -23193,7 +23678,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
-(when (require 'tab-bar nil t) (require 'tab-line) (defvar bufler-workspace-tabs-mode-saved-settings '((tab-bar-separator) (tab-bar-close-button-show)) "Settings saved from before `bufler-workspace-tabs-mode' was activated.\nUsed to restore them when the mode is disabled.") (defcustom bufler-workspace-tabs-tab-separator " | " "String displayed between tabs.\nSince there is no built-in separator between tabs, it can be\nunclear where one tab ends and the next begins, depending on face\nsettings.  Normally the tab-close button would indicate where a\ntab ends, but our tabs are dynamic, rule-generated workspaces and\naren't closable manually, so we repurpose the\n`tab-bar-close-button' as a separator.\n\nThis string can be anything, including an image using display\nproperties.  See the default value of `tab-bar-close-button'." :type 'string :group 'bufler-workspace) (define-minor-mode bufler-workspace-tabs-mode "Use Bufler workspaces for `tab-bar-mode' and `tab-line-mode'." :global t (if bufler-workspace-tabs-mode (progn (cl-loop for (symbol . _value) in bufler-workspace-tabs-mode-saved-settings do (setf (map-elt bufler-workspace-tabs-mode-saved-settings symbol) (symbol-value symbol))) (advice-add 'tab-bar-select-tab :override #'bufler-workspace-tabs--tab-bar-select-tab) (advice-add 'tab-bar-switch-to-tab :override #'bufler-workspace-frame-set) (setf tab-bar-tabs-function #'bufler-workspace-tabs tab-line-tabs-function #'bufler-workspace-buffers) (tab-bar-mode 1) (global-tab-line-mode 1) (setf tab-bar-separator bufler-workspace-tabs-tab-separator tab-bar-close-button-show nil)) (advice-remove 'tab-bar-select-tab #'bufler-workspace-tabs--tab-bar-select-tab) (advice-remove 'tab-bar-switch-to-tab #'bufler-workspace-frame-set) (setf tab-bar-tabs-function #'tab-bar-tabs tab-line-tabs-function #'tab-line-tabs-window-buffers) (cl-loop for (symbol . value) in bufler-workspace-tabs-mode-saved-settings do (set symbol value) do (setf (map-elt bufler-workspace-tabs-mode-saved-settings symbol) nil)) (tab-bar-mode -1) (global-tab-line-mode -1)) (force-mode-line-update 'all)) (defalias 'bufler-tabs-mode #'bufler-workspace-tabs-mode) (defun bufler-workspace-tabs--tab-bar-select-tab (&optional arg) "Set the frame's workspace to the selected tab's workspace.\nARG is the position of the tab in the tab bar." (interactive "P") (unless (integerp arg) (let ((key (event-basic-type last-command-event))) (setq arg (if (and (characterp key) (>= key 49) (<= key 57)) (- key 48) 1)))) (let* ((tabs (funcall tab-bar-tabs-function)) (from-index (tab-bar--current-tab-index tabs)) (to-index (1- (max 1 (min arg (length tabs)))))) (unless (eq from-index to-index) (let* ((_from-tab (tab-bar--tab)) (to-tab (nth to-index tabs)) (workspace-path (alist-get 'path to-tab))) (bufler-workspace-frame-set workspace-path) (force-mode-line-update 'all))))) (defun bufler-workspace-tabs (&optional frame) "Return a list of workspace tabs from FRAME's perspective.\nFRAME defaults to the selected frame.  Works as\n`tab-bar-tabs-function'." (with-selected-frame (or frame (selected-frame)) (cl-labels ((tab-type (path) (if (equal path (frame-parameter nil 'bufler-workspace-path)) 'current-tab 'tab)) (path-first (path) (cl-typecase path (string (list path)) (list (if (car path) (list (car path)) (list (cadr path)))))) (workspace-to-tab (workspace &optional type) (-let* (((&plist :name :path) workspace)) (list (or type (tab-type path)) (cons 'name (car name)) (cons 'path path)))) (path-top-level (path) (pcase-exhaustive path (`(,(and first (guard (not first))) ,(and second (guard second)) \, _rest) (ignore first second) (cl-subseq path 0 2)) (`(,first \, _rest) (list first)))) (path-to-workspace (path) (list :name (path-first path) :path path))) (let* ((bufler-vc-refresh nil) (buffer-paths (bufler-group-tree-paths (bufler-buffers))) (group-paths (mapcar #'butlast buffer-paths)) (top-level-paths (mapcar #'path-top-level group-paths)) (top-level-workspaces (mapcar #'path-to-workspace top-level-paths)) (unique-top-level-workspaces (seq-uniq top-level-workspaces #'equal)) (tabs (mapcar #'workspace-to-tab unique-top-level-workspaces))) (unless (cl-loop with current-path = (frame-parameter nil 'bufler-workspace-path) for tab in tabs for tab-path = (alist-get 'path tab) thereis (equal tab-path current-path)) (push (list 'current-tab (cons 'name (bufler-format-path (frame-parameter nil 'bufler-workspace-path))) (cons 'path (frame-parameter nil 'bufler-workspace-path))) tabs)) tabs)))))
+(when (require 'tab-bar nil t) (require 'tab-line) (defvar bufler-workspace-tabs-mode-saved-settings '((tab-bar-separator) (tab-bar-close-button-show)) "Settings saved from before `bufler-workspace-tabs-mode' was activated.\nUsed to restore them when the mode is disabled.") (defcustom bufler-workspace-tabs-tab-separator " | " "String displayed between tabs.\nSince there is no built-in separator between tabs, it can be\nunclear where one tab ends and the next begins, depending on face\nsettings.  Normally the tab-close button would indicate where a\ntab ends, but our tabs are dynamic, rule-generated workspaces and\naren't closable manually, so we repurpose the\n`tab-bar-close-button' as a separator.\n\nThis string can be anything, including an image using display\nproperties.  See the default value of `tab-bar-close-button'." :type 'string :group 'bufler-workspace) (define-minor-mode bufler-workspace-tabs-mode "Use Bufler workspaces for `tab-bar-mode' and `tab-line-mode'." :group 'bufler-workspace :global t (if bufler-workspace-tabs-mode (progn (cl-loop for (symbol . _value) in bufler-workspace-tabs-mode-saved-settings do (setf (map-elt bufler-workspace-tabs-mode-saved-settings symbol) (symbol-value symbol))) (advice-add 'tab-bar-select-tab :override #'bufler-workspace-tabs--tab-bar-select-tab) (advice-add 'tab-bar-switch-to-tab :override #'bufler-workspace-frame-set) (setf tab-bar-tabs-function #'bufler-workspace-tabs tab-line-tabs-function #'bufler-workspace-buffers) (tab-bar-mode 1) (global-tab-line-mode 1) (setf tab-bar-separator bufler-workspace-tabs-tab-separator tab-bar-close-button-show nil)) (advice-remove 'tab-bar-select-tab #'bufler-workspace-tabs--tab-bar-select-tab) (advice-remove 'tab-bar-switch-to-tab #'bufler-workspace-frame-set) (setf tab-bar-tabs-function #'tab-bar-tabs tab-line-tabs-function #'tab-line-tabs-window-buffers) (cl-loop for (symbol . value) in bufler-workspace-tabs-mode-saved-settings do (set symbol value) do (setf (map-elt bufler-workspace-tabs-mode-saved-settings symbol) nil)) (tab-bar-mode -1) (global-tab-line-mode -1)) (force-mode-line-update 'all)) (defalias 'bufler-tabs-mode #'bufler-workspace-tabs-mode) (defun bufler-workspace-tabs--tab-bar-select-tab (&optional arg) "Set the frame's workspace to the selected tab's workspace.\nARG is the position of the tab in the tab bar." (interactive "P") (unless (integerp arg) (let ((key (event-basic-type last-command-event))) (setq arg (if (and (characterp key) (>= key 49) (<= key 57)) (- key 48) 1)))) (let* ((tabs (funcall tab-bar-tabs-function)) (from-index (tab-bar--current-tab-index tabs)) (to-index (1- (max 1 (min arg (length tabs)))))) (unless (eq from-index to-index) (let* ((_from-tab (tab-bar--tab)) (to-tab (nth to-index tabs)) (workspace-path (alist-get 'path to-tab))) (bufler-workspace-frame-set workspace-path) (force-mode-line-update 'all))))) (defun bufler-workspace-tabs (&optional frame) "Return a list of workspace tabs from FRAME's perspective.\nFRAME defaults to the selected frame.  Works as\n`tab-bar-tabs-function'." (with-selected-frame (or frame (selected-frame)) (cl-labels ((tab-type (path) (if (equal path (frame-parameter nil 'bufler-workspace-path)) 'current-tab 'tab)) (path-first (path) (cl-typecase path (string (list path)) (list (if (car path) (list (car path)) (list (cadr path)))))) (workspace-to-tab (workspace &optional type) (-let* (((&plist :name :path) workspace)) (list (or type (tab-type path)) (cons 'name (car name)) (cons 'path path)))) (path-top-level (path) (pcase-exhaustive path (`(,(and first (guard (not first))) ,(and second (guard second)) \, _rest) (ignore first second) (cl-subseq path 0 2)) (`(,first \, _rest) (list first)))) (path-to-workspace (path) (list :name (path-first path) :path path))) (let* ((bufler-vc-refresh nil) (buffer-paths (bufler-group-tree-paths (bufler-buffers))) (group-paths (mapcar #'butlast buffer-paths)) (top-level-paths (mapcar #'path-top-level group-paths)) (top-level-workspaces (mapcar #'path-to-workspace top-level-paths)) (unique-top-level-workspaces (seq-uniq top-level-workspaces #'equal)) (tabs (mapcar #'workspace-to-tab unique-top-level-workspaces))) (unless (cl-loop with current-path = (frame-parameter nil 'bufler-workspace-path) for tab in tabs for tab-path = (alist-get 'path tab) thereis (equal tab-path current-path)) (push (list 'current-tab (cons 'name (bufler-format-path (frame-parameter nil 'bufler-workspace-path))) (cons 'path (frame-parameter nil 'bufler-workspace-path))) tabs)) tabs)))))
 
 
 
@@ -23324,10 +23809,10 @@ Turning on BNF Mode calls the value of `prog-mode-hook' and then of
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bicycle-20200723.2222/bicycle-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bicycle-20201028.1854/bicycle-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bicycle-20200723.2222/bicycle-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bicycle-20201028.1854/bicycle-autoloads.el") (car load-path))))
 
 
 
@@ -23479,20 +23964,20 @@ don’t re-activate minor modes already enabled in the buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-compile-20191020.1040/auto-compile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-compile-20201122.1157/auto-compile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-compile-20191020.1040/auto-compile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-compile-20201122.1157/auto-compile-autoloads.el") (car load-path))))
 
 
 
 (autoload 'auto-compile-mode "auto-compile" "\
 Compile Emacs Lisp source files after the visiting buffers are saved.
 
-If called interactively, enable Auto-Compile mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Auto-Compile mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 After a buffer containing Emacs Lisp code is saved to its source
 file update the respective byte code file.  If the latter does
@@ -23505,6 +23990,8 @@ variant `auto-compile-on-save-mode'.  Also see the related
 `auto-compile-on-load-mode'.
 
 \(fn &optional ARG)" t nil)
+
+(put 'auto-compile-on-save-mode 'globalized-minor-mode t)
 
 (defvar auto-compile-on-save-mode nil "\
 Non-nil if Auto-Compile-On-Save mode is enabled.
@@ -23588,10 +24075,10 @@ for a description of this minor mode.")
 (autoload 'auto-compile-on-load-mode "auto-compile" "\
 Before loading a library recompile it if it needs recompilation.
 
-If called interactively, enable Auto-Compile-On-Load mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Auto-Compile-On-Load mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 A library needs to be recompiled if the source file is newer than
 it's byte-compile destination.  Without this advice the outdated
@@ -23665,10 +24152,10 @@ Major mode for editing Apache configuration files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/anzu-20200514.1801/anzu-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/anzu-20201203.529/anzu-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/anzu-20200514.1801/anzu-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/anzu-20201203.529/anzu-autoloads.el") (car load-path))))
 
 
 
@@ -23734,7 +24221,7 @@ anzu version of `isearch-query-replace-regexp'.
 
 \(fn ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "anzu" '("anzu-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "anzu" '("anzu")))
 
 
 )
@@ -23830,10 +24317,10 @@ Install hooks to enable function ‘aggressive-fill-paragraph-mode’ in recomme
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ag-20190726.9/ag-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ag-20201031.2202/ag-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ag-20190726.9/ag-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ag-20201031.2202/ag-autoloads.el") (car load-path))))
 
 
 
@@ -23934,14 +24421,10 @@ See also `ag-dired-regexp'.
 \(fn REGEXP)" t nil)
 
 (autoload 'ag-kill-buffers "ag" "\
-Kill all `ag-mode' buffers.
-
-\(fn)" t nil)
+Kill all `ag-mode' buffers." t nil)
 
 (autoload 'ag-kill-other-buffers "ag" "\
-Kill all `ag-mode' buffers other than the current buffer.
-
-\(fn)" t nil)
+Kill all `ag-mode' buffers other than the current buffer." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ag" '("ag-" "ag/")))
 
@@ -24193,14 +24676,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht treemacs tree-sitter tree-sitter-langs tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional faceup pos-tip racket-mode geiser evil-surround clojure-mode a parseclj parseedn queue spinner sesman cider macrostep slime symex sublimity list-utils string-utils string-inflection string-edit standard-dirs speed-type solarized-theme smex smart-tabs-mode simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff edit-indirect separedit scss-mode scratch-comment sane-term rjsx-mode helm-core helm rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode quick-peek pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier posframe popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inform7 htmlize helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile compact-docstrings centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter async with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional evil-surround symex sublimity list-utils string-utils string-inflection string-edit standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan php-auto-yasnippets pdf-tools pcre2el a parseclj parseedn parse-it packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inform7 htmlize helm-core helm helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20200409.1253" "/Users/neagleson/.emacs.d/elpa/editorconfig-20200730.1329" "/Users/neagleson/.emacs.d/elpa/forge-20201002.1420" "/Users/neagleson/.emacs.d/elpa/ghub-20201016.927" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20200929.2119" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20200530.1710" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20200908.1021" "/Users/neagleson/.emacs.d/elpa/magit-20201019.1115" "/Users/neagleson/.emacs.d/elpa/prettier-20200714.859" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20200810.224" "/Users/neagleson/.emacs.d/elpa/geiser-20200826.2018" "/Users/neagleson/.emacs.d/elpa/racket-mode-20201016.1629" "/Users/neagleson/.emacs.d/elpa/evil-20201014.2043" "/Users/neagleson/.emacs.d/elpa/ivy-20200826.955" "/Users/neagleson/.emacs.d/elpa/transient-20201016.1936" "/Users/neagleson/.emacs.d/elpa/use-package-20200721.2156" "/Users/neagleson/.emacs.d/elpa/dash-20200803.1520" "/Users/neagleson/.emacs.d/elpa/with-editor-20200930.1912" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201008.918")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901" "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148" "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953" "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631" "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210110.1607" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210105.2148" "/Users/neagleson/.emacs.d/elpa/evil-20210109.807" "/Users/neagleson/.emacs.d/elpa/ivy-20210109.1619" "/Users/neagleson/.emacs.d/elpa/transient-20210103.1546" "/Users/neagleson/.emacs.d/elpa/use-package-20210106.2145" "/Users/neagleson/.emacs.d/elpa/dash-20210111.1247" "/Users/neagleson/.emacs.d/elpa/with-editor-20210110.1545" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

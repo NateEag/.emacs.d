@@ -414,6 +414,9 @@ The shell command lives in my dotfiles repo."
   :bind (:map lisp-interaction-mode-map
               ("C-j" . scratch-comment-eval-sexp)))
 
+(use-package svn-msg
+  :mode ("svn-commit\(.[[:digit]]+\).tmp" . svn-msg-mode))
+
 (use-package git-gutter
   :diminish
   :config

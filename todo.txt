@@ -128,6 +128,17 @@
 - Add font-lock-refontify to my Anki deck so I remember it exists (I rarely
   deal with font-lock code but sometimes I do wander into it)
 
+- Remove my dumb hacks to try to start evil-mode in the desired state and
+  instead use the supported mechanisms to choose initial state
+  (evil-*-state-modes, evil-buffer-regexps). The code to rip out is added to
+  evil-local-mode-hook in config-packages.el.
+
+- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
+  cases I'll just want to quit after seeing what I wanted to, and being in
+  normal-state makes that two keystrokes instead of one. Turns out this should
+  be easy to do - just add the appropriate mode to evil-insert-state-modes or
+  else match buffer name using evil-buffer-regexps.
+
 - Make "<leader> g n" support going to the last hunk in a file and "<leader> g
   p" support going to the first hunk in a file. Feels like an off-by-one error.
   Some tinkering via debug suggests that in `git-gutter:next-hunk`, the
@@ -141,10 +152,6 @@
 
 - Make git-gutter show staged changes as changed (right now they don't show up
   at all). Maybe use different colors to indicate the fact that they're staged?
-
-- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
-  cases I'll just want to quit after seeing what I wanted to, and being in
-  normal-state makes that two keystrokes instead of one.
 
 - Find or create a way to detect my most common typing errors. Bonus points if
   it automatically generates typing drills to let me focus in on typos it has

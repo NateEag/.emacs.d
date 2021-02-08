@@ -44,6 +44,11 @@
   but it does not seem to have any effect there, so I need to understand
   flyspell better.
 
+- Figure out how to sustainably and permanently fix string-edit-at-point in
+  json-mode. When editing JSON, you really don't want string concatenation, as
+  it doesn't support it. Bug report + suggested fix:
+  https://github.com/magnars/string-edit.el/issues/15
+
 - Look into using tree-sitter to drive syntax coloration in Emacs. I've
   installed the relevant packages but it will require a lot more than just
   that. I know php-mode has a long history of slow syntax coloration and having

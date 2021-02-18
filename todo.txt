@@ -34,6 +34,9 @@
   unresponsive while it's running, but as soon as I turn it off it's reasonable
   again.
 
+- Try frontmacs-javascript as a possible new JS mode. Installed but not
+  configured.
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I

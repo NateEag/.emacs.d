@@ -13,8 +13,8 @@
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;;     Tim Meusel <tim@bastelfreak.de>
 ;; URL: https://github.com/voxpupuli/puppet-mode
-;; Package-Version: 20200505.344
-;; Package-Commit: 0e2e32a3b1644edd8010bd3d44e83def683348b3
+;; Package-Version: 20210215.2347
+;; Package-Commit: 9f4fef6489ddd9251213f68c8389328ca75db9a6
 ;; Keywords: languages
 ;; Version: 0.4
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))
@@ -315,31 +315,41 @@ Return nil, if there is no special context at POS, or one of
                                (not (any "/" "\\" "\n"))
                                ;; Any escaped character
                                (and "\\" not-newline)))))
-      ;; http://docs.puppetlabs.com/puppet/latest/reference/lang_reserved.html#reserved-words
-      (keyword . ,(rx (or "and" "application" "attr" "case" "class" "consumes"
-                          "default" "define" "else" "elsif" "environment"
-                          "false" "function" "if" "import" "in" "inherits"
-                          "node" "or" "private" "produces" "site" "true"
-                          "type" "undef" "unless"
+      ;; https://puppet.com/docs/puppet/latest/lang_reserved.html
+      (keyword . ,(rx (or "and" "application" "attr" "case" "class" "component"
+                          "consumes" "default" "define" "else" "elsif"
+                          "environment" "false" "function" "if" "import" "in"
+                          "inherits" "node" "or" "private" "produces" "regexp"
+                          "site" "true" "type" "undef" "unit" "unless"
                           ;; Bolt
                           ;; https://puppet.com/docs/bolt/0.x/writing_plans.html
                           "plan"
                           )))
-      ;; http://docs.puppetlabs.com/references/latest/function.html
-      (builtin-function . ,(rx (or "alert" "assert_type" "binary_file" "break"
-                                   "contain" "create_resources" "crit" "debug"
-                                   "defined" "dig" "digest" "each" "emerg"
-                                   "epp" "err" "fail" "file" "filter"
-                                   "find_file" "fqdn_rand" "generate" "hiera"
-                                   "hiera_array" "hiera_hash" "hiera_include"
-                                   "include" "info" "inline_epp"
-                                   "inline_template" "lest" "lookup" "map"
-                                   "match" "md5" "new" "next" "notice"
-                                   "realize" "reduce" "regsubst" "require"
-                                   "return" "reverse_each" "scanf" "sha1"
-                                   "shellquote" "slice" "split" "sprintf"
-                                   "step" "strftime" "tag" "tagged" "template"
-                                   "then" "type" "versioncmp" "warning" "with"
+      ;; https://puppet.com/docs/puppet/latest/function.html
+      (builtin-function . ,(rx (or "abs" "alert" "all" "annotate" "any"
+                                   "assert_type" "binary_file" "break" "call"
+                                   "camelcase" "capitalize" "ceiling" "chomp"
+                                   "chop" "compare" "contain" "convert_to"
+                                   "create_resources" "crit" "debug" "defined"
+                                   "dig" "digest" "downcase" "each" "emerg"
+                                   "empty" "epp" "err" "eyaml_lookup_key"
+                                   "fail" "file" "filter" "find_file"
+                                   "find_template" "flatten" "floor"
+                                   "fqdn_rand" "generate" "get" "getvar"
+                                   "group_by" "hiera" "hiera_array"
+                                   "hiera_hash" "hiera_include" "hocon_data"
+                                   "import" "include" "info" "inline_epp"
+                                   "inline_template" "join" "json_data" "keys"
+                                   "length" "lest" "lookup" "lstrip" "map"
+                                   "match" "max" "md5" "min" "new" "next"
+                                   "notice" "partition" "realize" "reduce"
+                                   "regsubst" "require" "return" "reverse_each"
+                                   "round" "rstrip" "scanf" "sha1" "sha256"
+                                   "shellquote" "size" "slice" "split"
+                                   "sprintf" "step" "strftime" "strip" "tag"
+                                   "tagged" "template" "tree_each" "then"
+                                   "type" "unique" "unwrap" "upcase" "values"
+                                   "versioncmp" "warning" "with" "yaml_data"
                                    ;; Bolt
                                    ;; https://puppet.com/docs/bolt/0.x/plan_functions.html
                                    ;; https://puppet.com/docs/bolt/0.x/writing_plans.html#concept-4926
@@ -713,10 +723,17 @@ of the initial include plus puppet-include-indent."
               (setq cur-indent (current-indentation))
               (setq not-indented nil))
 
-             ;; Brace (possibly followed by a comma) or paren on a
-             ;; line by itself will already be indented to the right
-             ;; level, so we can cheat and stop there.
-             ((looking-at "^\\s-*[\)}]\\(,\\|\\s-*[-~]>\\)?\\s-*\s?$")
+             ;; Closing bracket. Use indentation based on start of
+             ;; array.
+             ((looking-at "^[^[\n]*],?\\s-*$")
+              (goto-char (puppet-in-array))
+              (setq cur-indent (current-indentation))
+              (setq not-indented nil))
+
+             ;; Brace, paren or bracket (possibly followed by a comma)
+             ;; on a line by itself will already be indented to the
+             ;; right level, so we can cheat and stop there.
+             ((looking-at "^\\s-*[])}]\\(,\\|\\s-*[-~]>\\)?\\s-*\s?$")
               (setq cur-indent (current-indentation))
               (setq not-indented nil))
 

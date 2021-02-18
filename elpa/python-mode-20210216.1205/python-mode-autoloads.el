@@ -90,7 +90,7 @@ See available customizations listed in files variables-python-mode at directory 
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("all-mode-setting" "autopair-mode" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ipython" "iypthon" "jython" "pdb-track-stack-from-shell-p" "pep8" "pst-here" "stri" "toggle-force-py-shell-name-p" "turn-o" "virtualenv-")))
 
 ;;;***
 

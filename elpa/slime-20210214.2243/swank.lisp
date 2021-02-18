@@ -2161,8 +2161,8 @@ conditions are simply reported."
                 (*print-pretty* t)
                 (*print-right-margin* 65)
                 (*print-circle* t)
-                (*print-length* (or *print-length* limit))
-                (*print-level* (or *print-level* limit))
+                (*print-length* (or *print-length* 64))
+                (*print-level* (or *print-level* 6))
                 (*print-lines* (or *print-lines* limit)))
             (print-condition condition stream))
         (serious-condition (c)
@@ -3641,7 +3641,7 @@ belonging to PACKAGE."
   (let ((alist '()))
     (flet ((consider (symbol)
              (let ((indent (symbol-indentation symbol)))
-               (when indent
+               (when (or indent (gethash symbol cache))
                  (unless (equal (gethash symbol cache) indent)
                    (setf (gethash symbol cache) indent)
                    (let ((pkgs (mapcar #'package-name 

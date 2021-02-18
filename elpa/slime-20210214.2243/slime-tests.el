@@ -1,4 +1,4 @@
-;;; slime-tests.el --- Automated tests for slime.el
+;;; slime-tests.el --- Automated tests for slime.el  -*- lexical-binding: t -*-
 ;;
 ;;;; License
 ;;     Copyright (C) 2003  Eric Marsden, Luke Gorrie, Helmut Eller
@@ -30,8 +30,6 @@
 (require 'ert "lib/ert" t) ;; look for bundled version for Emacs 23
 (require 'cl-lib)
 (require 'bytecomp) ; byte-compile-current-file
-(eval-when-compile
-  (require 'cl)) ; lexical-let
 
 (defun slime-shuffle-list (list)
   (let* ((len (length list))
@@ -54,7 +52,7 @@ Exits Emacs when finished. The exit code is the number of failed tests."
         (slime-background-message-function #'ignore))
     (slime)
     ;; Block until we are up and running.
-    (lexical-let (timed-out)
+    (let (timed-out)
       (run-with-timer timeout nil
                       (lambda () (setq timed-out t)))
       (while (not (slime-connected-p))
@@ -106,8 +104,8 @@ Also don't error if `ert.el' is missing."
     (if (not (featurep 'ert))
         (warn "No ert.el found: not defining test %s"
               name)
-      (let* ((docstring (and (stringp (second args))
-                             (second args)))
+      (let* ((docstring (and (stringp (cl-second args))
+                             (cl-second args)))
              (args (if docstring
                        (cddr args)
                      (cdr args)))
@@ -116,7 +114,7 @@ Also don't error if `ert.el' is missing."
            :tags ',tags
            ,@args))))
 
-  (defun slime-test-ert-test-for (name input i doc body fails-for style fname)
+  (defun slime-test-ert-test-for (name input i doc _body fails-for style fname)
     `(define-slime-ert-test
        ,(intern (format "%s-%d" name i)) ()
        ,(format "For input %s, %s" (truncate-string-to-width
@@ -204,7 +202,7 @@ conditions (assertions)."
     (while (not (funcall predicate))
       (let ((now (current-time)))
         (message "waiting for condition: %s [%s.%06d]" name
-                 (format-time-string "%H:%M:%S" now) (third now)))
+                 (format-time-string "%H:%M:%S" now) (cl-third now)))
       (cond ((time-less-p end (current-time))
              (error "Timeout waiting for condition: %S" name))
             (t
@@ -272,7 +270,7 @@ conditions (assertions)."
 
 (def-slime-test symbol-at-point.3 (sym)
   "fancy symbol-name with leading ,"
-  (remove-if (lambda (s) (eq (aref (car s) 0) ?@)) slime-test-symbols)
+  (cl-remove-if (lambda (s) (eq (aref (car s) 0) ?@)) slime-test-symbols)
   (slime-check-symbol-at-point "," sym ""))
 
 (def-slime-test symbol-at-point.4 (sym)
@@ -741,7 +739,7 @@ Confirm that SUBFORM is correctly located."
                   ;;(encode-coding-string (string #x304a #x306f #x3088 #x3046)
                   ;;                      'utf-8)
                   (string (decode-coding-string bytes 'utf-8-unix)))
-            (assert (equal bytes (encode-coding-string string 'utf-8-unix)))
+            (cl-assert (equal bytes (encode-coding-string string 'utf-8-unix)))
             (list (concat "(defun cl-user::foo () \"" string "\")")
                   string)))
   (slime-eval `(cl:eval (cl:read-from-string ,input)))
@@ -785,8 +783,8 @@ Confirm that SUBFORM is correctly located."
 (def-slime-test async-eval-debugging (depth)
   "Test recursive debugging of asynchronous evaluation requests."
   '((1) (2) (3))
-  (lexical-let ((depth depth)
-                (debug-hook-max-depth 0))
+  (let ((depth depth)
+        (debug-hook-max-depth 0))
     (let ((debug-hook
            (lambda ()
              (with-current-buffer (sldb-get-default-buffer)
@@ -809,15 +807,15 @@ Confirm that SUBFORM is correctly located."
   "Test recursive debugging and returning to lower SLDB levels."
   '((2 1) (4 2))
   (slime-check-top-level)
-  (lexical-let ((level2 level2)
-                (level1 level1)
-                (state 'enter)
-                (max-depth 0))
+  (let ((level2 level2)
+        (level1 level1)
+        (state 'enter)
+        (max-depth 0))
     (let ((debug-hook
            (lambda ()
              (with-current-buffer (sldb-get-default-buffer)
                (setq max-depth (max sldb-level max-depth))
-               (ecase state
+               (cl-ecase state
                  (enter
                   (cond ((= sldb-level level2)
                          (setq state 'leave)
@@ -887,7 +885,7 @@ Confirm that SUBFORM is correctly located."
     "Test interactive eval and continuing from the debugger."
     '(())
   (slime-check-top-level)
-  (lexical-let ((done nil))
+  (let ((done nil))
     (let ((sldb-hook (lambda () (sldb-continue) (setq done t))))
       (slime-interactive-eval
        "(progn\
@@ -910,7 +908,7 @@ Confirm that SUBFORM is correctly located."
       ("~a" "(let ((x (cons (make-string 100000 :initial-element #\\X) nil)))\
                 (setf (cdr x) x))"))
   (slime-check-top-level)
-  (lexical-let ((done nil))
+  (let ((done nil))
     (let ((sldb-hook (lambda () (sldb-continue) (setq done t))))
       (slime-interactive-eval
        (format "(with-standard-io-syntax (cerror \"foo\" \"%s\" %s) (+ 1 2))"
@@ -1066,6 +1064,38 @@ the buffer's undo-list."
   23)
 "
        ("23" "42")))
+  (with-temp-buffer
+    (lisp-mode)
+    (slime-lisp-mode-hook)
+    (insert buffer-content)
+    (slime-compile-region (point-min) (point-max))
+    (slime-sync-to-top-level 3)
+    (slime-update-indentation)
+    (slime-sync-to-top-level 3)
+    (dolist (marker point-markers)
+      (search-backward marker)
+      (beginning-of-defun)
+      (indent-sexp))
+    (slime-test-expect "Correct buffer content"
+                       buffer-content
+                       (substring-no-properties (buffer-string)))))
+
+(def-slime-test indentation.2 (buffer-content point-markers)
+        "Check indentation update to work correctly."
+    '(("
+\(in-package :swank)
+
+\(defmacro lolipop (&body body)
+  `(progn ,@body))
+
+\(defmacro lolipop (&rest body)
+  `(progn ,@body))
+
+\(lolipop 1
+         2
+         23)
+"
+       ("23")))
   (with-temp-buffer
     (lisp-mode)
     (slime-lisp-mode-hook)
@@ -1279,13 +1309,13 @@ Reconnect afterwards."
     (with-current-buffer (process-buffer p)
       (erase-buffer))
     (delete-process c)
-    (assert (equal (process-status c) 'closed) nil "Connection not closed")
+    (cl-assert (equal (process-status c) 'closed) nil "Connection not closed")
     (accept-process-output nil 0.1)
-    (assert (equal (process-status p) 'run) nil "Subprocess not running")
+    (cl-assert (equal (process-status p) 'run) nil "Subprocess not running")
     (with-current-buffer (process-buffer p)
-      (assert (< (buffer-size) 500) nil "Unusual output"))
+      (cl-assert (< (buffer-size) 500) nil "Unusual output"))
     (slime-inferior-connect p (slime-inferior-lisp-args p))
-    (lexical-let ((hook nil) (p p))
+    (let ((hook nil) (p p))
       (setq hook (lambda ()
                    (slime-test-expect
                     "We are connected again" p (slime-inferior-process))
@@ -1305,8 +1335,8 @@ Reconnect afterwards."
   (let ((success nil)
         (test-file (make-temp-file "slime-recipe-" nil ".el"))
         (test-forms
-         `((require 'cl)
-           (labels
+         `((require 'cl-lib)
+           (cl-labels
                ((die
                  (reason &optional more)
                  (princ reason)
@@ -1371,7 +1401,7 @@ Reconnect afterwards."
                 (setq slime-contribs '(slime-fancy)))
    :takeoff `((call-interactively 'slime))
    :landing `((unless (and (featurep 'slime-repl)
-                           (find 'swank-repl slime-required-modules))
+                           (cl-find 'swank-repl slime-required-modules))
                 (die "slime-repl not loaded properly"))
               (with-current-buffer (slime-repl-buffer)
                 (unless (and (string-match "^; +SLIME" (buffer-string))
@@ -1389,7 +1419,7 @@ Reconnect afterwards."
                 (slime-setup '(slime-fancy)))
    :takeoff `((call-interactively 'slime))
    :landing `((unless (and (featurep 'slime-repl)
-                           (find 'swank-repl slime-required-modules))
+                           (cl-find 'swank-repl slime-required-modules))
                 (die "slime-repl not loaded properly"))
               (with-current-buffer (slime-repl-buffer)
                 (unless (and (string-match "^; +SLIME" (buffer-string))
@@ -1411,7 +1441,7 @@ Reconnect afterwards."
                 (die "Expected SLIME to be fully loaded by now")))))
 
 (defun slime-test-eval-now (string)
-  (second (slime-eval `(swank:eval-and-grab-output ,string))))
+  (cl-second (slime-eval `(swank:eval-and-grab-output ,string))))
 
 (def-slime-test (slime-recompile-all-xrefs (:fails-for "cmucl")) ()
   "Test recompilation of all references within an xref buffer."

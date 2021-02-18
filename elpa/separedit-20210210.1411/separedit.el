@@ -5,8 +5,8 @@
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
 ;; Version: 0.2.0
-;; Package-Version: 20200827.725
-;; Package-Commit: dc0b3448f3d9738f5233c34c5c8fc172eda26323
+;; Package-Version: 20210210.1411
+;; Package-Commit: cc1145bde8b1868322ea799a90e38a1295089ada
 ;; Package-Requires: ((emacs "24.4") (dash "2.0") (dash-functional "1.2") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
@@ -351,7 +351,7 @@ Taken from `markdown-code-lang-modes'."
   :type 'list)
 
 (defcustom separedit-comment-delimiter-alist
-  '((("//+" "\\*+")    . (c-mode
+  '((("//+!\\(?:<\\)?" "//+\\(?:<\\)?" "\\*+") . (c-mode
                           c++-mode
                           csharp-mode
                           css-mode
@@ -360,24 +360,25 @@ Taken from `markdown-code-lang-modes'."
                           js-mode
                           objc-mode
                           php-mode
+                          rust-mode
+                          rustic-mode
                           swift-mode
                           typescript-mode))
-    (("//+!" "//+" "\\*+") . (rust-mode
-                              rustic-mode))
     (("--")            . (applescript-mode haskell-mode lua-mode))
     (("//+")           . (pascal-mode fsharp-mode))
     ((";+")            . (emacs-lisp-mode
                           lisp-interaction-mode
                           common-lisp
                           racket-mode
-                          scheme-mode))
+                          scheme-mode
+                          fennel-mode))
     (("#+")            . (nix-mode python-mode ruby-mode)))
   "Alist of comment delimiter regexp."
   :group 'separedit
   :type 'alist)
 
 (defcustom separedit-comment-encloser-alist
-  '((("/\\*+" "\\*+/") . (c-mode
+  '((("/\\*+\\(?:!\\)?" "\\*+/") . (c-mode
                           c++-mode
                           csharp-mode
                           css-mode
@@ -920,7 +921,8 @@ LANG is a string, and the returned major mode is a symbol."
           (t aval))))
 
 (defun separedit--indent-of-string-block (quotes beg end)
-  "Return the indentation of string block between BEN and END quoted by QUOTES."
+  "Return the indent info of string block between BEN and END quoted by QUOTES.
+Return value is in the form of (indent-length indent-line1)."
   (save-excursion
     (goto-char beg)
     (let ((str-start (buffer-substring-no-properties (point) (point-at-eol)))
@@ -940,14 +942,14 @@ LANG is a string, and the returned major mode is a symbol."
              ;;   "\
              ;;   String block does not need preserve indetation
              ;;   "
-             nil)
+             (cons nil nil))
             ((and (string= str-start "") beg-at-newline end-at-newline)
              ;; For
              ;;
              ;;   '''
              ;;   string block need preserve indetation
              ;;   '''
-             (- (current-column) (length quotes)))
+             (cons (- (current-column) (length quotes)) t))
             ((and (string= str-start "") (not beg-at-newline) end-at-newline)
              ;; For
              ;;
@@ -955,16 +957,18 @@ LANG is a string, and the returned major mode is a symbol."
              ;;   string block need preserve indetation
              ;;   '''
              (goto-char end)
-             (+ (current-column)
-                (or (cdr (assoc major-mode separedit-string-indent-offset-alist))
-                    0)))
+             (cons
+              (+ (current-column)
+                 (or (cdr (assoc major-mode separedit-string-indent-offset-alist))
+                     0))
+              t))
             ((not (string= str-start ""))
              ;; For situations like:
              ;;
              ;;   emacs --batch --eval "(progn
              ;;                           ...)"
              ;;
-             (current-column))))))
+             (cons (current-column) nil))))))
 
 (defun separedit--restore-point (line rcolumn)
   "Restore point to LINE and RCOLUMN."
@@ -1047,9 +1051,11 @@ Block info example:
          (indent-line1 nil)
          (string-indent
           (if (and strp separedit-preserve-string-indentation)
-              (apply #'separedit--indent-of-string-block
-                     strp
-                     comment-or-string-region)
+              (let ((indent-info (apply #'separedit--indent-of-string-block
+                                        strp
+                                        comment-or-string-region)))
+                (setq indent-line1 (cdr indent-info))
+                (car indent-info))
             (save-excursion
               (goto-char (car comment-or-string-region))
               ;; Not at "/*|"
@@ -1078,8 +1084,17 @@ Block info example:
                                     :indent-line1 indent-line1
                                     :indent-length indent-length))
           (if comment-or-string-region
-              (list :beginning (point-min)
-                    :end (point-max)
+              (list :beginning (if (and strp (eq (char-after (point-min)) ?\n))
+                                   (1+ (point-min))
+                                 (point-min))
+                    :end (if strp
+                             (save-excursion
+                               (goto-char (point-max))
+                               (when (looking-back "\n\s*" 1)
+                                 (forward-line -1)
+                                 (goto-char (point-at-eol)))
+                               (point))
+                           (point-max))
                     :string-quotes strp
                     :indent-line1 indent-line1
                     :indent-length indent-length)
@@ -1245,18 +1260,16 @@ It will override by the key that `separedit' binding in source buffer.")
 (defun separedit--buffer-creation-setup ()
   "Function called after the edit-indirect buffer is created."
   (-if-let (entry-cmd
-            (pcase (or (derived-mode-p 'prog-mode) major-mode)
-              ((or `separedit-single-quote-string-mode
-                   `separedit-double-quote-string-mode
-                   `fundamental-mode
-                   `prog-mode)
-               #'separedit)
-              (`markdown-mode
-               #'markdown-edit-code-block)
-              (`gfm-mode
-               #'gfm-edit-code-block)
-              (`org-mode
-               #'org-edit-special)))
+            (pcase major-mode
+              (`markdown-mode #'markdown-edit-code-block)
+              (`gfm-mode #'gfm-edit-code-block)
+              (`org-mode #'org-edit-special)
+              (_ (when (derived-mode-p 'separedit-single-quote-string-mode
+                                       'separedit-double-quote-string-mode
+                                       'fundamental-mode
+                                       'text-mode
+                                       'prog-mode)
+                   #'separedit))))
       (let ((km (copy-keymap edit-indirect-mode-map)))
         (separedit--log "==> [-buffer-creation-setup] major-mode: %s, entry-cmd: %s" major-mode entry-cmd)
         (define-key km (separedit--entry-key) entry-cmd)
@@ -1368,7 +1381,8 @@ MAX-WIDTH       maximum width that can be removed"
              (with-temp-buffer
                (insert buffer-str)
                (goto-char (point-min))
-               (when (looking-at-p "[^\s\t\n\r]")
+               (when (and (not separedit--indent-line1)
+                          (looking-at-p "[^\s\t\n\r]"))
                  (forward-line))
                (while (re-search-forward "[^\s\t\n\r]" nil t 1)
                  (goto-char (match-beginning 0))
@@ -1589,10 +1603,17 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
          (indent-line1 (plist-get block :indent-line1))
          (commentp (not strp))
          (codep (and lang-mode t))
-         (delimiter-regexp (concat (if strp "^\s*"
-                                     (or (plist-get block :comment-delimiter)
-                                         (separedit--comment-delimiter-regexp)))
-                                   (plist-get (plist-get block :regexps) :body)))
+         (local-fill-column fill-column)
+         (delimiter-regexp
+          (let ((regexp (concat (if strp "^\s*"
+                                  (or (plist-get block :comment-delimiter)
+                                      (separedit--comment-delimiter-regexp)))
+                                (plist-get (plist-get block :regexps) :body))))
+            (replace-regexp-in-string
+               "\\(\s+\\)$"
+               (lambda (match)
+                 (format "\\\\(?:%s\\\\|\\\\)" (match-string 1 match)))
+               regexp)))
          (edit-indirect-after-creation-hook #'separedit--buffer-creation-setup))
     (separedit--log "==> block-info: %S" block)
     ;; (separedit--log "==> block: %S" (buffer-substring-no-properties beg end))
@@ -1624,6 +1645,7 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                              (set (make-local-variable 'separedit--indent-length) (separedit--remove-string-indent indent-len)))
                            (set (make-local-variable 'separedit-leave-blank-line-in-comment)
                                 ,separedit-leave-blank-line-in-comment)
+                           (set (make-local-variable 'fill-column) ,local-fill-column)
                            (set (make-local-variable 'separedit--line-delimiter) line-delimiter)
                            (set (make-local-variable 'separedit--code-block-p) ,codep)
                            (set (make-local-variable 'edit-indirect-before-commit-hook)

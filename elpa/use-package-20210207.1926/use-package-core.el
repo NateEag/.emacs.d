@@ -43,10 +43,15 @@
 (require 'cl-lib)
 (require 'tabulated-list)
 
-;; Declare a synthetic theme for :custom variables.
-;; Necessary in order to avoid having those variables saved by custom.el.
-(deftheme use-package)
+(eval-and-compile
+  ;; Declare a synthetic theme for :custom variables.
+  ;; Necessary in order to avoid having those variables saved by custom.el.
+  (deftheme use-package))
+
 (enable-theme 'use-package)
+;; Remove the synthetic use-package theme from the enabled themes, so
+;; iterating over them to "disable all themes" won't disable it.
+(setq custom-enabled-themes (remq 'use-package custom-enabled-themes))
 
 (if (and (eq emacs-major-version 24) (eq emacs-minor-version 3))
     (defsubst hash-table-keys (hash-table)
@@ -127,6 +132,13 @@ otherwise requested."
   "If non-nil, issue warning instead of error when unknown
 keyword is encountered. The unknown keyword and its associated
 arguments will be ignored in the `use-package' expansion."
+  :type 'boolean
+  :group 'use-package)
+
+(defcustom use-package-use-theme t
+  "If non-nil, use a custom theme to avoid saving :custom
+variables twice (once in the Custom file, once in the use-package
+call)."
   :type 'boolean
   :group 'use-package)
 
@@ -1392,17 +1404,34 @@ no keyword implies `:all'."
 (defun use-package-handler/:custom (name _keyword args rest state)
   "Generate use-package custom keyword code."
   (use-package-concat
-   (mapcar
-    #'(lambda (def)
-        (let ((variable (nth 0 def))
-              (value (nth 1 def))
-              (comment (nth 2 def)))
-          (unless (and comment (stringp comment))
-            (setq comment (format "Customized with use-package %s" name)))
-          `(let ((custom--inhibit-theme-enable nil))
-             (custom-theme-set-variables 'use-package
-			                 '(,variable ,value nil () ,comment)))))
-    args)
+   (if (bound-and-true-p use-package-use-theme)
+       `((let ((custom--inhibit-theme-enable nil))
+           ;; Declare the theme here so use-package can be required inside
+           ;; eval-and-compile without warnings about unknown theme.
+           (unless (memq 'use-package custom-known-themes)
+             (deftheme use-package)
+             (enable-theme 'use-package)
+             (setq custom-enabled-themes (remq 'use-package custom-enabled-themes)))
+           (custom-theme-set-variables
+            'use-package
+            ,@(mapcar
+               #'(lambda (def)
+                   (let ((variable (nth 0 def))
+                         (value (nth 1 def))
+                         (comment (nth 2 def)))
+                     (unless (and comment (stringp comment))
+                       (setq comment (format "Customized with use-package %s" name)))
+                     `'(,variable ,value nil () ,comment)))
+               args))))
+     (mapcar
+      #'(lambda (def)
+          (let ((variable (nth 0 def))
+                (value (nth 1 def))
+                (comment (nth 2 def)))
+            (unless (and comment (stringp comment))
+              (setq comment (format "Customized with use-package %s" name)))
+            `(customize-set-variable (quote ,variable) ,value ,comment)))
+      args))
    (use-package-process-keywords name rest state)))
 
 ;;;; :custom-face

@@ -1366,7 +1366,11 @@
      `(notmuch-tree-match-date-face ((,class (:foreground ,yellow))))
      `(notmuch-tree-match-tag-face ((,class (:foreground ,cyan))))
      `(notmuch-tree-no-match-face ((,class (:inherit font-lock-comment-face))))
-
+;;;;; orderless
+     `(orderless-match-face-0 ((,class (:foreground ,blue))))
+     `(orderless-match-face-1 ((,class (:foreground ,magenta))))
+     `(orderless-match-face-2 ((,class (:foreground ,yellow))))
+     `(orderless-match-face-3 ((,class (:foreground ,green))))
 ;;;;; org-mode
      `(org-agenda-structure
        ((,class (:foreground ,base1 :background ,base02
@@ -1798,6 +1802,8 @@
        ((t (:underline nil :background ,(solarized-color-blend yellow-l s-base3 0.2)))))
      `(transient-mismatched-key
        ((t (:underline nil :background ,(solarized-color-blend red-l s-base3 0.2)))))
+     `(transient-separator           ((t (,@(and (>= emacs-major-version 27) '(:extend t))
+                                          :background ,s-line))))
 ;;;;; tuareg
      `(tuareg-font-lock-governing-face ((,class (:foreground ,magenta :weight bold))))
      `(tuareg-font-lock-multistage-face ((,class (:foreground ,blue :background ,base02
@@ -1979,6 +1985,9 @@
      `(window-divider-last-pixel ((,class (:foreground ,s-mode-line-bg))))
 ;;;;; window-number-mode
      `(window-number-face ((,class (:foreground ,green))))
+;;;;; woman
+     `(woman-bold ((,class (:inherit Man-overstrike))))
+     `(woman-italic ((,class (:inherit Man-underline))))
 ;;;;; yascroll
      `(yascroll:thumb-text-area
        ((,class (:foreground ,base01 :background ,base01))))

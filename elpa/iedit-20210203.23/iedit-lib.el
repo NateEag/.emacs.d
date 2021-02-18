@@ -3,7 +3,7 @@
 
 ;; Copyright (C) 2010 - 2019, 2020 Victor Ren
 
-;; Time-stamp: <2021-01-13 22:27:53 Victor Ren>
+;; Time-stamp: <2021-01-14 23:56:53 Victor Ren>
 ;; Author: Victor Ren <victorhge@gmail.com>
 ;; Keywords: occurrence region simultaneous rectangle refactoring
 ;; Version: 0.9.9.9
@@ -200,12 +200,15 @@ occurrence.")
 It replaces `inhibit-modification-hooks' which prevents calling
 `after-change-functions'.")
 
+(defvar iedit-line-move-ignore-invisible-value nil
+  "Used to save and restore the value of `line-move-ignore-invisible'.")
+
 (make-variable-buffer-local 'iedit-updating)
 (make-variable-buffer-local 'iedit-after-change-list)
 (make-variable-buffer-local 'iedit-occurrences-overlays)
 (make-variable-buffer-local 'iedit-read-only-occurrences-overlays)
 (make-variable-buffer-local 'iedit-hiding)
-(make-local-variable 'iedit-case-sensitive)
+(make-variable-buffer-local 'iedit-case-sensitive)
 (make-variable-buffer-local 'iedit-forward-success)
 (make-variable-buffer-local 'iedit-before-modification-string)
 (make-variable-buffer-local 'iedit-before-buffering-string)
@@ -221,6 +224,7 @@ It replaces `inhibit-modification-hooks' which prevents calling
 (make-variable-buffer-local 'iedit-lib-quit-func)
 (make-variable-buffer-local 'iedit-lib-skip-invisible-count)
 (make-variable-buffer-local 'iedit-lib-skip-filtered-count)
+(make-variable-buffer-local 'iedit-line-move-ignore-invisible-value)
 
 (defconst iedit-occurrence-overlay-name 'iedit-occurrence-overlay-name)
 (defconst iedit-invisible-overlay-name 'iedit-invisible-overlay-name)
@@ -324,7 +328,6 @@ It should be set before occurrence overlay is created.")
 (defun iedit-make-occurrences-overlays (occurrence-regexp beg end)
   "Create occurrence overlays for `occurrence-regexp' in a region.
 Return the number of occurrences."
-  (setq iedit-aborting nil)
   (setq iedit-occurrences-overlays nil)
   (setq iedit-read-only-occurrences-overlays nil)
   (setq iedit-lib-skip-invisible-count 0)
@@ -350,8 +353,8 @@ Return the number of occurrences."
              ((text-property-not-all beginning ending 'read-only nil)
               (push (iedit-make-read-only-occurrence-overlay beginning ending)
                     iedit-read-only-occurrences-overlays))
-			 ((not (or (eq search-invisible t)
-					   (not (isearch-range-invisible beginning ending))))
+			 ((and (not (eq search-invisible t))
+				   (isearch-range-invisible beginning ending))
 			  (setq iedit-lib-skip-invisible-count (1+ iedit-lib-skip-invisible-count)))
 			 ((not (funcall isearch-filter-predicate beginning ending))
 			  (setq iedit-lib-skip-filtered-count (1+ iedit-lib-skip-filtered-count)))
@@ -432,6 +435,12 @@ there are."
 
 (defun iedit-lib-start (mode-exit-func)
   "Initialize the hooks."
+  (when iedit-auto-buffering
+	(iedit-start-buffering))
+  (setq iedit-aborting nil)
+  ;; Enforce skip modification once, errors may happen to cause this to be
+  ;; unset.
+  (setq iedit-skip-modification-once t)
   (setq iedit-lib-quit-func mode-exit-func)
   (add-hook 'post-command-hook 'iedit-update-occurrences-2 nil t)
   (add-hook 'before-revert-hook iedit-lib-quit-func nil t)
@@ -441,11 +450,8 @@ there are."
 
 (defun iedit-lib-cleanup ()
   "Clean up occurrence overlay, invisible overlay and local variables."
+  (iedit-cleanup-occurrences-overlays)
   (remove-hook 'post-command-hook 'iedit-update-occurrences-2 t)
-  (remove-overlays nil nil iedit-occurrence-overlay-name t)
-  ;; Close overlays opened by `isearch-range-invisible'
-  (isearch-clean-overlays)
-  (iedit-show-all)
   (remove-hook 'before-revert-hook iedit-lib-quit-func t)
   (remove-hook 'kbd-macro-termination-hook iedit-lib-quit-func t)
   (remove-hook 'change-major-mode-hook iedit-lib-quit-func t)
@@ -750,7 +756,7 @@ value of `iedit-occurrence-context-lines' is used for this time."
 
 (defun iedit-show-all()
   "Show hidden lines."
-  (setq line-move-ignore-invisible nil)
+  (setq-local line-move-ignore-invisible iedit-line-move-ignore-invisible-value)
   (remove-from-invisibility-spec '(iedit-invisible-overlay-name . t))
   (remove-overlays nil nil iedit-invisible-overlay-name t))
 
@@ -777,7 +783,9 @@ value of `iedit-occurrence-context-lines' is used for this time."
       (if (< prev-occurrence-end (point-max))
           (push (list prev-occurrence-end (point-max)) hidden-regions))
       (when hidden-regions
-        (set (make-local-variable 'line-move-ignore-invisible) t)
+		(setq iedit-line-move-ignore-invisible-value
+			  (buffer-local-value 'line-move-ignore-invisible (current-buffer)))
+        (setq-local line-move-ignore-invisible t)
         (add-to-invisibility-spec '(iedit-invisible-overlay-name . t))
         (dolist (region hidden-regions)
           (iedit-make-invisible-overlay (car region) (cadr region)))))
@@ -804,8 +812,9 @@ value of `iedit-occurrence-context-lines' is used for this time."
 			(push (list beginning end) hidden-regions)
 			(setq beginning (line-beginning-position)))))
 	  (when hidden-regions
-		(set (make-local-variable 'line-move-ignore-invisible) t)
-		(add-to-invisibility-spec '(iedit-invisible-overlay-name . t))
+		(setq iedit-line-move-ignore-invisible-value
+			  (buffer-local-value 'line-move-ignore-invisible (current-buffer)))
+        (setq-local line-move-ignore-invisible t)
 		(dolist (region hidden-regions)
           (iedit-make-invisible-overlay (car region) (cadr region))))
 	    ;; Value returned is for ert
@@ -1023,8 +1032,8 @@ modification is not going to be applied to other occurrences."
 				      (upcase modified-string))
 				     (cap-initial
 				      (if (= 0 offset)
-                                          (capitalize modified-string)
-					modified-string))
+                          (capitalize modified-string)
+						modified-string))
 				     (t modified-string))))
                 (iedit-move-conjoined-overlays occurrence))))
           (goto-char (+ (overlay-start ov) offset))))))
@@ -1139,18 +1148,26 @@ Return nil if occurrence string is empty string."
           (setq overlays (cdr overlays)))))
     found))
 
-(defun iedit-cleanup-occurrences-overlays (beg end &optional inclusive)
-  "Remove deleted overlays from list `iedit-occurrences-overlays'."
-  (if inclusive
-      (remove-overlays beg end iedit-occurrence-overlay-name t)
-    (remove-overlays (point-min) beg iedit-occurrence-overlay-name t)
-    (remove-overlays end (point-max) iedit-occurrence-overlay-name t))
-  (let (overlays)
-    (dolist (overlay iedit-occurrences-overlays)
-      (if (overlay-buffer overlay)
-          (push overlay overlays)))
-    (setq iedit-occurrences-overlays overlays)
-    (iedit-update-index)))
+(defun iedit-cleanup-occurrences-overlays (&optional beg end inclusive)
+  "Remove overlays from list `iedit-occurrences-overlays'."
+  (when iedit-buffering
+    (iedit-stop-buffering))
+  ;; Close overlays opened by `isearch-range-invisible'
+  (isearch-clean-overlays)
+  (when iedit-hiding
+	(iedit-show-all))
+  (if (null beg)
+	  (remove-overlays nil nil iedit-occurrence-overlay-name t)
+	(if inclusive
+		(remove-overlays beg end iedit-occurrence-overlay-name t)
+      (remove-overlays (point-min) beg iedit-occurrence-overlay-name t)
+      (remove-overlays end (point-max) iedit-occurrence-overlay-name t))
+	(let (overlays)
+      (dolist (overlay iedit-occurrences-overlays)
+		(if (overlay-buffer overlay)
+			(push overlay overlays)))
+      (setq iedit-occurrences-overlays overlays)
+      (iedit-update-index))))
 
 (defun iedit-printable (string)
   "Return a omitted substring that is not longer than 50.

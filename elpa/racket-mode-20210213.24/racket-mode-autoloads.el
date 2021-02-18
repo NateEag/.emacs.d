@@ -26,10 +26,15 @@ Fill a buffer with data to make a Racket Mode bug report." t nil)
 ;;;### (autoloads nil "racket-cmd" "racket-cmd.el" (0 0 0 0))
 ;;; Generated autoloads from racket-cmd.el
 
+(defvar racket-start-back-end-hook nil "\
+Hook run after `racket-start-back-end'.")
+
 (autoload 'racket-start-back-end "racket-cmd" "\
 Start the back end process used by Racket Mode.
 
-If the process is already started, this command will stop and restart it." t nil)
+If the process is already started, this command will stop and restart it.
+
+As the final step, runs the hook `racket-start-back-end-hook'." t nil)
 
 (autoload 'racket-stop-back-end "racket-cmd" "\
 Stop the back end process used by Racket Mode.
@@ -186,17 +191,24 @@ for Racket packages.
 
 This command will do a `raco make` of Racket Mode's .rkt files,
 creating bytecode files in `compiled/` subdirectories. As a
-result, when a `racket-run' or `racket-repl' command must start
-the Racket process, it will start faster.
+result, when a command must start the Racket process, it will
+start somewhat faster.
 
-If you run this command, ever, you should run it again after:
+On many computers, the resulting speed up is negligible, and
+might not be worth the complication.
+
+If you run this command, ever, you will need to run it again
+after:
 
 - Installing an updated version of Racket Mode. Otherwise, you
   might lose some of the speed-up.
 
 - Installing a new version of Racket and/or changing the value of
   the variable `racket-program'. Otherwise, you might get an
-  error message due to the bytecode being different versions." t nil)
+  error message due to the bytecode being different versions.
+
+To revert to compiling on startup, use
+`racket-mode-start-slower'. " t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-mode" '("racket-")))
 
@@ -510,6 +522,10 @@ fully-expanded programs, without needing to evaluate a.k.a.
 - Visually annotating bindings -- local or imported definitions
   and references to them.
 
+- Visually annotating expressions in a tail position, as well as
+  the enclosing expression with respect to which they are in a
+  tail position.
+
 - Completion candidates.
 
 - Defintions' source and documentation.
@@ -536,7 +552,12 @@ and/or slow, in your `racket-xp-mode-hook' you may disable them:
 The remaining features discussed below will still work.
 
 You may also use commands to navigate among a definition and its
-uses, or to rename a local definitions and all its uses.
+uses, or to rename a local definitions and all its uses:
+
+  - `racket-xp-next-definition'
+  - `racket-xp-previous-definition'
+  - `racket-xp-next-use'
+  - `racket-xp-previous-use'
 
 In the following little example, not only does
 drracket/check-syntax distinguish the various \"x\" bindings, it
@@ -552,6 +573,26 @@ understands the two different imports of \"define\":
     (define x 2)
     x)
 #+END_SRC
+
+When point is on the opening parenthesis of an expression in tail
+position, it is highlighted using the face
+`racket-xp-tail-position-face' and has a tooltip annotation,
+\"tail\".
+
+When point is on the opening parenthesis of an enclosing
+expression with respect to which one or more expressions are in
+tail position, it is highlighted using the face
+`racket-xp-tail-target-face' and has a tooltip annotation,
+\"⟦tail⟧\".
+
+Furthermore, when point is on the opening parenthesis of either
+kind of expression, all of the immediately related expressions
+are also highlighted. Various commands to move among them:
+
+  - `racket-xp-tail-up'
+  - `racket-xp-tail-down'
+  - `racket-xp-tail-next-sibling'
+  - `racket-xp-tail-previous-sibling'
 
 The function `racket-xp-complete-at-point' is added to the
 variable `completion-at-point-functions'. Note that in this case,
@@ -579,7 +620,7 @@ The mode line changes to reflect the current status of
 annotations, and whether or not you had a syntax error.
 
 If you have one or more syntax errors, `racket-xp-next-error' and
-`racket-xp-previous-error' to navigate among them. Although most
+`racket-xp-previous-error' navigate among them. Although most
 languages will stop after the first syntax error, some like Typed
 Racket will try to collect and report multiple errors.
 

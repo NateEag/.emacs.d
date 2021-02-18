@@ -9,8 +9,7 @@
          racket/class
          drracket/check-syntax
          "../imports.rkt"
-         (only-in "../online-check-syntax.rkt"
-                  [get get-online-check-syntax-messages])
+         "../online-check-syntax.rkt"
          "../syntax.rkt"
          "../util.rkt")
 
@@ -59,6 +58,8 @@
         (λ () (call-with-semaphore
                sema
                (λ ()
+                 (log-racket-mode-debug "(current-memory-use) ~v"
+                                        (current-memory-use))
                  (hash-remove! ht path-str))))))))
 
 ;; Note: Instead of using the `show-content` wrapper, we give already
@@ -122,6 +123,7 @@
     (define ht-defs/uses (make-hash))
     (define ht-imenu (make-hash))
     (define local-completion-candidates (mutable-set))
+    (define ht-tails (make-hash))
 
     ;; I've seen drracket/check-syntax return bogus positions for e.g.
     ;; add-mouse-over-status so here's some validation.
@@ -157,10 +159,37 @@
         (unless require-arrow?
           (send this syncheck:add-mouse-over-status "" use-beg use-end "defined locally"))))
 
+    (define/override (syncheck:add-tail-arrow from-src from-pos to-src to-pos)
+      ;; Note: "from" and "to" are in terms of DrRacket _arrow_
+      ;; direction, which it draws _opposite_ of the _jump_ direction.
+      ;; Therefore we reverse the positions below.
+      (define head from-pos)
+      (define tail to-pos)
+      ;; AFAICT the sources should always = the source being analyzed
+      ;; -- i.e. the head and tail should be in the same source file.
+      ;; If a macro has neglected to supply good srcloc, and so e.g.
+      ;; the srcloc of the tail target is inside the macro source, we
+      ;; have no good way to show that to the user, so ignore it.
+      (match* [from-src to-src src]
+        [[v v v]
+         ;; Consolidate to hash-table much like defs/uses
+         (hash-update! ht-tails
+                       (add1 head)
+                       (λ (v) (set-add v (add1 tail)))
+                       (set))
+         (send this syncheck:add-mouse-over-status "" head (add1 head) "⟦tail⟧")
+         (send this syncheck:add-mouse-over-status "" tail (add1 tail) "tail")]
+        [[_ _ _]
+         (log-racket-mode-warning
+          "Ignoring syncheck:add-tail-arrow because sources differ"
+          (list from-src to-src src))]))
+
     (define/override (syncheck:add-mouse-over-status _text beg end status)
       (when (valid-beg/end? beg end)
         ;; Avoid silly "imported from “\"file.rkt\"”"
         (define cleansed (regexp-replace* #px"[“””]" status ""))
+        ;; Automatically append multiple mouse-over messages for the
+        ;; same interval.
         (interval-map-update*! im-mouse-overs beg end
                                (λ (s) (set-add s cleansed))
                                (set cleansed))
@@ -243,11 +272,9 @@
     (define/public (get-annotations)
       ;; Obtain any online-check-syntax log message values and treat
       ;; them as mouse-overs.
-      (for ([v (in-set (get-online-check-syntax-messages src))])
-        (match-define (list beg end string-or-thunk) v)
-        (define (force v) (if (procedure? v) (v) v))
-        (send this syncheck:add-mouse-over-status
-              "" beg end (force string-or-thunk)))
+      (for ([v (in-set (current-online-check-syntax))])
+        (match-define (list beg end str) v)
+        (send this syncheck:add-mouse-over-status "" beg end str))
 
       ;; Convert ht-defs/uses to a list of defs, each of whose uses
       ;; are sorted by positions.
@@ -259,6 +286,9 @@
                   def-beg def-end
                   req sym
                   (sort (set->list uses) < #:key car)))))
+      (define targets/tails
+        (for/list ([(target tails) (in-hash ht-tails)])
+          (list 'target/tails target (sort (set->list tails) <))))
       ;; Convert the interval maps for other annotations into simple
       ;; lists of the form (list symbol beg end value ...). Also add1
       ;; positions for Emacs.
@@ -273,6 +303,7 @@
       ;; Append all and sort by `beg` position
       (sort (append
              defs/uses
+             targets/tails
              (im->list im-mouse-overs     'info mouse-over-set->result)
              (im->list im-jumps           'jump)
              (im->list im-docs            'doc)
@@ -421,3 +452,40 @@
   ;; Twice to exercise and test cache
   (check-equal? (check-this-file (path->string (syntax-source #'here)))
                 (check-this-file (path->string (syntax-source #'here)))))
+
+(module+ slow-test
+  ;; To a large extent this is a test of the syntax cache in
+  ;; syntax.rkt -- a sanity check that the eviction strategy is
+  ;; working to avoid an unbounded and excessive growth in
+  ;; current-memory-use.
+  ;;
+  ;; Probably most consistent way to run is outside Emacs with:
+  ;;
+  ;;   raco test --submodule slow-test check-syntax.rkt
+  (require rackunit
+           racket/file
+           racket/path)
+  (for ([_ 2]) (collect-garbage))
+  (define start (current-seconds))
+  (define least (current-memory-use))
+  (define most  least)
+  (define count 0)
+  (for* ([roots (in-list '(("racket.rkt" "typed")
+                           ("core.rkt" "typed-racket")
+                           ("main.rkt" "racket")))]
+         [path  (in-directory
+                 (path-only
+                  (apply collection-file-path roots)))]
+         #:when (equal? #"rkt" (filename-extension path)))
+    (set! count (add1 count))
+    (check-syntax (path->string path) (file->string path))
+    (define after (current-memory-use))
+    (printf "~a, ~a, ~v\n" count after (path->string path))
+    (set! least (min least after))
+    (set! most  (max most  after)))
+  (printf "Time:  ~a seconds\n" (- (current-seconds) start))
+  (printf "Least: ~a bytes\n" least)
+  (printf "Most:  ~a bytes\n" most)
+  (define mem-use-diff (- most least))
+  (printf "Diff:  ~a bytes\n" mem-use-diff)
+  (check-true (< mem-use-diff 700000000)))

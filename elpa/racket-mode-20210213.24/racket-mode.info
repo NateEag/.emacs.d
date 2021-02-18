@@ -89,6 +89,16 @@ Explore
 * racket-xp-mode::
 * racket-xp-describe::
 * racket-xp-documentation::
+* racket-xp-next-definition::
+* racket-xp-previous-definition::
+* racket-xp-next-use::
+* racket-xp-previous-use::
+* racket-xp-next-error::
+* racket-xp-previous-error::
+* racket-xp-tail-up::
+* racket-xp-tail-down::
+* racket-xp-tail-next-sibling::
+* racket-xp-tail-previous-sibling::
 * racket-documentation-search::
 
 Run
@@ -134,6 +144,7 @@ Macro expand
 Other
 
 * racket-mode-start-faster::
+* racket-mode-start-slower::
 
 Showing information
 
@@ -212,6 +223,8 @@ All
 * racket-xp-def-face::
 * racket-xp-use-face::
 * racket-xp-unused-face::
+* racket-xp-tail-target-face::
+* racket-xp-tail-position-face::
 * racket-logger-config-face::
 * racket-logger-topic-face::
 * racket-logger-fatal-face::
@@ -1239,6 +1252,16 @@ File: racket-mode.info,  Node: Explore,  Next: Run,  Prev: Edit,  Up: Commands
 * racket-xp-mode::
 * racket-xp-describe::
 * racket-xp-documentation::
+* racket-xp-next-definition::
+* racket-xp-previous-definition::
+* racket-xp-next-use::
+* racket-xp-previous-use::
+* racket-xp-next-error::
+* racket-xp-previous-error::
+* racket-xp-tail-up::
+* racket-xp-tail-down::
+* racket-xp-tail-next-sibling::
+* racket-xp-tail-previous-sibling::
 * racket-documentation-search::
 
 
@@ -1270,6 +1293,10 @@ The resulting analysis provides information for:
    • Visually annotating bindings – local or imported definitions and
      references to them.
 
+   • Visually annotating expressions in a tail position, as well as the
+     enclosing expression with respect to which they are in a tail
+     position.
+
    • Completion candidates.
 
    • Defintions’ source and documentation.
@@ -1294,7 +1321,12 @@ slow, in your ‘racket-xp-mode-hook’ you may disable them:
    The remaining features discussed below will still work.
 
    You may also use commands to navigate among a definition and its
-uses, or to rename a local definitions and all its uses.
+uses, or to rename a local definitions and all its uses:
+
+   • *note racket-xp-next-definition::
+   • *note racket-xp-previous-definition::
+   • *note racket-xp-next-use::
+   • *note racket-xp-previous-use::
 
    In the following little example, not only does drracket/check-syntax
 distinguish the various “x” bindings, it understands the two different
@@ -1308,6 +1340,24 @@ imports of “define”:
      (module m typed/racket/base
        (define x 2)
        x)
+
+   When point is on the opening parenthesis of an expression in tail
+position, it is highlighted using the face *note
+racket-xp-tail-position-face:: and has a tooltip annotation, “tail”.
+
+   When point is on the opening parenthesis of an enclosing expression
+with respect to which one or more expressions are in tail position, it
+is highlighted using the face *note racket-xp-tail-target-face:: and has
+a tooltip annotation, "⟦tail⟧".
+
+   Furthermore, when point is on the opening parenthesis of either kind
+of expression, all of the immediately related expressions are also
+highlighted.  Various commands to move among them:
+
+   • *note racket-xp-tail-up::
+   • *note racket-xp-tail-down::
+   • *note racket-xp-tail-next-sibling::
+   • *note racket-xp-tail-previous-sibling::
 
    The function ‘racket-xp-complete-at-point’ is added to the variable
 ‘completion-at-point-functions’.  Note that in this case, it is not
@@ -1333,8 +1383,8 @@ and use the ‘racket-xp-annotate’ command manually.
    The mode line changes to reflect the current status of annotations,
 and whether or not you had a syntax error.
 
-   If you have one or more syntax errors, ‘racket-xp-next-error’ and
-‘racket-xp-previous-error’ to navigate among them.  Although most
+   If you have one or more syntax errors, *note racket-xp-next-error::
+and *note racket-xp-previous-error:: navigate among them.  Although most
 languages will stop after the first syntax error, some like Typed Racket
 will try to collect and report multiple errors.
 
@@ -1357,16 +1407,20 @@ Key                                                     Binding
 ‘M-.’                                                   ‘xref-find-definitions’
 ‘C-c C-d’                                               *note racket-xp-documentation::
 ‘C-c C-.’                                               *note racket-xp-describe::
-‘C-c # P’                                               ‘racket-xp-previous-error’
-‘C-c # N’                                               ‘racket-xp-next-error’
+‘C-c # P’                                               *note racket-xp-previous-error::
+‘C-c # N’                                               *note racket-xp-next-error::
 ‘C-c # g’                                               ‘racket-xp-annotate’
+‘C-c # <’                                               *note racket-xp-tail-previous-sibling::
+‘C-c # >’                                               *note racket-xp-tail-next-sibling::
+‘C-c # v’                                               *note racket-xp-tail-down::
+‘C-c # ^’                                               *note racket-xp-tail-up::
 ‘C-c # r’                                               ‘racket-xp-rename’
 ‘C-c # ?’                                               ‘xref-find-references’
 ‘C-c # .’                                               ‘xref-find-definitions’
-‘C-c # p’                                               ‘racket-xp-previous-use’
-‘C-c # n’                                               ‘racket-xp-next-use’
-‘C-c # k’                                               ‘racket-xp-previous-definition’
-‘C-c # j’                                               ‘racket-xp-next-definition’
+‘C-c # p’                                               *note racket-xp-previous-use::
+‘C-c # n’                                               *note racket-xp-next-use::
+‘C-c # k’                                               *note racket-xp-previous-definition::
+‘C-c # j’                                               *note racket-xp-next-definition::
 
 
 File: racket-mode.info,  Node: racket-xp-describe,  Next: racket-xp-documentation,  Prev: racket-xp-mode,  Up: Explore
@@ -1402,7 +1456,7 @@ activate using RET – for ‘xref-find-definitions’ and *note
 racket-xp-documentation::.
 
 
-File: racket-mode.info,  Node: racket-xp-documentation,  Next: racket-documentation-search,  Prev: racket-xp-describe,  Up: Explore
+File: racket-mode.info,  Node: racket-xp-documentation,  Next: racket-xp-next-definition,  Prev: racket-xp-describe,  Up: Explore
 
 5.2.3 racket-xp-documentation
 -----------------------------
@@ -1440,10 +1494,116 @@ supply.
      for example.
 
 
-File: racket-mode.info,  Node: racket-documentation-search,  Prev: racket-xp-documentation,  Up: Explore
+File: racket-mode.info,  Node: racket-xp-next-definition,  Next: racket-xp-previous-definition,  Prev: racket-xp-documentation,  Up: Explore
 
-5.2.4 racket-documentation-search
----------------------------------
+5.2.4 racket-xp-next-definition
+-------------------------------
+
+‘C-c # j’
+
+   Move point to the next definition.
+
+
+File: racket-mode.info,  Node: racket-xp-previous-definition,  Next: racket-xp-next-use,  Prev: racket-xp-next-definition,  Up: Explore
+
+5.2.5 racket-xp-previous-definition
+-----------------------------------
+
+‘C-c # k’
+
+   Move point to the previous definition.
+
+
+File: racket-mode.info,  Node: racket-xp-next-use,  Next: racket-xp-previous-use,  Prev: racket-xp-previous-definition,  Up: Explore
+
+5.2.6 racket-xp-next-use
+------------------------
+
+‘C-c # n’
+
+   When point is on a use, go to the next, sibling use.
+
+
+File: racket-mode.info,  Node: racket-xp-previous-use,  Next: racket-xp-next-error,  Prev: racket-xp-next-use,  Up: Explore
+
+5.2.7 racket-xp-previous-use
+----------------------------
+
+‘C-c # p’
+
+   When point is on a use, go to the previous, sibling use.
+
+
+File: racket-mode.info,  Node: racket-xp-next-error,  Next: racket-xp-previous-error,  Prev: racket-xp-previous-use,  Up: Explore
+
+5.2.8 racket-xp-next-error
+--------------------------
+
+‘C-c # N’
+
+   Go to the next error.
+
+
+File: racket-mode.info,  Node: racket-xp-previous-error,  Next: racket-xp-tail-up,  Prev: racket-xp-next-error,  Up: Explore
+
+5.2.9 racket-xp-previous-error
+------------------------------
+
+‘C-c # P’
+
+   Go to the previous error.
+
+
+File: racket-mode.info,  Node: racket-xp-tail-up,  Next: racket-xp-tail-down,  Prev: racket-xp-previous-error,  Up: Explore
+
+5.2.10 racket-xp-tail-up
+------------------------
+
+‘C-c # ^’
+
+   Go “up” to the expression enclosing an expression in tail position.
+
+   When point is on the opening parenthesis of an expression in tail
+position, go its “target” – that is, go to the enclosing expression with
+the same continuation as the tail expression.
+
+
+File: racket-mode.info,  Node: racket-xp-tail-down,  Next: racket-xp-tail-next-sibling,  Prev: racket-xp-tail-up,  Up: Explore
+
+5.2.11 racket-xp-tail-down
+--------------------------
+
+‘C-c # v’
+
+   Go “down” to the first tail position enclosed by the current
+expression.
+
+
+File: racket-mode.info,  Node: racket-xp-tail-next-sibling,  Next: racket-xp-tail-previous-sibling,  Prev: racket-xp-tail-down,  Up: Explore
+
+5.2.12 racket-xp-tail-next-sibling
+----------------------------------
+
+‘C-c # >’
+
+   Go to the next tail position sharing the same enclosing expression.
+
+
+File: racket-mode.info,  Node: racket-xp-tail-previous-sibling,  Next: racket-documentation-search,  Prev: racket-xp-tail-next-sibling,  Up: Explore
+
+5.2.13 racket-xp-tail-previous-sibling
+--------------------------------------
+
+‘C-c # <’
+
+   Go to the previous tail position sharing the same enclosing
+expression.
+
+
+File: racket-mode.info,  Node: racket-documentation-search,  Prev: racket-xp-tail-previous-sibling,  Up: Explore
+
+5.2.14 racket-documentation-search
+----------------------------------
 
 ‘C-c C-d’
 
@@ -2135,9 +2295,10 @@ File: racket-mode.info,  Node: Other,  Next: Showing information,  Prev: Macro e
 * Menu:
 
 * racket-mode-start-faster::
+* racket-mode-start-slower::
 
 
-File: racket-mode.info,  Node: racket-mode-start-faster,  Up: Other
+File: racket-mode.info,  Node: racket-mode-start-faster,  Next: racket-mode-start-slower,  Up: Other
 
 5.8.1 racket-mode-start-faster
 ------------------------------
@@ -2153,10 +2314,13 @@ Emacs package instead of a Racket package, installing it does not do the
 
    This command will do a ‘raco make’ of Racket Mode’s .rkt files,
 creating bytecode files in ‘compiled/’ subdirectories.  As a result,
-when a *note racket-run:: or *note racket-repl:: command must start the
-Racket process, it will start faster.
+when a command must start the Racket process, it will start somewhat
+faster.
 
-   If you run this command, ever, you should run it again after:
+   On many computers, the resulting speed up is negligible, and might
+not be worth the complication.
+
+   If you run this command, ever, you will need to run it again after:
 
    • Installing an updated version of Racket Mode.  Otherwise, you might
      lose some of the speed-up.
@@ -2164,6 +2328,20 @@ Racket process, it will start faster.
    • Installing a new version of Racket and/or changing the value of the
      variable *note racket-program::.  Otherwise, you might get an error
      message due to the bytecode being different versions.
+
+   To revert to compiling on startup, use *note
+racket-mode-start-slower::.
+
+
+File: racket-mode.info,  Node: racket-mode-start-slower,  Prev: racket-mode-start-faster,  Up: Other
+
+5.8.2 racket-mode-start-slower
+------------------------------
+
+‘M-x’ ‘racket-mode-start-slower’
+
+   Delete the “compiled” directories made by *note
+racket-mode-start-faster::.
 
 
 File: racket-mode.info,  Node: Showing information,  Next: Associating edit buffers with REPL buffers,  Prev: Other,  Up: Commands
@@ -2849,6 +3027,8 @@ File: racket-mode.info,  Node: All,  Up: Faces
 * racket-xp-def-face::
 * racket-xp-use-face::
 * racket-xp-unused-face::
+* racket-xp-tail-target-face::
+* racket-xp-tail-position-face::
 * racket-logger-config-face::
 * racket-logger-topic-face::
 * racket-logger-fatal-face::
@@ -2898,7 +3078,7 @@ File: racket-mode.info,  Node: racket-xp-use-face,  Next: racket-xp-unused-face,
 Face *note racket-xp-mode:: uses to highlight uses.
 
 
-File: racket-mode.info,  Node: racket-xp-unused-face,  Next: racket-logger-config-face,  Prev: racket-xp-use-face,  Up: All
+File: racket-mode.info,  Node: racket-xp-unused-face,  Next: racket-xp-tail-target-face,  Prev: racket-xp-use-face,  Up: All
 
 7.1.6 racket-xp-unused-face
 ---------------------------
@@ -2907,9 +3087,27 @@ Face *note racket-xp-mode:: uses to highlight unused requires or
 definitions.
 
 
-File: racket-mode.info,  Node: racket-logger-config-face,  Next: racket-logger-topic-face,  Prev: racket-xp-unused-face,  Up: All
+File: racket-mode.info,  Node: racket-xp-tail-target-face,  Next: racket-xp-tail-position-face,  Prev: racket-xp-unused-face,  Up: All
 
-7.1.7 racket-logger-config-face
+7.1.7 racket-xp-tail-target-face
+--------------------------------
+
+Face *note racket-xp-mode:: uses to highlight targets of a tail
+position.
+
+
+File: racket-mode.info,  Node: racket-xp-tail-position-face,  Next: racket-logger-config-face,  Prev: racket-xp-tail-target-face,  Up: All
+
+7.1.8 racket-xp-tail-position-face
+----------------------------------
+
+Face *note racket-xp-mode:: uses to highlight expressions in a tail
+position.
+
+
+File: racket-mode.info,  Node: racket-logger-config-face,  Next: racket-logger-topic-face,  Prev: racket-xp-tail-position-face,  Up: All
+
+7.1.9 racket-logger-config-face
 -------------------------------
 
 Face for *note racket-logger-mode:: configuration.
@@ -2917,23 +3115,23 @@ Face for *note racket-logger-mode:: configuration.
 
 File: racket-mode.info,  Node: racket-logger-topic-face,  Next: racket-logger-fatal-face,  Prev: racket-logger-config-face,  Up: All
 
-7.1.8 racket-logger-topic-face
-------------------------------
+7.1.10 racket-logger-topic-face
+-------------------------------
 
 Face for *note racket-logger-mode:: topics.
 
 
 File: racket-mode.info,  Node: racket-logger-fatal-face,  Next: racket-logger-error-face,  Prev: racket-logger-topic-face,  Up: All
 
-7.1.9 racket-logger-fatal-face
-------------------------------
+7.1.11 racket-logger-fatal-face
+-------------------------------
 
 Face for *note racket-logger-mode:: fatal level.
 
 
 File: racket-mode.info,  Node: racket-logger-error-face,  Next: racket-logger-warning-face,  Prev: racket-logger-fatal-face,  Up: All
 
-7.1.10 racket-logger-error-face
+7.1.12 racket-logger-error-face
 -------------------------------
 
 Face for *note racket-logger-mode:: error level.
@@ -2941,7 +3139,7 @@ Face for *note racket-logger-mode:: error level.
 
 File: racket-mode.info,  Node: racket-logger-warning-face,  Next: racket-logger-info-face,  Prev: racket-logger-error-face,  Up: All
 
-7.1.11 racket-logger-warning-face
+7.1.13 racket-logger-warning-face
 ---------------------------------
 
 Face for *note racket-logger-mode:: warning level.
@@ -2949,7 +3147,7 @@ Face for *note racket-logger-mode:: warning level.
 
 File: racket-mode.info,  Node: racket-logger-info-face,  Next: racket-logger-debug-face,  Prev: racket-logger-warning-face,  Up: All
 
-7.1.12 racket-logger-info-face
+7.1.14 racket-logger-info-face
 ------------------------------
 
 Face for *note racket-logger-mode:: info level.
@@ -2957,7 +3155,7 @@ Face for *note racket-logger-mode:: info level.
 
 File: racket-mode.info,  Node: racket-logger-debug-face,  Prev: racket-logger-info-face,  Up: All
 
-7.1.13 racket-logger-debug-face
+7.1.15 racket-logger-debug-face
 -------------------------------
 
 Face for *note racket-logger-mode:: debug level.
@@ -2966,144 +3164,157 @@ Face for *note racket-logger-mode:: debug level.
 
 Tag Table:
 Node: Top220
-Node: Introduction4190
-Ref: Introduction-Footnote-15349
-Node: Install5744
-Node: Configure Emacs to use MELPA6078
-Node: Install Racket Mode6551
-Node: Minimal Racket6852
-Node: Uninstall7416
-Node: Update7704
-Node: Upgrading all packages7867
-Node: Updating just Racket Mode8521
-Node: Configure9242
-Node: Key bindings10406
-Node: Font-lock (syntax highlighting)11023
-Node: Completion12307
-Node: Xref (definitions and references)14174
-Node: Indent17117
-Node: paredit17361
-Node: smartparens18354
-Node: Edit buffers and REPL buffers18729
-Node: eldoc19584
-Node: Start faster20843
-Node: Unicode input method21070
-Node: Reference21768
-Node: Commands22260
-Node: Edit22579
-Node: racket-mode23132
-Node: racket-insert-lambda25912
-Node: racket-fold-all-tests26200
-Node: racket-unfold-all-tests26437
-Node: racket-tidy-requires26680
-Node: racket-trim-requires27724
-Node: racket-base-requires28434
-Node: racket-add-require-for-identifier29699
-Node: racket-indent-line30792
-Node: racket-smart-open-bracket-mode32780
-Node: racket-insert-closing34427
-Node: racket-cycle-paren-shapes34920
-Node: racket-backward-up-list35171
-Node: racket-unicode-input-method-enable35731
-Node: racket-align37731
-Node: racket-unalign39699
-Node: racket-complete-at-point40032
-Node: Explore40454
-Node: racket-xp-mode40673
-Node: racket-xp-describe46578
-Node: racket-xp-documentation47922
-Node: racket-documentation-search49053
-Node: Run50040
-Node: racket-repl-mode50445
-Node: racket-run53087
-Node: racket-run-and-switch-to-repl55005
-Node: racket-run-module-at-point55295
-Node: racket-repl55802
-Node: racket-repl-describe56770
-Node: racket-repl-documentation58004
-Node: racket-racket59112
-Node: racket-profile59330
-Node: racket-profile-mode60047
-Node: racket-logger61062
-Node: racket-logger-mode61283
-Node: racket-debug-mode62406
-Node: Test65977
-Node: racket-test66122
-Node: racket-raco-test66795
-Node: Eval67042
-Node: racket-send-region67234
-Node: racket-send-definition67452
-Node: racket-send-last-sexp67701
-Node: Collections68011
-Node: racket-open-require-path68205
-Node: racket-find-collection68847
-Node: Macro expand69761
-Node: racket-stepper-mode70031
-Node: racket-expand-file71069
-Node: racket-expand-region71795
-Node: racket-expand-definition72161
-Node: racket-expand-last-sexp72550
-Node: Other72902
-Node: racket-mode-start-faster73066
-Node: Showing information74224
-Node: racket-show-pseudo-tooltip74526
-Node: racket-show-echo-area75151
-Node: racket-show-header-line75448
-Node: racket-show-pos-tip75968
-Node: Associating edit buffers with REPL buffers76245
-Node: racket-repl-buffer-name-shared76642
-Node: racket-repl-buffer-name-unique77075
-Node: racket-repl-buffer-name-project77551
-Node: racket-project-root78090
-Node: Browsing file URLs with anchors78543
-Node: racket-browse-url-using-temporary-file78803
-Node: Variables80315
-Node: General variables80577
-Node: racket-program81100
-Node: racket-command-timeout81283
-Node: racket-memory-limit81753
-Node: racket-error-context82359
-Node: racket-user-command-line-arguments83476
-Node: racket-path-from-emacs-to-racket-function84335
-Node: racket-path-from-racket-to-emacs-function85022
-Node: racket-browse-url-function85814
-Node: racket-xp-after-change-refresh-delay86217
-Node: racket-xp-highlight-unused-regexp86634
-Node: racket-documentation-search-location87094
-Node: REPL variables87898
-Node: racket-repl-buffer-name-function88299
-Node: racket-submodules-to-run89321
-Node: racket-history-filter-regexp90067
-Node: racket-images-inline90414
-Node: racket-imagemagick-props90662
-Node: racket-images-keep-last91270
-Node: racket-images-system-viewer91524
-Node: racket-pretty-print91798
-Node: Other variables92006
-Node: racket-indent-curly-as-sequence92342
-Node: racket-indent-sequence-depth92725
-Node: racket-pretty-lambda93415
-Node: racket-smart-open-bracket-enable93822
-Node: racket-logger-config94278
-Node: Experimental debugger variables95073
-Node: racket-debuggable-files95319
-Node: Showing informationx96013
-Node: racket-show-functions96209
-Node: Faces97216
-Node: All97319
-Node: racket-keyword-argument-face97759
-Node: racket-selfeval-face97969
-Node: racket-here-string-face98228
-Node: racket-xp-def-face98437
-Node: racket-xp-use-face98670
-Node: racket-xp-unused-face98894
-Node: racket-logger-config-face99157
-Node: racket-logger-topic-face99407
-Node: racket-logger-fatal-face99651
-Node: racket-logger-error-face99899
-Node: racket-logger-warning-face100151
-Node: racket-logger-info-face100408
-Node: racket-logger-debug-face100656
+Node: Introduction4565
+Ref: Introduction-Footnote-15724
+Node: Install6119
+Node: Configure Emacs to use MELPA6453
+Node: Install Racket Mode6926
+Node: Minimal Racket7227
+Node: Uninstall7791
+Node: Update8079
+Node: Upgrading all packages8242
+Node: Updating just Racket Mode8896
+Node: Configure9617
+Node: Key bindings10781
+Node: Font-lock (syntax highlighting)11398
+Node: Completion12682
+Node: Xref (definitions and references)14549
+Node: Indent17492
+Node: paredit17736
+Node: smartparens18729
+Node: Edit buffers and REPL buffers19104
+Node: eldoc19959
+Node: Start faster21218
+Node: Unicode input method21445
+Node: Reference22143
+Node: Commands22635
+Node: Edit22954
+Node: racket-mode23507
+Node: racket-insert-lambda26287
+Node: racket-fold-all-tests26575
+Node: racket-unfold-all-tests26812
+Node: racket-tidy-requires27055
+Node: racket-trim-requires28099
+Node: racket-base-requires28809
+Node: racket-add-require-for-identifier30074
+Node: racket-indent-line31167
+Node: racket-smart-open-bracket-mode33155
+Node: racket-insert-closing34802
+Node: racket-cycle-paren-shapes35295
+Node: racket-backward-up-list35546
+Node: racket-unicode-input-method-enable36106
+Node: racket-align38106
+Node: racket-unalign40074
+Node: racket-complete-at-point40407
+Node: Explore40829
+Node: racket-xp-mode41330
+Node: racket-xp-describe48728
+Node: racket-xp-documentation50072
+Node: racket-xp-next-definition51201
+Node: racket-xp-previous-definition51464
+Node: racket-xp-next-use51734
+Node: racket-xp-previous-use51993
+Node: racket-xp-next-error52255
+Node: racket-xp-previous-error52484
+Node: racket-xp-tail-up52720
+Node: racket-xp-tail-down53184
+Node: racket-xp-tail-next-sibling53465
+Node: racket-xp-tail-previous-sibling53767
+Node: racket-documentation-search54089
+Node: Run55086
+Node: racket-repl-mode55491
+Node: racket-run58133
+Node: racket-run-and-switch-to-repl60051
+Node: racket-run-module-at-point60341
+Node: racket-repl60848
+Node: racket-repl-describe61816
+Node: racket-repl-documentation63050
+Node: racket-racket64158
+Node: racket-profile64376
+Node: racket-profile-mode65093
+Node: racket-logger66108
+Node: racket-logger-mode66329
+Node: racket-debug-mode67452
+Node: Test71023
+Node: racket-test71168
+Node: racket-raco-test71841
+Node: Eval72088
+Node: racket-send-region72280
+Node: racket-send-definition72498
+Node: racket-send-last-sexp72747
+Node: Collections73057
+Node: racket-open-require-path73251
+Node: racket-find-collection73893
+Node: Macro expand74807
+Node: racket-stepper-mode75077
+Node: racket-expand-file76115
+Node: racket-expand-region76841
+Node: racket-expand-definition77207
+Node: racket-expand-last-sexp77596
+Node: Other77948
+Node: racket-mode-start-faster78141
+Node: racket-mode-start-slower79484
+Node: Showing information79777
+Node: racket-show-pseudo-tooltip80079
+Node: racket-show-echo-area80704
+Node: racket-show-header-line81001
+Node: racket-show-pos-tip81521
+Node: Associating edit buffers with REPL buffers81798
+Node: racket-repl-buffer-name-shared82195
+Node: racket-repl-buffer-name-unique82628
+Node: racket-repl-buffer-name-project83104
+Node: racket-project-root83643
+Node: Browsing file URLs with anchors84096
+Node: racket-browse-url-using-temporary-file84356
+Node: Variables85868
+Node: General variables86130
+Node: racket-program86653
+Node: racket-command-timeout86836
+Node: racket-memory-limit87306
+Node: racket-error-context87912
+Node: racket-user-command-line-arguments89029
+Node: racket-path-from-emacs-to-racket-function89888
+Node: racket-path-from-racket-to-emacs-function90575
+Node: racket-browse-url-function91367
+Node: racket-xp-after-change-refresh-delay91770
+Node: racket-xp-highlight-unused-regexp92187
+Node: racket-documentation-search-location92647
+Node: REPL variables93451
+Node: racket-repl-buffer-name-function93852
+Node: racket-submodules-to-run94874
+Node: racket-history-filter-regexp95620
+Node: racket-images-inline95967
+Node: racket-imagemagick-props96215
+Node: racket-images-keep-last96823
+Node: racket-images-system-viewer97077
+Node: racket-pretty-print97351
+Node: Other variables97559
+Node: racket-indent-curly-as-sequence97895
+Node: racket-indent-sequence-depth98278
+Node: racket-pretty-lambda98968
+Node: racket-smart-open-bracket-enable99375
+Node: racket-logger-config99831
+Node: Experimental debugger variables100626
+Node: racket-debuggable-files100872
+Node: Showing informationx101566
+Node: racket-show-functions101762
+Node: Faces102769
+Node: All102872
+Node: racket-keyword-argument-face103376
+Node: racket-selfeval-face103586
+Node: racket-here-string-face103845
+Node: racket-xp-def-face104054
+Node: racket-xp-use-face104287
+Node: racket-xp-unused-face104511
+Node: racket-xp-tail-target-face104775
+Node: racket-xp-tail-position-face105055
+Node: racket-logger-config-face105347
+Node: racket-logger-topic-face105604
+Node: racket-logger-fatal-face105850
+Node: racket-logger-error-face106100
+Node: racket-logger-warning-face106352
+Node: racket-logger-info-face106609
+Node: racket-logger-debug-face106857
 
 End Tag Table
 

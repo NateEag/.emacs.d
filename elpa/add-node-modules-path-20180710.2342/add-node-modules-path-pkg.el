@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/add-node-modules-path-20180710.2342/add-node-modules-path.el  -*- no-byte-compile: t -*-
+(define-package "add-node-modules-path" "20180710.2342" "Add node_modules to your exec-path" 'nil :commit "f31e69ccb681f882aebb806ce6e9478e3ac39708" :authors '(("Neri Marschik" . "marschik_neri@cyberagent.co.jp")) :maintainer '("Neri Marschik" . "marschik_neri@cyberagent.co.jp") :keywords '("javascript" "node" "node_modules" "eslint") :url "https://github.com/codesuki/add-node-modules-path")

@@ -4,8 +4,8 @@
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Keywords: convenience
-;; Package-Version: 20200908.816
-;; Package-Commit: 215d6cb509b11c63394a20666565cd9e9b2c2eab
+;; Package-Version: 20210215.1849
+;; Package-Commit: 1184368d3610bd0d0ca4a3db4068048c562c2b50
 ;; Version: 1.0.2
 ;; URL: https://github.com/emacsorphanage/popwin
 ;; Package-Requires: ((emacs "24.3"))
@@ -203,8 +203,9 @@ HFACTOR, and vertical factor VFACTOR."
     (cl-destructuring-bind (dir edges . windows) node
       (append (list dir edges)
               (cl-loop for window in windows
-                       unless (and (windowp window)
-                                   (window-parameter window 'window-side))
+                       unless (or (and (windowp window)
+                                       (window-parameter window 'window-side))
+                                  (not (windowp window)))
                        collect (popwin:window-config-tree-1 window))))))
 
 (defun popwin:window-config-tree ()

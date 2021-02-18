@@ -69,6 +69,16 @@ The builtin poshandler functions are listed below:
 15. `posframe-poshandler-point-top-left-corner'
 16. `posframe-poshandler-point-bottom-left-corner'
 17. `posframe-poshandler-point-bottom-left-corner-upward'
+18. `posframe-poshandler-point-window-center'
+
+by the way, poshandler can be used by other packages easily
+\(for example: mini-frame) with the help of function
+`posframe-poshandler-argbuilder'. like:
+
+   (let* ((info (posframe-poshandler-argbuilder child-frame))
+          (posn (posframe-poshandler-window-center info)))
+     `((left . ,(car posn))
+       (top . ,(cdr posn))))
 
 This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
 or a name of a (possibly nonexistent) buffer.
@@ -86,9 +96,15 @@ If LEFT-FRINGE or RIGHT-FRINGE is a number, left fringe or
 right fringe with be shown with the specified width.
 
 By default, posframe shows no borders, but users can specify
-borders by setting INTERNAL-BORDER-WIDTH to a positive number.
-Border color can be specified by INTERNAL-BORDER-COLOR
-or via the ‘internal-border’ face.
+borders by setting BORDER-WIDTH to a positive number.  Border
+color can be specified by BORDER-COLOR.
+
+INTERNAL-BORDER-WIDTH and INTERNAL-BORDER-COLOR are same as
+BORDER-WIDTH and INTERNAL-BORDER-COLOR, but do not suggest to use
+for the reason:
+
+   Add distinct controls for child frames' borders (Bug#45620)
+   http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=ff7b1a133bfa7f2614650f8551824ffaef13fadc
 
 Posframe's font as well as foreground and background colors are
 derived from the current frame by default, but can be overridden
@@ -133,7 +149,7 @@ The builtin hidehandler functions are listed below:
 
 You can use `posframe-delete-all' to delete all posframes.
 
-\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER &allow-other-keys)" nil nil)
+\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE BORDER-WIDTH BORDER-COLOR INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER &allow-other-keys)" nil nil)
 
 (autoload 'posframe-hide-all "posframe" "\
 Hide all posframe frames." t nil)

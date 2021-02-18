@@ -261,10 +261,10 @@ In plaintext: some sort settings are much slower than others.  Alphabetic
 sorting \(the default) is fastest and causes no additional overhead (even when
 compared against foregoing sorting altogether).
 
-Modification time sorting takes the middle, being ca.  4x slower than alphabetic.
-Sorting by size is slowest, being ca.  5-6x slower than alphabetic.  It also
-produces the most garbage, making it more like for you to run into a garbage
-collection pause.
+Modification time sorting takes the middle, being ca.  4x slower than
+alphabetic.  Sorting by size is slowest, being ca.  5-6x slower than alphabetic.
+It also produces the most garbage, making it more like for you to run into a
+garbage collection pause.
 
 Lest these numbers scare you off keep in mind that they will likely have little
 to no effect on your usage of treemacs until you begin frequently refreshing
@@ -309,9 +309,9 @@ rendered, when the files' git status information is now available.  This for
 example allows to make files ignored by git invisible.
 The functions in this list are therefore expected to have a different signature:
 They must take two arguments - a file's absolute path and a hash table that maps
-files to their git status.  The files' paths are the table's keys, its values are
-characters (and not strings) indicating the file's git condition.  The chars map
-map as follows: (the pattern is derived from 'git status --porcelain')
+files to their git status.  The files' paths are the table's keys, its values
+are characters (and not strings) indicating the file's git condition.  The chars
+map map as follows: (the pattern is derived from 'git status --porcelain')
 
  * M - file is modified
  * U - file is in conflict
@@ -564,12 +564,12 @@ missing project will not appear in the project list next time Emacs is started."
   :group 'treemacs)
 
 (defcustom treemacs-directory-name-transformer #'identity
-  "Transformer function that is applied to directory names before rendering for any sort of cosmetic effect."
+  "Transformer to apply to directory names before rendering for cosmetic effect."
   :type 'function
   :group 'treemacs)
 
 (defcustom treemacs-file-name-transformer #'identity
-  "Transformer function that is applied to file names before rendering for any sort of cosmetic effect."
+  "Transformer to apply to file names before rendering for cosmetic effect."
   :type 'function
   :group 'treemacs)
 
@@ -642,8 +642,9 @@ Possible values are:
 This means that treemacs will make sure that only the currently followed project
 is expanded while all others will remain collapsed.
 
-Setting this to t might lead to noticeable slowdowns, at least when `treemacs-git-mode'
-is enabled, since constantly expanding an entire project is fairly expensive."
+Setting this to t might lead to noticeable slowdowns, at least when
+`treemacs-git-mode' is enabled, since constantly expanding an entire project is
+fairly expensive."
   :type 'boolean
   :group 'treemacs-follow)
 
@@ -755,6 +756,37 @@ Will be called with the new project as the sole argument."
   "Hooks to run whenever a file or directory is created.
 Applies only when using `treemacs-create-file' or `treemacs-create-dir'.
 Will be called with the created file's or dir's path as the sole argument."
+  :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-delete-file-functions nil
+  "Hooks to run whenever a file or directory is deleted.
+Applies only when using `treemacs-delete'.  Will be called with the created
+file's or dir's path as the sole argument."
+  :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-rename-file-functions nil
+  "Hooks to run whenever a file or directory is renamed.
+
+Applies only when using `treemacs-rename'.  Will be called with 2 arguments: the
+file's old name, and the file's new name, both as absolute paths."
+  :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-move-file-functions nil
+  "Hooks to run whenever a file or directory is moved.
+
+Applies only when using `treemacs-move-file'.  Will be called with 2 arguments:
+the file's old location, and the file's new location, both as absolute paths."
+  :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-copy-file-functions nil
+  "Hooks to run whenever a file or directory is copied.
+
+Applies only when using `treemacs-copy-file'.  Will be called with 2 arguments:
+the original file's location, and the copy's location, both as absolute paths."
   :type 'hook
   :group 'treemacs-hooks)
 
@@ -912,7 +944,8 @@ available \"Treemacs\" text will be displayed.
 
 Setting this to `none' will disable the modeline.
 
-For more specific information about formatting mode line check `mode-line-format'."
+For more specific information about formatting mode line check
+`mode-line-format'."
   :type 'sexp
   :group 'treemacs)
 

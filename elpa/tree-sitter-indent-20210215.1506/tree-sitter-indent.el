@@ -4,11 +4,11 @@
 
 ;; Author: Felipe Lema <felipelema@mortemale.org>
 ;; Keywords: convenience, internal
-;; Package-Version: 20201231.1842
-;; Package-Commit: a11aa84a768cff2d40db7ef0c6029742b7ce46a1
-;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (seq "2.21"))
+;; Package-Version: 20210215.1506
+;; Package-Commit: 831a48571ccf14b8a8c607504a6e8e9263ff6dd4
+;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (seq "2.20"))
 ;; URL: https://codeberg.org/FelipeLema/tree-sitter-indent.el
-;; Version: 0.1
+;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

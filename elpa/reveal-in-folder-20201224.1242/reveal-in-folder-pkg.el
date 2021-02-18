@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/reveal-in-folder-20201224.1242/reveal-in-folder.el  -*- no-byte-compile: t -*-
-(define-package "reveal-in-folder" "20201224.1242" "Reveal current file in folder" '((emacs "24.3") (f "0.20.0") (s "1.12.0")) :commit "5143c92c806fd3a80e6729a42167be9caea88f45" :authors '(("Shen, Jen-Chieh" . "jcs090218@gmail.com")) :maintainer '("Shen, Jen-Chieh" . "jcs090218@gmail.com") :url "https://github.com/jcs-elpa/reveal-in-folder")

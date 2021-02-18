@@ -6,9 +6,9 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Reveal current file in folder.
 ;; Keyword: folder finder reveal file explorer
-;; Version: 0.1.1
-;; Package-Version: 20201224.1242
-;; Package-Commit: 5143c92c806fd3a80e6729a42167be9caea88f45
+;; Version: 0.1.2
+;; Package-Version: 20210129.1921
+;; Package-Commit: f62be2d11c8a9182cf84f0efe7ed054cc304262d
 ;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
 ;; URL: https://github.com/jcs-elpa/reveal-in-folder
 
@@ -58,8 +58,8 @@
   "Send the shell command by PATH."
   (let ((default-directory
           (if path (f-dirname (expand-file-name path)) default-directory))
-        (buf-name (if (and reveal-in-folder-select-file (buffer-file-name))
-                      (shell-quote-argument (expand-file-name (buffer-file-name)))
+        (buf-name (if (and reveal-in-folder-select-file path)
+                      (shell-quote-argument (expand-file-name path))
                     nil))
         cmd)
     (cond

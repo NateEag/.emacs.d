@@ -1,11 +1,11 @@
 ;;; projectile.el --- Manage and navigate projects in Emacs easily -*- lexical-binding: t -*-
 
-;; Copyright © 2011-2020 Bozhidar Batsov <bozhidar@batsov.com>
+;; Copyright © 2011-2021 Bozhidar Batsov <bozhidar@batsov.com>
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20210104.1216
-;; Package-Commit: c31bd41c0b9d6fba8837ebfd3a31dec0b3cd73c6
+;; Package-Version: 20210125.726
+;; Package-Commit: fd5994762a90c2311e8aa40c37373f24e1743a55
 ;; Keywords: project, convenience
 ;; Version: 2.4.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -412,6 +412,17 @@ is set to 'alien'."
     ".clangd")
   "A list of directories globally ignored by projectile.
 Regular expressions can be used.
+
+Strings that don't start with * are only ignored at the top level
+of the project. Strings that start with * are ignored everywhere
+in the project, as if there was no *. So note that * when used as
+a prefix is not a wildcard; it is an indicator that the directory
+should be ignored at all levels, not just root.
+
+Examples: \"tmp\" ignores only ./tmp at the top level of the
+project, but not ./src/tmp. \"*tmp\" will ignore both ./tmp and
+./src/tmp, but not ./not-a-tmp or ./src/not-a-tmp.
+
 Note that files aren't filtered if `projectile-indexing-method'
 is set to 'alien'."
   :safe (lambda (x) (not (remq t (mapcar #'stringp x))))
@@ -813,9 +824,11 @@ just return nil."
   "Get the symbol at point and strip its properties."
   (substring-no-properties (or (thing-at-point 'symbol) "")))
 
-(defun projectile-generate-process-name (process make-new)
-  "Infer the buffer name for PROCESS or generate a new one if MAKE-NEW is true."
-  (let* ((project (projectile-acquire-root))
+(defun projectile-generate-process-name (process make-new &optional project)
+  "Infer the buffer name for PROCESS or generate a new one if MAKE-NEW is true.
+The function operates on the current project by default, but you can also
+specify a project explicitly via the optional PROJECT param."
+  (let* ((project (or project (projectile-acquire-root)))
          (base-name (format "*%s %s*" process (projectile-project-name project))))
     (if make-new
         (generate-new-buffer-name base-name)
@@ -1012,14 +1025,16 @@ This function is not recursive and only adds projects with roots
 at the top level of DIRECTORY."
   (interactive
    (list (read-directory-name "Starting directory: ")))
-  (let ((subdirs (directory-files directory t)))
-    (mapcar
-     (lambda (dir)
-       (when (and (file-directory-p dir)
-                  (not (member (file-name-nondirectory dir) '(".." "."))))
-         (when (projectile-project-p dir)
-           (projectile-add-known-project dir))))
-     subdirs)))
+  (if (file-exists-p directory)
+      (let ((subdirs (directory-files directory t)))
+        (mapcar
+         (lambda (dir)
+           (when (and (file-directory-p dir)
+                      (not (member (file-name-nondirectory dir) '(".." "."))))
+             (when (projectile-project-p dir)
+               (projectile-add-known-project dir))))
+         subdirs))
+    (message "Project search path directory %s doesn't exist" directory)))
 
 ;;;###autoload
 (defun projectile-discover-projects-in-search-path ()
@@ -3587,8 +3602,9 @@ Switch to the project specific shell buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead."
   (interactive "P")
-  (projectile-with-default-dir (projectile-acquire-root)
-    (shell (projectile-generate-process-name "shell" arg))))
+  (let ((project (projectile-acquire-root)))
+    (projectile-with-default-dir project
+      (shell (projectile-generate-process-name "shell" arg project)))))
 
 ;;;###autoload
 (defun projectile-run-eshell (&optional arg)
@@ -3598,9 +3614,10 @@ Switch to the project specific eshell buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead."
   (interactive "P")
-  (projectile-with-default-dir (projectile-acquire-root)
-    (let ((eshell-buffer-name (projectile-generate-process-name "eshell" arg)))
-      (eshell))))
+  (let ((project (projectile-acquire-root)))
+    (projectile-with-default-dir project
+      (let ((eshell-buffer-name (projectile-generate-process-name "eshell" arg project)))
+        (eshell)))))
 
 ;;;###autoload
 (defun projectile-run-ielm (&optional arg)
@@ -3611,7 +3628,7 @@ Switch to the project specific ielm buffer if it already exists.
 Use a prefix argument ARG to indicate creation of a new process instead."
   (interactive "P")
   (let* ((project (projectile-acquire-root))
-         (ielm-buffer-name (projectile-generate-process-name "ielm" arg)))
+         (ielm-buffer-name (projectile-generate-process-name "ielm" arg project)))
     (if (get-buffer ielm-buffer-name)
         (switch-to-buffer ielm-buffer-name)
       (projectile-with-default-dir project
@@ -3627,12 +3644,12 @@ Switch to the project specific term buffer if it already exists.
 
 Use a prefix argument ARG to indicate creation of a new process instead."
   (interactive "P")
-  (let ((project (projectile-acquire-root))
-        (buffer-name (projectile-generate-process-name "term" arg))
-        (default-program (or explicit-shell-file-name
-                             (getenv "ESHELL")
-                             (getenv "SHELL")
-                             "/bin/sh")))
+  (let* ((project (projectile-acquire-root))
+         (buffer-name (projectile-generate-process-name "term" arg project))
+         (default-program (or explicit-shell-file-name
+                              (getenv "ESHELL")
+                              (getenv "SHELL")
+                              "/bin/sh")))
     (unless (get-buffer buffer-name)
       (require 'term)
       (let ((program (read-from-minibuffer "Run program: " default-program)))
@@ -3651,7 +3668,7 @@ Switch to the project specific term buffer if it already exists.
 Use a prefix argument ARG to indicate creation of a new process instead."
   (interactive "P")
   (let* ((project (projectile-acquire-root))
-         (buffer (projectile-generate-process-name "vterm" arg)))
+         (buffer (projectile-generate-process-name "vterm" arg project)))
     (unless (buffer-live-p (get-buffer buffer))
       (unless (require 'vterm nil 'noerror)
         (error "Package 'vterm' is not available"))

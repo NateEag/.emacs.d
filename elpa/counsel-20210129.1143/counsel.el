@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210109.1641
-;; Package-Commit: 8f2abd397dba7205806cfa1615624adc8cd5145f
+;; Package-Version: 20210129.1143
+;; Package-Commit: 0965e2375e2539fcc62b44b7b8f680d40c0b535a
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -424,7 +424,8 @@ Update the minibuffer with the amount of lines collected every
   (cons (concat (car x) (irony-completion-annotation x))
         (car x)))
 
-(add-to-list 'ivy-display-functions-alist '(counsel-irony . ivy-display-function-overlay))
+(ivy-configure #'counsel-irony
+  :display-fn #'ivy-display-function-overlay)
 
 ;;* Elisp symbols
 ;;** `counsel-describe-variable'
@@ -622,29 +623,35 @@ to `ivy-highlight-face'."
 (defun counsel-read-setq-expression (sym)
   "Read and eval a setq expression for SYM."
   (setq this-command 'eval-expression)
-  (let* ((minibuffer-completing-symbol t)
-         (sym-value (symbol-value sym))
-         (expr (minibuffer-with-setup-hook
-                   (lambda ()
-                     ;; Functions `elisp-eldoc-documentation-function' and
-                     ;; `elisp-completion-at-point' added in Emacs 25.1.
-                     (add-function :before-until (local 'eldoc-documentation-function)
-                                   #'elisp-eldoc-documentation-function)
-                     (add-hook 'completion-at-point-functions #'elisp-completion-at-point nil t)
-                     (run-hooks 'eval-expression-minibuffer-setup-hook)
-                     (goto-char (minibuffer-prompt-end))
-                     (forward-char 6)
-                     (insert (format "%S " sym)))
-                 (read-from-minibuffer "Eval: "
-                                       (format
-                                        (if (and sym-value (or (consp sym-value)
-                                                               (symbolp sym-value)))
-                                            "(setq '%S)"
-                                          "(setq %S)")
-                                        sym-value)
-                                       read-expression-map t
-                                       'read-expression-history))))
-    expr))
+  (let* ((sym-value (symbol-value sym))
+         (init (format "(setq %s%S)"
+                       (if (or (consp sym-value)
+                               (and sym-value (symbolp sym-value)))
+                           "'"
+                         "")
+                       sym-value)))
+    ;; Most of this duplicates `read--expression'.
+    (minibuffer-with-setup-hook
+        (lambda ()
+          (set-syntax-table emacs-lisp-mode-syntax-table)
+          ;; Added in Emacs 25.1.
+          (when (fboundp 'elisp-completion-at-point)
+            (add-hook 'completion-at-point-functions
+                      #'elisp-completion-at-point nil t))
+          ;; Emacs 27+ already sets up ElDoc in this hook.  Emacs 25 added
+          ;; `elisp-eldoc-documentation-function' and Emacs 28 obsoletes it.
+          (when (< emacs-major-version 27)
+            (when (fboundp 'elisp-eldoc-documentation-function)
+              (add-function :before-until (local 'eldoc-documentation-function)
+                            #'elisp-eldoc-documentation-function))
+            (eldoc-mode))
+          (run-hooks 'eval-expression-minibuffer-setup-hook)
+          ;; The following diverges from `read--expression'.
+          (goto-char (minibuffer-prompt-end))
+          (forward-char 6)
+          (insert (format "%S " sym)))
+      (read-from-minibuffer "Eval: " init read-expression-map t
+                            'read-expression-history))))
 
 (defun counsel--setq-doconst (x)
   "Return a cons of description and value for X.
@@ -2986,11 +2993,11 @@ NEEDLE is the search string."
        (ivy-more-chars))
      (let* ((default-directory (ivy-state-directory ivy-last))
             (regex (counsel--grep-regex search-term))
-            (switches (concat (car command-args)
-                              (counsel--ag-extra-switches regex)
-                              (if (ivy--case-fold-p string)
+            (switches (concat (if (ivy--case-fold-p string)
                                   " -i "
-                                " -s "))))
+                                " -s ")
+                              (counsel--ag-extra-switches regex)
+                              (car command-args))))
        (counsel--async-command (counsel--format-ag-command
                                 switches
                                 (funcall (if (listp counsel-ag-command) #'identity

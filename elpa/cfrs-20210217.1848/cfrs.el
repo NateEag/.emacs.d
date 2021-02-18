@@ -1,12 +1,12 @@
 ;;; cfrs.el --- Child-frame based read-string -*- lexical-binding: t -*-
 
-;; Copyright (C) 2020 Alexander Miller
+;; Copyright (C) 2021 Alexander Miller
 
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Package-Requires: ((emacs "26.1") (dash "2.11.0") (s "1.10.0") (posframe "0.6.0"))
-;; Package-Commit: d4cee9074b31b283b1475bfc8fe3c63ab51dbb61
-;; Package-Version: 20210108.1152
-;; Package-X-Original-Version: 1.5.1
+;; Package-Commit: 7c42f2c82c7ae689f3ef291b066688c58ab96298
+;; Package-Version: 20210217.1848
+;; Package-X-Original-Version: 1.5.4
 ;; Homepage: https://github.com/Alexander-Miller/cfrs
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -75,7 +75,6 @@ Only the `:background' part is used."
         (x-focus-frame frame)
         (add-hook 'delete-frame-functions #'cfrs--on-frame-kill nil :local)
         (with-current-buffer buffer
-          (display-line-numbers-mode -1)
           (setq-local cursor-type cursor)
           (cfrs-input-mode)
           (-each (overlays-in (point-min) (point-max)) #'delete-overlay)
@@ -111,6 +110,9 @@ Only the `:background' part is used."
 (defun cfrs-finish ()
   "Finish the cfrs read, returning the entered string."
   (interactive)
+  ;; XXX: workaround for persp believing we are in a different frame
+  ;; and need a new perspective when the recursive edit ends
+  (set-frame-parameter (selected-frame) 'persp--recursive nil)
   (exit-recursive-edit))
 
 (defun cfrs-cancel ()
@@ -128,7 +130,12 @@ Only the `:background' part is used."
 
 (define-derived-mode cfrs-input-mode fundamental-mode "Child Frame Read String"
   "Simple mode for buffers displayed in cfrs's input frames."
-  (add-hook 'post-command-hook #'cfrs--adjust-height nil :local))
+  (add-hook 'post-command-hook #'cfrs--adjust-height nil :local)
+  (display-line-numbers-mode -1))
+
+;; https://github.com/Alexander-Miller/treemacs/issues/775
+(with-eval-after-load 'beacon
+  (add-to-list 'beacon-dont-blink-major-modes 'cfrs-input-mode))
 
 (provide 'cfrs)
 

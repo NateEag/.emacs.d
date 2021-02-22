@@ -78,7 +78,7 @@
     ;; falls back to just finding files across my machine, and also provides
     ;; all open buffers. Basically, I don't want to have to think about where
     ;; files live or whether I've opened it unless necessary.
-    ("p f" . counsel-projectile-find-file-dwim)
+    ("p f" . counsel-projectile-find-file)
     ("p o f" . ne/switch-window-then-find-project-file)
     ("p s" . counsel-projectile-ag)
     ("p b" . counsel-projectile-switch-to-buffer)

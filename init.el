@@ -80,7 +80,7 @@
   (unless (file-exists-p filename)
     (let ((dir (file-name-directory filename)))
       (unless (file-exists-p dir)
-        (make-directory dir)))))
+        (make-directory dir t)))))
 
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.

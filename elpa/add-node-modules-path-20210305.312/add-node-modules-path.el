@@ -6,8 +6,8 @@
 
 ;; Author: Neri Marschik <marschik_neri@cyberagent.co.jp>
 ;; Version: 1.0
-;; Package-Version: 20180710.2342
-;; Package-Commit: f31e69ccb681f882aebb806ce6e9478e3ac39708
+;; Package-Version: 20210305.312
+;; Package-Commit: 7d9be65b3be062842b7ead862dec15d6f25db4a2
 ;; Package-Requires: ()
 ;; Keywords: javascript, node, node_modules, eslint
 ;; URL: https://github.com/codesuki/add-node-modules-path
@@ -33,15 +33,22 @@
 
 ;;; Code:
 
+(defgroup add-node-modules-path nil
+  "Put node_modules binaries into `exec-path'."
+  :prefix "add-node-modules-path-"
+  :group 'environment)
+
 ;;;###autoload
 (defcustom add-node-modules-path-debug nil
   "Enable verbose output when non nil."
-  :type 'boolean)
+  :type 'boolean
+  :group 'add-node-modules-path)
 
 ;;;###autoload
 (defcustom add-node-modules-max-depth 20
   "Max depth to look for node_modules."
-  :type 'integer)
+  :type 'integer
+  :group 'add-node-modules-path)
 
 ;;;###autoload
 (defun add-node-modules-path ()

@@ -2,10 +2,10 @@
 ;; Author: Laurent Charignon <l.charignon@gmail.com>
 ;; Maintainer: Laurent Charignon <l.charignon@gmail.com>
 ;; Keywords: git, tools, vc, github
-;; Package-Commit: db723740e02348c0760407e532ad667ef89210ec
+;; Package-Commit: 341b7a1352e4ee1f1119756360ac0714abbaf460
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25.1") (s "1.12.0") (ghub "2.0") (dash "2.11.0") (deferred "0.5.1") (a "0.1.1"))
-;; Package-Version: 20201012.40
+;; Package-Version: 20210314.2203
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -51,13 +51,14 @@
   "Write and submit GitHub code reviews from within Emacs."
   :group 'tools)
 
-(defcustom github-review-review-folder "/tmp"
+(defcustom github-review-review-folder temporary-file-directory
   "Folder in which to store the code review files."
   :group 'github-review
-  :type 'string)
+  :type 'directory)
 
 (defcustom github-review-host "api.github.com"
-  "Host for the GitHub api."
+  "Host for the GitHub api if you use the hosted version of GitHub. 
+  This typically looks like: api.git.mycompany.com"
   :group 'github-review
   :type 'string)
 

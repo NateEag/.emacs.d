@@ -1,6 +1,6 @@
-;;; parse-it-lisp.el --- Core parser for Lisp  -*- lexical-binding: t; -*-
+;;; parse-it-elisp.el --- Core parser for Emacs Lisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2020-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,47 +19,30 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Lisp.
+;; Core parser for Emacs Lisp.
 ;;
 
 ;;; Code:
 
-(require 'parse-it)
+(require 'parse-it-lisp)
 
-(defconst parse-it-lisp--token-type
-  '(("COMMA" . "[,]")
-    ("BACK_QUOTE" . "[`]")
-    ("QT_S" . "[']")
-    ("QT_D" . "[\"]")
-    ("PAREN_OPN" . "[(]")      ; (
-    ("PAREN_CLS" . "[)]"))     ; )
+(defconst parse-it-elisp--token-type
+  '()
   "Lisp token type.")
 
-(defconst parse-it-lisp--comment-token-type
-  '(("COMMENT" . "[;]"))     ; ;
-  "Lisp comment token type.")
-
-(defconst parse-it-lisp--into-level-symbols
-  '("PAREN_OPN")
-  "All symbols that goes into one nested level.")
-
-(defconst parse-it-lisp--back-level-symbols
-  '("PAREN_CLS")
-  "All symbols that goes back up one nested level.")
-
-(defun parse-it-lisp--make-token-type ()
+(defun parse-it-elisp--make-token-type ()
   "Make up the token type."
-  (append parse-it-lisp--token-type
+  (append parse-it-elisp--token-type
           parse-it-lisp--comment-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-lisp (path)
-  "Parse the PATH Lisp."
-  (let* ((parse-it-lex--token-type (parse-it-lisp--make-token-type))
+(defun parse-it-elisp (path)
+  "Parse the PATH Emacs Lisp."
+  (let* ((parse-it-lex--token-type (parse-it-elisp--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-lisp--into-level-symbols
                         parse-it-lisp--back-level-symbols)))
 
-(provide 'parse-it-lisp)
-;;; parse-it-lisp.el ends here
+(provide 'parse-it-elisp)
+;;; parse-it-elisp.el ends here

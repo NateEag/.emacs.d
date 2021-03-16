@@ -1,6 +1,6 @@
 ;;; parse-it-css.el --- Core parser for CSS  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 

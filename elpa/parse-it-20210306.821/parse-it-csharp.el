@@ -1,6 +1,6 @@
-;;; parse-it-c++.el --- Core parser for C++  -*- lexical-binding: t; -*-
+;;; parse-it-csharp.el --- Core parser for CSharp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,27 +19,27 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for C++.
+;; Core parser for CSharp.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-c++--token-type
+(defconst parse-it-csharp--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(asm\\|bool\\|catch\\|class\\|const_cast\\|delete\\|dynamic_cast\\|explicit\\|export\\|false\\|friend\\|inline\\|mutable\\|namespace\\|new\\|operator\\|private\\|protected\\|public\\|reinterpret_cast\\|static_cast\\|template\\|this\\|throw\\|true\\|try\\|typeid\\|typename\\|using\\|virtual\\|wchar_t\\|nullptr\\)"))
-  "C++ token type.")
+    ("ARROW" . "[=][>]")
+    ("KEYWORD" . "\\<\\(abstract\\|as\\|base\\|bool\\|break\\|byte\\|case\\|catch\\|char\\|checked\\|class\\|const\\|continue\\|decimal\\|default\\|delegate\\|do\\|double\\|else\\|enum\\|event\\|explicit\\|extern\\|false\\|finally\\|fixed\\|float\\|foreach\\|for\\|goto\\|if\\|implicit\\|interface\\|internal\\|int\\|in\\|is\\|lock\\|long\\|namespace\\|new\\|null\\|object\\|operator\\|out\\|override\\|params\\|private\\|protected\\|public\\|readonly\\|ref\\|return\\|sbyte\\|sealed\\|short\\|sizeof\\|stackalloc\\|static\\|string\\|struct\\|switch\\|this\\|throw\\|true\\|try\\|typeof\\|uint\\|ulong\\|unchecked\\|unsafe\\|ushort\\|using\\|virtual\\|void\\|volatile\\|while\\)"))
+  "CSharp token type.")
 
-(defun parse-it-c++--make-token-type ()
+(defun parse-it-csharp--make-token-type ()
   "Make up the token type."
-  (append parse-it-c++--token-type
-          parse-it-c--token-type
+  (append parse-it-csharp--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
           parse-it-c--macro-token-type
@@ -51,13 +51,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-c++ (path)
-  "Parse the PATH C++."
-  (let* ((parse-it-lex--token-type (parse-it-c++--make-token-type))
+(defun parse-it-csharp (path)
+  "Parse the PATH CSharp."
+  (let* ((parse-it-lex--token-type (parse-it-csharp--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-c++)
-;;; parse-it-c++.el ends here
+(provide 'parse-it-csharp)
+;;; parse-it-csharp.el ends here

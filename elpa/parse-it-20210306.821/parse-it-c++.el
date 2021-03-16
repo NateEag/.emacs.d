@@ -1,6 +1,6 @@
-;;; parse-it-php.el --- Core parser for PHP  -*- lexical-binding: t; -*-
+;;; parse-it-c++.el --- Core parser for C++  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,32 +19,30 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for PHP.
+;; Core parser for C++.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-php--token-type
-  '(("COMMENT" . "[#]")
-    ("COLON" . "[:]")
+(defconst parse-it-c++--token-type
+  '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("ARROW" . "[=][>]")
-    ("VARIABLE" . "[$][^ \t\n]*")
-    ("CONSTANT" . "\\<\\(__CLASS__\\|__DIR__\\|__FILE__\\|__FUNCTION__\\|__LINE__\\|__METHOD__\\|__NAMESPACE__\\|__TRAIT__\\)")
-    ("KEYWORD" . "\\<\\(abstract\\|and\\|as\\|break\\|callable\\|case\\|catch\\|class\\|clone\\|const\\|continue\\|declare\\|default\\|do\\|echo\\|else\\|elseif\\|enddeclare\\|endfor\\|endforeach\\|endif\\|endswitch\\|endwhile\\|extends\\|final\\|finally\\|foreach\\|for\\|function\\|global\\|goto\\|if\\|implements\\|include\\|include_once\\|instanceof\\|insteadof\\|interface\\|namespace\\|new\\|or\\|print\\|private\\|protected\\|public\\|require\\|require_once\\|return\\|static\\|switch\\|throw\\|trait\\|try\\|use\\|var\\|while\\|xor\\|yield from\\|yield\\)"))
-  "PHP token type.")
+    ("KEYWORD" . "\\<\\(asm\\|bool\\|catch\\|class\\|const_cast\\|delete\\|dynamic_cast\\|explicit\\|export\\|false\\|friend\\|inline\\|mutable\\|namespace\\|new\\|operator\\|private\\|protected\\|public\\|reinterpret_cast\\|static_cast\\|template\\|this\\|throw\\|true\\|try\\|typeid\\|typename\\|using\\|virtual\\|wchar_t\\|nullptr\\)"))
+  "C++ token type.")
 
-(defun parse-it-php--make-token-type ()
+(defun parse-it-c++--make-token-type ()
   "Make up the token type."
-  (append parse-it-php--token-type
+  (append parse-it-c++--token-type
+          parse-it-c--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
@@ -53,13 +51,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-php (path)
-  "Parse the PATH PHP."
-  (let* ((parse-it-lex--token-type (parse-it-php--make-token-type))
+(defun parse-it-c++ (path)
+  "Parse the PATH C++."
+  (let* ((parse-it-lex--token-type (parse-it-c++--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-php)
-;;; parse-it-php.el ends here
+(provide 'parse-it-c++)
+;;; parse-it-c++.el ends here

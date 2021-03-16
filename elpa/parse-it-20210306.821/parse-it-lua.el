@@ -1,6 +1,6 @@
-;;; parse-it-go.el --- Core parser for Go  -*- lexical-binding: t; -*-
+;;; parse-it-lua.el --- Core parser for Lua  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,44 +19,42 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Go.
+;; Core parser for Lua.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-go--token-type
-  '(("COLON" . "[:]")
+(defconst parse-it-lua--token-type
+  '(("COMMENT" . "[-][-]")
+    ("COMMENT_BEG" . "[-][-][[][[]")
+    ("COMMENT_END" . "[]][]][-][-]")
+    ("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(break\\|default\\|func\\|interface\\|select\\|case\\|defer\\|goto\\|map\\|struct\\|chan\\|else\\|go\\|package\\|switch\\|const\\|fallthrough\\|if\\|range\\|type\\|continue\\|for\\|import\\|return\\|var\\)"))
-  "Go token type.")
+    ("KEYWORD" . "\\<\\(break\\|case\\|catch\\|continue\\|debugger\\|default\\|delete\\|do\\|else\\|finally\\|for\\|function\\|if\\|instanceof\\|in\\|new\\|return\\|switch\\|this\\|throw\\|try\\|typeof\\|var\\|void\\|while\\|with\\|null\\|true\\|false\\|NaN\\|Infinity\\|undefined\\)"))
+  "Lua token type.")
 
-(defun parse-it-go--make-token-type ()
+(defun parse-it-lua--make-token-type ()
   "Make up the token type."
-  (append parse-it-go--token-type
-          parse-it-c--c-type-comment-token-type
-          parse-it-c--bracket-token-type
-          parse-it-c--macro-token-type
+  (append parse-it-lua--token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
           parse-it-c--c-type-relational-operators-token-type
-          parse-it-c--c-type-logical-operators-token-type
-          parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-go (path)
-  "Parse the PATH Go."
-  (let* ((parse-it-lex--token-type (parse-it-go--make-token-type))
+(defun parse-it-lua (path)
+  "Parse the PATH Lua."
+  (let* ((parse-it-lex--token-type (parse-it-lua--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-go)
-;;; parse-it-go.el ends here
+(provide 'parse-it-lua)
+;;; parse-it-lua.el ends here

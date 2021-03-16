@@ -24,7 +24,6 @@
 
 (require 's)
 (require 'ht)
-(require 'f)
 (require 'treemacs-core-utils)
 (require 'treemacs-icons)
 (require 'treemacs-async)
@@ -67,6 +66,9 @@
 If there are no projects, points to the position at the end of any top-level
 extensions positioned to `TOP'. This can always be used as the insertion point
 for new projects.")
+
+(defvar treemacs--file-name-handler-alist nil
+  "Value of `file-name-handler-alist' when treemacs loads a directory's content.")
 
 (define-inline treemacs--projects-end ()
   "Importable getter for `treemacs--projects-end'."
@@ -173,7 +175,7 @@ the height of treemacs' icons must be taken into account."
     (inline-quote
      ;; `directory-files' is much faster in a temp buffer for whatever reason
      (with-temp-buffer
-       (let* ((file-name-handler-alist '(("\\`/[^/|:]+:" . tramp-autoload-file-name-handler)))
+       (let* ((file-name-handler-alist treemacs--file-name-handler-alist)
               (sort-func (treemacs--get-sort-fuction))
               (entries (-> ,dir (directory-files :absolute-names nil :no-sort) (treemacs--filter-files-to-be-shown)))
               (dirs-files (-separate #'file-directory-p entries)))
@@ -533,7 +535,7 @@ BTN: Button
 GIT-FUTURE: Pfuture|HashMap
 RECURSIVE: Bool"
   (-let [path (treemacs-button-get btn :path)]
-    (if (not (f-readable? path))
+    (if (not (file-readable-p path))
         (treemacs-pulse-on-failure
             "Directory %s is not readable." (propertize path 'face 'font-lock-string-face))
       (let* ((project (treemacs-project-of-node btn))
@@ -722,7 +724,7 @@ DOM-NODE: Dom Node"
              (delete-offset (- (length path) (length new-path)))
              (new-label (substring new-path (length key)))
              (old-coll-count (car coll-status))
-             (new-coll-count (length (cdr (f-split new-label)))))
+             (new-coll-count (length (treemacs-split-path new-label))))
         (treemacs-button-put btn :path new-path)
         (end-of-line)
         ;; delete just enough to get rid of the deleted dirs
@@ -885,7 +887,7 @@ FLATTEN-INFO [Int File Path...]"
          ;; Create the path items of the new `:collapsed' property
          (dolist (token new-path-tokens)
            (cl-incf new-flatten-info-count)
-           (setf new-flatten-info-item (f-join new-flatten-info-item token))
+           (setf new-flatten-info-item (treemacs-join-path new-flatten-info-item token))
            (push new-flatten-info-item new-flatten-info))
          (setf new-flatten-info (nreverse new-flatten-info))
 

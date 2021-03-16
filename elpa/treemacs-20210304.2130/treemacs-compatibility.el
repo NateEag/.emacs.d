@@ -36,6 +36,30 @@
  (push '(treemacs-id . :never) frameset-filter-alist)
  (push '(treemacs-workspace . :never) frameset-filter-alist))
 
+(with-eval-after-load 'tramp
+  (setf treemacs--file-name-handler-alist
+        (with-no-warnings
+          (list
+           (cons tramp-file-name-regexp #'tramp-file-name-handler)))))
+
+(with-eval-after-load 'recentf
+  (with-no-warnings
+    (add-to-list 'recentf-exclude treemacs-persist-file)
+    (add-to-list 'recentf-exclude treemacs-last-error-persist-file)))
+
+(with-eval-after-load 'eyebrowse
+
+  (defun treemacs--follow-after-eyebrowse-switch ()
+    (when treemacs-follow-mode
+      (--when-let (treemacs-get-local-window)
+        (with-selected-window it
+          (treemacs--follow-after-buffer-list-update)
+          (hl-line-highlight)))))
+
+  (declare-function treemacs--follow-after-eyebrowse-switch "treemacs-compatibility")
+
+  (add-hook 'eyebrowse-post-window-switch-hook #'treemacs--follow-after-eyebrowse-switch))
+
 (with-eval-after-load 'winum
   (when (boundp 'winum-ignored-buffers-regexp)
     (add-to-list 'winum-ignored-buffers-regexp (regexp-quote (format "%sScoped-Buffer-" treemacs--buffer-name-prefix)))))

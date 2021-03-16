@@ -22,7 +22,6 @@
 
 (require 'hl-line)
 (require 'button)
-(require 'f)
 (require 's)
 (require 'dash)
 (require 'treemacs-core-utils)
@@ -382,17 +381,17 @@ they will instead be wiped irreversibly."
              (path (treemacs-button-get btn :path))
              (file-name (propertize (treemacs--filename path) 'face 'font-lock-string-face)))
         (cond
-         ((f-symlink? path)
+         ((file-symlink-p path)
           (if (yes-or-no-p (format "Remove link '%s -> %s' ? "
                                      file-name
                                      (propertize (file-symlink-p path) 'face 'font-lock-face)))
               (delete-file path delete-by-moving-to-trash)
             (treemacs-return (treemacs-log "Cancelled."))))
-         ((f-file? path)
+         ((file-regular-p path)
           (if (yes-or-no-p (format "Delete '%s' ? " file-name))
               (delete-file path delete-by-moving-to-trash)
             (treemacs-return (treemacs-log "Cancelled."))))
-         ((f-directory? path)
+         ((file-directory-p path)
           (if (yes-or-no-p (format "Recursively delete '%s' ? " file-name))
               (delete-directory path t delete-by-moving-to-trash)
             (treemacs-return (treemacs-log "Cancelled."))))
@@ -452,8 +451,8 @@ likewise be updated."
        (treemacs-error-return-if (not (file-exists-p old-path))
          "The file to be renamed does not exist.")
        (setq new-name (treemacs--read-string "New name: " (file-name-nondirectory old-path))
-             dir      (f-dirname old-path)
-             new-path (f-join dir new-name))
+             dir      (treemacs--parent-dir old-path)
+             new-path (treemacs-join-path dir new-name))
        (treemacs-error-return-if (file-exists-p new-path)
          "A file named %s already exists."
          (propertize new-name 'face font-lock-string-face))
@@ -491,14 +490,17 @@ itself, using $HOME when there is no path at or near point to grab."
                 (if treemacs-show-hidden-files "displayed." "hidden.")))
 
 (defun treemacs-toggle-fixed-width ()
-  "Toggle whether the treemacs buffer should have a fixed width.
+  "Toggle whether the local treemacs buffer should have a fixed width.
 See also `treemacs-width.'"
   (interactive)
-  (setq treemacs--width-is-locked (not treemacs--width-is-locked)
-        window-size-fixed (when treemacs--width-is-locked 'width))
-  (treemacs-log "Window width has been %s."
-                (propertize (if treemacs--width-is-locked "locked" "unlocked")
-                            'face 'font-lock-string-face)))
+  (-if-let (buffer (treemacs-get-local-buffer))
+      (with-current-buffer buffer
+        (setq treemacs--width-is-locked (not treemacs--width-is-locked)
+              window-size-fixed (when treemacs--width-is-locked 'width))
+        (treemacs-log "Window width has been %s."
+          (propertize (if treemacs--width-is-locked "locked" "unlocked")
+                      'face 'font-lock-string-face)))
+    (treemacs-log-failure "There is no treemacs buffer in the current scope.")))
 
 (defun treemacs-set-width (&optional arg)
   "Select a new value for `treemacs-width'.
@@ -520,8 +522,10 @@ With a prefix ARG simply reset the width of the treemacs window."
        "There is nothing to copy here")
      (treemacs-error-return-if (not (stringp path))
        "Path at point is not a file.")
-     (-let [copied (-> path (f-full) (kill-new))]
-       (treemacs-pulse-on-success "Copied absolute path: %s" (propertize copied 'face 'font-lock-string-face))))))
+     (when (file-directory-p path)
+       (setf path (treemacs--add-trailing-slash path)))
+     (kill-new path)
+     (treemacs-pulse-on-success "Copied absolute path: %s" (propertize path 'face 'font-lock-string-face)))))
 
 (defun treemacs-copy-relative-path-at-point ()
   "Copy the path of the node at point relative to the project root."
@@ -533,7 +537,9 @@ With a prefix ARG simply reset the width of the treemacs window."
        "There is nothing to copy here")
      (treemacs-error-return-if (not (stringp path))
        "Path at point is not a file.")
-     (-let [copied (-> path (f-full) (file-relative-name (treemacs-project->path project)) (kill-new))]
+     (when (file-directory-p path)
+       (setf path (treemacs--add-trailing-slash path)))
+     (-let [copied (-> path (file-relative-name (treemacs-project->path project)) (kill-new))]
        (treemacs-pulse-on-success "Copied relative path: %s" (propertize copied 'face 'font-lock-string-face))))))
 
 (defun treemacs-copy-project-path-at-point ()
@@ -606,7 +612,7 @@ without the need to call `treemacs-resort' with a prefix arg."
           ((or 'file-node-open 'file-node-closed 'tag-node-open 'tag-node-closed 'tag-node)
            (let* ((parent (treemacs-button-get btn :parent)))
              (while (and parent
-                         (not (-some-> parent (treemacs-button-get :path) (f-directory?))))
+                         (not (-some-> parent (treemacs-button-get :path) (file-directory-p))))
                (setq parent (treemacs-button-get parent :parent)))
              (if parent
                  (let ((line (line-number-at-pos))
@@ -900,15 +906,15 @@ workspaces."
   "Close the project at point.
 With a prefix ARG also forget about all the nodes opened in the project."
   (interactive "P")
-  (treemacs-unless-let (btn (treemacs-current-button))
+  (treemacs-unless-let (project (treemacs-project-at-point))
       (treemacs-pulse-on-failure "There is nothing to close here.")
-    (while (not (treemacs-button-get btn :project))
-      (setq btn (treemacs-button-get btn :parent)))
-    (when (eq 'root-node-open (treemacs-button-get btn :state))
-      (treemacs--forget-last-highlight)
-      (goto-char btn)
-      (treemacs--collapse-root-node btn arg)
-      (treemacs--maybe-recenter 'on-distance))))
+    (-let [btn (treemacs-project->position project)]
+      (when (treemacs-is-node-expanded? btn)
+        (treemacs--forget-last-highlight)
+        (goto-char btn)
+        (treemacs--collapse-root-node btn arg)
+        (treemacs--maybe-recenter 'on-distance)))
+    (treemacs-pulse-on-success "Collapsed current project")))
 
 (defun treemacs-collapse-all-projects (&optional arg)
   "Collapses all projects.
@@ -921,23 +927,23 @@ With a prefix ARG also forget about all the nodes opened in the projects."
         (when (eq 'root-node-open (treemacs-button-get pos :state))
           (goto-char pos)
           (treemacs--collapse-root-node pos arg)))))
-  (treemacs--maybe-recenter 'on-distance))
+  (treemacs--maybe-recenter 'on-distance)
+  (treemacs-pulse-on-success "Collapsed all projects"))
 
 (defun treemacs-collapse-other-projects (&optional arg)
   "Collapses all projects except the project at point.
 With a prefix ARG also forget about all the nodes opened in the projects."
   (interactive "P")
   (save-excursion
-    (-let [curr-project (-some-> (treemacs-current-button)
-                                 (treemacs--nearest-path)
-                                 (treemacs--find-project-for-path))]
+    (-let [curr-project (treemacs-project-at-point)]
       (dolist (project (treemacs-workspace->projects (treemacs-current-workspace)))
         (unless (eq project curr-project)
           (-when-let (pos (treemacs-project->position project))
             (when (eq 'root-node-open (treemacs-button-get pos :state))
               (goto-char pos)
               (treemacs--collapse-root-node pos arg)))))))
-  (treemacs--maybe-recenter 'on-distance))
+  (treemacs--maybe-recenter 'on-distance)
+  (treemacs-pulse-on-success "Collapsed all other projects"))
 
 (defun treemacs-peek ()
   "Peek at the content of the node at point.
@@ -972,9 +978,9 @@ Only works with a single project in the workspace."
      (let* ((project (-> btn (treemacs--nearest-path) (treemacs--find-project-for-path)))
             (old-root (treemacs-project->path project))
             (new-root (treemacs--parent old-root))
-            (new-name (if (f-root? new-root)
-                          "/"
-                        (file-name-nondirectory new-root)))
+            (new-name (pcase new-root
+                        ("/" new-root)
+                        (_  (file-name-nondirectory new-root))))
             (treemacs--no-messages t)
             (treemacs-pulse-on-success nil))
        (unless (treemacs-is-path old-root :same-as new-root)
@@ -1015,8 +1021,8 @@ Only works with a single project in the workspace."
            '(("* Directory Extensions" . directory)
              ("* Project Extensions" . project)
              ("* Root Extetensions"  . root)) )
-        (let ((top-name (symbol-value (intern (s-lex-format "treemacs--${name}-top-extensions"))))
-              (bottom-name (symbol-value (intern (s-lex-format "treemacs--${name}-bottom-extensions")))))
+        (let ((top-name (symbol-value (intern (format "treemacs--%s-top-extensions" name))))
+              (bottom-name (symbol-value (intern (format "treemacs--%s-bottom-extensions" name)))))
           (push headline txt)
           (pcase-dolist
               (`(,pos-txt . ,pos-val)
@@ -1105,7 +1111,11 @@ Only works with a single project in the workspace."
         (treemacs--org-edit-display-validation-msg err-msg err-line))
        ('success
         (treemacs--invalidate-buffer-project-cache)
-        (f-write (apply #'concat (--map (concat it "\n") lines)) 'utf-8 treemacs-persist-file)
+        (write-region
+         (apply #'concat (--map (concat it "\n") lines))
+         nil
+         treemacs-persist-file
+         nil :silent)
         (kill-buffer)
         (treemacs--restore)
         (-if-let (ws (treemacs--select-workspace-by-name

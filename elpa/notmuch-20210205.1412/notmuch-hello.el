@@ -21,7 +21,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
 (require 'widget)
 (require 'wid-edit) ; For `widget-forward'.
 
@@ -432,8 +431,7 @@ supported for \"Customized queries section\" items."
     ;; If an existing saved search with this name exists, remove it.
     (setq notmuch-saved-searches
 	  (cl-loop for elem in notmuch-saved-searches
-		   if (not (equal name
-				  (notmuch-saved-search-get elem :name)))
+		   unless (equal name (notmuch-saved-search-get elem :name))
 		   collect elem))
     ;; Add the new one.
     (customize-save-variable 'notmuch-saved-searches
@@ -481,18 +479,14 @@ diagonal."
 	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest _ignore)
-  (cond
-   ((eq (widget-get widget :notmuch-search-type) 'tree)
-    (notmuch-tree (widget-get widget
-			      :notmuch-search-terms)))
-   ((eq (widget-get widget :notmuch-search-type) 'unthreaded)
-    (notmuch-unthreaded (widget-get widget
-				    :notmuch-search-terms)))
+  (cl-case (widget-get widget :notmuch-search-type)
+   (tree
+    (notmuch-tree (widget-get widget :notmuch-search-terms)))
+   (unthreaded
+    (notmuch-unthreaded (widget-get widget :notmuch-search-terms)))
    (t
-    (notmuch-search (widget-get widget
-				:notmuch-search-terms)
-		    (widget-get widget
-				:notmuch-search-oldest-first)))))
+    (notmuch-search (widget-get widget :notmuch-search-terms)
+		    (widget-get widget :notmuch-search-oldest-first)))))
 
 (defun notmuch-saved-search-count (search)
   (car (process-lines notmuch-command "count" search)))
@@ -736,9 +730,7 @@ The screen may be customized via `\\[customize]'.
 Complete list of currently available key bindings:
 
 \\{notmuch-hello-mode-map}"
-  (setq notmuch-buffer-refresh-function #'notmuch-hello-update)
-  ;;(setq buffer-read-only t)
-  )
+  (setq notmuch-buffer-refresh-function #'notmuch-hello-update))
 
 ;;; Inserters
 
@@ -823,8 +815,7 @@ Complete list of currently available key bindings:
   ;; instead of a space to make `show-trailing-whitespace'
   ;; happy, i.e. avoid it marking the whole line as trailing
   ;; spaces.
-  (widget-insert ".")
-  (put-text-property (1- (point)) (point) 'invisible t)
+  (widget-insert (propertize "." 'invisible t))
   (widget-insert "\n"))
 
 (defun notmuch-hello-insert-recent-searches ()

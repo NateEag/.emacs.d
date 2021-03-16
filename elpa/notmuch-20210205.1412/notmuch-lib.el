@@ -22,6 +22,8 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'pcase)
+(require 'subr-x)
 
 (require 'mm-util)
 (require 'mm-view)
@@ -101,6 +103,7 @@ search results. Note that any filtered searches created by
 search."
   :type 'boolean
   :group 'notmuch-search)
+(make-variable-buffer-local 'notmuch-search-oldest-first)
 
 (defcustom notmuch-poll-script nil
   "[Deprecated] Command to run to incorporate new mail into the notmuch database.
@@ -192,8 +195,8 @@ will be signaled.
 
 Otherwise the output will be returned."
   (with-temp-buffer
-    (let* ((status (apply #'call-process notmuch-command nil t nil args))
-	   (output (buffer-string)))
+    (let ((status (apply #'call-process notmuch-command nil t nil args))
+	  (output (buffer-string)))
       (notmuch-check-exit-status status (cons notmuch-command args) output)
       output)))
 
@@ -247,8 +250,9 @@ displays both values separately."
   (let* ((val (notmuch-command-to-string "config" "get" item))
 	 (len (length val)))
     ;; Trim off the trailing newline (if the value is empty or not
-    ;; configured, there will be no newline)
-    (if (and (> len 0) (= (aref val (- len 1)) ?\n))
+    ;; configured, there will be no newline).
+    (if (and (> len 0)
+	     (= (aref val (- len 1)) ?\n))
 	(substring val 0 -1)
       val)))
 
@@ -281,7 +285,7 @@ depending on the value of `notmuch-poll-script'."
   (interactive)
   (message "Polling mail...")
   (if (stringp notmuch-poll-script)
-      (unless (string= notmuch-poll-script "")
+      (unless (string-empty-p notmuch-poll-script)
 	(unless (equal (call-process notmuch-poll-script nil nil) 0)
 	  (error "Notmuch: poll script `%s' failed!" notmuch-poll-script)))
     (notmuch-call-notmuch-process "new"))
@@ -414,9 +418,9 @@ A command that supports a prefix argument can explicitly document
 its prefixed behavior by setting the 'notmuch-prefix-doc property
 of its command symbol."
   (interactive)
-  (let* ((mode major-mode)
-	 (doc (substitute-command-keys
-	       (notmuch-substitute-command-keys (documentation mode t)))))
+  (let ((doc (substitute-command-keys
+	      (notmuch-substitute-command-keys
+	       (documentation major-mode t)))))
     (with-current-buffer (generate-new-buffer "*notmuch-help*")
       (insert doc)
       (goto-char (point-min))
@@ -482,8 +486,8 @@ be displayed."
 ;;; String Utilities
 
 (defun notmuch-prettify-subject (subject)
-  ;; This function is used by `notmuch-search-process-filter' which
-  ;; requires that we not disrupt its' matching state.
+  ;; This function is used by `notmuch-search-process-filter',
+  ;; which requires that we not disrupt its matching state.
   (save-match-data
     (if (and subject
 	     (string-match "^[ \t]*$" subject))
@@ -538,25 +542,29 @@ This replaces spaces, percents, and double quotes in STR with
 ;;; Generic Utilities
 
 (defun notmuch-plist-delete (plist property)
-  (let* ((xplist (cons nil plist))
-	 (pred xplist))
-    (while (cdr pred)
-      (when (eq (cadr pred) property)
-	(setcdr pred (cdddr pred)))
-      (setq pred (cddr pred)))
-    (cdr xplist)))
+  (let (p)
+    (while plist
+      (unless (eq property (car plist))
+	(setq p (plist-put p (car plist) (cadr plist))))
+      (setq plist (cddr plist)))
+    p))
 
 ;;; MML Utilities
 
 (defun notmuch-match-content-type (t1 t2)
-  "Return t if t1 and t2 are matching content types, taking wildcards into account."
-  (let ((st1 (split-string t1 "/"))
-	(st2 (split-string t2 "/")))
-    (if (or (string= (cadr st1) "*")
-	    (string= (cadr st2) "*"))
-	;; Comparison of content types should be case insensitive.
-	(string= (downcase (car st1)) (downcase (car st2)))
-      (string= (downcase t1) (downcase t2)))))
+  "Return t if t1 and t2 are matching content types.
+Take wildcards into account."
+  (and (stringp t1)
+       (stringp t2)
+       (let ((st1 (split-string t1 "/"))
+	     (st2 (split-string t2 "/")))
+	 (if (or (string= (cadr st1) "*")
+		 (string= (cadr st2) "*"))
+	     ;; Comparison of content types should be case insensitive.
+	     (string= (downcase (car st1))
+		      (downcase (car st2)))
+	   (string= (downcase t1)
+		    (downcase t2))))))
 
 (defvar notmuch-multipart/alternative-discouraged
   '(;; Avoid HTML parts.

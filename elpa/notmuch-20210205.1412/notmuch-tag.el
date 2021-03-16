@@ -23,10 +23,6 @@
 
 ;;; Code:
 
-(require 'cl-lib)
-(eval-when-compile
-  (require 'pcase))
-
 (require 'crm)
 
 (require 'notmuch-lib)
@@ -141,20 +137,23 @@ Used in the default value of `notmuch-tag-formats'."
      (notmuch-tag-format-image-data tag (notmuch-tag-star-icon))))
   "Custom formats for individual tags.
 
-This is an association list that maps from tag name regexps to
-lists of formatting expressions.  The first entry whose car
-regexp-matches a tag will be used to format that tag.  The regexp
-is implicitly anchored, so to match a literal tag name, just use
-that tag name (if it contains special regexp characters like
-\".\" or \"*\", these have to be escaped).  The cdr of the
-matching entry gives a list of Elisp expressions that modify the
-tag.  If the list is empty, the tag will simply be hidden.
-Otherwise, each expression will be evaluated in order: for the
-first expression, the variable `tag' will be bound to the tag
-name; for each later expression, the variable `tag' will be bound
-to the result of the previous expression.  In this way, each
+This is an association list of the form ((MATCH EXPR...)...),
+mapping tag name regexps to lists of formatting expressions.
+
+The first entry whose MATCH regexp-matches a tag is used to
+format that tag.  The regexp is implicitly anchored, so to match
+a literal tag name, just use that tag name (if it contains
+special regexp characters like \".\" or \"*\", these have to be
+escaped).
+
+The cdr of the matching entry gives a list of Elisp expressions
+that modify the tag.  If the list is empty, the tag is simply
+hidden.  Otherwise, each expression EXPR is evaluated in order:
+for the first expression, the variable `tag' is bound to the tag
+name; for each later expression, the variable `tag' is bound to
+the result of the previous expression.  In this way, each
 expression can build on the formatting performed by the previous
-expression.  The result of the last expression will displayed in
+expression.  The result of the last expression is displayed in
 place of the tag.
 
 For example, to replace a tag with another string, simply use
@@ -384,17 +383,15 @@ the messages that were tagged."
 ;;; User Input
 
 (defvar notmuch-select-tag-history nil
-  "Variable to store minibuffer history for
-`notmuch-select-tag-with-completion' function.")
+  "Minibuffer history of `notmuch-select-tag-with-completion' function.")
 
 (defvar notmuch-read-tag-changes-history nil
-  "Variable to store minibuffer history for
-`notmuch-read-tag-changes' function.")
+  "Minibuffer history of `notmuch-read-tag-changes' function.")
 
 (defun notmuch-tag-completions (&rest search-terms)
   "Return a list of tags for messages matching SEARCH-TERMS.
 
-Returns all tags if no search terms are given."
+Return all tags if no search terms are given."
   (unless search-terms
     (setq search-terms (list "*")))
   (split-string
@@ -405,14 +402,15 @@ Returns all tags if no search terms are given."
    "\n+" t))
 
 (defun notmuch-select-tag-with-completion (prompt &rest search-terms)
-  (let ((tag-list (apply #'notmuch-tag-completions search-terms)))
-    (completing-read prompt tag-list nil nil nil 'notmuch-select-tag-history)))
+  (completing-read prompt
+		   (apply #'notmuch-tag-completions search-terms)
+		   nil nil nil 'notmuch-select-tag-history))
 
 (defun notmuch-read-tag-changes (current-tags &optional prompt initial-input)
   "Prompt for tag changes in the minibuffer.
 
-CURRENT-TAGS is a list of tags that are present on the message or
-messages to be changed.  These are offered as tag removal
+CURRENT-TAGS is a list of tags that are present on the message
+or messages to be changed.  These are offered as tag removal
 completions.  CURRENT-TAGS may contain duplicates.  PROMPT, if
 non-nil, is the query string to present in the minibuffer.  It
 defaults to \"Tags\".  INITIAL-INPUT, if non-nil, will be the
@@ -454,9 +452,9 @@ present or a \"-\" to indicate that the tag should be removed
 from TAGS if present."
   (let ((result-tags (copy-sequence tags)))
     (dolist (tag-change tag-changes)
-      (let ((op (string-to-char tag-change))
-	    (tag (unless (string= tag-change "") (substring tag-change 1))))
-	(cl-case op
+      (let ((tag (and (not (string-empty-p tag-change))
+		      (substring tag-change 1))))
+	(cl-case (aref tag-change 0)
 	  (?+ (unless (member tag result-tags)
 		(push tag result-tags)))
 	  (?- (setq result-tags (delete tag result-tags)))
@@ -482,13 +480,12 @@ messages instead of running (notmuch-call-notmuch-process \"tag\" ..)
 directly, so that hooks specified in notmuch-before-tag-hook and
 notmuch-after-tag-hook will be run."
   ;; Perform some validation
-  (mapc (lambda (tag-change)
-	  (unless (string-match-p "^[-+]\\S-+$" tag-change)
-	    (error "Tag must be of the form `+this_tag' or `-that_tag'")))
-	tag-changes)
+  (dolist (tag-change tag-changes)
+    (unless (string-match-p "^[-+]\\S-+$" tag-change)
+      (error "Tag must be of the form `+this_tag' or `-that_tag'")))
   (unless query
     (error "Nothing to tag!"))
-  (unless (null tag-changes)
+  (when tag-changes
     (run-hooks 'notmuch-before-tag-hook)
     (if (<= (length query) notmuch-tag-argument-limit)
 	(apply 'notmuch-call-notmuch-process "tag"

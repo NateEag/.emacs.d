@@ -54,21 +54,28 @@ If the hash is not present it attempts to load a saved hash."
 (defcustom notmuch-address-command 'internal
   "Determines how address completion candidates are generated.
 
-If it is a string then that string should be an external program
-which must take a single argument (searched string) and output a
-list of completion candidates, one per line.
+If this is a string, then that string should be an external
+program, which must take a single argument (searched string)
+and output a list of completion candidates, one per line.
 
-Alternatively, it can be the symbol `internal', in which case
-internal completion is used; the variable
-`notmuch-address-internal-completion' can be used to customize
-this case.
+If this is the symbol `internal', then an implementation is used
+that relies on the \"notmuch address\" command, but does not use
+any third-party (i.e. \"external\") programs.
 
-Finally, if this variable is nil then address completion is
-disabled."
+If this is the symbol `as-is', then Notmuch does not modify the
+value of `message-completion-alist'. This option has to be set to
+this value before `notmuch' is loaded, otherwise the modification
+to `message-completion-alist' may already have taken place. This
+setting obviously does not prevent `message-completion-alist'
+from being modified at all; the user or some third-party package
+may still modify it.
+
+Finally, if this is nil, then address completion is disabled."
   :type '(radio
-	  (const :tag "Use internal address completion" internal)
-	  (const :tag "Disable address completion" nil)
-	  (string :tag "Use external completion command"))
+	  (const  :tag "Use internal address completion" internal)
+	  (string :tag "Use external completion command")
+	  (const  :tag "Disable address completion" nil)
+	  (const  :tag "Use default or third-party mechanism" as-is))
   :group 'notmuch-send
   :group 'notmuch-address
   :group 'notmuch-external)
@@ -160,15 +167,13 @@ matching `notmuch-address-completion-headers-regexp'."
   (message "calling notmuch-address-message-insinuate is no longer needed"))
 
 (defun notmuch-address-setup ()
-  (let* ((setup-company (and notmuch-address-use-company
-			     (require 'company nil t)))
-	 (pair (cons notmuch-address-completion-headers-regexp
-		     #'notmuch-address-expand-name)))
-    (when setup-company
+  (unless (eq notmuch-address-command 'as-is)
+    (when (and notmuch-address-use-company
+	       (require 'company nil t))
       (notmuch-company-setup))
-    (unless (member pair message-completion-alist)
-      (setq message-completion-alist
-	    (push pair message-completion-alist)))))
+    (cl-pushnew (cons notmuch-address-completion-headers-regexp
+		      #'notmuch-address-expand-name)
+		message-completion-alist :test #'equal)))
 
 (defun notmuch-address-toggle-internal-completion ()
   "Toggle use of internal completion for current buffer.
@@ -239,14 +244,8 @@ requiring external commands."
 		    (t
 		     (funcall notmuch-address-selection-function
 			      (format "Address (%s matches): " num-options)
-			      ;; We put the first match as the initial
-			      ;; input; we put all the matches as
-			      ;; possible completions, moving the
-			      ;; first match to the end of the list
-			      ;; makes cursor up/down in the list work
-			      ;; better.
-			      (append (cdr options) (list (car options)))
-			      (car options))))))
+			      options
+			      orig)))))
       (if chosen
 	  (progn
 	    (push chosen notmuch-address-history)
@@ -261,11 +260,8 @@ requiring external commands."
 ;;; Harvest
 
 (defun notmuch-address-harvest-addr (result)
-  (let ((name-addr (plist-get result :name-addr)))
-    (puthash name-addr t notmuch-address-completions)))
-
-(defun notmuch-address-harvest-handle-result (obj)
-  (notmuch-address-harvest-addr obj))
+  (puthash (plist-get result :name-addr)
+	   t notmuch-address-completions))
 
 (defun notmuch-address-harvest-filter (proc string)
   (when (buffer-live-p (process-buffer proc))
@@ -274,7 +270,7 @@ requiring external commands."
 	(goto-char (point-max))
 	(insert string))
       (notmuch-sexp-parse-partial-list
-       'notmuch-address-harvest-handle-result (process-buffer proc)))))
+       'notmuch-address-harvest-addr (process-buffer proc)))))
 
 (defvar notmuch-address-harvest-procs '(nil . nil)
   "The currently running harvests.
@@ -385,7 +381,7 @@ to be a saved address hash."
 (defun notmuch-address--save-address-hash ()
   (when notmuch-address-save-filename
     (if (or (not (file-exists-p notmuch-address-save-filename))
-	    ;; The file exists, check it is a file we saved
+	    ;; The file exists, check it is a file we saved.
 	    (notmuch-address--get-address-hash))
 	(with-temp-file notmuch-address-save-filename
 	  (let ((save-plist
@@ -408,8 +404,7 @@ appear to be an address savefile.  Not overwriting."
        nil nil
        (lambda (_proc event)
 	 ;; If harvest fails, we want to try
-	 ;; again when the trigger is next
-	 ;; called
+	 ;; again when the trigger is next called.
 	 (if (string= event "finished\n")
 	     (progn
 	       (notmuch-address--save-address-hash)

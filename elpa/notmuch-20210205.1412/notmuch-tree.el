@@ -24,8 +24,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'mail-parse)
 
 (require 'notmuch-lib)
@@ -401,9 +399,8 @@ Some useful entries are:
     (notmuch-tree-set-message-properties props)))
 
 (defun notmuch-tree-get-prop (prop &optional props)
-  (let ((props (or props
-		   (notmuch-tree-get-message-properties))))
-    (plist-get props prop)))
+  (plist-get (or props (notmuch-tree-get-message-properties))
+	     prop))
 
 (defun notmuch-tree-set-tags (tags)
   "Set the tags of the current message."
@@ -424,7 +421,6 @@ Some useful entries are:
 
 (defun notmuch-tree-get-match ()
   "Return whether the current message is a match."
-  (interactive)
   (notmuch-tree-get-prop :match))
 
 ;;; Update display
@@ -791,8 +787,7 @@ search results instead."
       (notmuch-tree-from-search-thread))))
 
 (defun notmuch-tree-next-thread (&optional previous)
-  "Move to the next thread in the current tree or parent search
-results
+  "Move to the next thread in the current tree or parent search results.
 
 If PREVIOUS is non-nil, move to the previous thread in the tree or
 search results instead."
@@ -802,14 +797,13 @@ search results instead."
     (notmuch-tree-next-thread-from-search previous)))
 
 (defun notmuch-tree-prev-thread ()
-  "Move to the previous thread in the current tree or parent search
-results"
+  "Move to the previous thread in the current tree or parent search results."
   (interactive)
   (notmuch-tree-next-thread t))
 
 (defun notmuch-tree-thread-mapcar (function)
-  "Iterate through all messages in the current thread
- and call FUNCTION for side effects."
+  "Call FUNCTION for each message in the current thread.
+FUNCTION is called for side effects only."
   (save-excursion
     (notmuch-tree-thread-top)
     (cl-loop collect (funcall function)

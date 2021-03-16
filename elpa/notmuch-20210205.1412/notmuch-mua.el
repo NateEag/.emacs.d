@@ -21,8 +21,6 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
-
 (require 'message)
 (require 'mm-view)
 (require 'format-spec)
@@ -99,7 +97,7 @@ the From: header is already filled in by notmuch."
   :group 'notmuch-send)
 
 (defgroup notmuch-reply nil
-  "Replying to messages in notmuch"
+  "Replying to messages in notmuch."
   :group 'notmuch)
 
 (defcustom notmuch-mua-cite-function 'message-cite-original
@@ -144,9 +142,10 @@ to `notmuch-mua-send-hook'."
 ;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
-  "Signal an error if the message text indicates that an
-attachment is expected but no MML referencing an attachment is
-found.
+  "Signal an error an attachement is expected but missing.
+
+Signal an error if the message text indicates that an attachment
+is expected but no MML referencing an attachment is found.
 
 Typically this is added to `notmuch-mua-send-hook'."
   (when (and
@@ -179,13 +178,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defun notmuch-mua-get-switch-function ()
   "Get a switch function according to `notmuch-mua-compose-in'."
-  (cond ((eq notmuch-mua-compose-in 'current-window)
-	 'switch-to-buffer)
-	((eq notmuch-mua-compose-in 'new-window)
-	 'switch-to-buffer-other-window)
-	((eq notmuch-mua-compose-in 'new-frame)
-	 'switch-to-buffer-other-frame)
-	(t (error "Invalid value for `notmuch-mua-compose-in'"))))
+  (pcase notmuch-mua-compose-in
+    ('current-window 'switch-to-buffer)
+    ('new-window     'switch-to-buffer-other-window)
+    ('new-frame      'switch-to-buffer-other-frame)
+    (_ (error "Invalid value for `notmuch-mua-compose-in'"))))
 
 (defun notmuch-mua-maybe-set-window-dedicated ()
   "Set the selected window as dedicated according to `notmuch-mua-compose-in'."
@@ -220,11 +217,10 @@ Typically this is added to `notmuch-mua-send-hook'."
 (defun notmuch-mua-reply-crypto (parts)
   "Add mml sign-encrypt flag if any part of original message is encrypted."
   (cl-loop for part in parts
-	   if (notmuch-match-content-type (plist-get part :content-type)
-					  "multipart/encrypted")
+	   for type = (plist-get part :content-type)
+	   if (notmuch-match-content-type type "multipart/encrypted")
 	   do (mml-secure-message-sign-encrypt)
-	   else if (notmuch-match-content-type (plist-get part :content-type)
-					       "multipart/*")
+	   else if (notmuch-match-content-type type "multipart/*")
 	   do (notmuch-mua-reply-crypto (plist-get part :content))))
 
 ;; There is a bug in Emacs' message.el that results in a newline
@@ -375,12 +371,10 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 		(select-window window))
 	    (funcall switch-function buffer)
 	    (set-buffer buffer))
-	  (when (and (buffer-modified-p)
-		     (not (prog1
-			      (y-or-n-p
-			       "Message already being composed; erase? ")
-			    (message nil))))
-	    (error "Message being composed")))
+	  (when (buffer-modified-p)
+	    (if (y-or-n-p "Message already being composed; erase? ")
+		(message nil)
+	      (error "Message being composed"))))
       (funcall switch-function name)
       (set-buffer name))
     (erase-buffer)
@@ -393,7 +387,7 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
   (interactive)
   (when notmuch-mua-user-agent-function
     (let ((user-agent (funcall notmuch-mua-user-agent-function)))
-      (unless (string= "" user-agent)
+      (unless (string-empty-p user-agent)
 	(push (cons 'User-Agent user-agent) other-headers))))
   (unless (assq 'From other-headers)
     (push (cons 'From (message-make-from
@@ -611,8 +605,10 @@ unencrypted.  Really send? "))))
 ;;; _
 
 (define-mail-user-agent 'notmuch-user-agent
-  'notmuch-mua-mail 'notmuch-mua-send-and-exit
-  'notmuch-mua-kill-buffer 'notmuch-mua-send-hook)
+  'notmuch-mua-mail
+  'notmuch-mua-send-and-exit
+  'notmuch-mua-kill-buffer
+  'notmuch-mua-send-hook)
 
 ;; Add some more headers to the list that `message-mode' hides when
 ;; composing a message.

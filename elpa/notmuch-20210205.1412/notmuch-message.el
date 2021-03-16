@@ -21,6 +21,10 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+(require 'pcase)
+(require 'subr-x)
+
 (require 'message)
 (require 'notmuch-tag)
 

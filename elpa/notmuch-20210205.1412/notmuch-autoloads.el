@@ -49,8 +49,8 @@ Run notmuch and display saved searches, known tags, etc." t nil)
 (autoload 'notmuch-cycle-notmuch-buffers "notmuch" "\
 Cycle through any existing notmuch buffers (search, show or hello).
 
-If the current buffer is the only notmuch buffer, bury it. If no
-notmuch buffers exist, run `notmuch'." t nil)
+If the current buffer is the only notmuch buffer, bury it.
+If no notmuch buffers exist, run `notmuch'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch" '("notmuch-")))
 

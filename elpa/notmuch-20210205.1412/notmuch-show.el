@@ -23,10 +23,6 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl-lib)
-  (require 'pcase))
-
 (require 'mm-view)
 (require 'message)
 (require 'mm-decode)
@@ -337,7 +333,7 @@ operation on the contents of the current buffer."
 	 (header (concat
 		  "Subject: " subject "\n"
 		  "To: " to "\n"
-		  (if (not (string= cc ""))
+		  (if (not (string-empty-p cc))
 		      (concat "Cc: " cc "\n")
 		    "")
 		  "From: " from "\n"
@@ -585,16 +581,17 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (pcase-let ((`(,content ,type)
-	       (split-string (downcase (plist-get part :content-type)) "/")))
-    (cond ((equal content "multipart")
-	   (mapc (apply-partially #'notmuch-show--register-cids msg)
-		 (plist-get part :content)))
-	  ((and (equal content "message")
-		(equal type "rfc822"))
-	   (notmuch-show--register-cids
-	    msg
-	    (car (plist-get (car (plist-get part :content)) :body)))))))
+  (when-let ((type (plist-get part :content-type)))
+    (pcase-let ((`(,type ,subtype)
+		 (split-string (downcase type) "/")))
+      (cond ((equal type "multipart")
+	     (mapc (apply-partially #'notmuch-show--register-cids msg)
+		   (plist-get part :content)))
+	    ((and (equal type "message")
+		  (equal subtype "rfc822"))
+	     (notmuch-show--register-cids
+	      msg
+	      (car (plist-get (car (plist-get part :content)) :body))))))))
 
 (defun notmuch-show--get-cid-content (cid)
   "Return a list (CID-content content-type) or nil.
@@ -603,16 +600,13 @@ This will only find parts from messages that have been inserted
 into the current buffer.  CID must be a raw content ID, without
 enclosing angle brackets, a cid: prefix, or URL encoding.  This
 will return nil if the CID is unknown or cannot be retrieved."
-  (let ((descriptor (cdr (assoc cid notmuch-show--cids))))
-    (when descriptor
-      (let* ((msg (car descriptor))
-	     (part (cadr descriptor))
-	     ;; Request caching for this content, as some messages
-	     ;; reference the same cid: part many times (hundreds!).
-	     (content (notmuch-get-bodypart-binary
-		       msg part notmuch-show-process-crypto 'cache))
-	     (content-type (plist-get part :content-type)))
-	(list content content-type)))))
+  (when-let ((descriptor (cdr (assoc cid notmuch-show--cids))))
+    (pcase-let ((`(,msg ,part) descriptor))
+      ;; Request caching for this content, as some messages
+      ;; reference the same cid: part many times (hundreds!).
+      (list (notmuch-get-bodypart-binary
+	     msg part notmuch-show-process-crypto 'cache)
+	    (plist-get part :content-type)))))
 
 (defun notmuch-show-setup-w3m ()
   "Instruct w3m how to retrieve content from a \"related\" part of a message."
@@ -955,7 +949,8 @@ will return nil if the CID is unknown or cannot be retrieved."
 
 (defun notmuch-show-mime-type (part)
   "Return the correct mime-type to use for PART."
-  (let ((content-type (downcase (plist-get part :content-type))))
+  (when-let ((content-type (plist-get part :content-type)))
+    (setq content-type (downcase content-type))
     (or (and (string= content-type "application/octet-stream")
 	     (notmuch-show-get-mime-type-of-application/octet-stream part))
 	(and (string= content-type "inline patch")
@@ -995,7 +990,7 @@ this part.")
 HIDE determines whether to show or hide the part and the button
 as follows: If HIDE is nil, show the part and the button. If HIDE
 is t, hide the part initially and show the button."
-  (let* ((content-type (downcase (plist-get part :content-type)))
+  (let* ((content-type (plist-get part :content-type))
 	 (mime-type (notmuch-show-mime-type part))
 	 (nth (plist-get part :id))
 	 (long (and (notmuch-match-content-type mime-type "text/*")
@@ -1007,7 +1002,8 @@ is t, hide the part initially and show the button."
 	 ;; the first (or only) part if this is text/plain.
 	 (button (and (funcall notmuch-show-insert-header-p-function part hide)
 		      (notmuch-show-insert-part-header
-		       nth mime-type content-type
+		       nth mime-type
+		       (and content-type (downcase content-type))
 		       (plist-get part :filename))))
 	 ;; Hide the part initially if HIDE is t, or if it is too long
 	 ;; and we have a button to allow toggling.
@@ -1666,13 +1662,13 @@ It gets property PROP from PROPS or, if PROPS is nil, the current
 message in either tree or show. This means that several utility
 functions in notmuch-show can be used directly by notmuch-tree as
 they just need the correct message properties."
-  (let ((props (or props
-		   (cond ((eq major-mode 'notmuch-show-mode)
-			  (notmuch-show-get-message-properties))
-			 ((eq major-mode 'notmuch-tree-mode)
-			  (notmuch-tree-get-message-properties))
-			 (t nil)))))
-    (plist-get props prop)))
+  (plist-get (or props
+		 (cond ((eq major-mode 'notmuch-show-mode)
+			(notmuch-show-get-message-properties))
+		       ((eq major-mode 'notmuch-tree-mode)
+			(notmuch-tree-get-message-properties))
+		       (t nil)))
+	     prop))
 
 (defun notmuch-show-get-message-id (&optional bare)
   "Return an id: query for the Message-Id of the current message.
@@ -1794,7 +1790,7 @@ user decision and we should not override it."
 Reshows the current thread with matches defined by the new query-string."
   (interactive (list (notmuch-read-query "Filter thread: ")))
   (let ((msg-id (notmuch-show-get-message-id)))
-    (setq notmuch-show-query-context (if (string= query "") nil query))
+    (setq notmuch-show-query-context (if (string-empty-p query) nil query))
     (notmuch-show-refresh-view t)
     (notmuch-show-goto-message msg-id)))
 

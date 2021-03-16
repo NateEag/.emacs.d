@@ -37,10 +37,10 @@
 (require 'cl-lib)
 (require 'dash)
 (require 'eieio)
+(require 'seq)
+(require 'subr-x)
 
-(eval-when-compile
-  (require 'benchmark)
-  (require 'subr-x))
+(eval-when-compile (require 'benchmark))
 
 ;;; Hooks
 
@@ -137,7 +137,8 @@ entries of this alist."
 (defcustom magit-section-visibility-indicator
   (if (window-system)
       '(magit-fringe-bitmap> . magit-fringe-bitmapv)
-    '("…" . t))
+    (cons (if (char-displayable-p ?…) "…" "...")
+          t))
   "Whether and how to indicate that a section can be expanded/collapsed.
 
 If nil, then don't show any indicators.
@@ -1770,6 +1771,67 @@ Configuration'."
                                     (plist-get p prop)
                                     val)))))
               (overlays-at pos t)))
+
+;;; Bitmaps
+
+(when (fboundp 'define-fringe-bitmap)
+  (define-fringe-bitmap 'magit-fringe-bitmap+
+    [#b00000000
+     #b00011000
+     #b00011000
+     #b01111110
+     #b01111110
+     #b00011000
+     #b00011000
+     #b00000000])
+  (define-fringe-bitmap 'magit-fringe-bitmap-
+    [#b00000000
+     #b00000000
+     #b00000000
+     #b01111110
+     #b01111110
+     #b00000000
+     #b00000000
+     #b00000000])
+
+  (define-fringe-bitmap 'magit-fringe-bitmap>
+    [#b01100000
+     #b00110000
+     #b00011000
+     #b00001100
+     #b00011000
+     #b00110000
+     #b01100000
+     #b00000000])
+  (define-fringe-bitmap 'magit-fringe-bitmapv
+    [#b00000000
+     #b10000010
+     #b11000110
+     #b01101100
+     #b00111000
+     #b00010000
+     #b00000000
+     #b00000000])
+
+  (define-fringe-bitmap 'magit-fringe-bitmap-bold>
+    [#b11100000
+     #b01110000
+     #b00111000
+     #b00011100
+     #b00011100
+     #b00111000
+     #b01110000
+     #b11100000])
+  (define-fringe-bitmap 'magit-fringe-bitmap-boldv
+    [#b10000001
+     #b11000011
+     #b11100111
+     #b01111110
+     #b00111100
+     #b00011000
+     #b00000000
+     #b00000000])
+  )
 
 ;;; _
 (provide 'magit-section)

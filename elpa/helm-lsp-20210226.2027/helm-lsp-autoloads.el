@@ -24,6 +24,11 @@ When called with prefix ARG the default selection will be symbol at point.
 (autoload 'helm-lsp-code-actions "helm-lsp" "\
 Show lsp code actions using helm." t nil)
 
+(autoload 'helm-lsp-diagnostics "helm-lsp" "\
+Diagnostics using `helm'
+
+\(fn ARG)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-lsp" '("helm-lsp-")))
 
 ;;;***

@@ -4,8 +4,8 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
-;; Package-Version: 20200915.1650
-;; Package-Commit: db52f860b50aa4d5edfa1c6c97802d36aef7f78b
+;; Package-Version: 20210305.334
+;; Package-Commit: 51e164b4bb1a9826fe8b39c0d02b4064c9352b9f
 ;; Version: 0.64
 ;; Package-Requires: ((emacs "25.1") (helm "2.0"))
 
@@ -1137,7 +1137,9 @@ Continue searching the parent directory? "))
            proc
            (lambda (process event)
              (helm-process-deferred-sentinel-hook
-              process event (helm-default-directory)))))))))
+              process event (helm-default-directory))
+             (when (string= event "finished\n")
+               (helm-ag--do-ag-propertize helm-input)))))))))
 
 (defconst helm-do-ag--help-message
   "\n* Helm Do Ag\n

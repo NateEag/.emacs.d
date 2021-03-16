@@ -4,8 +4,8 @@
 
 ;; Author: Vibhav Pant
 ;; Version: 1.0.0
-;; Package-Version: 20200914.1846
-;; Package-Commit: aa309589668d32a8b4bb23c8f41163f6ae208f7b
+;; Package-Version: 20210126.843
+;; Package-Commit: bedea3d25552d6969e917a15a0acc3d333ddc742
 ;; Keywords: languages lsp-mode
 ;; Package-Requires: ((origami "1.0") (lsp-mode "6.1"))
 ;; URL: https://github.com/emacs-lsp/lsp-origami
@@ -37,6 +37,7 @@
 (require 'lsp-mode)
 
 (defun lsp-origami--folding-range-to-fold (range create)
+  "Using the components of RANGE as arguments, execute the CREATE callback."
   (funcall create
            (lsp--folding-range-beg range)
            (lsp--folding-range-end range)
@@ -57,8 +58,8 @@
     (unless (lsp-feature? "foldingRangeProvider")
       (signal 'lsp-capability-not-supported (list "foldingRangeProvider")))
     (seq-map (lambda (range)
-	       (lsp-origami--folding-range-to-fold range create))
-	     (lsp--get-nested-folding-ranges))))
+               (lsp-origami--folding-range-to-fold range create))
+             (lsp--get-nested-folding-ranges))))
 
 ;;;###autoload
 (defun lsp-origami-try-enable ()

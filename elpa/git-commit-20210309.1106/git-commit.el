@@ -12,8 +12,8 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20200524") (transient "20200601") (with-editor "20200522"))
-;; Package-Version: 20210102.1242
-;; Package-Commit: 25f432551347468ce97b8b03987e59092e91f8f0
+;; Package-Version: 20210309.1106
+;; Package-Commit: cb9bb20cfe8e3a50df8669a43611ebc9a516358a
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -115,18 +115,19 @@
 ;;;; Dependencies
 
 (require 'dash)
-(require 'log-edit)
+(require 'subr-x)
+
 (require 'magit-git nil t)
 (require 'magit-utils nil t)
+
+(require 'log-edit)
 (require 'ring)
 (require 'rx)
 (require 'server)
 (require 'transient)
 (require 'with-editor)
 
-(eval-when-compile
-  (require 'recentf)
-  (require 'subr-x))
+(defvar recentf-exclude)
 
 ;;;; Declarations
 
@@ -153,13 +154,21 @@
   :link '(info-link "(magit)Editing Commit Messages")
   :group 'tools)
 
-;;;###autoload
 (define-minor-mode global-git-commit-mode
   "Edit Git commit messages.
+
 This global mode arranges for `git-commit-setup' to be called
 when a Git commit message file is opened.  That usually happens
 when Git uses the Emacsclient as $GIT_EDITOR to have the user
-provide such a commit message."
+provide such a commit message.
+
+Loading the library `git-commit' by default enables this mode,
+but the library is not automatically loaded because doing that
+would pull in many dependencies and increase startup time too
+much.  You can either rely on `magit' loading this library or
+you can load it explicitly.  Autoloading is not an alternative
+because in this case autoloading would immediately trigger
+full loading."
   :group 'git-commit
   :type 'boolean
   :global t
@@ -180,8 +189,17 @@ The major mode configured here is turned on by the minor mode
   :type '(choice (function-item text-mode)
                  (function-item markdown-mode)
                  (function-item org-mode)
+                 (function-item fundamental-mode)
+                 (function-item git-commit-elisp-text-mode)
                  (function :tag "Another mode")
                  (const :tag "No major mode")))
+;;;###autoload(put 'git-commit-major-mode 'safe-local-variable
+;;;###autoload     (lambda (val)
+;;;###autoload       (memq val '(text-mode
+;;;###autoload                   markdown-mode
+;;;###autoload                   org-mode
+;;;###autoload                   fundamental-mode
+;;;###autoload                   git-commit-elisp-text-mode))))
 
 (defcustom git-commit-setup-hook
   '(git-commit-save-message
@@ -423,7 +441,6 @@ This is only used if Magit is available."
 
 ;;; Hooks
 
-;;;###autoload
 (defconst git-commit-filename-regexp "/\\(\
 \\(\\(COMMIT\\|NOTES\\|PULLREQ\\|MERGEREQ\\|TAG\\)_EDIT\\|MERGE_\\|\\)MSG\
 \\|\\(BRANCH\\|EDIT\\)_DESCRIPTION\\)\\'")
@@ -440,7 +457,6 @@ This is only used if Magit is available."
 
 (add-hook 'after-change-major-mode-hook 'git-commit-setup-font-lock-in-buffer)
 
-;;;###autoload
 (defun git-commit-setup-check-buffer ()
   (and buffer-file-name
        (string-match-p git-commit-filename-regexp buffer-file-name)
@@ -480,7 +496,6 @@ Type \\[with-editor-finish] to finish, \
 \\[git-commit-prev-message] and \\[git-commit-next-message] \
 to recover older messages")
 
-;;;###autoload
 (defun git-commit-setup ()
   (when (fboundp 'magit-toplevel)
     ;; `magit-toplevel' is autoloaded and defined in magit-git.el,
@@ -627,7 +642,7 @@ finally check current non-comment text."
   "Check for violations of certain basic style conventions.
 
 For each violation ask the user if she wants to proceed anyway.
-Option `git-commit-check-style-conventions' controls which
+Option `git-commit-style-convention-checks' controls which
 conventions are checked."
   (or force
       (save-excursion

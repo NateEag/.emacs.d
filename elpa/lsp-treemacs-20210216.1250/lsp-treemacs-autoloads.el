@@ -9,9 +9,6 @@
 ;;;### (autoloads nil "lsp-treemacs" "lsp-treemacs.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-treemacs.el
 
-(autoload 'lsp-treemacs-errors-list "lsp-treemacs" "\
-Display error list." t nil)
-
 (autoload 'lsp-treemacs-symbols "lsp-treemacs" "\
 Show symbols view." t nil)
 
@@ -58,7 +55,9 @@ With a prefix argument, show the outgoing call hierarchy.
 
 \(fn OUTGOING)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-treemacs-")))
+(autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-tree")))
 
 ;;;***
 

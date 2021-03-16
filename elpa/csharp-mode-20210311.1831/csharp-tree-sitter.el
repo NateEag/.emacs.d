@@ -8,7 +8,7 @@
 ;; Version    : 0.11.0
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
-;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (tree-sitter-indent "0.1") (tree-sitter-langs "0.9.0"))
+;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (tree-sitter-indent "0.1") (tree-sitter-langs "0.9.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -45,12 +45,21 @@
    (comment) @comment
    (modifier) @keyword
    (this_expression) @keyword
+   (escape_sequence) @keyword
 
    ;; Literals
    [(real_literal) (integer_literal)] @number
    (null_literal) @constant
    (boolean_literal) @constant
-   (character_literal) @string
+   [(string_literal)
+    (verbatim_string_literal)
+    (interpolated_string_text)
+    (interpolated_verbatim_string_text)
+    (character_literal)
+    "\""
+    "$\""
+    "@$\""
+    "$@\""] @string
 
    ;; Keywords
    ["using" "namespace" "class" "if" "else" "throw" "new" "for"
@@ -58,7 +67,8 @@
     "default" "typeof" "try" "catch" "finally" "break"
     "foreach" "in" "yield" "get" "set" "when" "as" "out"
     "is" "while" "continue" "this" "ref" "goto" "interface"
-    "from" "where" "select" "lock" "base"
+    "from" "where" "select" "lock" "base" "record" "init"
+    "with" "let"
     ] @keyword
 
    ;; Linq
@@ -67,11 +77,6 @@
    (order_by_clause)
    (select_clause (identifier) @variable)
    (query_continuation (identifier) @variable) @keyword
-
-   ;; String
-   (interpolation (identifier) (interpolation_format_clause) @variable)
-   (interpolation (identifier)* @variable)
-   [(string_literal) (verbatim_string_literal) (interpolated_string_expression)] @string
 
    ;; Enum
    (enum_member_declaration (identifier) @variable)
@@ -84,12 +89,22 @@
    ;; Struct
    (struct_declaration (identifier) @type)
 
+   ;; Record
+   (record_declaration (identifier) @type)
+
+   (with_expression
+    (with_initializer_expression
+     (simple_assignment_expression
+      (identifier) @variable)))
+
    ;; Namespace
    (namespace_declaration
     name: (identifier) @type)
 
    ;; Class
    (base_list (identifier) @type)
+   (property_declaration
+    (generic_name))
    (property_declaration
     type: (nullable_type) @type
     name: (identifier) @variable)
@@ -109,6 +124,7 @@
    (method_declaration (nullable_type) @type (identifier) @function)
    (method_declaration (void_keyword) @type (identifier) @function)
    (method_declaration (generic_name) (identifier) @function)
+   (method_declaration (qualified_name (identifier) @type) (identifier) @function)
 
    ;; Function
    (local_function_statement (identifier) @type (identifier) @function)
@@ -116,6 +132,10 @@
    (local_function_statement (nullable_type) @type (identifier) @function)
    (local_function_statement (void_keyword) @type (identifier) @function)
    (local_function_statement (generic_name) (identifier) @function)
+
+   ;; Lambda
+   (lambda_expression
+    (identifier) @variable)
 
    ;; Parameter
    (parameter
@@ -136,6 +156,12 @@
    (anonymous_object_creation_expression)
    (object_creation_expression (identifier) @type)
    (initializer_expression (identifier) @variable)
+
+   ;; Typeof
+   (type_of_expression (identifier) @variable)
+
+   ;; Member access
+   (member_access_expression (identifier) @function)
 
    ;; Variable
    (variable_declaration (identifier) @type)
@@ -160,13 +186,20 @@
    (nullable_type) @type
    ["operator"] @type
 
+   ;; Type constraints
+   (type_parameter_constraints_clause
+    (identifier) @type)
+   (type_parameter_constraint
+    (identifier) @type)
+   (type_constraint
+    (identifier) @type)
+
    ;; Exprs
    (binary_expression (identifier) @variable (identifier) @variable)
    (binary_expression (identifier)* @variable)
    (conditional_expression (identifier) @variable)
    (prefix_unary_expression (identifier)* @variable)
    (postfix_unary_expression (identifier)* @variable)
-   (type_of_expression (identifier) @variable)
    (assignment_expression (identifier) @variable)
    (cast_expression (identifier) @type)
 
@@ -175,9 +208,9 @@
    (preprocessor_call (identifier) @string)
 
    ;; Loop
-   (for_each_statement (identifier) @type (identifier) @variable)
    (for_each_statement (implicit_type) @type (identifier) @variable)
    (for_each_statement (predefined_type) @type (identifier) @variable)
+   (for_each_statement (identifier) @type (identifier) @variable)
 
    ;; Exception
    (catch_declaration (identifier) @type (identifier) @variable)
@@ -200,6 +233,8 @@
    (lock_statement (identifier) @variable)
 
    ;; Other
+   (argument_list
+    (identifier) @variable)
    (label_name) @variable
    (qualified_name (identifier) @type)
    (using_directive (identifier)* @type)
@@ -208,11 +243,16 @@
    (element_access_expression (identifier) @variable)
    (conditional_access_expression (identifier) @variable)
    (member_binding_expression (identifier) @variable)
-   (member_access_expression (identifier) @function)
    (name_colon (identifier)* @variable)
    (name_equals (identifier) @type)
    (field_declaration)
    (argument (identifier) @variable)
+
+   ;; Catch-alls
+   (identifier) @variable
+
+   ;; Interpolation
+   ;; (interpolated_string_expression) @string
    ]
   "Default patterns for tree-sitter support.")
 
@@ -233,6 +273,7 @@
                  arrow_expression_clause
                  parameter_list
                  conditional_expression
+                 constructor_initializer
                  "."))
     (indent-rest . ;; if parent node is one of these and node is not first → indent
                  (
@@ -299,6 +340,7 @@ Key bindings:
   (setq-local tree-sitter-hl-default-patterns csharp-mode-tree-sitter-patterns)
   ;; Comments
   (setq-local comment-start "// ")
+  (setq-local comment-start-skip "\\(?://+\\|/\\*+\\)\\s *")
   (setq-local comment-end "")
 
   (tree-sitter-hl-mode))

@@ -8,6 +8,7 @@
 ;; Version    : 0.11.0
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
+;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (tree-sitter-indent "0.1") (tree-sitter-langs "0.9.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -249,7 +250,8 @@
                                    (substatement-open     . 0)))))
 
 (eval-and-compile
-  (unless (assoc 'csharp-mode c-default-style)
+  (unless (or (stringp c-default-style)
+              (assoc 'csharp-mode c-default-style))
     (setq c-default-style
           (cons '(csharp-mode . "csharp")
                 c-default-style))))

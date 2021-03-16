@@ -2,9 +2,9 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20201217.1633
-;; Package-Commit: 3f0ad28202207c266bd8fc7904b224db69ceccf6
-;; Version: 0.10
+;; Package-Version: 20210207.1829
+;; Package-Commit: 2c99ce29b86fc635649f4e89723912dc1cc4f36c
+;; Version: 0.12
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -70,6 +70,13 @@
       (web-mode-engine "none")
       (language-id--file-name-extension ".ts")))
 
+    ;; ReScript needs to come before Reason because in reason-mode
+    ;; we can tell them apart by file name extension only.
+    ("ReScript"
+     (reason-mode
+      (language-id--file-name-extension ".res")))
+    ("Reason" reason-mode)
+
     ;; vue-html-mode is derived from html-mode.
     ("Vue"
      vue-mode
@@ -83,6 +90,7 @@
     ("Bazel" bazel-mode)
     ("BibTeX" bibtex-mode)
     ("C" c-mode)
+    ("C#" csharp-mode)
     ("C++" c++-mode)
     ("Cabal Config" haskell-cabal-mode)
     ("Clojure" clojurescript-mode clojurec-mode clojure-mode)
@@ -136,7 +144,6 @@
     ("Python" python-mode)
     ("R" ess-r-mode (ess-mode (ess-dialect "R")))
     ("Racket" racket-mode)
-    ("Reason" reason-mode)
     ("Ruby" enh-ruby-mode ruby-mode)
     ("Rust" rust-mode rustic-mode)
     ("Scala" scala-mode)

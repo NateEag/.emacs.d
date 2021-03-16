@@ -2,7 +2,7 @@
 
 ;; Version: 3.0
 
-;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.14.1") (f "0.20.0") (ht "2.0") (dash-functional "1.2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
+;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.18.0") (f "0.20.0") (ht "2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
 ;; Keywords: languague, tools
 ;; URL: https://github.com/emacs-lsp/lsp-java
 
@@ -30,7 +30,6 @@
 (require 'dash)
 (require 'ht)
 (require 'f)
-(require 'tree-widget)
 (require 'request)
 (require 'cl-lib)
 
@@ -663,7 +662,7 @@ FULL specify whether full or incremental build will be performed."
    (t (let* ((project-gradlew (f-join (lsp-java--get-root) "gradlew -v"))
              (gradle-version-output (shell-command-to-string project-gradlew)))
         (when (string-match "Revision" gradle-version-output)
-            (nth 2 (split-string gradle-version-output)))))))
+          (nth 2 (split-string gradle-version-output)))))))
 
 (defun lsp-java--ls-command ()
   "LS startup command."
@@ -953,6 +952,16 @@ current symbol."
   (interactive)
   (lsp-java-execute-matching-action "Assign parameter to new field"))
 
+(defun lsp-java-assign-statement-to-local ()
+  "Assign statement to new local variable"
+  (interactive)
+  (lsp-java-execute-matching-action "Assign statement to new local variable"))
+
+(defun lsp-java-assign-statement-to-field ()
+  "Assign statement to new field"
+  (interactive)
+  (lsp-java-execute-matching-action "Assign statement to new field"))
+
 (defun lsp-java-assign-all ()
   "Assign to new field."
   (interactive)
@@ -966,8 +975,13 @@ current symbol."
 (defun lsp-java--bundles ()
   "Get lsp java bundles."
   (let ((bundles-dir (lsp-java--bundles-dir)))
-    (append lsp-java-bundles (when (file-directory-p bundles-dir)
-                               (apply 'vector (directory-files bundles-dir t "\\.jar$"))))))
+    (->> (-filter
+          (lambda (s)
+            (not (s-contains? "com.microsoft.java.test.runner.jar" s)))
+          (when (file-directory-p bundles-dir)
+            (directory-files bundles-dir t "\\.jar$")))
+         (append lsp-java-bundles)
+         (apply #'vector))))
 
 (defun lsp-java--workspace-folders (_workspace)
   "Return WORKSPACE folders."
@@ -1323,6 +1337,8 @@ current symbol."
                       "extractConstant"
                       "extractMethod"
                       "extractField"
+                      "assignField"
+                      "assignVariable"
                       "convertVariableToField"
                       "invertVariable"
                       "convertAnonymousClassToNestedCommand")
@@ -1363,7 +1379,7 @@ current symbol."
  (make-lsp--client
   :new-connection (lsp-stdio-connection #'lsp-java--ls-command
                                         #'lsp-java--locate-server-jar)
-  :major-modes '(java-mode)
+  :major-modes '(java-mode jdee-mode)
   :server-id 'jdtls
   :multi-root t
   :notification-handlers (ht ("language/status" #'lsp-java--language-status-callback)
@@ -1401,11 +1417,11 @@ current symbol."
                                         :resolveAdditionalTextEditsSupport t)
                                   :bundles (lsp-java--bundles)
                                   :workspaceFolders (->> (lsp-session)
-                                                         lsp-session-server-id->folders
-                                                         (gethash 'jdtls)
-                                                         (-uniq)
-                                                         (-map #'lsp--path-to-uri)
-                                                         (apply #'vector))))
+                                                      lsp-session-server-id->folders
+                                                      (gethash 'jdtls)
+                                                      (-uniq)
+                                                      (-map #'lsp--path-to-uri)
+                                                      (apply #'vector))))
   :library-folders-fn (lambda (_workspace) (list lsp-java-workspace-cache-dir))
   :before-file-open-fn (lambda (_workspace)
                          (let ((metadata-file-name (lsp-java--get-metadata-location buffer-file-name)))

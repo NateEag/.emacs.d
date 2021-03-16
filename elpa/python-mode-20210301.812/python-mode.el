@@ -7452,24 +7452,23 @@ Avoid empty lines at the beginning."
 	py-load-skeletons-p
 	erg)
     (with-temp-buffer
-      ;; (python-mode)
-      (insert strg)
-      (goto-char (point-min))
-      (when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
-	(dotimes (_ erg)
-	  (indent-rigidly-left (point-min) (point-max))))
-      (unless (py--beginning-of-statement-p)
-	(py-forward-statement))
-      (while (not (eq (current-indentation) 0))
-	(py-shift-left py-indent-offset))
-      (goto-char (point-max))
-      (unless (py-empty-line-p)
-	(newline 1))
-      (buffer-substring-no-properties 1 (point-max)))))
-
-
-
-
+      (with-current-buffer (current-buffer)
+	(when py-debug-p
+	  (switch-to-buffer (current-buffer)))
+	;; (python-mode)
+	(insert strg)
+	(goto-char (point-min))
+	(when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
+	  (dotimes (_ erg)
+	    (indent-rigidly-left (point-min) (point-max))))
+	(unless (py--beginning-of-statement-p)
+	  (py-forward-statement))
+	(while (not (eq (current-indentation) 0))
+	  (py-shift-left py-indent-offset))
+	(goto-char (point-max))
+	(unless (py-empty-line-p)
+	  (newline 1))
+	(buffer-substring-no-properties 1 (point-max))))))
 
 (defun py-fast-send-string (strg  &optional proc output-buffer result no-output argprompt args dedicated shell exception-buffer)
   (interactive
@@ -17645,7 +17644,7 @@ Requires BEG, END as the boundery of region"
 ;; TODO: Add docstring.
 ;; What is the intent of the this utility function?
 ;; What is the purpose of each argument?
-(defun py--indent-line-intern (need cui indent col &optional beg end region)
+(defun py--indent-line-intern (need cui indent col &optional beg end region outmost-only)
   (let (erg)
     (if py-tab-indent
 	(progn
@@ -17672,8 +17671,9 @@ Requires BEG, END as the boundery of region"
 	      (indent-to need)))
            ;;
 	   ((eq need cui)
-	    (if (or (eq this-command last-command)
-		    (eq this-command 'py-indent-line))
+	    (if (and (not outmost-only)
+		     (or (eq this-command last-command)
+			 (eq this-command 'py-indent-line)))
 		(if (and py-tab-shifts-region-p region)
 		    (while (and (goto-char beg) (< 0 (current-indentation)))
 		      (py-shift-region-left 1))
@@ -17708,7 +17708,7 @@ Requires BEG, END as the boundery of region"
 		(beginning-of-line))))))
       (insert-tab))))
 
-(defun py--indent-line-or-region-base (beg end region cui need arg this-indent-offset col)
+(defun py--indent-line-or-region-base (beg end region cui need arg this-indent-offset col &optional outmost-only)
   (cond ((eq 4 (prefix-numeric-value arg))
 	 (if (and (eq cui (current-indentation))
 		  (<= need cui))
@@ -17718,8 +17718,8 @@ Requires BEG, END as the boundery of region"
 	   (indent-to (+ need py-indent-offset))))
 	((not (eq 1 (prefix-numeric-value arg)))
 	 (py-smart-indentation-off)
-	 (py--indent-line-intern need cui this-indent-offset col beg end region))
-	(t (py--indent-line-intern need cui this-indent-offset col beg end region))))
+	 (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only))
+	(t (py--indent-line-intern need cui this-indent-offset col beg end region outmost-only))))
 
 (defun py--calculate-indent-backwards (cui indent-offset)
   "Return the next reasonable indent lower than current indentation.
@@ -17784,22 +17784,20 @@ If `py-tab-indents-region-p' is t and first TAB doesn't shift
 		(t (default-value 'py-indent-offset))))
     (setq outmost (py-compute-indentation nil nil nil nil nil nil nil this-indent-offset))
     ;; now choose the indent
-    (setq need
-	  (cond ((eq this-command last-command)
-		 (if (eq cui outmost)
-		     (when (not outmost-only)
-		       (py--calculate-indent-backwards cui this-indent-offset)))
-		 (if (bolp)
-		     (py-compute-indentation orig)
-		   (py--calculate-indent-backwards cui this-indent-offset)))
-		(t
-		 outmost
-		 ;; (py-compute-indentation orig)
-		 )))
-    ;; if at outmost
-    ;; and not (eq this-command last-command), need remains nil
-    (when need
-      (py--indent-line-or-region-base beg end region cui need arg this-indent-offset col)
+    (unless (and (not (eq this-command last-command))(eq outmost (current-indentation)))
+      (setq need
+	    (cond ((eq this-command last-command)
+		   (if outmost-only
+		       outmost
+		     (if (bolp)
+			 ;; jump forward to max indent
+			 outmost
+		       (py--calculate-indent-backwards cui this-indent-offset))))
+		  ;; (py--calculate-indent-backwards cui this-indent-offset)))))
+		  (t
+		   outmost
+		   )))
+      (py--indent-line-or-region-base beg end region cui need arg this-indent-offset col outmost-only)
       (and region (or py-tab-shifts-region-p
 		      py-tab-indents-region-p)
 	   (not (eq (point) orig))

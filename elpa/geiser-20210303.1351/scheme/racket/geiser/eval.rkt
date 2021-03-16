@@ -66,7 +66,7 @@
   (let ([all (and (not (null? all)) (car all))])
     (with-output-to-string
       (lambda ()
-        (pretty-print (syntax->datum ((if all expand expand-once) form)))))))
+        (pretty-print (syntax->datum ((if all expand expand-once) form)) (current-output-port) 1)))))
 
 (define (add-to-load-path p)
   (when (string? p)

@@ -126,7 +126,7 @@ If GREP-SPACE is used translate escaped space to \"\\s\" instead of \"\\s-\"."
 
 (defun helm-mm-prefix-match (candidate &optional pattern)
   ;; In filename completion basename and basedir may be
-  ;; quoted, unquote them for string comparison (Issue #1283).
+  ;; quoted, unquote them for string comparison (Bug#1283).
   (setq pattern (replace-regexp-in-string
                  "\\\\" "" (or pattern helm-pattern)))
   (let ((len (length pattern)))
@@ -202,7 +202,7 @@ previous value stored in `helm-mm--3-pattern-list'."
 E.g., ((identity . \"foo\") (not . \"bar\"))."
   (unless (string= pattern "")
     (cl-loop for pat in (helm-mm-split-pattern pattern)
-          collect (if (string= "!" (substring pat 0 1))
+          collect (if (char-equal ?! (aref pat 0))
                       (cons 'not (substring pat 1))
                     (cons 'identity pat)))))
 
@@ -367,11 +367,5 @@ E.g. \"bar foo baz\" will match \"barfoobaz\" or \"barbazfoo\" but not
 
 (provide 'helm-multi-match)
 
-
-;; Local Variables:
-;; byte-compile-warnings: (not obsolete)
-;; coding: utf-8
-;; indent-tabs-mode: nil
-;; End:
 
 ;;; helm-multi-match.el ends here

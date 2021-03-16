@@ -53,10 +53,10 @@
       (insert "\n* " (apply #'format format row) "\n"))))
 
 
-(defgeneric helm--setup-source (source)
+(cl-defgeneric helm--setup-source (source)
   "Prepare slots and handle slot errors before creating a helm source.")
 
-(defgeneric helm-setup-user-source (source)
+(cl-defgeneric helm-setup-user-source (source)
   "Allow users modifying slots in SOURCE just before creation.")
 
 
@@ -912,10 +912,17 @@ See `helm-candidates-in-buffer' for more infos.")
 ;;; Internal Builder functions.
 ;;
 ;;
+;; Compat
+(defun helm-object-slots (obj)
+  "Return list of slot names available in OBJ."
+  (cl-check-type obj eieio-object)
+  (mapcar #'eieio-slot-descriptor-name
+	  (eieio-class-slots (eieio--object-class obj))))
+
 (defun helm--create-source (object)
   "[INTERNAL] Build a helm source from OBJECT.
 Where OBJECT is an instance of an eieio class."
-  (cl-loop for s in (object-slots object)
+  (cl-loop for s in (helm-object-slots object)
            for slot-val = (slot-value object s)
            when slot-val
            collect (cons s slot-val)))
@@ -1007,38 +1014,45 @@ an eieio class."
                (slot-value source 'header-line)))))
 
 (defun helm-source--header-line (source)
+  "Compute a default header line for SOURCE.
+
+The header line is based on one of `persistent-action-if',
+`persistent-action', or `action' (in this order of precedence)."
   (substitute-command-keys
    (concat "\\<helm-map>\\[helm-execute-persistent-action]: "
-           (helm-aif (or (slot-value source 'persistent-action)
-                         (slot-value source 'action))
-               (cond ((and (symbolp it)
-                           (functionp it)
-                           (eq it 'identity))
-                      "Do Nothing")
-                     ((and (symbolp it)
-                           (boundp it)
-                           (listp (symbol-value it))
-                           (stringp (caar (symbol-value it))))
-                      (caar (symbol-value it)))
-                     ((or (symbolp it) (functionp it))
-                      (helm-symbol-name it))
-                     ((listp it)
-                      (let ((action (car it)))
-                        ;; It comes from :action ("foo" . function).
-                        (if (stringp (car action))
-                            (car action)
-                            ;; It comes from :persistent-action
-                            ;; (function . 'nosplit) Fix Issue #788.
-                            (if (or (symbolp action)
-                                    (functionp action))
-                                (helm-symbol-name action)))))
-                     (t ""))
-             "")
+           (helm-acond
+            ((slot-value source 'persistent-action-if)
+             (helm-symbol-name it))
+            ((or (slot-value source 'persistent-action)
+                 (slot-value source 'action))
+             (cond ((and (symbolp it)
+                         (functionp it)
+                         (eq it 'identity))
+                    "Do Nothing")
+                   ((and (symbolp it)
+                         (boundp it)
+                         (listp (symbol-value it))
+                         (stringp (caar (symbol-value it))))
+                    (caar (symbol-value it)))
+                   ((or (symbolp it) (functionp it))
+                    (helm-symbol-name it))
+                   ((listp it)
+                    (let ((action (car it)))
+                      ;; It comes from :action ("foo" . function).
+                      (if (stringp (car action))
+                          (car action)
+                        ;; It comes from :persistent-action
+                        ;; (function . 'nosplit) Fix Bug#788.
+                        (if (or (symbolp action)
+                                (functionp action))
+                            (helm-symbol-name action)))))
+                   (t "")))
+            (t ""))
            " (keeping session)")))
 
-(defmethod helm--setup-source :primary ((_source helm-source)))
+(cl-defmethod helm--setup-source ((_source helm-source)))
 
-(defmethod helm--setup-source :before ((source helm-source))
+(cl-defmethod helm--setup-source :before ((source helm-source))
   (unless (slot-value source 'group)
     (setf (slot-value source 'group) 'helm))
   (when (slot-value source 'delayed)
@@ -1087,9 +1101,9 @@ an eieio class."
                    it)))
         (setf (slot-value source 'requires-pattern) val))))
 
-(defmethod helm-setup-user-source ((_source helm-source)))
+(cl-defmethod helm-setup-user-source ((_source helm-source)))
 
-(defmethod helm--setup-source ((source helm-source-sync))
+(cl-defmethod helm--setup-source ((source helm-source-sync))
   (when (slot-value source 'fuzzy-match)
     (helm-aif (slot-value source 'match)
         (setf (slot-value source 'match)
@@ -1112,7 +1126,7 @@ an eieio class."
     (setf (slot-value source 'fuzzy-match) nil)
     (setf (slot-value source 'volatile) t)))
 
-(defmethod helm--setup-source ((source helm-source-in-buffer))
+(cl-defmethod helm--setup-source ((source helm-source-in-buffer))
   (cl-assert (eq (slot-value source 'candidates) 'helm-candidates-in-buffer)
              nil
              (format "Wrong usage of `candidates' attr in `%s' use `data' or `init' instead"
@@ -1155,7 +1169,7 @@ an eieio class."
     (cl-assert (eq (slot-value source 'volatile) t)
                nil "Invalid slot value for `volatile'")))
 
-(defmethod helm--setup-source ((source helm-source-async))
+(cl-defmethod helm--setup-source ((source helm-source-async))
   (cl-assert (null (slot-value source 'candidates))
              nil "Incorrect use of `candidates' use `candidates-process' instead")
   (cl-assert (null (slot-value source 'multimatch))
@@ -1163,7 +1177,7 @@ an eieio class."
   (cl-assert (null (slot-value source 'fuzzy-match))
              nil "`fuzzy-match' not supported in async sources."))
 
-(defmethod helm--setup-source ((source helm-source-dummy))
+(cl-defmethod helm--setup-source ((source helm-source-dummy))
   (let ((mtc (slot-value source 'match)))
     (cl-assert (or (equal '(identity) mtc)
                    (eq 'identity mtc))
@@ -1214,11 +1228,5 @@ Args ARGS are keywords provided by `helm-source-in-file'."
 
 
 (provide 'helm-source)
-
-;; Local Variables:
-;; byte-compile-warnings: (not obsolete)
-;; coding: utf-8
-;; indent-tabs-mode: nil
-;; End:
 
 ;;; helm-source ends here

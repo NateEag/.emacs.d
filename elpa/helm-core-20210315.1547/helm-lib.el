@@ -406,7 +406,7 @@ Like `this-command' but return the real command, and not
            if (and
                ;; In some case we may have in the way an
                ;; advice compiled resulting in byte-code,
-               ;; ignore it (Issue #691).
+               ;; ignore it (Bug#691).
                (symbolp fn)
                (commandp fn)
                (not (memq fn bl)))
@@ -733,7 +733,7 @@ displayed in BUFNAME."
                      (not (memq fun helm-help-not-interactive-command)))
                 ;; For movement of cursor in help buffer we need to
                 ;; call interactively commands for impaired people
-                ;; using a synthetizer (#1347).
+                ;; using a synthetizer (Bug#1347).
                 (call-interactively fun)
               (funcall fun))))))))
 
@@ -742,13 +742,17 @@ displayed in BUFNAME."
 
 If OVERRIDE is non nil, all bindings associated with FUNCTION are
 removed and only (KEY . FUNCTION) is kept.
+If FUNCTION is nil (KEY . FUNCTION) is not added and removed from
+alist if already present.
 See `helm-help-hkmap' for supported keys and functions."
   (cl-assert (not (cdr (split-string key))) nil
              (format "Error: Unsuported key `%s'" key))
   (when override
     (helm-awhile (rassoc function helm-help-hkmap)
       (setq helm-help-hkmap (delete it helm-help-hkmap))))
-  (add-to-list 'helm-help-hkmap `(,key . ,function)))
+  (helm-aif (and (null function) (assoc key helm-help-hkmap))
+      (setq helm-help-hkmap (delete it helm-help-hkmap))
+    (and function (add-to-list 'helm-help-hkmap `(,key . ,function)))))
 
 ;;; Multiline transformer
 ;;
@@ -784,21 +788,22 @@ See `helm-help-hkmap' for supported keys and functions."
 
 ;;; List processing
 ;;
-(defun helm-flatten-list (seq &optional omit-nulls)
-  "Return a list of all single elements of sublists in SEQ."
+(defun helm-flatten-list (seq)
+  "Return a list of all single elements of sublists in SEQ.
+
+    Example:
+    (helm-flatten-list '(1 (2 . 3) nil (4 5 (6) 7) 8 (9 . 10)))
+    => (1 2 3 4 5 6 7 8 9 10)"
   (let (result)
-    (cl-labels ((flatten (seq)
-                  (cl-loop
-                        for elm in seq
-                        if (and (or elm
-                                    (null omit-nulls))
-                                (or (atom elm)
-                                    (functionp elm)
-                                    (and (consp elm)
-                                         (cdr elm)
-                                         (atom (cdr elm)))))
-                        do (push elm result)
-                        else do (flatten elm))))
+    (cl-labels ((flatten
+                 (seq)
+                 (cl-loop for elm in seq
+                          if (consp elm)
+                          do (flatten
+                              (if (atom (cdr elm))
+                                  (list (car elm) (cdr elm))
+                                elm))
+                          else do (and elm (push elm result)))))
       (flatten seq))
     (nreverse result)))
 
@@ -854,7 +859,7 @@ hashtable itself."
   (helm-awhile (helm-basedir (directory-file-name
                               (expand-file-name directory)))
     ;; Break at root to avoid infloop, root is / or on Windows
-    ;; C:/ i.e. <volume>:/ (issue #2308).
+    ;; C:/ i.e. <volume>:/ (Bug#2308).
     (when (string-match-p "\\`[A-Za-z]?:?/\\'" it)
       (cl-return nil))
     (when (cl-loop for r in black-list
@@ -1270,7 +1275,8 @@ Argument ALIST is an alist of associated major modes."
 (defun helm-file-name-sans-extension (filename)
   "Same as `file-name-sans-extension' but remove all extensions."
   (helm-aif (file-name-sans-extension filename)
-      ;; Start searching at index 1 for files beginning with a dot (#1335).
+      ;; Start searching at index 1 for files beginning with a dot
+      ;; (bug#1335).
       (if (string-match "\\." (helm-basename it) 1)
           (helm-file-name-sans-extension it)
           it)))
@@ -1752,11 +1758,5 @@ broken."
      ("(\\<\\(helm-read-answer\\)\\>" 1 font-lock-keyword-face))))
 
 (provide 'helm-lib)
-
-;; Local Variables:
-;; byte-compile-warnings: (not obsolete)
-;; coding: utf-8
-;; indent-tabs-mode: nil
-;; End:
 
 ;;; helm-lib ends here

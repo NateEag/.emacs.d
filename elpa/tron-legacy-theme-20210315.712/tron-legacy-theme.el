@@ -4,8 +4,8 @@
 
 ;; Author: Ian Y.E. Pan
 ;; URL: https://github.com/ianpan870102/tron-legacy-emacs-theme
-;; Package-Version: 20200601.533
-;; Package-Commit: 5565d195b04684e6a7f00b7d3555bbfb07cd47ab
+;; Package-Version: 20210315.712
+;; Package-Commit: 4d543fbb9cb2098af1be0f5b10e1e4cd5245a9d0
 ;; Version: 2.0.0
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -24,12 +24,8 @@
 ;; This file is not part of Emacs.
 
 ;;; Commentary:
-;; An original theme for Emacs 24+ inspired by the look and feel of Tron: Legacy, with further inspirations drawn from Base16-Black-Metal, Grayscale and City Lights.
-
-;; MELPA recipe
-;; (tron-legacy-theme
-;;  :fetcher github
-;;  :repo "ianpan870102/tron-legacy-emacs-theme")
+;; An original theme for Emacs 24+ inspired by the look and feel of Tron: Legacy,
+;; with further inspirations drawn from Base16-Black-Metal, Grayscale and City Lights.
 
 ;;; Code:
 
@@ -125,7 +121,7 @@
    `(font-lock-warning-face                   ((,class (:foreground ,warning :background ,bg2))))
 
    ;;;;; More built-in UI
-   `(region                                   ((,class (:background ,bg-hl :distant-foreground ,fg0))))
+   `(region                                   ((,class (:background ,bg-hl :distant-foreground ,fg0 :extend nil))))
    `(highlight                                ((,class (:foreground ,bg3 :background ,fg3))))
    `(hl-line                                  ((,class (:background ,hl-line))))
    `(fringe                                   ((,class (:background ,bg1 :foreground ,fg4))))
@@ -564,8 +560,7 @@
    ;;;;; flycheck
    `(flycheck-info                            ((t (:underline (:style wave :color ,tron-green)))))
    `(flycheck-error                           ((t (:underline (:style wave :color ,tron-yellow)))))
-   `(flycheck-warning                         ((t (:underline (:style wave :color ,tron-yellow)))))
-   ))
+   `(flycheck-warning                         ((t (:underline (:style wave :color ,tron-yellow)))))))
 
 ;;;###autoload
 (when (and (boundp 'custom-theme-load-path) load-file-name)

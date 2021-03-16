@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20200601.533/tron-legacy-theme.el  -*- no-byte-compile: t -*-
-(define-package "tron-legacy-theme" "20200601.533" "An original retro-futuristic theme inspired by Tron: Legacy" 'nil :commit "5565d195b04684e6a7f00b7d3555bbfb07cd47ab" :authors '(("Ian Y.E. Pan")) :maintainer '("Ian Y.E. Pan") :url "https://github.com/ianpan870102/tron-legacy-emacs-theme")

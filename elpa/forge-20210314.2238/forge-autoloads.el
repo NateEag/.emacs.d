@@ -97,7 +97,11 @@ read an issue N to visit.
 Visit the current post using a browser." t nil)
 
 (autoload 'forge-visit-topic "forge-commands" "\
-View the current topic in a separate buffer." t nil)
+View the current topic in a separate buffer.
+If there is no current topic or with a prefix argument
+read topic N to visit instead.
+
+\(fn N)" t nil)
 
 (autoload 'forge-visit-pullreq "forge-commands" "\
 View the current pull-request in a separate buffer.

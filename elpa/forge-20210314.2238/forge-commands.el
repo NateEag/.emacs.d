@@ -61,7 +61,11 @@ for a repository using the command `forge-add-pullreq-refspec'."
     (7 "o i" "owned issues"           forge-list-owned-issues)
     (7 "o p" "owned pull-requests"    forge-list-owned-pullreqs)
     (7 "o r" "owned repositories"     forge-list-owned-repositories)]
-   ["Create"
+   ["Visit"
+    ("v t" "topic"         forge-visit-topic)
+    ("v i" "issue"         forge-visit-issue)
+    ("v p" "pull-request"  forge-visit-pullreq)
+    """Create"
     ("c i" "issue"         forge-create-issue)
     ("c p" "pull-request"  forge-create-pullreq)
     ("c u" "pull-request from issue" forge-create-pullreq-from-issue
@@ -286,12 +290,12 @@ read an issue N to visit."
 ;;; Visit
 
 ;;;###autoload
-(defun forge-visit-topic ()
-  "View the current topic in a separate buffer."
-  (interactive)
-  (if-let ((topic (forge-current-topic)))
-      (forge-visit topic)
-    (user-error "There is no current topic")))
+(defun forge-visit-topic (n)
+  "View the current topic in a separate buffer.
+If there is no current topic or with a prefix argument
+read topic N to visit instead."
+  (interactive (list (forge-read-topic "View topic")))
+  (forge-visit (forge-get-topic n)))
 
 ;;;###autoload
 (defun forge-visit-pullreq (n)
@@ -393,7 +397,7 @@ point is currently on."
     (user-error "This command is only available from topic buffers"))
   (let* ((topic forge-buffer-topic)
          (buf (forge--prepare-post-buffer
-               (forge--format topic "%i:new-comment")
+               (forge--format topic "%i;new-comment")
                (forge--format topic "New comment on #%i of %p")))
          (quote (cond
                  ((not (magit-section-match 'post)) nil)
@@ -429,7 +433,7 @@ point is currently on."
                   (forge--format post "Edit #%i of %p")))
                 (forge-post
                  (forge--prepare-post-buffer
-                  (forge--format post "%i:%I")
+                  (forge--format post "%i;%I")
                   (forge--format post "Edit comment on #%i of %p"))))))
     (with-current-buffer buf
       (setq forge--buffer-post-object post)
@@ -555,7 +559,7 @@ topic N and modify that instead."
   (interactive (list (forge-read-topic "Edit note about")))
   (let* ((topic (forge-get-topic n))
          (buf (forge--prepare-post-buffer
-               (forge--format topic "%i:note")
+               (forge--format topic "%i;note")
                (forge--format topic "New note on #%i of %p"))))
     (with-current-buffer buf
       (setq forge--buffer-post-object topic)
@@ -683,7 +687,7 @@ Please see the manual for more information."
              (magit-ref-p (format "refs/pullreqs/%s"
                                   (oref pullreq number)))
            (forge--pullreq-branch-active pullreq))
-         (let ((inhibit-magit-refresh t))
+         (let ((magit-inhibit-refresh t))
            (forge-branch-pullreq n))))))
 
 ;;;###autoload
@@ -713,7 +717,7 @@ information."
                        (= (length (directory-files "/tmp/testing/")) 2))))
     (user-error "%s already exists and isn't empty" path))
   (magit-worktree-checkout path
-                           (let ((inhibit-magit-refresh t))
+                           (let ((magit-inhibit-refresh t))
                              (forge-branch-pullreq n))))
 
 ;;; Marks

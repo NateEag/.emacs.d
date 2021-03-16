@@ -1,13 +1,13 @@
 ;;; counsel.el --- Various completion functions using Ivy -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2019  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2021 Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210129.1143
-;; Package-Commit: 0965e2375e2539fcc62b44b7b8f680d40c0b535a
-;; Version: 0.13.0
-;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
+;; Package-Version: 20210313.1108
+;; Package-Commit: 75002963859101003436c84d1d3a85f9ea5f89fc
+;; Version: 0.13.4
+;; Package-Requires: ((emacs "24.5") (ivy "0.13.4") (swiper "0.13.4"))
 ;; Keywords: convenience, matching, tools
 
 ;; This file is part of GNU Emacs.
@@ -42,6 +42,7 @@
 
 ;;; Code:
 
+(require 'ivy)
 (require 'swiper)
 
 (require 'compile)
@@ -882,6 +883,23 @@ packages are, in order of precedence, `amx' and `smex'."
            (smex-update))
          smex-ido-cache)))
 
+(defun counsel--M-x-externs-predicate (cand)
+  "Return non-nil if `counsel-M-x' should complete CAND.
+CAND is a string returned by `counsel--M-x-externs'."
+  (not (get (intern cand) 'no-counsel-M-x)))
+
+(defun counsel--M-x-make-predicate ()
+  "Return a predicate for `counsel-M-x' in the current buffer."
+  (defvar read-extended-command-predicate)
+  (let ((buf (current-buffer)))
+    (lambda (sym)
+      (and (commandp sym)
+           (not (get sym 'byte-obsolete-info))
+           (not (get sym 'no-counsel-M-x))
+           (or (not (bound-and-true-p read-extended-command-predicate))
+               (and (functionp read-extended-command-predicate)
+                    (funcall read-extended-command-predicate sym buf)))))))
+
 (defun counsel--M-x-prompt ()
   "String for `M-x' plus the string representation of `current-prefix-arg'."
   (concat (cond ((null current-prefix-arg)
@@ -927,12 +945,8 @@ when available, in that order of precedence."
   (let ((externs (counsel--M-x-externs)))
     (ivy-read (counsel--M-x-prompt) (or externs obarray)
               :predicate (if externs
-                             (lambda (x)
-                               (not (get (intern x) 'no-counsel-M-x)))
-                           (lambda (sym)
-                             (and (commandp sym)
-                                  (not (get sym 'byte-obsolete-info))
-                                  (not (get sym 'no-counsel-M-x)))))
+                             #'counsel--M-x-externs-predicate
+                           (counsel--M-x-make-predicate))
               :require-match t
               :history 'counsel-M-x-history
               :action #'counsel-M-x-action
@@ -2928,14 +2942,24 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search."
     (define-key map (kbd "C-x C-d") 'counsel-cd)
     map))
 
-(defcustom counsel-ag-base-command "ag --vimgrep %s"
-  "Format string to use in `counsel-ag-function' to construct the command.
-The %s will be replaced by optional extra ag arguments followed by the
-regex string."
-  :type '(radio
-          (const "ag --vimgrep %s")
-          (const "ag --nocolor --nogroup %s")
-          (string :tag "custom")))
+(defcustom counsel-ag-base-command (list "ag" "--vimgrep" "%s")
+  "Template for default `counsel-ag' command.
+The value should be either a list of strings, starting with the
+`ag' executable file name and followed by its arguments, or a
+single string describing a full `ag' shell command.
+
+If the command is specified as a list, `ag' is called directly
+using `process-file'; otherwise, it is called as a shell command.
+Calling `ag' directly avoids various shell quoting pitfalls, so
+it is generally recommended.
+
+If the string \"%s\" appears as an element of the list, or as a
+substring of the command string, it is replaced by any optional
+`ag' arguments followed by the search regexp specified during the
+`counsel-ag' session."
+  :package-version '(counsel . "0.14.0")
+  :type '(choice (repeat :tag "Command list to call directly" string)
+                 (string :tag "Shell command")))
 
 (defvar counsel-ag-command nil)
 
@@ -3008,9 +3032,10 @@ NEEDLE is the search string."
 ;;;###autoload
 (cl-defun counsel-ag (&optional initial-input initial-directory extra-ag-args ag-prompt
                       &key caller)
-  "Grep for a string in a root directory using ag.
+  "Grep for a string in a root directory using `ag'.
 
-By default, the root directory is the first directory containing a .git subdirectory.
+By default, the root directory is the first directory containing
+a .git subdirectory.
 
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
@@ -3100,8 +3125,9 @@ Works for `counsel-git-grep', `counsel-ag', etc."
     (ivy-occur-grep-mode)
     (setq default-directory (ivy-state-directory ivy-last)))
   (ivy-set-text
-   (and (string-match "\"\\(.*\\)\"" (buffer-name))
-        (match-string 1 (buffer-name))))
+   (if (string-match "\"\\(.*\\)\"" (buffer-name))
+       (match-string 1 (buffer-name))
+     (ivy-state-text ivy-occur-last)))
   (let* ((cmd
           (if (functionp cmd-template)
               (funcall cmd-template ivy-text)
@@ -3177,19 +3203,23 @@ This uses `counsel-ag' with `counsel-ack-base-command' replacing
      initial-input nil nil nil
      :caller 'counsel-ack)))
 
-
 ;;** `counsel-rg'
 (defcustom counsel-rg-base-command
-  (split-string
-   (if (memq system-type '(ms-dos windows-nt))
-       "rg -M 240 --with-filename --no-heading --line-number --color never %s --path-separator / ."
-     "rg -M 240 --with-filename --no-heading --line-number --color never %s"))
-  "Alternative to `counsel-ag-base-command' using ripgrep.
+  `("rg"
+    "--max-columns" "240"
+    "--with-filename"
+    "--no-heading"
+    "--line-number"
+    "--color" "never"
+    "%s"
+    ,@(and (memq system-type '(ms-dos windows-nt))
+           (list "--path-separator" "/" ".")))
+  "Like `counsel-ag-base-command', but for `counsel-rg'.
 
-Note: don't use single quotes for the regex."
-  :type '(choice
-          (repeat :tag "List to be used in `process-file'." string)
-          (string :tag "String to be used in `shell-command-to-string'.")))
+Note: don't use single quotes for the regexp."
+  :package-version '(counsel . "0.14.0")
+  :type '(choice (repeat :tag "Command list to call directly" string)
+                 (string :tag "Shell command")))
 
 (defun counsel--rg-targets ()
   "Return a list of files to operate on, based on `dired-mode' marks."
@@ -3206,7 +3236,7 @@ Note: don't use single quotes for the regex."
 
 ;;;###autoload
 (defun counsel-rg (&optional initial-input initial-directory extra-rg-args rg-prompt)
-  "Grep for a string in the current directory using rg.
+  "Grep for a string in the current directory using `rg'.
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 EXTRA-RG-ARGS string, if non-nil, is appended to `counsel-rg-base-command'.
@@ -4541,6 +4571,8 @@ Note: Duplicate elements of `kill-ring' are always deleted."
               :preselect preselect
               :action #'counsel-yank-pop-action
               :caller 'counsel-yank-pop)))
+
+(put #'counsel-yank-pop 'delete-selection 'yank)
 
 (ivy-configure 'counsel-yank-pop
   :height 5

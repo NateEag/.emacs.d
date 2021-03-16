@@ -672,19 +672,21 @@ and jump to the corresponding one."
   (evil-up-paren ?{ ?} (or count 1))
   (backward-char))
 
+(defun evil--lowercase-markers ()
+  "Get all lowercase markers."
+  (cl-remove-if-not (lambda (x) (and (markerp (cdr x))
+                                     (<= ?a (car x) ?z)))
+                    evil-markers-alist))
+
 (defun evil--next-mark (forwardp)
   "Move to next lowercase mark.
 Move forward if FORWARDP is truthy or backward if falsey.
 Loop back to the top of buffer if the end is reached."
-  (let* ((pos (point))
-         (markers (cl-remove-if-not
-                   (lambda (x) (and (markerp (cdr x))
-                                    (<= ?a (car x) ?z)))
-                   evil-markers-alist))
-         (sorted-markers (sort markers
-                               (lambda (a b) (< (cdr a) (cdr b))))))
+  (let ((pos (point))
+        (sorted-markers (sort (evil--lowercase-markers)
+                              (lambda (a b) (< (cdr a) (cdr b))))))
     (cond
-     ((null markers)
+     ((null sorted-markers)
       (user-error "No marks in this buffer"))
      (forwardp
       (let ((next-marker (cl-some (lambda (x) (and (< pos (cdr x)) (cdr x)))
@@ -715,10 +717,12 @@ Loop back to the top of buffer if the end is reached."
   :repeat nil
   :type exclusive
   :jump t
-  (dotimes (_ (or count 1))
-    (evil-end-of-line)
-    (evil--next-mark t)
-    (evil-first-non-blank)))
+  (if (evil--lowercase-markers)
+      (dotimes (_ (or count 1))
+        (evil-end-of-line)
+        (evil--next-mark t)
+        (evil-first-non-blank))
+    (user-error "No marks in this buffer")))
 
 (evil-define-motion evil-previous-mark (count)
   "Go to [count] previous lowercase mark."
@@ -735,10 +739,12 @@ Loop back to the top of buffer if the end is reached."
   :repeat nil
   :type exclusive
   :jump t
-  (dotimes (_ (or count 1))
-    (evil-beginning-of-line)
-    (evil--next-mark nil)
-    (evil-first-non-blank)))
+  (if (evil--lowercase-markers)
+      (dotimes (_ (or count 1))
+        (evil-beginning-of-line)
+        (evil--next-mark nil)
+        (evil-first-non-blank))
+    (user-error "No marks in this buffer")))
 
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR.
@@ -1696,12 +1702,14 @@ of the block."
 
 (evil-define-command evil-undo (count)
   "Undo COUNT changes in buffer using `evil-undo-function'."
+  :repeat abort
   (interactive "*p")
   (evil--check-undo-system)
   (funcall evil-undo-function count))
 
 (evil-define-command evil-redo (count)
   "Undo COUNT changes in buffer using `evil-redo-function'."
+  :repeat abort
   (interactive "*p")
   (evil--check-undo-system)
   (funcall evil-redo-function count))
@@ -3394,7 +3402,7 @@ If FORCE is non-nil all local marks except 0-9 are removed.
                  (and (re-search-backward ":\\([0-9]+\\)\\="
                                           (line-beginning-position) t)
                       (string-to-number (match-string 1))))))
-          (with-no-warnings (ffap-other-window))
+          (with-no-warnings (ffap-other-window fname))
           (when line
             (goto-char (point-min))
             (forward-line (1- line))))
@@ -3859,7 +3867,8 @@ range. The given argument is passed straight to
 (evil-define-command evil-goto-char (position)
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
-  (interactive "p")
+  :jump t
+  (interactive "<N>Goto position: ")
   (let ((position (evil-normalize-position
                    (or position (point-min)))))
     (goto-char position)))

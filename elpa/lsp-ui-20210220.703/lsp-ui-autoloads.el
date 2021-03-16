@@ -60,6 +60,13 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-ui-util" "lsp-ui-util.el" (0 0 0 0))
+;;; Generated autoloads from lsp-ui-util.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-util" '("lsp-ui-util-")))
+
+;;;***
+
 ;;;### (autoloads nil nil ("lsp-ui-pkg.el") (0 0 0 0))
 
 ;;;***

@@ -152,7 +152,8 @@ number - expand N levels."
   :group 'dap-ui)
 
 (defcustom  dap-ui-default-fetch-count 30
-  "Default number of variables to load in inspect variables view for array variables."
+  "Default number of variables to load in inspect variables view for
+array variables."
   :group 'dap-ui
   :type 'number)
 
@@ -500,50 +501,51 @@ DEBUG-SESSION is the debug session triggering the event."
               'help-echo hover-text))
 
 (defun dap-ui--update-controls (&rest _)
-  (let* ((session (dap--cur-session))
-         (stopped? (and session (dap--debug-session-active-frame session)))
-         (running? (and session (dap--session-running session))))
-    (if running?
-        (let ((content (s-concat
-                        (dap-ui--create-command "continue.png" #'dap-continue "Continue")
-                        " "
-                        (dap-ui--create-command (if stopped?
-                                                    "step-over.png"
-                                                  "step-over-disabled.png")
-                                                (when stopped? #'dap-next)
-                                                (if stopped? "Step over"
-                                                  "Session not stopped?"))
-                        " "
-                        (dap-ui--create-command (if stopped? "step-out.png"
-                                                  "step-out-disabled.png")
-                                                (when stopped? #'dap-step-out)
-                                                (if stopped? "Step out"
-                                                  "Session not stopped? "))
-                        " "
-                        (dap-ui--create-command (if stopped? "step-into.png"
-                                                  "step-into-disabled.png")
-                                                (when stopped? #'dap-step-in)
-                                                (if stopped? "Step in"
-                                                  "Session not stopped?"))
-                        " "
-                        (dap-ui--create-command "disconnect.png" #'dap-disconnect "Disconnect")
-                        " "
-                        (dap-ui--create-command "restart.png" #'dap-debug-restart "Restart")))
-              posframe-mouse-banish
-              (pos-frame (-first
-                          (lambda (frame)
-                            (let ((buffer-info (frame-parameter frame 'posframe-buffer)))
-                              (or (equal dap-ui--control-buffer (car buffer-info))
-                                  (equal dap-ui--control-buffer (cdr buffer-info)))))
-                          (frame-list))))
-          (ignore posframe-mouse-banish)
-          (when (eq (selected-frame) pos-frame)
-            (select-frame (frame-parent pos-frame)))
-          (posframe-show dap-ui--control-buffer
-                         :string content
-                         :poshandler #'posframe-poshandler-frame-top-center
-                         :internal-border-width 8))
-      (posframe-hide dap-ui--control-buffer))))
+  (when (posframe-workable-p)
+    (let* ((session (dap--cur-session))
+           (stopped? (and session (dap--debug-session-active-frame session)))
+           (running? (and session (dap--session-running session))))
+      (if running?
+          (let ((content (s-concat
+                          (dap-ui--create-command "continue.png" #'dap-continue "Continue")
+                          " "
+                          (dap-ui--create-command (if stopped?
+                                                      "step-over.png"
+                                                    "step-over-disabled.png")
+                                                  (when stopped? #'dap-next)
+                                                  (if stopped? "Step over"
+                                                    "Session not stopped?"))
+                          " "
+                          (dap-ui--create-command (if stopped? "step-out.png"
+                                                    "step-out-disabled.png")
+                                                  (when stopped? #'dap-step-out)
+                                                  (if stopped? "Step out"
+                                                    "Session not stopped? "))
+                          " "
+                          (dap-ui--create-command (if stopped? "step-into.png"
+                                                    "step-into-disabled.png")
+                                                  (when stopped? #'dap-step-in)
+                                                  (if stopped? "Step in"
+                                                    "Session not stopped?"))
+                          " "
+                          (dap-ui--create-command "disconnect.png" #'dap-disconnect "Disconnect")
+                          " "
+                          (dap-ui--create-command "restart.png" #'dap-debug-restart "Restart")))
+                posframe-mouse-banish
+                (pos-frame (-first
+                            (lambda (frame)
+                              (let ((buffer-info (frame-parameter frame 'posframe-buffer)))
+                                (or (equal dap-ui--control-buffer (car buffer-info))
+                                    (equal dap-ui--control-buffer (cdr buffer-info)))))
+                            (frame-list))))
+            (ignore posframe-mouse-banish)
+            (when (eq (selected-frame) pos-frame)
+              (select-frame (frame-parent pos-frame)))
+            (posframe-show dap-ui--control-buffer
+                           :string content
+                           :poshandler #'posframe-poshandler-frame-top-center
+                           :internal-border-width 8))
+        (posframe-hide dap-ui--control-buffer)))))
 
 ;;;###autoload
 (define-minor-mode dap-ui-controls-mode
@@ -770,7 +772,8 @@ DEBUG-SESSION is the debug session triggering the event."
 ;; locals
 
 (defcustom dap-ui-variable-length 30
-  "Default number of variables to load in inspect variables view for array variables."
+  "Default number of variables to load in inspect variables view for
+array variables."
   :group 'dap-ui
   :type 'number)
 
@@ -911,7 +914,7 @@ request."
 (defun dap-ui-locals ()
   (interactive)
   (dap-ui--show-buffer (get-buffer-create dap-ui--locals-buffer))
-  (dap-ui-locals--refresh)
+  (dap-ui-locals--refresh-schedule)
   (with-current-buffer dap-ui--locals-buffer
     (add-hook 'dap-terminated-hook #'dap-ui-locals--refresh-schedule)
     (add-hook 'dap-session-changed-hook #'dap-ui-locals--refresh-schedule)
@@ -1083,15 +1086,14 @@ request."
   (dap-breakpoint-log-message file-name breakpoint))
 
 (defun dap-ui--breakpoints-data ()
-  (-let (((debug-session &as &dap-session 'launch-args 'initialize-result 'breakpoints all-session-breakpoints)
+  (-let (((debug-session &as &dap-session 'launch-args 'current-capabilities 'breakpoints all-session-breakpoints)
           (or (dap--cur-session)
               (make-dap--debug-session)))
          (lsp-file-truename-cache (ht)))
     (lsp-with-cached-filetrue-name
      (append
       (when (dap--session-running debug-session)
-        (-some->> initialize-result
-          (gethash "body")
+        (-some->> current-capabilities
           (gethash "exceptionBreakpointFilters")
           (-map (-lambda ((&hash "label" "filter" "default"))
                   (list :label (propertize
@@ -1204,21 +1206,27 @@ request."
   (add-hook 'dap-breakpoints-changed-hook #'dap-ui-breakpoints--refresh)
   (add-hook 'kill-buffer-hook 'dap-ui-breakpoints--cleanup-hooks nil t))
 
+(defvar dap-ui--many-windows-displayed nil)
+
 (defun dap-ui--show-many-windows (_session)
   "Show auto configured feature windows."
-  (seq-doseq (feature-start-stop dap-auto-configure-features)
-    (when-let (start-stop (alist-get feature-start-stop dap-features->windows))
-      (funcall (car start-stop)))))
+  (unless dap-ui--many-windows-displayed
+    (seq-doseq (feature-start-stop dap-auto-configure-features)
+      (when-let (start-stop (alist-get feature-start-stop dap-features->windows))
+        (funcall (car start-stop))))
+    (setq dap-ui--many-windows-displayed t)))
 
 (defun dap-ui--hide-many-windows (_session)
   "Hide all debug windows when sessions are dead."
-  (seq-doseq (feature-start-stop dap-auto-configure-features)
-    (when-let* ((feature-start-stop (alist-get feature-start-stop dap-features->windows))
-                (buffer-name (symbol-value (cdr feature-start-stop))))
-      (when-let (window (get-buffer-window buffer-name))
-        (delete-window window))
-      (and (get-buffer buffer-name)
-           (kill-buffer buffer-name)))))
+  (when dap-ui--many-windows-displayed
+    (seq-doseq (feature-start-stop dap-auto-configure-features)
+      (when-let* ((feature-start-stop (alist-get feature-start-stop dap-features->windows))
+                  (buffer-name (symbol-value (cdr feature-start-stop))))
+        (when-let (window (get-buffer-window buffer-name))
+          (delete-window window))
+        (and (get-buffer buffer-name)
+             (kill-buffer buffer-name))))
+    (setq dap-ui--many-windows-displayed nil)))
 
 ;;;###autoload
 (defun dap-ui-show-many-windows ()

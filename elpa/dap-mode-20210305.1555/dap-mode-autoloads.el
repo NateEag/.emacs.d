@@ -13,6 +13,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "dap-codelldb" "dap-codelldb.el" (0 0 0 0))
+;;; Generated autoloads from dap-codelldb.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-codelldb" '("dap-codelldb-")))
+
+;;;***
+
 ;;;### (autoloads nil "dap-cpptools" "dap-cpptools.el" (0 0 0 0))
 ;;; Generated autoloads from dap-cpptools.el
 

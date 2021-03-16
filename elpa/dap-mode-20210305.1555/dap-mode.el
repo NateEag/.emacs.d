@@ -17,8 +17,8 @@
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
-;; URL: https://github.com/yyoncho/dap-mode
-;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0"))
+;; URL: https://github.com/emacs-lsp/dap-mode
+;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3"))
 ;; Version: 0.6
 
 ;;; Commentary:
@@ -34,6 +34,7 @@
 (require 'cl-lib)
 (require 'ansi-color)
 (require 'posframe)
+(require 'ht)
 
 (require 'dap-launch)
 
@@ -120,7 +121,8 @@ also `dap--make-terminal-buffer'."
   :type 'list)
 
 (defcustom dap-label-output-buffer-category nil
-  "If non-nil, content that is printed to the output buffer will be labelled based on DAP protocol category."
+  "If non-nil, content that is printed to the output buffer will be labelled
+based on DAP protocol category."
   :group 'dap-mode
   :type 'boolean)
 
@@ -163,7 +165,8 @@ has been terminated."
   :group 'dap-mode)
 
 (defcustom dap-loaded-sources-changed-hook nil
-  "List of functions to be called after loaded sources have changed for the session."
+  "List of functions to be called after loaded sources have changed for
+the session."
   :type 'hook
   :group 'dap-mode)
 
@@ -188,7 +191,8 @@ g. after calling `dap-continue')"
 
 (defcustom dap-breakpoints-changed-hook nil
   "List of functions that will be called after breakpoints have changed.
-The hook will be called with the session file and the new set of breakpoint locations."
+The hook will be called with the session file and the new set of breakpoint
+locations."
   :type 'hook
   :group 'dap-mode)
 
@@ -275,8 +279,8 @@ The hook will be called with the session file and the new set of breakpoint loca
   (thread-stack-frames (make-hash-table :test 'eql) :read-only t)
   ;; the arguments that were used to start the debug session.
   (launch-args nil)
-  ;; The result of initialize request. It holds the server capabilities.
-  (initialize-result nil)
+  ;; Currently-available server capabilities
+  (current-capabilities (make-hash-table :test 'equal))
   (error-message nil)
   (loaded-sources nil)
   (program-proc)
@@ -958,6 +962,9 @@ PARAMS are the event params.")
        (-let [(&hash "body" (&hash "source")) event]
          (cl-pushnew source (dap--debug-session-loaded-sources debug-session))
          (run-hook-with-args 'dap-loaded-sources-changed-hook debug-session)))
+      ("capabilities"
+       (-let [(&hash "body" (&hash "capabilities")) event]
+         (ht-update! (dap--debug-session-current-capabilities debug-session) capabilities)))
       (_ (dap-handle-event (intern event-type) debug-session body)))))
 
 (defcustom dap-default-terminal-kind "integrated"
@@ -1191,7 +1198,9 @@ FILE-BREAKPOINTS is a list of the breakpoints to set for FILE-NAME."
     (dap--make-request
      "setBreakpoints"
      (list :source (list :name (f-filename file-name)
-                         :path file-name)
+                         :path (if (eq system-type 'windows-nt)
+                                   (s-replace "/" "\\" file-name)
+                                 file-name))
            :breakpoints (->> file-breakpoints
                              (-map (-lambda ((it &as &plist :condition :hit-condition :log-message))
                                      (let ((result (->> it dap-breakpoint-get-point line-number-at-pos (list :line))))
@@ -1228,12 +1237,11 @@ DEBUG-SESSION is the active debug session."
              #'equal))
 
 (defun dap--set-exception-breakpoints (debug-session callback)
-  (-let [(&dap-session 'initialize-result 'launch-args (&plist :type)) debug-session]
+  (-let [(&dap-session 'current-capabilities 'launch-args (&plist :type)) debug-session]
     (dap--send-message
      (dap--make-request "setExceptionBreakpoints"
                         (list :filters
-                              (or (-some->> initialize-result
-                                    (gethash "body")
+                              (or (-some->> current-capabilities
                                     (gethash "exceptionBreakpointFilters")
                                     (-keep (-lambda ((&hash "default" "filter"))
                                              (when (dap--breakpoint-filter-enabled filter type default)
@@ -1615,10 +1623,10 @@ before starting the debug process."
          (dap--initialize-message type)
          (dap--session-init-resp-handler
           debug-session
-          (lambda (initialize-result)
+          (-lambda ((&hash "body" capabilities))
             (-let [debug-sessions (dap--get-sessions)]
 
-              (setf (dap--debug-session-initialize-result debug-session) initialize-result)
+              (ht-update! (dap--debug-session-current-capabilities debug-session) capabilities)
 
               (dap--set-sessions (cons debug-session debug-sessions)))
             (dap--send-message
@@ -1724,7 +1732,7 @@ normally with `dap-debug'"
               `((side . bottom) (slot . 5) (window-width . 0.20)))))
     (set-window-dedicated-p win t)
     (unless no-select (select-window win))
-    (fit-window-to-buffer nil dap-output-window-max-height dap-output-window-min-height)))
+    (fit-window-to-buffer win dap-output-window-max-height dap-output-window-min-height)))
 
 (defun dap-delete-session (debug-session)
   "Remove DEBUG-SESSION.

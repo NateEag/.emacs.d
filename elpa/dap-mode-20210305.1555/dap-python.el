@@ -44,7 +44,8 @@ If the port is taken, DAP will try the next port."
 
 (defcustom dap-python-terminal nil
   "The terminal to use when running the debug process.
-For example you may set it to `xterm -e' which will pop xterm console when you are debugging."
+For example you may set it to `xterm -e' which will pop xterm console when
+you are debugging."
   :group 'dap-python
   :risky t
   :type 'string)
@@ -93,7 +94,7 @@ https://github.com/pyenv/pyenv-which-ext."
                                              :character end-character))))
   (make-dap-python--symbol
    :name name
-   :type (alist-get kind lsp--symbol-kind)
+   :type (alist-get kind lsp-symbol-kinds)
    :location (make-dap-python--location
               :start (make-dap-python--point :line start-line
                                              :character start-character)

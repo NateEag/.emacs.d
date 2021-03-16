@@ -8,8 +8,8 @@
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;;             Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacsorphanage/git-gutter
-;; Package-Version: 20210109.640
-;; Package-Commit: 5c2ae01562b3ff2def870ed822fd0869326977d6
+;; Package-Version: 20210127.1100
+;; Package-Commit: cca61a1c6b0c0fd6ecb1b0366711c618581eabb6
 ;; Version: 0.91
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -75,8 +75,8 @@ character for signs of changes"
 
 (defcustom git-gutter:update-windows-commands
   '(kill-buffer ido-kill-buffer)
-  "Each command of this list is executed, gutter information is updated and \
-gutter information of other windows."
+  "Each command of this list is executed, gutter information is
+updated and gutter information of other windows."
   :type '(list (function :tag "Update command")
                (repeat :inline t (function :tag "Update command")))
   :group 'git-gutter)
@@ -481,7 +481,13 @@ Argument TEST is the case before BODY execution."
           t)
         (goto-char (point-max)))))
 
-(defun git-gutter:view-for-unchanged ()
+(defun git-gutter:unchanged-line-p (line diffinfos)
+  (cl-loop for info in diffinfos
+           for start = (git-gutter-hunk-start-line info)
+           for end = (git-gutter-hunk-end-line info)
+           never (and (>= line start) (<= line end))))
+
+(defun git-gutter:view-for-unchanged (diffinfos)
   (save-excursion
     (let ((sign (if git-gutter:unchanged-sign
                     (propertize git-gutter:unchanged-sign
@@ -493,7 +499,8 @@ Argument TEST is the case before BODY execution."
           points)
       (goto-char (point-min))
       (while (not (eobp))
-        (push (point) points)
+        (when (git-gutter:unchanged-line-p (line-number-at-pos) diffinfos)
+          (push (point) points))
         (funcall move-fn 1))
       (git-gutter:put-signs sign points))))
 
@@ -639,7 +646,7 @@ Argument TEST is the case before BODY execution."
 
 (defun git-gutter:view-set-overlays (diffinfos)
   (when (or git-gutter:unchanged-sign git-gutter:separator-sign)
-    (git-gutter:view-for-unchanged))
+    (git-gutter:view-for-unchanged diffinfos))
   (save-excursion
     (goto-char (point-min))
     (cl-loop with curline = 1

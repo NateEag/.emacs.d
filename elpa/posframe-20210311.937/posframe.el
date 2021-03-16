@@ -5,9 +5,9 @@
 ;; Author: Feng Shu <tumashu@163.com>
 ;; Maintainer: Feng Shu <tumashu@163.com>
 ;; URL: https://github.com/tumashu/posframe
-;; Package-Version: 20210208.229
-;; Package-Commit: 3454a4cb9d218c38f9c5b88798dfb2f7f85ad936
-;; Version: 0.8.5
+;; Package-Version: 20210311.937
+;; Package-Commit: fff21ccb706b576f4074883f9fa87d2bcc534096
+;; Version: 0.8.8
 ;; Keywords: convenience, tooltip
 ;; Package-Requires: ((emacs "26"))
 
@@ -358,7 +358,8 @@ This posframe's buffer is BUFFER-OR-NAME."
                        (desktop-dont-save . t))))
         (when border-color
           (set-face-background 'internal-border border-color posframe--frame)
-          (set-face-background 'child-frame-border border-color posframe--frame))
+          (when (facep 'child-frame-border)
+            (set-face-background 'child-frame-border border-color posframe--frame)))
         (let ((posframe-window (frame-root-window posframe--frame)))
           ;; This method is more stable than 'setq mode/header-line-format nil'
           (unless respect-mode-line
@@ -627,6 +628,8 @@ You can use `posframe-delete-all' to delete all posframes."
 
       ;; Remove tab-bar always.
       (set-frame-parameter posframe 'tab-bar-lines 0)
+      (when (version< "27.0" emacs-version)
+        (setq-local tab-line-format nil))
 
       ;; Move mouse to (0 . 0)
       (posframe--mouse-banish parent-frame posframe)

@@ -54,7 +54,7 @@
 
   (defun prettier--readme-link (anchor)
     "Return the URL of the Readme section identified by ANCHOR."
-    (concat "https://github.com/jscheid/prettier.el/README#"
+    (concat "https://github.com/jscheid/prettier.el#"
             anchor)))
 
 
@@ -493,6 +493,9 @@ For debugging only.")
 
 For debugging and performance tuning only.")
 
+(defvar prettier-timeout-seconds 20
+  "Number of seconds before aborting and restarting Prettier.")
+
 (defvar prettier-processes (make-hash-table :test 'equal)
   "Keep track of running node processes, keyed by `node-command'.
 It's the name or path of the node executable `prettier--find-node'
@@ -568,7 +571,39 @@ With prefix, ask for the parser to use"
   (maphash (lambda (_key process)
              (quit-process process))
            prettier-processes)
-  (clrhash prettier-processes))
+  (setq prettier-nvm-node-command-cache nil))
+
+(defun prettier-restart ()
+  "Restart Prettier in all buffers.
+
+This will cause all caches to be cleared and the latest version
+of the sidecar JavaScript file to be used.  It is executed every
+time this package is loaded which is intended to ensure you're
+running the latest when the package is upgraded.
+
+You should run this function whenever any relevant configuration
+changes, such as when you install a new version of Node,
+Prettier, or any plugins; when you install or uninstall Prettier
+as a local npm package in a directory from which you already have
+files open in Emacs; or when you change Prettier settings that
+might affect any open files."
+  (interactive)
+  (prettier--quit-all-processes)
+  (let* (wait-timer
+         (callback
+          (lambda ()
+            (when (zerop (hash-table-count prettier-processes))
+              (cancel-timer wait-timer)
+              (unless (eq prettier-pre-warm 'none)
+                (mapc (lambda (buf)
+                        (with-current-buffer buf
+                          (when (and (boundp 'prettier-mode)
+                                     prettier-mode)
+                            (prettier--get-process
+                             (eq prettier-pre-warm 'full)))))
+                      (buffer-list)))
+              (message "Prettier restart complete.")))))
+    (setq wait-timer (run-with-timer 0.1 0.1 callback))))
 
 (defun prettier--buffer-remote-p (&optional identification connected)
   "Return `file-remote-p' result for the current buffer.
@@ -683,8 +718,7 @@ should be used when filing bug reports."
  'global-prettier-mode-hook
  (lambda ()
    (unless global-prettier-mode
-     (prettier--quit-all-processes)
-     (setq prettier-nvm-node-command-cache nil))))
+     (prettier--quit-all-processes))))
 
 
 ;;;; Support
@@ -1022,8 +1056,7 @@ close to post-formatting as possible."
                                      &optional fire-and-forget-p)
   "Send REQUEST to PRETTIER-PROCESS, yield commands."
   (condition-case err
-      (let* ((p (point-min))
-             (buf (process-buffer prettier-process)))
+      (let (p (buf (process-buffer prettier-process)))
         (process-send-string prettier-process
                              (apply #'concat request))
         (unless fire-and-forget-p
@@ -1034,35 +1067,44 @@ close to post-formatting as possible."
                     (while
                         (null
                          (save-excursion
-                           (goto-char p)
-                           (when
-                               (looking-at
-                                "\\([CDEIMOPTVZ]\\)\\([[:xdigit:]]+\\)\n")
-                             (let* ((m (match-end 0))
-                                    (kind (string-to-char
-                                           (match-string 1)))
-                                    (len (string-to-number
-                                          (match-string 2)
-                                          16)))
-                               (cond
-                                ((eq kind ?Z)
-                                 (setq p m)
-                                 (throw 'end-of-message nil))
-                                ((member kind '(?I ?O ?E ?V ?P))
-                                 (when (<= (+ m len) (point-max))
-                                   (iter-yield
-                                    (cons kind (list m (+ m len))))
-                                   (setq p (+ m len 1))))
-                                (t (setq p m)
-                                   (iter-yield (cons kind len))
-                                   t))))))
-                      (tramp-accept-process-output prettier-process
-                                                   10)
+                           (goto-char (or p (point-min)))
+                           (and
+                            (or p (setq p (re-search-forward
+                                           "#prettier\.el-sync#\n" nil t)))
+                            (looking-at
+                             "\\([DEIMOPTVZ]\\)\\([[:xdigit:]]+\\)\n")
+                            (let* ((m (match-end 0))
+                                   (kind (string-to-char
+                                          (match-string 1)))
+                                   (len (string-to-number
+                                         (match-string 2)
+                                         16)))
+                              (cond
+                               ((eq kind ?Z)
+                                (setq p m)
+                                (throw 'end-of-message nil))
+                               ((member kind '(?I ?O ?E ?V ?P))
+                                (when (<= (+ m len) (point-max))
+                                  (iter-yield
+                                   (cons kind (list m (+ m len))))
+                                  (setq p (+ m len 1))))
+                               (t (setq p m)
+                                  (iter-yield (cons kind len))
+                                  t))))))
+                      (let ((len (point-max)))
+                        (and
+                         (null (tramp-accept-process-output
+                                prettier-process
+                                prettier-timeout-seconds))
+                         (eq len (point-max))
+                         (error  "Prettier timed out after %s seconds"
+                                 prettier-timeout-seconds)))
                       (when (eq (process-status prettier-process)
                                 'exit)
                         (error "Node sub-process died"))))))
-            (with-current-buffer buf
-              (delete-region 1 p)))))
+            (when p
+              (with-current-buffer buf
+                (delete-region 1 p))))))
     ((quit error)
      ;; FIXME: need more efficient recovery from quit
      (quit-process prettier-process)
@@ -1145,13 +1187,11 @@ TIMESTAMPS is additional information received from the server."
        (* (- total prettier) 1000)))))
 
 (defun prettier--format-iter (parsers
-                              relative-point
                               filename
                               tempfile)
   "Launch format operation remotely and return iterator.
 
-PARSERS are the enabled parsers, RELATIVE-POINT the location of
-point relative to the start of region.  FILENAME is the original
+PARSERS are the enabled parsers, FILENAME is the original
 filename and TEMPFILE is where the buffer contents before
 formatting are stored."
   (prettier--request-iter
@@ -1166,7 +1206,6 @@ formatting are stored."
               (mapcar #'symbol-name parsers)
               ",")
            "-")
-    "\n" (format "%X" (or relative-point 1))
     "\n" (prettier--pick-localname tempfile)
     "\n\n")))
 
@@ -1193,11 +1232,7 @@ formatting."
          (process-buf (process-buffer (prettier--get-process)))
          (start-point (copy-marker (or start (point-min)) nil))
          (end-point (copy-marker (or end (point-max)) t))
-         (point-before (point))
-         (point-end-p (eq point-before (point-max)))
-         (relative-point (and (>= point-before start-point)
-                              (<= point-before end-point)
-                              (- point-before start-point)))
+         (point-before (copy-marker (point)))
          (filename (prettier--local-file-name))
          (tempfile (make-nearby-temp-file "prettier-emacs."))
          result-point
@@ -1205,7 +1240,6 @@ formatting."
          timestamps
          (buffer-undo-list-backup buffer-undo-list)
          (iter (prettier--format-iter parsers
-                                      relative-point
                                       filename
                                       tempfile)))
     (unwind-protect
@@ -1252,13 +1286,7 @@ formatting."
                               (funcall command-str))))
 
                      ((eq kind ?V)
-                      (setq prettier-version (funcall command-str)))
-
-                     ((eq kind ?C)
-                      (when relative-point
-                        (setq result-point (if point-end-p
-                                               (point-max)
-                                             (cdr command)))))))))
+                      (setq prettier-version (funcall command-str)))))))
             ((quit error)
              (ignore-errors
                (setq any-errors t)
@@ -1392,10 +1420,17 @@ parsers configured for it and it is a derived mode."
 (add-to-list 'compilation-error-regexp-alist 'prettier)
 
 
+;;;; Ensure we're running latest JavaScript sub-process
+
+;; (On initial load, `prettier-restart' is a no-op.)
+(when load-in-progress
+  (prettier-restart))
+
+
 ;;;; Footer
 
 (provide 'prettier)
 
-;; LocalWords: editorconfig minibuffer minified nvm parsers stdin
+;; LocalWords: editorconfig minibuffer minified nvm parsers stdin npm
 
 ;;; prettier.el ends here

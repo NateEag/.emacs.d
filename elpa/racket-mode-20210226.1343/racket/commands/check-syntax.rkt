@@ -176,9 +176,7 @@
          (hash-update! ht-tails
                        (add1 head)
                        (λ (v) (set-add v (add1 tail)))
-                       (set))
-         (send this syncheck:add-mouse-over-status "" head (add1 head) "⟦tail⟧")
-         (send this syncheck:add-mouse-over-status "" tail (add1 tail) "tail")]
+                       (set))]
         [[_ _ _]
          (log-racket-mode-warning
           "Ignoring syncheck:add-tail-arrow because sources differ"
@@ -228,36 +226,35 @@
           [(cons key more) (trie-set! (hash-ref! ht key (make-hash)) more)]))
       (set-add! local-completion-candidates (~a symbol)))
 
-    (define/override (syncheck:add-jump-to-definition text beg end id-sym path submods)
+    (define/override (syncheck:add-jump-to-definition _n/a beg end id-sym path submods)
       ;; - drracket/check-syntax only reports the file, not the
-      ;;   position within. We can find that using our
-      ;;   def-in-file.
+      ;;   position within. We can find that using our def-in-file.
       ;;
-      ;; - drracket/check-syntax uses identifier-binding which
-      ;;   isn't smart about contracting and/or renaming
-      ;;   provides. As a result, the value of the id here can
-      ;;   be wrong. e.g. For "make-traversal" it will report
-      ;;   "provide/contract-id-make-traversal.1". It's good to
-      ;;   try both ids with def-in-file.
+      ;; - drracket/check-syntax uses identifier-binding which can't
+      ;;   follow some contracting and renaming provides. As a result,
+      ;;   the value of the id here can be wrong. For example it will
+      ;;   report "provide/contract-id-make-traversal.1" for
+      ;;   "make-traversal". When the reported id differs from that in
+      ;;   the source text, we report both to try with def-in-file.
       ;;
-      ;; However, calling def-in-file here/now for all jumps
-      ;; would be quite slow. Futhermore, a user might not
-      ;; actually use the jumps -- maybe not any, probably not
-      ;; most, certainly not all.
+      ;; However, calling def-in-file here/now for all jumps would be
+      ;; quite slow. Futhermore, a user might not actually use the
+      ;; jumps -- maybe not any, probably not most, certainly not all.
       ;;
       ;; Sound like a job for a thunk, e.g. racket/promise
-      ;; delay/force? We can't marshal a promise between Racket
-      ;; back end and Emacs front end. We can do the moral
-      ;; equivalent: Simply return the info that the front end
-      ;; should give to the "def/drr" command if/as/when needed.
+      ;; delay/force? We can't marshal a promise between Racket back
+      ;; end and Emacs front end. We can do the moral equivalent:
+      ;; Simply return the info that the front end should give to the
+      ;; "def/drr" command if/as/when needed.
       (when (and (valid-beg/end? beg end) (file-exists? path))
+        (define src-str (substring code-str beg end))
         (define drracket-id-str (symbol->string id-sym))
         (interval-map-set! im-jumps beg end
                            (list (path->string path)
                                  submods
-                                 (if (equal? drracket-id-str text)
+                                 (if (equal? drracket-id-str src-str)
                                      (list drracket-id-str)
-                                     (list drracket-id-str text))))))
+                                     (list drracket-id-str src-str))))))
 
     (define/override (syncheck:add-docs-menu _text beg end _sym _label path _anchor anchor-text)
       (when (valid-beg/end? beg end)

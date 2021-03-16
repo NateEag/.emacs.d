@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.2
-;; Package-Version: 20201214.2330
-;; Package-Commit: 9a3e893751791b17db85d691444e50e346cb2bd3
+;; Version: 0.8.3
+;; Package-Version: 20210121.235
+;; Package-Commit: d6eef8051003a9a0966e4524232648d110199c74
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -37,6 +37,9 @@
 
 ;;; Change Log:
 
+;; 2020-01-20 - v0.8.3
+;; * Add support for Savannah
+;;
 ;; 2020-12-14 - v0.8.2
 ;; * Fix sourcehut URL, don't link to raw version (Issue #77)
 ;; * Fix sourcehut multi-line URLs
@@ -198,6 +201,7 @@ See its docs."
     ("bitbucket" git-link-bitbucket)
     ("gitorious" git-link-gitorious)
     ("gitlab" git-link-gitlab)
+    ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-savannah)
     ("visualstudio\\|azure" git-link-azure)
     ("sourcegraph" git-link-sourcegraph))
   "Alist of host names and functions creating file links for those.
@@ -216,6 +220,7 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
     ("bitbucket" git-link-commit-bitbucket)
     ("gitorious" git-link-commit-gitorious)
     ("gitlab" git-link-commit-github)
+    ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-commit-savannah)
     ("visualstudio\\|azure" git-link-commit-azure)
     ("sourcegraph" git-link-commit-sourcegraph))
   "Alist of host names and functions creating commit links for those.
@@ -544,6 +549,22 @@ return (FILENAME . REVISION) otherwise nil."
 	  dirname
 	  commit))
 
+(defun git-link-savannah (hostname dirname filename branch commit start _end)
+  (format "https://%s/cgit/%s.git/tree/%s?h=%s"
+	  hostname
+	  dirname
+          filename
+          (concat
+           (or branch commit)
+           (when start
+             (concat "#" (format "n%s" start))))))
+
+(defun git-link-commit-savannah (hostname dirname commit)
+  (format "http://%s/cgit/%s.git/commit/?id=%s"
+	  hostname
+	  dirname
+	  commit))
+
 (defun git-link-sourcegraph (hostname dirname filename branch commit start end)
   (let ((line-or-range (cond ((and start end) (format "#L%s-%s" start end))
                              (start (format "#L%s" start))
@@ -669,10 +690,16 @@ is non-nil also call `browse-url'."
 
   (interactive (list (git-link--select-remote)))
   (let* ((remote-url (git-link--remote-url remote))
-         (remote-info (when remote-url (git-link--parse-remote remote-url))))
+         (remote-info (when remote-url (git-link--parse-remote remote-url)))
+         (base (car remote-info)))
+
+    ;; For Savannah
+    (when (string-match "gnu\\.org\\'" base)
+      (setq base (concat base  "/cgit")))
+
     (if remote-info
 	;;TODO: shouldn't assume https, need service specific handler like others
-	(git-link--new (format "https://%s/%s" (car remote-info) (cadr remote-info)))
+	(git-link--new (format "https://%s/%s" base (cadr remote-info)))
       (error  "Remote `%s' is unknown or contains an unsupported URL" remote))))
 
 (provide 'git-link)

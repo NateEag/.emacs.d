@@ -19,6 +19,12 @@ ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'symex-initialize "symex" "\
+Initialize symex mode.
+
+This registers symex mode for use in all recognized Lisp modes, and also
+advises functions to enable or disable features based on user configuration." nil nil)
+
 (autoload 'symex-mode-interface "symex" "\
 The main entry point for editing symbolic expressions using symex mode.
 

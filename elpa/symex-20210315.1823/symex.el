@@ -2,8 +2,8 @@
 
 ;; Author: Siddhartha Kasivajhula <sid@countvajhula.com>
 ;; URL: https://github.com/countvajhula/symex.el
-;; Version: 0.8.1
-;; Package-Requires: ((emacs "24.4") (lispy "0.26.0") (paredit "24") (evil-cleverparens "20170718.413") (dash-functional "2.15.0") (evil "1.2.14") (smartparens "1.11.0") (evil-surround "1.0.4") (hydra "0.15.0") (seq "2.22") (undo-tree "0.7.5"))
+;; Version: 0.9
+;; Package-Requires: ((emacs "24.4") (lispy "0.26.0") (paredit "24") (evil-cleverparens "20170718.413") (dash "2.18.0") (evil "1.2.14") (smartparens "1.11.0") (evil-surround "1.0.4") (hydra "0.15.0") (seq "2.22") (undo-tree "0.7.5"))
 ;; Keywords: lisp, evil
 
 ;; This program is "part of the world," in the sense described at
@@ -48,7 +48,7 @@
 (require 'paredit)
 (require 'evil-cleverparens)  ;; really only need cp-textobjects here
 (require 'cl-lib)
-(require 'dash-functional)
+(require 'dash)
 (require 'hydra)
 
 (require 'symex-data)
@@ -82,8 +82,8 @@
   :type 'boolean
   :group 'symex)
 
-(defcustom symex-smooth-scroll-p nil
-  "Whether refocusing should happen smoothly or abruptly."
+(defcustom symex-remember-branch-positions-p t
+  "Whether movement in the vertical direction should remember branch positions."
   :type 'boolean
   :group 'symex)
 
@@ -174,6 +174,8 @@ right symex when we enter Symex mode."
       (evil-symex-state)))
   (symex--ensure-minor-mode)
   (symex--adjust-point)
+  (when symex-remember-branch-positions-p
+    (symex--clear-branch-memory))
   (symex-select-nearest)
   (when symex-refocus-p
     ;; smooth scrolling currently not supported
@@ -249,6 +251,12 @@ to enter, and any of the standard exits to exit."
   ("B" symex-traverse-backward-skip "skip backward")
   ("C-h" symex-leap-backward "leap backward")
   ("C-l" symex-leap-forward "leap forward")
+  ("C-M-h" (lambda ()
+             (interactive)
+             (symex-leap-backward t)) "soar backward")
+  ("C-M-l" (lambda ()
+             (interactive)
+             (symex-leap-forward t)) "soar forward")
   ("C-k" symex-climb-branch "climb branch")
   ("C-j" symex-descend-branch "descend branch")
   ("y" symex-yank "yank (copy)")
@@ -279,7 +287,7 @@ to enter, and any of the standard exits to exit."
   ("T" symex-evaluate-thunk "evaluate as 'thunk'")
   (":" eval-expression "eval expression")
   ("t" symex-switch-to-scratch-buffer "scratch buffer" :exit t)
-  ("G" symex-switch-to-messages-buffer "messages buffer" :exit t)
+  ("M" symex-switch-to-messages-buffer "messages buffer")
   ("r" symex-repl "go to REPL" :exit t)
   ("R" symex-run "run buffer")
   ("X" symex-run "run buffer")
@@ -313,7 +321,8 @@ to enter, and any of the standard exits to exit."
   ("i" symex-insert-at-beginning "insert inside symex" :exit t)
   ("I" symex-insert-before "insert before symex" :exit t)
   ("w" symex-wrap "wrap with symex" :exit t)
-  ("g" evil-jump-to-tag "Go to definition")
+  ("g" evil-jump-to-tag "go to definition")
+  ("G" evil-jump-backward "return to previous location")
   (";" symex-comment "comment out")
   ("C-;" symex-eval-print "eval + print")
   ;; canonical action
@@ -333,6 +342,43 @@ to enter, and any of the standard exits to exit."
   ("<escape>" symex-escape-higher "escape higher" :exit t)
   ("C-g" symex-escape-higher "escape higher" :exit t))
 
+;;;###autoload
+(defun symex-initialize ()
+  "Initialize symex mode.
+
+This registers symex mode for use in all recognized Lisp modes, and also
+advises functions to enable or disable features based on user configuration."
+  ;; enable the symex minor mode in all recognized lisp modes
+  (dolist (mode-name symex-lisp-modes)
+    (let ((mode-hook (intern (concat (symbol-name mode-name)
+                                     "-hook"))))
+      (add-hook mode-hook 'symex-mode)))
+  ;; advise functions to enable or disable configured features
+  (when symex-remember-branch-positions-p
+    (advice-add #'symex-go-down :around #'symex--remember-branch-position)
+    (advice-add #'symex-go-up :around #'symex--return-to-branch-position)
+    (advice-add #'symex-go-backward :around #'symex--forget-branch-positions)
+    (advice-add #'symex-go-forward :around #'symex--forget-branch-positions)))
+
+(defun symex-disable ()
+  "Disable symex.
+
+This unregisters the symex minor mode from all lisp-related hooks, and
+removes any advice corresponding to configured features.
+
+If you are changing symex customizations to enable or disable certain
+features, you may need to call this function after making such changes
+and prior to calling `symex-initialize` again, in order for the former
+configuration to be disabled and the new one adopted."
+  (dolist (mode-name symex-lisp-modes)
+    (let ((mode-hook (intern (concat (symbol-name mode-name)
+                                     "-hook"))))
+      (remove-hook mode-hook 'symex-mode)))
+  ;; remove all advice
+  (advice-remove #'symex-go-down #'symex--remember-branch-position)
+  (advice-remove #'symex-go-up #'symex--return-to-branch-position)
+  (advice-remove #'symex-go-backward #'symex--forget-branch-positions)
+  (advice-remove #'symex-go-forward #'symex--forget-branch-positions))
 
 ;;;###autoload
 (defun symex-mode-interface ()

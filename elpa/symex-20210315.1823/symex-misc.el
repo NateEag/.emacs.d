@@ -43,9 +43,11 @@
 ;; explicitly indicating them here to avoid byte compile warnings
 (defvar symex-refocus-p)
 (defvar symex-highlight-p)
-(defvar symex-smooth-scroll-p)
 (defvar symex-racket-modes)
 (defvar symex-elisp-modes)
+
+;; buffer-local branch memory stack
+(defvar-local symex--branch-memory nil)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;;; MISCELLANEOUS ;;;
@@ -232,10 +234,43 @@ executing it."
          (symex-run-common-lisp))
         (t (error "Symex mode: Lisp flavor not recognized!"))))
 
+(cl-defun symex--new-scratch-buffer (buffer-name)
+  "Create a new empty buffer.
+
+The buffer will be named BUFFER-NAME and will be created in the
+currently active (at the time of command execution) major mode.
+As a \"scratch\" buffer, its contents will be treated as
+disposable, and it will not prompt to save if it is closed or
+if Emacs is exited.
+
+Modified from:
+URL `http://ergoemacs.org/emacs/emacs_new_empty_buffer.html'
+Version 2017-11-01"
+  (interactive)
+  (let (($buf (generate-new-buffer buffer-name))
+        (major-mode-to-use major-mode))
+    (with-current-buffer $buf
+      (funcall major-mode-to-use)
+      (setq buffer-offer-save nil))
+    $buf))
+
 (defun symex-switch-to-scratch-buffer ()
   "Switch to scratch buffer."
   (interactive)
-  (switch-to-buffer-other-window "*scratch*"))  ; TODO: create in lisp interaction mode if missing
+  (let* ((buffer-name (cond ((member major-mode symex-racket-modes)
+                             "*scratch - Racket*")
+                            ((member major-mode symex-elisp-modes)
+                             "*scratch*")
+                            ((equal major-mode 'scheme-mode)
+                             "*scratch - Scheme*")
+                            ((equal major-mode 'clojure-mode)
+                             "*scratch - Clojure*")
+                            ((equal major-mode 'lisp-mode)
+                             "*scratch - Common Lisp*")
+                            (t (error "Symex mode: Lisp flavor not recognized!"))))
+         (buf (get-buffer buffer-name)))
+    (let ((buf (or buf (symex--new-scratch-buffer buffer-name))))
+      (switch-to-buffer-other-window buf))))
 
 (defun symex-switch-to-messages-buffer ()
   "Switch to messages buffer while retaining focus in original window."
@@ -252,16 +287,19 @@ executing it."
               (save-excursion (forward-char) (lispy-right-p)))  ; |)
          (forward-char)
          (lispy-different))
-        ((looking-at-p "[[:space:]\n]")  ; <> |<> or <> |$
+        ((symex-comment-line-p)
+         (symex-if-stuck (symex--go-backward)
+                         (symex--go-forward)))
+        ((looking-at-p "[[:space:]\n]")  ; <>| <> or <> |$
          (condition-case nil
              (progn (re-search-forward "[^[:space:]\n]")
                     (backward-char))
-           (error (symex-if-stuck (symex-go-backward)
-                                  (symex-go-forward)))))
+           (error (symex-if-stuck (symex--go-backward)
+                                  (symex--go-forward)))))
         ((thing-at-point 'sexp)  ; som|ething
          (beginning-of-thing 'sexp))
-        (t (symex-if-stuck (symex-go-backward)
-                           (symex-go-forward))))
+        (t (symex-if-stuck (symex--go-backward)
+                           (symex--go-forward))))
   (point))
 
 (defun symex-index ()  ; TODO: may be better framed as a computation
@@ -273,91 +311,143 @@ executing it."
       (let ((current-location (symex-goto-first))
             (result 0))
         (while (< current-location original-location)
-          (symex-go-forward)
+          (symex--execute-tree-move (symex-make-move 1 0))
           (setq current-location (point))
           (setq result (1+ result)))
         result))))
 
-(defun symex-depth ()  ; TODO: may be better framed as a computation
-  "Get depth (from root) of current symex."
+(defun symex-height ()  ; TODO: may be better framed as a computation
+  "Get height (above root) of current symex."
   (interactive)
   (save-excursion
     (symex-select-nearest)
     (let ((moves (symex-execute-traversal symex--traversal-goto-lowest)))
       (length moves))))
 
-(defun symex-leap-backward ()
-  "Leap backward to a neighboring branch, preserving the depth and position.
+(defun symex-depth ()
+  "DEPRECATED.  Renamed to `symex-height`.
+
+This interface will be removed in a future version."
+  (symex-height))
+
+(defun symex-leap-backward (&optional soar)
+  "Leap backward to a neighboring branch, preserving height and position.
+
+If SOAR is true, leap between trees too, otherwise, stay in the
+current tree.
 
 Note: This isn't the most efficient at the moment since it determines
-the depth at every step of the traversal which itself is logarithmic
+the height at every step of the traversal which itself is logarithmic
 in the size of the tree, making the cost O(nlog(n)).
 
 There are at least two possible ways in which we could implement this
 'leap' feature: first, as a \"local\" traversal from the starting
-position, keeping track of changes to the depth while traversing and
+position, keeping track of changes to the height while traversing and
 stopping when a suitable destination point is reached.  This would be
-efficient since we would only need to determine the depth once, at the
+efficient since we would only need to determine the height once, at the
 start, making it O(n).  However, this approach would require some
 notion of 'memory' to be built into the DSL semantics, which at
 present it lacks (representing a theoretical limitation on the types
 of traversals expressible in the DSL in its present form).
 
 A second way to do it is in \"global\" terms -- rather than keeping
-track of changing depth in the course of the traversal, instead,
+track of changing height in the course of the traversal, instead,
 determine always from a common reference point (the root) the current
-depth. This allows us to circumvent the need for 'memory' since this
+height. This allows us to circumvent the need for 'memory' since this
 information could be computed afresh at each step.  This latter
 approach is the one employed here."
   (interactive)
-  (let ((depth (symex-depth))
+  (let ((traverse (if soar
+                      symex--traversal-postorder
+                    symex--traversal-postorder-in-tree))
+        (height (symex-height))
         (index (symex-index)))
-    (let ((find-neighboring-branch
-           (symex-traversal
-            (circuit (precaution symex--traversal-postorder
-                                 (afterwards (not (lambda ()
-                                                    (= (symex-depth)
-                                                       depth)))))))))
+    (let* ((find-neighboring-branch
+            (symex-traversal
+             (circuit (precaution traverse
+                                  (afterwards (not (lambda ()
+                                                     (= (symex-height)
+                                                        height))))))))
+           (run-along-neighboring-branch
+            (symex-traversal
+             (maneuver (decision (at first)
+                                 find-neighboring-branch
+                                 (maneuver symex--traversal-goto-first
+                                           find-neighboring-branch))
+                       traverse
+                       symex--traversal-goto-first
+                       (circuit (precaution (move forward)
+                                            (beforehand (lambda ()
+                                                          (< (symex-index)
+                                                             index)))))))))
       (symex-execute-traversal
        (symex-traversal
-        (precaution (maneuver (decision (at first)
-                                        find-neighboring-branch
-                                        (maneuver symex--traversal-goto-first
-                                                  find-neighboring-branch))
-                              symex--traversal-postorder
-                              symex--traversal-goto-first
-                              (circuit (precaution (move forward)
-                                                   (beforehand (lambda ()
-                                                                 (< (symex-index)
-                                                                    index))))))
-                    (beforehand (not (at root)))))))))
+        (precaution (maneuver run-along-neighboring-branch
+                              (circuit
+                               (precaution (decision (lambda ()
+                                                       (< (symex-index)
+                                                          index))
+                                                     run-along-neighboring-branch
+                                                     symex--move-zero)
+                                           (beforehand (lambda ()
+                                                         (< (symex-index)
+                                                            index))))))
+                    (beforehand (not (at root)))
+                    (afterwards (lambda ()
+                                  (and (= (symex-index)
+                                          index)
+                                       (= (symex-height)
+                                          height))))))))))
 
-(defun symex-leap-forward ()
-  "Leap forward to a neighboring branch, preserving the depth and position.
+(defun symex-leap-forward (&optional soar)
+  "Leap forward to a neighboring branch, preserving height and position.
+
+If SOAR is true, leap between trees too, otherwise, stay in the
+current tree.
 
 See the documentation on `symex-leap-backward` for details regarding
 the implementation."
   (interactive)
-  (let ((depth (symex-depth))
+  (let ((traverse (if soar
+                      symex--traversal-preorder
+                    symex--traversal-preorder-in-tree))
+        (height (symex-height))
         (index (symex-index)))
-    (let ((find-neighboring-branch
-           (symex-traversal
-            (circuit (precaution symex--traversal-preorder
-                                 (afterwards (not (lambda ()
-                                                    (= (symex-depth)
-                                                       depth)))))))))
+    (let* ((find-neighboring-branch
+            (symex-traversal
+             (circuit (precaution traverse
+                                  (afterwards (not (lambda ()
+                                                     (= (symex-height)
+                                                        height))))))))
+           (run-along-neighboring-branch
+            (symex-traversal
+             (maneuver (decision (at last)
+                                 find-neighboring-branch
+                                 (maneuver symex--traversal-goto-last
+                                           find-neighboring-branch))
+                       traverse
+                       (circuit (precaution (move forward)
+                                            (beforehand (lambda ()
+                                                          (< (symex-index)
+                                                             index)))))))))
       (symex-execute-traversal
        (symex-traversal
-        (precaution (maneuver (decision (at last)
-                                        find-neighboring-branch
-                                        (maneuver symex--traversal-goto-last
-                                                  find-neighboring-branch))
-                              symex--traversal-preorder
-                              (circuit (precaution (move forward)
-                                                   (beforehand (lambda ()
-                                                                 (< (symex-index)
-                                                                    index))))))
-                    (beforehand (not (at root)))))))))
+        (precaution (maneuver run-along-neighboring-branch
+                              (circuit
+                               (precaution (decision (lambda ()
+                                                       (< (symex-index)
+                                                          index))
+                                                     run-along-neighboring-branch
+                                                     symex--move-zero)
+                                           (beforehand (lambda ()
+                                                         (< (symex-index)
+                                                            index))))))
+                    (beforehand (not (at root)))
+                    (afterwards (lambda ()
+                                  (and (= (symex-index)
+                                          index)
+                                       (= (symex-height)
+                                          height))))))))))
 
 (defun symex--selection-side-effects ()
   "Things to do as part of symex selection, e.g. after navigations."
@@ -388,6 +478,59 @@ is expected to handle in Emacs)."
 (advice-add #'symex-traverse-backward :around #'symex-selection-advice)
 (advice-add #'symex-select-nearest :around #'symex-selection-advice)
 
+(defun symex--remember-branch-position (orig-fn &rest args)
+  "Remember branch position when descending the tree.
+
+This pushes the current position onto a stack, which is popped
+while ascending.
+
+ORIG-FN applied to ARGS is the invocation being advised."
+  (let ((position (symex-index)))
+    (let ((result (apply orig-fn args)))
+      (when result
+        (push position symex--branch-memory))
+      result)))
+
+(defun symex--return-to-branch-position (orig-fn &rest args)
+  "Return to recalled position on the branch.
+
+ORIG-FN applied to ARGS is the invocation being advised."
+  (let ((result (apply orig-fn args)))
+    (when result
+      (let ((position (pop symex--branch-memory)))
+        (when position
+          (symex--execute-tree-move (symex-make-move position 0)))))
+    result))
+
+(defun symex--clear-branch-memory ()
+  "Clear the branch memory stack.
+
+Technically, branch memory is tree-specific, and stored branch
+positions are no longer relevant on a different tree than the one on
+which they were recorded.  To be conservative and err on the side of
+determinism here, we clear branch memory upon entering symex mode,
+since may enter at arbitrary points in the code, i.e. on arbitrary
+trees.
+
+TODO: Yet, hypothetically if there were two identical trees next to
+one another, then the positions from one would naturally carry over to
+the other and in some sense this would be the most intuitive.  Thus,
+an alternative could be to retain branch memory across trees so that
+we attempt to climb each tree as if it were the last tree
+climbed, which may in practice end up being more intuitive than
+assuming no knowledge of the tree at all.
+
+This may be worth exploring as a defcustom."
+  (setq symex--branch-memory nil))
+
+(defun symex--forget-branch-positions (orig-fn &rest args)
+  "Forget any stored branch positions when moving to a different tree.
+
+ORIG-FN applied to ARGS is the invocation being advised."
+  (let ((result (apply orig-fn args)))
+    (when result
+      (setq symex--branch-memory nil))
+    result))
 
 (provide 'symex-misc)
 ;;; symex-misc.el ends here

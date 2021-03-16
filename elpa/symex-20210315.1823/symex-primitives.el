@@ -88,8 +88,13 @@
 
 (defun symex-comment-line-p ()
   "Check if we're currently at the start of a comment line."
-  (and (lispy-bolp)
-       (looking-at-p ";")))
+  (save-excursion
+    (back-to-indentation)
+    (looking-at-p ";")))
+
+(defun symex-string-p ()
+  "Check if the symex is a string."
+  (looking-at-p "\""))
 
 (defun symex-empty-list-p ()
   "Check if we're looking at an empty list."
@@ -97,6 +102,14 @@
     (and (lispy-left-p)
          (progn (forward-char 2) ;; need to go forward by 2 for some reason
                 (lispy-right-p)))))
+
+(defun symex-atom-p ()
+  "Check if the symex is an atom."
+  (not (lispy-left-p)))
+
+(defun symex-form-p ()
+  "Check if the symex is a composite expression, i.e. a nonatom."
+  (not (symex-atom-p)))
 
 (defun symex--forward-one ()
   "Forward one symex."

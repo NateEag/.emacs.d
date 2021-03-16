@@ -1,10 +1,10 @@
 ;;; ivy.el --- Incremental Vertical completYon -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2020  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2021 Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Version: 0.13.0
+;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5"))
 ;; Keywords: matching
 
@@ -3286,10 +3286,16 @@ The function was added in Emacs 26.1.")
           "~"
         home)))))
 
+(defvar ivy--minibuffer-metadata nil)
+
 (defun ivy-update-candidates (cands)
-  (ivy--insert-minibuffer
-   (ivy--format
-    (setq ivy--all-candidates cands))))
+  (let ((ivy--minibuffer-metadata
+         (unless (ivy-state-dynamic-collection ivy-last)
+           (completion-metadata "" minibuffer-completion-table
+                                minibuffer-completion-predicate))))
+    (ivy--insert-minibuffer
+     (ivy--format
+      (setq ivy--all-candidates cands)))))
 
 (defun ivy--exhibit ()
   "Insert Ivy completions display.
@@ -4032,7 +4038,8 @@ in this case."
                     (funcall ivy--highlight-function str))
                 str))
          (olen (length str))
-         (annot (plist-get completion-extra-properties :annotation-function)))
+         (annot (or (completion-metadata-get ivy--minibuffer-metadata 'annotation-function)
+                    (plist-get completion-extra-properties :annotation-function))))
     (add-text-properties
      0 olen
      '(mouse-face
@@ -4425,7 +4432,8 @@ BUFFER may be a string or nil."
 (defun ivy--kill-current-candidate-buffer ()
   (setf (ivy-state-preselect ivy-last) ivy--index)
   (setq ivy--old-re nil)
-  (setq ivy--all-candidates (ivy--buffer-list "" ivy-use-virtual-buffers nil))
+  (setq ivy--all-candidates (ivy--buffer-list "" ivy-use-virtual-buffers
+                                              (ivy-state-predicate ivy-last)))
   (let ((ivy--recompute-index-inhibit t))
     (ivy--exhibit)))
 

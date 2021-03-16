@@ -1,6 +1,6 @@
 This is ivy.info, produced by makeinfo version 6.5 from ivy.texi.
 
-Ivy manual, version 0.13.0
+Ivy manual, version 0.13.4
 
    Ivy is an interactive interface for completion in Emacs.  Emacs uses
 completion mechanism in a variety of contexts: code, menus, commands,
@@ -11,7 +11,7 @@ available choices while previewing in the minibuffer.  Selecting the
 final candidate is either through simple keyboard character inputs or
 through powerful regular expressions.
 
-   Copyright (C) 2015-2019 Free Software Foundation, Inc.
+   Copyright (C) 2015–2021 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -204,21 +204,22 @@ File: ivy.info,  Node: Installing from Emacs Package Manager,  Next: Installing 
 
 ‘M-x’ ‘package-install’ ‘RET’ ‘counsel’ ‘RET’
 
-   Ivy is installed as part of the ‘counsel’ package, which is available
+   Ivy is installed alongside the ‘counsel’ package, which is available
 from two different package archives, GNU ELPA and MELPA.  For the latest
-stable version, use the GNU ELPA archives.  For current hourly builds,
-use the MELPA archives.
+stable version, use the GNU ELPA archive.  For the latest development
+snaphshot, use the GNU-devel ELPA archive.
 
    Ivy is split into three packages: ‘ivy’, ‘swiper’ and ‘counsel’; by
 installing ‘counsel’, the other two are brought in as dependencies.  If
 you are not interested in the extra functionality provided by ‘swiper’
 and ‘counsel’, you can install only ‘ivy’.
 
-   See the code below for adding MELPA to the list of package archives:
+   See the code below for adding GNU-devel ELPA to your list of package
+archives:
 
      (require 'package)
      (add-to-list 'package-archives
-     	     '("melpa" . "https://melpa.org/packages/"))
+                  '("gnu-devel" . "https://elpa.gnu.org/devel/"))
 
    After this do ‘M-x’ ‘package-refresh-contents’ ‘RET’, followed by
 ‘M-x’ ‘package-install’ ‘RET’ ‘counsel’ ‘RET’.
@@ -234,7 +235,7 @@ File: ivy.info,  Node: Installing from the Git repository,  Prev: Installing fro
 Why install from Git?
 .....................
 
-        • No need to wait for MELPA’s hourly builds
+        • No need to wait for GNU ELPA / MELPA builds
         • Easy to revert to previous versions
         • Contribute to Ivy’s development; send patches; pull requests
 
@@ -1916,53 +1917,53 @@ File: ivy.info,  Node: Keystroke Index,  Prev: Variable Index,  Up: Top
 
 
 Tag Table:
-Node: Top1190
-Node: Introduction3101
-Node: Installation5624
-Node: Installing from Emacs Package Manager6074
-Node: Installing from the Git repository7284
-Node: Getting started8104
-Node: Basic customization8411
-Node: Key bindings9006
-Node: Global key bindings9198
-Node: Minibuffer key bindings11672
-Node: Key bindings for navigation12904
-Node: Key bindings for single selection action then exit minibuffer14111
-Node: Key bindings for multiple selections and actions keep minibuffer open16758
-Node: Key bindings that alter the minibuffer input19379
-Node: Other key bindings21324
-Node: Hydra in the minibuffer21702
-Node: Saving the current completion session to a buffer24120
-Node: Completion Styles25532
-Node: ivy--regex-plus27283
-Node: ivy--regex-ignore-order28769
-Node: ivy--regex-fuzzy29137
-Node: Customization29634
-Node: Faces29820
-Node: Defcustoms32249
-Node: Actions33608
-Node: What are actions?33934
-Node: How can different actions be called?34752
-Node: How to modify the actions list?35323
-Node: Example - add two actions to each command35983
-Node: How to undo adding the two actions36942
-Node: How to add actions to a specific command37394
-Node: Example - define a new command with several actions37810
-Node: Test the above function with ivy-occur38698
-Node: Packages39540
-Node: Commands40505
-Node: File Name Completion40690
-Node: Using TRAMP42647
-Node: Buffer Name Completion44149
-Node: Counsel commands44764
-Node: API45411
-Node: Required arguments for ivy-read46009
-Node: Optional arguments for ivy-read46528
-Node: Example - counsel-describe-function49954
-Node: Example - counsel-locate52812
-Node: Example - ivy-read-with-extra-properties56562
-Node: Variable Index57770
-Node: Keystroke Index64894
+Node: Top1192
+Node: Introduction3103
+Node: Installation5626
+Node: Installing from Emacs Package Manager6076
+Node: Installing from the Git repository7324
+Node: Getting started8144
+Node: Basic customization8451
+Node: Key bindings9046
+Node: Global key bindings9238
+Node: Minibuffer key bindings11712
+Node: Key bindings for navigation12944
+Node: Key bindings for single selection action then exit minibuffer14151
+Node: Key bindings for multiple selections and actions keep minibuffer open16798
+Node: Key bindings that alter the minibuffer input19419
+Node: Other key bindings21364
+Node: Hydra in the minibuffer21742
+Node: Saving the current completion session to a buffer24160
+Node: Completion Styles25572
+Node: ivy--regex-plus27323
+Node: ivy--regex-ignore-order28809
+Node: ivy--regex-fuzzy29177
+Node: Customization29674
+Node: Faces29860
+Node: Defcustoms32289
+Node: Actions33648
+Node: What are actions?33974
+Node: How can different actions be called?34792
+Node: How to modify the actions list?35363
+Node: Example - add two actions to each command36023
+Node: How to undo adding the two actions36982
+Node: How to add actions to a specific command37434
+Node: Example - define a new command with several actions37850
+Node: Test the above function with ivy-occur38738
+Node: Packages39580
+Node: Commands40545
+Node: File Name Completion40730
+Node: Using TRAMP42687
+Node: Buffer Name Completion44189
+Node: Counsel commands44804
+Node: API45451
+Node: Required arguments for ivy-read46049
+Node: Optional arguments for ivy-read46568
+Node: Example - counsel-describe-function49994
+Node: Example - counsel-locate52852
+Node: Example - ivy-read-with-extra-properties56602
+Node: Variable Index57810
+Node: Keystroke Index64934
 
 End Tag Table
 

@@ -5,9 +5,9 @@
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
 ;; Version: 0.2.0
-;; Package-Version: 20210210.1411
-;; Package-Commit: cc1145bde8b1868322ea799a90e38a1295089ada
-;; Package-Requires: ((emacs "24.4") (dash "2.0") (dash-functional "1.2") (edit-indirect "0.1.5"))
+;; Package-Version: 20210313.509
+;; Package-Commit: 8adfeb2edfdc19f86b42b350d2924cf56b3cdb71
+;; Package-Requires: ((emacs "24.4") (dash "2.18") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
 
@@ -304,7 +304,6 @@
 
 (require 'cl-lib)
 (require 'dash)
-(require 'dash-functional)
 (require 'edit-indirect)
 (require 'calc-misc)
 (require 'subr-x)

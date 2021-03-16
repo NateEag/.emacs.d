@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/separedit-20210210.1411/separedit.el  -*- no-byte-compile: t -*-
-(define-package "separedit" "20210210.1411" "Edit comment/string/docstring/code block in separate buffer" '((emacs "24.4") (dash "2.0") (dash-functional "1.2") (edit-indirect "0.1.5")) :commit "cc1145bde8b1868322ea799a90e38a1295089ada" :authors '(("Gong Qijian" . "gongqijian@gmail.com")) :maintainer '("Gong Qijian" . "gongqijian@gmail.com") :keywords '("tools" "languages" "docs") :url "https://github.com/twlz0ne/separedit.el")

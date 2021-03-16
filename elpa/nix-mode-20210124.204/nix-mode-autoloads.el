@@ -27,9 +27,13 @@ Completion for the nix command." nil nil)
 ;;; Generated autoloads from nix-drv-mode.el
 
 (autoload 'nix-drv-mode "nix-drv-mode" "\
-Pretty print Nix’s .drv files." t nil)
+Pretty print Nix’s .drv files.
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-drv-mode" '("nix-drv-mode")))
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\`/nix/store/.+\\.drv\\'" . nix-drv-mode))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-drv-mode" '("nix-drv-mode-dejsonify-buffer")))
 
 ;;;***
 
@@ -167,7 +171,7 @@ See `nix-prettify-mode' for more information on Nix-Prettify mode.
 
 \(fn &optional ARG)" t nil)
 
-(define-obsolete-function-alias 'global-nix-prettify-mode 'nix-prettify-global-mode)
+(define-obsolete-function-alias 'global-nix-prettify-mode 'nix-prettify-global-mode "v1.2.2")
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-prettify-mode" '("nix-prettify-")))
 

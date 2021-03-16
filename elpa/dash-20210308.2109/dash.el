@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012-2021 Free Software Foundation, Inc.
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 2.18.0
+;; Version: 2.18.1
 ;; Package-Requires: ((emacs "24"))
 ;; Keywords: extensions, lisp
 ;; Homepage: https://github.com/magnars/dash.el
@@ -685,12 +685,15 @@ Thus function FN should return a list."
 (defmacro --iterate (form init n)
   "Anaphoric version of `-iterate'."
   (declare (debug (form form form)))
-  (let ((res (make-symbol "result")))
-    `(let ((it ,init) ,res)
-       (dotimes (_ ,n)
-         (push it ,res)
-         (setq it ,form))
-       (nreverse ,res))))
+  (let ((res (make-symbol "result"))
+        (len (make-symbol "n")))
+    `(let ((,len ,n))
+       (when (> ,len 0)
+         (let* ((it ,init)
+                (,res (list it)))
+           (dotimes (_ (1- ,len))
+             (push (setq it ,form) ,res))
+           (nreverse ,res))))))
 
 (defun -iterate (fun init n)
   "Return a list of iterated applications of FUN to INIT.
@@ -724,7 +727,9 @@ See also: `-flatten-n'"
 
 See also: `-flatten'"
   (declare (pure t) (side-effect-free t))
-  (-last-item (--iterate (--mapcat (-list it) it) list (1+ num))))
+  (dotimes (_ num)
+    (setq list (apply #'append (mapcar #'-list list))))
+  list)
 
 (defun -concat (&rest lists)
   "Return a new list with the concatenation of the elements in the supplied LISTS."
@@ -1720,7 +1725,8 @@ See also: `-select-columns', `-select-by-indices'"
 in the first form, making a list of it if it is not a list
 already. If there are more forms, insert the first form as the
 second item in second form, etc."
-  (declare (debug (form &rest [&or symbolp (sexp &rest form)])))
+  (declare (debug (form &rest [&or symbolp (sexp &rest form)]))
+           (indent 1))
   (cond
    ((null form) x)
    ((null more) (if (listp form)
@@ -1733,7 +1739,8 @@ second item in second form, etc."
 in the first form, making a list of it if it is not a list
 already. If there are more forms, insert the first form as the
 last item in second form, etc."
-  (declare (debug ->))
+  (declare (debug ->)
+           (indent 1))
   (cond
    ((null form) x)
    ((null more) (if (listp form)
@@ -2992,41 +2999,48 @@ structure such as plist or alist."
 
 ;;; Combinators
 
-(defun -partial (fn &rest args)
-  "Take a function FN and fewer than the normal arguments to FN,
-and return a fn that takes a variable number of additional ARGS.
-When called, the returned function calls FN with ARGS first and
-then additional args."
-  (apply 'apply-partially fn args))
+(defalias '-partial #'apply-partially)
 
 (defun -rpartial (fn &rest args)
-  "Takes a function FN and fewer than the normal arguments to FN,
-and returns a fn that takes a variable number of additional ARGS.
-When called, the returned function calls FN with the additional
-args first and then ARGS."
+  "Return a function that is a partial application of FN to ARGS.
+ARGS is a list of the last N arguments to pass to FN.  The result
+is a new function which does the same as FN, except that the last
+N arguments are fixed at the values with which this function was
+called.  This is like `-partial', except the arguments are fixed
+starting from the right rather than the left."
+  (declare (pure t) (side-effect-free t))
   (lambda (&rest args-before) (apply fn (append args-before args))))
 
 (defun -juxt (&rest fns)
-  "Takes a list of functions and returns a fn that is the
-juxtaposition of those fns. The returned fn takes a variable
-number of args, and returns a list containing the result of
-applying each fn to the args (left-to-right)."
+  "Return a function that is the juxtaposition of FNS.
+The returned function takes a variable number of ARGS, applies
+each of FNS in turn to ARGS, and returns the list of results."
+  (declare (pure t) (side-effect-free t))
   (lambda (&rest args) (mapcar (lambda (x) (apply x args)) fns)))
 
 (defun -compose (&rest fns)
-  "Takes a list of functions and returns a fn that is the
-composition of those fns. The returned fn takes a variable
-number of arguments, and returns the result of applying
-each fn to the result of applying the previous fn to
-the arguments (right-to-left)."
-  (lambda (&rest args)
-    (car (-reduce-r-from (lambda (fn xs) (list (apply fn xs)))
-                         args fns))))
+  "Compose FNS into a single composite function.
+Return a function that takes a variable number of ARGS, applies
+the last function in FNS to ARGS, and returns the result of
+calling each remaining function on the result of the previous
+function, right-to-left.  If no FNS are given, return a variadic
+`identity' function."
+  (declare (pure t) (side-effect-free t))
+  (let* ((fns (nreverse fns))
+         (head (car fns))
+         (tail (cdr fns)))
+    (cond (tail
+           (lambda (&rest args)
+             (--reduce-from (funcall it acc) (apply head args) tail)))
+          (fns head)
+          ((lambda (&optional arg &rest _) arg)))))
 
 (defun -applify (fn)
-  "Changes an n-arity function FN to a 1-arity function that
-expects a list with n items as arguments"
-  (apply-partially 'apply fn))
+  "Return a function that applies FN to a single list of args.
+This changes the arity of FN from taking N distinct arguments to
+taking 1 argument which is a list of N arguments."
+  (declare (pure t) (side-effect-free t))
+  (lambda (args) (apply fn args)))
 
 (defun -on (operator transformer)
   "Return a function of two arguments that first applies

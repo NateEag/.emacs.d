@@ -429,10 +429,10 @@ Minor mode to provide key-bindings for web-mode-edit-element functions
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210210.1449/dash-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210308.2109/dash-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210210.1449/dash-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210308.2109/dash-autoloads.el") (car load-path))))
 
 
 
@@ -1091,10 +1091,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20210116.621/tsc-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20210315.238/tsc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20210116.621/tsc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20210315.238/tsc-autoloads.el") (car load-path))))
 
 
 
@@ -1119,10 +1119,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20200601.533/tron-legacy-theme-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210315.712/tron-legacy-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20200601.533/tron-legacy-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210315.712/tron-legacy-theme-autoloads.el") (car load-path))))
 
 
 
@@ -1140,17 +1140,6 @@ Key bindings:
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treepy" '("treepy-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/f-20191110.1357/f-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/f-20191110.1357/f-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "f" '("f-")))
 
 
 )
@@ -1611,10 +1600,10 @@ result of `defhydra'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210208.229/posframe-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210311.937/posframe-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210208.229/posframe-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210311.937/posframe-autoloads.el") (car load-path))))
 
 
 
@@ -1786,10 +1775,10 @@ Read a string using a pos-frame with given PROMPT and INITIAL-INPUT.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210201.1800/treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210304.2130/treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210201.1800/treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210304.2130/treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -1975,6 +1964,14 @@ Additionally FILE-EXTENSIONS are also not case sensitive and will be stored in a
 down-cased state.
 
 \(fn ICON &rest FILE-EXTENSIONS)" nil nil)
+
+(autoload 'treemacs-define-custom-image-icon "treemacs-icons" "\
+Same as `treemacs-define-custom-icon' but for image icons instead of strings.
+FILE is the path to an icon image (and not the actual icon string).
+FILE-EXTENSIONS are all the (not case-sensitive) file extensions the icon
+should be used for.
+
+\(fn FILE &rest FILE-EXTENSIONS)" nil nil)
 
 (autoload 'treemacs-map-icons-with-auto-mode-alist "treemacs-icons" "\
 Remaps icons for EXTENSIONS according to `auto-mode-alist'.
@@ -2198,10 +2195,10 @@ The `imenu-create-index-function' for treemacs buffers." nil nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-20210116.621/tree-sitter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-20210315.238/tree-sitter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-20210116.621/tree-sitter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-20210315.238/tree-sitter-autoloads.el") (car load-path))))
 
 
 
@@ -2371,10 +2368,10 @@ The buffer on focus when the command is called is set as the target buffer." t n
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210217.1044/tree-sitter-langs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210314.1704/tree-sitter-langs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210217.1044/tree-sitter-langs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210314.1704/tree-sitter-langs-autoloads.el") (car load-path))))
 
 
 
@@ -2455,10 +2452,10 @@ if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210213.1909/transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210315.1902/transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210213.1909/transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210315.1902/transient-autoloads.el") (car load-path))))
 
 
 
@@ -2682,10 +2679,10 @@ version.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20201228.2104/flycheck-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20210314.2015/flycheck-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-20201228.2104/flycheck-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-20210314.2015/flycheck-autoloads.el") (car load-path))))
 
 
 
@@ -2968,10 +2965,10 @@ SYMBOL with `flycheck-def-executable-var'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tide-20210211.1055/tide-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tide-20210313.1524/tide-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tide-20210211.1055/tide-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tide-20210313.1524/tide-autoloads.el") (car load-path))))
 
 
 
@@ -3134,10 +3131,10 @@ Setup auto-complete for tern-mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20210125.726/projectile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20210309.722/projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20210125.726/projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20210309.722/projectile-autoloads.el") (car load-path))))
 
 
 
@@ -4094,10 +4091,10 @@ Commands:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20210216.1611/ivy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20210311.1638/ivy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20210216.1611/ivy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20210311.1638/ivy-autoloads.el") (car load-path))))
 
 
 
@@ -4240,10 +4237,10 @@ Switch to another buffer in another window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210202.2312/swiper-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210310.1230/swiper-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210202.2312/swiper-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210310.1230/swiper-autoloads.el") (car load-path))))
 
 
 
@@ -4287,10 +4284,10 @@ Like `swiper-isearch' but the first result is before the point.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20210129.1143/counsel-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20210313.1108/counsel-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20210129.1143/counsel-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20210313.1108/counsel-autoloads.el") (car load-path))))
 
 
 
@@ -4485,9 +4482,10 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 \(fn &optional INITIAL-INPUT INITIAL-DIRECTORY)" t nil)
 
 (autoload 'counsel-ag "counsel" "\
-Grep for a string in a root directory using ag.
+Grep for a string in a root directory using `ag'.
 
-By default, the root directory is the first directory containing a .git subdirectory.
+By default, the root directory is the first directory containing
+a .git subdirectory.
 
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
@@ -4517,7 +4515,7 @@ This uses `counsel-ag' with `counsel-ack-base-command' replacing
 \(fn &optional INITIAL-INPUT)" t nil)
 
 (autoload 'counsel-rg "counsel" "\
-Grep for a string in the current directory using rg.
+Grep for a string in the current directory using `rg'.
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 EXTRA-RG-ARGS string, if non-nil, is appended to `counsel-rg-base-command'.
@@ -4950,10 +4948,10 @@ See `goto-last-change' for use of prefix argument.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-20210214.1746/evil-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-20210305.1341/evil-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-20210214.1746/evil-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-20210305.1341/evil-autoloads.el") (car load-path))))
 
 
 
@@ -5337,13 +5335,6 @@ for an advanced modal structural editing experience.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-functional-20210210.1449/dash-functional-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-functional-20210210.1449/dash-functional-autoloads.el") (car load-path))))
-
-
-)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20200603.2216/evil-surround-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -5411,10 +5402,10 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20210113.1943/symex-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20210315.1823/symex-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20210113.1943/symex-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20210315.1823/symex-autoloads.el") (car load-path))))
 
 
 
@@ -5427,6 +5418,12 @@ also enable the mode if ARG is omitted or nil, and toggle it if
 ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
+
+(autoload 'symex-initialize "symex" "\
+Initialize symex mode.
+
+This registers symex mode for use in all recognized Lisp modes, and also
+advises functions to enable or disable features based on user configuration." nil nil)
 
 (autoload 'symex-mode-interface "symex" "\
 The main entry point for editing symbolic expressions using symex mode.
@@ -6339,6 +6336,17 @@ Pop up a buffer to edit the string at point.
 This saves you from needing to manually escape characters.
 
 \(fn)" t nil)
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/f-20191110.1357/f-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/f-20191110.1357/f-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "f" '("f-")))
 
 
 )
@@ -7355,10 +7363,10 @@ In any case, return the edit-indirect buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20210210.1411/separedit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20210313.509/separedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20210210.1411/separedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20210313.509/separedit-autoloads.el") (car load-path))))
 
 
 
@@ -7694,10 +7702,10 @@ FUNCTION must return an explanation when the test fails and
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20210213.24/racket-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20210226.1343/racket-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20210213.24/racket-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20210226.1343/racket-mode-autoloads.el") (car load-path))))
 
 
 
@@ -8166,18 +8174,16 @@ understands the two different imports of \"define\":
 
 When point is on the opening parenthesis of an expression in tail
 position, it is highlighted using the face
-`racket-xp-tail-position-face' and has a tooltip annotation,
-\"tail\".
+`racket-xp-tail-position-face'.
 
 When point is on the opening parenthesis of an enclosing
 expression with respect to which one or more expressions are in
 tail position, it is highlighted using the face
-`racket-xp-tail-target-face' and has a tooltip annotation,
-\"⟦tail⟧\".
+`racket-xp-tail-target-face'.
 
 Furthermore, when point is on the opening parenthesis of either
 kind of expression, all of the immediately related expressions
-are also highlighted. Various commands to move among them:
+are also highlighted. Various commands move among them:
 
   - `racket-xp-tail-up'
   - `racket-xp-tail-down'
@@ -8271,10 +8277,10 @@ Deactivate python virtual environment." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20210216.1205/python-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20210301.812/python-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20210216.1205/python-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20210301.812/python-mode-autoloads.el") (car load-path))))
 
 
 
@@ -8436,10 +8442,10 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/puppet-mode-20210215.2347/puppet-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/puppet-mode-20210305.645/puppet-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/puppet-mode-20210215.2347/puppet-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/puppet-mode-20210305.645/puppet-mode-autoloads.el") (car load-path))))
 
 
 
@@ -8598,10 +8604,10 @@ Either use the custom fill, or standard fill if in a comment region.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pretty-hydra-20190930.2106/pretty-hydra-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pretty-hydra-20210221.834/pretty-hydra-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pretty-hydra-20190930.2106/pretty-hydra-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pretty-hydra-20210221.834/pretty-hydra-autoloads.el") (car load-path))))
 
 
 
@@ -8718,10 +8724,10 @@ If buffer is not visiting a file, do nothing." nil nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/prettier-20210129.826/prettier-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047/prettier-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/prettier-20210129.826/prettier-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047/prettier-autoloads.el") (car load-path))))
 
 
 
@@ -9220,10 +9226,10 @@ Major mode for editing pip requirements files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210103.1738/php-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210310.1724/php-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210103.1738/php-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210310.1724/php-mode-autoloads.el") (car load-path))))
 
 
 
@@ -10212,10 +10218,10 @@ See `rxt-mode' for more information on Rxt mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parse-it-20201103.1107/parse-it-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parse-it-20210306.821/parse-it-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parse-it-20201103.1107/parse-it-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parse-it-20210306.821/parse-it-autoloads.el") (car load-path))))
 
 
 
@@ -10338,10 +10344,10 @@ If optional argument is nil; then it will use current buffer instead.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pair-tree-20210122.1506/pair-tree-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pair-tree-20210214.1651/pair-tree-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pair-tree-20210122.1506/pair-tree-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pair-tree-20210214.1651/pair-tree-autoloads.el") (car load-path))))
 
 
 
@@ -10365,10 +10371,10 @@ Draw a pair tree for PAIR.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/package-lint-20210111.341/package-lint-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/package-lint-20210227.314/package-lint-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/package-lint-20210111.341/package-lint-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/package-lint-20210227.314/package-lint-autoloads.el") (car load-path))))
 
 
 
@@ -10476,10 +10482,10 @@ See `origami-mode' for more information on Origami mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210113.2130/csharp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210311.1831/csharp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210113.2130/csharp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210311.1831/csharp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -10630,10 +10636,10 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20210113.1123/notmuch-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20210205.1412/notmuch-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20210113.1123/notmuch-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20210205.1412/notmuch-autoloads.el") (car load-path))))
 
 
 
@@ -10671,8 +10677,8 @@ Run notmuch and display saved searches, known tags, etc." t nil)
 (autoload 'notmuch-cycle-notmuch-buffers "notmuch" "\
 Cycle through any existing notmuch buffers (search, show or hello).
 
-If the current buffer is the only notmuch buffer, bury it. If no
-notmuch buffers exist, run `notmuch'." t nil)
+If the current buffer is the only notmuch buffer, bury it.
+If no notmuch buffers exist, run `notmuch'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch" '("notmuch-")))
 
@@ -10901,10 +10907,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20201229.138/nix-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20210124.204/nix-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20201229.138/nix-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20210124.204/nix-mode-autoloads.el") (car load-path))))
 
 
 
@@ -10920,9 +10926,13 @@ Completion for the nix command." nil nil)
 
 
 (autoload 'nix-drv-mode "nix-drv-mode" "\
-Pretty print Nix’s .drv files." t nil)
+Pretty print Nix’s .drv files.
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-drv-mode" '("nix-drv-mode")))
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\`/nix/store/.+\\.drv\\'" . nix-drv-mode))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-drv-mode" '("nix-drv-mode-dejsonify-buffer")))
 
 
 
@@ -11040,7 +11050,7 @@ See `nix-prettify-mode' for more information on Nix-Prettify mode.
 
 \(fn &optional ARG)" t nil)
 
-(define-obsolete-function-alias 'global-nix-prettify-mode 'nix-prettify-global-mode)
+(define-obsolete-function-alias 'global-nix-prettify-mode 'nix-prettify-global-mode "v1.2.2")
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-prettify-mode" '("nix-prettify-")))
 
@@ -12103,10 +12113,10 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210112.1557/markdown-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210220.1301/markdown-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210112.1557/markdown-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/markdown-mode-20210220.1301/markdown-mode-autoloads.el") (car load-path))))
 
 
 
@@ -12202,211 +12212,28 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210309.1106/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210309.1106/git-commit-autoloads.el") (car load-path))))
 
 
+(put 'git-commit-major-mode 'safe-local-variable
+    (lambda (val)
+      (memq val '(text-mode
+                  markdown-mode
+                  org-mode
+                  fundamental-mode
+                  git-commit-elisp-text-mode))))
 
-(autoload 'async-start-process "async" "\
-Start the executable PROGRAM asynchronously named NAME.  See `async-start'.
-PROGRAM is passed PROGRAM-ARGS, calling FINISH-FUNC with the
-process object when done.  If FINISH-FUNC is nil, the future
-object will return the process object when the program is
-finished.  Set DEFAULT-DIRECTORY to change PROGRAM's current
-working directory.
-
-\(fn NAME PROGRAM FINISH-FUNC &rest PROGRAM-ARGS)" nil nil)
-
-(autoload 'async-start "async" "\
-Execute START-FUNC (often a lambda) in a subordinate Emacs process.
-When done, the return value is passed to FINISH-FUNC.  Example:
-
-    (async-start
-       ;; What to do in the child process
-       (lambda ()
-         (message \"This is a test\")
-         (sleep-for 3)
-         222)
-
-       ;; What to do when it finishes
-       (lambda (result)
-         (message \"Async process done, result should be 222: %s\"
-                  result)))
-
-If FINISH-FUNC is nil or missing, a future is returned that can
-be inspected using `async-get', blocking until the value is
-ready.  Example:
-
-    (let ((proc (async-start
-                   ;; What to do in the child process
-                   (lambda ()
-                     (message \"This is a test\")
-                     (sleep-for 3)
-                     222))))
-
-        (message \"I'm going to do some work here\") ;; ....
-
-        (message \"Waiting on async process, result should be 222: %s\"
-                 (async-get proc)))
-
-If you don't want to use a callback, and you don't care about any
-return value from the child process, pass the `ignore' symbol as
-the second argument (if you don't, and never call `async-get', it
-will leave *emacs* process buffers hanging around):
-
-    (async-start
-     (lambda ()
-       (delete-file \"a remote file on a slow link\" nil))
-     'ignore)
-
-Note: Even when FINISH-FUNC is present, a future is still
-returned except that it yields no value (since the value is
-passed to FINISH-FUNC).  Call `async-get' on such a future always
-returns nil.  It can still be useful, however, as an argument to
-`async-ready' or `async-wait'.
-
-\(fn START-FUNC &optional FINISH-FUNC)" nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async" '("async-")))
-
-
-
-(autoload 'async-byte-recompile-directory "async-bytecomp" "\
-Compile all *.el files in DIRECTORY asynchronously.
-All *.elc files are systematically deleted before proceeding.
-
-\(fn DIRECTORY &optional QUIET)" nil nil)
-
-(defvar async-bytecomp-package-mode nil "\
-Non-nil if Async-Bytecomp-Package mode is enabled.
-See the `async-bytecomp-package-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `async-bytecomp-package-mode'.")
-
-(custom-autoload 'async-bytecomp-package-mode "async-bytecomp" nil)
-
-(autoload 'async-bytecomp-package-mode "async-bytecomp" "\
-Byte compile asynchronously packages installed with package.el.
-Async compilation of packages can be controlled by
-`async-bytecomp-allowed-packages'.
-
-If called interactively, enable Async-Bytecomp-Package mode if
-ARG is positive, and disable it if ARG is zero or negative.  If
-called from Lisp, also enable the mode if ARG is omitted or nil,
-and toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'async-byte-compile-file "async-bytecomp" "\
-Byte compile Lisp code FILE asynchronously.
-
-Same as `byte-compile-file' but asynchronous.
-
-\(fn FILE)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-byte")))
-
-
-
-(defvar dired-async-mode nil "\
-Non-nil if Dired-Async mode is enabled.
-See the `dired-async-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `dired-async-mode'.")
-
-(custom-autoload 'dired-async-mode "dired-async" nil)
-
-(autoload 'dired-async-mode "dired-async" "\
-Do dired actions asynchronously.
-
-If called interactively, enable Dired-Async mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'dired-async-do-copy "dired-async" "\
-Run ‘dired-do-copy’ asynchronously.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'dired-async-do-symlink "dired-async" "\
-Run ‘dired-do-symlink’ asynchronously.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'dired-async-do-hardlink "dired-async" "\
-Run ‘dired-do-hardlink’ asynchronously.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'dired-async-do-rename "dired-async" "\
-Run ‘dired-do-rename’ asynchronously.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dired-async" '("dired-async-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smtpmail-async" '("async-smtpmail-")))
-
-
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-commit" '("git-commit-" "global-git-commit-mode")))
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210102.1242/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20210312.1012/magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210102.1242/git-commit-autoloads.el") (car load-path))))
-
-
-
-(defvar global-git-commit-mode t "\
-Non-nil if Global Git-Commit mode is enabled.
-See the `global-git-commit-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `global-git-commit-mode'.")
-
-(custom-autoload 'global-git-commit-mode "git-commit" nil)
-
-(autoload 'global-git-commit-mode "git-commit" "\
-Edit Git commit messages.
-This global mode arranges for `git-commit-setup' to be called
-when a Git commit message file is opened.  That usually happens
-when Git uses the Emacsclient as $GIT_EDITOR to have the user
-provide such a commit message.
-
-If called interactively, enable Global Git-Commit mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
-
-\(fn &optional ARG)" t nil)
-
-(defconst git-commit-filename-regexp "/\\(\\(\\(COMMIT\\|NOTES\\|PULLREQ\\|MERGEREQ\\|TAG\\)_EDIT\\|MERGE_\\|\\)MSG\\|\\(BRANCH\\|EDIT\\)_DESCRIPTION\\)\\'")
-
-(autoload 'git-commit-setup-check-buffer "git-commit" nil nil nil)
-
-(autoload 'git-commit-setup "git-commit" nil nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-commit" '("git-commit-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030/magit-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030/magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20210312.1012/magit-autoloads.el") (car load-path))))
 
 
 
@@ -12673,7 +12500,7 @@ changes.
 
 \(git checkout REVISION).
 
-\(fn REVISION)" t nil)
+\(fn REVISION &optional ARGS)" t nil)
 
 (autoload 'magit-branch-create "magit-branch" "\
 Create BRANCH at branch or revision START-POINT.
@@ -12683,7 +12510,7 @@ Create BRANCH at branch or revision START-POINT.
 (autoload 'magit-branch-and-checkout "magit-branch" "\
 Create and checkout BRANCH at branch or revision START-POINT.
 
-\(fn BRANCH START-POINT)" t nil)
+\(fn BRANCH START-POINT &optional ARGS)" t nil)
 
 (autoload 'magit-branch-or-checkout "magit-branch" "\
 Hybrid between `magit-checkout' and `magit-branch-and-checkout'.
@@ -12954,13 +12781,18 @@ Create a squash commit targeting COMMIT and instantly rebase.
 (autoload 'magit-commit-reshelve "magit-commit" "\
 Change the committer date and possibly the author date of `HEAD'.
 
-If you are the author of `HEAD', then both dates are changed,
-otherwise only the committer date.  The current time is used
-as the initial minibuffer input and the original author (if
-that is you) or committer date is available as the previous
+The current time is used as the initial minibuffer input and the
+original author or committer date is available as the previous
 history element.
 
-\(fn DATE)" t nil)
+Both the author and the committer dates are changes, unless one
+of the following is true, in which case only the committer date
+is updated:
+- You are not the author of the commit that is being reshelved.
+- The command was invoked with a prefix argument.
+- Non-interactively if UPDATE-AUTHOR is nil.
+
+\(fn DATE UPDATE-AUTHOR &optional ARGS)" t nil)
 
 (autoload 'magit-commit-absorb-modules "magit-commit" "\
 Spread modified modules across recent commits.
@@ -13298,7 +13130,11 @@ on.
 This command is only intended for interactive use and should only
 be used on highly rearranged and unpublished history.
 
-\(fn REV)" t nil)
+If KEYID is non-nil, then use that to sign all reshelved commits.
+Interactively use the value of the \"--gpg-sign\" option in the
+list returned by `magit-rebase-arguments'.
+
+\(fn REV KEYID)" t nil)
 
 (autoload 'magit-pop-revision-stack "magit-extras" "\
 Insert a representation of a revision into the current buffer.
@@ -13486,8 +13322,8 @@ repository.  Also stage the file.
 \(fn RULE)" t nil)
 
 (autoload 'magit-gitignore-in-subdir "magit-gitignore" "\
-Add the Git ignore RULE to a \".gitignore\" file.
-Prompted the user for a directory and add the rule to the
+Add the Git ignore RULE to a \".gitignore\" file in DIRECTORY.
+Prompt the user for a directory and add the rule to the
 \".gitignore\" file in that directory.  Since such files are
 tracked, they are shared with other clones of the repository.
 Also stage the file.
@@ -13795,7 +13631,7 @@ Abort the current merge operation.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-mode" '("disable-magit-save-buffers" "inhibit-magit-refresh" "magit-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-mode" '("disable-magit-save-buffers" "magit-")))
 
 
  (autoload 'magit-notes "magit" nil t)
@@ -14811,10 +14647,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631/magit-section-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417/magit-section-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631/magit-section-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417/magit-section-autoloads.el") (car load-path))))
 
 
 
@@ -14914,10 +14750,14 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210113.2045/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210314.1828/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210113.2045/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210314.1828/lsp-mode-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-actionscript" '("lsp-actionscript-")))
 
 
 
@@ -15007,6 +14847,30 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
+(defvar lsp-dired-mode nil "\
+Non-nil if Lsp-Dired mode is enabled.
+See the `lsp-dired-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `lsp-dired-mode'.")
+
+(custom-autoload 'lsp-dired-mode "lsp-dired" nil)
+
+(autoload 'lsp-dired-mode "lsp-dired" "\
+Display `lsp-mode' icons for each file in a dired buffer.
+
+If called interactively, enable Lsp-Dired mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dired" '("lsp-dired-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dockerfile" '("lsp-dockerfile-language-server-command")))
 
 
@@ -15092,8 +14956,25 @@ Narrow to the symbol range on breadcrumb at SYMBOL-POSITION.
 
 
 
+(autoload 'lsp-ido-workspace-symbol "lsp-ido" "\
+`ido' for lsp workspace/symbol.
+When called with prefix ARG the default selection will be symbol at point.
+
+\(fn ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ido" '("lsp-ido-")))
+
+
+
 (autoload 'lsp-iedit-highlights "lsp-iedit" "\
 Start an `iedit' operation on the documentHighlights at point.
+This can be used as a primitive `lsp-rename' replacement if the
+language server doesn't support renaming.
+
+See also `lsp-enable-symbol-highlighting'." t nil)
+
+(autoload 'lsp-evil-multiedit-highlights "lsp-iedit" "\
+Start an `evil-multiedit' operation on the documentHighlights at point.
 This can be used as a primitive `lsp-rename' replacement if the
 language server doesn't support renaming.
 
@@ -15346,10 +15227,10 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210110.1507/lsp-ui-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210220.703/lsp-ui-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210110.1507/lsp-ui-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ui-20210220.703/lsp-ui-autoloads.el") (car load-path))))
 
 
 
@@ -15387,17 +15268,18 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-util" '("lsp-ui-util-")))
+
+
+
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20201230.2214/lsp-treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210216.1250/lsp-treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20201230.2214/lsp-treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210216.1250/lsp-treemacs-autoloads.el") (car load-path))))
 
 
-
-(autoload 'lsp-treemacs-errors-list "lsp-treemacs" "\
-Display error list." t nil)
 
 (autoload 'lsp-treemacs-symbols "lsp-treemacs" "\
 Show symbols view." t nil)
@@ -15445,7 +15327,9 @@ With a prefix argument, show the outgoing call hierarchy.
 
 \(fn OUTGOING)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-treemacs-")))
+(autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-tree")))
 
 
 
@@ -15455,10 +15339,10 @@ With a prefix argument, show the outgoing call hierarchy.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-origami-20200914.1846/lsp-origami-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-origami-20210126.843/lsp-origami-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-origami-20200914.1846/lsp-origami-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-origami-20210126.843/lsp-origami-autoloads.el") (car load-path))))
 
 
 
@@ -15538,14 +15422,18 @@ This function is partially copied from
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20201118.1304/dap-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20210305.1555/dap-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20201118.1304/dap-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20210305.1555/dap-mode-autoloads.el") (car load-path))))
 
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-chrome" '("dap-chrome-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-codelldb" '("dap-codelldb-")))
 
 
 
@@ -15771,10 +15659,10 @@ evaluate python in the context of the debugee, ...." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-java-20210105.1625/lsp-java-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-java-20210309.1856/lsp-java-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-java-20210105.1625/lsp-java-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-java-20210309.1856/lsp-java-autoloads.el") (car load-path))))
 
 
 (with-eval-after-load 'lsp-java (require 'dap-java))
@@ -15994,10 +15882,10 @@ Special commands:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227/ledger-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210221.1315/ledger-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227/ledger-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210221.1315/ledger-mode-autoloads.el") (car load-path))))
 
 
 
@@ -16101,10 +15989,10 @@ A mode for editing ledger data files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20201217.1633/language-id-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20210207.1829/language-id-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20201217.1633/language-id-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20210207.1829/language-id-autoloads.el") (car load-path))))
 
 
 
@@ -16343,15 +16231,20 @@ Add this to .emacs to run jscs-fix on the current buffer when saving:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-refactor-20190630.2108/js2-refactor-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-refactor-20210306.2003/js2-refactor-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-refactor-20190630.2108/js2-refactor-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-refactor-20210306.2003/js2-refactor-autoloads.el") (car load-path))))
 
 
 
 (autoload 'js2-refactor-mode "js2-refactor" "\
 Minor mode providing JavaScript refactorings.
+
+If called interactively, enable Js2-Refactor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -16397,22 +16290,16 @@ Add js2r keybindings using the modifier MODIFIER.
 
 
 
-(autoload 'js2r-extract-var "js2r-vars" "\
+(autoload 'js2r-rename-var "js2r-vars" "\
+Renames the variable on point and all occurrences in its lexical scope." t nil)
 
+(autoload 'js2r-extract-var "js2r-vars" nil t nil)
 
-\(fn)" t nil)
+(autoload 'js2r-extract-let "js2r-vars" nil t nil)
 
-(autoload 'js2r-extract-let "js2r-vars" "\
+(autoload 'js2r-extract-const "js2r-vars" nil t nil)
 
-
-\(fn)" t nil)
-
-(autoload 'js2r-extract-const "js2r-vars" "\
-
-
-\(fn)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2r-vars" '("js2r-" "current-line-contents")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2r-vars" '("current-line-contents" "js2r-")))
 
 
 
@@ -16509,9 +16396,14 @@ Runs jq interactively on a json buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ctable-20171006.11/ctable-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ctable-20171006.11/ctable-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ctable-20210128.629/ctable-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ctable-20210128.629/ctable-autoloads.el") (car load-path))))
+
 
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ctable" '("ctbl:")))
 
 
 )
@@ -16521,10 +16413,10 @@ Runs jq interactively on a json buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jedi-core-20191011.1750/jedi-core-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jedi-core-20210202.856/jedi-core-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jedi-core-20191011.1750/jedi-core-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jedi-core-20210202.856/jedi-core-autoloads.el") (car load-path))))
 
 
 
@@ -16686,6 +16578,29 @@ Display inline docs FORMAT-STRING under point with extra ARGS.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/inheritenv-20210204.354/inheritenv-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/inheritenv-20210204.354/inheritenv-autoloads.el") (car load-path))))
+
+
+
+(autoload 'inheritenv-apply "inheritenv" "\
+Apply FUNC such that the environment it sees will match the current value.
+This is useful if FUNC creates a temp buffer, because that will
+not inherit any buffer-local values of variables `exec-path' and
+`process-environment'.
+
+This function is designed for convenient use as an \"around\" advice.
+
+ARGS is as for ORIG.
+
+\(fn FUNC &rest ARGS)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inheritenv" '("inheritenv")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/inform7-20200430.1539/inform7-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -16777,10 +16692,170 @@ HTMLize dired-marked files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-core-20210105.504/helm-core-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-core-20210105.504/helm-core-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el") (car load-path))))
+
+
+
+(autoload 'async-start-process "async" "\
+Start the executable PROGRAM asynchronously named NAME.  See `async-start'.
+PROGRAM is passed PROGRAM-ARGS, calling FINISH-FUNC with the
+process object when done.  If FINISH-FUNC is nil, the future
+object will return the process object when the program is
+finished.  Set DEFAULT-DIRECTORY to change PROGRAM's current
+working directory.
+
+\(fn NAME PROGRAM FINISH-FUNC &rest PROGRAM-ARGS)" nil nil)
+
+(autoload 'async-start "async" "\
+Execute START-FUNC (often a lambda) in a subordinate Emacs process.
+When done, the return value is passed to FINISH-FUNC.  Example:
+
+    (async-start
+       ;; What to do in the child process
+       (lambda ()
+         (message \"This is a test\")
+         (sleep-for 3)
+         222)
+
+       ;; What to do when it finishes
+       (lambda (result)
+         (message \"Async process done, result should be 222: %s\"
+                  result)))
+
+If FINISH-FUNC is nil or missing, a future is returned that can
+be inspected using `async-get', blocking until the value is
+ready.  Example:
+
+    (let ((proc (async-start
+                   ;; What to do in the child process
+                   (lambda ()
+                     (message \"This is a test\")
+                     (sleep-for 3)
+                     222))))
+
+        (message \"I'm going to do some work here\") ;; ....
+
+        (message \"Waiting on async process, result should be 222: %s\"
+                 (async-get proc)))
+
+If you don't want to use a callback, and you don't care about any
+return value from the child process, pass the `ignore' symbol as
+the second argument (if you don't, and never call `async-get', it
+will leave *emacs* process buffers hanging around):
+
+    (async-start
+     (lambda ()
+       (delete-file \"a remote file on a slow link\" nil))
+     'ignore)
+
+Note: Even when FINISH-FUNC is present, a future is still
+returned except that it yields no value (since the value is
+passed to FINISH-FUNC).  Call `async-get' on such a future always
+returns nil.  It can still be useful, however, as an argument to
+`async-ready' or `async-wait'.
+
+\(fn START-FUNC &optional FINISH-FUNC)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async" '("async-")))
+
+
+
+(autoload 'async-byte-recompile-directory "async-bytecomp" "\
+Compile all *.el files in DIRECTORY asynchronously.
+All *.elc files are systematically deleted before proceeding.
+
+\(fn DIRECTORY &optional QUIET)" nil nil)
+
+(defvar async-bytecomp-package-mode nil "\
+Non-nil if Async-Bytecomp-Package mode is enabled.
+See the `async-bytecomp-package-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `async-bytecomp-package-mode'.")
+
+(custom-autoload 'async-bytecomp-package-mode "async-bytecomp" nil)
+
+(autoload 'async-bytecomp-package-mode "async-bytecomp" "\
+Byte compile asynchronously packages installed with package.el.
+Async compilation of packages can be controlled by
+`async-bytecomp-allowed-packages'.
+
+If called interactively, enable Async-Bytecomp-Package mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'async-byte-compile-file "async-bytecomp" "\
+Byte compile Lisp code FILE asynchronously.
+
+Same as `byte-compile-file' but asynchronous.
+
+\(fn FILE)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-byte")))
+
+
+
+(defvar dired-async-mode nil "\
+Non-nil if Dired-Async mode is enabled.
+See the `dired-async-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `dired-async-mode'.")
+
+(custom-autoload 'dired-async-mode "dired-async" nil)
+
+(autoload 'dired-async-mode "dired-async" "\
+Do dired actions asynchronously.
+
+If called interactively, enable Dired-Async mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-copy "dired-async" "\
+Run ‘dired-do-copy’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-symlink "dired-async" "\
+Run ‘dired-do-symlink’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-hardlink "dired-async" "\
+Run ‘dired-do-hardlink’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-rename "dired-async" "\
+Run ‘dired-do-rename’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dired-async" '("dired-async-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smtpmail-async" '("async-smtpmail-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-core-20210315.1547/helm-core-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-core-20210315.1547/helm-core-autoloads.el") (car load-path))))
 
 
 
@@ -17014,10 +17089,10 @@ Call `helm' only with SOURCES and BUFFER as args.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-20210111.2036/helm-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-20210314.1923/helm-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-20210111.2036/helm-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-20210314.1923/helm-autoloads.el") (car load-path))))
 
 
 
@@ -17287,7 +17362,7 @@ files.
 Allow deleting tramp connection or marked tramp connections at once.
 
 This replace `tramp-cleanup-connection' which is partially broken
-in Emacs < to 25.1.50.1 (See Emacs Bug#24432).
+in Emacs < to 25.1.50.1 (See Emacs bug http://debbugs.gnu.org/cgi/bugreport.cgi?bug=24432).
 
 It allows additionally to delete more than one connection at
 once." t nil)
@@ -18119,10 +18194,10 @@ If invoked outside of a project, displays a list of known projects to jump.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-lsp-20200910.518/helm-lsp-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-lsp-20210226.2027/helm-lsp-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-lsp-20200910.518/helm-lsp-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-lsp-20210226.2027/helm-lsp-autoloads.el") (car load-path))))
 
 
 
@@ -18140,6 +18215,11 @@ When called with prefix ARG the default selection will be symbol at point.
 
 (autoload 'helm-lsp-code-actions "helm-lsp" "\
 Show lsp code actions using helm." t nil)
+
+(autoload 'helm-lsp-diagnostics "helm-lsp" "\
+Diagnostics using `helm'
+
+\(fn ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-lsp" '("helm-lsp-")))
 
@@ -18188,10 +18268,10 @@ Show lsp code actions using helm." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-ag-20200915.1650/helm-ag-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helm-ag-20210305.334/helm-ag-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-ag-20200915.1650/helm-ag-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helm-ag-20210305.334/helm-ag-autoloads.el") (car load-path))))
 
 
 
@@ -18245,10 +18325,10 @@ Not documented, QUERY.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342/haskell-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210303.1948/haskell-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342/haskell-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210303.1948/haskell-mode-autoloads.el") (car load-path))))
 
 
 
@@ -19296,10 +19376,10 @@ Preview goto line relative." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20201204.1652/go-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20210201.1458/go-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20201204.1652/go-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20210201.1458/go-mode-autoloads.el") (car load-path))))
 
 
 
@@ -19533,10 +19613,10 @@ A major mode for editing .gitignore files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717/ghub-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ghub-20210227.1925/ghub-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717/ghub-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ghub-20210227.1925/ghub-autoloads.el") (car load-path))))
 
 
 
@@ -19580,10 +19660,10 @@ and call `auth-source-forget+'." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/github-review-20201012.40/github-review-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/github-review-20210314.2203/github-review-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/github-review-20201012.40/github-review-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/github-review-20210314.2203/github-review-autoloads.el") (car load-path))))
 
 
 
@@ -19707,10 +19787,10 @@ Enable git timemachine for current buffer, switching to GIT-BRANCH.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20201214.2330/git-link-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20210121.235/git-link-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20201214.2330/git-link-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20210121.235/git-link-autoloads.el") (car load-path))))
 
 
 
@@ -19796,10 +19876,10 @@ Commit staged changes. If nothing is staged, ask to stage the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20210109.640/git-gutter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20210127.1100/git-gutter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20210109.640/git-gutter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20210127.1100/git-gutter-autoloads.el") (car load-path))))
 
 
 
@@ -19868,10 +19948,10 @@ Recalculate all blame information in the current buffer
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953/geiser-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20210303.1351/geiser-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953/geiser-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20210303.1351/geiser-autoloads.el") (car load-path))))
 
 
 
@@ -20105,10 +20185,10 @@ Disable Geiser's mode (useful in Scheme buffers)." t)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20180710.2342/add-node-modules-path-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20210305.312/add-node-modules-path-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20180710.2342/add-node-modules-path-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20210305.312/add-node-modules-path-autoloads.el") (car load-path))))
 
 
 
@@ -20130,10 +20210,10 @@ Any path found is added to the `exec-path'." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/company-20210122.2314/company-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/company-20210224.2244/company-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/company-20210122.2314/company-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/company-20210224.2244/company-autoloads.el") (car load-path))))
 
 
 
@@ -20462,10 +20542,10 @@ format recognized by `kbd', for example \"C-x\".
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210107.1425/format-all-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210315.640/format-all-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210107.1425/format-all-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210315.640/format-all-autoloads.el") (car load-path))))
 
 
 
@@ -20522,7 +20602,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("asmfmt" "atsfmt" "beautysh" "bibtex-mode" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nixfmt" "ocp-indent" "perltidy" "pgformatter" "prettier" "purty" "rufo" "rustfmt" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "bibtex-mode" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "purty" "resfmt" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
 
 
 )
@@ -20573,10 +20653,10 @@ A prefix argument causes the SQL to be printed into the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148/forge-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20210314.2238/forge-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148/forge-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20210314.2238/forge-autoloads.el") (car load-path))))
 
 
 
@@ -20660,7 +20740,11 @@ read an issue N to visit.
 Visit the current post using a browser." t nil)
 
 (autoload 'forge-visit-topic "forge-commands" "\
-View the current topic in a separate buffer." t nil)
+View the current topic in a separate buffer.
+If there is no current topic or with a prefix argument
+read topic N to visit instead.
+
+\(fn N)" t nil)
 
 (autoload 'forge-visit-pullreq "forge-commands" "\
 View the current pull-request in a separate buffer.
@@ -21301,10 +21385,10 @@ Start a evil-tutor session.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210110.1011/evil-matchit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210201.522/evil-matchit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210110.1011/evil-matchit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210201.522/evil-matchit-autoloads.el") (car load-path))))
 
 
 
@@ -22759,6 +22843,13 @@ Show `message-mode' buffer in a side-by-side view.
 This is useful for reading patches from mailing lists.
 
 \(fn)" t nil)
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-functional-20210210.1449/dash-functional-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-functional-20210210.1449/dash-functional-autoloads.el") (car load-path))))
 
 
 )
@@ -25089,14 +25180,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy f avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens dash-functional evil-surround symex sublimity list-utils string-utils string-inflection string-edit standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant async git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inform7 htmlize helm-core helm helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize async helm-core helm helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901" "/Users/neagleson/.emacs.d/elpa/forge-20210112.1148" "/Users/neagleson/.emacs.d/elpa/geiser-20210103.953" "/Users/neagleson/.emacs.d/elpa/ghub-20201211.1717" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20201230.342" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210106.227" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210103.1631" "/Users/neagleson/.emacs.d/elpa/magit-20210105.1030" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210213.24" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210214.2243" "/Users/neagleson/.emacs.d/elpa/evil-20210214.1746" "/Users/neagleson/.emacs.d/elpa/ivy-20210216.1611" "/Users/neagleson/.emacs.d/elpa/transient-20210213.1909" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210210.1449" "/Users/neagleson/.emacs.d/elpa/with-editor-20210117.2008" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901" "/Users/neagleson/.emacs.d/elpa/forge-20210314.2238" "/Users/neagleson/.emacs.d/elpa/geiser-20210303.1351" "/Users/neagleson/.emacs.d/elpa/ghub-20210227.1925" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210303.1948" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210221.1315" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417" "/Users/neagleson/.emacs.d/elpa/magit-20210312.1012" "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210226.1343" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210214.2243" "/Users/neagleson/.emacs.d/elpa/evil-20210305.1341" "/Users/neagleson/.emacs.d/elpa/ivy-20210311.1638" "/Users/neagleson/.emacs.d/elpa/transient-20210315.1902" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210308.2109" "/Users/neagleson/.emacs.d/elpa/with-editor-20210117.2008" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

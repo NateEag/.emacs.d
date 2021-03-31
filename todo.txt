@@ -78,6 +78,11 @@
 - Try modern-sh's REPL (or perhaps skip straight to just using
   eval-in-repl-shell.el, which got installed as a dependency)
 
+- Try emacs-piper for munging data from the filesystem. Different UI for
+  evolving pipelines interactively, with the option to use elisp as well. Seems
+  interesting (if only applicable for local desktop hacks).
+  https://gitlab.com/howardabrams/emacs-piper
+
 - Try eval-in-repl's Python and JavaScript support
 
 - figure out workflow for evaluating code inline some writing a file (that is,

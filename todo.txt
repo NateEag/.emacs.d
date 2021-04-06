@@ -68,7 +68,8 @@
   attempts, as I see buffer indents happening after almost every keystroke).
   Looks like this may be related to c-indent-new-comment-line, which tries to
   indent and is perhaps getting invoked somehow, with php-mode being an
-  extension of cc-mode.
+  extension of cc-mode. Could possibly relate to this issue as well:
+  https://github.com/emacs-php/php-mode/issues/657
 
 - Try using chemacs for managing custom environments for bug reports:
   https://github.com/plexus/chemacs

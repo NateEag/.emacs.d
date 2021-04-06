@@ -25,7 +25,7 @@
   :commands
   hit-servlet comment-or-uncomment-region-or-line wrap-args
   move-current-buffer insert-date insert-time unfill-paragraph
-  add-auto-mode)
+  add-auto-mode ne/set-theme-to-match-system-theme)
 
 (use-package daily-log
   :commands

@@ -243,5 +243,17 @@ Tweaked from here: http://stackoverflow.com/a/19160992/1128957"
                            t
                            t))
 
+(defun ne/set-theme-to-match-system-theme ()
+  "Set theme to solarized-light or solarized-dark based on OS light/dark setting.
+
+Yanked from
+https://www.reddit.com/r/emacs/comments/hejsqm/is_there_a_way_to_detect_lightdark_mode_on_mac/"
+
+  (interactive)
+  (if (string= (shell-command-to-string
+                "printf %s \"$( osascript -e \'tell application \"System Events\" to tell appearance preferences to return dark mode\' )\"") "true")
+      (load-theme 'solarized-dark-high-contrast t)
+    (load-theme 'solarized-light-high-contrast t)))
+
 (provide 'my-functions)
 ;;; my-functions.el ends here

@@ -37,6 +37,13 @@
 - Try frontmacs-javascript as a possible new JS mode. Installed but not
   configured.
 
+- Teach Emacs to automatically change its theme when OS X changes between light
+  and dark modes. I have a function to choose theme correctly,
+  ne/set-theme-to-match-system-theme, but I don't have a way to detect the
+  event. I could poll, but that's needless waste. I could also turn off OS X's
+  automatic theme picker and manually specify which mode I want via Hammerspoon
+  binding or similar.
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I

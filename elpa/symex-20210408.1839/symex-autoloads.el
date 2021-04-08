@@ -31,7 +31,7 @@ The main entry point for editing symbolic expressions using symex mode.
 Enter the symex evil state and show a hydra menu for accessing various
 features." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("hydra-symex" "symex-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("symex-")))
 
 ;;;***
 
@@ -40,6 +40,13 @@ features." t nil)
 ;;; Generated autoloads from symex-computations.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-computations" '("symex-")))
+
+;;;***
+
+;;;### (autoloads nil "symex-custom" "symex-custom.el" (0 0 0 0))
+;;; Generated autoloads from symex-custom.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-custom" '("symex-")))
 
 ;;;***
 
@@ -62,6 +69,28 @@ features." t nil)
 ;;; Generated autoloads from symex-evaluator.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evaluator" '("symex-")))
+
+;;;***
+
+;;;### (autoloads nil "symex-evil" "symex-evil.el" (0 0 0 0))
+;;; Generated autoloads from symex-evil.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil" '("symex-")))
+
+;;;***
+
+;;;### (autoloads nil "symex-evil-support" "symex-evil-support.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from symex-evil-support.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil-support" '("symex--define-evil-key")))
+
+;;;***
+
+;;;### (autoloads nil "symex-hydra" "symex-hydra.el" (0 0 0 0))
+;;; Generated autoloads from symex-hydra.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-")))
 
 ;;;***
 
@@ -148,6 +177,13 @@ features." t nil)
 ;;; Generated autoloads from symex-traversals.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-traversals" '("symex-")))
+
+;;;***
+
+;;;### (autoloads nil "symex-ui" "symex-ui.el" (0 0 0 0))
+;;; Generated autoloads from symex-ui.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-ui" '("symex--toggle-highlight")))
 
 ;;;***
 

@@ -1,4 +1,4 @@
-;;; symex-interface-clojure.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-scheme.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,59 +21,57 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Clojure language
+;; Interface for the Scheme language
 ;;
 
 ;;; Code:
 
-(require 'cider nil 'noerror)
+(require 'geiser-mode nil 'noerror)
 
-(declare-function cider-eval-last-sexp "ext:cider")
-(declare-function cider-eval-defun-at-point "ext:cider")
-(declare-function cider-eval-print-last-sexp "ext:cider")
-(declare-function cider-doc "ext:cider")
-(declare-function cider-switch-to-repl-buffer "ext:cider")
-(declare-function cider-eval-buffer "ext:cider")
+(declare-function geiser-eval-last-sexp "ext:geiser-mode")
+(declare-function geiser-eval-definition "ext:geiser-mode")
+(declare-function geiser-doc-symbol-at-point "ext:geiser-mode")
+(declare-function geiser-mode-switch-to-repl "ext:geiser-mode")
+(declare-function geiser-eval-buffer "ext:geiser-mode")
 
-(defun symex-eval-clojure ()
-  "Eval last sexp.
-
-Accounts for different point location in evil vs Emacs mode."
+(defun symex-eval-scheme ()
+  "Eval Scheme symex."
   (interactive)
-  (cider-eval-last-sexp))
+  (geiser-eval-last-sexp nil))
 
-(defun symex-eval-definition-clojure ()
+(defun symex-eval-definition-scheme ()
   "Eval entire containing definition."
-  (cider-eval-defun-at-point nil))
+  (geiser-eval-definition nil))
 
-(defun symex-eval-pretty-clojure ()
+(defun symex-eval-pretty-scheme ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-clojure))
+  (symex-eval-scheme))
 
-(defun symex-eval-thunk-clojure ()
+(defun symex-eval-thunk-scheme ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  (message "eval as thunk currently not supported for Clojure"))
+  (message "eval as thunk currently not supported for Scheme"))
 
-(defun symex-eval-print-clojure ()
+(defun symex-eval-print-scheme ()
   "Eval symex and print result in buffer."
   (interactive)
-  (cider-eval-print-last-sexp))
+  nil)
 
-(defun symex-describe-symbol-clojure ()
+(defun symex-describe-symbol-scheme ()
   "Describe symbol at point."
   (interactive)
-  (cider-doc nil))
+  (geiser-doc-symbol-at-point))
 
-(defun symex-repl-clojure ()
+(defun symex-repl-scheme ()
   "Go to REPL."
-  (cider-switch-to-repl-buffer))
+  (geiser-mode-switch-to-repl nil)
+  (goto-char (point-max)))
 
-(defun symex-run-clojure ()
+(defun symex-run-scheme ()
   "Evaluate buffer."
-  (cider-eval-buffer))
+  (geiser-eval-buffer nil))
 
 
-(provide 'symex-interface-clojure)
-;;; symex-interface-clojure.el ends here
+(provide 'symex-interface-scheme)
+;;; symex-interface-scheme.el ends here

@@ -29,8 +29,9 @@
 (require 'racket-mode nil 'noerror)
 (require 'subr-x)
 
-(eval-when-compile                    ; from racket-mode
-  (defvar racket--repl-buffer-name))  ; avoid byte-compile warnings
+;; from racket-mode - avoid byte-compile warnings
+(defvar racket-repl-buffer-name)
+(defvar racket-xp-mode)
 
 (declare-function racket-repl "ext:racket-mode")
 (declare-function racket--repl-forget-errors "ext:racket-mode")
@@ -38,7 +39,8 @@
 (declare-function racket-send-last-sexp "ext:racket-mode")
 (declare-function racket-send-definition "ext:racket-mode")
 (declare-function racket--repl-last-sexp-start "ext:racket-mode")
-(declare-function racket-describe "ext:racket-mode")
+(declare-function racket-xp-describe "ext:racket-mode")
+(declare-function racket-repl-describe "ext:racket-mode")
 (declare-function racket-run "ext:racket-mode")
 
 (defun symex--racket-send-to-repl (code)
@@ -49,10 +51,13 @@ Before sending the code (in string form), calls `racket-repl' and
 mark so that output goes on a fresh line, not on the same line as
 the prompt.
 
-Afterwards call `racket--repl-show-and-move-to-end'."
+Afterwards call `racket--repl-show-and-move-to-end'.
+
+This function is based on code from an old version of the
+`racket-mode` Emacs package."
   (racket-repl t)
   (racket--repl-forget-errors)
-  (let ((proc (get-buffer-process racket--repl-buffer-name)))
+  (let ((proc (get-buffer-process racket-repl-buffer-name)))
     (with-racket-repl-buffer
       (save-excursion
         (goto-char (process-mark proc))
@@ -75,7 +80,7 @@ Accounts for different point location in evil vs Emacs mode."
 
 (defun symex-eval-definition-racket ()
   "Eval entire containing definition."
-  (racket-send-definition nil))
+  (racket-send-definition))
 
 (defun symex-eval-pretty-racket ()
   "Evaluate symex and render the result in a useful string form."
@@ -108,11 +113,16 @@ Accounts for different point location in evil vs Emacs mode."
 (defun symex-describe-symbol-racket ()
   "Describe symbol at point."
   (interactive)
-  (racket-describe))
+  (let ((original-window (selected-window)))
+    (cond (racket-xp-mode (racket-xp-describe))
+          ((eq major-mode 'racket-repl-mode) (racket-repl-describe))
+          (t (error "Enable racket-xp-mode or start the REPL!")))
+    (select-window original-window)))
 
 (defun symex-repl-racket ()
   "Go to REPL."
-  (racket-repl))
+  (racket-repl)
+  (goto-char (point-max)))
 
 (defun symex-run-racket ()
   "Evaluate buffer."

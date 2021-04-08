@@ -1,4 +1,4 @@
-;;; symex-interface-arc.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-common-lisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,63 +21,61 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Arc language
+;; Interface for the Common Lisp language
 ;;
 
 ;;; Code:
 
-(require 'arc nil 'noerror)
+(require 'slime nil 'noerror)
+(require 'slime-repl nil 'noerror)
 
-(declare-function arc-send-last-sexp "ext:arc")
-(declare-function arc-send-definition "ext:arc")
-(declare-function arc--repl-last-sexp-start "ext:arc")
-(declare-function arc--send-to-repl "ext:arc")
-(declare-function arc-repl "ext:arc")
+(declare-function slime-eval-last-expression "ext:slime")
+(declare-function slime-eval-defun "ext:slime")
+(declare-function slime-eval-buffer "ext:slime")
+(declare-function slime-repl "ext:slime-repl")
 
-(defun symex-eval-arc ()
+(defun symex-eval-common-lisp ()
   "Eval last sexp.
 
 Accounts for different point location in evil vs Emacs mode."
   (interactive)
-  (arc-send-last-sexp))
+  (slime-eval-last-expression))
 
-(defun symex-eval-definition-arc ()
+(defun symex-eval-definition-common-lisp ()
   "Eval entire containing definition."
-  (arc-send-definition))
+  (slime-eval-defun))
 
-(defun symex-eval-pretty-arc ()
+(defun symex-eval-pretty-common-lisp ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-arc))
+  (symex-eval-common-lisp))
 
-(defun symex-eval-thunk-arc ()
+(defun symex-eval-thunk-common-lisp ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  (let ((thunk-code (string-join
-                     `("("
-                       ,(buffer-substring (arc--repl-last-sexp-start)
-                                          (point))
-                       ")"))))
-    (arc--send-to-repl thunk-code)))
+  ;; can use slime-interactive-eval
+  (message "eval as thunk currently not supported for Common Lisp"))
 
-(defun symex-eval-print-arc ()
+(defun symex-eval-print-common-lisp ()
   "Eval symex and print result in buffer."
   (interactive)
-  nil)
+  (call-interactively 'slime-eval-print-last-expression))
 
-(defun symex-describe-symbol-arc ()
+(defun symex-describe-symbol-common-lisp ()
   "Describe symbol at point."
   (interactive)
-  nil)
+  (call-interactively 'slime-documentation))
 
-(defun symex-repl-arc ()
+(defun symex-repl-common-lisp ()
   "Go to REPL."
-  (arc-repl))
+  ;; this already goes to the active repl prompt
+  ;; so there's no need to move point there
+  (slime-repl))
 
-(defun symex-run-arc ()
+(defun symex-run-common-lisp ()
   "Evaluate buffer."
-  (error "Not implemented"))
+  (slime-eval-buffer))
 
 
-(provide 'symex-interface-arc)
-;;; symex-interface-arc.el ends here
+(provide 'symex-interface-common-lisp)
+;;; symex-interface-common-lisp.el ends here

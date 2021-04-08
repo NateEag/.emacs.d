@@ -38,6 +38,7 @@
 (require 'symex-interface-clojure)
 (require 'symex-interface-common-lisp)
 (require 'symex-interface-arc)
+(require 'symex-interop)
 
 ;; These are customization or config variables defined elsewhere;
 ;; explicitly indicating them here to avoid byte compile warnings
@@ -161,7 +162,7 @@
           (t (error "Symex mode: Lisp flavor not recognized!")))))
 
 (defun symex-evaluate-thunk ()
-  "Evaluate Symex as a thunk.
+  "Evaluate symex as a thunk.
 
 This treats the symex as a thunk -- i.e. a function that takes no
 arguments -- by (transparently) wrapping it in parens and then
@@ -217,7 +218,8 @@ executing it."
          (symex-repl-common-lisp))
         ((equal major-mode 'arc-mode)
          (symex-repl-arc))
-        (t (error "Symex mode: Lisp flavor not recognized!"))))
+        (t (error "Symex mode: Lisp flavor not recognized!")))
+  (symex-enter-lowest))
 
 (defun symex-run ()
   "Send to REPL."
@@ -270,7 +272,7 @@ Version 2017-11-01"
                             (t (error "Symex mode: Lisp flavor not recognized!"))))
          (buf (get-buffer buffer-name)))
     (let ((buf (or buf (symex--new-scratch-buffer buffer-name))))
-      (switch-to-buffer-other-window buf))))
+      (switch-to-buffer buf))))
 
 (defun symex-switch-to-messages-buffer ()
   "Switch to messages buffer while retaining focus in original window."
@@ -287,15 +289,6 @@ Version 2017-11-01"
               (save-excursion (forward-char) (lispy-right-p)))  ; |)
          (forward-char)
          (lispy-different))
-        ((symex-comment-line-p)
-         (symex-if-stuck (symex--go-backward)
-                         (symex--go-forward)))
-        ((looking-at-p "[[:space:]\n]")  ; <>| <> or <> |$
-         (condition-case nil
-             (progn (re-search-forward "[^[:space:]\n]")
-                    (backward-char))
-           (error (symex-if-stuck (symex--go-backward)
-                                  (symex--go-forward)))))
         ((thing-at-point 'sexp)  ; som|ething
          (beginning-of-thing 'sexp))
         (t (symex-if-stuck (symex--go-backward)
@@ -330,7 +323,49 @@ Version 2017-11-01"
 This interface will be removed in a future version."
   (symex-height))
 
-(defun symex-leap-backward (&optional soar)
+(defun symex-soar-backward (count)
+  "Leap backwards, crossing to a neighboring tree.
+
+At the moment, if a neighboring branch in the current tree is
+available in that direction, we leap to it.  In a future version of
+symex, this may be changed to always go to a neighboring tree,
+ignoring local branches.
+
+Leaps COUNT times, defaulting to once."
+  (interactive "p")
+  (dotimes (_ count)
+    (symex--leap-backward t)))
+
+(defun symex-soar-forward (count)
+  "Leap forward, crossing to a neighboring tree.
+
+At the moment, if a neighboring branch in the current tree is
+available in that direction, we leap to it.  In a future version of
+symex, this may be changed to always go to a neighboring tree,
+ignoring local branches.
+
+Leaps COUNT times, defaulting to once."
+  (interactive "p")
+  (dotimes (_ count)
+    (symex--leap-forward t)))
+
+(defun symex-leap-backward (count)
+  "Leap backward to a neighboring branch, preserving height and position.
+
+Leaps COUNT times, defaulting to once."
+  (interactive "p")
+  (dotimes (_ count)
+    (symex--leap-backward)))
+
+(defun symex-leap-forward (count)
+  "Leap forward to a neighboring branch, preserving height and position.
+
+Leaps COUNT times, defaulting to once."
+  (interactive "p")
+  (dotimes (_ count)
+    (symex--leap-forward)))
+
+(defun symex--leap-backward (&optional soar)
   "Leap backward to a neighboring branch, preserving height and position.
 
 If SOAR is true, leap between trees too, otherwise, stay in the
@@ -356,7 +391,6 @@ determine always from a common reference point (the root) the current
 height. This allows us to circumvent the need for 'memory' since this
 information could be computed afresh at each step.  This latter
 approach is the one employed here."
-  (interactive)
   (let ((traverse (if soar
                       symex--traversal-postorder
                     symex--traversal-postorder-in-tree))
@@ -399,7 +433,7 @@ approach is the one employed here."
                                        (= (symex-height)
                                           height))))))))))
 
-(defun symex-leap-forward (&optional soar)
+(defun symex--leap-forward (&optional soar)
   "Leap forward to a neighboring branch, preserving height and position.
 
 If SOAR is true, leap between trees too, otherwise, stay in the
@@ -407,7 +441,6 @@ current tree.
 
 See the documentation on `symex-leap-backward` for details regarding
 the implementation."
-  (interactive)
   (let ((traverse (if soar
                       symex--traversal-preorder
                     symex--traversal-preorder-in-tree))
@@ -466,17 +499,61 @@ is expected to handle in Emacs)."
     (symex--selection-side-effects)
     result))
 
-(advice-add #'symex-go-forward :around #'symex-selection-advice)
-(advice-add #'symex-go-backward :around #'symex-selection-advice)
-(advice-add #'symex-go-up :around #'symex-selection-advice)
-(advice-add #'symex-go-down :around #'symex-selection-advice)
-(advice-add #'symex-goto-first :around #'symex-selection-advice)
-(advice-add #'symex-goto-last :around #'symex-selection-advice)
-(advice-add #'symex-goto-lowest :around #'symex-selection-advice)
-(advice-add #'symex-goto-highest :around #'symex-selection-advice)
-(advice-add #'symex-traverse-forward :around #'symex-selection-advice)
-(advice-add #'symex-traverse-backward :around #'symex-selection-advice)
-(advice-add #'symex-select-nearest :around #'symex-selection-advice)
+(defun symex-selection-motion-advice (orig-fn count &rest args)
+  "Attach symex selection side effects to a given function.
+
+This is a version of `symex-selection-advice` that preserves a numeric
+argument supplied by the user, and can be used when the underlying
+function expects to receive one.
+
+ORIG-FN could be any function that results in a symex being selected.
+COUNT is the numeric argument provided via interactive invocation.
+ARGS are the arguments that were passed to ORIG-FN (as any advice function
+is expected to handle in Emacs)."
+  (interactive "p")
+  (let ((result (apply orig-fn count args)))
+    (symex--selection-side-effects)
+    result))
+
+(defun symex--add-selection-advice ()
+  "Add selection advice."
+  (advice-add #'symex-go-forward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-go-backward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-go-up :around #'symex-selection-motion-advice)
+  (advice-add #'symex-go-down :around #'symex-selection-motion-advice)
+  (advice-add #'symex-traverse-forward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-traverse-backward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-traverse-forward-skip :around #'symex-selection-motion-advice)
+  (advice-add #'symex-traverse-backward-skip :around #'symex-selection-motion-advice)
+  (advice-add #'symex-leap-forward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-leap-backward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-soar-forward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-soar-backward :around #'symex-selection-motion-advice)
+  (advice-add #'symex-goto-first :around #'symex-selection-advice)
+  (advice-add #'symex-goto-last :around #'symex-selection-advice)
+  (advice-add #'symex-goto-lowest :around #'symex-selection-advice)
+  (advice-add #'symex-goto-highest :around #'symex-selection-advice)
+  (advice-add #'symex-select-nearest :around #'symex-selection-advice))
+
+(defun symex--remove-selection-advice ()
+  "Remove selection advice."
+  (advice-remove #'symex-go-forward #'symex-selection-motion-advice)
+  (advice-remove #'symex-go-backward #'symex-selection-motion-advice)
+  (advice-remove #'symex-go-up #'symex-selection-motion-advice)
+  (advice-remove #'symex-go-down #'symex-selection-motion-advice)
+  (advice-remove #'symex-traverse-forward #'symex-selection-motion-advice)
+  (advice-remove #'symex-traverse-backward #'symex-selection-motion-advice)
+  (advice-remove #'symex-traverse-forward-skip #'symex-selection-motion-advice)
+  (advice-remove #'symex-traverse-backward-skip #'symex-selection-motion-advice)
+  (advice-remove #'symex-leap-forward #'symex-selection-motion-advice)
+  (advice-remove #'symex-leap-backward #'symex-selection-motion-advice)
+  (advice-remove #'symex-soar-forward #'symex-selection-motion-advice)
+  (advice-remove #'symex-soar-backward #'symex-selection-motion-advice)
+  (advice-remove #'symex-goto-first #'symex-selection-advice)
+  (advice-remove #'symex-goto-last #'symex-selection-advice)
+  (advice-remove #'symex-goto-lowest #'symex-selection-advice)
+  (advice-remove #'symex-goto-highest #'symex-selection-advice)
+  (advice-remove #'symex-select-nearest #'symex-selection-advice))
 
 (defun symex--remember-branch-position (orig-fn &rest args)
   "Remember branch position when descending the tree.
@@ -531,6 +608,12 @@ ORIG-FN applied to ARGS is the invocation being advised."
     (when result
       (setq symex--branch-memory nil))
     result))
+
+(defun symex-exit-mode ()
+  "Take necessary action upon symex mode exit."
+  (deactivate-mark)
+  (when symex-refocus-p
+    (symex--restore-scroll-margin)))
 
 (provide 'symex-misc)
 ;;; symex-misc.el ends here

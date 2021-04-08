@@ -1,4 +1,4 @@
-;;; symex-interface-scheme.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-arc.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,56 +21,64 @@
 
 ;;; Commentary:
 ;;
-;; Interface for the Scheme language
+;; Interface for the Arc language
 ;;
 
 ;;; Code:
 
-(require 'geiser-mode nil 'noerror)
+(require 'arc nil 'noerror)
 
-(declare-function geiser-eval-last-sexp "ext:geiser-mode")
-(declare-function geiser-eval-definition "ext:geiser-mode")
-(declare-function geiser-doc-symbol-at-point "ext:geiser-mode")
-(declare-function geiser-mode-switch-to-repl "ext:geiser-mode")
-(declare-function geiser-eval-buffer "ext:geiser-mode")
+(declare-function arc-send-last-sexp "ext:arc")
+(declare-function arc-send-definition "ext:arc")
+(declare-function arc--repl-last-sexp-start "ext:arc")
+(declare-function arc--send-to-repl "ext:arc")
+(declare-function arc-repl "ext:arc")
 
-(defun symex-eval-scheme ()
-  "Eval Scheme symex."
+(defun symex-eval-arc ()
+  "Eval last sexp.
+
+Accounts for different point location in evil vs Emacs mode."
   (interactive)
-  (geiser-eval-last-sexp nil))
+  (arc-send-last-sexp))
 
-(defun symex-eval-definition-scheme ()
+(defun symex-eval-definition-arc ()
   "Eval entire containing definition."
-  (geiser-eval-definition nil))
+  (arc-send-definition))
 
-(defun symex-eval-pretty-scheme ()
+(defun symex-eval-pretty-arc ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-scheme))
+  (symex-eval-arc))
 
-(defun symex-eval-thunk-scheme ()
+(defun symex-eval-thunk-arc ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  (message "eval as thunk currently not supported for Scheme"))
+  (let ((thunk-code (string-join
+                     `("("
+                       ,(buffer-substring (arc--repl-last-sexp-start)
+                                          (point))
+                       ")"))))
+    (arc--send-to-repl thunk-code)))
 
-(defun symex-eval-print-scheme ()
+(defun symex-eval-print-arc ()
   "Eval symex and print result in buffer."
   (interactive)
   nil)
 
-(defun symex-describe-symbol-scheme ()
+(defun symex-describe-symbol-arc ()
   "Describe symbol at point."
   (interactive)
-  (geiser-doc-symbol-at-point))
+  nil)
 
-(defun symex-repl-scheme ()
+(defun symex-repl-arc ()
   "Go to REPL."
-  (geiser-mode-switch-to-repl nil))
+  (arc-repl)
+  (goto-char (point-max)))
 
-(defun symex-run-scheme ()
+(defun symex-run-arc ()
   "Evaluate buffer."
-  (geiser-eval-buffer nil))
+  (error "Not implemented"))
 
 
-(provide 'symex-interface-scheme)
-;;; symex-interface-scheme.el ends here
+(provide 'symex-interface-arc)
+;;; symex-interface-arc.el ends here

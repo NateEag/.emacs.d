@@ -472,7 +472,10 @@
   queue mail if offline and to automatically send it when back online.
 
   Update: I have just installed the 'network-watch' package from MELPA, so this
-  should be just about trivial to do now.
+  should be just about trivial to do now. The one thing is I'd have to
+  distinguish between "network is up" and "I have an internet connection",
+  which the eping package might be useful for (or I could just shell out
+  myself).
 
   Incident count: 1
 

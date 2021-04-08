@@ -29,6 +29,7 @@
 (require 'rect)
 (require 'thingatpt)
 (require 'cl-lib)
+(require 'calc)
 
 ;;; Code:
 
@@ -2037,6 +2038,25 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
+(defun evil--eval-expr (input)
+  "Eval INPUT and return stringified result, if of a suitable type.
+If INPUT starts with a number, +, -, or . use `calc-eval' instead."
+  (let* ((first-char (car (remove ?\s (string-to-list input))))
+         (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
+         (result (if calcable-p
+                     (let ((calc-multiplication-has-precedence nil))
+                       (calc-eval input))
+                   (eval (car (read-from-string input))))))
+    (cond
+     (calcable-p result)
+     ((or (stringp result)
+          (numberp result)
+          (symbolp result))
+      (format "%s" result))
+     ((sequencep result)
+      (mapconcat (lambda (x) (format "%s" x)) result "\n"))
+     (t (user-error "Using %s as a string" (type-of result))))))
+
 (defun evil-get-register (register &optional _noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
@@ -2062,7 +2082,7 @@ The following special registers are supported.
         (or (cond
              ((eq register ?\")
               (current-kill 0))
-             ((and (<= ?1 register) (<= register ?9))
+             ((<= ?1 register ?9)
               (let ((reg (- register ?1)))
                 (and (< reg (length kill-ring))
                      (current-kill reg t))))
@@ -2127,16 +2147,21 @@ The following special registers are supported.
              ((eq register ?-)
               evil-last-small-deletion)
              ((eq register ?=)
-              (let* ((enable-recursive-minibuffers t)
-                     (result (eval (car (read-from-string (read-string "="))))))
-                (cond
-                 ((or (stringp result)
-                      (numberp result)
-                      (symbolp result))
-                  (prin1-to-string result))
-                 ((sequencep result)
-                  (mapconcat #'prin1-to-string result "\n"))
-                 (t (user-error "Using %s as a string" (type-of result))))))
+              (let ((enable-recursive-minibuffers t))
+                (setq evil-last-=-register-input
+                      (minibuffer-with-setup-hook
+                          (lambda () (when evil-last-=-register-input
+                                       (add-hook 'pre-command-hook #'evil-ex-remove-default)))
+                        (read-from-minibuffer
+                         "="
+                         (and evil-last-=-register-input
+                              (propertize evil-last-=-register-input 'face 'shadow))
+                         evil-eval-map
+                         nil
+                         'evil-eval-history
+                         evil-last-=-register-input
+                         t)))
+                (evil--eval-expr evil-last-=-register-input)))
              ((eq register ?_) ; the black hole register
               "")
              (t
@@ -2213,6 +2238,7 @@ to keep Vim compatibility with register jumps."
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
+                (list (cons ?= evil-last-=-register-input))
                 (cl-remove-if-not (lambda (reg) (number-or-marker-p (car reg))) register-alist)
                 nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
@@ -2647,7 +2673,8 @@ The tracked insertion is set to `evil-last-insertion'."
       (forward-char))))
 
 (defun evil-delete-yanked-rectangle (nrows ncols)
-  "Special function to delete the block yanked by a previous paste command."
+  "Special function to delete the block yanked by a previous paste command.
+Supplied as the `undo' element of a yank handler."
   (let ((opoint (point))
         (col (if (eq last-command 'evil-paste-after)
                  (1+ (current-column))

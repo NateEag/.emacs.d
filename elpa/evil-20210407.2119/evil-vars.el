@@ -704,6 +704,7 @@ expression matching the buffer's name and STATE is one of `normal',
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
+    bs-mode
     bubbles-mode
     bzr-annotate-mode
     calc-mode
@@ -1405,6 +1406,9 @@ type.")
 (evil-define-local-var evil-this-register nil
   "Current register.")
 
+(defvar evil-last-=-register-input nil
+  "Most recent input from the `=' register. A string.")
+
 (defvar evil-this-macro nil
   "Current macro register.")
 
@@ -1857,6 +1861,13 @@ See `evil-ex-init-shell-argument-completion'.")
 
 (defvar evil-previous-shell-command nil
   "The last shell command.")
+
+;; Eval
+(defvar evil-eval-history nil
+  "History of eval input, from the `=' register.")
+
+(defvar evil-eval-map (make-sparse-keymap)
+  "Keymap for eval input.")
 
 ;; Searching
 (defvar evil-ex-search-history nil

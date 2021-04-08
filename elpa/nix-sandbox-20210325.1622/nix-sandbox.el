@@ -3,10 +3,10 @@
 ;; Copyright (C) 2015 Sven Keidel
 
 ;; Author: Sven Keidel <svenkeidel@gmail.com>
-;; Package-Version: 20191126.759
+;; Package-Version: 20210325.1622
 ;; Package-X-Original-Version: 0.1
 ;; Package-Requires: ((dash "2.12.1") (s "1.10.0"))
-;; Package-Commit: 977b9a505ffc8b33b70ec7742f90e469b3168297
+;; Package-Commit: 053a2d5110ce05b7f99bcc2ac4804b70cbe87916
 ;; Homepage: https://github.com/travisbhartwell/nix-emacs
 
 ;; This file is not part of GNU Emacs.
@@ -63,7 +63,8 @@ e.g. /home/user/.nix-defexpr/channels/unstable/nixpkgs"
 ;;;###autoload
 (defun nix-shell-command (sandbox &rest args)
   "Assemble a command from ARGS that can be executed in the specified SANDBOX."
-  (list "bash" "-c" (format "source %s; %s" (nix-sandbox-rc sandbox) (s-join " " args))))
+  (list "bash" "-c" (format "source %s; %s" (nix-sandbox-rc sandbox)
+                            (mapconcat 'shell-quote-argument args " "))))
 
 (defun nix-shell-string (sandbox &rest args)
   "Assemble a command string from ARGS that can be executed in the specifed SANDBOX."
@@ -110,7 +111,11 @@ file is returned.  Otherwise if the directory contains a
               (sandbox-directory
                (funcall map-nil 'expand-file-name
                         (locate-dominating-file path
-                          '(lambda (dir) (directory-files dir t ".*\.nix$")))))
+                          '(lambda (dir)
+                             (seq-filter
+                              (lambda (candidate)
+                                (not (file-directory-p candidate)))
+                              (directory-files dir t ".*\\.nix$"))))))
               (shell-nix (and sandbox-directory (concat sandbox-directory "shell.nix"))))
          (if (and sandbox-directory (file-exists-p shell-nix))
              shell-nix

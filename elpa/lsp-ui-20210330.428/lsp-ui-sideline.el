@@ -196,7 +196,7 @@ This face have a low priority over the others."
   (save-excursion (goto-char 1) (forward-line 1) (> (point) pos)))
 
 (defun lsp-ui-sideline--calc-space (win-width str-len index)
-  "Calcul whether there is enough space on line.
+  "Calculate whether there is enough space on line.
 If there is enough space, it returns the point of the last
 character on the line.
 
@@ -212,20 +212,26 @@ INDEX is the line number (relative to the current line)."
 
 (defun lsp-ui-sideline--find-line (str-len bol eol &optional up offset)
   "Find a line where the string can be inserted.
-It loops on the nexts lines to find enough space.
-Returns the point of the last character on the line.
 
-STR-LEN is the string size.
-BOL & EOL are beginning and ending of the user point line.
-if UP is non-nil, it loops on the previous lines.
-if OFFSET is non-nil, it starts search OFFSET lines from user point line."
+It loops on the nexts lines to find enough space.  Returns the point
+of the last character on the line.
+
+Argument STR-LEN is the string size.
+Argument BOL and EOL are beginning and ending of the user point line.
+If optional argument UP is non-nil, it loops on the previous lines.
+If optional argument OFFSET is non-nil, it starts search OFFSET lines
+from user point line."
   (let ((win-width (lsp-ui-sideline--window-width))
         (index (if (null offset) 1 offset))
         pos)
     (while (and (null pos) (<= (abs index) 30))
       (setq index (if up (1- index) (1+ index)))
       (setq pos (lsp-ui-sideline--calc-space win-width str-len index)))
-    (if (and up (or (null pos) (lsp-ui-sideline--first-line-p pos)))
+    (if (and up (or (null pos)
+                    ;; This will avoid sideline not showing on the first
+                    ;; line of the buffer.
+                    (and (lsp-ui-sideline--first-line-p pos)
+                         (lsp-ui-sideline--first-line-p (point)))))
         (lsp-ui-sideline--find-line str-len bol eol nil offset)
       (and pos (or (> pos eol) (< pos bol))
            (push pos lsp-ui-sideline--occupied-lines)
@@ -265,9 +271,10 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
     (->> (if (> (length marked-string) win-width)
              (car (split-string marked-string "[\r\n]+"))
            marked-string)
-         (replace-regexp-in-string "[\n\r\t ]+" " "))))
+      (replace-regexp-in-string "[\n\r\t ]+" " "))))
 
 (defun lsp-ui-sideline--align (&rest lengths)
+  "Align sideline string by LENGTHS from the right of the window."
   (+ (apply '+ lengths)
      (if (display-graphic-p) 1 2)))
 
@@ -422,16 +429,17 @@ Push sideline overlays on `lsp-ui-sideline--ovs'."
              (display-lines (butlast lines (- (length lines) lsp-ui-sideline-diagnostic-max-lines)))
              (offset 1))
         (dolist (line (nreverse display-lines))
-          (let* ((message (string-trim (replace-regexp-in-string "[\t ]+" " " line)))
-                 (len (length message))
+          (let* ((msg (string-trim (replace-regexp-in-string "[\t ]+" " " line)))
+                 (msg (replace-regexp-in-string " " " " msg))
+                 (len (length msg))
                  (level (flycheck-error-level e))
                  (face (if (eq level 'info) 'success level))
                  (margin (lsp-ui-sideline--margin-width))
-                 (message (progn (add-face-text-property 0 len 'lsp-ui-sideline-global nil message)
-                                 (add-face-text-property 0 len face nil message)
-                                 message))
+                 (msg (progn (add-face-text-property 0 len 'lsp-ui-sideline-global nil msg)
+                             (add-face-text-property 0 len face nil msg)
+                             msg))
                  (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(lsp-ui-sideline--align len margin))))
-                                 (propertize message 'display (lsp-ui-sideline--compute-height))))
+                                 (propertize msg 'display (lsp-ui-sideline--compute-height))))
                  (pos-ov (lsp-ui-sideline--find-line len bol eol t offset))
                  (ov (and pos-ov (make-overlay (car pos-ov) (car pos-ov)))))
             (when pos-ov
@@ -466,7 +474,7 @@ Argument HEIGHT is an actual image height in pixel."
       (append it `(:scale ,(->> (cond (is-default 128)
                                       ((fboundp 'image-size) (cdr (image-size it t)))
                                       (t (error "Function image-size undefined.  Use default icon")))
-                                (lsp-ui-sideline--scale-lightbulb)))))))
+                             (lsp-ui-sideline--scale-lightbulb)))))))
 
 (defun lsp-ui-sideline--code-actions-image nil
   (when lsp-ui-sideline-actions-icon
@@ -487,9 +495,10 @@ Argument HEIGHT is an actual image height in pixel."
     (lsp-ui-sideline--delete-kind 'actions)
     (seq-doseq (action actions)
       (-let* ((title (->> (lsp:code-action-title action)
-                          (replace-regexp-in-string "[\n\t ]+" " ")
-                          (concat (unless lsp-ui-sideline-actions-icon
-                                    lsp-ui-sideline-code-actions-prefix))))
+                       (replace-regexp-in-string "[\n\t ]+" " ")
+                       (replace-regexp-in-string " " " ")
+                       (concat (unless lsp-ui-sideline-actions-icon
+                                 lsp-ui-sideline-code-actions-prefix))))
               (image (lsp-ui-sideline--code-actions-image))
               (margin (lsp-ui-sideline--margin-width))
               (keymap (let ((map (make-sparse-keymap)))
@@ -527,7 +536,7 @@ Argument HEIGHT is an actual image height in pixel."
           (delete-overlay it)
           t)
         lsp-ui-sideline--ovs)
-       (setq lsp-ui-sideline--ovs)))
+    (setq lsp-ui-sideline--ovs)))
 
 (defvar-local lsp-ui-sideline--last-tick-info nil)
 (defvar-local lsp-ui-sideline--previous-line nil)

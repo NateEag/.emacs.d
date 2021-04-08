@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.15.0
-;; Package-Requires: ((emacs "25.1") (tsc "0.15.0"))
+;; Version: 0.15.1
+;; Package-Requires: ((emacs "25.1") (tsc "0.15.1"))
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -264,7 +264,7 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
            ;; Disable MODE when `tree-sitter-mode' is disabled. Quoting is
            ;; important, because we don't want a variable-capturing closure.
            (add-hook 'tree-sitter--before-off-hook
-                     '(lambda () (,mode -1))
+                     (with-no-warnings '(lambda () (,mode -1)))
                      nil :local))
        ,teardown)))
 

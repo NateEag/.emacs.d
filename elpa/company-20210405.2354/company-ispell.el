@@ -75,6 +75,7 @@ If nil, use `ispell-complete-word-dict'."
            words
          ;; Work around issue #284.
          (all-completions arg words))))
+    (kind 'text)
     (sorted t)
     (ignore-case 'keep-prefix)))
 

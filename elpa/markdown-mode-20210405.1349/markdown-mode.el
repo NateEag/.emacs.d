@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.5-dev
-;; Package-Version: 20210220.1301
-;; Package-Commit: 051734091aba17a54af96b81beebdbfc84c26459
+;; Package-Version: 20210405.1349
+;; Package-Commit: ac9ea26b941eef512a3c206375a6404625c229ed
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -1779,7 +1779,7 @@ See `markdown-hide-markup' for additional details."
 (require 'font-lock)
 
 (defgroup markdown-faces nil
-  "Faces used in Markdown Mode"
+  "Faces used in Markdown Mode."
   :group 'markdown
   :group 'faces)
 
@@ -5418,7 +5418,7 @@ See also `markdown-mode-map'.")
 ;;; Menu ======================================================================
 
 (easy-menu-define markdown-mode-menu markdown-mode-map
-  "Menu for Markdown mode"
+  "Menu for Markdown mode."
   '("Markdown"
     "---"
     ("Movement"
@@ -8527,11 +8527,10 @@ or \\[markdown-toggle-inline-images]."
         (let* ((start (match-beginning 0))
               (imagep (match-beginning 1))
               (end (match-end 0))
-              (file (match-string-no-properties 6))
-              (unhex_file (url-unhex-string file)))
+              (file (match-string-no-properties 6)))
           (when (and imagep
                      (not (zerop (length file))))
-            (unless (file-exists-p unhex_file)
+            (unless (file-exists-p file)
               (let* ((download-file (funcall markdown-translate-filename-function file))
                      (valid-url (ignore-errors
                                   (member (downcase (url-type (url-generic-parse-url download-file)))
@@ -8540,11 +8539,13 @@ or \\[markdown-toggle-inline-images]."
                     (setq file (markdown--get-remote-image download-file))
                   (when (not valid-url)
                     ;; strip query parameter
-                    (setq file (replace-regexp-in-string "?.+\\'" "" file))))))
-            (when (file-exists-p unhex_file)
-              (let* ((abspath (if (file-name-absolute-p unhex_file)
-                                  unhex_file
-                                (concat default-directory unhex_file)))
+                    (setq file (replace-regexp-in-string "?.+\\'" "" file))
+                    (unless (file-exists-p file)
+                      (setq file (url-unhex-string file)))))))
+            (when (file-exists-p file)
+              (let* ((abspath (if (file-name-absolute-p file)
+                                  file
+                                (concat default-directory file)))
                      (image
                       (cond ((and markdown-max-image-size
                                (image-type-available-p 'imagemagick))

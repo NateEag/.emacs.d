@@ -318,12 +318,9 @@ And some tools that do not handle $EDITOR properly also break."
 (put 'with-editor-post-finish-hook 'permanent-local t)
 (put 'with-editor-post-cancel-hook 'permanent-local t)
 
-(defvar with-editor-show-usage t)
-(defvar with-editor-cancel-message nil)
-(defvar with-editor-previous-winconf nil)
-(make-variable-buffer-local 'with-editor-show-usage)
-(make-variable-buffer-local 'with-editor-cancel-message)
-(make-variable-buffer-local 'with-editor-previous-winconf)
+(defvar-local with-editor-show-usage t)
+(defvar-local with-editor-cancel-message nil)
+(defvar-local with-editor-previous-winconf nil)
 (put 'with-editor-cancel-message 'permanent-local t)
 (put 'with-editor-previous-winconf 'permanent-local t)
 
@@ -697,7 +694,7 @@ This works in `shell-mode', `term-mode', `eshell-mode' and
   (interactive (list (with-editor-read-envvar)))
   (cond
    ((derived-mode-p 'comint-mode 'term-mode)
-    (let ((process (get-buffer-process (current-buffer))))
+    (when-let ((process (get-buffer-process (current-buffer))))
       (goto-char (process-mark process))
       (process-send-string
        process (format " export %s=%s\n" envvar

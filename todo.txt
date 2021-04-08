@@ -6,12 +6,19 @@
   does what I want until it triggers this behavior, sort of a binary search
   *towards* a broken state.
 
+- Use text-mode if the first character in a todo.txt file is '-', as
+  that indicates one of my ad-hoc todo.txt files, not one that follows the
+  standard rules.
+
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
 
 - Bind C-k to previous result in ivy buffer switching. Make sure I'm taking the
   right approach to general ivy-based keybinds, as it works in projectile file
   search, but not in buffer switching.
+
+- Add an evil-mode textobject for comments. I've wanted this so many times and
+  I find it hard to believe it doesn't exist.
 
 - Add a vim textobject for URL. I attempted this as ne/textobj-url, but it
   definitely doesn't work. Gotta understand evil-define-text-object better, I

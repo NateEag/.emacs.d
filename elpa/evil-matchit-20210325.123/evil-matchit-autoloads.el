@@ -258,9 +258,9 @@ Use INFO returned by `evilmi-octave-get-tag' and NUM to jump to matched tag.
 Get current tag in org file." nil nil)
 
 (autoload 'evilmi-org-jump "evil-matchit-org" "\
+Jump to the matching tag using INFO and NUM.
 
-
-\(fn RLT NUM)" nil nil)
+\(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-org" '("evilmi-")))
 

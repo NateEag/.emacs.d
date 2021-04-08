@@ -94,7 +94,7 @@
 (defvar eshell-current-command)
 (defvar eshell-debug-command)
 (defvar eshell-current-command)
-
+(defvar tramp-archive-enabled)
 
 
 (defgroup helm-files nil
@@ -284,7 +284,7 @@ variable."
   :type 'boolean)
 
 (defcustom helm-ff-allow-non-existing-file-at-point nil
-  "Use file-at-point as initial input in `helm-find-files' even if it doesn't exists."
+  "Use non existing file-at-point as initial input in `helm-find-files'."
   :group 'helm-files
   :type 'boolean)
 
@@ -4628,20 +4628,23 @@ source is `helm-source-find-files'."
                    ("" nil)
                    (t it))))
     (unless (eq major-mode 'image-mode)
-      (or (and input (or (and (file-remote-p input) input)
-                         (expand-file-name input)))
-          (helm-find-files-input
-           (if (and helm-ff-allow-non-existing-file-at-point
-                    guesser
-                    (not (string-match ffap-url-regexp guesser)))
-               ;; Keep the ability of jumping to numbered lines even
-               ;; when allowing non existing filenames at point.
-               (helm-aand guesser
-                          (thing-at-point 'filename)
-                          (replace-regexp-in-string
-                           ":[0-9]+\\'" "" it))
-             guesser)
-           (thing-at-point 'filename))))))
+      (if input
+          (if (or (file-remote-p input)
+                  (string-match helm-ff-url-regexp input))
+              input
+            (expand-file-name input))
+        (helm-find-files-input
+         (if (and helm-ff-allow-non-existing-file-at-point
+                  guesser
+                  (not (string-match ffap-url-regexp guesser)))
+             ;; Keep the ability of jumping to numbered lines even
+             ;; when allowing non existing filenames at point.
+             (helm-aand guesser
+                        (thing-at-point 'filename)
+                        (replace-regexp-in-string
+                         ":[0-9]+\\'" "" it))
+           guesser)
+         (thing-at-point 'filename))))))
 
 (defun helm-ffap-guesser ()
   "Same as `ffap-guesser' but without gopher and machine support."
@@ -4970,7 +4973,7 @@ is nil."
           (trash (or trash (helm-ff--delete-by-moving-to-trash file)))
           (delete-by-moving-to-trash trash))
       (cond ((and (eq (nth 0 file-attrs) t)
-                  (directory-files file t dired-re-no-dot))
+                  (directory-files file t directory-files-no-dot-files-regexp))
              ;; Synchro means persistent deletion from HFF.
              (if synchro
                  (when (or helm-ff-allow-recursive-deletes
@@ -5616,7 +5619,9 @@ Don't call it from programs, use `helm-find-files-1' instead.
 This is the starting point for nearly all actions you can do on
 files."
   (interactive "P")
-  (let* ((hist            (and arg helm-ff-history (helm-find-files-history nil)))
+  (let* (tramp-archive-enabled ; Disable tramp-archive which is
+                               ; kicking in unexpectedly.
+         (hist            (and arg helm-ff-history (helm-find-files-history nil)))
          (smart-input     (or hist (helm-find-files-initial-input)))
          (default-input   (expand-file-name (helm-current-directory)))
          (input           (cond ((and (null hist)
@@ -5632,7 +5637,7 @@ files."
                                 ((and (not (string= smart-input ""))
                                       smart-input))
                                 (t default-input)))
-         (input-as-presel (null (nth 0 (file-attributes input))))
+         (input-as-presel (null (file-directory-p input)))
          (presel          (helm-aif (or hist
                                         (and input-as-presel input)
                                         (buffer-file-name (current-buffer))

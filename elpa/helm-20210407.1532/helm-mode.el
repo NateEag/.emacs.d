@@ -397,7 +397,11 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
   ;; only in the context of current-buffer (Bug#1030) .
   (with-helm-current-buffer
     (let ((cands
-           (cond ((vectorp collection)
+           (cond ((and alistp (hash-table-p collection))
+                  (cl-loop for k being the hash-keys of collection
+                           using (hash-values v)
+                           collect (cons k v)))
+                 ((vectorp collection)
                   (all-completions input collection test))
                  ((and (symbolp collection) (boundp collection)
                        ;; Bug#324 history is let-bounded and given
@@ -566,7 +570,9 @@ It is helm `completing-read' equivalent.
 
 - PROMPT is the prompt name to use.
 
-- COLLECTION can be a list, vector, obarray or hash-table.
+- COLLECTION can be a list, alist, vector, obarray or hash-table.
+  For alists and hash-tables their car are use as real value of
+  candidate unless ALISTP is non-nil.
   It can be also a function that receives three arguments:
   the values string, predicate and t. See `all-completions' for more details.
 
@@ -640,7 +646,12 @@ Keys description:
 
 - NOMARK: When non--nil don't allow marking candidates.
 
-- ALISTP: (default is non--nil) See `helm-comp-read-get-candidates'.
+- ALISTP:
+  When non-nil (default) pass the value of (DISPLAY . REAL)
+  candidate in COLLECTION to action when COLLECTION is an alist or a
+  hash-table, otherwise DISPLAY is always returned as result on exit,
+  which is the default when using `completing-read'.
+  See `helm-comp-read-get-candidates'.
 
 - CANDIDATES-IN-BUFFER: when non--nil use a source build with
   `helm-source-in-buffer' which is much faster.
@@ -1330,7 +1341,9 @@ Keys description:
          (result (helm
                   :sources (if helm-mode-reverse-history
                                (reverse src-list) src-list)
-                  :input (expand-file-name initial-input)
+                  :input (if (string-match helm-ff-url-regexp initial-input)
+                             initial-input
+                           (expand-file-name initial-input))
                   :prompt prompt
                   :candidate-number-limit candidate-number-limit
                   :resume 'noresume
@@ -1466,7 +1479,9 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
                        :buffer buf-name
                        :default default-filename
                        ;; Helm handlers should always have a non nil INITIAL arg.
-                       :initial-input (expand-file-name init dir)
+                       :initial-input (if (string-match helm-ff-url-regexp init)
+                                          init
+                                        (expand-file-name init dir))
                        :alistp nil
                        :nomark (null helm-comp-read-use-marked)
                        :marked-candidates helm-comp-read-use-marked

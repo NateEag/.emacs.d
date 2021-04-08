@@ -7,8 +7,8 @@
 ;; Description: Preview line when executing `goto-line` command.
 ;; Keyword: line navigation
 ;; Version: 0.1.1
-;; Package-Version: 20210113.616
-;; Package-Commit: 605a182c389b60b11dad0738babc66d227a4ed23
+;; Package-Version: 20210323.422
+;; Package-Commit: c83688ea95b4308145555fea50e953a26d67b1b2
 ;; Package-Requires: ((emacs "25"))
 ;; URL: https://github.com/jcs-elpa/goto-line-preview
 
@@ -90,11 +90,12 @@
         jumped)
     (run-hooks 'goto-line-preview-before-hook)
     (unwind-protect
-        (setq jumped (read-number
-                      (if goto-line-preview--relative-p
-                          "Goto line relative: "
-                        "Goto line: ")))
-      (unless jumped
+        (setq jumped (read-number (if goto-line-preview--relative-p
+                                      "Goto line relative: "
+                                    "Goto line: ")))
+      (if jumped
+          (with-current-buffer (window-buffer goto-line-preview--prev-window)
+            (unless (region-active-p) (push-mark window-point)))
         (set-window-point goto-line-preview--prev-window window-point))
       (run-hooks 'goto-line-preview-after-hook))))
 

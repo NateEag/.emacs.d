@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/goto-line-preview-20210113.616/goto-line-preview.el  -*- no-byte-compile: t -*-
-(define-package "goto-line-preview" "20210113.616" "Preview line when executing `goto-line` command" '((emacs "25")) :commit "605a182c389b60b11dad0738babc66d227a4ed23" :authors '(("Shen, Jen-Chieh" . "jcs090218@gmail.com")) :maintainer '("Shen, Jen-Chieh" . "jcs090218@gmail.com") :url "https://github.com/jcs-elpa/goto-line-preview")

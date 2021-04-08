@@ -48,7 +48,7 @@ Key bindings:
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-tree-sitter" '("csharp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-tree-sitter" '("csharp-" "tree-sitter-indent-csharp-tree-sitter-scopes")))
 
 ;;;***
 

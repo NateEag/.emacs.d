@@ -26,6 +26,7 @@
 
 ;;; Code:
 (require 'cl-lib)
+(require 'cl-extra)
 (require 'seq)
 
 (require 'tree-sitter)
@@ -40,7 +41,7 @@
 
 ;;; Tree-sitter
 
-(defvar-local csharp-mode-tree-sitter-patterns
+(setq csharp-mode-tree-sitter-patterns
   [ ;; Various constructs
    (comment) @comment
    (modifier) @keyword
@@ -139,9 +140,11 @@
 
    ;; Parameter
    (parameter
+    type: (qualified_name) @type)
+   (parameter
     type: (identifier) @type
-    name: (identifier) @variable)
-   (parameter (identifier) @variable)
+    name: (identifier) @variable.parameter)
+   (parameter (identifier) @variable.parameter)
 
    ;; Array
    (array_rank_specifier (identifier) @variable)
@@ -161,7 +164,9 @@
    (type_of_expression (identifier) @variable)
 
    ;; Member access
-   (member_access_expression (identifier) @function)
+   (invocation_expression (member_access_expression (generic_name (identifier) @method.call)))
+   (invocation_expression (member_access_expression (identifier)\? @method.call .))
+   (member_access_expression (identifier) @variable)
 
    ;; Variable
    (variable_declaration (identifier) @type)
@@ -178,7 +183,7 @@
    (type_parameter
     (identifier) @type)
    (type_argument_list
-    (identifier) @type)
+    (identifier) @type.argument)
    (generic_name
     (identifier) @type)
    (implicit_type) @type
@@ -189,8 +194,8 @@
    ;; Type constraints
    (type_parameter_constraints_clause
     (identifier) @type)
-   (type_parameter_constraint
-    (identifier) @type)
+   ;; (type_parameter_constraint
+   ;;  (identifier) @type) ;; causes parsing error in tree-sitter
    (type_constraint
     (identifier) @type)
 
@@ -198,7 +203,7 @@
    (binary_expression (identifier) @variable (identifier) @variable)
    (binary_expression (identifier)* @variable)
    (conditional_expression (identifier) @variable)
-   (prefix_unary_expression (identifier)* @variable)
+   ;; (prefix_unary_expression (identifier)* @variable) ;; crashes tree-sitter c-code with SIGABRT
    (postfix_unary_expression (identifier)* @variable)
    (assignment_expression (identifier) @variable)
    (cast_expression (identifier) @type)
@@ -233,18 +238,18 @@
    (lock_statement (identifier) @variable)
 
    ;; Other
-   (argument_list
-    (identifier) @variable)
+   ;; (argument_list
+   ;;  (identifier) @variable) ;; causes parsing error in tree-sitter
    (label_name) @variable
-   (qualified_name (identifier) @type)
-   (using_directive (identifier)* @type)
-   (await_expression (identifier)* @function)
+   (using_directive (identifier) @type.parameter)
+   (using_directive (qualified_name) @type.parameter)
+   (using_directive (name_equals (identifier) @type.parameter))
+   ;; (await_expression (identifier)* @function) ;; crashes tree-sitter c-code with sigabrt!
    (invocation_expression (identifier) @function)
    (element_access_expression (identifier) @variable)
    (conditional_access_expression (identifier) @variable)
    (member_binding_expression (identifier) @variable)
-   (name_colon (identifier)* @variable)
-   (name_equals (identifier) @type)
+   (name_colon (identifier)* @variable.special)
    (field_declaration)
    (argument (identifier) @variable)
 
@@ -254,19 +259,19 @@
    ;; Interpolation
    ;; (interpolated_string_expression) @string
    ]
-  "Default patterns for tree-sitter support.")
+  )
 
 ;;; Tree-sitter indentation
 
 (defgroup csharp-mode-indent nil "Indent lines using Tree-sitter as backend"
   :group 'tree-sitter)
 
-(defcustom csharp-mode-indent-offset 4
-  "Indent offset for csharp-mode"
+(defcustom csharp-tree-sitter-indent-offset 4
+  "Indent offset for csharp-tree-sitter-mode."
   :type 'integer
   :group 'csharp)
 
-(defvar csharp-mode-indent-scopes
+(defvar tree-sitter-indent-csharp-tree-sitter-scopes
   '((indent-all . ;; these nodes are always indented
                 (accessor_declaration
                  break_statement
@@ -274,6 +279,7 @@
                  parameter_list
                  conditional_expression
                  constructor_initializer
+                 argument_list
                  "."))
     (indent-rest . ;; if parent node is one of these and node is not first → indent
                  (
@@ -307,9 +313,60 @@
     (outdent . ;; these nodes always outdent (1 shift in opposite direction)
              (;; "}"
               case_switch_label
+
               ))
+
+    (align-to-node-line . ;; this group has lists of alist (node type . (node types... ))
+                          ;; we move parentwise, searching for one of the node
+                          ;; types associated with the key node type. if found,
+                          ;; align key node with line where the ancestor node
+                          ;; was found.
+             ((block . (lambda_expression))))
     )
   "Scopes for indenting in C#.")
+
+;;; tree-sitter helper-functions. navigation, editing, etc.
+;;; may be subject to future upstreaming-effort
+
+(defun csharp-beginning-of-defun ()
+  "Replacement-function for `beginning-of-defun' for `csharp-tree-sitter-mode'."
+  (interactive)
+  (when-let ((declaration
+              (cl-some (lambda (decl)
+                         (tree-sitter-node-at-point decl))
+                       '(method_declaration
+                         constructor_declaration
+                         class_declaration
+                         namespace_declaration))))
+    (goto-char (tsc-node-start-position declaration))))
+
+(defun csharp-end-of-defun ()
+  "Replacement-function for `end-of-defun' for `csharp-tree-sitter-mode'."
+  (interactive)
+  (when-let ((declaration
+              (cl-some (lambda (decl)
+                         (tree-sitter-node-at-point decl))
+                       '(method_declaration
+                         constructor_declaration
+                         class_declaration
+                         namespace_declaration))))
+    (goto-char (tsc-node-end-position declaration))))
+
+(defun csharp-delete-method-at-point ()
+  "Deletes the method at point."
+  (interactive)
+  (when-let ((method (tree-sitter-node-at-point 'method_declaration)))
+    (delete-region (tsc-node-start-position method)
+                   (tsc-node-end-position method))))
+
+(defun csharp-change-string-at-point ()
+  "Change string at point."
+  (interactive)
+  (when-let ((method (tree-sitter-node-at-point 'string_literal)))
+    (delete-region (1+ (tsc-node-start-position method))
+                   (1- (tsc-node-end-position method)))))
+
+;;; end tree-sitter helper-functions.
 
 (defvar csharp-tree-sitter-mode-map
   (let ((map (make-sparse-keymap)))
@@ -330,9 +387,9 @@ Key bindings:
   :group 'csharp
   :syntax-table csharp-tree-sitter-mode-syntax-table
 
-  (setq-local tree-sitter-indent-current-scopes csharp-mode-indent-scopes)
-  (setq-local tree-sitter-indent-offset csharp-mode-indent-offset)
   (setq-local indent-line-function #'tree-sitter-indent-line)
+  (setq-local beginning-of-defun-function #'csharp-beginning-of-defun)
+  (setq-local end-of-defun-function #'csharp-end-of-defun)
 
   ;; https://github.com/ubolonton/emacs-tree-sitter/issues/84
   (unless font-lock-defaults
@@ -343,7 +400,8 @@ Key bindings:
   (setq-local comment-start-skip "\\(?://+\\|/\\*+\\)\\s *")
   (setq-local comment-end "")
 
-  (tree-sitter-hl-mode))
+  (tree-sitter-hl-mode)
+  (tree-sitter-indent-mode))
 
 (add-to-list 'tree-sitter-major-mode-language-alist '(csharp-tree-sitter-mode . c-sharp))
 

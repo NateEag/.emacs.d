@@ -1,9 +1,9 @@
-(define-package "csharp-mode" "20210311.1831" "C# mode derived mode"
+(define-package "csharp-mode" "20210328.2004" "C# mode derived mode"
   '((emacs "26.1")
-    (tree-sitter "0.12.1")
+    (tree-sitter "0.15.1")
     (tree-sitter-indent "0.1")
-    (tree-sitter-langs "0.9.1"))
-  :commit "43e591987f620479413defa3d0bc5b3cd7887159" :authors
+    (tree-sitter-langs "0.10.0"))
+  :commit "33e3042535e70a284389f8da1c495958fed8a826" :authors
   '(("Theodor Thornhill" . "theo@thornhill.no"))
   :maintainer
   '("Jostein Kjønigsen" . "jostein@gmail.com")

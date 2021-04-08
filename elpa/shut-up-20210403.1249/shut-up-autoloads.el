@@ -1,9 +1,12 @@
 ;;; shut-up-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "shut-up" "shut-up.el" (23400 19330 0 0))
+;;;### (autoloads nil "shut-up" "shut-up.el" (0 0 0 0))
 ;;; Generated autoloads from shut-up.el
 
 (autoload 'shut-up "shut-up" "\
@@ -33,9 +36,9 @@ Silence Emacs.
 Change Emacs settings to reduce the output.
 
 WARNING: This function has GLOBAL SIDE-EFFECTS.  You should only
-call this function in `noninteractive' sessions.
+call this function in `noninteractive' sessions." nil nil)
 
-\(fn)" nil nil)
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shut-up" '("inhibit-message" "shut-up-")))
 
 ;;;***
 
@@ -43,5 +46,6 @@ call this function in `noninteractive' sessions.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; shut-up-autoloads.el ends here

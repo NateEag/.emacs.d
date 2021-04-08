@@ -1,27 +1,46 @@
-This is web.info, produced by makeinfo version 6.5 from web.texi.
+This is geiser.info, produced by makeinfo version 6.5 from geiser.texi.
+
+This manual documents Geiser, an Emacs environment to hack in Scheme.
+
+   Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020,
+2021 Jose Antonio Ortega Ruiz
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is available from the
+     Free Software Foundation Web site at
+     <http://www.gnu.org/licenses/fdl.html>.
+
+   The document was typeset with GNU Texinfo
+(http://www.gnu.org/software/texinfo/index.html).
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Geiser: (geiser).           Emacs environment for Scheme hacking.
+END-INFO-DIR-ENTRY
 
 
-File: web.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
+File: geiser.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 
-Geiser is a collection of Emacs major and minor modes that conspire with
-one or more Scheme interpreters to keep the Lisp Machine Spirit alive.
-It draws inspiration (and a bit more) from environments such as Common
-Lisp's Slime, Factor's FUEL, Squeak or Emacs itself, and does its best
-to make Scheme hacking inside Emacs (even more) fun.
+Geiser
+******
 
-   Or, to be precise, what i (https://jao.io) consider fun.  Geiser is
-thus my humble contribution to the dynamic school of expression, and a
-reaction against what i perceive as a derailment, in modern times, of
-standard Scheme towards the static camp.  Because i prefer growing and
-healing to poking at corpses, the continuously running Scheme
-interpreter takes the center of the stage in Geiser.  A bundle of Elisp
-shims orchestrates the dialog between the Scheme interpreter, Emacs and,
-ultimately, the schemer, giving her access to live metadata.  Here's
-how.
+This manual documents Geiser, an Emacs environment to hack in Scheme.
 
-   Version 0.12 (February 2020) for Guile 2.2 Chicken 4.8.0 GNU/MIT 9.1
-Chez 9.4 Chibi 0.7 Gambit 4.9 and Racket 6.0
-(https://gitlab.com/jaor/geiser/-/releases)
+   Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020,
+2021 Jose Antonio Ortega Ruiz
+
+     Permission is granted to copy, distribute and/or modify this
+     document under the terms of the GNU Free Documentation License,
+     Version 1.3 or any later version published by the Free Software
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is available from the
+     Free Software Foundation Web site at
+     <http://www.gnu.org/licenses/fdl.html>.
+
+   The document was typeset with GNU Texinfo
+(http://www.gnu.org/software/texinfo/index.html).
 
 * Menu:
 
@@ -33,8 +52,65 @@ Chez 9.4 Chibi 0.7 Gambit 4.9 and Racket 6.0
 * No hacker is an island::
 * Index::
 
+ -- The Detailed Node Listing --
+
+Introduction
+
+* Modus operandi::
+* Showing off::
+
+Installation
+
+* Must needs::
+* The quick and easy way::
+* From the source's mouth::
+* Friends::
+
+The REPL
+
+* Starting the REPL::
+* First aids::
+* Switching context::
+* Completion and error handling::
+* Autodoc and friends::
+* Seeing is believing::
+* Customization and tips::
+
+Between the parens
+
+* Activating Geiser::
+* The source and the REPL::
+* Documentation helpers::
+* To eval or not to eval::
+* To err perchance to debug::
+* Jumping around::
+* Geiser writes for you::
+
+Cheat sheet
+
+* Scheme buffers::
+* REPL::
+* Documentation browser::
+
+
+   Geiser is a collection of Emacs major and minor modes that conspire
+with one or more Scheme interpreters to keep the Lisp Machine Spirit
+alive.  It draws inspiration (and a bit more) from environments such as
+Common Lisp's Slime, Factor's FUEL, Squeak or Emacs itself, and does its
+best to make Scheme hacking inside Emacs (even more) fun.
+
+   Or, to be precise, what i (https://jao.io) consider fun.  Geiser is
+thus my humble contribution to the dynamic school of expression, and a
+reaction against what i perceive as a derailment, in modern times, of
+standard Scheme towards the static camp.  Because i prefer growing and
+healing to poking at corpses, the continuously running Scheme
+interpreter takes the center of the stage in Geiser.  A bundle of Elisp
+shims orchestrates the dialog between the Scheme interpreter, Emacs and,
+ultimately, the schemer, giving her access to live metadata.  Here's
+how.
+
 
-File: web.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
+File: geiser.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
 
 1 Introduction
 **************
@@ -49,7 +125,7 @@ that's enough for you, see *note Installation:: to get it running and
 * Showing off::
 
 
-File: web.info,  Node: Modus operandi,  Next: Showing off,  Prev: Introduction,  Up: Introduction
+File: geiser.info,  Node: Modus operandi,  Next: Showing off,  Prev: Introduction,  Up: Introduction
 
 1.1 Modus operandi
 ==================
@@ -88,7 +164,7 @@ on, Dan Leslie added support for Chicken, and there's active work to add
 support for scsh.
 
 
-File: web.info,  Node: Showing off,  Prev: Modus operandi,  Up: Introduction
+File: geiser.info,  Node: Showing off,  Prev: Modus operandi,  Up: Introduction
 
 1.2 Showing off
 ===============
@@ -119,7 +195,7 @@ actually are (i'm just swanking here), and how to use them for your
 profit.  But, before that, let's see how to install Geiser.
 
 
-File: web.info,  Node: Installation,  Next: The REPL,  Prev: Introduction,  Up: Top
+File: geiser.info,  Node: Installation,  Next: The REPL,  Prev: Introduction,  Up: Top
 
 2 Installation
 **************
@@ -127,44 +203,52 @@ File: web.info,  Node: Installation,  Next: The REPL,  Prev: Introduction,  Up: 
 * Menu:
 
 * Must needs::
-* The easy and quick way::
-* Chicken installation::
-* Gambit installation::
+* The quick and easy way::
 * From the source's mouth::
 * Friends::
 
 
-File: web.info,  Node: Must needs,  Next: The easy and quick way,  Prev: Installation,  Up: Installation
+File: geiser.info,  Node: Must needs,  Next: The quick and easy way,  Prev: Installation,  Up: Installation
 
 2.1 Must needs
 ==============
 
 If Geiser came with any guarantees, you'd break all of them by not using
-GNU Emacs 24 (or better: i regularly use it with a recent Emacs
+GNU Emacs 24.4 (or better: i regularly use it with a recent Emacs
 snapshot) and at least one of the supported Schemes, namely:
 
-   * Guile (http://www.gnu.org/software/guile) 2.2 or better
-   * Chicken (http://call-cc.org) 4.8.0 or better
-   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme/) 9.1 or
-     better
-   * Chibi Scheme (http://synthcode.com/scheme/chibi/) 0.7 or better
-   * Chez Scheme (http://www.scheme.com) 9.4 or better
-   * Gambit (http://gambitscheme.org/wiki/index.php/Main_Page) 4.9 or
-     better
-   * Racket (http://www.racket-lang.org) 6.0 or better
+   * Chez (9.4) 9.4 or better, via geiser-chez
+     (https://gitlab.com/emacs-geiser/chez)
+   * Chibi (0.7.3) 0.7.3 or better, via geiser-chez
+     (https://gitlab.com/emacs-geiser/chez)
+   * Chicken (4.8.0) 4.8.0 or better, via geiser-chicken
+     (https://gitlab.com/emacs-geiser/chicken)
+   * Gambit (4.9.3) 4.9.3 or better, via geiser-gambit
+     (https://gitlab.com/emacs-geiser/gambit)
+   * Gauche (0.9.6) 0.9.6 or better, via geiser-gauche
+     (https://gitlab.com/emacs-geiser/gauche)
+   * Guile (2.2) 2.2 or better, via geiser-guile
+     (https://gitlab.com/emacs-geiser/guile)
+   * GNU Kawa (3.1) 3.1 or better, via geiser-kawa
+     (https://gitlab.com/emacs-geiser/kawa)
+   * MIT/GNU Scheme (9.0) 9.0 or better, via geiser-mit
+     (https://gitlab.com/emacs-geiser/mit)
+   * Racket (7.0) 7.0 or better, via geiser-racket
+     (https://gitlab.com/emacs-geiser/racket)
+   * Stklos (1.50) 1.50 or better, via geiser-stklos
+     (https://gitlab.com/emacs-geiser/stklos)
 
    Since Geiser supports multiple REPLs, having all of them will just
 add to the fun.
 
-   You'll also need Geiser itself.  The quickest installation is via its
-ELPA package, as described in the next section.  If you prefer to use
-the source code directly, it's not that difficult either: just keep on
-reading.
+   You'll also need Geiser itself.  The quickest installation is via
+your favourite implementation's ELPA packages (as of this writing,
+they're all available in MELPA).
 
 
-File: web.info,  Node: The easy and quick way,  Next: Chicken installation,  Prev: Must needs,  Up: Installation
+File: geiser.info,  Node: The quick and easy way,  Next: From the source's mouth,  Prev: Must needs,  Up: Installation
 
-2.2 The easy and quick way
+2.2 The quick and easy way
 ==========================
 
 Did i mention that the easiest way of installing Geiser is using its
@@ -190,175 +274,45 @@ repo).  To tell Emacs that an ELPA repo exists, you add it to
 
      (package-initialize)
 
-   And then installing Geiser is as easy as:
+   And then installing your favourite Geiser is as easy as (if, say,
+you're a MIT aficionado):
 
-     M-x package-install RET geiser RET
+     M-x package-install RET geiser-mit RET
 
-   Unless you are using Gambit or Chicken, with that, you are pretty
-much all set up.  See *note The REPL:: to start using Geiser.  If you
-plan to use Chicken or Gambit, just keep reading below for a few
-additional instructions to set up your environment.
+   Rinse and repeat for each of the scheme implementations that you
+would like to use.  Some of them (e.g.  Gambit or Chicken) have a bit of
+additional setup, specific to them, so make sure you also check their
+respective package documentation.
 
-
-File: web.info,  Node: Chicken installation,  Next: Gambit installation,  Prev: The easy and quick way,  Up: Installation
-
-2.3 Chicken installation
-========================
-
-If you plan to use Chicken, you'll need also to fire a terminal and
-configure a couple of Chicken eggs.  For Chicken 4 that would be:
-     $ chicken-install -s apropos chicken-doc
-     $ cd `csi -p '(chicken-home)'`
-     $ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
-
-   while Chicken 5 prefers:
-     $ chicken-install -s apropos chicken-doc srfi-18 srfi-1
-     $ cd `csi -R chicken.platform -p '(chicken-home)'`
-     $ curl https://3e8.org/pub/chicken-doc/chicken-doc-repo-5.tgz | sudo tar zx
-
-   (see also Chicken's wiki (https://wiki.call-cc.org/emacs#geiser)).
+   With that, you are pretty much all set up.  See *note The REPL:: to
+start using Geiser.
 
 
-File: web.info,  Node: Gambit installation,  Next: From the source's mouth,  Prev: Chicken installation,  Up: Installation
+File: geiser.info,  Node: From the source's mouth,  Next: Friends,  Prev: The quick and easy way,  Up: Installation
 
-2.4 Gambit installation
-=======================
-
-If you plan to use Gambit, you'll also need to open a terminal and
-configure a couple of awesome Gambit's features:
-
-  1. Clone the last version of gambit and of this repo
-  2. Configure Gambit using '--enable-rtlib-debug-source' to activate
-     autodoc
-              $ cd ~/
-              $ git clone "the gambit repo current address"
-              $ cd gambit
-              $ ./configure --enable-single-host --enable-debug --enable-rtlib-debug-source
-              $ make bootstrap
-              $ make bootclean
-              $ make -j
-              $ make install
-  3. Put a link to 'geiser/elisp/geiser.el' in your init file in your
-     init file paste :
-              (load-file "~/geiser/elisp/geiser.el")
-     (the path is your path to geiser.el.)
-
-   And, if you also want to use a remote Gambit REPL:
-
-  1. Enable the gambit/geiser module:
-              $ mkdir ~/gambit/lib/gambit/geiser
-              $ cp ~/geiser/geiser-module/* ~/gambit/lib/geiser/
-  2. Now that you have the module you start gsi with it and using the
-     '-:d' option:
-              $ gsi -:d gambit/geiser -
-  3. You can now open emacs and call
-              M-x geiser-connect gambit
-     Enjoy!
-
-   By the way, if you are unable to use gambit modules, open gsi with
-the 'gambit.scm' file located in
-'geiser/scheme/gambit/geiser/gambit.scm'; something like:
-             gsi -:d ~/geiser/scheme/gambit/geiser/gambit.scm -
-   (Keep in mind that these paths may be a little different for you.)
-
-
-File: web.info,  Node: From the source's mouth,  Next: Friends,  Prev: Gambit installation,  Up: Installation
-
-2.5 Installing from source
+2.3 Installing from source
 ==========================
 
-Downloading Geiser
-..................
-
-The latest release tarballs can be found here
-(https://gitlab.com/jaor/geiser/-/releases).
-
-   If you feel like living on the bleeding edge, just grab Geiser from
-its Git repository over at Savannah
-(http://git.savannah.nongnu.org/cgit/geiser.git/), either with the
-following incantation:
-
-     git clone git://git.sv.gnu.org/geiser.git
-
-or, if you happen to live behind a firewall, with the alternative:
-
-     git clone http://git.sv.gnu.org/r/geiser.git
-
-You can also follow Geiser's development in one
-(https://gitlab.com/jaor/geiser) or (http://repo.or.cz/w/geiser.git)
-three (http://gitorious.org/geiser) mirrors that are kept synchronized
-with the one at Savannah.
-
-   Either way, you'll now be in possession of a copy of Geiser's libre
-code.  I'll follow you into its directory and the next section.
-
-Setting it up
-.............
-
-Geiser is ready to be used out of the box without much more ado.  For
-the sake of concreteness, let's assume you put its source in the
-directory '~/lisp/geiser'.  All you need to do is to add the following
-line to your Emacs initialisation file (be it '~/.emacs',
+All Geiser packages are ready to be used out of the box without much
+more ado.  For the sake of concreteness, let's assume you put its source
+in the directory '~/lisp/geiser'.  All you need to do is to add the
+following line to your Emacs initialisation file (be it '~/.emacs',
 '~/.emacs.d/init.el' or any of its moral equivalents):
 
-     (load-file "~/lisp/geiser/elisp/geiser.el")
+     (add-to-list 'load-path "~/lisp/geiser/elisp")
 
-or simply evaluate that form inside Emacs (you wouldn't kill a friend
-just to start using Geiser, would you?).  That's it: you're ready to go
-(*note The REPL::).
+   and, if your, say, 'geiser-gambit' checkout lives in
+'~/lisp/geiser-mit' add to that:
 
-   What?  You still here?  I promise the above is all that's needed to
-start using Geiser.  But, in case you are missing your configure/make
-all install routine, by all means, you can go through those motions to
-byte compile and install Geiser too.  That is, you enter the source
-directory and (since we grabbed the development tree) run the customary
-autogen script:
+     (add-to-list 'load-path "~/lisp/geiser-gambit")
 
-     $ cd ~/lisp/geiser
-     $ ./autogen.sh
-
-I recommend that you compile Geiser in a separate directory:
-
-     $ mkdir build && cd build
-     $ ../configure
-     <some drivel here>
-     $ make all
-     <more of the above>
-
-   Now you have two options: loading the byte-compiled Geiser from the
-'elisp' subdirectory, or installing it system-wide.  To load the
-byte-code from here, add this line to your initialisation file:
-
-     (load "~/lisp/geiser/build/elisp/geiser-load")
-
-and eval that form and you're done (you could also restart Emacs, but
-killing your friends is widely considered bad form).  Yes, that's 'load'
-and 'geiser-load' instead of 'load-file' and 'geiser.el'.
-
-   If you prefer a system-wide installation, just type:
-
-     $ sudo make install
-
-   With the above spell, Geiser will be compiled and installed in a safe
-place inside Emacs' load path.  To load it into Emacs you'll need,
-instead of the 'load-file' form above, the following line in your
-initialisation file:
-
-     (require 'geiser-install)
-
-Please note that we're requiring 'geiser-install', and not 'geiser', and
-that there's no 'load-file' to be seen this time.  There are some ways
-of fine-tuning this process, mainly by providing additional arguments in
-the call to configure: you'll find those gory details in the file called
-'INSTALL', right at the root of the source tree.  The installation will
-also take care of placing this manual, in Info format, where Emacs can
-find it, so you can continue to learn about Geiser inside its natural
-habitat.  See you there and into the next chapter!
+   The autoloads defined in those packages should be enough to start
+scheming.
 
 
-File: web.info,  Node: Friends,  Prev: From the source's mouth,  Up: Installation
+File: geiser.info,  Node: Friends,  Prev: From the source's mouth,  Up: Installation
 
-2.6 Friends
+2.4 Friends
 ===========
 
 Although Geiser does not need them, it plays well with (and is enhanced
@@ -372,6 +326,9 @@ by) the following Emacs packages:
      Dmitry Gutov's 'company-mode' provides a generic front-end for
      completion engines (such as Geiser's), with pretty and automatic
      completion lists.
+   * macrostep-geiser (https://github.com/nbfalcon/macrostep-geiser)
+     provides support for in-buffer macro expansion, using the macrostep
+     (https://github.com/joddie/macrostep) package.
    * ac-geiser (https://github.com/xiaohanyu/ac-geiser/) If you prefer
      'auto-complete-mode' to 'company-mode', Xiao Hanyu's 'ac-geiser',
      which provides a Geiser plugin for the popular Emacs Auto
@@ -384,7 +341,7 @@ definition of usual.  Geiser will notice their presence and react
 accordingly.
 
 
-File: web.info,  Node: The REPL,  Next: Between the parens,  Prev: Installation,  Up: Top
+File: geiser.info,  Node: The REPL,  Next: Between the parens,  Prev: Installation,  Up: Top
 
 3 The REPL
 **********
@@ -404,7 +361,7 @@ you're ready, just come back here and proceed to the following sections.
 * Customization and tips::
 
 
-File: web.info,  Node: Starting the REPL,  Next: First aids,  Prev: The REPL,  Up: The REPL
+File: geiser.info,  Node: Starting the REPL,  Next: First aids,  Prev: The REPL,  Up: The REPL
 
 3.1 Starting the REPL
 =====================
@@ -486,7 +443,7 @@ it can be as remote as you need, perhaps with the intervention of an SSH
 tunnel.
 
 
-File: web.info,  Node: First aids,  Next: Switching context,  Prev: Starting the REPL,  Up: The REPL
+File: geiser.info,  Node: First aids,  Next: Switching context,  Prev: Starting the REPL,  Up: The REPL
 
 3.2 First aids
 ==============
@@ -524,7 +481,7 @@ in *note this section: switching-repl-buff.
 own.
 
 
-File: web.info,  Node: Switching context,  Next: Completion and error handling,  Prev: First aids,  Up: The REPL
+File: geiser.info,  Node: Switching context,  Next: Completion and error handling,  Prev: First aids,  Up: The REPL
 
 3.3 Switching context
 =====================
@@ -560,7 +517,7 @@ prefix-aware list of available module names.
    Which brings me to the next group of REPL commands.
 
 
-File: web.info,  Node: Completion and error handling,  Next: Autodoc and friends,  Prev: Switching context,  Up: The REPL
+File: geiser.info,  Node: Completion and error handling,  Next: Autodoc and friends,  Prev: Switching context,  Up: The REPL
 
 3.4 Completion and error handling
 =================================
@@ -633,7 +590,7 @@ you have a better solution than that, please share it with the Geiser
 developers; we'll be more than happy to hear it.
 
 
-File: web.info,  Node: Autodoc and friends,  Next: Seeing is believing,  Prev: Completion and error handling,  Up: The REPL
+File: geiser.info,  Node: Autodoc and friends,  Next: Seeing is believing,  Prev: Completion and error handling,  Up: The REPL
 
 3.5 Autodoc and friends
 =======================
@@ -692,7 +649,7 @@ also works for modules: if your point is on an unambiguous module name,
 the file where it's defined will be opened for you.
 
 
-File: web.info,  Node: Seeing is believing,  Next: Customization and tips,  Prev: Autodoc and friends,  Up: The REPL
+File: geiser.info,  Node: Seeing is believing,  Next: Customization and tips,  Prev: Autodoc and friends,  Up: The REPL
 
 3.6 Seeing is believing
 =======================
@@ -715,7 +672,7 @@ which takes a prefix argument to indicate which image number you want, 0
 corresponding to the newest one.
 
 
-File: web.info,  Node: Customization and tips,  Prev: Seeing is believing,  Up: The REPL
+File: geiser.info,  Node: Customization and tips,  Prev: Seeing is believing,  Up: The REPL
 
 3.7 Customization and tips
 ==========================
@@ -853,7 +810,7 @@ Geiser should ask for confirmation when you exit the REPL explicitly
 'nil' by default.
 
 
-File: web.info,  Node: Between the parens,  Next: Cheat sheet,  Prev: The REPL,  Up: Top
+File: geiser.info,  Node: Between the parens,  Next: Cheat sheet,  Prev: The REPL,  Up: Top
 
 4 Between the parens
 ********************
@@ -881,13 +838,13 @@ the REPL, make those Scheme buffers come to life.
 * Geiser writes for you::
 
 
-File: web.info,  Node: Activating Geiser,  Next: The source and the REPL,  Prev: Between the parens,  Up: Between the parens
+File: geiser.info,  Node: Activating Geiser,  Next: The source and the REPL,  Prev: Between the parens,  Up: Between the parens
 
 4.1 Activating Geiser
 =====================
 
 With Geiser installed following any of the procedures described in *note
-The easy and quick way:: or *note From the source's mouth::, Emacs will
+The quick and easy way:: or *note From the source's mouth::, Emacs will
 automatically activate geiser-mode when opening a Scheme buffer.  Geiser
 also instructs Emacs to consider files with the extension 'rkt' part of
 the family, so that, in principle, there's nothing you need to do to
@@ -930,7 +887,7 @@ the correct Scheme implementation.  In the following section, we'll see
 how to make sure that that's actually the case.
 
 
-File: web.info,  Node: The source and the REPL,  Next: Documentation helpers,  Prev: Activating Geiser,  Up: Between the parens
+File: geiser.info,  Node: The source and the REPL,  Next: Documentation helpers,  Prev: Activating Geiser,  Up: Between the parens
 
 4.2 The source and the REPL
 ===========================
@@ -1072,7 +1029,7 @@ and communicating with the right REPL instance, let us see what it can
 do for us, besides jumping to and fro.
 
 
-File: web.info,  Node: Documentation helpers,  Next: To eval or not to eval,  Prev: The source and the REPL,  Up: Between the parens
+File: geiser.info,  Node: Documentation helpers,  Next: To eval or not to eval,  Prev: The source and the REPL,  Up: Between the parens
 
 4.3 Documentation helpers
 =========================
@@ -1204,7 +1161,7 @@ manual page for the symbol at point with the command
 'geiser-doc-look-up-manual', bound to 'C-c C-d i'.
 
 
-File: web.info,  Node: To eval or not to eval,  Next: To err perchance to debug,  Prev: Documentation helpers,  Up: Between the parens
+File: geiser.info,  Node: To eval or not to eval,  Next: To err perchance to debug,  Prev: Documentation helpers,  Up: Between the parens
 
 4.4 To eval or not to eval
 ==========================
@@ -1280,7 +1237,7 @@ macro-expand them.  The corresponding key bindings start with the prefix
 result of the macro expansion always appears in a pop up buffer.
 
 
-File: web.info,  Node: To err perchance to debug,  Next: Jumping around,  Prev: To eval or not to eval,  Up: Between the parens
+File: geiser.info,  Node: To err perchance to debug,  Next: Jumping around,  Prev: To eval or not to eval,  Up: Between the parens
 
 4.5 To err: perchance to debug
 ==============================
@@ -1326,7 +1283,7 @@ interacts with Guile's debugger (and more).  Same thing for racketeers
 and geiser-racket.
 
 
-File: web.info,  Node: Jumping around,  Next: Geiser writes for you,  Prev: To err perchance to debug,  Up: Between the parens
+File: geiser.info,  Node: Jumping around,  Next: Geiser writes for you,  Prev: To err perchance to debug,  Up: Between the parens
 
 4.6 Jumping around
 ==================
@@ -1353,7 +1310,7 @@ current window), ''window' (other window in the same frame) or ''frame'
 (in a new frame).
 
 
-File: web.info,  Node: Geiser writes for you,  Prev: Jumping around,  Up: Between the parens
+File: geiser.info,  Node: Geiser writes for you,  Prev: Jumping around,  Up: Between the parens
 
 4.7 Geiser writes for you
 =========================
@@ -1408,7 +1365,7 @@ how to fix this problem, *note Caveat about completion & the REPL:
 completion-caveat.
 
 
-File: web.info,  Node: Cheat sheet,  Next: No hacker is an island,  Prev: Between the parens,  Up: Top
+File: geiser.info,  Node: Cheat sheet,  Next: No hacker is an island,  Prev: Between the parens,  Up: Top
 
 5 Cheat sheet
 *************
@@ -1424,7 +1381,7 @@ bound both to 'C-c C-d C-s' and 'C-c C-d s'.
 * Documentation browser::
 
 
-File: web.info,  Node: Scheme buffers,  Next: REPL,  Prev: Cheat sheet,  Up: Cheat sheet
+File: geiser.info,  Node: Scheme buffers,  Next: REPL,  Prev: Cheat sheet,  Up: Cheat sheet
 
 5.1 Scheme buffers
 ==================
@@ -1496,7 +1453,7 @@ M-', C-.       'geiser-completion--complete-module'Complete module name at
                                              point
 
 
-File: web.info,  Node: REPL,  Next: Documentation browser,  Prev: Scheme buffers,  Up: Cheat sheet
+File: geiser.info,  Node: REPL,  Next: Documentation browser,  Prev: Scheme buffers,  Up: Cheat sheet
 
 5.2 REPL
 ========
@@ -1542,7 +1499,7 @@ C-c C-d C-m    'geiser-repl--doc-module'     See documentation for
 C-c C-d C-a    'geiser-autodoc-mode'         Toggle autodoc mode
 
 
-File: web.info,  Node: Documentation browser,  Prev: REPL,  Up: Cheat sheet
+File: geiser.info,  Node: Documentation browser,  Prev: REPL,  Up: Cheat sheet
 
 5.3 Documentation browser
 =========================
@@ -1564,7 +1521,7 @@ z              'geiser-doc-switch-to-repl'   Switch to REPL
 q              'View-quit'                   Bury buffer
 
 
-File: web.info,  Node: No hacker is an island,  Next: Index,  Prev: Cheat sheet,  Up: Top
+File: geiser.info,  Node: No hacker is an island,  Next: Index,  Prev: Cheat sheet,  Up: Top
 
 6 No hacker is an island
 ************************
@@ -1632,16 +1589,13 @@ Joining the fun
      gmane.lisp.scheme.geiser
      (http://dir.gmane.org/gmane.lisp.scheme.geiser).
    * You can submit bug reports either to the mailing list or to our bug
-     tracker (https://gitlab.com/jaor/geiser/issues) over at Gitlab.
-   * If you only need to hear about Geiser on new releases, the News
-     page (http://savannah.nongnu.org/news/?group=geiser) and its Atom
-     feed (https://savannah.nongnu.org/news/atom.php?group=geiser) are
-     probably what you're looking for.
+     tracker (https://gitlab.com/groups/emacs-geiser/-/issues) over at
+     Gitlab.
    * The Freenode IRC channel #geiser is the Geiserati's meeting point
      in cyberspace.
 
 
-File: web.info,  Node: Index,  Prev: No hacker is an island,  Up: Top
+File: geiser.info,  Node: Index,  Prev: No hacker is an island,  Up: Top
 
 Index
 *****
@@ -1671,12 +1625,6 @@ Index
                                                               (line   6)
 * bug tracker:                           No hacker is an island.
                                                               (line  68)
-* byte-compilation:                      From the source's mouth.
-                                                              (line  46)
-* Chicken:                               The easy and quick way.
-                                                              (line  38)
-* Chicken installation:                  The easy and quick way.
-                                                              (line  37)
 * company:                               Friends.             (line   9)
 * completion for module names:           Geiser writes for you.
                                                               (line  33)
@@ -1685,11 +1633,11 @@ Index
 * completion, at the REPL:               Completion and error handling.
                                                               (line   6)
 * connect to server:                     Starting the REPL.   (line  43)
-* corpses:                               Top.                 (line   9)
+* corpses:                               Top.                 (line  79)
 * current module:                        Modus operandi.      (line  15)
 * current module, change:                Switching context.   (line  21)
 * current module, in REPL:               Switching context.   (line   6)
-* derailment:                            Top.                 (line   9)
+* derailment:                            Top.                 (line  79)
 * dir-locals:                            The source and the REPL.
                                                               (line  87)
 * disabling autodoc:                     Documentation helpers.
@@ -1698,7 +1646,7 @@ Index
                                                               (line  85)
 * documentation for symbol:              Documentation helpers.
                                                               (line  85)
-* ELPA:                                  The easy and quick way.
+* ELPA:                                  The quick and easy way.
                                                               (line   6)
 * error buffer:                          To err perchance to debug.
                                                               (line   9)
@@ -1708,10 +1656,6 @@ Index
                                                               (line  37)
 * external image viewer:                 Seeing is believing. (line  10)
 * faces, in the REPL:                    Starting the REPL.   (line  35)
-* Gambit:                                Chicken installation.
-                                                              (line  19)
-* Gambit installation:                   Chicken installation.
-                                                              (line  18)
 * geiser-mode:                           Activating Geiser.   (line   6)
 * geiser-mode commands:                  Activating Geiser.   (line  21)
 * gmane:                                 No hacker is an island.
@@ -1738,18 +1682,17 @@ Index
 * incremental development, not evil:     To eval or not to eval.
                                                               (line  37)
 * IRC channel:                           No hacker is an island.
-                                                              (line  74)
+                                                              (line  71)
 * jump, at the REPL:                     Autodoc and friends. (line  51)
 * jumping customized:                    Jumping around.      (line  22)
 * jumping in scheme buffers:             Jumping around.      (line   6)
+* macrostep:                             Friends.             (line   9)
 * mailing list:                          No hacker is an island.
                                                               (line  58)
 * manual autodoc:                        Documentation helpers.
                                                               (line  22)
 * module exports:                        Autodoc and friends. (line  39)
 * modus operandi:                        Modus operandi.      (line   6)
-* news feed:                             No hacker is an island.
-                                                              (line  70)
 * opening manual pages:                  Documentation helpers.
                                                               (line 128)
 * paredit:                               Friends.             (line   9)
@@ -1757,7 +1700,7 @@ Index
                                                               (line  18)
 * peace and quiet:                       Customization and tips.
                                                               (line 111)
-* philosophy:                            Top.                 (line   9)
+* philosophy:                            Top.                 (line  79)
 * philosophy <1>:                        To eval or not to eval.
                                                               (line   6)
 * PLTCOLLECTS:                           Customization and tips.
@@ -1768,8 +1711,7 @@ Index
                                                               (line  87)
 * projectile:                            The source and the REPL.
                                                               (line  87)
-* quack:                                 Friends.             (line   9)
-* quick install:                         The easy and quick way.
+* quick install:                         The quick and easy way.
                                                               (line   6)
 * Racket's REPL server:                  Starting the REPL.   (line  53)
 * recursion:                             Index.               (line   6)
@@ -1815,8 +1757,6 @@ Index
                                                               (line  82)
 * to err is schemey:                     To err perchance to debug.
                                                               (line   6)
-* use the source, Luke:                  From the source's mouth.
-                                                              (line   9)
 * useless wretch:                        Activating Geiser.   (line  43)
 * Version checking:                      Customization and tips.
                                                               (line  50)
@@ -1825,50 +1765,48 @@ Index
 
 
 Tag Table:
-Node: Top67
-Node: Introduction1344
-Node: Modus operandi1675
-Ref: current-module2327
-Node: Showing off3800
-Node: Installation5075
-Node: Must needs5334
-Node: The easy and quick way6438
-Node: Chicken installation7894
-Node: Gambit installation8663
-Node: From the source's mouth10320
-Node: Friends13844
-Ref: paredit14115
-Node: The REPL15058
-Ref: quick-start15174
-Node: Starting the REPL15565
-Node: First aids19949
-Node: Switching context21779
-Node: Completion and error handling23701
-Ref: completion-caveat25406
-Node: Autodoc and friends27320
-Ref: repl-mod29387
-Node: Seeing is believing30393
-Node: Customization and tips31402
-Ref: choosing-impl32128
-Ref: active-implementations32363
-Ref: impl-binary32745
-Node: Between the parens37102
-Node: Activating Geiser38161
-Node: The source and the REPL40768
-Ref: repl-association41809
-Ref: repl-per-project45057
-Ref: switching-repl-buff46060
-Node: Documentation helpers47745
-Ref: doc-browser52010
-Node: To eval or not to eval54737
-Node: To err perchance to debug58873
-Node: Jumping around61232
-Node: Geiser writes for you62506
-Node: Cheat sheet65007
-Node: Scheme buffers65388
-Node: REPL69710
-Node: Documentation browser72300
-Node: No hacker is an island73365
-Node: Index76681
+Node: Top907
+Node: Introduction3375
+Node: Modus operandi3709
+Ref: current-module4364
+Node: Showing off5837
+Node: Installation7115
+Node: Must needs7328
+Node: The quick and easy way8906
+Node: From the source's mouth10503
+Node: Friends11288
+Ref: paredit11562
+Node: The REPL12699
+Ref: quick-start12818
+Node: Starting the REPL13209
+Node: First aids17596
+Node: Switching context19429
+Node: Completion and error handling21354
+Ref: completion-caveat23062
+Node: Autodoc and friends24976
+Ref: repl-mod27046
+Node: Seeing is believing28052
+Node: Customization and tips29064
+Ref: choosing-impl29793
+Ref: active-implementations30028
+Ref: impl-binary30410
+Node: Between the parens34767
+Node: Activating Geiser35829
+Node: The source and the REPL38439
+Ref: repl-association39483
+Ref: repl-per-project42731
+Ref: switching-repl-buff43734
+Node: Documentation helpers45419
+Ref: doc-browser49687
+Node: To eval or not to eval52414
+Node: To err perchance to debug56553
+Node: Jumping around58915
+Node: Geiser writes for you60192
+Node: Cheat sheet62696
+Node: Scheme buffers63080
+Node: REPL67405
+Node: Documentation browser69998
+Node: No hacker is an island71066
+Node: Index74150
 
 End Tag Table

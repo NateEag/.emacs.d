@@ -169,13 +169,13 @@ As defined by the Language Server Protocol 3.16."
 
 (defcustom lsp-client-packages
   '(ccls lsp-actionscript lsp-ada lsp-angular lsp-bash lsp-clangd lsp-clojure lsp-cmake
-         lsp-crystal lsp-csharp lsp-css lsp-dart lsp-dhall lsp-dockerfile lsp-elm
+         lsp-crystal lsp-csharp lsp-css lsp-d lsp-dart lsp-dhall lsp-dockerfile lsp-elm
          lsp-elixir lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript lsp-go
          lsp-hack lsp-grammarly lsp-groovy lsp-haskell lsp-haxe lsp-java lsp-javascript lsp-json
          lsp-kotlin lsp-lua lsp-nim lsp-nix lsp-metals lsp-ocaml lsp-perl lsp-php lsp-pwsh
          lsp-pyls lsp-python-ms lsp-purescript lsp-r lsp-rf lsp-rust lsp-solargraph lsp-sorbet
          lsp-tex lsp-terraform lsp-vala lsp-verilog lsp-vetur lsp-vhdl lsp-vimscript lsp-xml
-         lsp-yaml lsp-sqls lsp-svelte lsp-steep)
+         lsp-yaml lsp-sqls lsp-svelte lsp-steep lsp-zig)
   "List of the clients to be automatically required."
   :group 'lsp-mode
   :type '(repeat symbol))
@@ -339,7 +339,8 @@ the server has requested that."
     "[/\\\\]bin/Debug\\'"
     "[/\\\\]obj\\'")
   "List of regexps matching directory paths which won't be monitored when
-creating file watches."
+creating file watches. Customization of this variable is only honored at
+the global level or at a root of an lsp workspace."
   :group 'lsp-mode
   :type '(repeat string)
   :package-version '(lsp-mode . "7.1.0"))
@@ -367,7 +368,10 @@ This setting has no impact on whether a file-watch is created for
 a directory; it merely prevents notifications pertaining to
 matched files from being sent to the server.  To prevent a
 file-watch from being created for a directory, customize
-`lsp-file-watch-ignored-directories'"
+`lsp-file-watch-ignored-directories'
+
+Customization of this variable is only honored at the global
+level or at a root of an lsp workspace."
   :group 'lsp-mode
   :type '(repeat string)
   :package-version '(lsp-mode . "7.1.0"))
@@ -768,7 +772,10 @@ Changes take effect only when a new session is started."
                                         (nix-mode . "nix")
                                         (prolog-mode . "prolog")
                                         (vala-mode . "vala")
-                                        (actionscript-mode . "actionscript"))
+                                        (actionscript-mode . "actionscript")
+                                        (d-mode . "d")
+                                        (zig-mode . "zig")
+                                        (text-mode . "plaintext"))
   "Language id configuration.")
 
 (defvar lsp--last-active-workspaces nil
@@ -1642,15 +1649,15 @@ This set of allowed chars is enough for hexifying local file paths.")
   (descriptors (make-hash-table :test 'equal))
   root-directory)
 
-(defun lsp--folder-watch-callback (event callback watch)
+(defun lsp--folder-watch-callback (event callback watch ignored-files ignored-directories)
   (let ((file-name (cl-third event))
         (event-type (cl-second event)))
     (cond
      ((and (file-directory-p file-name)
            (equal 'created event-type)
-           (not (lsp--string-match-any (lsp-file-watch-ignored-directories) file-name)))
+           (not (lsp--string-match-any ignored-directories file-name)))
 
-      (lsp-watch-root-folder (file-truename file-name) callback watch)
+      (lsp-watch-root-folder (file-truename file-name) callback ignored-files ignored-directories watch)
 
       ;; process the files that are already present in
       ;; the directory.
@@ -1659,12 +1666,12 @@ This set of allowed chars is enough for hexifying local file paths.")
                      (unless (file-directory-p f)
                        (funcall callback (list nil 'created f)))))))
      ((and (not (file-directory-p file-name))
-           (not (lsp--string-match-any lsp-file-watch-ignored-files file-name))
+           (not (lsp--string-match-any ignored-files file-name))
            (memq event-type '(created deleted changed)))
       (funcall callback event)))))
 
-(defun lsp--directory-files-recursively (dir regexp &optional include-directories)
-  "Copy of `directory-files-recursively' but it skips `lsp-file-watch-ignored-directories'."
+(defun lsp--directory-files-recursively (dir regexp ignored-directories &optional include-directories)
+  "Copy of `directory-files-recursively' but it skips directories matching any regex in IGNORED-DIRECTORIES."
   (let* ((result nil)
          (files nil)
          (dir (directory-file-name dir))
@@ -1675,14 +1682,14 @@ This set of allowed chars is enough for hexifying local file paths.")
                         'string<))
       (unless (member file '("./" "../"))
         (if (and (directory-name-p file)
-                 (not (lsp--string-match-any (lsp-file-watch-ignored-directories) (f-join dir (f-filename file)))))
+                 (not (lsp--string-match-any ignored-directories (f-join dir (f-filename file)))))
             (let* ((leaf (substring file 0 (1- (length file))))
                    (full-file (f-join dir leaf)))
               ;; Don't follow symlinks to other directories.
               (unless (file-symlink-p full-file)
                 (setq result
                       (nconc result (lsp--directory-files-recursively
-                                     full-file regexp include-directories))))
+                                     full-file regexp ignored-directories include-directories))))
               (when (and include-directories
                          (string-match regexp leaf))
                 (setq result (nconc result (list full-file)))))
@@ -1707,12 +1714,15 @@ Do you want to watch all files in %s? "
      (concat "You can configure this warning with the `lsp-enable-file-watchers' "
              "and `lsp-file-watch-threshold' variables"))))
 
-(defun lsp-watch-root-folder (dir callback &optional watch warn-big-repo?)
+(defun lsp-watch-root-folder (dir callback ignored-files ignored-directories &optional watch warn-big-repo?)
   "Create recursive file notification watch in DIR.
 CALLBACK will be called when there are changes in any of
 the monitored files. WATCHES is a hash table directory->file
 notification handle which contains all of the watch that
-already have been created."
+already have been created. Watches will not be created for
+any directory that matches any regex in IGNORED-DIRECTORIES.
+Watches will not be created for any file that matches any
+regex in IGNORED-FILES."
   (let* ((dir (if (f-symlink? dir)
                   (file-truename dir)
                 dir))
@@ -1721,7 +1731,7 @@ already have been created."
     (when (or
            (not warn-big-repo?)
            (not lsp-file-watch-threshold)
-           (let ((number-of-files (length (lsp--directory-files-recursively dir ".*" t))))
+           (let ((number-of-files (length (lsp--directory-files-recursively dir ".*" ignored-directories t))))
              (or
               (< number-of-files lsp-file-watch-threshold)
               (condition-case _err
@@ -1734,17 +1744,19 @@ already have been created."
              (file-notify-add-watch dir
                                     '(change)
                                     (lambda (event)
-                                      (lsp--folder-watch-callback event callback watch)))
+                                      (lsp--folder-watch-callback event callback watch
+                                                                  ignored-files
+                                                                  ignored-directories)))
              (lsp-watch-descriptors watch))
             (seq-do
-             (-rpartial #'lsp-watch-root-folder callback watch)
+             (-rpartial #'lsp-watch-root-folder callback ignored-files ignored-directories watch)
              (seq-filter (lambda (f)
                            (and (file-directory-p f)
                                 (not (gethash (if (f-symlink? f)
                                                   (file-truename f)
                                                 f)
                                               (lsp-watch-descriptors watch)))
-                                (not (lsp--string-match-any (lsp-file-watch-ignored-directories) f))
+                                (not (lsp--string-match-any ignored-directories f))
                                 (not (-contains? '("." "..") (f-filename f)))))
                          (directory-files dir t))))
         (error (lsp-log "Failed to create a watch for %s: message" (error-message-string err)))
@@ -3264,7 +3276,7 @@ disappearing, unset all the variables related to it."
                                                                              :json-false)
                                                                             (lsp-enable-snippet t)
                                                                             (t :json-false)))
-                                                        (documentationFormat . ["markdown"])
+                                                        (documentationFormat . ["markdown" "plaintext"])
                                                         ;; Remove this after jdtls support resolveSupport
                                                         (resolveAdditionalTextEditsSupport . t)
                                                         (resolveSupport
@@ -3353,16 +3365,33 @@ disappearing, unset all the variables related to it."
                            (ht-keys created-watches))))
       ;; create watch for each root folder without such
       (dolist (folder root-folders)
-        (let ((watch (make-lsp-watch :root-directory folder)))
+        (let* ((watch (make-lsp-watch :root-directory folder))
+               (ignored-things (lsp--get-ignored-regexes-for-workspace-root folder))
+               (ignored-files-regex-list (car ignored-things))
+               (ignored-directories-regex-list (cadr ignored-things)))
           (puthash folder watch created-watches)
           (lsp-watch-root-folder (file-truename folder)
                                  (-partial #'lsp--file-process-event (lsp-session) folder)
+                                 ignored-files-regex-list
+                                 ignored-directories-regex-list
                                  watch
                                  t)))))
 
   (push
    (make-lsp--registered-capability :id id :method method :options register-options?)
    (lsp--workspace-registered-server-capabilities lsp--cur-workspace)))
+
+(defun lsp--get-ignored-regexes-for-workspace-root (workspace-root)
+  "Return a list of the form (lsp-file-watch-ignored-files lsp-file-watch-ignored-directories) for the given WORKSPACE-ROOT."
+  ;; The intent of this function is to provide per-root workspace-level customization of the
+  ;; lsp-file-watch-ignored-directories and lsp-file-watch-ignored-files variables.
+  (with-temp-buffer
+    ;; Set the buffer's name to something under the root so that we can hack the local variables
+    ;; This file doesn't need to exist and will not be created due to this.
+    (setq-local buffer-file-name (expand-file-name "lsp-mode-temp" (expand-file-name workspace-root)))
+    (hack-local-variables)
+    (list lsp-file-watch-ignored-files lsp-file-watch-ignored-directories)))
+
 
 (defun lsp--cleanup-hanging-watches ()
   "Cleanup watches in case there are no more workspaces that are interested
@@ -4937,13 +4966,16 @@ RENDER-ALL - nil if only the signature should be rendered."
 (declare-function posframe-hide "ext:posframe")
 (declare-function posframe-poshandler-point-bottom-left-corner-upward "ext:posframe")
 
+(defface lsp-signature-posframe
+  '((t :inherit tooltip))
+  "Background and foreground for `lsp-signature-posframe'."
+  :group 'lsp-faces)
+
 (defvar lsp-signature-posframe-params
   (list :poshandler #'posframe-poshandler-point-bottom-left-corner-upward
-        :background-color (face-attribute 'tooltip :background)
         :height 6
         :width 60
         :border-width 10
-        :border-color (face-attribute 'tooltip :background)
         :min-width 60)
   "Params for signature and `posframe-show'.")
 
@@ -4956,8 +4988,12 @@ RENDER-ALL - nil if only the signature should be rendered."
                (insert str)
                (visual-line-mode 1)
                (current-buffer))
-             :position (point)
-             lsp-signature-posframe-params)
+             (append lsp-signature-posframe-params
+                     (list
+                      :position (point)
+                      :background-color (face-attribute 'lsp-signature-posframe :background nil t)
+                      :foreground-color (face-attribute 'lsp-signature-posframe :foreground nil t)
+                      :border-color (face-attribute 'lsp-signature-posframe :background))))
     (posframe-hide "*lsp-signature*")))
 
 (defun lsp--handle-signature-update (signature)
@@ -5761,10 +5797,14 @@ REFERENCES? t when METHOD returns references."
 
 (defun lsp-workspace-command-execute (command &optional args)
   "Execute workspace COMMAND with ARGS."
-  (let ((params (if args
-                    (list :command command :arguments args)
-                  (list :command command))))
-    (lsp-request "workspace/executeCommand" params)))
+  (condition-case-unless-debug err
+      (let ((params (if args
+                        (list :command command :arguments args)
+                      (list :command command))))
+        (lsp-request "workspace/executeCommand" params))
+    (error
+     (lsp--error "`workspace/executeCommand' with `%s' failed.\n\n%S"
+                 command err))))
 
 (defun lsp-send-execute-command (command &optional args)
   "Create and send a 'workspace/executeCommand' message having command COMMAND and optional ARGS."

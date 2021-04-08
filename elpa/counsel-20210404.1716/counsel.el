@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210313.1108
-;; Package-Commit: 75002963859101003436c84d1d3a85f9ea5f89fc
+;; Package-Version: 20210404.1716
+;; Package-Commit: 471d644d6bdd7d5dc6ca4efb405e6a6389dff245
 ;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.4") (swiper "0.13.4"))
 ;; Keywords: convenience, matching, tools
@@ -896,9 +896,12 @@ CAND is a string returned by `counsel--M-x-externs'."
       (and (commandp sym)
            (not (get sym 'byte-obsolete-info))
            (not (get sym 'no-counsel-M-x))
-           (or (not (bound-and-true-p read-extended-command-predicate))
-               (and (functionp read-extended-command-predicate)
-                    (funcall read-extended-command-predicate sym buf)))))))
+           (cond ((not (bound-and-true-p read-extended-command-predicate)))
+                 ((functionp read-extended-command-predicate)
+                  (condition-case-unless-debug err
+                      (funcall read-extended-command-predicate sym buf)
+                    (error (message "read-extended-command-predicate: %s: %s"
+                                    sym (error-message-string err))))))))))
 
 (defun counsel--M-x-prompt ()
   "String for `M-x' plus the string representation of `current-prefix-arg'."
@@ -1968,7 +1971,7 @@ but the leading dot is a lot faster."
           (const :tag "None" nil)
           (const :tag "Dotfiles and Lockfiles" "\\(?:\\`\\|[/\\]\\)\\(?:[#.]\\)")
           (const :tag "Ignored Extensions"
-                 ,(regexp-opt completion-ignored-extensions))
+                 ,(concat (regexp-opt completion-ignored-extensions) "\\'"))
           (regexp :tag "Regex")))
 
 (defvar counsel--find-file-predicate nil
@@ -5449,6 +5452,9 @@ Return nil if NAME does not designate a valid color."
          (propertize (funcall formatter color)
                      'face (list :foreground fg :background hex))))
      formatter colors "\n")))
+
+;; No longer preloaded in Emacs 28.
+(autoload 'list-colors-duplicates "facemenu")
 
 ;;;###autoload
 (defun counsel-colors-emacs ()

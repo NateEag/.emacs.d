@@ -786,7 +786,7 @@
 		    ("Matthew L. Fidler" . "matthew.fidler@gmail.com"))
 		   (:keywords "convenience"))])
  (excorporate .
-	      [(0 9 3)
+	      [(0 9 5)
 	       ((emacs
 		 (24 1))
 		(fsm
@@ -1661,7 +1661,7 @@
 	      ("Nicolas Goaziou" . "mail@nicolasgoaziou.fr"))
 	     (:maintainer "Nicolas Goaziou" . "mail@nicolasgoaziou.fr"))])
  (osc .
-      [(0 3)
+      [(0 4)
        nil "Open Sound Control protocol library" tar
        ((:maintainer "Mario Lang" . "mlang@blind.guru")
 	(:authors
@@ -2522,6 +2522,15 @@
 		  ("Michael McNamara" . "mac@verilog.com")
 		  ("Wilson Snyder" . "wsnyder@wsnyder.org"))
 		 (:keywords "languages"))])
+ (vertico .
+	  [(0 2)
+	   ((emacs
+	     (27 1)))
+	   "VERTical Interactive COmpletion" tar
+	   ((:url . "https://github.com/minad/vertico")
+	    (:maintainer "Daniel Mendler")
+	    (:authors
+	     ("Daniel Mendler")))])
  (vigenere .
 	   [(1 0)
 	    ((emacs

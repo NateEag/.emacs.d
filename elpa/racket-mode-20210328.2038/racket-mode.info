@@ -49,6 +49,7 @@ Configure
 * eldoc::
 * Start faster::
 * Unicode input method::
+* Ligatures::
 
 Commands
 
@@ -430,6 +431,7 @@ might want to set ‘racket-program’ to a complete pathname.
 * eldoc::
 * Start faster::
 * Unicode input method::
+* Ligatures::
 
 
 File: racket-mode.info,  Node: Key bindings,  Next: Font-lock (syntax highlighting),  Up: Configure
@@ -689,7 +691,7 @@ You can use *note racket-mode-start-faster:: to make the Racket REPL
 start faster.
 
 
-File: racket-mode.info,  Node: Unicode input method,  Prev: Start faster,  Up: Configure
+File: racket-mode.info,  Node: Unicode input method,  Next: Ligatures,  Prev: Start faster,  Up: Configure
 
 3.11 Unicode input method
 =========================
@@ -707,6 +709,21 @@ your Emacs init file:
    *Note racket-unicode-input-method-enable::.
 
    *Note racket-insert-lambda::.
+
+
+File: racket-mode.info,  Node: Ligatures,  Prev: Unicode input method,  Up: Configure
+
+3.12 Ligatures
+==============
+
+Prior to Emacs 28.0.50, things like ‘auto-composition-mode’ or
+‘ligature-mode’ that use ‘composition-function-table’ to display
+ligatures can cause Emacs to freeze.  This can happen when an Emacs
+‘overlay’ displays a string containing such a ligature — this includes
+the overlays created by ‘racket-show-pseudo-tooltip’, as used by
+‘racket-xp-mode’.  The only known work-around is to change the value of
+‘racket-show-functions’ to something “boring” such as
+‘(racket-show-echo-area)’.
 
 
 File: racket-mode.info,  Node: Reference,  Next: Commands,  Prev: Configure,  Up: Top
@@ -3163,157 +3180,158 @@ Face for *note racket-logger-mode:: debug level.
 
 Tag Table:
 Node: Top220
-Node: Introduction4565
-Ref: Introduction-Footnote-15724
-Node: Install6119
-Node: Configure Emacs to use MELPA6453
-Node: Install Racket Mode6926
-Node: Minimal Racket7227
-Node: Uninstall7791
-Node: Update8079
-Node: Upgrading all packages8242
-Node: Updating just Racket Mode8896
-Node: Configure9617
-Node: Key bindings10781
-Node: Font-lock (syntax highlighting)11398
-Node: Completion12682
-Node: Xref (definitions and references)14549
-Node: Indent17492
-Node: paredit17736
-Node: smartparens18729
-Node: Edit buffers and REPL buffers19104
-Node: eldoc19959
-Node: Start faster21218
-Node: Unicode input method21445
-Node: Reference22143
-Node: Commands22635
-Node: Edit22954
-Node: racket-mode23507
-Node: racket-insert-lambda26287
-Node: racket-fold-all-tests26575
-Node: racket-unfold-all-tests26812
-Node: racket-tidy-requires27055
-Node: racket-trim-requires28099
-Node: racket-base-requires28809
-Node: racket-add-require-for-identifier30074
-Node: racket-indent-line31167
-Node: racket-smart-open-bracket-mode33155
-Node: racket-insert-closing34802
-Node: racket-cycle-paren-shapes35295
-Node: racket-backward-up-list35546
-Node: racket-unicode-input-method-enable36106
-Node: racket-align38106
-Node: racket-unalign40074
-Node: racket-complete-at-point40407
-Node: Explore40829
-Node: racket-xp-mode41330
-Node: racket-xp-describe48641
-Node: racket-xp-documentation49985
-Node: racket-xp-next-definition51114
-Node: racket-xp-previous-definition51377
-Node: racket-xp-next-use51647
-Node: racket-xp-previous-use51906
-Node: racket-xp-next-error52168
-Node: racket-xp-previous-error52397
-Node: racket-xp-tail-up52633
-Node: racket-xp-tail-down53097
-Node: racket-xp-tail-next-sibling53378
-Node: racket-xp-tail-previous-sibling53680
-Node: racket-documentation-search54002
-Node: Run54999
-Node: racket-repl-mode55404
-Node: racket-run58046
-Node: racket-run-and-switch-to-repl59964
-Node: racket-run-module-at-point60254
-Node: racket-repl60761
-Node: racket-repl-describe61729
-Node: racket-repl-documentation62963
-Node: racket-racket64071
-Node: racket-profile64289
-Node: racket-profile-mode65006
-Node: racket-logger66021
-Node: racket-logger-mode66242
-Node: racket-debug-mode67365
-Node: Test70936
-Node: racket-test71081
-Node: racket-raco-test71754
-Node: Eval72001
-Node: racket-send-region72193
-Node: racket-send-definition72411
-Node: racket-send-last-sexp72660
-Node: Collections72970
-Node: racket-open-require-path73164
-Node: racket-find-collection73806
-Node: Macro expand74720
-Node: racket-stepper-mode74990
-Node: racket-expand-file76028
-Node: racket-expand-region76754
-Node: racket-expand-definition77120
-Node: racket-expand-last-sexp77509
-Node: Other77861
-Node: racket-mode-start-faster78054
-Node: racket-mode-start-slower79397
-Node: Showing information79690
-Node: racket-show-pseudo-tooltip79992
-Node: racket-show-echo-area80617
-Node: racket-show-header-line80914
-Node: racket-show-pos-tip81434
-Node: Associating edit buffers with REPL buffers81711
-Node: racket-repl-buffer-name-shared82108
-Node: racket-repl-buffer-name-unique82541
-Node: racket-repl-buffer-name-project83017
-Node: racket-project-root83556
-Node: Browsing file URLs with anchors84009
-Node: racket-browse-url-using-temporary-file84269
-Node: Variables85781
-Node: General variables86043
-Node: racket-program86566
-Node: racket-command-timeout86749
-Node: racket-memory-limit87219
-Node: racket-error-context87825
-Node: racket-user-command-line-arguments88942
-Node: racket-path-from-emacs-to-racket-function89801
-Node: racket-path-from-racket-to-emacs-function90488
-Node: racket-browse-url-function91280
-Node: racket-xp-after-change-refresh-delay91683
-Node: racket-xp-highlight-unused-regexp92100
-Node: racket-documentation-search-location92560
-Node: REPL variables93364
-Node: racket-repl-buffer-name-function93765
-Node: racket-submodules-to-run94787
-Node: racket-history-filter-regexp95533
-Node: racket-images-inline95880
-Node: racket-imagemagick-props96128
-Node: racket-images-keep-last96736
-Node: racket-images-system-viewer96990
-Node: racket-pretty-print97264
-Node: Other variables97472
-Node: racket-indent-curly-as-sequence97808
-Node: racket-indent-sequence-depth98191
-Node: racket-pretty-lambda98881
-Node: racket-smart-open-bracket-enable99288
-Node: racket-logger-config99744
-Node: Experimental debugger variables100539
-Node: racket-debuggable-files100785
-Node: Showing informationx101479
-Node: racket-show-functions101675
-Node: Faces102682
-Node: All102785
-Node: racket-keyword-argument-face103289
-Node: racket-selfeval-face103499
-Node: racket-here-string-face103758
-Node: racket-xp-def-face103967
-Node: racket-xp-use-face104200
-Node: racket-xp-unused-face104424
-Node: racket-xp-tail-target-face104688
-Node: racket-xp-tail-position-face104968
-Node: racket-logger-config-face105260
-Node: racket-logger-topic-face105517
-Node: racket-logger-fatal-face105763
-Node: racket-logger-error-face106013
-Node: racket-logger-warning-face106265
-Node: racket-logger-info-face106522
-Node: racket-logger-debug-face106770
+Node: Introduction4579
+Ref: Introduction-Footnote-15738
+Node: Install6133
+Node: Configure Emacs to use MELPA6467
+Node: Install Racket Mode6940
+Node: Minimal Racket7241
+Node: Uninstall7805
+Node: Update8093
+Node: Upgrading all packages8256
+Node: Updating just Racket Mode8910
+Node: Configure9631
+Node: Key bindings10809
+Node: Font-lock (syntax highlighting)11426
+Node: Completion12710
+Node: Xref (definitions and references)14577
+Node: Indent17520
+Node: paredit17764
+Node: smartparens18757
+Node: Edit buffers and REPL buffers19132
+Node: eldoc19987
+Node: Start faster21246
+Node: Unicode input method21473
+Node: Ligatures22189
+Node: Reference22833
+Node: Commands23325
+Node: Edit23644
+Node: racket-mode24197
+Node: racket-insert-lambda26977
+Node: racket-fold-all-tests27265
+Node: racket-unfold-all-tests27502
+Node: racket-tidy-requires27745
+Node: racket-trim-requires28789
+Node: racket-base-requires29499
+Node: racket-add-require-for-identifier30764
+Node: racket-indent-line31857
+Node: racket-smart-open-bracket-mode33845
+Node: racket-insert-closing35492
+Node: racket-cycle-paren-shapes35985
+Node: racket-backward-up-list36236
+Node: racket-unicode-input-method-enable36796
+Node: racket-align38796
+Node: racket-unalign40764
+Node: racket-complete-at-point41097
+Node: Explore41519
+Node: racket-xp-mode42020
+Node: racket-xp-describe49331
+Node: racket-xp-documentation50675
+Node: racket-xp-next-definition51804
+Node: racket-xp-previous-definition52067
+Node: racket-xp-next-use52337
+Node: racket-xp-previous-use52596
+Node: racket-xp-next-error52858
+Node: racket-xp-previous-error53087
+Node: racket-xp-tail-up53323
+Node: racket-xp-tail-down53787
+Node: racket-xp-tail-next-sibling54068
+Node: racket-xp-tail-previous-sibling54370
+Node: racket-documentation-search54692
+Node: Run55689
+Node: racket-repl-mode56094
+Node: racket-run58736
+Node: racket-run-and-switch-to-repl60654
+Node: racket-run-module-at-point60944
+Node: racket-repl61451
+Node: racket-repl-describe62419
+Node: racket-repl-documentation63653
+Node: racket-racket64761
+Node: racket-profile64979
+Node: racket-profile-mode65696
+Node: racket-logger66711
+Node: racket-logger-mode66932
+Node: racket-debug-mode68055
+Node: Test71626
+Node: racket-test71771
+Node: racket-raco-test72444
+Node: Eval72691
+Node: racket-send-region72883
+Node: racket-send-definition73101
+Node: racket-send-last-sexp73350
+Node: Collections73660
+Node: racket-open-require-path73854
+Node: racket-find-collection74496
+Node: Macro expand75410
+Node: racket-stepper-mode75680
+Node: racket-expand-file76718
+Node: racket-expand-region77444
+Node: racket-expand-definition77810
+Node: racket-expand-last-sexp78199
+Node: Other78551
+Node: racket-mode-start-faster78744
+Node: racket-mode-start-slower80087
+Node: Showing information80380
+Node: racket-show-pseudo-tooltip80682
+Node: racket-show-echo-area81307
+Node: racket-show-header-line81604
+Node: racket-show-pos-tip82124
+Node: Associating edit buffers with REPL buffers82401
+Node: racket-repl-buffer-name-shared82798
+Node: racket-repl-buffer-name-unique83231
+Node: racket-repl-buffer-name-project83707
+Node: racket-project-root84246
+Node: Browsing file URLs with anchors84699
+Node: racket-browse-url-using-temporary-file84959
+Node: Variables86471
+Node: General variables86733
+Node: racket-program87256
+Node: racket-command-timeout87439
+Node: racket-memory-limit87909
+Node: racket-error-context88515
+Node: racket-user-command-line-arguments89632
+Node: racket-path-from-emacs-to-racket-function90491
+Node: racket-path-from-racket-to-emacs-function91178
+Node: racket-browse-url-function91970
+Node: racket-xp-after-change-refresh-delay92373
+Node: racket-xp-highlight-unused-regexp92790
+Node: racket-documentation-search-location93250
+Node: REPL variables94054
+Node: racket-repl-buffer-name-function94455
+Node: racket-submodules-to-run95477
+Node: racket-history-filter-regexp96223
+Node: racket-images-inline96570
+Node: racket-imagemagick-props96818
+Node: racket-images-keep-last97426
+Node: racket-images-system-viewer97680
+Node: racket-pretty-print97954
+Node: Other variables98162
+Node: racket-indent-curly-as-sequence98498
+Node: racket-indent-sequence-depth98881
+Node: racket-pretty-lambda99571
+Node: racket-smart-open-bracket-enable99978
+Node: racket-logger-config100434
+Node: Experimental debugger variables101229
+Node: racket-debuggable-files101475
+Node: Showing informationx102169
+Node: racket-show-functions102365
+Node: Faces103372
+Node: All103475
+Node: racket-keyword-argument-face103979
+Node: racket-selfeval-face104189
+Node: racket-here-string-face104448
+Node: racket-xp-def-face104657
+Node: racket-xp-use-face104890
+Node: racket-xp-unused-face105114
+Node: racket-xp-tail-target-face105378
+Node: racket-xp-tail-position-face105658
+Node: racket-logger-config-face105950
+Node: racket-logger-topic-face106207
+Node: racket-logger-fatal-face106453
+Node: racket-logger-error-face106703
+Node: racket-logger-warning-face106955
+Node: racket-logger-info-face107212
+Node: racket-logger-debug-face107460
 
 End Tag Table
 

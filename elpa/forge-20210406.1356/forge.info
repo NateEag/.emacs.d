@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-359-gc4ae0f2b+1).
+This manual is for Forge version 0.1.0 (v0.1.0-372-g315aeb40+1).
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -59,6 +59,7 @@ Getting Started
 * Token Creation::
 * Initial Pull::
 * Repository Detection::
+* Caveats::
 
 Usage
 
@@ -271,29 +272,14 @@ File: forge.info,  Node: Getting Started,  Next: Usage,  Prev: Supported Forges 
 3 Getting Started
 *****************
 
-Getting started using Forge should be fairly easy, but there are a few
-caveats you should be aware of:
+Getting started using Forge should be fairly easy provide you take the
+time to read the documentation.  First see *note (ghub)Getting Started::
+from Ghub’s manual.  Ghub is the library that Forge uses to communicate
+with forge APIs.  While Ghub can be used independently of Forge, its
+"Getting Started" part was written with Forge users in mind.
 
-   • Forge uses the Ghub package to access forge APIs.  For this purpose
-     you have to create a token as described in *note Token Creation::.
-
-   • Fetched information is stored in a database.  The table schemata of
-     that database have not been finalized yet.  Until that has happened
-     it will occasionally have to be discarded.  That isn’t such a huge
-     deal because for now the database does not contain any information
-     that cannot simply be fetched again, see *note Initial Pull::.
-
-   • Fetching is implemented under the assumption that the API can be
-     asked to list the things that have changed since we last checked.
-     Unfortunately the APIs are not bug-free, so this is not always the
-     case.  Especially in closed-source software it can take years for
-     issues to get fixed, so I am no longer delaying the initial Forge
-     release because of that.  If in doubt, then re-fetch an individual
-     pull-request to ensure it is up-to-date using the command
-     ‘forge-pull-pullreq’.
-
-   • Some other, forge-specific, caveats are mentioned in *note
-     Supported Forges and Hosts::.
+   Please begin reading in *note (ghub)Getting Started:: and then come
+back here and make sure to read the subsections.
 
    Loading Magit doesn’t cause Forge to be loaded automatically.  Adding
 something like this to your init file takes care of this:
@@ -311,6 +297,7 @@ something like this to your init file takes care of this:
 * Token Creation::
 * Initial Pull::
 * Repository Detection::
+* Caveats::
 
 
 File: forge.info,  Node: Token Creation,  Next: Initial Pull,  Up: Getting Started
@@ -378,7 +365,7 @@ forges because making a handful of GraphQL requests is much faster than
 making hundreds of REST requests.
 
 
-File: forge.info,  Node: Repository Detection,  Prev: Initial Pull,  Up: Getting Started
+File: forge.info,  Node: Repository Detection,  Next: Caveats,  Prev: Initial Pull,  Up: Getting Started
 
 3.3 Repository Detection
 ========================
@@ -416,6 +403,30 @@ remote by your chosen name exists.
    Once the upstream remote has been determined, Forge looks it up in
 ‘forge-alist’, using the host part of the URL as the key.  For example
 the key for ‘git@github.com:magit/forge.git’ is ‘github.com’.
+
+
+File: forge.info,  Node: Caveats,  Prev: Repository Detection,  Up: Getting Started
+
+3.4 Caveats
+===========
+
+   • Fetched information is stored in a database.  The table schemata of
+     that database have not been finalized yet.  Until that has happened
+     it will occasionally have to be discarded.  That isn’t such a huge
+     deal because for now the database does not contain any information
+     that cannot simply be fetched again, see *note Initial Pull::.
+
+   • Fetching is implemented under the assumption that the API can be
+     asked to list the things that have changed since we last checked.
+     Unfortunately the APIs are not bug-free, so this is not always the
+     case.  Especially in closed-source software it can take years for
+     issues to get fixed, so I am no longer delaying the initial Forge
+     release because of that.  If in doubt, then re-fetch an individual
+     pull-request to ensure it is up-to-date using the command
+     ‘forge-pull-pullreq’.
+
+   • Some other, forge-specific, caveats are mentioned in *note
+     Supported Forges and Hosts::.
 
 
 File: forge.info,  Node: Usage,  Next: FAQ,  Prev: Getting Started,  Up: Top
@@ -853,7 +864,7 @@ File: forge.info,  Node: Creating Topics,  Next: Editing Topics and Posts,  Prev
      This command creates a new pull-request for the current repository.
 
 ‘' c i’     (‘forge-create-issue’)
-‘C-c C-n [on "Issues" section]’     (‘forge-create-pullreq’)
+‘C-c C-n [on "Issues" section]’     (‘forge-create-issue’)
 
      This command creates a new issue for the current repository.
 
@@ -1115,13 +1126,13 @@ Appendix C Command Index
 * forge-checkout-pullreq:                Branching.           (line 106)
 * forge-checkout-worktree:               Branching.           (line 112)
 * forge-create-issue:                    Creating Topics.     (line  11)
+* forge-create-issue <1>:                Creating Topics.     (line  12)
 * forge-create-post:                     Editing Topics and Posts.
                                                               (line  15)
 * forge-create-post <1>:                 Editing Topics and Posts.
                                                               (line  16)
 * forge-create-pullreq:                  Creating Topics.     (line   6)
 * forge-create-pullreq <1>:              Creating Topics.     (line   7)
-* forge-create-pullreq <2>:              Creating Topics.     (line  12)
 * forge-delete-comment:                  Editing Topics and Posts.
                                                               (line  73)
 * forge-dispatch:                        Usage.               (line  23)
@@ -1243,27 +1254,28 @@ Appendix E Variable Index
 
 Tag Table:
 Node: Top751
-Node: Introduction2205
-Node: Supported Forges and Hosts2768
-Node: Getting Started8316
-Node: Token Creation10045
-Node: Initial Pull11304
-Node: Repository Detection12699
-Node: Usage14586
-Node: Pulling15863
-Node: Branching18731
-Node: Working with Topics24847
-Node: Visiting Topics25220
-Node: Listing Topics and Notifications26949
-Node: Creating Topics31490
-Node: Editing Topics and Posts32055
-Node: Miscellaneous35610
-Node: FAQ37937
-Node: Is it possible to create a single pull-request without pulling everything?38137
-Node: Keystroke Index38542
-Node: Command Index42428
-Node: Function Index47869
-Node: Variable Index50627
+Node: Introduction2217
+Node: Supported Forges and Hosts2780
+Node: Getting Started8328
+Node: Token Creation9298
+Node: Initial Pull10557
+Node: Repository Detection11952
+Node: Caveats13855
+Node: Usage14956
+Node: Pulling16233
+Node: Branching19101
+Node: Working with Topics25217
+Node: Visiting Topics25590
+Node: Listing Topics and Notifications27319
+Node: Creating Topics31860
+Node: Editing Topics and Posts32423
+Node: Miscellaneous35978
+Node: FAQ38305
+Node: Is it possible to create a single pull-request without pulling everything?38505
+Node: Keystroke Index38910
+Node: Command Index42796
+Node: Function Index48237
+Node: Variable Index50995
 
 End Tag Table
 

@@ -290,12 +290,14 @@ read an issue N to visit."
 ;;; Visit
 
 ;;;###autoload
-(defun forge-visit-topic (n)
+(defun forge-visit-topic (topic)
   "View the current topic in a separate buffer.
 If there is no current topic or with a prefix argument
-read topic N to visit instead."
-  (interactive (list (forge-read-topic "View topic")))
-  (forge-visit (forge-get-topic n)))
+read a topic to visit instead."
+  (interactive (list (or (forge-current-topic)
+                         (forge-get-topic
+                          (forge-read-topic "View topic")))))
+  (forge-visit topic))
 
 ;;;###autoload
 (defun forge-visit-pullreq (n)
@@ -314,12 +316,13 @@ read an issue N to visit instead."
   (forge-visit (forge-get-issue n)))
 
 ;;;###autoload
-(defun forge-visit-repository ()
+(defun forge-visit-repository (repo)
   "View the current repository in a separate buffer."
-  (interactive)
-  (if-let ((repo (forge-current-repository)))
-      (forge-visit repo)
-    (user-error "There is no current forge repository")))
+  (interactive
+   (list (or (forge-current-repository)
+             (forge-get-repository
+              (forge-read-repository "Visit repository")))))
+  (forge-visit repo))
 
 ;;; Create
 

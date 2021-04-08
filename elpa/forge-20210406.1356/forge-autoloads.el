@@ -99,9 +99,9 @@ Visit the current post using a browser." t nil)
 (autoload 'forge-visit-topic "forge-commands" "\
 View the current topic in a separate buffer.
 If there is no current topic or with a prefix argument
-read topic N to visit instead.
+read a topic to visit instead.
 
-\(fn N)" t nil)
+\(fn TOPIC)" t nil)
 
 (autoload 'forge-visit-pullreq "forge-commands" "\
 View the current pull-request in a separate buffer.
@@ -118,7 +118,9 @@ read an issue N to visit instead.
 \(fn N)" t nil)
 
 (autoload 'forge-visit-repository "forge-commands" "\
-View the current repository in a separate buffer." t nil)
+View the current repository in a separate buffer.
+
+\(fn REPO)" t nil)
 
 (autoload 'forge-branch-pullreq "forge-commands" "\
 Create and configure a new branch from a pull-request.

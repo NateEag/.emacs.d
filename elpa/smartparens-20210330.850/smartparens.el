@@ -128,7 +128,11 @@ better orientation."
                                    sp-use-paredit-bindings
                                    sp-use-smartparens-bindings
                                    ))
-        (commands (cl-loop for i in (cdr (assoc-string (file-truename (locate-library "smartparens")) load-history))
+        (commands (cl-loop for i in (cdr
+                                     (assoc-string
+                                      (file-truename (locate-library "smartparens"))
+                                      (--map (cons (file-truename (car it)) (cdr it))
+                                             load-history)))
                            if (and (consp i) (eq (car i) 'defun) (commandp (cdr i)))
                            collect (cdr i))))
     (with-current-buffer (get-buffer-create "*Smartparens cheat sheet*")
@@ -580,6 +584,7 @@ Symbol is defined as a chunk of text recognized by
                            scheme-interaction-mode
                            scheme-mode
                            slime-repl-mode
+                           sly-mrepl-mode
                            stumpwm-mode
                            )
   "List of Lisp-related modes."
@@ -8383,7 +8388,7 @@ Examples:
   (interactive "P")
   (cond
    ((equal arg '(4))
-    (-when-let [(first-item . rest-items) (sp-get-list-items)]
+    (-when-let ((first-item . rest-items) (sp-get-list-items))
       (sp-get first-item
         (save-excursion
           (goto-char :end)

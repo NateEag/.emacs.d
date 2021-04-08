@@ -5,11 +5,12 @@
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
+;; URL: https://github.com/auto-complete/popup-el
+;; Package-Version: 20210317.138
+;; Package-Commit: 866a091b83369873b4d1c5d62a590fbb0a150bd0
 ;; Keywords: lisp
-;; Package-Version: 20210108.1821
-;; Package-Commit: bd5a0df7e5bc68af46eef37afe9e80764a1d4fd8
 ;; Version: 0.5.8
-;; Package-Requires: ((cl-lib "0.5"))
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

@@ -7,10 +7,10 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; URL: https://github.com/joostkremers/visual-fill-column
-;; Package-Version: 20201229.2303
-;; Package-Commit: 5b08b9ae9da5b95e42e94e4c9ec01d63e8848ea2
+;; Package-Version: 20210404.2152
+;; Package-Commit: 6854932d7fe689caf5cbc1ab65271fcfd46590bd
 ;; Created: 2015
-;; Version: 2.2
+;; Version: 2.3
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -86,18 +86,15 @@ otherwise reduce the actual size of the text area."
 By default, `split-window-preferred-function' is set to
 `visual-fill-column-split-window-sensibly', in order to allow
 `display-buffer' to split windows in two side-by-side windows.
-Unset this option if you wish to use your custom function for
-`split-window-sensibly'."
+Unset this option if you wish to use the default or a custom
+function for `split-window-sensibly'."
   :group 'visual-fill-column
   :type '(choice (const :tag "Allow vertical window split" nil)
                  (const :tag "Use standard window split" t)))
 
 (defvar visual-fill-column--use-split-window-parameter nil "If set, the window parameter `split-window' is used.")
 
-(defvar visual-fill-column--min-margins nil "Width of the margins before invoking `visual-fill-column-mode'.")
-(make-variable-buffer-local 'visual-fill-column--min-margins)
-
-(defvar visual-fill-column--original-split-window-function nil "The value of `split-window-preferred-function'.")
+(defvar visual-fill-column--use-min-margins nil "If set, the window parameter `min-margins' is used.")
 
 (defvar visual-fill-column-mode-map
   (let ((map (make-sparse-keymap)))
@@ -155,33 +152,41 @@ that actually visit a file."
 
 (defun visual-fill-column-mode--enable ()
   "Set up `visual-fill-column-mode' for the current buffer."
-  (add-hook 'window-configuration-change-hook #'visual-fill-column--adjust-all-windows 'append 'local)
-  (add-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'append 'local)
+  (add-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'append 'local)
 
   (when (not visual-fill-column-inhibit-sensible-window-split)
-    (setq visual-fill-column--original-split-window-function split-window-preferred-function)
+    ;; Note that `split-window-preferred-function' is not reset to its original
+    ;; value when `visual-fill-column-mode' is disabled, because it may still be
+    ;; enabled in other buffers.  When `visual-fill-column-mode' is disabled,
+    ;; `visual-fill-column-split-window-sensibly' simply invokes
+    ;; `split-window-sensibly', so keeping it is harmless.
     (setq-default split-window-preferred-function #'visual-fill-column-split-window-sensibly))
 
-  (when (version<= emacs-version "27.1")
+  (cond
+   ((version<= emacs-version "27.1")
+    (add-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'append 'local)
     (setq visual-fill-column--use-split-window-parameter t))
 
-  (when (version< "27.1" emacs-version)
-    (let ((margins (window-margins (selected-window))))
-      (setq visual-fill-column--min-margins (cons (or (car margins) 0)
-                                                  (or (cdr margins) 0)))))
+   ((version< "27.1" emacs-version)
+    (add-hook 'window-state-change-functions #'visual-fill-column--adjust-window 'append 'local)
+    (setq visual-fill-column--use-min-margins t)))
 
   (visual-fill-column--adjust-window (selected-window)))
 
 (defun visual-fill-column-mode--disable ()
   "Disable `visual-fill-column-mode' for the current buffer."
-  (if (<= emacs-major-version 26)
-      (remove-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'local))
-  (remove-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'local)
+  (remove-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'local)
+
   (let ((window (get-buffer-window (current-buffer))))
-    (set-window-margins window (car visual-fill-column--min-margins) (cdr visual-fill-column--min-margins))
-    (set-window-fringes window nil)
-    (set-window-parameter window 'min-margins nil)
-    (kill-local-variable 'visual-fill-column--min-margins)))
+    (cond
+     ((version<= emacs-version "27.1")
+      (remove-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'local))
+
+     ((version< "27.1" emacs-version)
+      (remove-hook 'window-state-change-functions #'visual-fill-column--adjust-window 'local)
+      (set-window-margins window 0 0)
+      (set-window-parameter window 'min-margins nil)))
+    (set-window-fringes window nil)))
 
 (defun visual-fill-column-split-window (&optional window size side)
   "Split WINDOW, unsetting its margins first.
@@ -243,14 +248,9 @@ selected window has `visual-fill-column-mode' enabled."
       (set-window-fringes window nil nil visual-fill-column-fringes-outside-margins)
       (if visual-fill-column--use-split-window-parameter
           (set-window-parameter window 'split-window #'visual-fill-column-split-window))
-      (if visual-fill-column--min-margins  ; This is non-nil if the window parameter `min-margins' is used (Emacs 27.2).
-          (set-window-parameter window 'min-margins visual-fill-column--min-margins))
+      (if visual-fill-column--use-min-margins  ; This is non-nil if the window parameter `min-margins' is used (Emacs 27.2).
+          (set-window-parameter window 'min-margins '(0 . 0)))
       (visual-fill-column--set-margins window))))
-
-(defun visual-fill-column--adjust-all-windows ()
-  "Adjust margins of all windows displaying the current buffer."
-  (mapc #'visual-fill-column--adjust-window
-        (get-buffer-window-list (current-buffer) 'no-minibuffer 'visible)))
 
 (defun visual-fill-column-adjust (&optional _inc)
   "Adjust the window margins and fringes.

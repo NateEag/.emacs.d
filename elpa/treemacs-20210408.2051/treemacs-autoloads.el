@@ -398,6 +398,11 @@ Show a contextual right click menu based on click EVENT.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from treemacs-tag-follow-mode.el
 
+(autoload 'treemacs--flatten&sort-imenu-index "treemacs-tag-follow-mode" "\
+Flatten current file's imenu index and sort it by tag position.
+The tags are sorted into the order in which they appear, reguardless of section
+or nesting depth." nil nil)
+
 (defvar treemacs-tag-follow-mode nil "\
 Non-nil if Treemacs-Tag-Follow mode is enabled.
 See the `treemacs-tag-follow-mode' command

@@ -4,8 +4,8 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20210309.722
-;; Package-Commit: 1528ed4f082e7aaca19f22394eb4bed879645b7c
+;; Package-Version: 20210407.707
+;; Package-Commit: 513228f473910128efcad13f46dfc22a74976675
 ;; Keywords: project, convenience
 ;; Version: 2.4.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -1165,7 +1165,9 @@ If DIR is not supplied its set to the current directory by default."
 (defun projectile-ensure-project (dir)
   "Ensure that DIR is non-nil.
 Useful for commands that expect the presence of a project.
-Controlled by `projectile-require-project-root'."
+Controlled by `projectile-require-project-root'.
+
+See also `projectile-acquire-root'."
   (if dir
       dir
     (cond
@@ -1176,7 +1178,7 @@ Controlled by `projectile-require-project-root'."
 
 (defun projectile-acquire-root (&optional dir)
   "Find the current project root, and prompts the user for it if that fails.
-Provides the common idiom (projectile-ensure-root (projectile-project-root)).
+Provides the common idiom (projectile-ensure-project (projectile-project-root)).
 Starts the search for the project with DIR."
   (projectile-ensure-project (projectile-project-root dir)))
 
@@ -2143,7 +2145,7 @@ A typical example of such a defun would be `find-file-other-window' or
 
 Subroutine for `projectile-find-file-dwim' and
 `projectile-find-file-dwim-other-window'"
-  (let* ((project-root (projectile-project-root))
+  (let* ((project-root (projectile-acquire-root))
          (project-files (projectile-project-files project-root))
          (files (projectile-select-files project-files invalidate-cache))
          (file (cond ((= (length files) 1)
@@ -3010,7 +3012,7 @@ Expands wildcards using `file-expand-wildcards' before checking."
   "Determine the VCS used by the project if any.
 PROJECT-ROOT is the targeted directory.  If nil, use
 `projectile-project-root'."
-  (or project-root (setq project-root (projectile-project-root)))
+  (or project-root (setq project-root (projectile-acquire-root)))
   (cond
    ;; first we check for a VCS marker in the project root itself
    ((projectile-file-exists-p (expand-file-name ".git" project-root)) 'git)
@@ -3458,7 +3460,7 @@ regular expression."
                                               '()))))))
             ;; reset the prefix arg, otherwise it will affect the ag-command
             (current-prefix-arg nil))
-        (funcall ag-command search-term (projectile-project-root)))
+        (funcall ag-command search-term (projectile-acquire-root)))
     (error "Package 'ag' is not available")))
 
 ;;;###autoload
@@ -3476,7 +3478,7 @@ regular expression."
                           (append projectile-globally-ignored-files
                                   projectile-globally-ignored-directories))))
         (ripgrep-regexp search-term
-                        (projectile-project-root)
+                        (projectile-acquire-root)
                         (if arg
                             args
                           (cons "--fixed-strings" args))))
@@ -4768,7 +4770,7 @@ is chosen."
 (defun projectile-check-vcs-status (&optional project-path)
   "Check the status of the current project.
 If PROJECT-PATH is a project, check this one instead."
-  (let ((project-path (or project-path (projectile-project-root)))
+  (let ((project-path (or project-path (projectile-acquire-root)))
         (project-status nil))
     (save-excursion
       (vc-dir project-path)

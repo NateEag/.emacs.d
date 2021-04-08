@@ -63,8 +63,7 @@
   (define-key evil-inner-text-objects-map "d" 'ne/textobj-inner-c-defun)
   (define-key evil-outer-text-objects-map "d" 'ne/textobj-outer-c-defun)
 
-  (define-key evil-inner-text-objects-map "U" 'ne/textobj-url)
-  )
+  (define-key evil-inner-text-objects-map "U" 'ne/textobj-url))
 
 (provide 'ne-evil-textobjects)
 ;;; ne-evil-textobjects.el ends here

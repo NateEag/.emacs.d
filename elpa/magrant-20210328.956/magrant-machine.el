@@ -126,9 +126,9 @@ This forces Vagrant to refresh its cache for each machine."
     (define-key map "c" #'magrant-machine-config)
 
     (define-key map "p" #'magrant-machine-provision)
-    (define-key map "u" #'magrant-machine-up)
-    (define-key map "H" #'magrant-machine-halt)
-    (define-key map "S" #'magrant-machine-suspend)
+    (define-key map "S" #'magrant-machine-up)
+    (define-key map "O" #'magrant-machine-halt)
+    (define-key map "P" #'magrant-machine-suspend)
 
     (define-key map "b" #'magrant-machine-ssh)
 
@@ -159,9 +159,9 @@ This forces Vagrant to refresh its cache for each machine."
 
    ("p" "Provision" magrant-machine-provision)
 
-   ("u" "Up (start)" magrant-machine-up)
-   ("H" "Halt" magrant-machine-halt)
-   ("S" "Suspend" magrant-machine-suspend)
+   ("S" "Start (up)" magrant-machine-up)
+   ("O" "stOp (halt)" magrant-machine-halt)
+   ("P" "Pause (suspend)" magrant-machine-suspend)
 
    ("b" "SSH" magrant-machine-ssh)
    ("D" "Destroy" magrant-machine-destroy)

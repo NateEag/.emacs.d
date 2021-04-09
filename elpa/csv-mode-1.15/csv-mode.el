@@ -4,7 +4,7 @@
 
 ;; Author: "Francis J. Wright" <F.J.Wright@qmul.ac.uk>
 ;; Maintainer: emacs-devel@gnu.org
-;; Version: 1.14
+;; Version: 1.15
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: convenience
 
@@ -1264,9 +1264,7 @@ When called non-interactively, BEG and END specify region to process."
 	      (forward-line)
 	    (let ((lep (line-end-position)))
 	      (push
-	       (split-string
-		(buffer-substring-no-properties (point) lep)
-		csv-separator-regexp)
+	       (csv--collect-fields lep)
 	       rows)
 	      (delete-region (point) lep)
 	      (or (eobp) (delete-char 1)))))
@@ -1304,6 +1302,26 @@ When called non-interactively, BEG and END specify region to process."
 	  (setq columns (cdr columns)))
 	;; Re-do soft alignment if necessary:
 	(if align (csv-align-fields nil (point-min) (point-max)))))))
+
+(defun csv--collect-fields (row-end-position)
+  "Collect the fields of a row.
+Splits a row into fields, honoring quoted fields, and returns
+the list of fields.  ROW-END-POSITION is the end-of-line position.
+point is assumed to be at the beginning of the line."
+  (let ((csv-field-quotes-regexp (apply #'concat `("[" ,@csv-field-quotes "]")))
+	(row-text (buffer-substring-no-properties (point) row-end-position))
+	fields field-start)
+    (if (not (string-match csv-field-quotes-regexp row-text))
+	(split-string row-text csv-separator-regexp)
+      (save-excursion
+	(while (< (setq field-start (point)) row-end-position)
+	  (csv-forward-field 1)
+	  (push
+	   (buffer-substring-no-properties field-start (point))
+	   fields)
+	  (if (memq (following-char) csv-separator-chars)
+	      (forward-char)))
+	(nreverse fields)))))
 
 (defvar-local csv--header-line nil)
 (defvar-local csv--header-hscroll nil)

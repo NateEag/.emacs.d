@@ -3,8 +3,9 @@
 ;; Copyright (C) 2016 alpha22jp <alpha22jp@gmail.com>
 
 ;; Author: alpha22jp <alpha22jp@gmail.com>
-;; Package-Requires: ((emacs "24.3") (let-alist "1.0.4") (websocket "1.4"))
-;; Package-Version: 20180617.724
+;; Package-Requires: ((emacs "24.4") (let-alist "1.0.4") (websocket "1.4"))
+;; Package-Version: 20210221.59
+;; Package-Commit: c73367d8aa660f2b3c3f70ef5c39f5b502d60404
 ;; Keywords: chrome edit textarea
 ;; URL: https://github.com/alpha22jp/atomic-chrome
 ;; Version: 2.0.0
@@ -40,10 +41,10 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
+(eval-when-compile (require 'cl-lib))
 (require 'json)
 (require 'let-alist)
-(require 'subr-x)
+(eval-when-compile (require 'subr-x))
 (require 'websocket)
 
 (defgroup atomic-chrome nil
@@ -81,7 +82,7 @@
 
 (defcustom atomic-chrome-enable-auto-update t
   "If non-nil, edit on Emacs is reflected to the browser instantly, \
-otherwise you need to type \"C-xC-s\" manually."
+otherwise you need to type \"C-cC-s\" manually."
   :type 'boolean
   :group 'atomic-chrome)
 
@@ -263,7 +264,7 @@ where FRAME show raw data received."
 
 (defvar atomic-chrome-edit-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-x C-s") 'atomic-chrome-send-buffer-text)
+    (define-key map (kbd "C-c C-s") 'atomic-chrome-send-buffer-text)
     (define-key map (kbd "C-c C-c") 'atomic-chrome-close-current-buffer)
     map)
   "Keymap for minor mode `atomic-chrome-edit-mode'.")

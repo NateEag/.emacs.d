@@ -116,13 +116,13 @@ When live editing the filter, it is bound to :live.")
   (quit-window))
 
 (defun elfeed-search-last-entry ()
-  "Place point on first entry."
+  "Place point on last entry."
   (interactive)
   (setf (point) (point-max))
-  (forward-line -2))
+  (forward-line -1))
 
 (defun elfeed-search-first-entry ()
-  "Place point on last entry."
+  "Place point on first entry."
   (interactive)
   (setf (point) (point-min)))
 
@@ -217,7 +217,15 @@ When live editing the filter, it is bound to :live.")
         truncate-lines t
         buffer-read-only t
         desktop-save-buffer #'elfeed-search-desktop-save
-        header-line-format '(:eval (funcall elfeed-search-header-function)))
+        ;; Provide format string via symbol value slot so that it will
+        ;; not be %-construct interpolated. The symbol is uninterned
+        ;; so that it's not *really* a global variable.
+        header-line-format
+        (let ((symbol (make-symbol "dummy")))
+          (put symbol 'risky-local-variable t)
+          `(:eval
+            (prog1 ',symbol
+              (set ',symbol (funcall elfeed-search-header-function))))))
   (set (make-local-variable 'bookmark-make-record-function)
        #'elfeed-search-bookmark-make-record)
   (buffer-disable-undo)

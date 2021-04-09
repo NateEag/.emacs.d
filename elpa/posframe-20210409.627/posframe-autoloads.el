@@ -52,9 +52,6 @@ position.  Its argument is a plist of the following form:
    :x-pixel-offset xxx
    :y-pixel-offset xxx)
 
-Note: poshandler info include :parent-frame-position, but user
-should never use it in poshandler function.
-
 By default, poshandler is auto-selected based on the type of POSITION,
 but the selection can be overridden using the POSHANDLER argument.
 The builtin poshandler functions are listed below:
@@ -187,23 +184,30 @@ The builtin hidehandler functions are listed below:
 
 1. `posframe-hidehandler-when-buffer-switch'
 
-\(18) PARENT-FRAME-POSHANDLER
+\(18) REFPOSHANDLER
 
-PARENT-FRAME-POSHANDLER is a function, posframe can get current
-frame's position in screen by call this function, PLEASE NOTE:
-this argument will disable child-frame feature, the user case at
-the moment I know is let ivy-posframe run properly in EXWM
-environment (let posframe show on the other appliction window).
-DO NOT USE UNLESS NECESSARY. an example parent frame poshandler
-function is:
+REFPOSHANDLER is a function, a reference position (most is
+top-left of current frame) will be returned when call this
+function.
 
-1. `posframe-parent-frame-poshandler-xwininfo'
+when it is nil or it return nil, child-frame feature will be used
+and reference position will be deal with in emacs.
+
+The user case I know at the moment is let ivy-posframe work well
+in EXWM environment (let posframe show on the other appliction
+window).
+
+         DO NOT USE UNLESS NECESSARY!!!
+
+An example parent frame poshandler function is:
+
+1. `posframe-refposhandler-xwininfo'
 
 \(19) Others
 
 You can use `posframe-delete-all' to delete all posframes.
 
-\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER POSHANDLER-EXTRA-INFO WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE BORDER-WIDTH BORDER-COLOR INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER PARENT-FRAME-POSHANDLER &allow-other-keys)" nil nil)
+\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER POSHANDLER-EXTRA-INFO WIDTH HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE BORDER-WIDTH BORDER-COLOR INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER REFPOSHANDLER &allow-other-keys)" nil nil)
 
 (autoload 'posframe-hide-all "posframe" "\
 Hide all posframe frames." t nil)

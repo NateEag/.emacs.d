@@ -1,6 +1,6 @@
-(define-package "geiser" "20210405.2206" "GNU Emacs and Scheme talk to each other"
+(define-package "geiser" "20210409.1554" "GNU Emacs and Scheme talk to each other"
   '((emacs "24.4"))
-  :commit "9fd3174cead8bfa17a8413bffa38362853d71a02" :authors
+  :commit "d7ba81b402787e3315b40f60952f95816a1cf99c" :authors
   '(("Jose Antonio Ortega Ruiz" . "jao@gnu.org"))
   :maintainer
   '("Jose Antonio Ortega Ruiz" . "jao@gnu.org")

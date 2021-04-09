@@ -1,11 +1,11 @@
 ;;; dtrt-indent.el --- Adapt to foreign indentation offsets
 
 ;; Copyright (C) 2003, 2007, 2008 Julian Scheid
-;; Copyright (C) 2014-2020 Reuben Thomas
+;; Copyright (C) 2014-2021 Reuben Thomas
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
 ;; Maintainer: Reuben Thomas <rrt@sc3d.org>
-;; Version: 1.3
+;; Version: 1.4
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -194,7 +194,7 @@ adjusted transparently."
   :lighter " dtrt-indent"
   :group 'dtrt-indent
   (if dtrt-indent-mode
-      (if (and (featurep 'smie) (not (eq smie-grammar 'unset)))
+      (if (and (featurep 'smie) (not (null smie-grammar)) (not (eq smie-grammar 'unset)))
           (progn
             (when (null smie-config--buffer-local) (smie-config-guess))
             (when dtrt-indent-run-after-smie
@@ -205,7 +205,9 @@ adjusted transparently."
 ;;;###autoload
 (define-globalized-minor-mode dtrt-indent-global-mode dtrt-indent-mode
   (lambda ()
-    (when (derived-mode-p 'prog-mode 'text-mode)
+    ;; javascript-mode is an alias for js-mode, so derived-mode-p does not
+    ;; detect it is derived from 'prog-mode (Emacs bug #46331)
+    (when (derived-mode-p 'prog-mode 'text-mode 'javascript-mode)
       (dtrt-indent-mode))))
 
 (defvar dtrt-indent-language-syntax-table
@@ -285,6 +287,10 @@ adjusted transparently."
                                          0   "\\]\\][>]"     nil)
                 ("[<]!--"                0   "[^-]--[>]"  nil))
 
+    (cmake      ("\""                    0   "\""        nil "\\\\.")
+                ("#\\[\\(=*\\)\\["       1   "\\]\\1\\]" nil)
+                ("#"                     0   "$"         nil))
+
     (default    ("\""                    0   "\""       nil "\\\\.")))
 
   "A list of syntax tables for supported languages.
@@ -341,6 +347,8 @@ quote, for example.")
     (pascal-mode     pascal        pascal-indent-level)  ; Pascal
     (typescript-mode javascript    typescript-indent-level) ; Typescript
     (protobuf-mode   c/c++/java    c-basic-offset)       ; Protobuf
+    (plantuml-mode   default       plantuml-indent-level) ; PlantUML
+    (cmake-mode      cmake         cmake-tab-width)       ; CMake
 
     ;; Modes that use SMIE if available
     (sh-mode         default       sh-basic-offset)      ; Shell Script

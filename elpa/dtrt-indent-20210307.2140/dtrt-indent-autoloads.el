@@ -45,7 +45,7 @@ otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 
 Dtrt-Indent mode is enabled in all buffers where
-`(lambda nil (when (derived-mode-p 'prog-mode 'text-mode) (dtrt-indent-mode)))' would do it.
+`(lambda nil (when (derived-mode-p 'prog-mode 'text-mode 'javascript-mode) (dtrt-indent-mode)))' would do it.
 See `dtrt-indent-mode' for more information on Dtrt-Indent mode.
 
 \(fn &optional ARG)" t nil)

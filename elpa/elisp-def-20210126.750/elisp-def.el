@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2020  Wilfred Hughes
 ;; Version: 1.2
-;; Package-Version: 20201215.706
-;; Package-Commit: 679fa7d2d702263b6a55f30a1b8cfbb2fd817549
+;; Package-Version: 20210126.750
+;; Package-Commit: dfca043ec0cbead67bd9c526cb009daf771d0fa2
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: lisp
@@ -839,7 +839,7 @@ If SYM isn't present, use the most relevant symbol."
   (save-match-data
     (let (sym-end-pos)
       (cond
-       ((or (derived-mode-p 'c-mode) (derived-mode-p 'c++-mode))
+       ((or (derived-mode-p 'c-mode) (derived-mode-p 'c++-mode) (derived-mode-p 'objc-mode))
         ;; move to the quoted function/variable name string; the bound is after
         ;; two sexps: one DEFUN/DEFVAR/... followed by a parenthesised list of
         ;; arguments.

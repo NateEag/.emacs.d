@@ -410,6 +410,9 @@ The shell command lives in my dotfiles repo."
                                                             "*scratch*")))
                                 (evil-insert-state)))))))
 
+(use-package evil-collection
+  :init (evil-collection-init))
+
 (use-package scratch-comment
   :bind (:map lisp-interaction-mode-map
               ("C-j" . scratch-comment-eval-sexp)))
@@ -434,17 +437,16 @@ The shell command lives in my dotfiles repo."
          (magit-status-mode . evil-local-mode)
          (magit-rebase-mode . evil-local-mode))
   :config
-  (require 'evil-magit)
   (magit-delta-mode)
-  ;; I never use magit's gitignore editing and because evil-magit
-  ;; doesn't have support for everything I want to do from
-  ;; evil-normal-state, I change to evil-insert-state sometimes.
+  ;; I never use magit's gitignore editing and because evil-collection doesn't
+  ;; have support for everything I want to do from evil-normal-state, I change
+  ;; to evil-insert-state sometimes.
   ;;
   ;; Specifically I can't jump to end-of-line/start-of-line in
   ;; normal-state because magit binds '$', '^' and '0'. I also can't
   ;; trigger magit-svn with its default binding of 'N', because evil
   ;; rightfully binds 'N' to evil-search-previous.
-  (define-key magit-status-mode-map (kbd "i") nil))
+  (define-key magit-status-mode-map (kbd "i") 'evil-insert-state))
 
 (use-package forge
   :after magit)

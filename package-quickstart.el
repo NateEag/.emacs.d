@@ -21755,26 +21755,6 @@ Use INFO returned by `evilmi-verlog-get-tag' and NUM to jump to matched tag.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-magit-20201107.1529/evil-magit-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-magit-20201107.1529/evil-magit-autoloads.el") (car load-path))))
-
-
-
-(autoload 'evil-magit-init "evil-magit" "\
-This function completes the setup of evil-magit. It is called
-automatically when evil-magit is loaded. The only reason to use
-this function is if you've called `evil-magit-revert' and wish to
-go back to evil-magit behavior." t nil)
-
-(autoload 'evil-magit-revert "evil-magit" "\
-Revert changes by evil-magit that affect default evil+magit behavior." t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-magit" '("evil-magit-")))
-
-
-)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-ledger-20180802.1612/evil-ledger-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-ledger-20180802.1612/evil-ledger-autoloads.el") (car load-path))))
 
@@ -21874,6 +21854,110 @@ Commentary mode.
 Comment function for `org-mode'.
 
 \(fn BEG END)" t nil)
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207/annalist-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207/annalist-autoloads.el") (car load-path))))
+
+
+
+(autoload 'annalist-record "annalist" "\
+In the store for ANNALIST, TYPE, and LOCAL, record RECORD.
+ANNALIST should correspond to the package/user recording this information (e.g.
+'general, 'me, etc.). TYPE is the type of information being recorded (e.g.
+'keybindings). LOCAL corresponds to whether to store RECORD only for the current
+buffer. This information together is used to select where RECORD should be
+stored in and later retrieved from with `annalist-describe'. RECORD should be a
+list of items to record and later print as org headings and column entries in a
+single row. If PLIST is non-nil, RECORD should be a plist instead of an ordered
+list (e.g. '(keymap org-mode-map key \"C-c a\" ...)). The plist keys should be
+the symbols used for the definition of TYPE.
+
+\(fn ANNALIST TYPE RECORD &key LOCAL PLIST)" nil nil)
+
+(autoload 'annalist-describe "annalist" "\
+Describe information recorded by ANNALIST for TYPE.
+For example: (annalist-describe 'general 'keybindings) If VIEW is non-nil, use
+those settings for displaying recorded information instead of the defaults.
+
+\(fn ANNALIST TYPE &optional VIEW)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "annalist" '("annalist-")))
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-collection-20210401.1012/evil-collection-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-collection-20210401.1012/evil-collection-autoloads.el") (car load-path))))
+
+
+
+(autoload 'evil-collection-translate-key "evil-collection" "\
+Translate keys in the keymap(s) corresponding to STATES and KEYMAPS.
+STATES should be the name of an evil state, a list of states, or nil. KEYMAPS
+should be a symbol corresponding to the keymap to make the translations in or a
+list of keymap symbols. Like `evil-define-key', when a keymap does not exist,
+the keybindings will be deferred until the keymap is defined, so
+`with-eval-after-load' is not necessary. TRANSLATIONS corresponds to a list of
+key replacement pairs. For example, specifying \"a\" \"b\" will bind \"a\" to
+\"b\"'s definition in the keymap. Specifying nil as a replacement will unbind a
+key. If DESTRUCTIVE is nil, a backup of the keymap will be stored on the initial
+invocation, and future invocations will always look up keys in the backup
+keymap. When no TRANSLATIONS are given, this function will only create the
+backup keymap without making any translations. On the other hand, if DESTRUCTIVE
+is non-nil, the keymap will be destructively altered without creating a backup.
+For example, calling this function multiple times with \"a\" \"b\" \"b\" \"a\"
+would continue to swap and unswap the definitions of these keys. This means that
+when DESTRUCTIVE is non-nil, all related swaps/cycles should be done in the same
+invocation.
+
+\(fn STATES KEYMAPS &rest TRANSLATIONS &key DESTRUCTIVE &allow-other-keys)" nil nil)
+
+(function-put 'evil-collection-translate-key 'lisp-indent-function 'defun)
+
+(autoload 'evil-collection-swap-key "evil-collection" "\
+Wrapper around `evil-collection-translate-key' for swapping keys.
+STATES, KEYMAPS, and ARGS are passed to `evil-collection-translate-key'. ARGS
+should consist of key swaps (e.g. \"a\" \"b\" is equivalent to \"a\" \"b\" \"b\"
+\"a\" with `evil-collection-translate-key') and optionally keyword arguments for
+`evil-collection-translate-key'.
+
+\(fn STATES KEYMAPS &rest ARGS)" nil t)
+
+(function-put 'evil-collection-swap-key 'lisp-indent-function 'defun)
+
+(autoload 'evil-collection-require "evil-collection" "\
+Require the evil-collection-MODE file, but do not activate it.
+
+MODE should be a symbol. This requires the evil-collection-MODE
+feature without needing to manipulate `load-path'. NOERROR is
+forwarded to `require'.
+
+\(fn MODE &optional NOERROR)" nil nil)
+
+(autoload 'evil-collection-init "evil-collection" "\
+Register the Evil bindings for all modes in `evil-collection-mode-list'.
+
+Alternatively, you may register select bindings manually, for
+instance:
+
+  (with-eval-after-load 'calendar
+    (evil-collection-calendar-setup))
+
+If MODES is specified (as either one mode or a list of modes), use those modes
+instead of the modes in `evil-collection-mode-list'.
+
+\(fn &optional MODES)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-collection" '("evil-collection-")))
 
 
 
@@ -25197,14 +25281,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize async helm-core helm helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-magit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-section magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize async helm-core helm helm-swoop helm-rg helm-projectile helm-lsp helm-ls-git helm-git-files helm-ag haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-helm ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/forge-20210406.1356" "/Users/neagleson/.emacs.d/elpa/geiser-20210405.2206" "/Users/neagleson/.emacs.d/elpa/ghub-20210327.1647" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210407.214" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210329.2024" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417" "/Users/neagleson/.emacs.d/elpa/magit-20210406.454" "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210328.2038" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210214.2243" "/Users/neagleson/.emacs.d/elpa/evil-20210407.2119" "/Users/neagleson/.emacs.d/elpa/ivy-20210404.1241" "/Users/neagleson/.emacs.d/elpa/transient-20210315.1902" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210330.1544" "/Users/neagleson/.emacs.d/elpa/with-editor-20210319.1930" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210112.901" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210406.1356" "/Users/neagleson/.emacs.d/elpa/geiser-20210405.2206" "/Users/neagleson/.emacs.d/elpa/ghub-20210327.1647" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210407.214" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210329.2024" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417" "/Users/neagleson/.emacs.d/elpa/magit-20210406.454" "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210328.2038" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210214.2243" "/Users/neagleson/.emacs.d/elpa/evil-20210407.2119" "/Users/neagleson/.emacs.d/elpa/ivy-20210404.1241" "/Users/neagleson/.emacs.d/elpa/transient-20210315.1902" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210330.1544" "/Users/neagleson/.emacs.d/elpa/with-editor-20210319.1930" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

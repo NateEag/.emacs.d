@@ -45,6 +45,10 @@
 (if (eq system-type 'windows-nt)
     (set-windows-env))
 
+;; evil-collection says I should do this before loading evil. I don't
+;; understand why.
+(setq evil-want-keybinding nil)
+
 ;; Set up package-specific autoloads and settings.
 (load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
 

@@ -4,8 +4,8 @@
 
 ;; Author: Eder Elorriaga <gexplorer8@gmail.com>
 ;; URL: https://github.com/gexplorer/counsel-ag-popup
-;; Package-Version: 20210112.1320
-;; Package-Commit: b7179875a2185b7ed2460c71a786413be94bb6f6
+;; Package-Version: 20210121.805
+;; Package-Commit: 41d85fe36edd72da68f5009ad9cf9013cd19960d
 ;; Keywords: convenience, matching, tools
 ;; Version: 1.0
 ;; Package-Requires: ((emacs "26.1" ) (counsel "0.13.0") (transient "0.3.0"))
@@ -138,6 +138,11 @@ The third arg HISTORY, if non-nil, specifies a history."
   :argument "--context="
   :reader 'transient-read-number-N+)
 
+(transient-define-argument counsel-ag-popup:=h ()
+  :description "Search hidden files"
+  :shortarg "=h"
+  :argument "--hidden")
+
 (transient-define-argument counsel-ag-popup:-f ()
   :description "Follow symlinks"
   :shortarg "-f"
@@ -145,6 +150,7 @@ The third arg HISTORY, if non-nil, specifies a history."
 
 (transient-define-argument counsel-ag-popup:-G ()
   :description "Limit search to filenames matching PATTERN"
+  :class 'transient-option
   :shortarg "-G"
   :argument "--file-search-regex="
   :reader 'counsel-ag-popup-read-pattern)
@@ -205,6 +211,7 @@ The third arg HISTORY, if non-nil, specifies a history."
    (counsel-ag-popup:-C)]
   ["Search options"
    (counsel-ag-popup:-f)
+   (counsel-ag-popup:=h)
    (counsel-ag-popup:-G)
    (counsel-ag-popup:-i)
    (counsel-ag-popup:-m)

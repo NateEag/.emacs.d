@@ -165,15 +165,16 @@ default to \"powershell\"."
   :safe #'stringp
   :package-version '(cider . "0.17.0"))
 
-(defcustom cider-clojure-cli-parameters
-  "-m nrepl.cmdline --middleware '%s'"
-  "Params passed to clojure to start an nREPL server via `cider-jack-in'.
-This is evaluated using `format', with the first argument being the Clojure
-vector of middleware variables as a string."
+(defcustom cider-clojure-cli-aliases
+  nil
+  "A list of aliases to include when using the clojure cli.
+Should be of the form `foo:bar`.  Any leading \"-A\" or \"-M\" will be
+stripped as these are concatenated into the \"-M[your-deps]:cider/nrepl\"
+form."
   :type 'string
   :group 'cider
   :safe #'stringp
-  :package-version '(cider . "0.17.0"))
+  :package-version '(cider . "1.1"))
 
 (defcustom cider-shadow-cljs-command
   "npx shadow-cljs"
@@ -370,14 +371,7 @@ Throws an error if PROJECT-TYPE is unknown."
   (pcase project-type
     ('lein        cider-lein-parameters)
     ('boot        cider-boot-parameters)
-    ('clojure-cli (format cider-clojure-cli-parameters
-                          (concat
-                           "["
-                           (mapconcat
-                            (apply-partially #'format "\"%s\"")
-                            (cider-jack-in-normalized-nrepl-middlewares)
-                            ",")
-                           "]")))
+    ('clojure-cli nil)
     ('shadow-cljs cider-shadow-cljs-parameters)
     ('gradle      cider-gradle-parameters)
     (_            (user-error "Unsupported project type `%S'" project-type))))
@@ -412,7 +406,7 @@ Elements of the list are artifact name and list of exclusions to apply for the a
 (defconst cider-latest-clojure-version "1.10.1"
   "Latest supported version of Clojure.")
 
-(defconst cider-required-middleware-version "0.25.6"
+(defconst cider-required-middleware-version "0.25.10"
   "The CIDER nREPL version that's known to work properly with CIDER.")
 
 (defcustom cider-jack-in-auto-inject-clojure nil
@@ -565,19 +559,31 @@ removed, LEIN-PLUGINS, and finally PARAMS."
    " -- "
    params))
 
-(defun cider-clojure-cli-jack-in-dependencies (global-opts params dependencies)
+(defun cider-clojure-cli-jack-in-dependencies (global-options _params dependencies)
   "Create Clojure tools.deps jack-in dependencies.
-Does so by concatenating DEPENDENCIES, GLOBAL-OPTS and PARAMS."
-  (let ((dependencies (append dependencies cider-jack-in-lein-plugins)))
-    (concat
-     "-Sdeps '{:deps {"
-     (mapconcat #'identity
-                (seq-map (lambda (dep) (format "%s {:mvn/version \"%s\"}" (car dep) (cadr dep))) dependencies)
-                " ")
-     "}}' "
-     global-opts
-     (unless (seq-empty-p global-opts) " ")
-     params)))
+Does so by concatenating DEPENDENCIES and GLOBAL-OPTIONS into a suitable
+`clojure` invocation.  The main is placed in an inline alias :cider/nrepl
+so that if your aliases contain any mains, the cider/nrepl one will be the
+one used."
+  (let* ((deps-string (string-join
+                       (seq-map (lambda (dep)
+                                  (format "%s {:mvn/version \"%s\"}" (car dep) (cadr dep)))
+                                (append dependencies cider-jack-in-lein-plugins))
+                       " "))
+         (middleware (mapconcat
+                      (apply-partially #'format "%s")
+                      (cider-jack-in-normalized-nrepl-middlewares)
+                      ","))
+         (main-opts (format "\"-m\" \"nrepl.cmdline\" \"--middleware\" \"[%s]\"" middleware)))
+    (format "%s-Sdeps '{:deps {%s} :aliases {:cider/nrepl {:main-opts [%s]}}}' -M%s:cider/nrepl"
+            (if global-options (format "%s " global-options) "")
+            deps-string
+            main-opts
+            (if cider-clojure-cli-aliases
+                ;; replace -A or -M in the jack-in-aliases to be concatenated
+                ;; with cider/nrepl to ensure cider/nrepl comes last
+                (format ":%s" (replace-regexp-in-string "^-\\(A\\\|M\\):" "" cider-clojure-cli-aliases))
+              ""))))
 
 (defun cider-shadow-cljs-jack-in-dependencies (global-opts params dependencies)
   "Create shadow-cljs jack-in deps.
@@ -721,6 +727,7 @@ Generally you should not disable this unless you run into some faulty check."
 (defcustom cider-shadow-watched-builds nil
   "Defines the list of builds `shadow-cljs' should watch."
   :type '(repeat string)
+  :safe #'listp
   :package-version '(cider . "1.0"))
 
 (defcustom cider-shadow-default-options nil

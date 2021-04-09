@@ -1,7 +1,7 @@
 ;;; clojure-mode.el --- Major mode for Clojure code -*- lexical-binding: t; -*-
 
-;; Copyright © 2007-2020 Jeffrey Chu, Lennart Staflin, Phil Hagelberg
-;; Copyright © 2013-2020 Bozhidar Batsov, Artur Malabarba
+;; Copyright © 2007-2013 Jeffrey Chu, Lennart Staflin, Phil Hagelberg
+;; Copyright © 2013-2021 Bozhidar Batsov, Artur Malabarba
 ;;
 ;; Authors: Jeffrey Chu <jochu0@gmail.com>
 ;;       Lennart Staflin <lenst@lysator.liu.se>
@@ -10,8 +10,8 @@
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20201126.1558
-;; Package-Commit: 53ef8ac076ae7811627fbdd408e519ab7fca9a0b
+;; Package-Version: 20210322.704
+;; Package-Commit: a14671e03c867c9d759ee9e59cdc5cecbf271245
 ;; Keywords: languages clojure clojurescript lisp
 ;; Version: 5.13.0-snapshot
 ;; Package-Requires: ((emacs "25.1"))
@@ -248,6 +248,10 @@ Out-of-the box `clojure-mode' understands lein, boot, gradle,
     (define-key map (kbd "s b") #'clojure-let-backward-slurp-sexp)
     (define-key map (kbd "C-a") #'clojure-add-arity)
     (define-key map (kbd "a") #'clojure-add-arity)
+    (define-key map (kbd "-") #'clojure-toggle-ignore)
+    (define-key map (kbd "C--") #'clojure-toggle-ignore)
+    (define-key map (kbd "_") #'clojure-toggle-ignore-surrounding-form)
+    (define-key map (kbd "C-_") #'clojure-toggle-ignore-surrounding-form)
     map)
   "Keymap for Clojure refactoring commands.")
 (fset 'clojure-refactor-map clojure-refactor-map)
@@ -266,6 +270,8 @@ Out-of-the box `clojure-mode' understands lein, boot, gradle,
         ["Cycle if, if-not" clojure-cycle-if]
         ["Cycle when, when-not" clojure-cycle-when]
         ["Cycle not" clojure-cycle-not]
+        ["Toggle #_ ignore form" clojure-toggle-ignore]
+        ["Toggle #_ ignore of surrounding form" clojure-toggle-ignore-surrounding-form]
         ["Add function arity" clojure-add-arity]
         ("ns forms"
          ["Insert ns form at the top" clojure-insert-ns-form]
@@ -1138,6 +1144,13 @@ will align the values like this:
   :safe #'listp
   :type '(repeat string))
 
+(defcustom clojure-special-arg-indent-factor
+  2
+  "Factor of the 'lisp-body-indent' used to indent special arguments."
+  :package-version '(clojure-mode . "5.13")
+  :type 'integer
+  :safe 'integerp)
+
 (defvar clojure--beginning-of-reader-conditional-regexp
   "#\\?@(\\|#\\?("
   "Regexp denoting the beginning of a reader conditional.")
@@ -1484,7 +1497,7 @@ This function also returns nil meaning don't specify the indentation."
           (last-sexp calculate-lisp-indent-last-sexp)
           (containing-form-column (1- (current-column))))
       (pcase method
-        ((or (pred integerp) `(,method))
+        ((or (and (pred integerp) method) `(,method))
          (let ((pos -1))
            (condition-case nil
                (while (and (<= (point) indent-point)
@@ -1505,7 +1518,8 @@ This function also returns nil meaning don't specify the indentation."
              (clojure--normal-indent last-sexp 'always-align))
             ;; Special arg. Rigidly indent with a large indentation.
             (t
-             (+ (* 2 lisp-body-indent) containing-form-column)))))
+             (+ (* clojure-special-arg-indent-factor lisp-body-indent)
+                containing-form-column)))))
         (`:defn
          (+ lisp-body-indent containing-form-column))
         ((pred functionp)
@@ -2823,6 +2837,57 @@ Assumes cursor is at beginning of function."
         (funcall jump-up (- n 1))
         (clojure--add-arity-reify-internal)))
       (indent-region beg end-marker))))
+
+
+;;; Toggle Ignore forms
+
+(defun clojure--toggle-ignore-next-sexp (&optional n)
+  "Insert or delete N `#_' ignore macros at the current point.
+Point must be directly before a sexp or the #_ characters.
+When acting on a top level form, insert #_ on a new line
+preceding the form to prevent indentation changes."
+  (let ((rgx (rx-to-string `(repeat ,(or n 1) (seq "#_" (* (in "\r\n" blank)))))))
+    (backward-prefix-chars)
+    (skip-chars-backward "#_ \r\n")
+    (skip-chars-forward " \r\n")
+    (if (looking-at rgx)
+        (delete-region (point) (match-end 0))
+      (dotimes (_ (or  n 1)) (insert-before-markers "#_"))
+      (when (zerop (car (syntax-ppss)))
+        (insert-before-markers "\n")))))
+
+(defun clojure-toggle-ignore (&optional n)
+  "Toggle the #_ ignore reader form for the sexp at point.
+With numeric argument, toggle N number of #_ forms at the same point.
+
+  e.g. with N = 2:
+  |a b c  => #_#_a b c"
+  (interactive "p")
+  (save-excursion
+    (ignore-errors
+      (goto-char (or (nth 8 (syntax-ppss)) ;; beginning of string
+                     (beginning-of-thing 'sexp))))
+    (clojure--toggle-ignore-next-sexp n)))
+
+(defun clojure-toggle-ignore-surrounding-form (&optional arg)
+  "Toggle the #_ ignore reader form for the surrounding form at point.
+With optional ARG, move up by ARG surrounding forms first.
+With universal argument \\[universal-argument], act on the \"top-level\" form."
+  (interactive "P")
+  (save-excursion
+    (if (consp arg)
+        (clojure-toggle-ignore-defun)
+      (condition-case nil
+          (backward-up-list arg t t)
+        (scan-error nil)))
+    (clojure--toggle-ignore-next-sexp)))
+
+(defun clojure-toggle-ignore-defun ()
+  "Toggle the #_ ignore reader form for the \"top-level\" form at point."
+  (interactive)
+  (save-excursion
+    (beginning-of-defun)
+    (clojure--toggle-ignore-next-sexp)))
 
 
 ;;; ClojureScript

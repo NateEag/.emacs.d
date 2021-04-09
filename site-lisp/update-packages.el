@@ -87,6 +87,17 @@ Does *not* install PACKAGE if it is known to not be installable."
                     "-A"
                     package-dir)
 
+      ;; Stage changes to package-quickstart.el, as updating a package makes
+      ;; changes to it.
+      (call-process git-executable
+                    nil
+                    "*git-results*"
+                    nil
+                    "add"
+                    "-A"
+                    (expand-file-name (s-concat user-emacs-directory
+                                                "package-quickstart.el")))
+
       ;; Commit changes.
       (call-process git-executable
                     nil

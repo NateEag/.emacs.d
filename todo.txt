@@ -44,6 +44,10 @@
 - Try frontmacs-javascript as a possible new JS mode. Installed but not
   configured.
 
+- Try Serenata as a new PHP intelligence engine. See how it compares to
+  php-language-server. Seems to be more maintained, at least.
+  https://serenata.gitlab.io/
+
 - Teach Emacs to automatically change its theme when OS X changes between light
   and dark modes. I have a function to choose theme correctly,
   ne/set-theme-to-match-system-theme, but I don't have a way to detect the

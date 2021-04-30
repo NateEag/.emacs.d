@@ -146,7 +146,9 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
              (split-window-right my-window-width)))
 
   (if (= 2 num-windows)
-        (split-window-right my-window-width)))
+        (split-window-right my-window-width))
+
+  (balance-windows))
 
 (defadvice make-frame-command (after set-up-new-frame activate)
   "After creating a new frame, size it the way I like."

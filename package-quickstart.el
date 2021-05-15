@@ -16572,10 +16572,10 @@ Runs jq interactively on a json buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jedi-core-20210202.856/jedi-core-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jedi-core-20210503.1315/jedi-core-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jedi-core-20210202.856/jedi-core-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jedi-core-20210503.1315/jedi-core-autoloads.el") (car load-path))))
 
 
 

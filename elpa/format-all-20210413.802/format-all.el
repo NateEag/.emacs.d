@@ -2,8 +2,8 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20210315.640
-;; Package-Commit: 94239d35944830ce009d01ac3369e0d61f9723c2
+;; Package-Version: 20210413.802
+;; Package-Commit: eb5906c7070b667432194da3991daf21f24b516a
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.3") (inheritenv "0.1") (language-id "0.12"))
 ;; Keywords: languages util
@@ -114,7 +114,7 @@
   '(("Assembly" asmfmt)
     ("ATS" atsfmt)
     ("Bazel" buildifier)
-    ("BibTeX" bibtex-mode)
+    ("BibTeX" emacs-bibtex)
     ("C" clang-format)
     ("C#" clang-format)
     ("C++" clang-format)
@@ -559,20 +559,16 @@ Consult the existing formatters for examples of BODY."
   (:install)
   (:languages "LaTeX")
   (:format (format-all--buffer-native
-            'latex-mode (lambda () (LaTeX-fill-buffer nil)))))
+            'latex-mode
+            (lambda ()
+              (let ((f (symbol-function 'LaTeX-fill-buffer)))
+                (when f (funcall f nil)))))))
 
 (define-format-all-formatter beautysh
   (:executable "beautysh")
   (:install "pip install beautysh")
   (:languages "Shell")
   (:format (format-all--buffer-easy executable "-")))
-
-(define-format-all-formatter bibtex-mode
-  (:executable)
-  (:install)
-  (:languages "BibTeX")
-  (:format (format-all--buffer-native
-            'bibtex-mode 'bibtex-reformat 'bibtex-sort-buffer)))
 
 (define-format-all-formatter black
   (:executable "black")
@@ -686,6 +682,18 @@ Consult the existing formatters for examples of BODY."
                                 executable "--yes" "--stdin")
      (let ((error-output (format-all--remove-ansi-color error-output)))
        (list output error-output)))))
+
+(define-format-all-formatter emacs-bibtex
+  (:executable)
+  (:install)
+  (:languages "BibTeX")
+  (:format (format-all--buffer-native 'bibtex-mode 'bibtex-reformat)))
+
+(define-format-all-formatter emacs-bibtex-sort
+  (:executable)
+  (:install)
+  (:languages "BibTeX")
+  (:format (format-all--buffer-native 'bibtex-mode 'bibtex-sort-buffer)))
 
 (define-format-all-formatter emacs-lisp
   (:executable)

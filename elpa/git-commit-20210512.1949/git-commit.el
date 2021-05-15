@@ -12,8 +12,8 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20200524") (transient "20200601") (with-editor "20200522"))
-;; Package-Version: 20210328.1730
-;; Package-Commit: 0edb4e156f182a478d816e068c2b7641a202ea44
+;; Package-Version: 20210512.1949
+;; Package-Commit: fcd50dd8ae7cb33332eb7c6d90932be41b869cae
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -445,8 +445,8 @@ This is only used if Magit is available."
 \\(\\(COMMIT\\|NOTES\\|PULLREQ\\|MERGEREQ\\|TAG\\)_EDIT\\|MERGE_\\|\\)MSG\
 \\|\\(BRANCH\\|EDIT\\)_DESCRIPTION\\)\\'")
 
-(eval-after-load 'recentf
-  '(add-to-list 'recentf-exclude git-commit-filename-regexp))
+(with-eval-after-load 'recentf
+  (add-to-list 'recentf-exclude git-commit-filename-regexp))
 
 (add-to-list 'with-editor-file-name-history-exclude git-commit-filename-regexp)
 

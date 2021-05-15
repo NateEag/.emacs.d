@@ -5,8 +5,9 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/transient
 ;; Package-Requires: ((emacs "25.1"))
-;; Package-Version: 0.3.0
+;; Package-Version: 0.3.2
 ;; Keywords: bindings
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is part of GNU Emacs.
 
@@ -1629,7 +1630,7 @@ This function is also called internally in which case LAYOUT and
 EDIT may be non-nil."
   (transient--debug 'setup)
   (when (> (minibuffer-depth) 0)
-    (user-error "Cannot invoke transient %s while minibuffer is active"))
+    (user-error "Cannot invoke transient %s while minibuffer is active" name))
   (transient--with-emergency-exit
     (cond
      ((not name)

@@ -1,4 +1,4 @@
-This is transient.info, produced by makeinfo version 6.5 from
+This is transient.info, produced by makeinfo version 6.7 from
 transient.texi.
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
@@ -44,7 +44,7 @@ reading a new value in the minibuffer.
    Calling a suffix command usually causes the transient to be exited
 but suffix commands can also be configured to not exit the transient.
 
-This manual is for Transient version 0.3.0.
+This manual is for Transient version 0.3.2.
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 

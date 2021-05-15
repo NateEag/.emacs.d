@@ -113,6 +113,8 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (define-obsolete-variable-alias 'lsp-flycheck-default-level 'lsp-diagnostics-flycheck-default-level "lsp-mode 7.0.1")
 
+(autoload 'lsp-diagnostics-lsp-checker-if-needed "lsp-diagnostics" nil nil nil)
+
 (autoload 'lsp-diagnostics--enable "lsp-diagnostics" "\
 Enable LSP checker support." nil nil)
 
@@ -383,6 +385,13 @@ Click lsp lens using `avy' package." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "lsp-markdown" "lsp-markdown.el" (0 0 0 0))
+;;; Generated autoloads from lsp-markdown.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-markdown" '("lsp-markdown-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-mode.el
 (put 'lsp-enable-file-watchers 'safe-local-variable #'booleanp)
@@ -513,6 +522,13 @@ mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-pylsp" "lsp-pylsp.el" (0 0 0 0))
+;;; Generated autoloads from lsp-pylsp.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-pylsp" '("lsp-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-r" "lsp-r.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-r.el
 
@@ -636,7 +652,7 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;### (autoloads nil "lsp-verilog" "lsp-verilog.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-verilog.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-verilog" '("lsp-clients-verilog-executable")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-verilog" '("lsp-clients-")))
 
 ;;;***
 

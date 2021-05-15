@@ -14857,10 +14857,10 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210409.1821/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210515.1509/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210409.1821/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210515.1509/lsp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -14934,6 +14934,8 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 (define-obsolete-variable-alias 'lsp-diagnostic-package 'lsp-diagnostics-provider "lsp-mode 7.0.1")
 
 (define-obsolete-variable-alias 'lsp-flycheck-default-level 'lsp-diagnostics-flycheck-default-level "lsp-mode 7.0.1")
+
+(autoload 'lsp-diagnostics-lsp-checker-if-needed "lsp-diagnostics" nil nil nil)
 
 (autoload 'lsp-diagnostics--enable "lsp-diagnostics" "\
 Enable LSP checker support." nil nil)
@@ -15132,6 +15134,10 @@ Click lsp lens using `avy' package." t nil)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lua" '("lsp-")))
 
 
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-markdown" '("lsp-markdown-")))
+
+
 (put 'lsp-enable-file-watchers 'safe-local-variable #'booleanp)
 (put 'lsp-file-watch-threshold 'safe-local-variable (lambda (i) (or (numberp i) (not i))))
 
@@ -15229,6 +15235,10 @@ mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-pylsp" '("lsp-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-r" '("lsp-clients-r-server-command")))
 
 
@@ -15308,7 +15318,7 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-verilog" '("lsp-clients-verilog-executable")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-verilog" '("lsp-clients-")))
 
 
 

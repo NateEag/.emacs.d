@@ -23,6 +23,12 @@
 
 (require 'lsp-mode)
 
+(defgroup lsp-diagnostics nil
+  "LSP support for diagnostics"
+  :prefix "lsp-disagnostics-"
+  :group 'lsp-mode
+  :tag "LSP Diagnostics")
+
 ;;;###autoload
 (define-obsolete-variable-alias 'lsp-diagnostic-package
   'lsp-diagnostics-provider  "lsp-mode 7.0.1")
@@ -37,7 +43,7 @@
     (const :tag "Use neither flymake nor lsp" :none)
     (const :tag "Prefer flymake" t)
     (const :tag "Prefer flycheck" nil))
-  :group 'lsp-mode
+  :group 'lsp-diagnostics
   :package-version '(lsp-mode . "6.3"))
 
 ;;;###autoload
@@ -50,7 +56,7 @@
           (const error)
           (const warning)
           (const info))
-  :group 'lsp-mode)
+  :group 'lsp-diagnostics)
 
 (defcustom lsp-diagnostics-attributes
   `((unnecessary :foreground "gray")
@@ -60,12 +66,12 @@ List containing (tag attributes) where tag is the LSP diagnostic tag and
 attributes is a `plist' containing face attributes which will be applied
 on top the flycheck face for that error level."
   :type '(repeat list)
-  :group 'lsp-mode)
+  :group 'lsp-diagnostics)
 
 (defcustom lsp-diagnostics-disabled-modes nil
   "A list of major models for which `lsp-diagnostics-mode' should be disabled."
   :type '(repeat symbol)
-  :group 'lsp-mode
+  :group 'lsp-diagnostics
   :package-version '(lsp-mode . "7.1"))
 
 ;; Flycheck integration
@@ -202,6 +208,7 @@ from the language server."
 
 (defvar lsp-diagnostics-mode) ;; properly defined by define-minor-mode below
 
+;;;###autoload
 (defun lsp-diagnostics-lsp-checker-if-needed ()
   (unless (flycheck-valid-checker-p 'lsp)
     (flycheck-define-generic-checker 'lsp
@@ -255,9 +262,9 @@ See https://github.com/emacs-lsp/lsp-mode."
 (defun lsp-diagnostics--flymake-setup ()
   "Setup flymake."
   (setq lsp-diagnostics--flymake-report-fn nil)
-  (flymake-mode 1)
   (add-hook 'flymake-diagnostic-functions 'lsp-diagnostics--flymake-backend nil t)
-  (add-hook 'lsp-diagnostics-updated-hook 'lsp-diagnostics--flymake-after-diagnostics nil t))
+  (add-hook 'lsp-diagnostics-updated-hook 'lsp-diagnostics--flymake-after-diagnostics nil t)
+  (flymake-mode 1))
 
 (defun lsp-diagnostics--flymake-after-diagnostics ()
   "Handler for `lsp-diagnostics-updated-hook'."
@@ -323,7 +330,7 @@ See https://github.com/emacs-lsp/lsp-mode."
 ;;;###autoload
 (define-minor-mode lsp-diagnostics-mode
   "Toggle LSP diagnostics integration."
-  :group 'lsp-mode
+  :group 'lsp-diagnostics
   :global nil
   :lighter ""
   (cond

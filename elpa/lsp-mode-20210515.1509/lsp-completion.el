@@ -23,6 +23,12 @@
 
 (require 'lsp-mode)
 
+(defgroup lsp-completion nil
+  "LSP support for completion"
+  :prefix "lsp-completion-"
+  :group 'lsp-mode
+  :tag "LSP Completion")
+
 ;;;###autoload
 (define-obsolete-variable-alias 'lsp-prefer-capf
   'lsp-completion-provider  "lsp-mode 7.0.1")
@@ -32,7 +38,7 @@
   :type '(choice
           (const :tag "Use company-capf" :capf)
           (const :tag "None" :none))
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.0.1"))
 
 ;;;###autoload
@@ -42,7 +48,7 @@
 (defcustom lsp-completion-enable t
   "Enable `completion-at-point' integration."
   :type 'boolean
-  :group 'lsp-mode)
+  :group 'lsp-completion)
 
 (defcustom lsp-completion-enable-additional-text-edit t
   "Whether or not to apply additional text edit when performing completion.
@@ -51,43 +57,43 @@ If set to non-nil, `lsp-mode' will apply additional text edits
 from the server.  Otherwise, the additional text edits are
 ignored."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "6.3.2"))
 
 (defcustom lsp-completion-show-kind t
   "Whether or not to show kind of completion candidates."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.0.1"))
 
 (defcustom lsp-completion-show-detail t
   "Whether or not to show detail of completion candidates."
   :type 'boolean
-  :group 'lsp-mode)
+  :group 'lsp-completion)
 
 (defcustom lsp-completion-no-cache nil
   "Whether or not caching the returned completions from server."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.0.1"))
 
 (defcustom lsp-completion-filter-on-incomplete t
   "Whether or not filter incomplete results."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.0.1"))
 
 (defcustom lsp-completion-sort-initial-results t
   "Whether or not filter initial results from server."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.1"))
 
 (defcustom lsp-completion-use-last-result t
   "Temporarily use last server result when interrupted by keyboard.
 This will help minimize popup flickering issue in `company-mode'."
   :type 'boolean
-  :group 'lsp-mode
+  :group 'lsp-completion
   :package-version '(lsp-mode . "7.1"))
 
 (defconst lsp-completion--item-kind
@@ -186,6 +192,14 @@ KEEP-LAST-RESULT if specified."
   (setq lsp-completion--cache nil)
   (unless keep-last-result (setq lsp-completion--last-result nil)))
 
+(defcustom lsp-completion-default-behaviour :replace
+  "Default behaviour of `InsertReplaceEdit'."
+  :type '(choice
+          (const :insert :tag "Default completion inserts")
+          (const :replace :tag "Default completion replaces"))
+  :group 'lsp-mode
+  :package-version '(lsp-mode . "7.1"))
+
 (lsp-defun lsp-completion--guess-prefix ((item &as &CompletionItem :text-edit?))
   "Guess ITEM's prefix start point according to following heuristics:
 - If `textEdit' exists, use insertion range start as prefix start point.
@@ -194,6 +208,8 @@ KEEP-LAST-RESULT if specified."
   - The character before prefix is not word constitute
 Return `nil' when fails to guess prefix."
   (cond
+   ((lsp-insert-replace-edit? text-edit?)
+    (lsp--position-to-point (lsp:range-start (lsp:insert-replace-edit-insert text-edit?))))
    (text-edit?
     (lsp--position-to-point (lsp:range-start (lsp:text-edit-range text-edit?))))
    (t
@@ -354,10 +370,12 @@ The MARKERS and PREFIX value will be attached to each candidate."
 
 (defun lsp-completion--get-context (trigger-characters)
   "Get completion context with provided TRIGGER-CHARACTERS."
-  (let* (trigger-char
+  (let* ((triggered-by-char (equal last-command 'self-insert-command))
+         (trigger-char (when triggered-by-char
+                           (lsp-completion--looking-back-trigger-characterp
+                            trigger-characters)))
          (trigger-kind (cond
-                        ((setq trigger-char (lsp-completion--looking-back-trigger-characterp
-                                             trigger-characters))
+                        (trigger-char
                          lsp/completion-trigger-kind-trigger-character)
                         ((equal (cl-second lsp-completion--cache) :incomplete)
                          lsp/completion-trigger-kind-trigger-for-incomplete-completions)
@@ -403,6 +421,10 @@ The MARKERS and PREFIX value will be attached to each candidate."
               (lsp--catch 'input
                   (let ((lsp--throw-on-input lsp-completion-use-last-result)
                         (same-session? (and lsp-completion--cache
+                                            ;; Special case for empty prefix and empty result
+                                            (or (cl-second lsp-completion--cache)
+                                                (not (string-empty-p
+                                                      (plist-get (cddr lsp-completion--cache) :prefix))))
                                             (equal (cl-first lsp-completion--cache) bounds-start)
                                             (s-prefix?
                                              (plist-get (cddr lsp-completion--cache) :prefix)
@@ -419,8 +441,9 @@ The MARKERS and PREFIX value will be attached to each candidate."
                                      "textDocument/completion"
                                      (plist-put (lsp--text-document-position-params)
                                                 :context (lsp-completion--get-context trigger-chars))))
-                              (completed (or (and resp (not (lsp-completion-list? resp)))
-                                             (not (lsp:completion-list-is-incomplete resp))))
+                              (completed (and resp
+                                              (not (and (lsp-completion-list? resp)
+                                                        (lsp:completion-list-is-incomplete resp)))))
                               (items (lsp--while-no-input
                                        (--> (cond
                                              ((lsp-completion-list? resp)
@@ -514,7 +537,16 @@ Others: CANDIDATES"
          (text-edit?
           (apply #'delete-region markers)
           (insert prefix)
-          (lsp--apply-text-edit text-edit?))
+          (pcase text-edit?
+            ((TextEdit) (lsp--apply-text-edit text-edit?))
+            ((InsertReplaceEdit :insert :replace :new-text)
+             (lsp--apply-text-edit
+              (lsp-make-text-edit
+               :new-text new-text
+               :range (if (or (and current-prefix-arg (eq lsp-completion-default-behaviour :replace))
+                              (and (not current-prefix-arg) (eq lsp-completion-default-behaviour :insert)))
+                          insert
+                        replace))))))
          ((or (unless (lsp-falsy? insert-text?) insert-text?) label)
           (apply #'delete-region markers)
           (insert prefix)
@@ -637,9 +669,18 @@ The return is nil or in range of (0, inf)."
     (unless (zerop len)
       (/ score-numerator (1+ score-denominator) 1.0))))
 
+(defun lsp-completion--fix-resolve-data (item)
+  ;; patch `CompletionItem' for rust-analyzer otherwise resolve will fail
+  ;; see #2675
+  (let ((data (lsp:completion-item-data? item)))
+    (when (lsp-member? data :import_for_trait_assoc_item)
+      (unless (lsp-get data :import_for_trait_assoc_item)
+        (lsp-put data :import_for_trait_assoc_item :json-false)))))
+
 (defun lsp-completion--resolve (item)
   "Resolve completion ITEM."
   (cl-assert item nil "Completion item must not be nil")
+  (lsp-completion--fix-resolve-data item)
   (or (ignore-errors
         (when (lsp-feature? "completionItem/resolve")
           (lsp-request "completionItem/resolve" item)))
@@ -649,14 +690,7 @@ The return is nil or in range of (0, inf)."
   "Resolve completion ITEM asynchronously with CALLBACK.
 The CLEANUP-FN will be called to cleanup."
   (cl-assert item nil "Completion item must not be nil")
-
-  ;; patch `CompletionItem' for rust-analyzer otherwise resolve will fail
-  ;; see #2675
-  (let ((data (lsp:completion-item-data? item)))
-    (when (lsp-member? data :import_for_trait_assoc_item)
-      (unless (lsp-get data :import_for_trait_assoc_item)
-        (lsp-put data :import_for_trait_assoc_item :json-false))))
-
+  (lsp-completion--fix-resolve-data item)
   (ignore-errors
     (if (lsp-feature? "completionItem/resolve")
         (lsp-request-async "completionItem/resolve" item
@@ -686,7 +720,7 @@ The CLEANUP-FN will be called to cleanup."
 ;;;###autoload
 (define-minor-mode lsp-completion-mode
   "Toggle LSP completion support."
-  :group 'lsp-mode
+  :group 'lsp-completion
   :global nil
   :lighter ""
   (let ((completion-started-fn (lambda (&rest _)
@@ -708,7 +742,7 @@ The CLEANUP-FN will be called to cleanup."
              (fboundp 'company-mode))
         (setq-local company-abort-on-unique-match nil)
         (company-mode 1)
-        (add-to-list 'company-backends 'company-capf))
+        (setq-local company-backends (cl-adjoin 'company-capf company-backends :test #'equal)))
        (t
         (lsp--warn "Unable to autoconfigure company-mode.")))
 

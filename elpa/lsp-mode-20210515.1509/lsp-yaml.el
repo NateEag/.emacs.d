@@ -89,7 +89,7 @@
 
 (defcustom lsp-yaml-schemas '()
   "Associate schemas to YAML files in a glob pattern."
-  :type '(alist :key-type (symbol :tag "schema") :value-type (vector :tag "files (glob)"))
+  :type '(alist :key-type (symbol :tag "schema") :value-type (lsp-string-vector :tag "files (glob)"))
   :group 'lsp-yaml
   :package-version '(lsp-mode . "6.2"))
 
@@ -102,7 +102,7 @@
 
 (defcustom lsp-yaml-custom-tags nil
   "Custom tags for the parser to use."
-  :type '(repeat string)
+  :type '(lsp-repeatable-vector string)
   :group 'lsp-yaml
   :package-version '(lsp-mode . "6.2"))
 

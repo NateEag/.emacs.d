@@ -77,7 +77,18 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from php-local-manual.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-search")))
+(autoload 'php-local-manual-search "php-local-manual" "\
+Search the local PHP documentation (i.e. in `php-manual-path') for
+the word at point.  The function returns t if the requested documentation
+exists, and nil otherwise.
+
+With a prefix argument, prompt (with completion) for a word to search for.
+
+\(fn WORD)" t nil)
+
+(define-obsolete-function-alias 'php-search-local-documentation #'php-local-manual-search "2.0.0")
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-")))
 
 ;;;***
 

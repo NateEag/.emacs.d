@@ -9318,10 +9318,10 @@ Major mode for editing pip requirements files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210310.1724/php-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210513.1507/php-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210310.1724/php-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210513.1507/php-mode-autoloads.el") (car load-path))))
 
 
 
@@ -9383,7 +9383,18 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-search")))
+(autoload 'php-local-manual-search "php-local-manual" "\
+Search the local PHP documentation (i.e. in `php-manual-path') for
+the word at point.  The function returns t if the requested documentation
+exists, and nil otherwise.
+
+With a prefix argument, prompt (with completion) for a word to search for.
+
+\(fn WORD)" t nil)
+
+(define-obsolete-function-alias 'php-search-local-documentation #'php-local-manual-search "2.0.0")
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-")))
 
 
 

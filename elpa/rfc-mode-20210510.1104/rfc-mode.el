@@ -2,8 +2,8 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20201121.544
-;; Package-Commit: 21c966a02cdd4783dc6ea50b807589abc405d929
+;; Package-Version: 20210510.1104
+;; Package-Commit: b885d6bd2b3be69a2413c4dc5cc34344d821cba2
 ;; Version: 1.3.0
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -30,6 +30,9 @@
 (require 'helm nil t)
 (require 'pcase)
 (require 'seq)
+
+(eval-when-compile
+  (require 'cl-lib))
 
 (declare-function helm-build-sync-source "helm-source")
 (declare-function helm-make-actions "helm-lib")
@@ -239,8 +242,7 @@ Offer the number at point as default."
   (interactive)
   (rfc-mode--fetch-document "-index" (rfc-mode-index-path))
   (unless rfc-mode-index-entries
-    (setq rfc-mode-index-entries
-          (rfc-mode-read-index-file (rfc-mode-index-path))))
+    (rfc-mode-reload-index))
   (pcase rfc-mode-browse-input-function
     ('read-number
      (display-buffer (rfc-mode--document-buffer
@@ -255,19 +257,22 @@ Offer the number at point as default."
        (user-error "Helm has to be installed explicitly")))
     ('completing-read
      (let* ((default (rfc-mode--integer-at-point))
-	    (choice (completing-read
-		     "View RFC document: "
-		     (mapcar #'rfc-mode-browser-format-candidate
-			     rfc-mode-index-entries)
-		     nil nil nil nil
-		     (and default
-			  (rfc-mode-browser-format-candidate default))))
+            (cands (mapcar (lambda (entry)
+                             (let ((cand
+                                    (rfc-mode-browser-format-candidate entry)))
+                               (and (numberp default)
+                                    (= (plist-get entry :number) default)
+                                    (setq default (car cand)))
+                               cand))
+                           rfc-mode-index-entries))
+            (choice (completing-read "View RFC document: "
+                                     cands nil nil nil nil default))
 	    (number (or (and (string-match "\\`RFC\\([0-9]+\\)" choice)
 			     (string-to-number (match-string 1 choice)))
 			(ignore-errors (string-to-number choice)))))
        (unless number
 	 (user-error
-	  "%s doesn't match a complication candidate and is not a number"
+          "%s doesn't match a completion candidate and is not a number"
 	  choice))
        (display-buffer (rfc-mode--document-buffer number))))
     (_ (display-buffer (rfc-mode--document-buffer
@@ -320,8 +325,8 @@ Offer the number at point as default."
                 (number (string-to-number (match-string 1))))
             (unless (= start (line-beginning-position))
               (make-text-button start end
-                                'action `(lambda (button)
-                                           (rfc-mode-read ,number))
+                                'action (lambda (_button)
+                                          (rfc-mode-read number))
                                 'help-echo (format "Read RFC %d" number)
                                 'follow-link t))
             (goto-char end)))))))

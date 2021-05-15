@@ -46,7 +46,7 @@ The slash is expected at the end."
   :risky t
   :type 'directory)
 
-(defcustom lsp-java-jdt-download-url "https://download.eclipse.org/jdtls/snapshots/jdt-language-server-latest.tar.gz"
+(defcustom lsp-java-jdt-download-url "https://download.eclipse.org/jdtls/milestones/1.0.0/jdt-language-server-1.0.0-202104151857.tar.gz"
   "JDT JS download url.
 Use http://download.eclipse.org/che/che-ls-jdt/snapshots/che-jdt-language-server-latest.tar.gz if you want to use Eclipse Che JDT LS."
   :group 'lsp-java
@@ -92,7 +92,7 @@ Use http://download.eclipse.org/che/che-ls-jdt/snapshots/che-jdt-language-server
   :type 'function
   :group 'lsp-java)
 
-(defcustom lsp-java-vmargs '("-noverify" "-Xmx1G" "-XX:+UseG1GC" "-XX:+UseStringDeduplication")
+(defcustom lsp-java-vmargs '("-XX:+UseParallelGC" "-XX:GCTimeRatio=4" "-XX:AdaptiveSizePolicyWeight=90" "-Dsun.zip.disableMemoryMapping=true" "-Xmx1G" "-Xms100m")
   "Specifies extra VM arguments used to launch the Java Language Server.
 
 Eg. use `-noverify -Xmx1G -XX:+UseG1GC
@@ -798,6 +798,9 @@ PARAMS progress report notification data."
 
 (defun lsp-java--ensure-server (_client callback error-callback _update?)
   "Ensure that JDT server and the other configuration."
+  (f-delete lsp-java-server-install-dir t)
+  (f-delete lsp-java-workspace-cache-dir t)
+  (f-delete lsp-java-workspace-dir t)
   (let* ((default-directory (make-temp-file "lsp-java-install" t))
          (installed-mvn (executable-find "mvn"))
          (mvn-command-and-options (if installed-mvn
@@ -1535,33 +1538,96 @@ current symbol."
      "workspace/executeCommand"
      (list :command "vscode.java.resolveMainMethod"
            :arguments (vector (lsp--buffer-uri)))
+
      (lambda (result)
        (funcall callback
                 (append
                  (-map
                   (lambda (lens)
-                    (-doto lens
-                      (lsp-make-code-lens :command?
-                                          (lsp-make-command
-                                           :title "Run"
-                                           :command (lambda ()
-                                                      (interactive)
-                                                      (lsp-java--start-main-class lens t))))))
+                    (lsp-make-code-lens :command?
+                                        (lsp-make-command
+                                         :title "Run"
+                                         :command (lambda ()
+                                                    (interactive)
+                                                    (lsp-java--start-main-class lens t)))
+                                        :range (lsp-get lens :range)))
                   result)
                  (-map
                   (lambda (lens)
-                    (-doto (ht-copy lens)
-                      (lsp-make-code-lens :command
-                                          (lsp-make-command
-                                           :title "Debug"
-                                           :command (lambda ()
-                                                      (interactive)
-                                                      (lsp-java--start-main-class lens nil))))))
+                    (lsp-make-code-lens :command
+                                        (lsp-make-command
+                                         :title "Debug"
+                                         :command (lambda ()
+                                                    (interactive)
+                                                    (lsp-java--start-main-class lens nil)))
+                                        :range (lsp-get lens :range)))
                   result))
                 lsp--cur-version))
      :mode 'tick)))
 
 
+
+(defconst lsp-java--hierarchy-sub 0)
+(defconst lsp-java--hierarchy-super 1)
+(defconst lsp-java--hierarchy-both 2)
+
+(defun lsp-java--type-hierarchy-render-nodes (nodes direction load-direction)
+  (-map (-lambda ((it &as &TypeHierarchyItem :name :kind :uri :selection-range (&Range :start)))
+          (list :label (concat name
+                               (cond
+                                ((eq lsp-java--hierarchy-sub direction) (propertize " ↓" 'face 'shadow))
+                                ((eq lsp-java--hierarchy-super direction) (propertize " ↑" 'face 'shadow))))
+                :key name
+                :icon (lsp-treemacs-symbol-kind->icon kind)
+                :children-async (-partial #'lsp-java--type-hierarchy-render it load-direction)
+                :ret-action #'lsp-treemacs-go-to
+                :position start
+                :uri uri
+                :actions `(["Go to" lsp-treemacs-go-to])))
+        nodes))
+
+(lsp-defun lsp-java--type-hierarchy-render ((item &as &TypeHierarchyItem :uri :range (&Range :start)) direction _ callback)
+  (lsp-request-async
+   "workspace/executeCommand"
+   (list :command "java.navigate.resolveTypeHierarchy"
+         :arguments (vector (lsp--json-serialize item)
+                            (number-to-string direction)
+                            "1"))
+   (-lambda ((&TypeHierarchyItem :children? :parents?))
+     (funcall callback (nconc (lsp-java--type-hierarchy-render-nodes
+                               children? lsp-java--hierarchy-sub direction)
+                              (lsp-java--type-hierarchy-render-nodes
+                               parents? lsp-java--hierarchy-super direction))))))
+
+(defun lsp-java-type-hierarchy (direction)
+  "Show the type hierarchy for the symbol at point.
+With prefix 0 show sub-types.
+With prefix 1 show super-types.
+With prefix 2 show both."
+  (interactive "P")
+  (setq direction (or direction lsp-java--hierarchy-both))
+  (let ((workspaces (lsp-workspaces))
+        (result
+         (lsp-workspace-command-execute
+          "java.navigate.openTypeHierarchy"
+          (vector (lsp--json-serialize (lsp--text-document-position-params))
+                  (number-to-string direction)
+                  "0"))))
+    (if result
+        (pop-to-buffer
+         (lsp-treemacs-render
+          (lsp-java--type-hierarchy-render-nodes (vector result) nil direction)
+          (concat (cond
+                   ((eq lsp-java--hierarchy-sub direction) "Sub")
+                   ((eq lsp-java--hierarchy-super direction) "Super")
+                   ((eq lsp-java--hierarchy-both direction) "Sub/Super"))
+                  " Type Hierarchy")
+          nil
+          "*lsp-java-type-hierarchy*"
+          nil
+          t))
+      (user-error "No class under point."))
+    (setq lsp--buffer-workspaces workspaces)))
 
 (provide 'lsp-java)
 ;;; lsp-java.el ends here

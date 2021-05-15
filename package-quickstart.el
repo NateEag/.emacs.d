@@ -17769,10 +17769,10 @@ Face for quarantines." :group 'haskell)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/groovy-mode-20191031.2256/groovy-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/groovy-mode-20210510.317/groovy-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/groovy-mode-20191031.2256/groovy-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/groovy-mode-20210510.317/groovy-mode-autoloads.el") (car load-path))))
 
 
 
@@ -17782,10 +17782,10 @@ With no argument, this command toggles the mode.  Non-null prefix
 argument turns on the mode.  Null prefix argument turns off the
 mode.
 
-If called interactively, enable Groovy-Electric mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Groovy-Electric mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 When Groovy Electric mode is enabled, simple, double and back
 quotes as well as braces are paired auto-magically. Expansion

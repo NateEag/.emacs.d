@@ -4,8 +4,8 @@
 
 ;; Author: Ian Y.E. Pan
 ;; URL: https://github.com/ianpan870102/tron-legacy-emacs-theme
-;; Package-Version: 20210315.712
-;; Package-Commit: 4d543fbb9cb2098af1be0f5b10e1e4cd5245a9d0
+;; Package-Version: 20210420.1201
+;; Package-Commit: e7d16ebe4a824e7d7766fb34ffe4ea3b002f3d23
 ;; Version: 2.0.0
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -82,7 +82,7 @@
       (str               "#387AAA")
       (func              "#DEB45B")
       (var               (if tron-legacy-theme-dark-fg-bright-comments "#5A7387" "#B0CCDC")) ; var = fg
-      (warning           "#880000")
+      (warning           "#FF7DBB")
 
       ;; standardized palette
       (tron-yellow         "#DEB45B")
@@ -134,8 +134,8 @@
    `(minibuffer-prompt                        ((,class (:foreground ,tron-bluegreen :weight normal))))
    `(default-italic                           ((,class (:italic t))))
    `(link                                     ((,class (:foreground ,const :underline t))))
-   `(error                                    ((,class (:foreground ,tron-orange))))
-   `(warning                                  ((,class (:foreground ,tron-magenta))))
+   `(error                                    ((,class (:foreground ,tron-lightred))))
+   `(warning                                  ((,class (:foreground ,tron-yellow))))
    `(success                                  ((,class (:foreground ,tron-bluegreen))))
    `(dired-directory                          ((t (:inherit font-lock-keyword-face))))
    `(line-number                              ((,class (:foreground ,line-num :background nil))))
@@ -519,11 +519,11 @@
    `(diff-hl-change                           ((t (:background ,vc-b :foreground ,vc-b))))
 
    ;;;;; Neo tree
-   `(neo-dir-link-face                        ((t (:foreground "#cccccc" :family "Sans Serif"))))
-   `(neo-header-face                          ((t (:foreground "#cccccc" :family "Sans Serif"))))
-   `(neo-banner-face                          ((t (:foreground "#cccccc" :family "Sans Serif"))))
-   `(neo-root-dir-face                        ((t (:foreground "#cccccc" :family "Sans Serif"))))
-   `(neo-file-link-face                       ((t (:foreground "#aaaaaa" :family "Sans Serif"))))
+   `(neo-dir-link-face                        ((t (:foreground "#cccccc"))))
+   `(neo-header-face                          ((t (:foreground "#cccccc"))))
+   `(neo-banner-face                          ((t (:foreground "#cccccc"))))
+   `(neo-root-dir-face                        ((t (:foreground "#cccccc"))))
+   `(neo-file-link-face                       ((t (:foreground "#aaaaaa"))))
    `(neo-expand-btn-face                      ((t (:foreground "#aaaaaa"))))
 
    ;;;;; smart mode line
@@ -557,9 +557,20 @@
    ;;;;; highlight thing
    `(highlight-thing                          ((t (:inherit highlight-symbol-face))))
 
+   ;;;;; tree-sitter
+   `(tree-sitter-hl-face:method.call          ((t (:inherit font-lock-function-name-face))))
+   `(tree-sitter-hl-face:function.call        ((t (:inherit font-lock-function-name-face))))
+   `(tree-sitter-hl-face:operator             ((t (:inherit default))))
+   `(tree-sitter-hl-face:type.builtin         ((t (:inherit font-lock-keyword-face))))
+   `(tree-sitter-hl-face:number               ((t (:inherit highlight-numbers-number))))
+   `(tree-sitter-hl-face:variable.special     ((t (:inherit font-lock-keyword-face))))
+
+   ;;;;; lsp-ui
+   `(lsp-ui-doc-background                    ((t (:background ,bg0))))
+
    ;;;;; flycheck
    `(flycheck-info                            ((t (:underline (:style wave :color ,tron-green)))))
-   `(flycheck-error                           ((t (:underline (:style wave :color ,tron-yellow)))))
+   `(flycheck-error                           ((t (:underline (:style wave :color ,tron-lightred)))))
    `(flycheck-warning                         ((t (:underline (:style wave :color ,tron-yellow)))))))
 
 ;;;###autoload

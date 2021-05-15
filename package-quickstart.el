@@ -1119,10 +1119,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210315.712/tron-legacy-theme-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210420.1201/tron-legacy-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210315.712/tron-legacy-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20210420.1201/tron-legacy-theme-autoloads.el") (car load-path))))
 
 
 

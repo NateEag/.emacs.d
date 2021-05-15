@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/key-assist-20210415.227/key-assist.el  -*- no-byte-compile: t -*-
+(define-package "key-assist" "20210415.227" "Minibuffer keybinding cheatsheet and launcher" '((emacs "24.3")) :commit "fae7ce265db3bcfd1c6153eb051afd8789e61a4b" :authors '(("Boruch Baum" . "boruch_baum@gmx.com")) :maintainer '("Boruch Baum" . "boruch_baum@gmx.com") :keywords '("abbrev" "convenience" "docs" "help") :url "https://github.com/Boruch-Baum/emacs-key-assist")

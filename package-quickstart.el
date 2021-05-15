@@ -16277,10 +16277,10 @@ If COMMAND is nil, the key-chord is removed.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-assist-20201109.1358/key-assist-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-assist-20210415.227/key-assist-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/key-assist-20201109.1358/key-assist-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/key-assist-20210415.227/key-assist-autoloads.el") (car load-path))))
 
 
 

@@ -18328,10 +18328,10 @@ Enable git timemachine for current buffer, switching to GIT-BRANCH.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20210318.313/git-link-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20210504.2207/git-link-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20210318.313/git-link-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20210504.2207/git-link-autoloads.el") (car load-path))))
 
 
 

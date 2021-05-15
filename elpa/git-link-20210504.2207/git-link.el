@@ -3,8 +3,8 @@
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
 ;; Version: 0.8.3
-;; Package-Version: 20210318.313
-;; Package-Commit: 2b510cf3f28bed842853294fc4ee23c7f8b6435a
+;; Package-Version: 20210504.2207
+;; Package-Commit: 0d2fd02c160cf2a09ca4b5b4ffa544833df5afed
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -332,7 +332,7 @@ return (FILENAME . REVISION) otherwise nil."
 (defvar magit-buffer-file-name)
 
 (defun git-link--relative-filename ()
-  (let* ((filename (buffer-file-name))
+  (let* ((filename (buffer-file-name (buffer-base-buffer)))
 	 (dir      (git-link--repo-root)))
 
     (when (null filename)

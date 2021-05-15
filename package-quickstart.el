@@ -18126,8 +18126,11 @@ Run an inferior Gnuplot process." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20180318.1956/gitignore-mode-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20180318.1956/gitignore-mode-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210426.2132/gitignore-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210426.2132/gitignore-mode-autoloads.el") (car load-path))))
+
 
 
 (autoload 'gitignore-mode "gitignore-mode" "\
@@ -18136,6 +18139,8 @@ A major mode for editing .gitignore files.
 \(fn)" t nil)
 
 (dolist (pattern (list "/\\.gitignore\\'" "/info/exclude\\'" "/git/ignore\\'")) (add-to-list 'auto-mode-alist (cons pattern 'gitignore-mode)))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gitignore-mode" '("gitignore-mode-font-lock-keywords")))
 
 
 )

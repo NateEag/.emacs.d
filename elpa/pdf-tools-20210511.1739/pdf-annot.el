@@ -164,8 +164,7 @@ LaTeX fragment."
   (concat org-format-latex-header
           "\n\\setlength{\\textwidth}{12cm}")
   "Header used when latex compiling annotations.
-
-The default value is `org-format-latex-header' + \
+The default value is `org-format-latex-header' +
 \"\\n\\\\setlength{\\\\textwidth}{12cm}\"."
   :group 'pdf-annot
   :type 'string)
@@ -224,7 +223,7 @@ annoyed while reading the annotations."
 A function on this hook should accept one argument: A CLOSURE
 containing inserted, changed and deleted annotations.
 
-It may access theses annotations by calling CLOSURE with one of
+It may access these annotations by calling CLOSURE with one of
 these arguments:
 
 `:inserted' The list of recently added annotations.
@@ -850,7 +849,7 @@ Return nil, if no annotation was found."
       (setq window (posn-window pos)
             pos (posn-object-x-y pos)))
     (save-selected-window
-      (when window (select-window window))
+      (when window (select-window window 'norecord))
       (let* ((annots (pdf-annot-getannots (pdf-view-current-page)))
              (size (pdf-view-image-size))
              (rx (/ (car pos) (float (car size))))
@@ -968,7 +967,7 @@ If HIGHLIGHT-P is non-nil, visually distinguish annotation A from
 other annotations."
 
   (save-selected-window
-    (when window (select-window window))
+    (when window (select-window window 'norecord))
     (pdf-util-assert-pdf-window)
     (let ((page (pdf-annot-get a 'page))
           (size (pdf-view-image-size)))

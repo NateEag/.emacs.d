@@ -26,7 +26,7 @@
 ;; order to transparently make this collection appear as one single
 ;; document.
 ;;
-;; The trickiest part is to make theses intermediate functions behave
+;; The trickiest part is to make these intermediate functions behave
 ;; like the pdf-info-* equivalents in both the synchronous and
 ;; asynchronous case.
 
@@ -479,6 +479,7 @@ PAGE should be a page-number."
   "Enable recognition and handling of VPDF files."
   nil nil nil
   :global t
+  :group 'pdf-tools
   (let ((elt `(,pdf-virtual-magic-mode-regexp . pdf-virtual-view-mode)))
     (cond
      (pdf-virtual-global-minor-mode
@@ -518,7 +519,7 @@ PAGE should be a page-number."
                             (concat " " f))
                           unreadable "\n"))))
     (if (= (pdf-virtual-document-number-of-pages) 0)
-        (error "Docüment is empty.")
+        (error "Document is empty.")
       (unless pdf-virtual-global-minor-mode
         (pdf-virtual-global-minor-mode 1))
       (funcall fn))))
@@ -567,7 +568,7 @@ PAGE should be a page-number."
 
 (defun pdf-virtual-view-window-p (&optional window)
   (save-selected-window
-    (when window (select-window window))
+    (when window (select-window window 'norecord))
     (derived-mode-p 'pdf-virtual-view-mode)))
 
 (defun pdf-virtual-filename-p (filename)

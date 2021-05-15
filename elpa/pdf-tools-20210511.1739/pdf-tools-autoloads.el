@@ -172,6 +172,13 @@ see.
 
 ;;;***
 
+;;;### (autoloads nil "pdf-macs" "pdf-macs.el" (0 0 0 0))
+;;; Generated autoloads from pdf-macs.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-macs" '("pdf-view-")))
+
+;;;***
+
 ;;;### (autoloads nil "pdf-misc" "pdf-misc.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-misc.el
 

@@ -1,10 +1,12 @@
 #+TITLE:     PDF Tools README
 #+AUTHOR:    Andreas Politz
 #+EMAIL:     politza@fh-trier.de
+#+Maintainer: Vedang Manerikar
+#+Maintainer_Email: vedang.manerikar@gmail.com
 
-[[https://travis-ci.org/politza/pdf-tools.svg?branch%3Dmaster][https://travis-ci.org/politza/pdf-tools.svg?branch=master]]
-[[http://stable.melpa.org/#/pdf-tools][http://stable.melpa.org/packages/pdf-tools-badge.svg]]
-[[http://melpa.org/#/pdf-tools][http://melpa.org/packages/pdf-tools-badge.svg]]
+[[https://app.circleci.com/pipelines/github/vedang/pdf-tools][https://circleci.com/gh/vedang/pdf-tools.svg?style=svg]]
+[[https://stable.melpa.org/#/pdf-tools][http://stable.melpa.org/packages/pdf-tools-badge.svg]]
+[[https://melpa.org/#/pdf-tools][http://melpa.org/packages/pdf-tools-badge.svg]] [[https://ci.appveyor.com/project/vedang/pdf-tools][https://ci.appveyor.com/api/projects/status/yqic2san0wi7o5v8/branch/master?svg=true]]
 
 
 
@@ -170,7 +172,7 @@
      project, those available as MSYS2 packages and numerous third-party
      binaries. It has been tested with emacs 25.1. Instructions are
      provided under [[#compilation-and-installation-on-windows][Compilation and installation on Windows]], below.
-     PDF Tools will successfully compile using Cygwin, but it will not be 
+     PDF Tools will successfully compile using Cygwin, but it will not be
      able to open PDFs properly due to the way binaries compiled with Cygwin
      handle file paths.
 
@@ -194,6 +196,9 @@
     libpoppler version, will be available.  These commands should give
     no error, otherwise you are in trouble.
 **** Compilation and installation on Windows
+     :PROPERTIES:
+     :CUSTOM_ID: compilation-and-installation-on-windows
+     :END:
       If using the GNU binaries for Windows, support for PNG and zlib
       must first be installed by copying the appropriate dlls into
       emacs' ~bin/~ directory. Most third-party binaries come with this
@@ -283,7 +288,7 @@
   (pdf-tools-install)
 #+end_src
   somewhere in your ~.emacs~.  Alternatively, and if you care about
-  start-up time, you may want to use 
+  start-up time, you may want to use
 #+begin_src elisp
   (pdf-loader-install)
 #+end_src

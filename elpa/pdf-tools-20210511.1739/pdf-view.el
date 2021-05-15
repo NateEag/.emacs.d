@@ -25,6 +25,7 @@
 ;;; Code:
 
 (require 'image-mode)
+(require 'pdf-macs)
 (require 'pdf-util)
 (require 'pdf-info)
 (require 'pdf-cache)
@@ -113,7 +114,7 @@ image-format is available."
   :group 'pdf-tools-faces)
 
 (defcustom pdf-view-midnight-colors '("#839496" . "#002b36" )
-  "Colors used when `pdf-view-midnight-minor-mode' is activated.
+  "Colors used when command `pdf-view-midnight-minor-mode' is activated.
 
 This should be a cons \(FOREGROUND . BACKGROUND\) of colors."
   :group 'pdf-view
@@ -169,7 +170,7 @@ See :relief property in Info node `(elisp) Image Descriptors'."
   :type '(integer :tag "Pixel"))
 
 (defcustom pdf-view-use-unicode-ligther t
-  "Whether to use unicode symbols in the mode-line
+  "Decide whether to use unicode symbols in the mode-line.
 
 On some systems finding a font which supports those symbols can
 take some time.  If you don't want to spend that time waiting and
@@ -222,29 +223,6 @@ regarding display of the region in the later function.")
 (defvar-local pdf-view-register-alist nil
   "Local, dedicated register for PDF positions.")
 
-(defmacro pdf-view-current-page (&optional window)
-  ;;TODO: write documentation!
-  `(image-mode-window-get 'page ,window))
-
-(defmacro pdf-view-current-overlay (&optional window)
-  ;;TODO: write documentation!
-  `(image-mode-window-get 'overlay ,window))
-
-(defmacro pdf-view-current-image (&optional window)
-  ;;TODO: write documentation!
-  `(image-mode-window-get 'image ,window))
-
-(defmacro pdf-view-current-slice (&optional window)
-  ;;TODO: write documentation!
-  `(image-mode-window-get 'slice ,window))
-
-(defmacro pdf-view-current-window-size (&optional window)
-  ;;TODO: write documentation!
-  `(image-mode-window-get 'window-size ,window))
-
-(defmacro pdf-view-window-needs-redisplay (&optional window)
-  `(image-mode-window-get 'needs-redisplay ,window))
-
 (defun pdf-view-current-pagelabel (&optional window)
   (nth (1- (pdf-view-current-page window)) (pdf-info-pagelabels)))
 
@@ -259,7 +237,7 @@ regarding display of the region in the later function.")
 
 (defconst pdf-view-have-image-mode-pixel-vscroll
   (>= emacs-major-version 27)
-  "Whether image-mode scrolls vertically by pixels.")
+  "Whether `image-mode' scrolls vertically by pixels.")
 
 
 ;; * ================================================================== *
@@ -282,10 +260,14 @@ regarding display of the region in the later function.")
     (define-key map (kbd "DEL")       'pdf-view-scroll-down-or-previous-page)
     (define-key map (kbd "C-n")       'pdf-view-next-line-or-next-page)
     (define-key map (kbd "<down>")    'pdf-view-next-line-or-next-page)
-    (define-key map (kbd "C-p")       'pdf-view-previous-line-or-previous-page)
-    (define-key map (kbd "<up>")      'pdf-view-previous-line-or-previous-page)
-    (define-key map (kbd "M-<")       'pdf-view-first-page)
-    (define-key map (kbd "M->")       'pdf-view-last-page)
+    (define-key map [remap next-line] 'pdf-view-next-line-or-next-page)
+    (define-key map (kbd "C-p")           'pdf-view-previous-line-or-previous-page)
+    (define-key map (kbd "<up>")          'pdf-view-previous-line-or-previous-page)
+    (define-key map [remap previous-line] 'pdf-view-previous-line-or-previous-page)
+    (define-key map (kbd "M-<")                 'pdf-view-first-page)
+    (define-key map [remap beginning-of-buffer] 'pdf-view-first-page)
+    (define-key map (kbd "M->")                 'pdf-view-last-page)
+    (define-key map [remap end-of-buffer]       'pdf-view-last-page)
     (define-key map [remap goto-line] 'pdf-view-goto-page)
     (define-key map (kbd "M-g l")     'pdf-view-goto-label)
     (define-key map (kbd "RET")       'image-next-line)
@@ -321,6 +303,7 @@ regarding display of the region in the later function.")
     (define-key map (kbd "C-c C-i") 'pdf-view-extract-region-image)
     ;; Rendering
     (define-key map (kbd "C-c C-r m") 'pdf-view-midnight-minor-mode)
+    (define-key map (kbd "C-c C-r t") 'pdf-view-themed-minor-mode)
     (define-key map (kbd "C-c C-r p") 'pdf-view-printer-minor-mode)
     map)
   "Keymap used by `pdf-view-mode' when displaying a doc as a set of images.")
@@ -626,7 +609,7 @@ windows."
   (save-selected-window
     ;; Select the window for the hooks below.
     (when (window-live-p window)
-      (select-window window))
+      (select-window window 'norecord))
     (let ((changing-p
            (not (eq page (pdf-view-current-page window)))))
       (when changing-p
@@ -1219,6 +1202,43 @@ The colors are determined by the variable
   (pdf-cache-clear-images)
   (pdf-view-redisplay t))
 
+(defun pdf-view-refresh-themed-buffer (&optional get-theme)
+  "Refresh the current buffer to activate applied colors.
+
+When GET-THEME is non-nil, also reset the applied colors to the
+current theme's colors."
+  (pdf-util-assert-pdf-buffer)
+  (pdf-cache-clear-images)
+  (when get-theme
+	(pdf-view-set-theme-background))
+  (pdf-view-redisplay t))
+
+(defun pdf-view-set-theme-background ()
+  "Set the buffer's color filter to correspond to the current Emacs theme."
+  (pdf-util-assert-pdf-buffer)
+  (pdf-info-setoptions
+   :render/foreground (face-foreground 'default nil)
+   :render/background (face-background 'default nil)
+   :render/usecolors t))
+
+(define-minor-mode pdf-view-themed-minor-mode
+  "Synchronize color filter with the present Emacs theme.
+
+The colors are determined by the `face-foreground' and
+`face-background' of the currently active theme."
+
+  nil " Thm" nil
+  (pdf-util-assert-pdf-buffer)
+  (cond
+   (pdf-view-themed-minor-mode
+    (add-hook 'after-save-hook #'pdf-view-set-theme-background nil t)
+    (add-hook 'after-revert-hook #'pdf-view-set-theme-background nil t))
+   (t
+    (remove-hook 'after-save-hook #'pdf-view-set-theme-background t)
+    (remove-hook 'after-revert-hook #'pdf-view-set-theme-background t)
+    (pdf-info-setoptions :render/usecolors nil)))
+  (pdf-view-refresh-themed-buffer pdf-view-themed-minor-mode))
+
 (when pdf-view-use-unicode-ligther
   ;; This check uses an implementation detail, which hopefully gets the
   ;; right answer.
@@ -1261,7 +1281,7 @@ supersede hotspots in lower ones."
   ;; TODO: write documentation!
   (unless pdf-view-inhibit-hotspots
     (save-selected-window
-      (when window (select-window window))
+      (when window (select-window window 'norecord))
       (apply 'nconc
              (mapcar (lambda (fn)
                        (funcall fn page image-size))

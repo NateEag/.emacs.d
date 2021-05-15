@@ -9631,10 +9631,10 @@ NIL
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20200512.1524/pdf-tools-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210511.1739/pdf-tools-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20200512.1524/pdf-tools-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210511.1739/pdf-tools-autoloads.el") (car load-path))))
 
 
 
@@ -9777,6 +9777,10 @@ see.
 \(fn &optional NO-QUERY-P SKIP-DEPENDENCIES-P NO-ERROR-P FORCE-DEPENDENCIES-P)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-loader" '("pdf-loader--")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-macs" '("pdf-view-")))
 
 
 

@@ -1,4 +1,4 @@
-This is ghub.info, produced by makeinfo version 6.5 from ghub.texi.
+This is ghub.info, produced by makeinfo version 6.7 from ghub.texi.
 
      Copyright (C) 2017-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -26,7 +26,7 @@ Ghub User and Developer Manual
 Ghub is an Emacs library that is used by various packages to access the
 APIs of various instances of various Git forge implementations.
 
-This manual is for Ghub version 3.5.1 (v3.5.1-1-gc46de21+1).
+This manual is for Ghub version 3.5.2.
 
      Copyright (C) 2017-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1183,26 +1183,26 @@ Appendix B Variable Index
 
 Tag Table:
 Node: Top764
-Node: Introduction2310
-Node: Getting Started2715
-Node: Basic Concepts Arguments and Variables4397
-Node: Setting the Username8267
-Node: Creating and Storing a Token11158
-Node: Creating a Token11422
-Node: Storing a Token12441
-Node: Github Configuration Variables14286
-Node: API16000
-Node: Their APIs16238
-Node: Making REST Requests16969
-Node: Making GraphQL Requests26401
-Node: Github Convenience Wrappers33035
-Node: Non-Github Convenience Wrappers36742
-Node: Notes42248
-Node: Using Ghub in Personal Scripts42455
-Node: Using Ghub in Your Own Package43346
-Node: Forge Limitations and Notes44281
-Node: Function Index45254
-Node: Variable Index50903
+Node: Introduction2288
+Node: Getting Started2693
+Node: Basic Concepts Arguments and Variables4375
+Node: Setting the Username8245
+Node: Creating and Storing a Token11136
+Node: Creating a Token11400
+Node: Storing a Token12419
+Node: Github Configuration Variables14264
+Node: API15978
+Node: Their APIs16216
+Node: Making REST Requests16947
+Node: Making GraphQL Requests26379
+Node: Github Convenience Wrappers33013
+Node: Non-Github Convenience Wrappers36720
+Node: Notes42226
+Node: Using Ghub in Personal Scripts42433
+Node: Using Ghub in Your Own Package43324
+Node: Forge Limitations and Notes44259
+Node: Function Index45232
+Node: Variable Index50881
 
 End Tag Table
 

@@ -4,9 +4,9 @@
 
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
-;; Version: 0.2.0
-;; Package-Version: 20210403.1354
-;; Package-Commit: 588a5dba2b38e57b88870efbc0cd2482202f28c8
+;; Version: 0.3.0
+;; Package-Version: 20210420.1527
+;; Package-Commit: 424b0f260a1bca20cd9359c42a0bc64a1a5e1928
 ;; Package-Requires: ((emacs "25.1") (dash "2.18") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
@@ -297,6 +297,27 @@
 
 ;;; Change Log:
 
+;;  0.3.0  2020/04/20  * Drop support for Emacs 24
+;;                     * Migrate ti Github Actions
+;;                     * New features
+;;                         + Add support for following comment styles:
+;;                             doxygen / javadoc / gnu
+;;                         + Add support for following code blocks:
+;;                             - unicode box-drawing blocks
+;;                             - org-mode blocks
+;;                         + Add support for following places:
+;;                             - active region
+;;                             - minibuffer
+;;                             - help & helpful
+;;                         + Add support for following major modes:
+;;                             nix-mode / gfm-mode / rustic-mode /
+;;                             typescript-mode / fennel-mode /
+;;                             text-mode and it's derivatives
+;;                     * Improves
+;;                         + Edit the ;;;###autoload block as elisp
+;;                         + Region detection of interpolated string of Nix
+;;                         + Saving changes without exiting edit buffer
+;;                     * Bunch of bug fixes
 ;;  0.2.0  2020/02/25  Renamed to separedit
 ;;  0.1.0  2019/04/06  Initial version.
 
@@ -365,9 +386,9 @@ Taken from `markdown-code-lang-modes'."
                           typescript-mode))
     (("--")            . (applescript-mode haskell-mode lua-mode))
     (("//+")           . (pascal-mode fsharp-mode))
-    ((";+")            . (emacs-lisp-mode
-                          lisp-interaction-mode
-                          common-lisp
+    ((";+\\(?:###autoload\\)?") . (emacs-lisp-mode
+                                   lisp-interaction-mode))
+    ((";+")            . (common-lisp
                           racket-mode
                           scheme-mode
                           fennel-mode))
@@ -1696,7 +1717,11 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                              (separedit--log "==> quotes(edit buffer): %S" ,strp)
                              (separedit--remove-escape ,strp))
                            (separedit--log "==> mode(edit buffer): %S" ',mode)
-                           (funcall ',mode)
+                           (if (and line-delimiter
+                                    (memq ',major-mode '(emacs-lisp-mode lisp-interaction-mode))
+                                    (string-match-p ";;;###autoload\s*?" line-delimiter))
+                               (funcall ',major-mode)
+                             (funcall ',mode))
                            (when (and indent-len (>= indent-len 0))
                              (set (make-local-variable 'separedit--indent-line1) ,indent-line1)
                              (set (make-local-variable 'separedit--indent-length) (separedit--remove-string-indent indent-len)))

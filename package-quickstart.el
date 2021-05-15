@@ -18224,8 +18224,11 @@ Major mode for code review
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20180318.1956/gitconfig-mode-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20180318.1956/gitconfig-mode-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210426.2132/gitconfig-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210426.2132/gitconfig-mode-autoloads.el") (car load-path))))
+
 
 
 (autoload 'gitconfig-mode "gitconfig-mode" "\
@@ -18234,6 +18237,8 @@ A major mode for editing .gitconfig files.
 \(fn)" t nil)
 
 (dolist (pattern '("/\\.gitconfig\\'" "/\\.git/config\\'" "/modules/.*/config\\'" "/git/config\\'" "/\\.gitmodules\\'" "/etc/gitconfig\\'")) (add-to-list 'auto-mode-alist (cons pattern 'gitconfig-mode)))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gitconfig-mode" '("gitconfig-")))
 
 
 )

@@ -1,13 +1,14 @@
 ;;; magit-svn.el --- Git-Svn extension for Magit
 
-;; Copyright (C) 2010-2019  The Magit Project Contributors
+;; Copyright (C) 2010-2021  The Magit Project Contributors
 
 ;; Author: Phil Jackson <phil@shellarchive.co.uk>
 ;; Keywords: vc tools
-;; Package-Version: 20190821.1455
-;; Package-Commit: 2cff1a30a30f2b3963342a7d185ec13fc12279c3
+;; Package-Version: 20210426.2114
+;; Package-Commit: 350493217afdb7637564e089f475909adecd9208
 ;; Package: magit-svn
-;; Package-Requires: ((emacs "24.4") (magit "2.1.0"))
+;; Package-Requires: ((emacs "25.1") (magit "2.90.1") (transient "0.3.2"))
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; Magit is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -62,6 +63,8 @@
 
 (eval-when-compile
   (require 'subr-x))
+
+(require 'transient)
 
 (require 'magit)
 
@@ -334,10 +337,7 @@ in `magit-svn-external-directories' and runs
                       (propertize (concat "r" it) 'face 'magit-hash)
                       (magit-svn-get-url))))))
 
-;;; magit-svn.el ends soon
-
-(define-obsolete-function-alias 'turn-on-magit-svn 'magit-svn-mode)
-
+;;; _
 (provide 'magit-svn)
 ;; Local Variables:
 ;; indent-tabs-mode: nil

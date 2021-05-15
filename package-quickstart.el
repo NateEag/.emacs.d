@@ -14686,10 +14686,10 @@ Move WORKTREE to PATH.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-svn-20190821.1455/magit-svn-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-svn-20210426.2114/magit-svn-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-svn-20190821.1455/magit-svn-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-svn-20210426.2114/magit-svn-autoloads.el") (car load-path))))
 
 
 

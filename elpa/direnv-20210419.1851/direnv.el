@@ -2,8 +2,8 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.1.0
-;; Package-Version: 20210117.1213
-;; Package-Commit: 381176f301dea8414a5a395c0d6546507838f6ce
+;; Package-Version: 20210419.1851
+;; Package-Commit: 4b94393a9adf677c7c037215e233eef5fbca553d
 ;; Package-Requires: ((emacs "25.1") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -277,7 +277,6 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
 When this mode is active, the environment inside Emacs will be
 continuously updated to match the direnv environment for the currently
 visited (local) file."
-  :require 'direnv
   :global t
   (if direnv-mode
       (direnv--enable)

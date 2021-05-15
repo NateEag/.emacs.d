@@ -21288,10 +21288,10 @@ Major mode for `.env' files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/direnv-20210117.1213/direnv-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/direnv-20210419.1851/direnv-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/direnv-20210117.1213/direnv-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/direnv-20210419.1851/direnv-autoloads.el") (car load-path))))
 
 
 

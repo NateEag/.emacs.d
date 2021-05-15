@@ -10,6 +10,12 @@
   that indicates one of my ad-hoc todo.txt files, not one that follows the
   standard rules.
 
+- Snag and adapt
+   https://takeonrules.com/2020/11/11/synchronizing-osx-terminal-and-emacs-dark-light-appearance/
+  for my own config.
+
+- Add wgrep-ag to my setup so global find-and-replace can be massively easier.
+
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
 

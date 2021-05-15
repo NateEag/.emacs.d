@@ -40,7 +40,11 @@ Input values are the major-mode's `magit-bookmark-name' method,
 and the buffer-local values of the variables referenced in its
 `magit-bookmark-variables' property."
   (if (plist-member (symbol-plist major-mode) 'magit-bookmark-variables)
-      (let ((bookmark (bookmark-make-record-default 'no-file)))
+      ;; `bookmark-make-record-default's return value does not match
+      ;; (NAME . ALIST), even though it is used as the default value
+      ;; of `bookmark-make-record-function', which states that such
+      ;; functions must do that.  See #4356.
+      (let ((bookmark (cons nil (bookmark-make-record-default 'no-file))))
         (bookmark-prop-set bookmark 'handler  'magit--handle-bookmark)
         (bookmark-prop-set bookmark 'mode     major-mode)
         (bookmark-prop-set bookmark 'filename (magit-toplevel))
@@ -84,6 +88,9 @@ with the variables' values as arguments, which were recorded by
                       hidden)
               (magit-section-hide child)
             (magit-section-show child)))))
+    ;; Compatibility with `bookmark+' package.  See #4356.
+    (when (bound-and-true-p bmkp-jump-display-function)
+      (funcall bmkp-jump-display-function (current-buffer)))
     nil))
 
 (cl-defgeneric magit-bookmark-name ()

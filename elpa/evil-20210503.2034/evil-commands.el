@@ -746,6 +746,16 @@ Loop back to the top of buffer if the end is reached."
         (evil-first-non-blank))
     (user-error "No marks in this buffer")))
 
+(evil-define-command evil-set-col-0-mark (_beg end mark)
+  "Set MARK at column 0 of line of END. Default is cursor line."
+  (interactive "<r><a>")
+  (if (< 1 (length mark))
+      (user-error "Trailing characters")
+    (save-excursion
+      (goto-char (if (eobp) end (1- end)))
+      (evil-beginning-of-line)
+      (evil-set-marker (string-to-char mark)))))
+
 (evil-define-motion evil-find-char (count char)
   "Move to the next COUNT'th occurrence of CHAR.
 Movement is restricted to the current line unless `evil-cross-lines' is non-nil."
@@ -1617,8 +1627,8 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
-(evil-define-command evil-ex-put (_beg end _type ex-arg &optional force)
-  (interactive "<R><a><!>")
+(evil-define-command evil-ex-put (_beg end ex-arg &optional force)
+  (interactive "<r><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
          (reg (or (car arg-chars) ?\"))
          (text (cond
@@ -1672,17 +1682,21 @@ of the block."
       (evil-insert 1)))))
 
 (evil-define-operator evil-change-line (beg end type register yank-handler)
-  "Change to end of line."
+  "Change to end of line, or change whole line if characterwise visual mode."
   :motion evil-end-of-line-or-visual-line
   (interactive "<R><x><y>")
-  (evil-change beg end type register yank-handler #'evil-delete-line))
+  (if (and (evil-visual-state-p) (eq 'inclusive type))
+      (cl-destructuring-bind (beg* end* &rest) (evil-line-expand beg end)
+          (evil-change-whole-line beg* end* register yank-handler))
+    (evil-change beg end type register yank-handler #'evil-delete-line)))
 
 (evil-define-operator evil-change-whole-line
-  (beg end type register yank-handler)
+  (beg end register yank-handler)
   "Change whole line."
   :motion evil-line-or-visual-line
-  (interactive "<R><x>")
-  (evil-change beg end type register yank-handler #'evil-delete-whole-line))
+  :type line
+  (interactive "<r><x>")
+  (evil-change beg end 'line register yank-handler #'evil-delete-whole-line))
 
 (evil-define-command evil-copy (beg end address)
   "Copy lines in BEG END below line given by ADDRESS."
@@ -3300,23 +3314,30 @@ If ARG is nil this function calls `recompile', otherwise it calls
 
 ;; TODO: escape special characters (currently only \n) ... perhaps
 ;; there is some Emacs function doing this?
-(evil-define-command evil-show-registers ()
-  "Shows the contents of all registers."
+(evil-define-command evil-show-registers (registers)
+  "Shows the contents of REGISTERS, or all registers, if none supplied."
   :repeat nil
-  (evil-with-view-list
-    :name "evil-registers"
-    :mode-name "Evil Registers"
-    :format
-    [("Register" 10 nil)
-     ("Value" 1000 nil)]
-    :entries
-    (cl-loop for (key . val) in (evil-register-list)
-             collect `(nil [,(char-to-string key)
-                            ,(cond ((stringp val)
-                                    (replace-regexp-in-string "\n" "^J" val))
-                                   ((vectorp val)
-                                    (key-description val))
-                                   (t ""))]))))
+  (interactive "<a>")
+  (let* ((all-registers (evil-register-list))
+         (reg-chars (string-to-list registers))
+         (display-regs (if reg-chars
+                           (cl-remove-if-not (lambda (r) (memq (car r) reg-chars))
+                                             all-registers)
+                         all-registers)))
+    (evil-with-view-list
+      :name "evil-registers"
+      :mode-name "Evil Registers"
+      :format
+      [("Register" 10 nil)
+       ("Value" 1000 nil)]
+      :entries
+      (cl-loop for (key . val) in display-regs
+               collect `(nil [,(char-to-string key)
+                              ,(cond ((stringp val)
+                                      (replace-regexp-in-string "\n" "^J" val))
+                                     ((vectorp val)
+                                      (key-description val))
+                                     (t ""))])))))
 
 (evil-define-command evil-show-marks (mrks)
   "Shows all marks.

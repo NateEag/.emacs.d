@@ -2042,7 +2042,8 @@ or a marker object pointing nowhere."
   "Eval INPUT and return stringified result, if of a suitable type.
 If INPUT starts with a number, +, -, or . use `calc-eval' instead."
   (let* ((first-char (car (remove ?\s (string-to-list input))))
-         (calcable-p (or (<= ?0 first-char ?9) (memq first-char '(?- ?+ ?.))))
+         (calcable-p (and first-char (or (<= ?0 first-char ?9)
+                                         (memq first-char '(?- ?+ ?.)))))
          (result (if calcable-p
                      (let ((calc-multiplication-has-precedence nil))
                        (calc-eval input))
@@ -2057,7 +2058,7 @@ If INPUT starts with a number, +, -, or . use `calc-eval' instead."
       (mapconcat (lambda (x) (format "%s" x)) result "\n"))
      (t (user-error "Using %s as a string" (type-of result))))))
 
-(defun evil-get-register (register &optional _noerror)
+(defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
 
@@ -2168,7 +2169,7 @@ The following special registers are supported.
               (setq register (downcase register))
               (get-register register)))
             (user-error "Register `%c' is empty" register)))
-    (error (unless err (signal (car err) (cdr err))))))
+    (error (unless noerror (signal (car err) (cdr err))))))
 
 (defun evil-append-register (register text)
   "Append TEXT to the contents of register REGISTER."

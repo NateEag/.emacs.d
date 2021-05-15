@@ -18242,8 +18242,11 @@ A major mode for editing .gitconfig files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitattributes-mode-20180318.1956/gitattributes-mode-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitattributes-mode-20180318.1956/gitattributes-mode-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitattributes-mode-20210426.2132/gitattributes-mode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitattributes-mode-20210426.2132/gitattributes-mode-autoloads.el") (car load-path))))
+
 
 
 (autoload 'gitattributes-mode "gitattributes-mode" "\
@@ -18253,6 +18256,8 @@ A major mode for editing .gitattributes files.
 \(fn)" t nil)
 
 (dolist (pattern '("/\\.gitattributes\\'" "/info/attributes\\'" "/git/attributes\\'")) (add-to-list 'auto-mode-alist (cons pattern #'gitattributes-mode)))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gitattributes-mode" '("gitattributes-mode-")))
 
 
 )

@@ -1,12 +1,14 @@
 ;;; gitattributes-mode.el --- Major mode for editing .gitattributes files -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2018  The Magit Project Contributors
+;; Copyright (C) 2013-2021  The Magit Project Contributors
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
-;; Package-Version: 20180318.1956
+;; Package-Version: 20210426.2132
+;; Package-Commit: 7678ead3cdbb1692c9728b9730c016283ed97af1
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is NOT part of GNU Emacs.
 

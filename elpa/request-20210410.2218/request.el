@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20210214.37
-;; Package-Commit: accd430ee706f5b10fb20003b06bd8209bcdaa82
+;; Package-Version: 20210410.2218
+;; Package-Commit: f3a5b4352e9f444ace2a332939abff504b573887
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.3
 
@@ -276,7 +276,6 @@ as there's already precedent with `request-response-header', I
 hew to consistency."
   (let ((raw-header (request-response--raw-header response)))
     (when raw-header
-      raw-header
       (with-temp-buffer
         (save-excursion (insert raw-header))
         (when (save-excursion (request--parse-response-at-point))

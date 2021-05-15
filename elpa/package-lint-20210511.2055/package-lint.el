@@ -180,8 +180,9 @@ symbol such as 'variable-added.")
   "A regexp matching whitelisted non-standard symbol prefixes.")
 
 (defvar package-lint--allowed-prefix-mappings
-  '(("ox-" . ("org-"))
-    ("ob-" . ("org-")))
+  '(("ob-" . ("org-"))
+    ("ol-" . ("org-"))
+    ("ox-" . ("org-")))
   "Alist containing mappings of package prefixes to symbol prefixes.")
 
 (defun package-lint--main-file-p ()
@@ -837,12 +838,19 @@ DESC is a struct as returned by `package-buffer-info'."
 (defun package-lint--check-provide-form (desc)
   "Check the provide form for package with descriptor DESC.
 DESC is a struct as returned by `package-buffer-info'."
-  (let ((name (package-lint--package-desc-name desc))
-        (feature (package-lint--provided-feature)))
-    (unless (string-equal (symbol-name name) feature)
-      (package-lint--error-at-bob
-       'error
-       (format "There is no (provide '%s) form." name)))))
+  (let ((name (symbol-name (package-lint--package-desc-name desc))))
+    (if (string-match-p "-theme\\'" name)
+        (let ((theme-name (replace-regexp-in-string "-theme\\'" "" name))
+              (provided-theme (package-lint--provided-theme)))
+          (unless (string-equal theme-name provided-theme)
+            (package-lint--error-at-bob
+             'error
+             (format "There is no (provide-theme '%s) form." theme-name))))
+      (let ((feature (package-lint--provided-feature)))
+        (unless (string-equal name feature)
+          (package-lint--error-at-bob
+           'error
+           (format "There is no (provide '%s) form." name)))))))
 
 (defun package-lint--check-provide-form-secondary-file ()
   "Check there is a provide form."
@@ -1146,6 +1154,13 @@ The returned list is of the form (SYMBOL-NAME . POSITION)."
           ((re-search-backward "(provide-me)" nil t)
            (file-name-sans-extension (file-name-nondirectory buffer-file-name))))))
 
+(defun package-lint--provided-theme ()
+  "Return the last-provided theme name, as a string, or nil if none."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward (rx "(provide-theme '" (group (1+ (or (syntax word) (syntax symbol))))) nil t)
+      (match-string-no-properties 1))))
+
 (defun package-lint--get-package-prefix ()
   "Return package prefix string (i.e. the symbol the package `provide's).
 Prefix is returned without any `-mode' suffix."
@@ -1267,8 +1282,7 @@ whether or not warnings alone produce a non-zero exit code."
             (widen)
             (goto-char (point-min))
             (re-search-forward
-             (concat lm-header-prefix
-                     (rx (or "Version" "Package-Version" "Package-Requires")))
+             (lm-get-header-re (rx (or "Version" "Package-Version" "Package-Requires")))
              nil t))))))
 
 (provide 'package-lint)

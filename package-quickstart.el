@@ -18417,10 +18417,10 @@ Commit staged changes. If nothing is staged, ask to stage the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20210127.1100/git-gutter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-gutter-20210511.427/git-gutter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20210127.1100/git-gutter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-gutter-20210511.427/git-gutter-autoloads.el") (car load-path))))
 
 
 

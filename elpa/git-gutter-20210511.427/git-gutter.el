@@ -8,8 +8,8 @@
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;;             Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacsorphanage/git-gutter
-;; Package-Version: 20210127.1100
-;; Package-Commit: cca61a1c6b0c0fd6ecb1b0366711c618581eabb6
+;; Package-Version: 20210511.427
+;; Package-Commit: d050abdd7f5a46c9cfbec2953d2fca90095e2857
 ;; Version: 0.91
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -1014,8 +1014,8 @@ start revision."
 (defun git-gutter:update-all-windows ()
   "Update git-gutter information for all visible buffers."
   (interactive)
-  (dolist (win (window-list))
-    (let ((buf (window-buffer win)))
+  (dolist (buf (buffer-list))
+    (when (get-buffer-window buf 'visible)
       (with-current-buffer buf
         (when git-gutter-mode
           (git-gutter))))))

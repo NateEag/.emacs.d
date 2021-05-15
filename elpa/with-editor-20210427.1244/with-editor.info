@@ -1,7 +1,7 @@
-This is with-editor.info, produced by makeinfo version 6.5 from
+This is with-editor.info, produced by makeinfo version 6.7 from
 with-editor.texi.
 
-     Copyright (C) 2015-2020 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2021 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -39,9 +39,9 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.9.4 (v2.9.4-2-gc4768f5+1).
+This manual is for With-Editor version 3.0.3.
 
-     Copyright (C) 2015-2020 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2021 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -398,14 +398,14 @@ Appendix C Variable Index
 
 Tag Table:
 Node: Top773
-Node: Using the With-Editor package2591
-Node: Configuring With-Editor3177
-Node: Using With-Editor commands7726
-Node: Using With-Editor as a library11017
-Node: Debugging12980
-Node: Command Index13859
-Node: Function Index14741
-Node: Variable Index16207
+Node: Using the With-Editor package2569
+Node: Configuring With-Editor3155
+Node: Using With-Editor commands7704
+Node: Using With-Editor as a library10995
+Node: Debugging12958
+Node: Command Index13837
+Node: Function Index14719
+Node: Variable Index16185
 
 End Tag Table
 

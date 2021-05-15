@@ -95,6 +95,10 @@ Run debug configuration DEBUG-ARGS.
 If DEBUG-ARGS is not specified the configuration is generated
 after selecting configuration template.
 
+:dap-compilation specifies a shell command to be run using
+`compilation-start' before starting the debug session. It could
+be used to compile the project, spin up docker, ....
+
 \(fn DEBUG-ARGS)" t nil)
 
 (defvar dap-mode nil "\

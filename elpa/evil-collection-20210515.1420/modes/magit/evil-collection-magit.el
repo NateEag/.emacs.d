@@ -65,13 +65,14 @@
                                        magit-submodule-list-mode-map))
 
 (defcustom evil-collection-magit-use-y-for-yank t
-  "When non nil, replace \"y\" for `magit-show-refs-popup' with
-\"yy\" for `evil-collection-magit-yank-whole-line', `ys'
-`magit-copy-section-value', \"yb\" for
-`magit-copy-buffer-revision' and \"yr\" for
-`magit-show-refs-popup'. This keeps \"y\" for
-`magit-show-refs-popup' in the help
-popup (`magit-dispatch-popup'). Default is t."
+  "When non nil (Default is t),
+replace \"y\" for `magit-show-refs' with
+\"yy\" for `evil-collection-magit-yank-whole-line',
+\"ys\" for `magit-copy-section-value',
+\"yb\" for `magit-copy-buffer-revision' and
+\"yr\" for `magit-show-refs'.
+This keeps \"y\" for `magit-show-refs',
+in the help popup (`magit-dispatch')."
   :group 'magit
   :type 'boolean)
 
@@ -508,7 +509,8 @@ denotes the original magit key for this command.")
                (flush-lines (concat "^" (regexp-quote comment-start) ".+ = "))
                (dolist (cmd evil-collection-magit-rebase-commands-w-descriptions)
                  (insert
-                  (format (concat comment-start " %-8s %s\n")
+                  (format "%s %-8s %s\n"
+                          comment-start 
                           (if (and (car cmd)
                                    (eq (nth 1 cmd)
                                        (lookup-key aux-map (kbd (car cmd)))))
@@ -573,7 +575,7 @@ evil-collection-magit affects.")
      (magit-dispatch "v" "-" magit-reverse)
      (magit-dispatch "k" "x" magit-discard)
      (magit-remote "k" "x" magit-remote-remove)
-     (magit-revert "v" "o" magit-revert-no-commit)
+     (magit-revert "v" "-" magit-revert-no-commit)
      ;; FIXME: how to properly handle a popup with a key that appears twice (in
      ;; `define-transient-command' definition)? Currently we rely on:
      ;; 1. first call to `evil-collection-magit-change-popup-key' changes the first "V"
@@ -581,8 +583,8 @@ evil-collection-magit affects.")
      ;;    definition of `magit-revert'), second call changes the second "V".
      ;; 2. the remapping here are in the same order as in `magit-revert'
      ;;    definition
-     (magit-revert "V" "O" magit-revert-and-commit)
-     (magit-revert "V" "O" magit-sequencer-continue)
+     (magit-revert "V" "_" magit-revert-and-commit)
+     (magit-revert "V" "_" magit-sequencer-continue)
      (magit-tag    "k" "x" magit-tag-delete)))
   "Changes to popup keys")
 

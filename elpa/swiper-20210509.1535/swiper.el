@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210404.1302
-;; Package-Commit: 471d644d6bdd7d5dc6ca4efb405e6a6389dff245
+;; Package-Version: 20210509.1535
+;; Package-Commit: e8ac2e23ffccb23600c5a3883805560927a54202
 ;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.4"))
 ;; Keywords: matching
@@ -1400,24 +1400,20 @@ See `ivy-format-functions-alist' for further information."
         (nreverse cands)))))
 
 (defun swiper--isearch-next-item (re cands)
-  (if swiper--isearch-backward
-      (or
-       (cl-position-if
-        (lambda (x)
-          (and
-           (< x swiper--isearch-start-point)
-           (eq 0 (string-match-p
-                  re
-                  (buffer-substring-no-properties
-                   x swiper--isearch-start-point)))))
-        cands
-        :from-end t)
-       0)
-    (or
-     (cl-position-if
-      (lambda (x) (> x swiper--isearch-start-point))
-      cands)
-     0)))
+  (or (if swiper--isearch-backward
+          (save-excursion
+            ;; Match RE starting at each position in CANDS.
+            (setq re (concat "\\=\\(?:" re "\\)"))
+            (cl-position-if
+             (lambda (x)
+               (when (< x swiper--isearch-start-point)
+                 (goto-char x)
+                 ;; Note: Not quite the same as `looking-at' + `match-end'.
+                 (re-search-forward re swiper--isearch-start-point t)))
+             cands
+             :from-end t))
+        (cl-position swiper--isearch-start-point cands :test #'<))
+      0))
 
 (defun swiper--isearch-filter-ignore-order (re-full cands)
   (let (filtered-cands)

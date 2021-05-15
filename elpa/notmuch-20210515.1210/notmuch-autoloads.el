@@ -83,7 +83,7 @@ If no notmuch buffers exist, run `notmuch'." t nil)
 ;;;;;;  0))
 ;;; Generated autoloads from notmuch-compat.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-compat" '("notmuch-message--fold-long-headers")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-compat" '("notmuch-")))
 
 ;;;***
 

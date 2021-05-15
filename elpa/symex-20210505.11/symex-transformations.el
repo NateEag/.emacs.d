@@ -71,7 +71,8 @@ to how the Lisp interpreter does it (when it is following
 (defun symex-delete (count)
   "Delete COUNT symexes."
   (interactive "p")
-  (let ((start (point))
+  (let ((last-command nil) ; see symex-yank re: last-command
+        (start (point))
         (end (symex--get-end-point count)))
     (kill-region start end))
   (cond ((or (symex--current-line-empty-p)             ; ^<>$
@@ -287,7 +288,8 @@ by default, joins next symex to current one."
           (forward-char))
         (insert extra-to-append))
       (symex--go-forward)
-      (symex-tidy))))
+      (symex-tidy))
+    (symex-tidy)))
 
 (defun symex-paste-before (count)
   "Paste before symex, COUNT times."
@@ -346,21 +348,23 @@ by default, joins next symex to current one."
   "Append after symex (instead of vim's default of line)."
   (interactive)
   (forward-sexp)  ; selected symexes will have the cursor on the starting paren
+  (insert " ")
   (symex-enter-lowest))
 
 (defun symex-insert-before ()
   "Insert before symex (instead of vim's default at the start of line)."
   (interactive)
+  (insert " ")
+  (backward-char)
   (symex-enter-lowest))
 
 (defun symex-insert-at-beginning ()
   "Insert at beginning of symex."
   (interactive)
-  (if (or (lispy-left-p)
-          (symex-string-p))
-      (progn (forward-char)
-             (symex-enter-lowest))
-    (symex-enter-lowest)))
+  (when (or (lispy-left-p)
+            (symex-string-p))
+    (forward-char))
+  (symex-enter-lowest))
 
 (defun symex-insert-at-end ()
   "Insert at end of symex."
@@ -368,10 +372,9 @@ by default, joins next symex to current one."
   (if (or (lispy-left-p)
           (symex-string-p))
       (progn (forward-sexp)
-             (backward-char)
-             (symex-enter-lowest))
-    (progn (forward-sexp)
-           (symex-enter-lowest))))
+             (backward-char))
+    (forward-sexp))
+  (symex-enter-lowest))
 
 (defun symex-create (type)
   "Create new symex (list).
@@ -515,10 +518,10 @@ then no action is taken."
   (interactive)
   (evil-surround-change (following-char)))
 
-(defun symex-comment ()
-  "Comment out symex."
-  (interactive)
-  (mark-sexp)
+(defun symex-comment (count)
+  "Comment out COUNT symexes."
+  (interactive "p")
+  (mark-sexp count)
   (comment-dwim nil))
 
 (defun symex-tidy ()
@@ -546,35 +549,73 @@ then no action is taken."
                       (list start end))))))
   (symex-select-nearest))
 
+(cl-defun symex--transform-in-isolation (traversal side-effect &key pre-traversal)
+  "Transform a symex in a temporary buffer and replace the original with it.
+
+First traverses using PRE-TRAVERSAL if non-nil, then traverses using
+TRAVERSAL and performs SIDE-EFFECT at each step.  Note that the side
+effect is not performed during the pre-traversal."
+  (kill-sexp 1)
+  (kill-new
+   (with-temp-buffer
+     (yank)
+     (goto-char 0)
+     (symex-execute-traversal pre-traversal)
+     ;; do it once first since it will be executed as a side-effect
+     ;; _after_ each step in the traversal
+     (condition-case nil
+         (funcall side-effect)
+       (error nil))
+     (condition-case nil
+         (symex--do-while-traversing
+          side-effect
+          traversal)
+       (error nil))
+     (buffer-string)))
+  (save-excursion (yank))
+  (symex-tidy))
+
 (defun symex-tidy-proper ()
-  "Properly tidy things up."
+  "Properly tidy things up.
+
+This operates on the subtree indicated by the selection, rather than
+on the entire tree.  Ordinarily this would require 'remembering' the
+initial location on the tree while traversing and collapsing the
+subexpressions, a feature (memory) that is absent in the Symex DSL.
+But the present implementation gets around the need for memory by
+copying the subtree into a temporary buffer and indenting it as a
+complete tree, and then replacing the original symex with the
+indented version from the temporary buffer.
+
+When memory is added to the DSL, this would probably have a simpler
+implementation."
   (interactive)
-  (save-excursion
-    (symex-execute-traversal
-     (symex-traversal (circuit symex--traversal-preorder-in-tree)))
-    ;; do it once first since it will be executed as a side-effect
-    ;; _after_ each step in the traversal
-    (symex-tidy)
-    (symex--do-while-traversing #'symex-tidy
-                                symex--traversal-postorder-in-tree)))
+  (symex--transform-in-isolation
+   symex--traversal-postorder-in-tree
+   #'symex-tidy
+   :pre-traversal (symex-traversal (circuit symex--traversal-preorder-in-tree))))
 
 (defun symex-collapse ()
-  "Collapse a symex to a single line."
+  "Collapse a symex to a single line.
+
+This operates on the subtree indicated by the selection, rather than
+on the entire tree.  Ordinarily this would require 'remembering' the
+initial location on the tree while traversing and collapsing the
+subexpressions, a feature (memory) that is absent in the Symex DSL.
+But the present implementation gets around the need for memory by
+copying the subtree into a temporary buffer and collapsing it as a
+complete tree, and then replacing the original symex with the
+collapsed version from the temporary buffer.
+
+When memory is added to the DSL, this would probably have a simpler
+implementation."
   (interactive)
-  (save-excursion
-    (let ((start (point)))
-      (symex-execute-traversal
-       (symex-traversal (circuit symex--traversal-preorder-in-tree)))
-      ;; do it once first since it will be executed as a side-effect
-      ;; _after_ each step in the traversal
-      (symex--join-lines t)
-      (symex--do-while-traversing
-       (apply-partially #'symex--join-lines t)
-       (symex-traversal
-        (precaution symex--traversal-postorder-in-tree
-                    (afterwards (lambda ()
-                                  (not (equal (line-number-at-pos (point))
-                                              (line-number-at-pos start)))))))))))
+  (symex--transform-in-isolation
+   (symex-traversal
+    (precaution symex--traversal-postorder-in-tree
+                (afterwards (not (at root)))))
+   (apply-partially #'symex--join-lines t)
+   :pre-traversal (symex-traversal (circuit symex--traversal-preorder-in-tree))))
 
 (provide 'symex-transformations)
 ;;; symex-transformations.el ends here

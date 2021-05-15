@@ -15395,10 +15395,10 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210216.1250/lsp-treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210502.1804/lsp-treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210216.1250/lsp-treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210502.1804/lsp-treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -15447,6 +15447,14 @@ Show the incoming call hierarchy for the symbol at point.
 With a prefix argument, show the outgoing call hierarchy.
 
 \(fn OUTGOING)" t nil)
+
+(autoload 'lsp-treemacs-type-hierarchy "lsp-treemacs" "\
+Show the type hierarchy for the symbol at point.
+With prefix 0 show sub-types.
+With prefix 1 show super-types.
+With prefix 2 show both.
+
+\(fn DIRECTION)" t nil)
 
 (autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
 

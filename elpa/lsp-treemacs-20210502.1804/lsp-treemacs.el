@@ -109,6 +109,12 @@
   "Severity level for `lsp-treemacs-error-list-mode'. 1 (highest) to 3 (lowest)"
   :type 'number)
 
+(defcustom lsp-treemacs-error-list-current-project-only nil
+  "List the error list of the current project only if available.
+Fallback to list all workspaces if no project root is found."
+  :type 'boolean
+  :group 'lsp-treemacs)
+
 (defun lsp-treemacs--open-file-in-mru (file)
   (select-window (get-mru-window (selected-frame) nil :not-selected))
   (find-file file))
@@ -242,6 +248,12 @@ this hook will be run after having jumped to the target."
   (goto-char (lsp--position-to-point location))
   (run-hooks 'lsp-treemacs-after-jump-hook))
 
+(lsp-treemacs-define-action lsp-treemacs-go-to (:uri :position)
+  "Goto POSITION in URL."
+  (lsp-treemacs--open-file-in-mru (lsp--uri-to-path uri))
+  (goto-char (lsp--position-to-point position))
+  (run-hooks 'xref-after-jump-hook))
+
 (defun lsp-treemacs--symbols->tree (items parent-key)
   "Convert ITEMS and PARENT-KEY to a treemacs tree."
   (-sort (lambda (left right)
@@ -373,10 +385,11 @@ will be rendered an empty line between them."
         ;; enabled it already) -> `kill-all-local-variables'.
         (lsp-treemacs-initialize)
         (setq-local treemacs-default-visit-action 'treemacs-RET-action)
+        (setq-local treemacs--width-is-locked nil)
         (setq-local treemacs-space-between-root-nodes
                     lsp-treemacs-symbols-space-between-root-nodes)
-    (unless lsp-treemacs--symbols-timer
-      (setq lsp-treemacs--symbols-timer (run-with-idle-timer 1 t #'lsp-treemacs--update)))
+        (unless lsp-treemacs--symbols-timer
+          (setq lsp-treemacs--symbols-timer (run-with-idle-timer 1 t #'lsp-treemacs--update)))
         (add-hook 'kill-buffer-hook 'lsp-treemacs--kill-symbols-buffer nil t)))
     (with-current-buffer original-buffer (lsp-treemacs--update))))
 
@@ -391,6 +404,12 @@ will be rendered an empty line between them."
          (lsp-treemacs--expand-recursively btn (if (booleanp depth) depth (1- depth))))
        (treemacs-collect-child-nodes root)))))
 
+
+;; deps
+(eval-and-compile
+  (lsp-interface
+   (java:Node (:projectUri :rootPath :path :kind :name :uri :entryKind))))
+
 (defmacro lsp-treemacs-deps-with-jdtls (&rest body)
   "Helper macro for invoking BODY against WORKSPACE context."
   (declare (debug (form body))
@@ -403,17 +422,17 @@ will be rendered an empty line between them."
   (if-let ((dep (-some-> (treemacs-node-at-point)
                   (button-get :dep))))
       (lsp-treemacs--open-file-in-mru
-       (or (-some-> (gethash "uri" dep)
+       (or (-some-> (lsp-get dep :uri)
              (lsp--uri-to-path))
-           (when (f-exists? (gethash "path" dep))
-             (gethash "path" dep))
-           (concat (f-parent (lsp--uri-to-path (gethash "projectUri" dep)))
-                   (gethash "path" dep))))
+           (when (f-exists? (lsp-get dep :path))
+             (lsp-get dep :path))
+           (concat (f-parent (lsp--uri-to-path (lsp-get dep :projectUri)))
+                   (lsp-get dep :path))))
     (user-error "No element under point.")))
 
 (defun lsp-treemacs-deps--icon (dep expanded)
   "Get the symbol for the the kind."
-  (-let (((&hash "uri" "kind" "entryKind" entry-kind) dep))
+  (-let (((&java:Node :uri :kind :entry-kind) dep))
     (concat
      (if expanded  "▾ " "▸ ")
      (if (or (= kind 8)
@@ -433,7 +452,7 @@ will be rendered an empty line between them."
 
 (defun lsp-treemacs-deps--get-children (dep)
   (lsp-treemacs-deps-with-jdtls
-    (-let* (((&hash "projectUri" project-uri "rootPath" root-path "path" "kind" "name" "uri") dep)
+    (-let* (((&java:Node :project-uri :root-path :path :kind :name :uri) dep)
             (project-uri (if (eq kind 2) uri project-uri)))
       (unless (or (= kind 6)
                   (= kind 8))
@@ -448,15 +467,15 @@ will be rendered an empty line between them."
                                         (or root-path path)))
                           ("projectUri" project-uri))))
              (-mapcat (lambda (inner-dep)
-                        (puthash "projectUri" project-uri inner-dep)
+                        (lsp-put inner-dep :projectUri project-uri)
                         (when (= kind 4)
-                          (puthash "rootPath" path inner-dep))
-                        (if (eq (gethash "entryKind" inner-dep) 3)
+                          (lsp-put inner-dep :rootPath path))
+                        (if (eq (lsp-get inner-dep :entryKind) 3)
                             (lsp-treemacs-deps--get-children inner-dep)
                           (list inner-dep)))))))))
 
 (defun lsp-treemacs-deps--java-file? (dep)
-  (-let [(&hash "kind" "entryKind" entry-kind) dep]
+  (-let [(&java:Node :kind :entry-kind) dep]
     (and (eq kind 6)
          (or (eq entry-kind 1)
              (eq entry-kind 2)))))
@@ -464,7 +483,7 @@ will be rendered an empty line between them."
 (treemacs-define-expandable-node lsp-treemacs-deps
   :icon-open-form (lsp-treemacs-deps--icon (treemacs-button-get node :dep) t)
   :icon-closed-form (lsp-treemacs-deps--icon (treemacs-button-get node :dep) nil)
-  :query-function (-let (((dep &as &hash "uri") (treemacs-button-get node :dep)))
+  :query-function (-let (((dep &as &java:Node :uri) (treemacs-button-get node :dep)))
                     (if (lsp-treemacs-deps--java-file? dep)
                         (lsp-treemacs-deps-with-jdtls
                           (lsp-request "textDocument/documentSymbol"
@@ -472,23 +491,20 @@ will be rendered an empty line between them."
                                                                         (lsp-make-text-document-item :uri uri))))
                       (lsp-treemacs-deps--get-children dep)))
   :ret-action 'lsp-treemacs-deps--goto-element
-  :render-action (if (lsp-treemacs-deps--java-file? (treemacs-button-get node :dep))
+  :render-action (-let (((&java:Node :name :uri :path) item))
+                   (if (lsp-treemacs-deps--java-file? (treemacs-button-get node :dep))
+                       (treemacs-render-node
+                        :icon (lsp-treemacs--symbol-icon item nil)
+                        :label-form (propertize name 'face 'default)
+                        :state treemacs-lsp-symbol-closed-state
+                        :key-form (list name uri path)
+                        :more-properties (:symbol item))
                      (treemacs-render-node
-                      :icon (lsp-treemacs--symbol-icon item nil)
-                      :label-form (propertize (gethash "name" item) 'face 'default)
-                      :state treemacs-lsp-symbol-closed-state
-                      :key-form (list (gethash "name" item)
-                                      (gethash "uri" item)
-                                      (gethash "path" item))
-                      :more-properties (:symbol item))
-                   (treemacs-render-node
-                    :icon (lsp-treemacs-deps--icon item nil)
-                    :label-form (propertize (gethash "name" item) 'face 'default)
-                    :state treemacs-lsp-treemacs-deps-closed-state
-                    :key-form (list (gethash "name" item)
-                                    (gethash "uri" item)
-                                    (gethash "path" item))
-                    :more-properties (:dep item))))
+                      :icon (lsp-treemacs-deps--icon item nil)
+                      :label-form (propertize name 'face 'default)
+                      :state treemacs-lsp-treemacs-deps-closed-state
+                      :key-form (list name uri path)
+                      :more-properties (:dep item)))))
 
 (defun lsp-treemacs-deps--root-folders ()
   (lsp-treemacs-deps-with-jdtls
@@ -496,20 +512,19 @@ will be rendered an empty line between them."
                (let ((project-uri (lsp--path-to-uri root-path)))
                  (->> project-uri
                       (lsp-send-execute-command "java.project.list")
-                      (--map (--doto it (puthash "projectUri" project-uri it))))))
+                      (--map (--doto it (lsp-put it :projectUri project-uri))))))
              (lsp-session-folders (lsp-session)))))
 
 (treemacs-define-variadic-node lsp-treemacs-deps-list
   :query-function (lsp-treemacs-deps--root-folders)
   :render-action
-  (treemacs-render-node
-   :icon (lsp-treemacs-deps--icon item nil)
-   :label-form (propertize (gethash "name" item) 'face 'default)
-   :state treemacs-lsp-treemacs-deps-closed-state
-   :key-form (list (gethash "name" item)
-                   (gethash "uri" item)
-                   (gethash "path" item))
-   :more-properties (:dep item))
+  (-let (((&java:Node :name :uri :path) item))
+    (treemacs-render-node
+     :icon (lsp-treemacs-deps--icon item nil)
+     :label-form (propertize name 'face 'default)
+     :state treemacs-lsp-treemacs-deps-closed-state
+     :key-form (list name uri path)
+     :more-properties (:dep item)))
   :root-key-form 'LSP-Java-Dependency)
 
 (defun lsp-treemacs-java-deps-refresh ()
@@ -538,10 +553,11 @@ will be rendered an empty line between them."
       (lsp-treemacs--set-mode-line-format buffer " Java Dependencies ")
       (lsp-treemacs-deps-list-mode t)
 
-      (setq-local treemacs-space-between-root-nodes nil)
       (setq-local treemacs-default-visit-action 'treemacs-RET-action)
 
-      (treemacs-LSP-TREEMACS-DEPS-LIST-extension))))
+      (treemacs-LSP-TREEMACS-DEPS-LIST-extension)
+      (setq-local treemacs--width-is-locked nil)
+      (setq-local window-size-fixed  nil))))
 
 (defun lsp-treemacs--deps-find-children-for-key (node key)
   (->> node
@@ -557,7 +573,6 @@ will be rendered an empty line between them."
   "Keymap for `lsp-treemacs-deps-list-mode'.")
 
 (define-minor-mode lsp-treemacs-deps-list-mode ""
-  nil nil nil
   :keymap lsp-treemacs-deps-list-mode-map
   :group 'lsp-treeemacs)
 
@@ -573,7 +588,7 @@ will be rendered an empty line between them."
           (get-buffer-window)
           (marker-position
            (-reduce-from
-            (-lambda (node (&hash "path" "name" "uri"))
+            (-lambda (node (&java:Node :path :name :uri))
               (unless (treemacs-is-node-expanded? node)
                 (save-excursion
                   (goto-char (marker-position node))
@@ -584,7 +599,6 @@ will be rendered an empty line between them."
             paths)))
          (get-buffer-window)))
       (recenter nil))))
-
 
 
 ;; treemacs synchronization
@@ -860,7 +874,7 @@ will be rendered an empty line between them."
   "Keymap for `lsp-treemacs-generic-mode'")
 
 (define-minor-mode lsp-treemacs-generic-mode "Treemacs generic mode."
-  nil nil lsp-treemacs-generic-map)
+  :keymap lsp-treemacs-generic-map)
 
 (defun lsp-treemacs--handle-references (refs)
   (->> refs
@@ -900,6 +914,9 @@ will be rendered an empty line between them."
                                                 (ht)))
       (setq-local lsp-treemacs-tree tree)
       (setq-local face-remapping-alist '((button . default)))
+      (setq-local window-size-fixed nil)
+      (setq-local treemacs--width-is-locked nil)
+      (setq-local treemacs-space-between-root-nodes nil)
       (lsp-treemacs--set-mode-line-format search-buffer title)
       (lsp-treemacs-generic-refresh)
       (when expand-depth (lsp-treemacs--expand 'LSP-Generic expand-depth))
@@ -1081,6 +1098,7 @@ With a prefix argument, show the outgoing call hierarchy."
                           parents?)
                         nil direction)))))
 
+;;;###autoload
 (defun lsp-treemacs-type-hierarchy (direction)
   "Show the type hierarchy for the symbol at point.
 With prefix 0 show sub-types.
@@ -1202,35 +1220,44 @@ With prefix 2 show both."
                             count)))
        (seq-some #'identity)))
 
+(defun lsp-treemacs--build-error-list (folder)
+  (when-let ((diags (append (lsp-diagnostics-stats-for folder) ())))
+    (when (lsp-treemacs-errors--diags? diags)
+      (list :label (format
+                    (propertize "%s %s %s" 'face 'default)
+                    (f-filename folder)
+                    (->> diags
+                      (-map-indexed
+                       (lambda (index count)
+                         (when (and (not (zerop count))
+                                    (<= index lsp-treemacs-error-list-severity))
+                           (propertize
+                            (number-to-string count)
+                            'face (alist-get index lsp-treemacs-file-face-map)))))
+                      (-filter #'identity)
+                      (s-join "/"))
+                    (propertize (f-dirname folder)
+                                'face 'lsp-lens-face))
+            :id folder
+            :icon 'root
+            :children (-partial #'lsp-treemacs-errors--list-files folder)
+            :ret-action (lambda (&rest _)
+                          (interactive)
+                          (lsp-treemacs--open-file-in-mru folder))))))
+
+(defvar lsp-treemacs--current-workspaces nil)
+
 (defun lsp-treemacs-errors-list--refresh ()
   (lsp-treemacs-render
-   (->> (lsp-session)
-        (lsp-session-folders)
-        (-keep
-         (lambda (folder)
-           (when-let ((diags (append (lsp-diagnostics-stats-for folder) ())))
-             (when (lsp-treemacs-errors--diags? diags)
-               (list :label (format
-                             (propertize "%s %s %s" 'face 'default)
-                             (f-filename folder)
-                             (->> diags
-                                  (-map-indexed
-                                   (lambda (index count)
-                                     (when (and (not (zerop count))
-                                                (<= index lsp-treemacs-error-list-severity))
-                                       (propertize
-                                        (number-to-string count)
-                                        'face (alist-get index lsp-treemacs-file-face-map)))))
-                                  (-filter #'identity)
-                                  (s-join "/"))
-                             (propertize (f-dirname folder)
-                                         'face 'lsp-lens-face))
-                     :id folder
-                     :icon 'root
-                     :children (-partial #'lsp-treemacs-errors--list-files folder)
-                     :ret-action (lambda (&rest _)
-                                   (interactive)
-                                   (lsp-treemacs--open-file-in-mru folder))))))))
+   (if (and lsp-treemacs-error-list-current-project-only
+            lsp-treemacs--current-workspaces)
+       (->> lsp-treemacs--current-workspaces
+            (-map #'lsp-workspace-folders)
+            (-flatten)
+            (-keep #'lsp-treemacs--build-error-list))
+     (->> (lsp-session)
+          (lsp-session-folders)
+          (-keep #'lsp-treemacs--build-error-list)))
    "Errors List"
    nil
    lsp-treemacs-errors-buffer-name
@@ -1239,6 +1266,7 @@ With prefix 2 show both."
 ;;;###autoload
 (defun lsp-treemacs-errors-list ()
   (interactive)
+  (setq lsp-treemacs--current-workspaces (lsp-workspaces))
   (-if-let (buffer (get-buffer lsp-treemacs-errors-buffer-name))
       (progn
         (select-window (display-buffer-in-side-window buffer '((side . bottom))))
@@ -1276,7 +1304,6 @@ With prefix 2 show both."
   "Keymap for `lsp-treemacs-error-list-mode'.")
 
 (define-minor-mode lsp-treemacs-error-list-mode ""
-  nil nil nil
   :keymap lsp-treemacs-error-list-mode-map
   :group 'lsp-treeemacs)
 

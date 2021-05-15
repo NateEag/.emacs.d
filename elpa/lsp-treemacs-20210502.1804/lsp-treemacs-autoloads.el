@@ -55,6 +55,14 @@ With a prefix argument, show the outgoing call hierarchy.
 
 \(fn OUTGOING)" t nil)
 
+(autoload 'lsp-treemacs-type-hierarchy "lsp-treemacs" "\
+Show the type hierarchy for the symbol at point.
+With prefix 0 show sub-types.
+With prefix 1 show super-types.
+With prefix 2 show both.
+
+\(fn DIRECTION)" t nil)
+
 (autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-tree")))

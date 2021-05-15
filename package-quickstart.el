@@ -8961,10 +8961,10 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/polymode-20200606.1106/polymode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/polymode-20210413.2004/polymode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/polymode-20200606.1106/polymode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/polymode-20210413.2004/polymode-autoloads.el") (car load-path))))
 
 
 

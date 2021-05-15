@@ -551,10 +551,10 @@ most frequently used slots are:
     (while (keywordp (setq keyw (car body)))
       (setq body (cdr body))
       (pcase keyw
-        (`:lighter (setq lighter (purecopy (pop body))))
-        (`:keymap (setq keymap (pop body)))
-        (`:after-hook (setq after-hook (pop body)))
-        (`:keylist (setq keylist (pop body)))
+        (:lighter (setq lighter (purecopy (pop body))))
+        (:keymap (setq keymap (pop body)))
+        (:after-hook (setq after-hook (pop body)))
+        (:keylist (setq keylist (pop body)))
         (_ (push (pop body) slots) (push keyw slots))))
 
 
@@ -616,6 +616,9 @@ most frequently used slots are:
                     ;; non-nil (like in define-mirror-mode)
                     doc keymap-name)
            (interactive)
+           ;; Don't restore in desktop-save-mode #289
+           (with-eval-after-load 'desktop
+             (add-to-list 'desktop-minor-mode-table '(,mode nil)))
            (let ((,last-message (current-message))
                  (state (cond
                          ((numberp arg) (> arg 0))

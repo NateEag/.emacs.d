@@ -112,7 +112,8 @@ that the character is not escaped."
 
 (mapc (lambda (sym)
         (cond ((fboundp sym)
-               (unless (byte-code-function-p (symbol-function sym))
+               (unless (or (byte-code-function-p (symbol-function sym))
+                           (subrp (symbol-function sym)))
                  (byte-compile sym)))
               (t (error "%S is not fbound" sym))))
       '(slime-parse-form-upto-point

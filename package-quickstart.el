@@ -23190,10 +23190,10 @@ Stop websocket server for atomic-chrome." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20210501.1527/async-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20210117.718/async-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20210501.1527/async-autoloads.el") (car load-path))))
 
 
 
@@ -23247,7 +23247,7 @@ will leave *emacs* process buffers hanging around):
     (async-start
      (lambda ()
        (delete-file \"a remote file on a slow link\" nil))
-     'ignore)
+     \\='ignore)
 
 Note: Even when FINISH-FUNC is present, a future is still
 returned except that it yields no value (since the value is
@@ -23296,7 +23296,7 @@ Same as `byte-compile-file' but asynchronous.
 
 \(fn FILE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-byte")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-")))
 
 
 

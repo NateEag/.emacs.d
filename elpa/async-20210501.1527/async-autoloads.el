@@ -59,7 +59,7 @@ will leave *emacs* process buffers hanging around):
     (async-start
      (lambda ()
        (delete-file \"a remote file on a slow link\" nil))
-     'ignore)
+     \\='ignore)
 
 Note: Even when FINISH-FUNC is present, a future is still
 returned except that it yields no value (since the value is
@@ -112,7 +112,7 @@ Same as `byte-compile-file' but asynchronous.
 
 \(fn FILE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-byte")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-bytecomp" '("async-")))
 
 ;;;***
 

@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/auto-rename-tag-20210418.1758/auto-rename-tag.el  -*- no-byte-compile: t -*-
+(define-package "auto-rename-tag" "20210418.1758" "Automatically rename paired HTML/XML tag" '((emacs "24.4")) :commit "8dbf13b344f6d5eba5c4876b18905d30b3118bb9" :authors '(("Shen, Jen-Chieh" . "jcs090218@gmail.com")) :maintainer '("Shen, Jen-Chieh" . "jcs090218@gmail.com") :url "https://github.com/jcs-elpa/auto-rename-tag")

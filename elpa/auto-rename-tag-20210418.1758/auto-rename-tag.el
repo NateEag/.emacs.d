@@ -7,8 +7,8 @@
 ;; Description: Automatically rename paired HTML/XML tag.
 ;; Keyword: auto-complete html rename tag xml
 ;; Version: 0.3.5
-;; Package-Version: 20201012.630
-;; Package-Commit: 88c5236280ff8212ff5c74f3e2e654c1a288dbf2
+;; Package-Version: 20210418.1758
+;; Package-Commit: 8dbf13b344f6d5eba5c4876b18905d30b3118bb9
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/auto-rename-tag
 
@@ -46,7 +46,10 @@
   "Tag regular expression to find tag position.")
 
 (defcustom auto-rename-tag-disabled-commands
-  '(query-replace)
+  '(query-replace
+    query-replace-regexp
+    replace-string
+    replace-regexp)
   "List of disabled commands."
   :type 'list
   :group 'auto-rename-tag)

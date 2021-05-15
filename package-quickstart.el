@@ -20718,10 +20718,10 @@ Run an inferior instance of `elpl-cli' inside Emacs." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-slime-nav-20200304.2201/elisp-slime-nav-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-slime-nav-20210510.528/elisp-slime-nav-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-slime-nav-20200304.2201/elisp-slime-nav-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-slime-nav-20210510.528/elisp-slime-nav-autoloads.el") (car load-path))))
 
 
 

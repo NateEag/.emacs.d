@@ -4,8 +4,9 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: languages navigation slime elisp emacs-lisp
+;; Package-Commit: 8588d80d414aee1fafce5b9da0e913612ee0bcdd
 ;; URL: https://github.com/purcell/elisp-slime-nav
-;; Package-Version: 20200304.2201
+;; Package-Version: 20210510.528
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.2"))
 
@@ -60,7 +61,7 @@
 ;;;###autoload
 (define-minor-mode elisp-slime-nav-mode
   "Enable Slime-style navigation of elisp symbols using M-. and M-,"
-  nil " SliNav" elisp-slime-nav-mode-map)
+  :lighter " SliNav" :keymap elisp-slime-nav-mode-map)
 
 ;;;###autoload
 (define-obsolete-function-alias 'turn-on-elisp-slime-nav-mode 'elisp-slime-nav-mode

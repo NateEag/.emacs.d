@@ -1,4 +1,4 @@
-This is forge.info, produced by makeinfo version 6.5 from forge.texi.
+This is forge.info, produced by makeinfo version 6.7 from forge.texi.
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-372-g315aeb40+1).
+This manual is for Forge version 0.1.0 (v0.1.0-376-gab3be5a7+1).
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -831,22 +831,33 @@ dedicated buffers:
 
      This command lists open pull-requests from all the repositories
      that you own.  Options ‘forge-owned-accounts’ and
-     ‘forge-owned-blacklist’ controls which repositories are considered
-     to be owned by you.  Only Github is supported for now.
+     ‘forge-owned-ignored’ controls which repositories are considered to
+     be owned by you.  Only Github is supported for now.
 
  -- Command: forge-list-owned-issues
 
      This command lists open issues from all the repositories that you
-     own.  Options ‘forge-owned-accounts’ and ‘forge-owned-blacklist’
+     own.  Options ‘forge-owned-accounts’ and ‘forge-owned-ignored’
      controls which repositories are considered to be owned by you.
      Only Github is supported for now.
 
  -- User Option: forge-owned-accounts
 
-     This is a list of accounts that are owned by you.  This should
-     include your username as well as any organizations that you own.
+     This is an alist of accounts that are owned by you.  This should
+     include your username as well as any organization that you own.
+     Used by the commands ‘forge-list-owned-issues’,
+     ‘forge-list-owned-pullreqs’ and ‘forge-fork’.
 
- -- User Option: forge-owned-blacklist
+     Each element has the form ‘(ACCOUNT . PLIST)’.  The following
+     properties are currently being used:
+
+        • ‘remote-name’ The default name suggested by ‘forge-fork’ for a
+          fork created within this account.  If unspecified, then the
+          name of the account is used.
+
+     Example: ‘(("tarsius") ("emacsmirror" :remote-name "mirror"))’.
+
+ -- User Option: forge-owned-ignored
 
      This is a list of repository names that are considered to not be
      owned by you even though they would have been considered to be
@@ -1247,8 +1258,8 @@ Appendix E Variable Index
 
 * forge-owned-accounts:                  Listing Topics and Notifications.
                                                               (line 127)
-* forge-owned-blacklist:                 Listing Topics and Notifications.
-                                                              (line 132)
+* forge-owned-ignored:                   Listing Topics and Notifications.
+                                                              (line 143)
 
 
 
@@ -1267,15 +1278,15 @@ Node: Branching19101
 Node: Working with Topics25217
 Node: Visiting Topics25590
 Node: Listing Topics and Notifications27319
-Node: Creating Topics31860
-Node: Editing Topics and Posts32423
-Node: Miscellaneous35978
-Node: FAQ38305
-Node: Is it possible to create a single pull-request without pulling everything?38505
-Node: Keystroke Index38910
-Node: Command Index42796
-Node: Function Index48237
-Node: Variable Index50995
+Node: Creating Topics32352
+Node: Editing Topics and Posts32915
+Node: Miscellaneous36470
+Node: FAQ38797
+Node: Is it possible to create a single pull-request without pulling everything?38997
+Node: Keystroke Index39402
+Node: Command Index43288
+Node: Function Index48729
+Node: Variable Index51487
 
 End Tag Table
 

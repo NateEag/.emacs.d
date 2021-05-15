@@ -6,6 +6,9 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/forge
 ;; Keywords: git tools vc
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; This file is not part of GNU Emacs.
 
 ;; Forge is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -77,7 +80,7 @@
 (define-key magit-branch-section-map (kbd "C-c C-v") 'forge-visit-topic)
 
 (transient-append-suffix 'magit-dispatch "%"
-  '("'" "Forge" forge-dispatch ?%))
+  '("'" "Forge" forge-dispatch))
 
 (transient-append-suffix 'magit-fetch "m"
   '("y" "forge topics" forge-pull))

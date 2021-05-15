@@ -1,9 +1,12 @@
-;;; forge-gitea.el --- Gitea support              -*- lexical-binding: t -*-
+;;; forge-bitbucket.el --- Bitbucket support      -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2018-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; This file is not part of GNU Emacs.
 
 ;; Forge is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -20,26 +23,25 @@
 
 ;;; Code:
 
-(require 'gtea)
+(require 'buck)
 (require 'forge)
 
 ;;; Class
 
-(defclass forge-gitea-repository (forge-unusedapi-repository)
+(defclass forge-bitbucket-repository (forge-noapi-repository)
   ((issues-url-format         :initform "https://%h/%o/%n/issues")
    (issue-url-format          :initform "https://%h/%o/%n/issues/%i")
    ;; The anchor for the issue itself is .../%i#issue-%i
-   (issue-post-url-format     :initform "https://%h/%o/%n/issues/%i#issuecomment-%I")
-   (pullreqs-url-format       :initform "https://%h/%o/%n/pulls")
-   (pullreq-url-format        :initform "https://%h/%o/%n/pulls/%i")
-   (pullreq-post-url-format   :initform "https://%h/%o/%n/pulls/%i#issuecomment-%I")
-   (commit-url-format         :initform "https://%h/%o/%n/commit/%r")
-   (branch-url-format         :initform "https://%h/%o/%n/commits/branch/%r")
-   (remote-url-format         :initform "https://%h/%o/%n")
+   (issue-post-url-format     :initform "https://%h/%o/%n/issues/%i#comment-%I")
+   (pullreqs-url-format       :initform "https://%h/%o/%n/pull-requests")
+   (pullreq-url-format        :initform "https://%h/%o/%n/pull-requests/%i")
+   (pullreq-post-url-format   :initform "https://%h/%o/%n/pull-requests/%i#comment-%I")
+   (commit-url-format         :initform "https://%h/%o/%n/commits/%r")
+   (branch-url-format         :initform "https://%h/%o/%n/branch/%r")
+   (remote-url-format         :initform "https://%h/%o/%n/src")
    (create-issue-url-format   :initform "https://%h/%o/%n/issues/new")
-   (create-pullreq-url-format :initform "https://%h/%o/%n/pulls") ; sic
-   (pullreq-refspec :initform "+refs/pull/*/head:refs/pullreqs/*")))
+   (create-pullreq-url-format :initform "https://%h/%o/%n/pull-requests/new")))
 
 ;;; _
-(provide 'forge-gitea)
-;;; forge-gitea.el ends here
+(provide 'forge-bitbucket)
+;;; forge-bitbucket.el ends here

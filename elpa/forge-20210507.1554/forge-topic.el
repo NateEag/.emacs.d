@@ -4,6 +4,9 @@
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+;; SPDX-License-Identifier: GPL-3.0-or-later
+
+;; This file is not part of GNU Emacs.
 
 ;; Forge is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -121,6 +124,12 @@ This variable has to be customized before `forge' is loaded."
 (defface forge-topic-unmerged
   '((t :inherit magit-dimmed :slant italic))
   "Face used for number of unmerged pull-requests."
+  :group 'forge-faces)
+
+(defface forge-topic-label
+  `((t :box ( :line-width ,(if (>= emacs-major-version 28) (cons -1 -1) -1)
+              :style released-button)))
+  "Face used for topic labels."
   :group 'forge-faces)
 
 (defface forge-post-author
@@ -519,9 +528,9 @@ identifier."
         (overlay-put o 'priority 2)
         (overlay-put o 'evaporate t)
         (overlay-put o 'font-lock-face
-                     (list :background background
-                           :foreground foreground
-                           :box "black"))
+                     `(( :background ,background
+                         :foreground ,foreground)
+                       forge-topic-label))
         (when description
           (overlay-put o 'help-echo description))))))
 
@@ -549,7 +558,7 @@ identifier."
     (let ((o (make-overlay (- (point) (length name)) (point))))
       (overlay-put o 'priority 2)
       (overlay-put o 'evaporate t)
-      (overlay-put o 'font-lock-face face)
+      (overlay-put o 'font-lock-face (list face 'forge-topic-label))
       (when description
         (overlay-put o 'help-echo description)))))
 

@@ -3197,10 +3197,10 @@ Setup auto-complete for tern-mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20210407.707/projectile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20210503.738/projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20210407.707/projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20210503.738/projectile-autoloads.el") (car load-path))))
 
 
 

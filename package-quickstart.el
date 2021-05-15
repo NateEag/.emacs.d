@@ -21760,10 +21760,10 @@ See `compact-docstrings-mode' for more information on Compact-Docstrings mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210322.704/clojure-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210505.712/clojure-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210322.704/clojure-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210505.712/clojure-mode-autoloads.el") (car load-path))))
 
 
 
@@ -21853,7 +21853,8 @@ With a numeric prefix argument the let is introduced N lists up.
 Move the form at point to a binding in the nearest let." t nil)
 
 (autoload 'clojure-rename-ns-alias "clojure-mode" "\
-Rename a namespace alias." t nil)
+Rename a namespace alias.
+If a region is active, only pick up and rename aliases within the region." t nil)
 
 (autoload 'clojure-add-arity "clojure-mode" "\
 Add an arity to a function." t nil)

@@ -10,10 +10,10 @@
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20210322.704
-;; Package-Commit: a14671e03c867c9d759ee9e59cdc5cecbf271245
+;; Package-Version: 20210505.712
+;; Package-Commit: 33f267ac182afe8fa82cc321e9f515c0397e35f6
 ;; Keywords: languages clojure clojurescript lisp
-;; Version: 5.13.0-snapshot
+;; Version: 5.13.0
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -803,8 +803,6 @@ any number of matches of `clojure--sym-forbidden-rest-chars'."))
                 "\\(\\sw+\\)?" )
        (1 font-lock-keyword-face)
        (2 font-lock-function-name-face nil t))
-      ;; lambda arguments - %, %&, %1, %2, etc
-      ("\\<%[&1-9]?" (0 font-lock-variable-name-face))
       ;; Special forms
       (,(concat
          "("
@@ -864,14 +862,16 @@ any number of matches of `clojure--sym-forbidden-rest-chars'."))
          "\\>")
        0 font-lock-constant-face)
       ;; Character literals - \1, \a, \newline, \u0000
-      (,(rx "\\" (or any
-                    "newline" "space" "tab" "formfeed" "backspace"
-                    "return"
-                    (: "u" (= 4 (char "0-9a-fA-F")))
-                    (: "o" (repeat 1 3 (char "0-7"))))
-            word-boundary)
-       0 'clojure-character-face)
-
+      (,(rx (group "\\" (or any
+                            "newline" "space" "tab" "formfeed" "backspace"
+                            "return"
+                            (: "u" (= 4 (char "0-9a-fA-F")))
+                            (: "o" (repeat 1 3 (char "0-7")))))
+            (or (not word) word-boundary))
+       1 'clojure-character-face)
+      ;; lambda arguments - %, %&, %1, %2, etc
+      ;; must come after character literals for \% to be handled properly
+      ("\\<%[&1-9]?" (0 font-lock-variable-name-face))
       ;; namespace definitions: (ns foo.bar)
       (,(concat "(\\<ns\\>[ \r\n\t]*"
                 ;; Possibly metadata, shorthand and/or longhand
@@ -1664,17 +1664,11 @@ If REGEX is non-nil, return the position of the # that begins the
 regex at point.  If point is not inside a string or regex, return
 nil."
   (when (nth 3 (syntax-ppss)) ;; Are we really in a string?
-    (save-excursion
-      (save-match-data
-        ;; Find a quote that appears immediately after whitespace,
-        ;; beginning of line, hash, or an open paren, brace, or bracket
-        (re-search-backward "\\(\\s-\\|^\\|#\\|(\\|\\[\\|{\\)\\(\"\\)")
-        (let ((beg (match-beginning 2)))
-          (when beg
-            (if regex
-                (and (char-before beg) (eq ?# (char-before beg)) (1- beg))
-              (when (not (eq ?# (char-before beg)))
-                beg))))))))
+    (let* ((beg (nth 8 (syntax-ppss)))
+           (hash (eq ?# (char-before beg))))
+      (if regex
+          (and hash (1- beg))
+        (and (not hash) beg)))))
 
 (defun clojure-char-at-point ()
   "Return the char at point or nil if at buffer end."
@@ -2672,38 +2666,6 @@ lists up."
     (insert sexp)
     (clojure--replace-sexps-with-bindings-and-indent)))
 
-(defun clojure-collect-ns-aliases (ns-form)
-  "Collect all namespace aliases in NS-FORM."
-  (with-temp-buffer
-    (delay-mode-hooks
-      (clojure-mode)
-      (insert ns-form)
-      (goto-char (point-min))
-      (let ((end (point-max))
-            (rgx (rx ":as" (+ space)
-                     (group-n 1 (+ (not (in " ,]\n"))))))
-            (res ()))
-        (while (re-search-forward rgx end 'noerror)
-          (unless (or (clojure--in-string-p) (clojure--in-comment-p))
-            (push (match-string-no-properties 1) res)))
-        res))))
-
-(defun clojure--rename-ns-alias-internal (current-alias new-alias)
-  "Rename a namespace alias CURRENT-ALIAS to NEW-ALIAS."
-  (clojure--find-ns-in-direction 'backward)
-  (let ((rgx (concat ":as +" (regexp-quote current-alias) "\\_>"))
-        (bound (save-excursion (forward-list 1) (point))))
-    (when (search-forward-regexp rgx bound t)
-      (replace-match (concat ":as " new-alias))
-      (save-excursion
-        (while (re-search-forward (concat (regexp-quote current-alias) "/") nil t)
-          (when (not (nth 3 (syntax-ppss)))
-            (replace-match (concat new-alias "/")))))
-      (save-excursion
-        (while (re-search-forward (concat "#::" (regexp-quote current-alias) "{") nil t)
-          (replace-match (concat "#::" new-alias "{"))))
-      (message "Successfully renamed alias '%s' to '%s'" current-alias new-alias))))
-
 ;;;###autoload
 (defun clojure-let-backward-slurp-sexp (&optional n)
   "Slurp the s-expression before the let form into the let form.
@@ -2747,21 +2709,84 @@ With a numeric prefix argument the let is introduced N lists up."
   (interactive)
   (clojure--move-to-let-internal (read-from-minibuffer "Name of bound symbol: ")))
 
+
+;;; Renaming ns aliases
+
+(defun clojure--alias-usage-regexp (alias)
+  "Regexp for matching usages of ALIAS in qualified symbols, keywords and maps.
+When nil, match all namespace usages.
+The first match-group is the alias."
+  (let ((alias (if alias (regexp-quote alias) clojure--sym-regexp)))
+    (concat "#::\\(?1:" alias "\\)[ ,\r\n\t]*{"
+            "\\|"
+            "\\_<\\(?1:" alias "\\)/")))
+
+(defun clojure--rename-ns-alias-usages (current-alias new-alias beg end)
+  "Rename all usages of CURRENT-ALIAS in region BEG to END with NEW-ALIAS."
+  (let ((rgx (clojure--alias-usage-regexp current-alias)))
+    (save-mark-and-excursion
+      (goto-char end)
+      (setq end (point-marker))
+      (goto-char beg)
+      (while (re-search-forward rgx end 'noerror)
+        (when (not (clojure--in-string-p)) ;; replace in comments, but not strings
+          (goto-char (match-beginning 1))
+          (delete-region (point) (match-end 1))
+          (insert new-alias))))))
+
+(defun clojure--collect-ns-aliases (beg end ns-form-p)
+  "Collect all aliases between BEG and END.
+When NS-FORM-P is non-nil, treat the region as a ns form
+and pick up aliases from [... :as alias] forms,
+otherwise pick up alias usages from keywords / symbols."
+  (let ((res ()))
+    (save-excursion
+      (let ((rgx (if ns-form-p
+                     (rx ":as" (+ space)
+                         (group-n 1 (+ (not (in " ,]\n")))))
+                   (clojure--alias-usage-regexp nil))))
+        (goto-char beg)
+        (while (re-search-forward rgx end 'noerror)
+          (unless (or (clojure--in-string-p) (clojure--in-comment-p))
+            (cl-pushnew (match-string-no-properties 1) res
+                        :test #'equal)))
+        (reverse res)))))
+
+(defun clojure--rename-ns-alias-internal (current-alias new-alias)
+  "Rename a namespace alias CURRENT-ALIAS to NEW-ALIAS.
+Assume point is at the start of ns form."
+  (clojure--find-ns-in-direction 'backward)
+  (let ((rgx (concat ":as +" (regexp-quote current-alias) "\\_>"))
+        (bound (save-excursion (forward-list 1) (point-marker))))
+    (when (search-forward-regexp rgx bound t)
+      (replace-match (concat ":as " new-alias))
+      (clojure--rename-ns-alias-usages current-alias new-alias bound (point-max)))))
+
 ;;;###autoload
 (defun clojure-rename-ns-alias ()
-  "Rename a namespace alias."
+  "Rename a namespace alias.
+If a region is active, only pick up and rename aliases within the region."
   (interactive)
-  (save-excursion
-    (clojure--find-ns-in-direction 'backward)
-    (let* ((current-alias (completing-read "Current alias: "
-                                           (clojure-collect-ns-aliases
-                                            (thing-at-point 'list))))
-           (rgx (concat ":as +" (regexp-quote current-alias) "\\_>"))
-           (bound (save-excursion (forward-list 1) (point))))
-      (if (save-excursion (search-forward-regexp rgx bound t))
-          (let ((new-alias (read-from-minibuffer "New alias: ")))
-            (clojure--rename-ns-alias-internal current-alias new-alias))
-        (message "Cannot find namespace alias: '%s'" current-alias)))))
+  (if (use-region-p)
+      (let ((beg (region-beginning))
+            (end (copy-marker (region-end)))
+            current-alias new-alias)
+        ;; while loop for renaming multiple aliases in the region.
+        ;; C-g or leave blank to break out of the loop
+        (while (not (string-empty-p
+                     (setq current-alias
+                           (completing-read "Current alias: "
+                                            (clojure--collect-ns-aliases beg end nil)))))
+          (setq new-alias (read-from-minibuffer (format "Replace %s with: " current-alias)))
+          (clojure--rename-ns-alias-usages current-alias new-alias beg end)))
+    (save-excursion
+      (clojure--find-ns-in-direction 'backward)
+      (let* ((bounds (bounds-of-thing-at-point 'list))
+             (current-alias (completing-read "Current alias: "
+                                             (clojure--collect-ns-aliases
+                                              (car bounds) (cdr bounds) t)))
+             (new-alias (read-from-minibuffer (format "Replace %s with: " current-alias))))
+        (clojure--rename-ns-alias-internal current-alias new-alias)))))
 
 (defun clojure--add-arity-defprotocol-internal ()
   "Add an arity to a signature inside a defprotocol.

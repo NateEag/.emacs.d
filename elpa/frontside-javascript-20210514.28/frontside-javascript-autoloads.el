@@ -14,6 +14,8 @@
 Make Emacs have your back no matter what JavaScript project you'refaced with.
 This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS development" t nil)
 
+(setq use-package--frontside-javascript--pre-config-hook #'frontside-javascript)
+
 ;;;***
 
 ;; Local Variables:

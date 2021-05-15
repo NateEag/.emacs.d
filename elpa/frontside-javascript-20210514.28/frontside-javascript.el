@@ -5,8 +5,8 @@
 
 ;; Author: Frontside Engineering <engineering@frontside.com>
 ;; Version: 1.0.0
-;; Package-Version: 20210206.2008
-;; Package-Commit: 2b0e27a2f5fa18079b00753b3bf9635818e11f71
+;; Package-Version: 20210514.28
+;; Package-Commit: f3e5c610a719ce28d99950087f0e6046712dd430
 ;; Package-Requires: ((emacs "25.1") (add-node-modules-path "1.2.0") (company "0.9.2") (flycheck "20201228.2104") (js2-mode "20201220") (js2-refactor "0.9.0") (rjsx-mode "0.5.0") (tide "4.0.2") (web-mode "17"))
 ;; Keywords: files, tools
 ;; URL: https://github.com/thefrontside/frontmacs
@@ -34,7 +34,7 @@
 ;; Enter `frontside-javascript'.  The goal is simple: any JavaScript
 ;; project you care to download you should just work straight away, no
 ;; matter if it contains TypeScript, React, Node, ES6, Deno, or
-;; whatever; now and going forward.   By work, it means it should:
+;; whatever; now and going forward.  By work, it means it should:
 ;;
 ;;   1. Be able to understand the syntax as defined by the project
 ;;      itself, not a global concept of JavaScript syntax.
@@ -198,6 +198,10 @@ to enable refactoring."
   ;; buffers find `node_modules/.bin/eslint' before any other
   ;; executable in their `exec-path'
   (add-hook 'prog-mode-hook #'add-node-modules-path))
+
+;; Make it so that you only need to say `(use-package frontside-javascript)`
+;;;###autoload
+(setq use-package--frontside-javascript--pre-config-hook #'frontside-javascript)
 
 (provide 'frontside-javascript)
 ;;; frontside-javascript.el ends here

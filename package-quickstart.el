@@ -18972,16 +18972,18 @@ shadow backends that come after it.  Recommended usages:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210206.2008/frontside-javascript-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210514.28/frontside-javascript-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210206.2008/frontside-javascript-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210514.28/frontside-javascript-autoloads.el") (car load-path))))
 
 
 
 (autoload 'frontside-javascript "frontside-javascript" "\
 Make Emacs have your back no matter what JavaScript project you'refaced with.
 This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS development" t nil)
+
+(setq use-package--frontside-javascript--pre-config-hook #'frontside-javascript)
 
 
 )

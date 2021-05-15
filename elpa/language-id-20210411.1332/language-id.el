@@ -2,8 +2,8 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20210207.1829
-;; Package-Commit: 2c99ce29b86fc635649f4e89723912dc1cc4f36c
+;; Package-Version: 20210411.1332
+;; Package-Commit: 30a5bc267af7de167d0a835ead828016e6e7e14c
 ;; Version: 0.12
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -75,6 +75,9 @@
     ("ReScript"
      (reason-mode
       (language-id--file-name-extension ".res")))
+    ("ReScript"
+     (reason-mode
+      (language-id--file-name-extension ".resi")))
     ("Reason" reason-mode)
 
     ;; vue-html-mode is derived from html-mode.

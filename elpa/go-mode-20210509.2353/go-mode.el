@@ -8,8 +8,8 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20210201.1458
-;; Package-Commit: 49a538028e63dbe20f428c52d91f09b70b564626
+;; Package-Version: 20210509.2353
+;; Package-Commit: 34974346d1f74fa835d745514c9fe9afccce8dae
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -493,7 +493,7 @@ statements."
      (go--match-type-alias 2 font-lock-type-face)
 
      ;; Arrays/slices: []<type> | [123]<type> | [some.Const]<type> | [someConst]<type> | [...]<type>
-     (,(concat "\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
+     (,(concat "\\(?:^\\|[^[:word:][:multibyte:]]\\)\\[\\(?:[[:digit:]]+\\|" go-qualified-identifier-regexp "\\|" go-identifier-regexp "\\|\\.\\.\\.\\)?\\]" go-type-name-regexp) 1 font-lock-type-face)
 
      ;; Unary "!"
      ("\\(!\\)[^=]" 1 font-lock-negation-char-face)
@@ -502,7 +502,7 @@ statements."
      (,(concat go-type-name-regexp "{") 1 font-lock-type-face)
 
      ;; Map value type
-     (,(concat "\\_<map\\_>\\[[^]]+\\]" go-type-name-regexp) 1 font-lock-type-face)
+     (go--match-map-value 1 font-lock-type-face)
 
      ;; Map key type
      (,(concat "\\_<map\\_>\\[" go-type-name-regexp) 1 font-lock-type-face)
@@ -1725,6 +1725,17 @@ We are looking for the right-hand-side of the type alias"
                          (go--in-paren-with-prefix-p ?\( "type"))))
     found-match))
 
+
+(defconst go--map-value-re
+  (concat "\\_<map\\_>\\[\\(?:\\[[^]]*\\]\\)*[^]]*\\]" go-type-name-regexp))
+
+(defun go--match-map-value (end)
+  "Search for map value types."
+  (when (re-search-forward go--map-value-re end t)
+    ;; Move point to beginning of map value in case value itself is
+    ;; also a map (we will match it next iteration).
+    (goto-char (match-beginning 1))
+    t))
 
 (defconst go--label-re (concat "\\(" go-label-regexp "\\):"))
 

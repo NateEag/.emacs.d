@@ -12,6 +12,8 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl-macs))
+
 (require 'geiser-edit)
 (require 'geiser-autodoc)
 (require 'geiser-impl)
@@ -154,9 +156,9 @@ buffer.")
   (let* ((err (geiser-eval--retort-error ret))
          (key (geiser-eval--error-key err))
          (output (geiser-eval--retort-output ret))
+         (output (and (stringp output) (not (string= output "")) output))
          (impl geiser-impl--implementation)
          (module (geiser-eval--get-module))
-         (dbg nil)
          (img nil)
          (dir default-directory)
          (buffer (current-buffer))
@@ -168,21 +170,20 @@ buffer.")
     (geiser-debug--with-buffer
       (erase-buffer)
       (when dir (setq default-directory dir))
-      (unless after
-        (geiser-debug--display-error impl module nil what)
-        (goto-char (point-max))
-        (newline 2))
+      (unless after (insert what "\n\n"))
       (setq img (when (and res (not err)) (geiser-debug--insert-res res)))
-      (setq dbg (geiser-debug--display-error impl module key output))
+      (when (or err key output)
+        (or (geiser-debug--display-error impl module key output)
+            (insert "\n" (if key (format "%s\n" key) "") output "\n")))
       (when after
         (goto-char (point-max))
         (insert "\nExpression evaluated was:\n\n")
-        (geiser-debug--display-error impl module nil what))
-      (case geiser-debug-treat-ansi-colors
-        (colors (ansi-color-apply-on-region (point-min) (point)))
-        (remove (ansi-color-filter-region (point-min) (point))))
+        (insert what "\n"))
+      (cl-case geiser-debug-treat-ansi-colors
+        (colors (ansi-color-apply-on-region (point-min) (point-max)))
+        (remove (ansi-color-filter-region (point-min) (point-max))))
       (goto-char (point-min)))
-    (when (or img dbg)
+    (when (or img err output)
       (when (or geiser-debug-jump-to-debug-p geiser-debug-show-debug-p)
         (if geiser-debug-jump-to-debug-p
             (geiser-debug--pop-to-buffer)

@@ -45,11 +45,15 @@ Enable Geiser's mode (useful in Scheme buffers)." t)
 (autoload 'turn-off-geiser-mode "geiser-mode" "\
 Disable Geiser's mode (useful in Scheme buffers)." t)
 
-(autoload 'geiser-mode--maybe-activate "geiser-mode")
+(autoload 'geiser-activate-implementation "geiser-impl" "\
+Register the given implementation as active.")
 
-(autoload 'geiser-activate-implementation "geiser-impl")
+(autoload 'geiser-implementation-extension "geiser-impl" "\
+Register a file extension as handled by a given implementation.")
 
 (mapc (lambda (group) (custom-add-load group (symbol-name group)) (custom-add-load 'geiser (symbol-name group))) '(geiser geiser-repl geiser-autodoc geiser-doc geiser-debug geiser-faces geiser-mode geiser-image geiser-implementation geiser-xref))
+
+(autoload 'geiser-mode--maybe-activate "geiser-mode")
 
 (add-hook 'scheme-mode-hook 'geiser-mode--maybe-activate)
 
@@ -81,6 +85,13 @@ Disable Geiser's mode (useful in Scheme buffers)." t)
 ;;;### (autoloads nil "geiser-compile" "geiser-compile.el" (0 0 0
 ;;;;;;  0))
 ;;; Generated autoloads from geiser-compile.el
+
+(autoload 'geiser-add-to-load-path "geiser-compile" "\
+Add a new directory to running Scheme's load path.
+When called interactively, this function will ask for the path to
+add, defaulting to the current buffer's directory.
+
+\(fn PATH)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-compile" '("geiser-")))
 
@@ -146,6 +157,11 @@ Disable Geiser's mode (useful in Scheme buffers)." t)
 
 ;;;### (autoloads nil "geiser-impl" "geiser-impl.el" (0 0 0 0))
 ;;; Generated autoloads from geiser-impl.el
+
+(autoload 'geiser-impl--add-to-alist "geiser-impl" "\
+
+
+\(fn KIND WHAT IMPL &optional APPEND)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-impl" '("define-geiser-implementation" "geiser-" "with--geiser-implementation")))
 

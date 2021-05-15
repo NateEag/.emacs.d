@@ -18489,10 +18489,10 @@ Recalculate all blame information in the current buffer
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20210409.1554/geiser-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942/geiser-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20210409.1554/geiser-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942/geiser-autoloads.el") (car load-path))))
 
 
 
@@ -18532,11 +18532,15 @@ Enable Geiser's mode (useful in Scheme buffers)." t)
 (autoload 'turn-off-geiser-mode "geiser-mode" "\
 Disable Geiser's mode (useful in Scheme buffers)." t)
 
-(autoload 'geiser-mode--maybe-activate "geiser-mode")
+(autoload 'geiser-activate-implementation "geiser-impl" "\
+Register the given implementation as active.")
 
-(autoload 'geiser-activate-implementation "geiser-impl")
+(autoload 'geiser-implementation-extension "geiser-impl" "\
+Register a file extension as handled by a given implementation.")
 
 (mapc (lambda (group) (custom-add-load group (symbol-name group)) (custom-add-load 'geiser (symbol-name group))) '(geiser geiser-repl geiser-autodoc geiser-doc geiser-debug geiser-faces geiser-mode geiser-image geiser-implementation geiser-xref))
+
+(autoload 'geiser-mode--maybe-activate "geiser-mode")
 
 (add-hook 'scheme-mode-hook 'geiser-mode--maybe-activate)
 
@@ -18553,6 +18557,13 @@ Disable Geiser's mode (useful in Scheme buffers)." t)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-company" '("geiser-company--")))
 
 
+
+(autoload 'geiser-add-to-load-path "geiser-compile" "\
+Add a new directory to running Scheme's load path.
+When called interactively, this function will ask for the path to
+add, defaulting to the current buffer's directory.
+
+\(fn PATH)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-compile" '("geiser-")))
 
@@ -18589,6 +18600,11 @@ Disable Geiser's mode (useful in Scheme buffers)." t)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-image" '("geiser-")))
 
 
+
+(autoload 'geiser-impl--add-to-alist "geiser-impl" "\
+
+
+\(fn KIND WHAT IMPL &optional APPEND)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-impl" '("define-geiser-implementation" "geiser-" "with--geiser-implementation")))
 
@@ -23894,7 +23910,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210406.1356" "/Users/neagleson/.emacs.d/elpa/geiser-20210409.1554" "/Users/neagleson/.emacs.d/elpa/ghub-20210427.1239" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210429.134" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417" "/Users/neagleson/.emacs.d/elpa/magit-20210512.1949" "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210510.1517" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210512.1220" "/Users/neagleson/.emacs.d/elpa/evil-20210503.2034" "/Users/neagleson/.emacs.d/elpa/ivy-20210515.1303" "/Users/neagleson/.emacs.d/elpa/transient-20210426.2141" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210330.1544" "/Users/neagleson/.emacs.d/elpa/with-editor-20210427.1244" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210406.1356" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210427.1239" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210429.134" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-section-20210224.1417" "/Users/neagleson/.emacs.d/elpa/magit-20210512.1949" "/Users/neagleson/.emacs.d/elpa/prettier-20210313.1047" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210510.1517" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210512.1220" "/Users/neagleson/.emacs.d/elpa/evil-20210503.2034" "/Users/neagleson/.emacs.d/elpa/ivy-20210515.1303" "/Users/neagleson/.emacs.d/elpa/transient-20210426.2141" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210330.1544" "/Users/neagleson/.emacs.d/elpa/with-editor-20210427.1244" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

@@ -1,4 +1,4 @@
-This is geiser.info, produced by makeinfo version 6.5 from geiser.texi.
+This is geiser.info, produced by makeinfo version 6.7 from geiser.texi.
 
 This manual documents Geiser, an Emacs environment to hack in Scheme.
 
@@ -160,8 +160,8 @@ and so forth.  Although this is not an all-or-none proposition (Geiser
 can operate with just part of that functionality available), i initially
 concentrated in supporting those Schemes with the richest (to my
 knowledge) introspection capabilities, namely, Guile and Racket.  Later
-on, Dan Leslie added support for Chicken, and there's active work to add
-support for scsh.
+on, Dan Leslie added support for Chicken, and several other schemes
+followed suit.
 
 
 File: geiser.info,  Node: Showing off,  Prev: Modus operandi,  Up: Introduction
@@ -1769,44 +1769,49 @@ Node: Top907
 Node: Introduction3375
 Node: Modus operandi3709
 Ref: current-module4364
-Node: Showing off5837
-Node: Installation7115
-Node: Must needs7328
-Node: The quick and easy way8906
-Node: From the source's mouth10503
-Node: Friends11288
-Ref: paredit11562
-Node: The REPL12699
-Ref: quick-start12818
-Node: Starting the REPL13209
-Node: First aids17596
-Node: Switching context19429
-Node: Completion and error handling21354
-Ref: completion-caveat23062
-Node: Autodoc and friends24976
-Ref: repl-mod27046
-Node: Seeing is believing28052
-Node: Customization and tips29064
-Ref: choosing-impl29793
-Ref: active-implementations30028
-Ref: impl-binary30410
-Node: Between the parens34767
-Node: Activating Geiser35829
-Node: The source and the REPL38439
-Ref: repl-association39483
-Ref: repl-per-project42731
-Ref: switching-repl-buff43734
-Node: Documentation helpers45419
-Ref: doc-browser49687
-Node: To eval or not to eval52414
-Node: To err perchance to debug56553
-Node: Jumping around58915
-Node: Geiser writes for you60192
-Node: Cheat sheet62696
-Node: Scheme buffers63080
-Node: REPL67405
-Node: Documentation browser69998
-Node: No hacker is an island71066
-Node: Index74150
+Node: Showing off5829
+Node: Installation7107
+Node: Must needs7320
+Node: The quick and easy way8898
+Node: From the source's mouth10495
+Node: Friends11280
+Ref: paredit11554
+Node: The REPL12691
+Ref: quick-start12810
+Node: Starting the REPL13201
+Node: First aids17588
+Node: Switching context19421
+Node: Completion and error handling21346
+Ref: completion-caveat23054
+Node: Autodoc and friends24968
+Ref: repl-mod27038
+Node: Seeing is believing28044
+Node: Customization and tips29056
+Ref: choosing-impl29785
+Ref: active-implementations30020
+Ref: impl-binary30402
+Node: Between the parens34759
+Node: Activating Geiser35821
+Node: The source and the REPL38431
+Ref: repl-association39475
+Ref: repl-per-project42723
+Ref: switching-repl-buff43726
+Node: Documentation helpers45411
+Ref: doc-browser49679
+Node: To eval or not to eval52406
+Node: To err perchance to debug56545
+Node: Jumping around58907
+Node: Geiser writes for you60184
+Node: Cheat sheet62688
+Node: Scheme buffers63072
+Node: REPL67397
+Node: Documentation browser69990
+Node: No hacker is an island71058
+Node: Index74142
 
 End Tag Table
+
+
+Local Variables:
+coding: utf-8
+End:

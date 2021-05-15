@@ -7174,10 +7174,10 @@ See `show-eol-mode' for more information on Show-Eol mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20200814.435/reformatter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20210510.522/reformatter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reformatter-20200814.435/reformatter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reformatter-20210510.522/reformatter-autoloads.el") (car load-path))))
 
 
 

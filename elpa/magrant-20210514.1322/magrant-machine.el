@@ -225,7 +225,7 @@ This forces Vagrant to refresh its cache for each machine."
   "Transient for starting machines."
   :man-page "magrant-machine-up"
   [:description magrant-utils-generic-actions-heading
-                ("u" "Start" magrant-machine-generic-action-async)])
+                ("S" "Start (up)" magrant-machine-generic-action-async)])
 
 (magrant-utils-transient-define-prefix magrant-machine-halt ()
   "Transient for halting machines."
@@ -233,7 +233,7 @@ This forces Vagrant to refresh its cache for each machine."
   ["Tune arguments"
    ("-f" "Force" "-f")]
   [:description magrant-utils-generic-actions-heading
-                ("H" "Halt" magrant-machine-generic-action-async)])
+                ("O" "stOp (halt)" magrant-machine-generic-action-async)])
 
 (magrant-utils-transient-define-prefix magrant-machine-suspend ()
   "Transient for suspending machines."

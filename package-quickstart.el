@@ -12293,10 +12293,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magrant-20210328.956/magrant-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magrant-20210514.1322/magrant-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magrant-20210328.956/magrant-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magrant-20210514.1322/magrant-autoloads.el") (car load-path))))
 
 
 

@@ -1836,10 +1836,10 @@ Read a string using a pos-frame with given PROMPT and INITIAL-INPUT.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210408.2051/treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210513.1932/treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210408.2051/treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210513.1932/treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -2066,7 +2066,7 @@ A major mode for displaying the file system in a tree layout.
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mode" '("treemacs--")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-mode" '("treemacs-")))
 
 
 
@@ -2144,7 +2144,7 @@ Show a contextual right click menu based on click EVENT.
 
 (autoload 'treemacs--flatten&sort-imenu-index "treemacs-tag-follow-mode" "\
 Flatten current file's imenu index and sort it by tag position.
-The tags are sorted into the order in which they appear, reguardless of section
+The tags are sorted into the order in which they appear, regardless of section
 or nesting depth." nil nil)
 
 (defvar treemacs-tag-follow-mode nil "\
@@ -2166,23 +2166,23 @@ called from Lisp, also enable the mode if ARG is omitted or nil,
 and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This acts as more fine-grained alternative to `treemacs-follow-mode' and will
-thus disable `treemacs-follow-mode' on activation. When enabled treemacs will
+thus disable `treemacs-follow-mode' on activation.  When enabled treemacs will
 focus not only the file of the current buffer, but also the tag at point.
 
 The follow action is attached to Emacs' idle timer and will run
-`treemacs-tag-follow-delay' seconds of idle time. The delay value is not an
+`treemacs-tag-follow-delay' seconds of idle time.  The delay value is not an
 integer, meaning it accepts floating point values like 1.5.
 
-Every time a tag is followed a rescan of the imenu index is forced by
+Every time a tag is followed a re--scan of the imenu index is forced by
 temporarily setting `imenu-auto-rescan' to t (though a cache is applied as long
-as the buffer is unmodified). This is necessary to assure that creation or
+as the buffer is unmodified).  This is necessary to assure that creation or
 deletion of tags does not lead to errors and guarantees an always up-to-date tag
 view.
 
 Note that in order to move to a tag in treemacs the treemacs buffer's window
-needs to be temporarily selected, which will reset `blink-cursor-mode's timer if
-it is enabled. This will result in the cursor blinking seemingly pausing for a
-short time and giving the appereance of the tag follow action lasting much
+needs to be temporarily selected, which will reset blink-cursor-mode's timer if
+it is enabled.  This will result in the cursor blinking seemingly pausing for a
+short time and giving the appearance of the tag follow action lasting much
 longer than it really does.
 
 \(fn &optional ARG)" t nil)

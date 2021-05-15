@@ -5,9 +5,9 @@
 ;; Author: Feng Shu <tumashu@163.com>
 ;; Maintainer: Feng Shu <tumashu@163.com>
 ;; URL: https://github.com/tumashu/posframe
-;; Package-Version: 20210409.627
-;; Package-Commit: f8b099069fad4b0a4d8c6a047a6676c2a60008c1
-;; Version: 0.9.0
+;; Package-Version: 20210423.220
+;; Package-Commit: 739d8fd1081bdd0d20dee9e437d64df58747b871
+;; Version: 1.0.2
 ;; Keywords: convenience, tooltip
 ;; Package-Requires: ((emacs "26"))
 
@@ -137,15 +137,6 @@
 ;;     (or (plist-get info arg-name) value)))
 ;; #+END_EXAMPLE
 
-;; *** Some packages which use posframe
-;; 1. [[https://github.com/yanghaoxie/which-key-posframe][which-key-posframe]]
-;; 2. [[https://github.com/conao3/ddskk-posframe.el][ddskk-posframe]]
-;; 3. [[https://github.com/tumashu/pyim][pyim]]
-;; 4. [[https://github.com/tumashu/ivy-posframe][ivy-posframe]]
-;; 5. [[https://github.com/tumashu/company-posframe][company-posframe]]
-;; 6. [[https://github.com/randomwangran/org-marginalia-posframe][org-marginalia-posframe]]
-;; 7. ...
-
 ;;; Code:
 ;; * posframe's code                         :CODE:
 (require 'cl-lib)
@@ -156,7 +147,11 @@
   :prefix "posframe-")
 
 (defcustom posframe-mouse-banish (not (eq system-type 'darwin))
-  "Mouse will be moved to (0 , 0) when it is non-nil.
+  "Mouse banish.
+
+when this variable is t, mouse will be moved to (0 , 0).
+when this variable is a cons like (x . y), mouse will be moved
+to (x , y).
 
 This option is used to solve the problem of child frame getting
 focus, with the help of `posframe--redirect-posframe-focus',
@@ -269,8 +264,7 @@ This posframe's buffer is BUFFER-OR-NAME."
         (buffer (get-buffer-create buffer-or-name))
         (after-make-frame-functions nil)
         (x-gtk-resize-child-frames posframe-gtk-resize-child-frames)
-        (args (list parent-frame
-                    foreground-color
+        (args (list foreground-color
                     background-color
                     right-fringe
                     left-fringe
@@ -504,6 +498,9 @@ exist key in 'info'.
 This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
 or a name of a (possibly nonexistent) buffer.
 
+buffer name can prefix with space, for example ' *mybuffer*', so
+the buffer name will hide for ibuffer and list-buffers.
+
 (5) NO-PROPERTIES
 
 If NO-PROPERTIES is non-nil, The STRING's properties will
@@ -661,7 +658,8 @@ You can use `posframe-delete-all' to delete all posframes."
          (parent-frame-height (frame-pixel-height parent-frame))
          (ref-position
           (when (functionp refposhandler)
-            (funcall refposhandler parent-frame)))
+            (ignore-errors
+              (funcall refposhandler parent-frame))))
          (font-width (default-font-width))
          (font-height (with-current-buffer (window-buffer parent-window)
                         (posframe--get-font-height position)))
@@ -756,7 +754,9 @@ You can use `posframe-delete-all' to delete all posframes."
        posframe refresh height min-height width min-width)
 
       ;; Make sure not hide buffer's content for scroll down.
-      (set-window-point (frame-root-window posframe--frame) 0)
+      (let ((window (frame-root-window posframe--frame)))
+        (when (window-live-p window)
+          (set-window-point window 0)))
 
       ;; Force raise the current posframe.
       (raise-frame posframe--frame)
@@ -808,12 +808,16 @@ is non-nil.
 
 FIXME: This is a hacky fix for the mouse focus problem, which like:
 https://github.com/tumashu/posframe/issues/4#issuecomment-357514918"
-  (when (and posframe-mouse-banish
-             ;; Do not banish mouse when posframe can accept focus.
-             ;; See posframe-show's accept-focus argument.
-             (frame-parameter posframe 'no-accept-focus)
-             (not (equal (cdr (mouse-position)) '(0 . 0))))
-    (set-mouse-position parent-frame 0 0)))
+  (let ((x-y (pcase posframe-mouse-banish
+               (`(,x . ,y) (cons x y))
+               ('nil nil)
+               (_ '(0 . 0)))))
+    (when (and x-y
+               ;; Do not banish mouse when posframe can accept focus.
+               ;; See posframe-show's accept-focus argument.
+               (frame-parameter posframe 'no-accept-focus)
+               (not (equal (cdr (mouse-position)) (cons (car x-y) (cdr x-y)))))
+      (set-mouse-position parent-frame (car x-y) (cdr x-y)))))
 
 (defun posframe--insert-string (string no-properties)
   "Insert STRING to current buffer.
@@ -981,7 +985,10 @@ Note: This function is called in `post-command-hook'."
 
 (defun posframe-delete (buffer-or-name)
   "Delete posframe pertaining to BUFFER-OR-NAME and kill the buffer.
-BUFFER-OR-NAME can be a buffer or a buffer name."
+BUFFER-OR-NAME can be a buffer or a buffer name.
+
+This function is not commonly used, for delete and recreate
+posframe is very very slowly, `posframe-hide' is more useful."
   (posframe-delete-frame buffer-or-name)
   (posframe--kill-buffer buffer-or-name))
 
@@ -1086,6 +1093,7 @@ of `posframe-show'."
                                           &key
                                           position
                                           poshandler
+                                          refposhandler
                                           x-pixel-offset
                                           y-pixel-offset)
   "Return a info list of CHILD-FRAME, which can be used as poshandler's info argument.
@@ -1125,7 +1133,11 @@ poshandler easily used for other purposes."
          (header-line-height (window-header-line-height parent-window))
          (tab-line-height (if (functionp 'window-tab-line-height)
                               (window-tab-line-height parent-window)
-                            0)))
+                            0))
+         (ref-position
+          (when (functionp refposhandler)
+            (ignore-errors
+              (funcall refposhandler parent-frame)))))
     (list :position position
           :position-info position-info
           :poshandler poshandler
@@ -1138,6 +1150,7 @@ poshandler easily used for other purposes."
           :parent-frame parent-frame
           :parent-frame-width parent-frame-width
           :parent-frame-height parent-frame-height
+          :ref-position ref-position
           :parent-window parent-window
           :parent-window-top parent-window-top
           :parent-window-left parent-window-left
@@ -1417,11 +1430,10 @@ Get the position of parent frame (current frame) with the help of
 xwininfo."
   (when (executable-find "xwininfo")
     (with-temp-buffer
-      (let ((case-fold-search nil)
-            (args (format "xwininfo -display %s -id %s"
-		          (frame-parameter frame 'display)
-		          (frame-parameter frame 'window-id))))
-        (call-process shell-file-name nil t nil shell-command-switch args)
+      (let ((case-fold-search nil))
+        (call-process "xwininfo" nil t nil
+                      "-display" (frame-parameter frame 'display)
+                      "-id"  (frame-parameter frame 'window-id))
         (goto-char (point-min))
         (search-forward "Absolute upper-left")
         (let ((x (string-to-number

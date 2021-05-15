@@ -1600,10 +1600,10 @@ result of `defhydra'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210409.627/posframe-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210423.220/posframe-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210409.627/posframe-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210423.220/posframe-autoloads.el") (car load-path))))
 
 
 
@@ -1692,6 +1692,9 @@ exist key in 'info'.
 
 This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
 or a name of a (possibly nonexistent) buffer.
+
+buffer name can prefix with space, for example ' *mybuffer*', so
+the buffer name will hide for ibuffer and list-buffers.
 
 \(5) NO-PROPERTIES
 

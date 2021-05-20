@@ -20368,10 +20368,10 @@ those settings for displaying recorded information instead of the defaults.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-collection-20210515.1420/evil-collection-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-collection-20210519.524/evil-collection-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-collection-20210515.1420/evil-collection-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-collection-20210519.524/evil-collection-autoloads.el") (car load-path))))
 
 
 

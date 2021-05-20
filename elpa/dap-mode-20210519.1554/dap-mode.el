@@ -1632,6 +1632,8 @@ before starting the debug process."
             (dap--send-message
              (dap--make-request request (-> launch-args
                                             (cl-copy-list)
+                                            (dap--plist-delete :dap-compilation)
+                                            (dap--plist-delete :dap-compilation-dir)
                                             (dap--plist-delete :cleanup-function)
                                             (dap--plist-delete :startup-function)
                                             (dap--plist-delete :dap-server-path)
@@ -1685,23 +1687,26 @@ be used to compile the project, spin up docker, ...."
                (if (functionp launch-args)
                    (funcall launch-args #'dap-start-debugging-noexpand)
                  (dap-start-debugging-noexpand launch-args)))))
-    (-if-let ((&plist :dap-compilation compilation) launch-args)
-        (progn
-          (cl-remf launch-args :dap-compilation)
-          (with-current-buffer (compilation-start compilation t (lambda (&rest _)
-                                                                  "*DAP compilation*"))
+    (-if-let ((&plist :dap-compilation) launch-args)
+        (let ((default-directory (or (plist-get :dap-compilation-dir launch-args)
+                                     (lsp-workspace-root)
+                                     default-directory)))
+          (with-current-buffer (compilation-start dap-compilation t (lambda (&rest _)
+                                                                      "*DAP compilation*"))
             (let (window)
-              (add-hook 'compilation-finish-functions
-                        (lambda (buf status &rest _)
-                          (if (string= "finished\n" status)
-                              (progn
-                                (when (and (not dap-debug-compilation-keep)
-                                           (window-live-p window)
-                                           (eq buf (window-buffer window)))
-                                  (delete-window window))
-                                (funcall cb))
-                            (lsp--error "Compilation step failed"))))
-              (setq window (display-buffer (current-buffer))))))
+              (cl-labels ((cf (buf status &rest _)
+                              (with-current-buffer buf
+                                (remove-hook 'compilation-finish-functions #'cf t)
+                                (if (string= "finished\n" status)
+                                    (progn
+                                      (when (and (not dap-debug-compilation-keep)
+                                                 (window-live-p window)
+                                                 (eq buf (window-buffer window)))
+                                        (delete-window window))
+                                      (funcall cb))
+                                  (lsp--error "Compilation step failed")))))
+                (add-hook 'compilation-finish-functions #'cf nil t)
+                (setq window (display-buffer (current-buffer)))))))
       (funcall cb))))
 
 (defun dap-debug-edit-template (&optional debug-args)

@@ -5,27 +5,27 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/auto-compile
 ;; Keywords: compile, convenience, lisp
-;; Package-Version: 20210503.2047
-;; Package-Commit: ec4c700f5a7d6af6992b50d7b309c8d9a7c07a7c
+;; Package-Version: 20210518.1020
+;; Package-Commit: 3af0b02393ca4f207f1e454161f7bd8a747f3051
 
 ;; Package-Requires: ((emacs "25.1") (packed "3.0.3"))
 
-;; This file is not part of GNU Emacs.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
-
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; For a full copy of the GNU General Public License
 ;; see <http://www.gnu.org/licenses/>.
 
-;; SPDX-License-Identifier: GPL-3.0-or-later
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -82,8 +82,7 @@
 ;; t, e.g. by adding "-*- no-byte-compile: t -*-" (without the quotes)
 ;; at the end of the very first line.  That way all user files benefit
 ;; from the protection offered by `load-prefer-newer' and the modes
-;; that are defined here, otherwise `~/.emacs.d/init.el' is the only
-;; exception.
+;; that are defined here, otherwise `init.el' is the only exception.
 
 ;; If you are using Emacs 27 or later, then these settings should be
 ;; placed in `early-init.el', which should never be compiled:

@@ -1,4 +1,4 @@
-;;; php-mode.el --- Major mode for editing PHP code
+;;; php-mode.el --- Major mode for editing PHP code  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2020  Friends of Emacs-PHP development
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004 Turadg Aleahmad
@@ -56,9 +56,9 @@
 (require 'php)
 (require 'php-face)
 (require 'cc-mode)
-(require 'cc-langs)
 
 (eval-when-compile
+  (require 'cc-langs)
   (require 'cc-fonts))
 
 ;; Boilerplate from other `cc-mode' derived modes. See
@@ -72,41 +72,18 @@
 (require 'speedbar)
 (require 'imenu)
 (require 'package)
-(require 'nadvice nil t)
-
-(require 'cl-lib)
+(require 'nadvice)
 (require 'mode-local)
 (require 'php-project)
 
 (eval-when-compile
+  (require 'rx)
+  (require 'cl-lib)
   (require 'regexp-opt)
   (defvar add-log-current-defun-header-regexp)
   (defvar add-log-current-defun-function)
   (defvar c-vsemi-status-unknown-p)
   (defvar syntax-propertize-via-font-lock))
-
-;; Work around emacs bug#18845, cc-mode expects cl to be loaded
-;; while php-mode only uses cl-lib (without compatibility aliases)
-(eval-and-compile
-  (when (and (= emacs-major-version 24) (>= emacs-minor-version 4))
-    (require 'cl)))
-
-;; Work around https://github.com/emacs-php/php-mode/issues/310.
-;;
-;; In emacs 24.4 and 24.5, lines after functions with a return type
-;; are incorrectly analyzed as member-init-cont.
-;;
-;; Before emacs 24.4, c member initializers are not supported this
-;; way. Starting from emacs 25.1, cc-mode only detects member
-;; initializers when the major mode is c++-mode.
-(eval-and-compile
-  (if (and (= emacs-major-version 24) (or (= emacs-minor-version 4)
-                                          (= emacs-minor-version 5)))
-      (defun c-back-over-member-initializers ()
-        ;; Override of cc-engine.el, cc-mode in emacs 24.4 and 24.5 are too
-        ;; optimistic in recognizing c member initializers. Since we don't
-        ;; need it in php-mode, just return nil.
-        nil)))
 
 (autoload 'php-mode-debug "php-mode-debug"
   "Display informations useful for debugging PHP Mode." t)
@@ -192,12 +169,9 @@ enabled."
   :type 'boolean)
 
 ;;;###autoload
-(if (version< emacs-version "24.4")
-    (dolist (i '("php" "php5" "php7"))
-      (add-to-list 'interpreter-mode-alist (cons i 'php-mode)))
-  (add-to-list 'interpreter-mode-alist
-               ;; Match php, php-3, php5, php7, php5.5, php-7.0.1, etc.
-               (cons "php\\(?:-?[3457]\\(?:\\.[0-9]+\\)*\\)?" 'php-mode)))
+(add-to-list 'interpreter-mode-alist
+             ;; Match php, php-3, php5, php7, php5.5, php-7.0.1, etc.
+             (cons "php\\(?:-?[34578]\\(?:\\.[0-9]+\\)*\\)?" 'php-mode))
 
 (defcustom php-mode-hook nil
   "List of functions to be executed on entry to `php-mode'."
@@ -409,8 +383,7 @@ In that case set to `NIL'."
   php "\\s-*\\(<\\?(=\\|\\sw+)\\)")
 
 (c-lang-defconst c-identifier-ops
-  php '(
-        (left-assoc "\\" "::" "->")
+  php '((left-assoc "\\" "::" "->")
         (prefix "\\" "::")))
 
 (c-lang-defconst c-operators
@@ -478,7 +451,7 @@ contains another declaration level that should be considered a class."
   "Keywords introducing declarations where the following block (if
 any) is a brace list.
 
-PHP does not have an \"enum\"-like keyword."
+PHP does not have an C-like \"enum\" keyword."
   php nil)
 
 (c-lang-defconst c-typeless-decl-kwds
@@ -523,8 +496,7 @@ PHP does not have an \"enum\"-like keyword."
 (c-lang-defconst c-other-kwds
   "Keywords not accounted for by any other `*-kwds' language constant."
   php
-  '(
-    "__halt_compiler"
+  '("__halt_compiler"
     "and"
     "array"
     "as"
@@ -1022,8 +994,7 @@ this ^ lineup"
       ;; turn call this to be called again.
       (push pair php-mode--propertize-extend-region-current)
       (unwind-protect
-          (let ((new-start)
-                (new-end))
+          (let (new-start new-end)
             (goto-char start)
             (when (re-search-backward php-heredoc-start-re nil t)
               (let ((maybe (point)))
@@ -1107,8 +1078,7 @@ After setting the stylevars run hooks according to STYLENAME
 (defun php-mode--disable-delay-set-style (&rest args)
   "Disable php-mode-set-style-delay on after hook.  `ARGS' be ignore."
   (setq php-mode--delayed-set-style nil)
-  (when (fboundp 'advice-remove)
-    (advice-remove #'php-mode--disable-delay-set-style #'c-set-style)))
+  (advice-remove #'php-mode--disable-delay-set-style #'c-set-style))
 
 (defun php-mode-set-style-delay ()
   "Set the current `php-mode' buffer to use the style by custom or local variables."
@@ -1196,8 +1166,7 @@ After setting the stylevars run hooks according to STYLENAME
       (progn
         (add-hook 'hack-local-variables-hook #'php-mode-set-style-delay t t)
         (setq php-mode--delayed-set-style t)
-        (when (fboundp 'advice-add)
-          (advice-add #'c-set-style :after #'php-mode--disable-delay-set-style '(local))))
+        (advice-add #'c-set-style :after #'php-mode--disable-delay-set-style '(local)))
     (let ((php-mode-enable-backup-style-variables nil))
       (php-set-style (symbol-name php-mode-coding-style))))
 
@@ -1229,7 +1198,8 @@ After setting the stylevars run hooks according to STYLENAME
 
   (when (fboundp 'c-looking-at-or-maybe-in-bracelist)
     (advice-add #'c-looking-at-or-maybe-in-bracelist
-                :override 'php-c-looking-at-or-maybe-in-bracelist))
+                :override 'php-c-looking-at-or-maybe-in-bracelist '(local)))
+  (advice-add #'fixup-whitespace :after #'php-mode--fixup-whitespace-after '(local))
 
   (when (>= emacs-major-version 25)
     (with-silent-modifications
@@ -1469,7 +1439,9 @@ for \\[find-tag] (which see)."
 
      ;; Logical operators (and, or, &&, ...)
      ;; Not operator (!) is defined in "before cc-mode" section above.
-     ("\\(&&\\|||\\)" 1 'php-logical-op)))
+     ("\\(&&\\|||\\)" 1 'php-logical-op)
+     ;; string interpolation ("$var, ${var}, {$var}")
+     (php-mode--string-interpolated-variable-font-lock-find 0 nil)))
   "Detailed highlighting for PHP Mode.")
 
 (defvar php-font-lock-keywords php-font-lock-keywords-3
@@ -1501,36 +1473,24 @@ The output will appear in the buffer *PHP*."
 (defconst php-string-interpolated-variable-regexp
   "{\\$[^}\n\\\\]*\\(?:\\\\.[^}\n\\\\]*\\)*}\\|\\${\\sw+}\\|\\$\\sw+")
 
-(defun php-string-intepolated-variable-font-lock-find (limit)
-  (while (re-search-forward php-string-interpolated-variable-regexp limit t)
-    (let ((quoted-stuff (nth 3 (syntax-ppss))))
-      (when (and quoted-stuff (member quoted-stuff '(?\" ?`)))
-        (put-text-property (match-beginning 0) (match-end 0)
-                           'face 'php-variable-name))))
+(defun php-mode--string-interpolated-variable-font-lock-find (limit)
+  "Apply text-property to LIMIT for string interpolation by font-lock."
+  (let (quoted-stuff)
+    (while (re-search-forward php-string-interpolated-variable-regexp limit t)
+      (setq quoted-stuff (php-in-string-p))
+      (when (or (eq ?\" quoted-stuff) (eq ?` quoted-stuff))
+        (put-text-property (match-beginning 0) (match-end 0) 'face 'php-variable-name))))
   nil)
-
-(eval-after-load 'php-mode
-  '(progn
-     (font-lock-add-keywords
-      'php-mode
-      `((php-string-intepolated-variable-font-lock-find))
-      'append)))
 
-
 ;;; Correct the behavior of `delete-indentation' by modifying the
 ;;; logic of `fixup-whitespace'.
-(defadvice fixup-whitespace (after php-mode-fixup-whitespace)
+(defun php-mode--fixup-whitespace-after ()
   "Remove whitespace before certain characters in PHP Mode."
-  (let* ((no-behind-space ";\\|,\\|->\\|::")
-         (no-front-space "->\\|::"))
-    (when (and (eq major-mode 'php-mode)
-               (or (looking-at-p (concat " \\(" no-behind-space "\\)"))
-                   (save-excursion
-                     (forward-char -2)
-                     (looking-at-p no-front-space))))
-      (delete-char 1))))
-
-(ad-activate 'fixup-whitespace)
+  (when (or (looking-at-p " \\(?:;\\|,\\|->\\|::\\)")
+            (save-excursion
+              (forward-char -2)
+              (looking-at-p "->\\|::")))
+    (delete-char 1)))
 
 ;;;###autoload
 (progn

@@ -18673,10 +18673,10 @@ Any path found is added to the `exec-path'." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/company-20210513.1853/company-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/company-20210516.211/company-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/company-20210513.1853/company-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/company-20210516.211/company-autoloads.el") (car load-path))))
 
 
 

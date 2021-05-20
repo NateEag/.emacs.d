@@ -20475,10 +20475,10 @@ ARGS is a list of extra command line arguments to pass to Emacs.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/envrc-20210207.810/envrc-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/envrc-20210516.2143/envrc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/envrc-20210207.810/envrc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/envrc-20210516.2143/envrc-autoloads.el") (car load-path))))
 
 
 

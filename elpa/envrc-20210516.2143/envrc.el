@@ -4,10 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
-;; Package-Commit: 110a221f8205655a31fa51bffd45e1e9da056ffc
+;; Package-Commit: 8a9a142cf9d35e62a70d9d100a946f78fe0b066a
 ;; Homepage: https://github.com/purcell/envrc
 ;; Package-Requires: ((seq "2") (emacs "24.4") (inheritenv "0.1"))
-;; Package-Version: 20210207.810
+;; Package-Version: 20210516.2143
 ;; Package-X-Original-Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -77,12 +77,25 @@
 Messages are written into the *envrc-debug* buffer."
   :type 'boolean)
 
-(defcustom envrc--lighter '(:eval (envrc--lighter))
+(define-obsolete-variable-alias 'envrc--lighter 'envrc-lighter "2021-05-17")
+
+(defcustom envrc-lighter '(:eval (envrc--lighter))
   "The mode line lighter for `envrc-mode'.
 You can set this to nil to disable the lighter."
   :type 'sexp)
+(put 'envrc-lighter 'risky-local-variable t)
 
-(put 'envrc--lighter 'risky-local-variable t)
+(defcustom envrc-none-lighter '(" envrc[" (:propertize "none" face envrc-mode-line-none-face) "]")
+  "Lighter spec used by the default `envrc-lighter' when envrc is inactive."
+  :type 'sexp)
+
+(defcustom envrc-on-lighter '(" envrc[" (:propertize "on" face envrc-mode-line-on-face) "]")
+  "Lighter spec used by the default `envrc-lighter' when envrc is on."
+  :type 'sexp)
+
+(defcustom envrc-error-lighter '(" envrc[" (:propertize "error" face envrc-mode-line-error-face) "]")
+  "Lighter spec used by the default `envrc-lighter' when envrc has errored."
+  :type 'sexp)
 
 (defcustom envrc-command-map
   (let ((map (make-sparse-keymap)))
@@ -105,7 +118,7 @@ e.g. (define-key envrc-mode-map (kbd \"C-c e\") 'envrc-command-map)"
 (define-minor-mode envrc-mode
   "A local minor mode in which env vars are set by direnv."
   :init-value nil
-  :lighter envrc--lighter
+  :lighter envrc-lighter
   :keymap envrc-mode-map
   (if envrc-mode
       (envrc--update)
@@ -114,7 +127,7 @@ e.g. (define-key envrc-mode-map (kbd \"C-c e\") 'envrc-command-map)"
 ;;;###autoload
 (define-globalized-minor-mode envrc-global-mode envrc-mode
   (lambda () (unless (or (minibufferp) (file-remote-p default-directory))
-          (envrc-mode 1))))
+               (envrc-mode 1))))
 
 (defface envrc-mode-line-on-face '((t :inherit success))
   "Face used in mode line to indicate that direnv is in effect.")
@@ -140,14 +153,10 @@ One of '(none on error).")
 
 (defun envrc--lighter ()
   "Return a colourised version of `envrc--status' for use in the mode line."
-  `(" env["
-    (:propertize ,(symbol-name envrc--status)
-                 face
-                 ,(pcase envrc--status
-                    (`on 'envrc-mode-line-on-face)
-                    (`error 'envrc-mode-line-error-face)
-                    (`none 'envrc-mode-line-none-face)))
-    "]"))
+  (pcase envrc--status
+    (`on envrc-on-lighter)
+    (`error envrc-error-lighter)
+    (`none envrc-none-lighter)))
 
 (defun envrc--find-env-dir ()
   "Return the envrc directory for the current buffer, if any.
@@ -172,19 +181,19 @@ called `cd'"
 All envrc.el-managed buffers with this env will have their
 environments updated."
   (let ((env-dir (envrc--find-env-dir)))
-    ;; TODO: if no env-dir?
-    (when env-dir
-      (let* ((cache-key (envrc--cache-key env-dir process-environment))
-             (result (pcase (gethash cache-key envrc--cache 'missing)
-                       (`missing (let ((calculated (envrc--export env-dir)))
-                                   (puthash cache-key calculated envrc--cache)
-                                   calculated))
-                       (cached cached))))
-        (envrc--apply (current-buffer) result)
-        ;; We assume direnv and envrc's use of it is idempotent, and
-        ;; add a cache entry for the new process-environment on that
-        ;; basis.
-        (puthash (envrc--cache-key env-dir process-environment) result envrc--cache)))))
+    (if env-dir
+        (let* ((cache-key (envrc--cache-key env-dir process-environment))
+               (result (pcase (gethash cache-key envrc--cache 'missing)
+                         (`missing (let ((calculated (envrc--export env-dir)))
+                                     (puthash cache-key calculated envrc--cache)
+                                     calculated))
+                         (cached cached))))
+          (envrc--apply (current-buffer) result)
+          ;; We assume direnv and envrc's use of it is idempotent, and
+          ;; add a cache entry for the new process-environment on that
+          ;; basis.
+          (puthash (envrc--cache-key env-dir process-environment) result envrc--cache))
+      (envrc--apply (current-buffer) 'none))))
 
 (defmacro envrc--at-end-of-special-buffer (name &rest body)
   "At the end of `special-mode' buffer NAME, execute BODY.

@@ -18972,10 +18972,10 @@ shadow backends that come after it.  Recommended usages:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210514.28/frontside-javascript-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210515.1811/frontside-javascript-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210514.28/frontside-javascript-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210515.1811/frontside-javascript-autoloads.el") (car load-path))))
 
 
 

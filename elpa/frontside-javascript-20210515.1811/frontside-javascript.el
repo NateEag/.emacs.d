@@ -5,8 +5,8 @@
 
 ;; Author: Frontside Engineering <engineering@frontside.com>
 ;; Version: 1.0.0
-;; Package-Version: 20210514.28
-;; Package-Commit: f3e5c610a719ce28d99950087f0e6046712dd430
+;; Package-Version: 20210515.1811
+;; Package-Commit: f11fea0cf3b92eddf1d083e0ce1abfc396f06631
 ;; Package-Requires: ((emacs "25.1") (add-node-modules-path "1.2.0") (company "0.9.2") (flycheck "20201228.2104") (js2-mode "20201220") (js2-refactor "0.9.0") (rjsx-mode "0.5.0") (tide "4.0.2") (web-mode "17"))
 ;; Keywords: files, tools
 ;; URL: https://github.com/thefrontside/frontmacs
@@ -74,6 +74,9 @@ This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS devel
 (defun frontside-javascript--javascript()
   "Setup for working with JavaScript."
 
+  ;; 2 space tab width
+  (custom-set-default 'js-indent-level 2)
+  (custom-set-default 'js2-basic-offset 2)
 
   ;; Use js2r-refactor-mode which implies using js2-mode.
   ;; see https://github.com/magnars/js2-refactor.el

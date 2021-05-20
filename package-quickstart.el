@@ -15850,10 +15850,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ivy-20210407.856/lsp-ivy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-ivy-20210518.2034/lsp-ivy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ivy-20210407.856/lsp-ivy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-ivy-20210518.2034/lsp-ivy-autoloads.el") (car load-path))))
 
 
 

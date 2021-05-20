@@ -1064,15 +1064,20 @@ Run hooks `magit-pre-refresh-hook' and `magit-post-refresh-hook'."
       (when magit-refresh-verbose
         (message "Refreshing buffer `%s'..." (buffer-name)))
       (let* ((buffer (current-buffer))
-             (windows
-              (--mapcat (with-selected-window it
-                          (with-current-buffer buffer
-                            (when-let ((section (magit-current-section)))
-                              (list
-                               (nconc (list it section)
-                                      (magit-refresh-get-relative-position))))))
-                        (or (get-buffer-window-list buffer nil t)
-                            (list (selected-window))))))
+             (windows (cl-mapcan
+                       (lambda (window)
+                         (with-selected-window window
+                           (with-current-buffer buffer
+                             (when-let ((section (magit-current-section)))
+                               `(( ,window
+                                   ,section
+                                   ,@(magit-refresh-get-relative-position)))))))
+                       ;; If it qualifies, then the selected window
+                       ;; comes first, but we want to handle it last
+                       ;; so that its `magit-section-movement-hook'
+                       ;; run can override the effects of other runs.
+                       (or (nreverse (get-buffer-window-list buffer nil t))
+                           (list (selected-window))))))
         (deactivate-mark)
         (setq magit-section-highlight-overlays nil)
         (setq magit-section-highlighted-section nil)
@@ -1084,9 +1089,12 @@ Run hooks `magit-pre-refresh-hook' and `magit-post-refresh-hook'."
           (save-excursion
             (apply refresh (with-no-warnings magit-refresh-args))))
         (pcase-dolist (`(,window . ,args) windows)
-          (with-selected-window window
+          (if (eq buffer (window-buffer window))
+              (with-selected-window window
+                (apply #'magit-section-goto-successor args))
             (with-current-buffer buffer
-              (apply #'magit-section-goto-successor args))))
+              (let ((magit-section-movement-hook nil))
+                (apply #'magit-section-goto-successor args)))))
         (run-hooks 'magit-refresh-buffer-hook)
         (magit-section-update-highlight)
         (set-buffer-modified-p nil))

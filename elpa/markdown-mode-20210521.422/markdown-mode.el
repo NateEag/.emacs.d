@@ -7,8 +7,8 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.5-dev
-;; Package-Version: 20210504.249
-;; Package-Commit: 9977753eebe3f5cca7ab85b18a7c719fdb0b7654
+;; Package-Version: 20210521.422
+;; Package-Commit: de365c070c7deecbabfd5a7294bc8c2603d9ec22
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -9089,7 +9089,7 @@ This function assumes point is on a table."
             (indent (progn (looking-at "[ \t]*") (match-string 0)))
             ;; Split table in lines and save column format specifier
             (lines (mapcar (lambda (l)
-                             (if (string-match-p "\\`[ \t]*|[-:]" l)
+                             (if (string-match-p "\\`[ \t]*|[ \t]*[-:]" l)
                                  (progn (setq fmtspec (or fmtspec l)) nil) l))
                            (markdown--split-string (buffer-substring begin end) "\n")))
             ;; Split lines in cells

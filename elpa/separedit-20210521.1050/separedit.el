@@ -5,8 +5,8 @@
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
 ;; Version: 0.3.0
-;; Package-Version: 20210420.1527
-;; Package-Commit: 424b0f260a1bca20cd9359c42a0bc64a1a5e1928
+;; Package-Version: 20210521.1050
+;; Package-Commit: 900fdc33b647e92d0f464872da1b12d724de7d43
 ;; Package-Requires: ((emacs "25.1") (dash "2.18") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
@@ -273,7 +273,7 @@
 ;;   (let ((separedit-continue-fill-column t))
 ;;     (with-current-buffer (separedit-dwim)
 ;;       (fill-region (point-min) (point-max))
-;;       (execute-kbd-macro (kbd "C-c C-k")))))
+;;       (execute-kbd-macro (kbd "C-c C-c")))))
 ;; ```
 
 ;; ### Eval multiple-line sexp in comment
@@ -281,10 +281,11 @@
 ;; ``` elisp
 ;; (defun separedit/eval-last-sexp-in-comment ()
 ;;   (interactive)
-;;   (let ((separedit-default-mode 'emacs-lisp-mode))
+;;   (let ((separedit-default-mode 'emacs-lisp-mode)
+;;         (separedit-inhibit-edit-window-p t))
 ;;     (with-current-buffer (separedit)
-;;       (prog1 (call-interactively #'eval-last-sexp)
-;;         (execute-kbd-macro (kbd "C-c C-k"))))))
+;;       (unwind-protect (call-interactively #'eval-last-sexp)
+;;         (edit-indirect-abort)))))
 
 ;; (define-key emacs-lisp-mode-map (kbd "C-x C-e")
 ;;   (lambda ()
@@ -493,6 +494,19 @@ Example of a string block with indentation offset:
   "Functions called after the edit buffer is created."
   :group 'separedit
   :type 'hook)
+
+(defvar separedit-inhibit-edit-window-p nil
+  "Non-nil for open the edit buffer in background.
+
+For example:
+
+   (let ((separedit-inhibit-edit-window-p t))
+     (with-current-buffer (separedi)
+       (unwind-protect
+           (progn
+             ;; DO SOMETHING
+             )
+         (edit-indirect-abort))))")
 
 (defvar separedit--line-delimiter nil "Comment delimiter of each editing line.")
 
@@ -1738,7 +1752,8 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                                               (separedit--restore-escape ,strp))))
                                         edit-indirect-before-commit-hook))
                            (separedit--restore-point ,@point-info))))
-          (edit-indirect-region beg end 'display-buffer))
+          (edit-indirect-region beg end (unless separedit-inhibit-edit-window-p
+                                          'display-buffer)))
       (user-error "Not inside a edit block"))))
 
 (defun separedit-mark-region (beg end &optional edit-buffer-mode)

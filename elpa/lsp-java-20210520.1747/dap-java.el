@@ -75,10 +75,22 @@ If the port is taken, DAP will try the next port."
                  (const never)))
 
 (defcustom dap-java-hot-reload 'always
-  "How to perfor hot reload."
+  "How to perform hot reload."
   :group 'dap-java
   :type '(choice (const always)
                  (const never)))
+
+(defcustom dap-java-terminal 'internalConsole
+  "Default java terminal."
+  :group 'dap-java
+  :type '(choice (const 'integratedTerminal)
+                 (const 'externalTerminal)
+                 (const 'internalConsole)))
+
+(defcustom dap-java-args []
+  "Default java args."
+  :group 'dap-java
+  :type 'lsp-string-vector)
 
 (defcustom dap-java-test-additional-args ()
   "Additional arguments for JUnit standalone runner."
@@ -157,11 +169,11 @@ Please check whether the server is configured propertly"))
 
   (-let [(&plist :mainClass main-class :projectName project-name) conf]
     (-> conf
-        (dap--put-if-absent :args "")
+        (dap--put-if-absent :args dap-java-args)
         (dap--put-if-absent :cwd (lsp-java--get-root))
         (dap--put-if-absent :stopOnEntry :json-false)
         (dap--put-if-absent :host "localhost")
-        (dap--put-if-absent :console "internalConsole")
+        (dap--put-if-absent :console (symbol-name dap-java-terminal))
         (dap--put-if-absent :request "launch")
         (dap--put-if-absent :modulePaths (vector))
         (dap--put-if-absent :classPaths

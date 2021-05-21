@@ -27,6 +27,7 @@
 (require 'cc-mode)
 (require 'lsp-mode)
 (require 'markdown-mode)
+(require 'lsp-treemacs)
 (require 'dash)
 (require 'ht)
 (require 'f)
@@ -370,7 +371,7 @@ example 'java.awt.*' will hide all types from the awt packages."
 (declare-function helm-make-source "ext:helm-source")
 
 (lsp-register-custom-settings
- '(("java.codeGeneration.toString.limitElements" lsp-java-code-generation-to-string-limit-elements)
+ `(("java.codeGeneration.toString.limitElements" lsp-java-code-generation-to-string-limit-elements)
    ("java.codeGeneration.toString.listArrayContents" lsp-java-code-generation-to-string-list-array-contents t)
    ("java.codeGeneration.toString.skipNullValues" lsp-java-code-generation-to-string-skip-null-values t)
    ("java.codeGeneration.toString.codeStyle" lsp-java-code-generation-to-string-code-style)
@@ -430,7 +431,9 @@ example 'java.awt.*' will hide all types from the awt packages."
    ("java.import.gradle.offline.enabled" lsp-java-import-gradle-offline-enabled t)
    ("java.import.gradle.java.home" lsp-java-import-gradle-java-home)
    ("java.import.gradle.home" lsp-java-import-gradle-home)
-   ("java.project.resourceFilters" lsp-java-project-resource-filters)))
+   ("java.project.resourceFilters" lsp-java-project-resource-filters)
+   ("java.format.tabSize" c-basic-offset)
+   ("java.format.insertSpaces" ,(lambda () (not indent-tabs-mode)) t)))
 
 (defcustom lsp-java-inhibit-message t
   "If non-nil, inhibit java messages echo via `inhibit-message'."
@@ -438,7 +441,9 @@ example 'java.awt.*' will hide all types from the awt packages."
   :group 'lsp-mode)
 
 (defcustom lsp-java-import-gradle-home nil
-  "Use Gradle from the specified local installation directory or GRADLE_HOME if the Gradle wrapper is missing or disabled and no 'java.import.gradle.version' is specified."
+  "Use Gradle from the specified local installation directory or
+GRADLE_HOME if the Gradle wrapper is missing or disabled and no
+'java.import.gradle.version' is specified."
   :type 'string)
 
 (defcustom lsp-java-import-gradle-java-home nil
@@ -497,7 +502,8 @@ bracket-based smart selection."
   :type 'number)
 
 (defcustom lsp-java-sources-organize-imports-static-star-threshold 99
-  "Specifies the number of static imports added before a star-import declaration is used."
+  "Specifies the number of static imports added before a
+star-import declaration is used."
   :type 'number)
 
 (defun lsp-java--checksum? (candidate)
@@ -508,7 +514,8 @@ every element of it is of type list, else nil."
    (seq-every-p #'consp candidate)))
 
 (define-widget 'lsp-java-checksum-vector 'lazy
-  "A vector of zero or more elements, every element of which is a checksum object."
+  "A vector of zero or more elements, every element of which is a
+checksum object."
   :offset 4
   :tag "Checksum Vector"
   :type '(restricted-sexp
@@ -521,7 +528,8 @@ Sample value: [(:sha256 \"504b..\" :allowed t)]"
   :type 'lsp-java-checksum-vector)
 
 (defcustom lsp-java-project-import-on-first-time-startup "automatic"
-  "Specifies whether to import the Java projects, when opening the folder in Hybrid mode for the first time."
+  "Specifies whether to import the Java projects, when opening
+the folder in Hybrid mode for the first time."
   :type '(choice (:tag "disabled" "interactive" "automatic")))
 
 (defcustom lsp-java-project-import-hint t
@@ -1586,7 +1594,7 @@ current symbol."
                 :actions `(["Go to" lsp-treemacs-go-to])))
         nodes))
 
-(lsp-defun lsp-java--type-hierarchy-render ((item &as &TypeHierarchyItem :uri :range (&Range :start)) direction _ callback)
+(defun lsp-java--type-hierarchy-render (item direction _ callback)
   (lsp-request-async
    "workspace/executeCommand"
    (list :command "java.navigate.resolveTypeHierarchy"

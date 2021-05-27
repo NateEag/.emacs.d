@@ -413,6 +413,10 @@ The shell command lives in my dotfiles repo."
 (use-package evil-collection
   :init (evil-collection-init))
 
+(use-package evil-args
+  :config (define-key evil-inner-text-objects-map "a" 'evil-inner-arg)
+          (define-key evil-outer-text-objects-map "a" 'evil-outer-arg))
+
 (use-package scratch-comment
   :bind (:map lisp-interaction-mode-map
               ("C-j" . scratch-comment-eval-sexp)))

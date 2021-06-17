@@ -11,8 +11,8 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20200603.2216
-;; Package-Commit: 346d4d85fcf1f9517e9c4991c1efe68b4130f93a
+;; Package-Version: 20210615.2119
+;; Package-Commit: 3bd73794ee5a760118042584ef74e2b6fb2a1e06
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -394,6 +394,33 @@ Becomes this:
             (cond ((eq type 'block)
                    (evil-surround-block beg end char))
 
+				  ((and (eq type 'screen-line) evil-respect-visual-line-mode)
+                   (setq force-new-line
+                         (or force-new-line
+                             ;; Force newline if not invoked from an operator, e.g. visual line mode with VS)
+                             (evil-visual-state-p)
+                             ;; Or on multi-line operator surrounds (like 'ysj]')
+                             (/= (line-number-at-pos) (line-number-at-pos (1- end)))))
+
+                   (beginning-of-visual-line)
+				   (skip-syntax-forward " " (save-excursion (evil-end-of-visual-line) (point)))
+				   (backward-prefix-chars)
+                   (setq beg-pos (point))
+                   (insert open)
+                   (when force-new-line (newline-and-indent))
+                   (evil-end-of-visual-line)
+                   (if force-new-line
+                       (when (eobp)
+                         (newline-and-indent))
+                     (backward-char)
+                     (evil-end-of-visual-line)
+				     (skip-syntax-backward " " (save-excursion (evil-beginning-of-visual-line) (point))))
+                   (insert close)
+                   (when (or force-new-line
+                             (/= (line-number-at-pos) (line-number-at-pos beg-pos)))
+                     (indent-region beg-pos (point))
+                     (newline-and-indent)))
+
                   ((eq type 'line)
                    (setq force-new-line
                          (or force-new-line
@@ -418,6 +445,7 @@ Becomes this:
                              (/= (line-number-at-pos) (line-number-at-pos beg-pos)))
                      (indent-region beg-pos (point))
                      (newline-and-indent)))
+
 
                   (force-new-line
                    (insert open)

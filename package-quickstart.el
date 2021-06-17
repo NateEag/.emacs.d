@@ -5419,10 +5419,10 @@ for an advanced modal structural editing experience.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20200603.2216/evil-surround-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-surround-20200603.2216/evil-surround-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el") (car load-path))))
 
 
 

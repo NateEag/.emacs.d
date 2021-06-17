@@ -18255,10 +18255,10 @@ Major mode for code review
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210426.2132/gitconfig-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210528.1856/gitconfig-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210426.2132/gitconfig-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitconfig-mode-20210528.1856/gitconfig-mode-autoloads.el") (car load-path))))
 
 
 

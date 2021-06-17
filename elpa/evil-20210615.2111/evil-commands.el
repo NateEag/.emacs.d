@@ -766,7 +766,7 @@ Movement is restricted to the current line unless `evil-cross-lines' is non-nil.
         (visual (and evil-respect-visual-line-mode
                      visual-line-mode)))
     (setq evil-last-find (list #'evil-find-char char fwd))
-    (when fwd (forward-char))
+    (when fwd (evil-forward-char 1 evil-cross-lines))
     (let ((case-fold-search nil))
       (unless (prog1
                   (search-forward (char-to-string char)
@@ -1679,7 +1679,8 @@ of the block."
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
-      (evil-insert 1)))))
+      (evil-insert 1)))
+    (setq evil-this-register nil)))
 
 (evil-define-operator evil-change-line (beg end type register yank-handler)
   "Change to end of line, or change whole line if characterwise visual mode."
@@ -4635,11 +4636,28 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
+(evil-define-local-var evil--execute-normal-eol-pos nil
+  "Vim has special behaviour for executing in normal state at eol.
+This var stores the eol position, so it can be restored when necessary.")
+
+(defun evil--restore-repeat-hooks ()
+  "No insert-state repeat info is recorded after executing in normal state.
+Restore the disabled repeat hooks on insert-state exit."
+  (evil-repeat-stop)
+  (add-hook 'pre-command-hook 'evil-repeat-pre-hook)
+  (add-hook 'post-command-hook 'evil-repeat-post-hook)
+  (remove-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
+
+(defvar evil--execute-normal-return-state nil
+  "The state to return to after executing in normal state.")
+
 (defun evil-execute-in-normal-state ()
   "Execute the next command in Normal state."
   (interactive)
   (evil-delay '(not (memq this-command
-                          '(evil-execute-in-normal-state
+                          '(nil
+                            evil-execute-in-normal-state
+                            evil-replace-state
                             evil-use-register
                             digit-argument
                             negative-argument
@@ -4649,11 +4667,24 @@ if the previous state was Emacs state."
                             universal-argument-other-key)))
       `(progn
          (with-current-buffer ,(current-buffer)
-           (evil-change-state ',evil-state)
+           (when (and evil--execute-normal-eol-pos
+                      (= (point) (1- evil--execute-normal-eol-pos))
+                      (not (memq this-command '(evil-insert
+                                                evil-goto-mark))))
+             (forward-char))
+           (unless (eq 'replace evil-state)
+             (evil-change-state ',evil-state))
+           (when (eq 'insert evil-state)
+             (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
+             (remove-hook 'post-command-hook 'evil-repeat-post-hook)
+             (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
            (setq evil-move-cursor-back ',evil-move-cursor-back
                  evil-move-beyond-eol ',evil-move-beyond-eol)))
     'post-command-hook)
-  (setq evil-move-cursor-back nil)
+  (setq evil-insert-count nil
+        evil--execute-normal-return-state evil-state
+        evil--execute-normal-eol-pos (when (eolp) (point))
+        evil-move-cursor-back nil)
   (evil-normal-state)
   (setq evil-move-beyond-eol t)
   (evil-echo "Switched to Normal state for the next command ..."))

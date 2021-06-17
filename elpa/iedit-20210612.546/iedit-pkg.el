@@ -1,4 +1,4 @@
-(define-package "iedit" "20210402.854" "Edit multiple regions in the same way simultaneously." 'nil :commit "ff68c2065316aa5fb72662428f8d5812ec8da83a" :authors
+(define-package "iedit" "20210612.546" "Edit multiple regions in the same way simultaneously." 'nil :commit "3247f3029a4e309c71a5b066fa4299d4cbb79fbc" :authors
   '(("Victor Ren" . "victorhge@gmail.com"))
   :maintainer
   '("Victor Ren" . "victorhge@gmail.com")

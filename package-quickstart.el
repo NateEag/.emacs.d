@@ -4081,10 +4081,10 @@ The thesaurus backend can be configured with
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20210402.854/iedit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20210612.546/iedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20210402.854/iedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20210612.546/iedit-autoloads.el") (car load-path))))
 
 
 

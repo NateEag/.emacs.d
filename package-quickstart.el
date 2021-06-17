@@ -5102,10 +5102,10 @@ See `goto-last-change' for use of prefix argument.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20210330.850/smartparens-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20210529.1129/smartparens-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smartparens-20210330.850/smartparens-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smartparens-20210529.1129/smartparens-autoloads.el") (car load-path))))
 
 
 

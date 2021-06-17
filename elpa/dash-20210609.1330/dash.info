@@ -1,4 +1,4 @@
-This is dash.info, produced by makeinfo version 6.5 from dash.texi.
+This is dash.info, produced by makeinfo version 6.7 from dash.texi.
 
 This manual is for Dash version 2.18.1.
 
@@ -1418,8 +1418,9 @@ Functions partitioning the input list into a list of lists.
               ⇒ ((2 1 1 1) (4 1 3 5) (6 6 1))
 
  -- Function: -partition-after-pred (pred list)
-     Partition directly after each time PRED is true on an element of
-     LIST.
+     Partition LIST after each element for which PRED returns non-nil.
+
+     This function’s anaphoric counterpart is ‘--partition-after-pred’.
 
           (-partition-after-pred #'booleanp ())
               ⇒ ()
@@ -4294,7 +4295,7 @@ Index
                                                               (line 320)
 * -grade-down:                           Indexing.            (line  81)
 * -grade-up:                             Indexing.            (line  71)
-* -group-by:                             Partitioning.        (line 193)
+* -group-by:                             Partitioning.        (line 194)
 * -if-let:                               Binding.             (line  34)
 * -if-let*:                              Binding.             (line  45)
 * -inits:                                Reductions.          (line 222)
@@ -4348,12 +4349,12 @@ Index
 * -partial:                              Function combinators.
                                                               (line   8)
 * -partition:                            Partitioning.        (line  80)
-* -partition-after-item:                 Partitioning.        (line 183)
+* -partition-after-item:                 Partitioning.        (line 184)
 * -partition-after-pred:                 Partitioning.        (line 151)
 * -partition-all:                        Partitioning.        (line  92)
 * -partition-all-in-steps:               Partitioning.        (line 115)
-* -partition-before-item:                Partitioning.        (line 173)
-* -partition-before-pred:                Partitioning.        (line 162)
+* -partition-before-item:                Partitioning.        (line 174)
+* -partition-before-pred:                Partitioning.        (line 163)
 * -partition-by:                         Partitioning.        (line 127)
 * -partition-by-header:                  Partitioning.        (line 138)
 * -partition-in-steps:                   Partitioning.        (line 103)
@@ -4550,114 +4551,114 @@ Ref: -partition-all-in-steps46825
 Ref: -partition-by47307
 Ref: -partition-by-header47685
 Ref: -partition-after-pred48286
-Ref: -partition-before-pred48664
-Ref: -partition-before-item49049
-Ref: -partition-after-item49356
-Ref: -group-by49658
-Node: Indexing50091
-Ref: -elem-index50293
-Ref: -elem-indices50688
-Ref: -find-index51068
-Ref: -find-last-index51557
-Ref: -find-indices52061
-Ref: -grade-up52466
-Ref: -grade-down52873
-Node: Set operations53287
-Ref: -union53470
-Ref: -difference53908
-Ref: -intersection54320
-Ref: -powerset54752
-Ref: -permutations54962
-Ref: -distinct55258
-Node: Other list operations55632
-Ref: -rotate55857
-Ref: -repeat56224
-Ref: -cons*56503
-Ref: -snoc56919
-Ref: -interpose57329
-Ref: -interleave57623
-Ref: -iota57989
-Ref: -zip-with58472
-Ref: -zip59186
-Ref: -zip-lists60015
-Ref: -zip-fill60713
-Ref: -unzip61035
-Ref: -cycle61777
-Ref: -pad62176
-Ref: -table62495
-Ref: -table-flat63281
-Ref: -first64286
-Ref: -some64772
-Ref: -last65256
-Ref: -first-item65590
-Ref: -second-item65989
-Ref: -third-item66253
-Ref: -fourth-item66515
-Ref: -fifth-item66781
-Ref: -last-item67043
-Ref: -butlast67334
-Ref: -sort67579
-Ref: -list68065
-Ref: -fix68634
-Node: Tree operations69123
-Ref: -tree-seq69319
-Ref: -tree-map70174
-Ref: -tree-map-nodes70614
-Ref: -tree-reduce71461
-Ref: -tree-reduce-from72343
-Ref: -tree-mapreduce72943
-Ref: -tree-mapreduce-from73802
-Ref: -clone75087
-Node: Threading macros75414
-Ref: ->75639
-Ref: ->>76127
-Ref: -->76630
-Ref: -as->77186
-Ref: -some->77640
-Ref: -some->>78013
-Ref: -some-->78448
-Ref: -doto78997
-Node: Binding79550
-Ref: -when-let79757
-Ref: -when-let*80212
-Ref: -if-let80735
-Ref: -if-let*81095
-Ref: -let81712
-Ref: -let*87784
-Ref: -lambda88721
-Ref: -setq89527
-Node: Side effects90328
-Ref: -each90522
-Ref: -each-while91043
-Ref: -each-indexed91645
-Ref: -each-r92231
-Ref: -each-r-while92667
-Ref: -dotimes93293
-Node: Destructive operations93846
-Ref: !cons94064
-Ref: !cdr94268
-Node: Function combinators94461
-Ref: -partial94665
-Ref: -rpartial95183
-Ref: -juxt95831
-Ref: -compose96283
-Ref: -applify96890
-Ref: -on97320
-Ref: -flip97844
-Ref: -const98155
-Ref: -cut98493
-Ref: -not98973
-Ref: -orfn99282
-Ref: -andfn99715
-Ref: -iteratefn100209
-Ref: -fixfn100911
-Ref: -prodfn102467
-Node: Development103525
-Node: Contribute103814
-Node: Contributors104826
-Node: FDL106919
-Node: GPL132239
-Node: Index169988
+Ref: -partition-before-pred48733
+Ref: -partition-before-item49118
+Ref: -partition-after-item49425
+Ref: -group-by49727
+Node: Indexing50160
+Ref: -elem-index50362
+Ref: -elem-indices50757
+Ref: -find-index51137
+Ref: -find-last-index51626
+Ref: -find-indices52130
+Ref: -grade-up52535
+Ref: -grade-down52942
+Node: Set operations53356
+Ref: -union53539
+Ref: -difference53977
+Ref: -intersection54389
+Ref: -powerset54821
+Ref: -permutations55031
+Ref: -distinct55327
+Node: Other list operations55701
+Ref: -rotate55926
+Ref: -repeat56293
+Ref: -cons*56572
+Ref: -snoc56988
+Ref: -interpose57398
+Ref: -interleave57692
+Ref: -iota58058
+Ref: -zip-with58541
+Ref: -zip59255
+Ref: -zip-lists60084
+Ref: -zip-fill60782
+Ref: -unzip61104
+Ref: -cycle61846
+Ref: -pad62245
+Ref: -table62564
+Ref: -table-flat63350
+Ref: -first64355
+Ref: -some64841
+Ref: -last65325
+Ref: -first-item65659
+Ref: -second-item66058
+Ref: -third-item66322
+Ref: -fourth-item66584
+Ref: -fifth-item66850
+Ref: -last-item67112
+Ref: -butlast67403
+Ref: -sort67648
+Ref: -list68134
+Ref: -fix68703
+Node: Tree operations69192
+Ref: -tree-seq69388
+Ref: -tree-map70243
+Ref: -tree-map-nodes70683
+Ref: -tree-reduce71530
+Ref: -tree-reduce-from72412
+Ref: -tree-mapreduce73012
+Ref: -tree-mapreduce-from73871
+Ref: -clone75156
+Node: Threading macros75483
+Ref: ->75708
+Ref: ->>76196
+Ref: -->76699
+Ref: -as->77255
+Ref: -some->77709
+Ref: -some->>78082
+Ref: -some-->78517
+Ref: -doto79066
+Node: Binding79619
+Ref: -when-let79826
+Ref: -when-let*80281
+Ref: -if-let80804
+Ref: -if-let*81164
+Ref: -let81781
+Ref: -let*87853
+Ref: -lambda88790
+Ref: -setq89596
+Node: Side effects90397
+Ref: -each90591
+Ref: -each-while91112
+Ref: -each-indexed91714
+Ref: -each-r92300
+Ref: -each-r-while92736
+Ref: -dotimes93362
+Node: Destructive operations93915
+Ref: !cons94133
+Ref: !cdr94337
+Node: Function combinators94530
+Ref: -partial94734
+Ref: -rpartial95252
+Ref: -juxt95900
+Ref: -compose96352
+Ref: -applify96959
+Ref: -on97389
+Ref: -flip97913
+Ref: -const98224
+Ref: -cut98562
+Ref: -not99042
+Ref: -orfn99351
+Ref: -andfn99784
+Ref: -iteratefn100278
+Ref: -fixfn100980
+Ref: -prodfn102536
+Node: Development103594
+Node: Contribute103883
+Node: Contributors104895
+Node: FDL106988
+Node: GPL132308
+Node: Index170057
 
 End Tag Table
 

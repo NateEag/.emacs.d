@@ -1,12 +1,12 @@
 ;;; bicycle.el --- cycle outline and code visibility  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2020 Jonas Bernoulli
+;; Copyright (C) 2018-2021 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20201028.1854
-;; Package-Commit: e3fbc0737bb5f891e4d57d048bbc1fe17401f17f
+;; Package-Version: 20210615.1459
+;; Package-Commit: 2f0d6fbe0e363a0ed1f878316d1c0d7c1d6e1082
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -253,14 +253,14 @@ is not considered to be a sublevel."
       (save-excursion
         (outline-back-to-heading)
         (while (and (not level) (outline-next-heading))
-	  (cond
+          (cond
            ((eobp)
-	    (setq level 1))
+            (setq level 1))
            ((bicycle--code-level-p)
             (unless level
               (setq eoc (1+ (point)))))
            ((not (> (point) eos))
-	    (setq level (max 1 (- (funcall outline-level) start-level)))))))
+            (setq level (max 1 (- (funcall outline-level) start-level)))))))
       (outline-show-children
        (or level (max 1 (- outline-code-level start-level))))
       (when (and eoc (not nocode))

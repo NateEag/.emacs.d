@@ -20888,10 +20888,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-20210309.2323/elfeed-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-20210606.1130/elfeed-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-20210309.2323/elfeed-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-20210606.1130/elfeed-autoloads.el") (car load-path))))
 
 
 

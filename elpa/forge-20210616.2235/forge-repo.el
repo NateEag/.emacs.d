@@ -31,8 +31,8 @@
 (defclass forge-repository (forge-object)
   ((closql-class-prefix       :initform "forge-")
    (closql-class-suffix       :initform "-repository")
-   (closql-table              :initform repository)
-   (closql-primary-key        :initform id)
+   (closql-table              :initform 'repository)
+   (closql-primary-key        :initform 'id)
    (issues-url-format         :initform nil :allocation :class)
    (issue-url-format          :initform nil :allocation :class)
    (issue-post-url-format     :initform nil :allocation :class)
@@ -173,7 +173,7 @@ repository, if any."
       (error "Cannot determine forge repository.  %s isn't a forge url" url))))
 
 (cl-defmethod forge-get-repository (((host owner name) list)
-				    &optional remote demand)
+                                    &optional remote demand)
   "((host owner name) &optional remote demand)
 
 Return the repository identified by HOST, OWNER and NAME."

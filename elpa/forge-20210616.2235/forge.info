@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.1.0 (v0.1.0-376-gab3be5a7+1).
+This manual is for Forge version 0.2.1.
 
      Copyright (C) 2018-2021 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1265,28 +1265,28 @@ Appendix E Variable Index
 
 Tag Table:
 Node: Top751
-Node: Introduction2217
-Node: Supported Forges and Hosts2780
-Node: Getting Started8328
-Node: Token Creation9298
-Node: Initial Pull10557
-Node: Repository Detection11952
-Node: Caveats13855
-Node: Usage14956
-Node: Pulling16233
-Node: Branching19101
-Node: Working with Topics25217
-Node: Visiting Topics25590
-Node: Listing Topics and Notifications27319
-Node: Creating Topics32352
-Node: Editing Topics and Posts32915
-Node: Miscellaneous36470
-Node: FAQ38797
-Node: Is it possible to create a single pull-request without pulling everything?38997
-Node: Keystroke Index39402
-Node: Command Index43288
-Node: Function Index48729
-Node: Variable Index51487
+Node: Introduction2192
+Node: Supported Forges and Hosts2755
+Node: Getting Started8303
+Node: Token Creation9273
+Node: Initial Pull10532
+Node: Repository Detection11927
+Node: Caveats13830
+Node: Usage14931
+Node: Pulling16208
+Node: Branching19076
+Node: Working with Topics25192
+Node: Visiting Topics25565
+Node: Listing Topics and Notifications27294
+Node: Creating Topics32327
+Node: Editing Topics and Posts32890
+Node: Miscellaneous36445
+Node: FAQ38772
+Node: Is it possible to create a single pull-request without pulling everything?38972
+Node: Keystroke Index39377
+Node: Command Index43263
+Node: Function Index48704
+Node: Variable Index51462
 
 End Tag Table
 

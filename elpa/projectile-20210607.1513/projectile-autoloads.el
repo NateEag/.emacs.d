@@ -509,6 +509,9 @@ Remove known projects that don't exist anymore." t nil)
 (autoload 'projectile-clear-known-projects "projectile" "\
 Clear both `projectile-known-projects' and `projectile-known-projects-file'." t nil)
 
+(autoload 'projectile-reset-known-projects "projectile" "\
+Clear known projects and rediscover." t nil)
+
 (autoload 'projectile-remove-known-project "projectile" "\
 Remove PROJECT from the list of known projects.
 

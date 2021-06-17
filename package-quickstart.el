@@ -14807,10 +14807,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-patch-changelog-20200217.1202/magit-patch-changelog-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-patch-changelog-20210616.1302/magit-patch-changelog-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-patch-changelog-20200217.1202/magit-patch-changelog-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-patch-changelog-20210616.1302/magit-patch-changelog-autoloads.el") (car load-path))))
 
 
 

@@ -12347,10 +12347,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210512.1949/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210512.1949/git-commit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el") (car load-path))))
 
 
 (put 'git-commit-major-mode 'safe-local-variable

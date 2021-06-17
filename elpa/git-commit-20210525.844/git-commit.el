@@ -5,30 +5,30 @@
 ;; You should have received a copy of the AUTHORS.md file which
 ;; lists all contributors.  If not, see http://magit.vc/authors.
 
-;; Authors: Jonas Bernoulli <jonas@bernoul.li>
-;;	Sebastian Wiesner <lunaryorn@gmail.com>
-;;	Florian Ragwitz <rafl@debian.org>
-;;	Marius Vollmer <marius.vollmer@gmail.com>
+;; Author: Jonas Bernoulli <jonas@bernoul.li>
+;;      Sebastian Wiesner <lunaryorn@gmail.com>
+;;      Florian Ragwitz <rafl@debian.org>
+;;      Marius Vollmer <marius.vollmer@gmail.com>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
-;; Package-Requires: ((emacs "25.1") (dash "20200524") (transient "20200601") (with-editor "20200522"))
-;; Package-Version: 20210512.1949
-;; Package-Commit: fcd50dd8ae7cb33332eb7c6d90932be41b869cae
 ;; Keywords: git tools vc
+;; Package-Commit: 54a0019f33b6f6854e29742642597283d25fcd6a
 ;; Homepage: https://github.com/magit/magit
-
-;; This file is not part of GNU Emacs.
+;; Package-Requires: ((emacs "25.1") (dash "20210330") (transient "20210524") (with-editor "20210524"))
+;; Package-Version: 20210525.844
+;; Package-X-Original-Version: 3.0.0
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
-
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this file.  If not, see <http://www.gnu.org/licenses/>.
 

@@ -5,9 +5,7 @@
 ;; Author: Feng Shu <tumashu@163.com>
 ;; Maintainer: Feng Shu <tumashu@163.com>
 ;; URL: https://github.com/tumashu/posframe
-;; Package-Version: 20210423.220
-;; Package-Commit: 739d8fd1081bdd0d20dee9e437d64df58747b871
-;; Version: 1.0.2
+;; Version: 1.0.4
 ;; Keywords: convenience, tooltip
 ;; Package-Requires: ((emacs "26"))
 
@@ -26,11 +24,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
 
-
 ;;; Commentary:
-
 ;; * Posframe README                                :README:
-;; ** What is posframe?
+
 ;; Posframe can pop up a frame at point, this *posframe* is a
 ;; child-frame connected to its root window's buffer.
 
@@ -38,104 +34,7 @@
 ;; 1. It is fast enough for daily usage :-)
 ;; 2. It works well with CJK languages.
 
-;; NOTE:
-;; 1. For MacOS users, posframe needs Emacs version >= 26.0.91
-;; 2. GNOME users with GTK3 builds need Emacs 27 or later.
-;;    See variable `posframe-gtk-resize-child-frames'
-;;    which auto-detects this configuration.
-
-;;    More details:
-;;    1. [[https://git.savannah.gnu.org/cgit/emacs.git/commit/?h=emacs-27&id=c49d379f17bcb0ce82604def2eaa04bda00bd5ec][Fix some problems with moving and resizing child frames]]
-;;    2. [[https://lists.gnu.org/archive/html/emacs-devel/2020-01/msg00343.html][Emacs's set-frame-size can not work well with gnome-shell?]]
-
-;; [[./snapshots/posframe-1.png]]
-
-;; ** Installation
-
-;; #+BEGIN_EXAMPLE
-;; (require 'posframe)
-;; #+END_EXAMPLE
-
-;; ** Usage
-
-;; *** Create a posframe
-
-;; **** Simple way
-;; #+BEGIN_EXAMPLE
-;; (when (posframe-workable-p)
-;;   (posframe-show " *my-posframe-buffer*"
-;;                  :string "This is a test"
-;;                  :position (point)))
-;; #+END_EXAMPLE
-
-;; **** Advanced way
-;; #+BEGIN_EXAMPLE
-;; (defvar my-posframe-buffer " *my-posframe-buffer*")
-
-;; (with-current-buffer (get-buffer-create my-posframe-buffer)
-;;   (erase-buffer)
-;;   (insert "Hello world"))
-
-;; (when (posframe-workable-p)
-;;   (posframe-show my-posframe-buffer
-;;                  :position (point)))
-;; #+END_EXAMPLE
-
-;; **** Arguments
-
-;; #+BEGIN_EXAMPLE
-;; C-h f posframe-show
-;; #+END_EXAMPLE
-
-;; *** Hide a posframe
-;; #+BEGIN_EXAMPLE
-;; (posframe-hide " *my-posframe-buffer*")
-;; #+END_EXAMPLE
-
-;; *** Hide all posframes
-;; #+BEGIN_EXAMPLE
-;; M-x posframe-hide-all
-;; #+END_EXAMPLE
-
-;; *** Delete a posframe
-;; 1. Delete posframe and its buffer
-;;    #+BEGIN_EXAMPLE
-;;    (posframe-delete " *my-posframe-buffer*")
-;;    #+END_EXAMPLE
-;; 2. Only delete the frame
-;;    #+BEGIN_EXAMPLE
-;;    (posframe-delete-frame " *my-posframe-buffer*")
-;;    #+END_EXAMPLE
-;; *** Delete all posframes
-;; #+BEGIN_EXAMPLE
-;; M-x posframe-delete-all
-;; #+END_EXAMPLE
-
-;; Note: this command will delete all posframe buffers.
-;; You probably shouldn't use it if you are sharing a buffer
-;; between posframe and other packages.
-
-;; *** Customizing mouse pointer control
-
-;; By default, posframe moves the pointer to point (0,0) in
-;; the frame, as a way to address an issue with mouse focus.
-;; To disable this feature, add this to your init.el:
-;; #+BEGIN_EXAMPLE
-;; (setq posframe-mouse-banish nil)
-;; #+END_EXAMPLE
-
-;; *** Set fallback arguments of posframe-show
-
-;; Users can set fallback values of posframe-show's arguments with the
-;; help of `posframe-arghandler'.  The example below sets fallback
-;; border-width to 10 and fallback background color to green.
-
-;; #+BEGIN_EXAMPLE
-;; (setq posframe-arghandler #'my-posframe-arghandler)
-;; (defun my-posframe-arghandler (buffer-or-name arg-name value)
-;;   (let ((info '(:internal-border-width 10 :background-color "green")))
-;;     (or (plist-get info arg-name) value)))
-;; #+END_EXAMPLE
+;; More info please see: README.org
 
 ;;; Code:
 ;; * posframe's code                         :CODE:
@@ -207,6 +106,12 @@ frame.")
 
 (defvar-local posframe--initialized-p nil
   "Record initialize status of `posframe-show'.")
+
+(defvar-local posframe--accept-focus nil
+  "Record accept focus status of `posframe-show'.")
+
+(defvar posframe-hidehandler-timer nil
+  "Timer used by hidehandler function.")
 
 ;; Avoid compilation warnings on Emacs < 27.
 (defvar x-gtk-resize-child-frames)
@@ -292,6 +197,7 @@ This posframe's buffer is BUFFER-OR-NAME."
       (setq-local cursor-type nil)
       (setq-local cursor-in-non-selected-windows nil)
       (setq-local show-trailing-whitespace nil)
+      (setq-local posframe--accept-focus accept-focus)
       (unless respect-mode-line
         (setq-local mode-line-format nil))
       (unless respect-header-line
@@ -432,7 +338,6 @@ POSHANDLER is a function of one argument returning an actual
 position.  Its argument is a plist of the following form:
 
   (:position xxx
-   :position-info xxx
    :poshandler xxx
    :font-height xxx
    :font-width xxx
@@ -580,8 +485,7 @@ be careful, you may face some bugs when set it to non-nil.
 (17) HIDEHANDLER
 
 HIDEHANDLER is a function, when it return t, posframe will be
-hide when `post-command-hook' is executed, this function has a
-plist argument:
+hide, this function has a plist argument:
 
   (:posframe-buffer xxx
    :posframe-parent-buffer xxx)
@@ -649,10 +553,6 @@ You can use `posframe-delete-all' to delete all posframes."
          (parent-window-left (window-pixel-left parent-window))
          (parent-window-width (window-pixel-width parent-window))
          (parent-window-height (window-pixel-height parent-window))
-         (position-info
-          (if (integerp position)
-              (posn-at-point position parent-window)
-            position))
          (parent-frame (window-frame parent-window))
          (parent-frame-width (frame-pixel-width parent-frame))
          (parent-frame-height (frame-pixel-height parent-frame))
@@ -705,7 +605,7 @@ You can use `posframe-delete-all' to delete all posframes."
              :accept-focus accept-focus))
 
       ;; Move mouse to (0 . 0)
-      (posframe--mouse-banish parent-frame posframe)
+      (posframe--mouse-banish parent-frame)
 
       ;; Insert string into the posframe buffer
       (posframe--insert-string string no-properties)
@@ -721,7 +621,6 @@ You can use `posframe-delete-all' to delete all posframes."
         ;; All poshandlers will get info from this plist.
         `(,@poshandler-extra-info
           ,@(list :position position
-                  :position-info position-info
                   :poshandler poshandler
                   :font-height font-height
                   :font-width font-width
@@ -758,9 +657,6 @@ You can use `posframe-delete-all' to delete all posframes."
         (when (window-live-p window)
           (set-window-point window 0)))
 
-      ;; Force raise the current posframe.
-      (raise-frame posframe--frame)
-
       ;; Hide posframe when switch buffer
       (let* ((parent-buffer (window-buffer parent-window))
              (parent-buffer-name (buffer-name parent-buffer)))
@@ -794,17 +690,16 @@ posframe from catching keyboard input if the window manager selects it."
   (when (and (eq (selected-frame) posframe--frame)
              ;; Do not redirect focus when posframe can accept focus.
              ;; See posframe-show's accept-focus argument.
-             (frame-parameter (selected-frame) 'no-accept-focus))
+             (not posframe--accept-focus))
     (redirect-frame-focus posframe--frame (frame-parent))))
 
 (if (version< emacs-version "27.1")
-    (add-hook 'focus-in-hook #'posframe--redirect-posframe-focus)
+    (with-no-warnings
+      (add-hook 'focus-in-hook #'posframe--redirect-posframe-focus))
   (add-function :after after-focus-change-function #'posframe--redirect-posframe-focus))
 
-(defun posframe--mouse-banish (parent-frame &optional posframe)
+(defun posframe--mouse-banish (parent-frame)
   "Banish mouse to the (0 . 0) of PARENT-FRAME.
-Do not banish mouse when no-accept-focus frame parameter of POSFRAME
-is non-nil.
 
 FIXME: This is a hacky fix for the mouse focus problem, which like:
 https://github.com/tumashu/posframe/issues/4#issuecomment-357514918"
@@ -815,8 +710,7 @@ https://github.com/tumashu/posframe/issues/4#issuecomment-357514918"
     (when (and x-y
                ;; Do not banish mouse when posframe can accept focus.
                ;; See posframe-show's accept-focus argument.
-               (frame-parameter posframe 'no-accept-focus)
-               (not (equal (cdr (mouse-position)) (cons (car x-y) (cdr x-y)))))
+               (not posframe--accept-focus))
       (set-mouse-position parent-frame (car x-y) (cdr x-y)))))
 
 (defun posframe--insert-string (string no-properties)
@@ -958,8 +852,15 @@ BUFFER-OR-NAME can be a buffer or a buffer name."
                   (equal buffer-or-name (cdr buffer-info)))
           (posframe--make-frame-invisible frame))))))
 
-(defun posframe-run-hidehandler ()
-  "Run posframe hidehandler. this function is used in `post-command-hook'."
+(defun posframe-hidehandler-daemon ()
+  "Run posframe hidehandler daemon."
+  (when (timerp posframe-hidehandler-timer)
+    (cancel-timer posframe-hidehandler-timer))
+  (setq posframe-hidehandler-timer
+        (run-with-idle-timer 0.5 t #'posframe-hidehandler-daemon-function)))
+
+(defun posframe-hidehandler-daemon-function ()
+  "Posframe hidehandler daemon function."
   (ignore-errors
     (dolist (frame (frame-list))
       (let ((hidehandler (frame-parameter frame 'posframe-hidehandler))
@@ -972,7 +873,9 @@ BUFFER-OR-NAME can be a buffer or a buffer name."
                              :posframe-parent-buffer parent-buffer)))
           (posframe--make-frame-invisible frame))))))
 
-(add-hook 'post-command-hook #'posframe-run-hidehandler)
+(posframe-hidehandler-daemon)
+;; For compatibility, remove In the future.
+(remove-hook 'post-command-hook 'posframe-run-hidehandler)
 
 (defun posframe-hidehandler-when-buffer-switch (info)
   "Posframe hidehandler function.
@@ -1121,10 +1024,6 @@ poshandler easily used for other purposes."
          (parent-window-left (window-pixel-left parent-window))
          (parent-window-width (window-pixel-width parent-window))
          (parent-window-height (window-pixel-height parent-window))
-         (position-info
-          (if (integerp position)
-              (posn-at-point position parent-window)
-            position))
          (font-width (default-font-width))
          (font-height (with-current-buffer (window-buffer parent-window)
                         (posframe--get-font-height position)))
@@ -1139,7 +1038,6 @@ poshandler easily used for other purposes."
             (ignore-errors
               (funcall refposhandler parent-frame)))))
     (list :position position
-          :position-info position-info
           :poshandler poshandler
           :font-height font-height
           :font-width font-width
@@ -1192,7 +1090,16 @@ Optional argument FONT-HEIGHT, UPWARD, CENTERING ."
          (window-width (plist-get info :parent-window-width))
          (xmax (plist-get info :parent-frame-width))
          (ymax (plist-get info :parent-frame-height))
-         (position-info (plist-get info :position-info))
+         (position-info
+          (or
+           ;; :position-info has been removed, this line
+           ;; is used for compatible.
+           (plist-get info :position-info)
+           (plist-get info :position)))
+         (position-info
+          (if (integerp position-info)
+              (posn-at-point position-info window)
+            position-info))
          (header-line-height (plist-get info :header-line-height))
          (tab-line-height (plist-get info :tab-line-height))
          (x (+ (car (window-inside-pixel-edges window))
@@ -1438,12 +1345,12 @@ xwininfo."
         (search-forward "Absolute upper-left")
         (let ((x (string-to-number
                   (buffer-substring-no-properties
-	           (search-forward "X: ")
-	           (line-end-position))))
+                   (search-forward "X: ")
+                   (line-end-position))))
               (y (string-to-number
                   (buffer-substring-no-properties
-	           (search-forward "Y: ")
-	           (line-end-position)))))
+                   (search-forward "Y: ")
+                   (line-end-position)))))
           (cons x y))))))
 
 

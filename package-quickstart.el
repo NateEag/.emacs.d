@@ -1605,10 +1605,10 @@ result of `defhydra'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210423.220/posframe-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20210617.42/posframe-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210423.220/posframe-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/posframe-20210617.42/posframe-autoloads.el") (car load-path))))
 
 
 
@@ -1632,7 +1632,6 @@ POSHANDLER is a function of one argument returning an actual
 position.  Its argument is a plist of the following form:
 
   (:position xxx
-   :position-info xxx
    :poshandler xxx
    :font-height xxx
    :font-width xxx
@@ -1780,8 +1779,7 @@ be careful, you may face some bugs when set it to non-nil.
 \(17) HIDEHANDLER
 
 HIDEHANDLER is a function, when it return t, posframe will be
-hide when `post-command-hook' is executed, this function has a
-plist argument:
+hide, this function has a plist argument:
 
   (:posframe-buffer xxx
    :posframe-parent-buffer xxx)
@@ -1822,6 +1820,15 @@ Hide all posframe frames." t nil)
 Delete all posframe frames and buffers." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe" '("posframe-")))
+
+
+
+(autoload 'posframe-benchmark "posframe-benchmark" "\
+Benchmark tool for posframe." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe-benchmark" '("posframe-benchmark-alist")))
+
+
 
 
 )

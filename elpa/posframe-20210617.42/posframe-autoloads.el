@@ -29,7 +29,6 @@ POSHANDLER is a function of one argument returning an actual
 position.  Its argument is a plist of the following form:
 
   (:position xxx
-   :position-info xxx
    :poshandler xxx
    :font-height xxx
    :font-width xxx
@@ -177,8 +176,7 @@ be careful, you may face some bugs when set it to non-nil.
 \(17) HIDEHANDLER
 
 HIDEHANDLER is a function, when it return t, posframe will be
-hide when `post-command-hook' is executed, this function has a
-plist argument:
+hide, this function has a plist argument:
 
   (:posframe-buffer xxx
    :posframe-parent-buffer xxx)
@@ -219,6 +217,21 @@ Hide all posframe frames." t nil)
 Delete all posframe frames and buffers." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe" '("posframe-")))
+
+;;;***
+
+;;;### (autoloads nil "posframe-benchmark" "posframe-benchmark.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from posframe-benchmark.el
+
+(autoload 'posframe-benchmark "posframe-benchmark" "\
+Benchmark tool for posframe." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe-benchmark" '("posframe-benchmark-alist")))
+
+;;;***
+
+;;;### (autoloads nil nil ("posframe-pkg.el") (0 0 0 0))
 
 ;;;***
 

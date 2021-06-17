@@ -4,8 +4,8 @@
 
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Package-Requires: ((emacs "26.1") (dash "2.11.0") (s "1.10.0") (posframe "0.6.0"))
-;; Package-Commit: 7c42f2c82c7ae689f3ef291b066688c58ab96298
-;; Package-Version: 20210217.1848
+;; Package-Commit: 2cb7f1cbf9292b0efe167ef372cfb5a7600564eb
+;; Package-Version: 20210609.1805
 ;; Package-X-Original-Version: 1.5.4
 ;; Homepage: https://github.com/Alexander-Miller/cfrs
 
@@ -60,7 +60,7 @@ Only the `:background' part is used."
       (read-string prompt nil nil initial-input)
     (let* ((buffer (get-buffer-create " *Pos-Frame-Read*"))
            (border-color (face-attribute 'cfrs-border-color :background nil t))
-           (cursor cursor-type)
+           (cursor (cfrs--determine-cursor-type))
            (frame (posframe-show
                    buffer
                    :min-height 1
@@ -75,22 +75,35 @@ Only the `:background' part is used."
         (x-focus-frame frame)
         (add-hook 'delete-frame-functions #'cfrs--on-frame-kill nil :local)
         (with-current-buffer buffer
-          (setq-local cursor-type cursor)
           (cfrs-input-mode)
           (-each (overlays-in (point-min) (point-max)) #'delete-overlay)
           (erase-buffer)
           (-doto (make-overlay 1 2)
-            (overlay-put 'before-string (propertize (concat " " prompt) 'face 'minibuffer-prompt))
+            (overlay-put
+             'before-string
+             (propertize (concat " " prompt) 'face 'minibuffer-prompt))
             (overlay-put 'rear-nonsticky t)
             (overlay-put 'read-only t))
           (when initial-input
             (insert initial-input))
-          (when (fboundp 'evil-insert-state)
+          (when (and (bound-and-true-p evil-mode)
+                     (fboundp 'evil-insert-state))
             (evil-insert-state nil))
           (end-of-line)
           (recursive-edit)
           (cfrs--hide)
           (s-trim (buffer-string)))))))
+
+(defun cfrs--determine-cursor-type ()
+  "Determine the cursor type for the popup frame.
+Prevents showing an invisible cursor with a height or width of 0."
+  (let ((ct (if (memq cursor-type '(t nil))
+                (frame-parameter (selected-frame) 'cursor-type)
+              cursor-type)))
+    (pcase ct
+      (`(,_ . 0) ct)
+      (`nil 'hbar)
+      (_ ct))))
 
 (defun cfrs--hide ()
   "Hide the current cfrs frame."
@@ -135,7 +148,8 @@ Only the `:background' part is used."
 
 ;; https://github.com/Alexander-Miller/treemacs/issues/775
 (with-eval-after-load 'beacon
-  (add-to-list 'beacon-dont-blink-major-modes 'cfrs-input-mode))
+  (with-no-warnings
+    (add-to-list 'beacon-dont-blink-major-modes 'cfrs-input-mode)))
 
 (provide 'cfrs)
 

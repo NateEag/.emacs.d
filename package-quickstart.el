@@ -1832,10 +1832,10 @@ Benchmark tool for posframe." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cfrs-20210217.1848/cfrs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cfrs-20210609.1805/cfrs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cfrs-20210217.1848/cfrs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cfrs-20210609.1805/cfrs-autoloads.el") (car load-path))))
 
 
 

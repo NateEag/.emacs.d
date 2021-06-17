@@ -126,6 +126,16 @@
   '((default :inherit company-tooltip-annotation))
   "Face used for the selected completion annotation in the tooltip.")
 
+(defface company-tooltip-quick-access
+  '((default :inherit company-tooltip-annotation))
+  "Face used for the quick-access keys shown in the tooltip."
+  :package-version '(company . "0.9.14"))
+
+(defface company-tooltip-quick-access-selection
+  '((default :inherit company-tooltip-annotation-selection))
+  "Face used for the selected quick-access keys shown in the tooltip."
+  :package-version '(company . "0.9.14"))
+
 (defface company-scrollbar-fg
   '((((background light))
      :background "darkred")
@@ -156,8 +166,8 @@
   "Face used for completions in the echo area.")
 
 (defface company-echo-common
-  '((((background dark)) (:foreground "firebrick1"))
-    (((background light)) (:background "firebrick4")))
+  '((((background light)) (:foreground "firebrick4"))
+    (((background dark)) (:foreground "firebrick1")))
   "Face used for the common part of completions in the echo area.")
 
 ;; Too lazy to re-add :group to all defcustoms down below.
@@ -688,8 +698,8 @@ asynchronous call into synchronous.")
     (define-key keymap "\C-g" 'company-abort)
     (define-key keymap (kbd "M-n") 'company--select-next-and-warn)
     (define-key keymap (kbd "M-p") 'company--select-previous-and-warn)
-    (define-key keymap (kbd "C-n") 'company-select-next)
-    (define-key keymap (kbd "C-p") 'company-select-previous)
+    (define-key keymap (kbd "C-n") 'company-select-next-or-abort)
+    (define-key keymap (kbd "C-p") 'company-select-previous-or-abort)
     (define-key keymap (kbd "<down>") 'company-select-next-or-abort)
     (define-key keymap (kbd "<up>") 'company-select-previous-or-abort)
     (define-key keymap [remap scroll-up-command] 'company-next-page)
@@ -1671,7 +1681,8 @@ Keywords and function definition names are ignored."
             (cl-delete-if
              (lambda (candidate)
                (goto-char w-start)
-               (when (and (search-forward candidate w-end t)
+               (when (and (not (equal candidate ""))
+                          (search-forward candidate w-end t)
                           ;; ^^^ optimize for large lists where most elements
                           ;; won't have a match.
                           (catch 'done
@@ -2137,16 +2148,18 @@ each one wraps a part of the input string."
         (cl-return i))
       (cl-incf i))))
 
-(defun company-search-keypad ()
-  (interactive)
-  (let* ((name (symbol-name last-command-event))
-         (last-command-event (aref name (1- (length name)))))
-    (company-search-printing-char)))
-
 (defun company-search-printing-char ()
   (interactive)
   (company--search-assert-enabled)
-  (let ((ss (concat company-search-string (string last-command-event))))
+  (let* ((event-type (event-basic-type last-command-event))
+         (event-string (if (characterp event-type)
+                           (string last-command-event)
+                         ;; Handle key press on the keypad.
+                         (let ((name (symbol-name event-type)))
+                           (if (string-match "kp-\\([0-9]\\)" name)
+                               (match-string 1 name)
+                             (error "Unexpected printing char input")))))
+         (ss (concat company-search-string event-string)))
     (when company-search-filtering
       (company--search-update-predicate ss))
     (company--search-update-string ss)))
@@ -2253,13 +2266,13 @@ each one wraps a part of the input string."
       (define-key keymap (vector i) 'company-search-printing-char)
       (cl-incf i))
     (dotimes (i 10)
-      (define-key keymap (read (format "[kp-%s]" i)) 'company-search-keypad))
+      (define-key keymap (kbd (format "<kp-%d>" i)) 'company-search-printing-char))
     (let ((meta-map (make-sparse-keymap)))
       (define-key keymap (char-to-string meta-prefix-char) meta-map)
       (define-key keymap [escape] meta-map))
     (define-key keymap (vector meta-prefix-char t) 'company-search-other-char)
-    (define-key keymap (kbd "C-n") 'company-select-next)
-    (define-key keymap (kbd "C-p") 'company-select-previous)
+    (define-key keymap (kbd "C-n") 'company-select-next-or-abort)
+    (define-key keymap (kbd "C-p") 'company-select-previous-or-abort)
     (define-key keymap (kbd "M-n") 'company--select-next-and-warn)
     (define-key keymap (kbd "M-p") 'company--select-previous-and-warn)
     (define-key keymap (kbd "<down>") 'company-select-next-or-abort)
@@ -2986,7 +2999,17 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
           (company-safe-substring old (+ offset (length new)))))
 
 (defun company--show-numbers (numbered)
-  (format " %d" (mod numbered 10)))
+  (format " %s" (if (<= numbered 10)
+                    (mod numbered 10)
+                  " ")))
+
+(defun company--format-quick-access-key (numbered selected)
+  "Produce a quick-access key to show beside a candidate."
+  (propertize (funcall company-show-numbers-function numbered)
+              'face
+              (if selected
+                  'company-tooltip-quick-access-selection
+                'company-tooltip-quick-access)))
 
 (defsubst company--window-height ()
   (if (fboundp 'window-screen-lines)
@@ -3167,7 +3190,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
           (numbered (if company-show-numbers 0 99999))
           new)
       (when previous
-        (push (company--scrollpos-line previous width) new))
+        (push (company--scrollpos-line previous width left-margin-size) new))
 
       (dotimes (i len)
         (let* ((item (pop items))
@@ -3175,16 +3198,18 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                (annotation (cadr item))
                (left (nth 2 item))
                (right (company-space-string company-tooltip-margin))
-               (width width))
-          (when (< numbered 10)
-            (cl-decf width 2)
-            (cl-incf numbered)
-            (setf (if (eq company-show-numbers 'left) left right)
-                  (concat (funcall company-show-numbers-function numbered)
-                          (if (eq company-show-numbers 'left) left right))))
+               (width width)
+               (selected (equal selection i)))
+          (when company-show-numbers
+            (let ((numbers-place (gv-ref (if (eq company-show-numbers 'left) left right))))
+              (cl-decf width 2)
+              (cl-incf numbered)
+              (setf (gv-deref numbers-place)
+                    (concat (company--format-quick-access-key numbered selected)
+                            (gv-deref numbers-place)))))
           (push (concat
                  (company-fill-propertize str annotation
-                                          width (equal i selection)
+                                          width selected
                                           left
                                           right)
                  (when scrollbar-bounds
@@ -3192,7 +3217,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                 new)))
 
       (when remainder
-        (push (company--scrollpos-line remainder width) new))
+        (push (company--scrollpos-line remainder width left-margin-size) new))
 
       (cons
        left-margin-size
@@ -3211,10 +3236,10 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                   'company-scrollbar-fg
                 'company-scrollbar-bg)))
 
-(defun company--scrollpos-line (text width)
+(defun company--scrollpos-line (text width fancy-margin-width)
   (propertize (concat (company-space-string company-tooltip-margin)
                       (company-safe-substring text 0 width)
-                      (company-space-string company-tooltip-margin))
+                      (company-space-string fancy-margin-width))
               'face 'company-tooltip))
 
 ;; show
@@ -3393,6 +3418,10 @@ Returns a negative number if the tooltip should be displayed above point."
                (company--show-inline-p))
     (company-pseudo-tooltip-frontend command)))
 
+(defun company-pseudo-tooltip--ujofwd-on-timer (command)
+  (when company-candidates
+    (company-pseudo-tooltip-unless-just-one-frontend-with-delay command)))
+
 (defun company-pseudo-tooltip-unless-just-one-frontend-with-delay (command)
   "`compandy-pseudo-tooltip-frontend', but shown after a delay.
 Delay is determined by `company-tooltip-idle-delay'."
@@ -3412,8 +3441,11 @@ Delay is determined by `company-tooltip-idle-delay'."
            (company-call-frontends 'post-command))
        (setq company-tooltip-timer
              (run-with-timer company-tooltip-idle-delay nil
-                             'company-pseudo-tooltip-unless-just-one-frontend-with-delay
+                             'company-pseudo-tooltip--ujofwd-on-timer
                              'post-command))))
+    (unhide
+     (when (overlayp company-pseudo-tooltip-overlay)
+       (company-pseudo-tooltip-unless-just-one-frontend command)))
     (t
      (company-pseudo-tooltip-unless-just-one-frontend command))))
 
@@ -3474,11 +3506,15 @@ Delay is determined by `company-tooltip-idle-delay'."
     (`pre-command (company-preview-hide))
     (`unhide
      (when company-selection
-       (let ((company-prefix (buffer-substring
-                              (- company-point (length company-prefix))
-                              (point))))
-         (company-preview-show-at-point (point)
-                                        (nth company-selection company-candidates)))))
+       (let* ((current (nth company-selection company-candidates))
+              (company-prefix (if (equal current company-prefix)
+                                  ;; Would be more accurate to compare lengths,
+                                  ;; but this is shorter.
+                                  current
+                                (buffer-substring
+                                 (- company-point (length company-prefix))
+                                 (point)))))
+         (company-preview-show-at-point (point) current))))
     (`post-command
      (when company-selection
        (company-preview-show-at-point (point)
@@ -3561,19 +3597,18 @@ Delay is determined by `company-tooltip-idle-delay'."
           (len -1)
           ;; Roll to selection.
           (candidates (nthcdr selection company-candidates))
-          (i (if company-show-numbers selection 99999))
+          (numbered (if company-show-numbers selection 99999))
           comp msg)
 
       (while candidates
         (setq comp (company-reformat (company--clean-string (pop candidates)))
               len (+ len 1 (length comp)))
-        (if (< i 10)
-            ;; Add number.
+        (if (< numbered 10)
             (progn
-              (setq comp (propertize (format "%d: %s" i comp)
+              (cl-incf numbered)
+              (setq comp (propertize (format "%d: %s" (mod numbered 10) comp)
                                      'face 'company-echo))
               (cl-incf len 3)
-              (cl-incf i)
               ;; FIXME: Add support for the `match' backend action, and thus,
               ;; non-prefix matches.
               (add-text-properties 3 (+ 3 (string-width (or company-common "")))
@@ -3593,17 +3628,16 @@ Delay is determined by `company-tooltip-idle-delay'."
           (len (+ (length company-prefix) 2))
           ;; Roll to selection.
           (candidates (nthcdr selection company-candidates))
-          (i (if company-show-numbers selection 99999))
+          (numbered (if company-show-numbers selection 99999))
           msg comp)
 
       (while candidates
         (setq comp (company-strip-prefix (pop candidates))
               len (+ len 2 (length comp)))
-        (when (< i 10)
-          ;; Add number.
-          (setq comp (format "%s (%d)" comp i))
-          (cl-incf len 4)
-          (cl-incf i))
+        (when (< numbered 10)
+          (cl-incf numbered)
+          (setq comp (format "%s (%d)" comp (mod numbered 10)))
+          (cl-incf len 4))
         (if (>= len limit)
             (setq candidates nil)
           (push (propertize comp 'face 'company-echo) msg)))
@@ -3633,6 +3667,7 @@ Delay is determined by `company-tooltip-idle-delay'."
   "`company-mode' frontend showing the documentation in the echo area."
   (pcase command
     (`post-command (company-echo-show-soon 'company-fetch-metadata))
+    (`unhide (company-echo-show))
     (`hide (company-echo-hide))))
 
 (provide 'company)

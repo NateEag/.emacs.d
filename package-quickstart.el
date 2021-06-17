@@ -19138,10 +19138,10 @@ A prefix argument causes the SQL to be printed into the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/closql-20200704.2124/closql-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/closql-20210616.1951/closql-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/closql-20200704.2124/closql-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/closql-20210616.1951/closql-autoloads.el") (car load-path))))
 
 
 

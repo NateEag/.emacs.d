@@ -1,27 +1,28 @@
 ;;; closql.el --- store EIEIO objects using EmacSQL  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016-2020  Jonas Bernoulli
+;; Copyright (C) 2016-2021  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/closql
-;; Package-Requires: ((emacs "25.1") (emacsql-sqlite "3.0.0"))
-;; Package-Version: 20200704.2124
-;; Package-Commit: e074a6ddb17a2109c15ca6a2d84e4bc3071a1147
 ;; Keywords: extensions
-
-;; This file is not part of GNU Emacs.
+;; Package-Version: 20210616.1951
+;; Package-Commit: e2687e7ff958a19e6e5d6552c4e0b7b33c424bab
+;; Package-Requires: ((emacs "25.1") (emacsql-sqlite "3.0.0"))
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
 ;; by the Free Software Foundation; either version 3 of the License,
 ;; or (at your option) any later version.
-
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; For a full copy of the GNU GPL see http://www.gnu.org/licenses.
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -37,6 +38,9 @@
 (require 'emacsql-sqlite)
 
 (eval-when-compile (require 'subr-x))
+
+(unless (boundp 'eieio--unbound) ; New name since Emacs 28.1.
+  (defvaralias 'eieio--unbound 'eieio-unbound nil))
 
 ;;; Objects
 
@@ -108,7 +112,7 @@
                                   obj (oref-default obj closql-primary-key))
                                  (oref-default class closql-primary-key)))))
          (table
-          (if (eq value eieio-unbound)
+          (if (eq value eieio--unbound)
               (let ((columns (closql--table-columns db table)))
                 (aset obj c
                       (mapcar
@@ -150,7 +154,7 @@
       (eieio--validate-slot-value class c value slot)
       (unless (eq slot 'closql-database)
         (let ((db (closql--oref obj 'closql-database)))
-          (unless (or (not db) (eq db eieio-unbound))
+          (unless (or (not db) (eq db eieio--unbound))
             (closql--dset db obj slot value))))
       (aset obj c value))))
 
@@ -166,7 +170,7 @@
       (emacsql-with-transaction db
         (let ((columns (closql--table-columns db table)))
           ;; Caller might have modified value in place.
-          (closql--oset obj slot eieio-unbound)
+          (closql--oset obj slot eieio--unbound)
           (let ((list1 (closql-oref obj slot))
                 (list2 value)
                 elt1 elt2)
@@ -214,7 +218,7 @@
       (emacsql db [:update $i1 :set (= $i2 $s3) :where (= $i4 $s5)]
                (oref-default obj closql-table)
                slot
-               (if (eq value eieio-unbound) 'eieio-unbound value)
+               (if (eq value eieio--unbound) 'eieio-unbound value)
                key id)))))
 
 ;;;; Slot Properties
@@ -313,7 +317,7 @@
       (let ((table (closql--slot-table obj slot)))
         (when table
           (push (cons slot (closql-oref obj slot)) alist)
-          (closql--oset obj slot eieio-unbound))))
+          (closql--oset obj slot eieio--unbound))))
     (emacsql-with-transaction db
       (emacsql db
                (if replace
@@ -430,12 +434,12 @@
 
 (defun closql--intern-unbound (row)
   (mapcar (lambda (elt)
-            (if (eq elt eieio-unbound) 'eieio-unbound elt))
+            (if (eq elt eieio--unbound) 'eieio-unbound elt))
           row))
 
 (defun closql--extern-unbound (row)
   (mapcar (lambda (elt)
-            (if (eq elt 'eieio-unbound) eieio-unbound elt))
+            (if (eq elt 'eieio-unbound) eieio--unbound elt))
           row))
 
 (defun closql--coerce (object type)
@@ -543,14 +547,14 @@
     (emacsql db (format "\
 SELECT DISTINCT %s FROM %s AS d, %s AS i
 WHERE d.%s = i.%s AND d.%s = '%S';"
-                (mapconcat (apply-partially #'format "i.%s")
-                           (cddr i-cols) ", ")
-                d-table
-                i-table
-                (cadr d-cols)
-                (cadr i-cols)
-                (car  d-cols)
-                obj-id))))
+                        (mapconcat (apply-partially #'format "i.%s")
+                                   (cddr i-cols) ", ")
+                        d-table
+                        i-table
+                        (cadr d-cols)
+                        (cadr i-cols)
+                        (car  d-cols)
+                        obj-id))))
 
 (defun closql--slot-tables (obj slot)
   (let ((tbls (closql--slot-get obj slot :closql-table)))

@@ -3,7 +3,7 @@
 ;; URL: https://github.com/countvajhula/symex.el
 
 ;; This program is "part of the world," in the sense described at
-;; http://drym.org.  From your perspective, this is no different than
+;; https://drym.org.  From your perspective, this is no different than
 ;; MIT or BSD or other such "liberal" licenses that you may be
 ;; familiar with, that is to say, you are free to do whatever you like
 ;; with this program.  It is much more than BSD or MIT, however, in
@@ -20,9 +20,8 @@
 ;;
 
 ;;; Commentary:
-;;
+
 ;; Hydra modal frontend to symex.
-;;
 
 ;;; Code:
 
@@ -140,6 +139,10 @@ to enter, and any of the standard exits to exit."
   ("C-S-o" symex-append-newline "append newline")
   ("J" symex-join-lines "join lines")
   ("M-J" symex-collapse "collapse to single line")
+  ("M-<" symex-collapse "collapse to single line")
+  ("M->" symex-unfurl "unfurl across lines")
+  ("C-M-<" symex-collapse-remaining "collapse remaining")
+  ("C-M->" symex-unfurl-remaining "unfurl remaining")
   ("N" symex-join-lines-backwards "join lines backwards")
   ("0" symex-goto-first "go to first")
   ("M-h" symex-goto-first "go to first")

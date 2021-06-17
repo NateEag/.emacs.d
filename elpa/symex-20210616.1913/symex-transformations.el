@@ -3,7 +3,7 @@
 ;; URL: https://github.com/countvajhula/symex.el
 
 ;; This program is "part of the world," in the sense described at
-;; http://drym.org.  From your perspective, this is no different than
+;; https://drym.org.  From your perspective, this is no different than
 ;; MIT or BSD or other such "liberal" licenses that you may be
 ;; familiar with, that is to say, you are free to do whatever you like
 ;; with this program.  It is much more than BSD or MIT, however, in
@@ -20,9 +20,8 @@
 ;;
 
 ;;; Commentary:
-;;
+
 ;; Standard mutative operations to be performed on symexes.
-;;
 
 ;;; Code:
 
@@ -388,7 +387,8 @@ New list delimiters are determined by the TYPE."
           ((equal type 'curly)
            (insert "{}"))
           ((equal type 'angled)
-           (insert "<>")))))
+           (insert "<>"))))
+  (symex-tidy))
 
 (defun symex-create-round ()
   "Create new symex with round delimiters."
@@ -616,6 +616,34 @@ implementation."
                 (afterwards (not (at root)))))
    (apply-partially #'symex--join-lines t)
    :pre-traversal (symex-traversal (circuit symex--traversal-preorder-in-tree))))
+
+(defun symex-collapse-remaining ()
+  "Collapse the remaining symexes to the current line."
+  (interactive)
+  (save-excursion
+    (let ((line (line-number-at-pos)))
+      (symex--do-while-traversing (lambda ()
+                                    (unless (= line (line-number-at-pos))
+                                      (symex--join-lines t)))
+                                  (symex-make-move 1 0)))))
+
+(defun symex-unfurl-remaining ()
+  "Unfurl the remaining symexes so they each occupy separate lines."
+  (interactive)
+  (save-excursion
+    (symex--go-forward)
+    ;; do it once first since it will be executed as a side-effect
+    ;; _after_ each step in the traversal
+    (symex-insert-newline 1)
+    (symex--do-while-traversing (apply-partially #'symex-insert-newline 1)
+                                (symex-make-move 1 0))))
+
+(defun symex-unfurl ()
+  "Unfurl the constituent symexes so they each occupy separate lines."
+  (interactive)
+  (save-excursion
+    (symex--go-up)
+    (symex-unfurl-remaining)))
 
 (provide 'symex-transformations)
 ;;; symex-transformations.el ends here

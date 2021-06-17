@@ -3,7 +3,7 @@
 ;; URL: https://github.com/countvajhula/symex.el
 
 ;; This program is "part of the world," in the sense described at
-;; http://drym.org.  From your perspective, this is no different than
+;; https://drym.org.  From your perspective, this is no different than
 ;; MIT or BSD or other such "liberal" licenses that you may be
 ;; familiar with, that is to say, you are free to do whatever you like
 ;; with this program.  It is much more than BSD or MIT, however, in
@@ -20,13 +20,12 @@
 ;;
 
 ;;; Commentary:
-;;
+
 ;; Primitive navigations using third party libraries.  This layer of primitives
 ;; can be swapped out without changing the higher-level functionality provided
 ;; by the Symex DSL.  In the future it may make sense to directly operate on
 ;; an annotated representation of the AST here containing a mapping to buffer
 ;; positions and other metadata relevant for editing purposes.
-;;
 
 ;;; Code:
 
@@ -147,28 +146,43 @@
   "Check if the symex is a racket syntax object."
   (looking-at (concat "#['`]" lispy-left)))
 
+(defun symex--splicing-unquote-p ()
+  "Check if the symex is a spliced unquoted list."
+  (looking-at (concat ",@" lispy-left)))
+
+(defun symex--racket-splicing-unsyntax-p ()
+  "Check if the symex is a racket spliced unsyntaxed list."
+  (looking-at (concat "#,@" lispy-left)))
+
 (defun symex--quoted-list-p ()
   "Check if the symex is a quoted list."
   (looking-at (concat "['`]" lispy-left)))
+
+(defun symex--unquoted-list-p ()
+  "Check if the symex is an unquoted list."
+  (looking-at (concat "," lispy-left)))
 
 (defun symex--clojure-literal-lambda-p ()
   "Check if the symex is a clojurescript anonymous function literal."
   (looking-at (concat "#" lispy-left)))
 
 (defun symex--special-left-p ()
-  "Check if point is at a 'special' opening delimiter."
-  (or (symex--quoted-list-p)
-      (symex--racket-syntax-object-p)
-      (symex--clojure-literal-lambda-p)))
-
-(defun symex--special-empty-list-p ()
-  "Check if we're looking at a 'special' empty list.
+  "Check if point is at a 'special' opening delimiter.
 
 This includes any special cases that should be treated as lists for
 the purpose of movement, such as quoted lists and Lisp flavor-specific
 special forms.  This may be the sort of information that's best
 obtained from an AST-aware primitives layer, rather than parsed
 as special cases here."
+  (or (symex--quoted-list-p)
+      (symex--unquoted-list-p)
+      (symex--racket-syntax-object-p)
+      (symex--splicing-unquote-p)
+      (symex--racket-splicing-unsyntax-p)
+      (symex--clojure-literal-lambda-p)))
+
+(defun symex--special-empty-list-p ()
+  "Check if we're looking at a 'special' empty list."
   (or (save-excursion
         (and (symex--racket-syntax-object-p)
              (progn (forward-char 4)
@@ -314,10 +328,15 @@ of symex mode (use the public `symex-go-backward` instead)."
           ;; treating these special cases as "symex-left-p" but it
           ;; would likely be too much special case handling to be
           ;; worth it to support those cases naively, without an AST
-          ((and (symex--racket-syntax-object-p)
-                (not (symex--special-empty-list-p)))
+          ((or (and (symex--racket-syntax-object-p)
+                    (not (symex--special-empty-list-p)))
+               (symex--splicing-unquote-p))
            (forward-char 3))
-          ((and (or (symex--quoted-list-p) (symex--clojure-literal-lambda-p))
+          ((symex--racket-splicing-unsyntax-p)
+           (forward-char 4))
+          ((and (or (symex--quoted-list-p)
+                    (symex--unquoted-list-p)
+                    (symex--clojure-literal-lambda-p))
                 (not (symex--special-empty-list-p)))
            (forward-char 2))
           (t (setq result 0)))

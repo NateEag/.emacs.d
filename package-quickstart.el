@@ -5486,10 +5486,10 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20210505.11/symex-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20210616.1913/symex-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20210505.11/symex-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20210616.1913/symex-autoloads.el") (car load-path))))
 
 
 

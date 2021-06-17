@@ -3,7 +3,7 @@
 ;; URL: https://github.com/countvajhula/symex.el
 
 ;; This program is "part of the world," in the sense described at
-;; http://drym.org.  From your perspective, this is no different than
+;; https://drym.org.  From your perspective, this is no different than
 ;; MIT or BSD or other such "liberal" licenses that you may be
 ;; familiar with, that is to say, you are free to do whatever you like
 ;; with this program.  It is much more than BSD or MIT, however, in
@@ -20,9 +20,8 @@
 ;;
 
 ;;; Commentary:
-;;
+
 ;; Evil modal frontend to symex.
-;;
 
 ;;; Code:
 
@@ -40,7 +39,7 @@
 
 (define-minor-mode symex-editing-mode
   "Minor mode to modulate keybindings in symex evil state."
-  :lighter "symex"
+  :lighter " symex"
   :keymap symex-editing-mode-map)
 
 (evil-define-state symex
@@ -131,6 +130,10 @@ executing this command to get the expected behavior."
     ("C-S-o" . symex-append-newline)
     ("J" . symex-join-lines)
     ("M-J" . symex-collapse)
+    ("M-<" . symex-collapse)
+    ("M->" . symex-unfurl)
+    ("C-M-<" . symex-collapse-remaining)
+    ("C-M->" . symex-unfurl-remaining)
     ("0" . symex-goto-first)
     ("M-h" . symex-goto-first)
     ("$" . symex-goto-last)

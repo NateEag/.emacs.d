@@ -6,23 +6,25 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20210114.850
-;; Package-Commit: 2a29baa0cb6e364c5acbbf590a6d7c936c4378ae
+;; Package-Version: 20210615.1511
+;; Package-Commit: 9d8b2f758098d19781c7c5cdaeda5785e41be039
 
-;; This file is not part of GNU Emacs.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 3, or (at your option)
 ;; any later version.
-
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; For a full copy of the GNU General Public License
 ;; see <http://www.gnu.org/licenses/>.
+
+;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -290,9 +292,9 @@ to the command loop."
       (or (eq (selected-window)
               (old-selected-window))
           (and (not (zerop (minibuffer-depth)))
-	       (eq (selected-window)
-	           (with-selected-window (minibuffer-window)
-	             (minibuffer-selected-window)))))
+               (eq (selected-window)
+                   (with-selected-window (minibuffer-window)
+                     (minibuffer-selected-window)))))
     (eq (selected-window) moody--active-window)))
 
 (unless (fboundp 'old-selected-window)

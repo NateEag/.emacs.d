@@ -11839,10 +11839,10 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20210114.850/moody-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20210615.1511/moody-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20210114.850/moody-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20210615.1511/moody-autoloads.el") (car load-path))))
 
 
 

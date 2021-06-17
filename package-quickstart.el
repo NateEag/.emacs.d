@@ -19038,10 +19038,10 @@ format recognized by `kbd', for example \"C-x\".
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210413.802/format-all-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210608.2033/format-all-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210413.802/format-all-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210608.2033/format-all-autoloads.el") (car load-path))))
 
 
 
@@ -19098,7 +19098,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-" "fish-indent" "format-all-" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "purty" "resfmt" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-" "fish-indent" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "purty" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
 
 
 )

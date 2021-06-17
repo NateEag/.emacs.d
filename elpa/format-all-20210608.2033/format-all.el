@@ -2,8 +2,8 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20210413.802
-;; Package-Commit: eb5906c7070b667432194da3991daf21f24b516a
+;; Package-Version: 20210608.2033
+;; Package-Commit: 3a15ba2e99c01a054560542d7350fb54da64fbb4
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.3") (inheritenv "0.1") (language-id "0.12"))
 ;; Keywords: languages util
@@ -49,7 +49,7 @@
 ;; - GLSL (clang-format)
 ;; - Go (gofmt, goimports)
 ;; - GraphQL (prettier)
-;; - Haskell (brittany, hindent, ormolu, stylish-haskell)
+;; - Haskell (brittany, fourmolu, hindent, ormolu, stylish-haskell)
 ;; - HTML/XHTML/XML (tidy)
 ;; - Java (clang-format, astyle)
 ;; - JavaScript/JSON/JSX (prettier, standard)
@@ -68,8 +68,8 @@
 ;; - Python (black, yapf)
 ;; - R (styler)
 ;; - Reason (bsrefmt)
-;; - ReScript (resfmt)
-;; - Ruby (rufo)
+;; - ReScript (rescript)
+;; - Ruby (rubocop, rufo, standardrb)
 ;; - Rust (rustfmt)
 ;; - Scala (scalafmt)
 ;; - Shell script (beautysh, shfmt)
@@ -157,7 +157,7 @@
     ("Python" black)
     ("R" styler)
     ("Reason" bsrefmt)
-    ("ReScript" resfmt)
+    ("ReScript" rescript)
     ("Ruby" rufo)
     ("Rust" rustfmt)
     ("Scala" scalafmt)
@@ -481,6 +481,40 @@ If ARGS are given, those are arguments to EXECUTABLE.  They don't
 need to be shell-quoted."
   (apply 'format-all--buffer-hard nil nil nil executable args))
 
+(defun format-all--ruby-gem-bundled-p (gem-name)
+  "Internal helper function to check if GEM-NAME is listed in the current project's Gemfile.lock."
+  (let* ((lockfile "Gemfile.lock")
+         (dir (locate-dominating-file (buffer-file-name) lockfile)))
+    (and dir
+         (with-temp-buffer
+           (insert-file-contents (expand-file-name lockfile dir))
+           (re-search-forward (format "^    %s " (regexp-quote gem-name)) nil t))
+         t)))
+
+(defun format-all--buffer-hard-ruby
+    (gem-name ok-statuses error-regexp root-files executable &rest args)
+  "Internal helper function to implement ruby based formatters.
+
+GEM-NAME is the name of a Ruby gem required to run EXECUTABLE.
+
+For OK-STATUSES, ERROR-REGEXP, ROOT-FILES, EXECUTABLE and ARGS, see `format-all--buffer-hard'."
+  (let* ((error-regexp
+          (apply #'regexp-or
+                 "Bundler::GemNotFound"
+                 (concat "bundler: failed to load command: "
+                         (regexp-quote executable))
+                 (concat (regexp-or "bundle" (regexp-quote executable))
+                         ": command not found")
+                 (if error-regexp (list error-regexp))))
+         (command-args
+          (append (if (format-all--ruby-gem-bundled-p gem-name)
+                      '("bundle" "exec"))
+                  (cons executable (format-all--flatten-once args)))))
+    (format-all--buffer-hard
+     ok-statuses error-regexp root-files
+     (car command-args)
+     (cdr command-args))))
+
 (defvar format-all--executable-table (make-hash-table)
   "Internal table of formatter executable names for format-all.")
 
@@ -710,6 +744,12 @@ Consult the existing formatters for examples of BODY."
   (:languages "Fish")
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter fourmolu
+  (:executable "fourmolu")
+  (:install "stack install fourmolu")
+  (:languages "Haskell" "Literate Haskell")
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter fprettify
   (:executable "fprettify")
   (:install "pip install fprettify")
@@ -871,22 +911,41 @@ Consult the existing formatters for examples of BODY."
   (:languages "PureScript")
   (:format (format-all--buffer-easy executable "-")))
 
-(define-format-all-formatter resfmt
-  (:executable "resfmt")
-  (:install "pip install resfmt")
+(define-format-all-formatter rescript
+  (:executable "rescript")
+  (:install "npm install --global rescript")
   (:languages "ReScript")
-  (:format (format-all--buffer-easy executable)))
+  (:format
+   (format-all--buffer-easy
+    executable "format" "-stdin"
+    (let ((ext (if (not (buffer-file-name)) ""
+                   (file-name-extension (buffer-file-name)))))
+      (concat "." (if (equal ext "") "res" ext))))))
 
 (define-format-all-formatter rufo
   (:executable "rufo")
   (:install "gem install rufo")
   (:languages "Ruby")
   (:format
-   (format-all--buffer-easy
-    executable
+   (format-all--buffer-hard-ruby
+    "rufo" nil nil nil
+    "rufo"
     "--simple-exit"
     (when (buffer-file-name)
       (list "--filename" (buffer-file-name))))))
+
+(define-format-all-formatter rubocop
+  (:executable "rubocop")
+  (:install "gem install rubocop:'>=1.4.0'")
+  (:languages "Ruby")
+  (:format
+   (format-all--buffer-hard-ruby
+    "rubocop" '(0 1) nil nil
+    "rubocop"
+    "--auto-correct"
+    "--format" "quiet"
+    "--stderr"
+    "--stdin" (or (buffer-file-name) (buffer-name)))))
 
 (define-format-all-formatter rustfmt
   (:executable "rustfmt")
@@ -954,6 +1013,17 @@ Consult the existing formatters for examples of BODY."
    (format-all--buffer-hard
     '(0 1) ".*?:.*?:[0-9]+:[0-9]+: Parsing error:" nil
     executable "--fix" "--stdin")))
+
+(define-format-all-formatter standardrb
+  (:executable "standardrb")
+  (:install "gem install standard:'>=0.13.0'")
+  (:languages "Ruby")
+  (:format
+   (format-all--buffer-hard-ruby
+    "standard" '(0 1) nil nil
+    "standardrb"
+    "--fix"
+    "--stdin" (or (buffer-file-name) (buffer-name)))))
 
 (define-format-all-formatter styler
   (:executable "Rscript")
@@ -1031,9 +1101,10 @@ unofficial languages IDs are prefixed with \"_\"."
   (let ((executable (gethash formatter format-all--executable-table)))
     (when executable
       (or (executable-find executable)
-          (error (format-all--please-install
-                  executable
-                  (gethash formatter format-all--install-table)))))))
+          (signal 'format-all-executable-not-found
+                  (format-all--please-install
+                   executable
+                   (gethash formatter format-all--install-table)))))))
 
 (defun format-all--show-errors-buffer (error-output show-errors-p)
   "Internal shorthand function to update and show error output.

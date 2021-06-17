@@ -4321,15 +4321,15 @@ Switch to another buffer in another window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210509.1535/swiper-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210521.1319/swiper-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210509.1535/swiper-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210521.1319/swiper-autoloads.el") (car load-path))))
 
 
 
 (autoload 'swiper-avy "swiper" "\
-Jump to one of the current swiper candidates." t nil)
+Jump to one of the current swiper candidates with `avy'." t nil)
 
 (autoload 'swiper-backward "swiper" "\
 `isearch-backward' with an overview.

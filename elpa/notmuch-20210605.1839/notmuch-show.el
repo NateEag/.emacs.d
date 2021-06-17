@@ -39,19 +39,20 @@
 (require 'notmuch-print)
 (require 'notmuch-draft)
 
-(declare-function notmuch-call-notmuch-process "notmuch" (&rest args))
+(declare-function notmuch-call-notmuch-process "notmuch-lib" (&rest args))
 (declare-function notmuch-search-next-thread "notmuch" nil)
 (declare-function notmuch-search-previous-thread "notmuch" nil)
-(declare-function notmuch-search-show-thread "notmuch" nil)
+(declare-function notmuch-search-show-thread "notmuch")
 (declare-function notmuch-foreach-mime-part "notmuch" (function mm-handle))
 (declare-function notmuch-count-attachments "notmuch" (mm-handle))
 (declare-function notmuch-save-attachments "notmuch" (mm-handle &optional queryp))
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target unthreaded))
+			     open-target unthreaded parent-buffer))
 (declare-function notmuch-tree-get-message-properties "notmuch-tree" nil)
-(declare-function notmuch-unthreaded
-		  (&optional query query-context target buffer-name open-target))
+(declare-function notmuch-unthreaded "notmuch-tree"
+		  (&optional query query-context target buffer-name
+			     open-target))
 (declare-function notmuch-read-query "notmuch" (prompt))
 (declare-function notmuch-draft-resume "notmuch-draft" (id))
 
@@ -189,10 +190,10 @@ each attachment handler is logged in buffers with names beginning
 ;;; Options
 
 (defcustom notmuch-show-stash-mlarchive-link-alist
-  '(("Gmane" . "https://mid.gmane.org/")
-    ("MARC" . "https://marc.info/?i=")
+  '(("MARC" . "https://marc.info/?i=")
     ("Mail Archive, The" . "https://mid.mail-archive.com/")
-    ("LKML" . "https://lkml.kernel.org/r/")
+    ("Lore" . "https://lore.kernel.org/r/")
+    ("Notmuch" . "https://nmbug.notmuchmail.org/nmweb/show/")
     ;; FIXME: can these services be searched by `Message-Id' ?
     ;; ("MarkMail" . "http://markmail.org/")
     ;; ("Nabble" . "http://nabble.com/")
@@ -217,7 +218,7 @@ return the ML archive reference URI."
 			     (function :tag "Function returning the URL")))
   :group 'notmuch-show)
 
-(defcustom notmuch-show-stash-mlarchive-link-default "Gmane"
+(defcustom notmuch-show-stash-mlarchive-link-default "MARC"
   "Default Mailing List Archive to use when stashing links.
 
 This is used when `notmuch-show-stash-mlarchive-link' isn't

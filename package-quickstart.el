@@ -18068,10 +18068,10 @@ require buffer to be visiting a file.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gnuplot-20210104.1052/gnuplot-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gnuplot-20210609.834/gnuplot-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gnuplot-20210104.1052/gnuplot-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gnuplot-20210609.834/gnuplot-autoloads.el") (car load-path))))
 
 
 

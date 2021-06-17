@@ -9649,10 +9649,10 @@ NIL
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210511.1739/pdf-tools-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210531.1613/pdf-tools-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210511.1739/pdf-tools-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210531.1613/pdf-tools-autoloads.el") (car load-path))))
 
 
 

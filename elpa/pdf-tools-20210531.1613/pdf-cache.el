@@ -339,7 +339,7 @@ See also `pdf-info-renderpage-highlight' and
 
 (define-minor-mode pdf-cache-prefetch-minor-mode
   "Try to load images which will probably be needed in a while."
-  nil nil nil
+  :group 'pdf-cache
   (pdf-cache--prefetch-cancel)
   (cond
    (pdf-cache-prefetch-minor-mode
@@ -380,6 +380,7 @@ See also `pdf-info-renderpage-highlight' and
          (pdf-cache-pagelinks
           (pdf-view-current-page)))))))))
 
+(defvar pdf-view-use-scaling)
 (defun pdf-cache--prefetch-pages (window image-width)
   (when (and (eq window (selected-window))
              (pdf-util-pdf-buffer-p))
@@ -388,7 +389,7 @@ See also `pdf-info-renderpage-highlight' and
                   (pdf-cache-lookup-image
                    page
                    image-width
-                   (if (not (pdf-view-use-scaling-p))
+                   (if (not pdf-view-use-scaling)
                        image-width
                      (* 2 image-width))))
         (setq page (pop pdf-cache--prefetch-pages)))

@@ -92,10 +92,7 @@ FIXME: Explain dis-/advantages of imagemagick and png."
 This variable affects both the reuse of higher-resolution images
 as lower-resolution ones by down-scaling the image.  As well as
 the rendering of higher-resolution for high-resolution displays,
-if available.
-
-It has no effect, unless either the imagemagick or image-io
-image-format is available."
+if available."
   :group 'pdf-view
   :type 'boolean)
 
@@ -869,7 +866,7 @@ again."
   "Automatically slice pages according to their bounding boxes.
 
 See also `pdf-view-set-slice-from-bounding-box'."
-  nil nil nil
+  :group 'pdf-view
   (pdf-util-assert-pdf-buffer)
   (cond
    (pdf-view-auto-slice-minor-mode
@@ -911,12 +908,6 @@ See also `pdf-view-use-imagemagick'."
         (t
          (error "PNG image supported not compiled into Emacs"))))
 
-(defun pdf-view-use-scaling-p ()
-  "Return t if scaling should be used."
-  (and (memq (pdf-view-image-type)
-             '(imagemagick image-io))
-       pdf-view-use-scaling))
-
 (defmacro pdf-view-create-image (data &rest props)
   ;; TODO: add DATA and PROPS to docstring.
   "Like `create-image', but with set DATA-P and TYPE arguments."
@@ -935,7 +926,7 @@ See also `pdf-view-use-imagemagick'."
   (let* ((size (pdf-view-desired-image-size page window))
          (data (pdf-cache-renderpage
                 page (car size)
-                (if (not (pdf-view-use-scaling-p))
+                (if (not pdf-view-use-scaling)
                     (car size)
                   (* 2 (car size)))))
          (hotspots (pdf-view-apply-hotspot-functions
@@ -1150,7 +1141,7 @@ This will display a text cursor, when hovering over them."
   "Mode for PDF documents with dark background.
 
 This tells the various modes to use their face's dark colors."
-  nil nil nil
+  :group 'pdf-view
   (pdf-util-assert-pdf-buffer)
   ;; FIXME: This should really be run in a hook.
   (when (bound-and-true-p pdf-isearch-active-mode)
@@ -1161,7 +1152,8 @@ This tells the various modes to use their face's dark colors."
 
 (define-minor-mode pdf-view-printer-minor-mode
   "Display the PDF as it would be printed."
-  nil " Prn" nil
+  :group 'pdf-view
+  :lighter " Prn"
   (pdf-util-assert-pdf-buffer)
   (let ((enable (lambda ()
                   (pdf-info-setoptions :render/printed t))))
@@ -1181,8 +1173,8 @@ This tells the various modes to use their face's dark colors."
 
 The colors are determined by the variable
 `pdf-view-midnight-colors', which see. "
-
-  nil " Mid" nil
+  :group 'pdf-view
+  :lighter " Mid"
   (pdf-util-assert-pdf-buffer)
   ;; FIXME: Maybe these options should be passed stateless to pdf-info-renderpage ?
   (let ((enable (lambda ()
@@ -1226,8 +1218,8 @@ current theme's colors."
 
 The colors are determined by the `face-foreground' and
 `face-background' of the currently active theme."
-
-  nil " Thm" nil
+  :group 'pdf-view
+  :lighter " Thm"
   (pdf-util-assert-pdf-buffer)
   (cond
    (pdf-view-themed-minor-mode
@@ -1438,7 +1430,8 @@ This is more useful for commands like
               `(,(car colors) ,(cdr colors) 0.35 ,@region))
            (pdf-info-renderpage-text-regions
             page width nil nil
-            `(,(car colors) ,(cdr colors) ,@region)))))))
+            `(,(car colors) ,(cdr colors) ,@region)))
+       :width width))))
 
 (defun pdf-view-kill-ring-save ()
   "Copy the region to the `kill-ring'."

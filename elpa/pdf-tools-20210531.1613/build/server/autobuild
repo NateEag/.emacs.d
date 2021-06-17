@@ -167,9 +167,7 @@ have_packages_installed()
         which make || return 1
         which gcc || which cc || return 1
         which g++ || which c++ || return 1
-        cc $(pkg-config --cflags poppler) -o /dev/null -E - 2>/dev/null <<EOF
-        #include <PDFDocEncoding.h>
-EOF
+        c++ $(pkg-config --cflags poppler) -o /dev/null -E install_test.cpp 2>/dev/null
         [ $? -eq 0 ] || return 1
         return 0
     } >/dev/null 2>&1
@@ -490,10 +488,6 @@ if [ -n "$PKGCMD" ];then
     echo
 fi
 
-echo "---------------------------"
-echo " Configuring and compiling "
-echo "---------------------------"
-
 # Try to be in the correct directory.
 if which dirname >/dev/null 2>&1; then
     cd "$(dirname "$0")" || {
@@ -501,6 +495,10 @@ if which dirname >/dev/null 2>&1; then
         exit 1
     }
 fi
+
+echo "---------------------------"
+echo " Configuring and compiling "
+echo "---------------------------"
 
 # Create the configure script.
 if ! [ -f ./configure ]; then
@@ -515,8 +513,8 @@ if [ -n "$INSTALL_DIR" ]; then
     prefix=--bindir=$INSTALL_DIR
 fi
 
-echo "./configure -q $prefix && make -s"
-eval "./configure -q $(quote "$prefix") && make -s || exit_fail"
+echo "./configure -q $prefix && make clean && make -s"
+eval "./configure -q $(quote "$prefix") && make clean && make -s || exit_fail"
 echo
 if [ -n "$INSTALL_DIR" ]; then
     echo "---------------------------"

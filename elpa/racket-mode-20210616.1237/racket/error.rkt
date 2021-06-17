@@ -15,16 +15,16 @@
          "util.rkt")
 
 (provide display-exn
-         our-error-display-handler
+         racket-mode-error-display-handler
          prevent-path-elision-by-srcloc->string)
 
 (module+ test
   (require rackunit))
 
 (define (display-exn exn)
-  (our-error-display-handler (exn-message exn) exn))
+  (racket-mode-error-display-handler (exn-message exn) exn))
 
-(define (our-error-display-handler str v)
+(define (racket-mode-error-display-handler str v)
   (cond [(exn? v)
          (unless (equal? "Check failure" (exn-message v)) ;rackunit check fails
            (fresh-line)
@@ -197,15 +197,15 @@
            (check-equal? undone complete))]
         [_ (void)]))))
 
-;; If this looks like a source location where the pathname is not
-;; complete, prepend current-directory if that results in an actually
+;; If this looks like a source location where the pathname is
+;; relative, prepend current-directory if that results in an actually
 ;; existing file.
 (define (complete-paths s)
   (regexp-replace*
    #px"([^:]+):(\\d+[:.]\\d+)"
    s
    (λ (_ orig-path line+col)
-     (~a (or (and (not (complete-path? orig-path))
+     (~a (or (and (relative-path? orig-path)
                   (existing (build-path (current-directory) orig-path)))
              orig-path)
          ":" line+col))))

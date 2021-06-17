@@ -599,7 +599,7 @@ FN is the function to call on click."
   "Make empty lines half normal lines."
   (progn  ; Customize line before header
     (goto-char 1)
-    (insert (propertize "\n" 'face '(:height 0.2))))
+    (insert (propertize "\n" 'face '(:height 0.3))))
   (progn  ; Customize line after header
     (forward-line 1)
     (insert (propertize " " 'face '(:height 0.1))))
@@ -738,7 +738,6 @@ FN is the function to call on click."
                    (-zip-with 'lsp-ui-doc--inline-zip buffer-strings it)
                    (string-join it "\n")
                    (concat it "\n"))))
-    (add-face-text-property 0 (length merged) 'default t merged)
     merged))
 
 (defun lsp-ui-doc--inline-pos-at (start lines)
@@ -774,6 +773,7 @@ HEIGHT is the documentation number of lines."
           (ov (if (overlayp lsp-ui-doc--inline-ov) lsp-ui-doc--inline-ov
                 (setq lsp-ui-doc--inline-ov (make-overlay start end)))))
     (move-overlay ov start end)
+    (overlay-put ov 'face 'default)
     (overlay-put ov 'display (lsp-ui-doc--inline-merge buffer-string))
     (overlay-put ov 'lsp-ui-doc-inline t)
     (overlay-put ov 'window (selected-window))))

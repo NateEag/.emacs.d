@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/auto-compile
 ;; Keywords: compile, convenience, lisp
-;; Package-Version: 20210518.1020
-;; Package-Commit: 3af0b02393ca4f207f1e454161f7bd8a747f3051
+;; Package-Version: 20210615.1457
+;; Package-Commit: 0f3afc6b057f9c9a3b60966f36e34cb46008cf61
 
 ;; Package-Requires: ((emacs "25.1") (packed "3.0.3"))
 
@@ -550,12 +550,12 @@ pretend the byte code file exists.")
         (pcase success
           (`no-byte-compile)
           (`t (message "Wrote %s.{%s,%s}%s"
-                        (file-name-sans-extension
-                         (file-name-sans-extension file))
-                        (progn (string-match "\\(\\.[^./]+\\)+$" file)
-                               (substring (match-string 0 file) 1))
-                        (file-name-extension dest)
-                        (if loaddefs " (+)" "")))
+                       (file-name-sans-extension
+                        (file-name-sans-extension file))
+                       (progn (string-match "\\(\\.[^./]+\\)+$" file)
+                              (substring (match-string 0 file) 1))
+                       (file-name-extension dest)
+                       (if loaddefs " (+)" "")))
           (_  (message "Wrote %s (byte-compiling failed)" file))))
       success)))
 

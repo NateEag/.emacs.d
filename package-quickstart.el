@@ -23134,10 +23134,10 @@ don’t re-activate minor modes already enabled in the buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-compile-20210518.1020/auto-compile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-compile-20210615.1457/auto-compile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-compile-20210518.1020/auto-compile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-compile-20210615.1457/auto-compile-autoloads.el") (car load-path))))
 
 
 

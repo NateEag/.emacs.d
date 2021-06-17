@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/rfc-mode-20210510.1104/rfc-mode.el  -*- no-byte-compile: t -*-
-(define-package "rfc-mode" "20210510.1104" "RFC document browser and viewer" '((emacs "25.1")) :commit "b885d6bd2b3be69a2413c4dc5cc34344d821cba2" :authors '(("Nicolas Martyanoff" . "khaelin@gmail.com")) :maintainer '("Nicolas Martyanoff" . "khaelin@gmail.com") :url "https://github.com/galdor/rfc-mode")

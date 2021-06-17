@@ -18157,10 +18157,10 @@ Run an inferior Gnuplot process." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210426.2132/gitignore-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210528.1856/gitignore-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210426.2132/gitignore-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/gitignore-mode-20210528.1856/gitignore-mode-autoloads.el") (car load-path))))
 
 
 

@@ -19883,10 +19883,10 @@ Start a evil-tutor session.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210325.123/evil-matchit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210609.1311/evil-matchit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210325.123/evil-matchit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210609.1311/evil-matchit-autoloads.el") (car load-path))))
 
 
 

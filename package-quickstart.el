@@ -1848,10 +1848,10 @@ Read a string using a pos-frame with given PROMPT and INITIAL-INPUT.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210518.2056/treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/treemacs-20210606.1918/treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210518.2056/treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/treemacs-20210606.1918/treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -1899,14 +1899,17 @@ Edit your treemacs workspaces and projects as an `org-mode' file." t nil)
 (autoload 'treemacs-display-current-project-exclusively "treemacs" "\
 Display the current project, and *only* the current project.
 Like `treemacs-add-and-display-current-project' this will add the current
-project to treemacs based on either projectile or the built-in project.el.
+project to treemacs based on either projectile, the built-in project.el, or the
+current working directory.
+
 However the 'exclusive' part means that it will make the current project the
 only project, all other projects *will be removed* from the current workspace." t nil)
 
 (autoload 'treemacs-add-and-display-current-project "treemacs" "\
 Open treemacs and add the current project root to the workspace.
 The project is determined first by projectile (if treemacs-projectile is
-installed), then by project.el.
+installed), then by project.el, then by the current working directory.
+
 If the project is already registered with treemacs just move point to its root.
 An error message is displayed if the current buffer is not part of any project." t nil)
 

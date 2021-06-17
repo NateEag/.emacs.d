@@ -114,7 +114,7 @@ them instead."
   (interactive "P")
   (treemacs-do-for-button-state
    :on-root-node-open   (treemacs--collapse-root-node btn arg)
-   :on-root-node-closed (treemacs--expand-root-node btn)
+   :on-root-node-closed (treemacs--expand-root-node btn arg)
    :on-dir-node-open    (treemacs--collapse-dir-node btn arg)
    :on-dir-node-closed  (treemacs--expand-dir-node btn :recursive arg)
    :on-file-node-open   (treemacs--collapse-file-node btn arg)
@@ -369,8 +369,12 @@ Treemacs knows how to open files on linux, windows and macos."
         ('darwin
          (shell-command (format "open \"%s\"" path)))
         ('gnu/linux
-         (let ((process-connection-type nil))
-           (start-process "" nil "xdg-open" path)))
+         (let (process-connection-type)
+           (start-process
+            "" nil "sh" "-c"
+            ;; XXX workaround for #633
+            (format "xdg-open %s; sleep 1"
+                    (shell-quote-argument path)))))
         (_ (treemacs-pulse-on-failure "Don't know how to open files on %s."
              (propertize (symbol-name system-type) 'face 'font-lock-string-face))))
     (treemacs-pulse-on-failure "Nothing to open here.")))

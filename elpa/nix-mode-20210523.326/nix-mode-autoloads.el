@@ -194,14 +194,24 @@ See `completion-at-point-functions'." nil nil)
 ;;;### (autoloads nil "nix-search" "nix-search.el" (0 0 0 0))
 ;;; Generated autoloads from nix-search.el
 
+(autoload 'nix-search--search "nix-search" "\
+
+
+\(fn SEARCH FILE &optional NO-CACHE USE-FLAKES)" nil nil)
+
+(autoload 'nix-search--display "nix-search" "\
+
+
+\(fn RESULTS &optional DISPLAY-BUFFER USE-FLAKES SEARCH FILE)" nil nil)
+
 (autoload 'nix-search "nix-search" "\
 Run nix search.
 SEARCH a search term to use.
 FILE a Nix expression to search in.
 
-\(fn &optional SEARCH FILE)" t nil)
+\(fn SEARCH &optional FILE DISPLAY-BUFFER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-search" '("nix-search-read-attr")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-search" '("nix-search-")))
 
 ;;;***
 

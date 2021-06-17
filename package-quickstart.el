@@ -11032,10 +11032,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20210124.204/nix-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20210523.326/nix-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20210124.204/nix-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20210523.326/nix-mode-autoloads.el") (car load-path))))
 
 
 
@@ -11192,14 +11192,24 @@ See `completion-at-point-functions'." nil nil)
 
 
 
+(autoload 'nix-search--search "nix-search" "\
+
+
+\(fn SEARCH FILE &optional NO-CACHE USE-FLAKES)" nil nil)
+
+(autoload 'nix-search--display "nix-search" "\
+
+
+\(fn RESULTS &optional DISPLAY-BUFFER USE-FLAKES SEARCH FILE)" nil nil)
+
 (autoload 'nix-search "nix-search" "\
 Run nix search.
 SEARCH a search term to use.
 FILE a Nix expression to search in.
 
-\(fn &optional SEARCH FILE)" t nil)
+\(fn SEARCH &optional FILE DISPLAY-BUFFER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-search" '("nix-search-read-attr")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-search" '("nix-search-")))
 
 
 

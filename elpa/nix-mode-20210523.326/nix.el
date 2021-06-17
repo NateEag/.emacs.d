@@ -17,6 +17,7 @@
 ;;; Code:
 
 (require 'pcomplete)
+(require 'json)
 
 (defgroup nix nil
   "Nix-related customizations"
@@ -59,24 +60,26 @@
 
 (defun nix-system ()
   "Get the current system tuple."
-  (let ((stdout (generate-new-buffer "nix eval"))
-        result)
-    (call-process nix-executable nil (list stdout nil) nil
-		  "eval" "--raw" "(builtins.currentSystem)")
-    (with-current-buffer stdout (setq result (buffer-string)))
-    (kill-buffer stdout)
-    result))
+  (with-temp-buffer
+    (if (nix-is-24)
+	(call-process nix-executable nil (list t nil) nil "eval" "--impure" "--raw" "--expr" "(builtins.currentSystem)")
+      (call-process nix-executable nil (list t nil) nil "eval" "--raw" "(builtins.currentSystem)"))
+    (buffer-string)))
 
 (defvar nix-version nil)
 (defun nix-version ()
   "Get the version of Nix"
-  (if nix-version nix-version
-    (let ((stdout (generate-new-buffer "nix eval"))
-          result)
-      (call-process nix-executable nil (list stdout nil) nil "--version")
-      (with-current-buffer stdout (setq result (buffer-string)))
-      (kill-buffer stdout)
-      result)))
+  (or nix-version
+    (with-temp-buffer
+      (call-process nix-executable nil (list t nil) nil "--version")
+      (buffer-string))))
+
+(defun nix-show-config ()
+  "Show nix config."
+  (with-temp-buffer
+    (call-process nix-executable nil (list t nil) nil "show-config" "--json")
+    (goto-char (point-min))
+    (json-read)))
 
 (defvar nix-commands
   '("add-to-store"
@@ -187,10 +190,23 @@ OPTIONS a list of options to accept."
        ((or (string= "-s" last-arg) (string= "--substituter" last-arg))
         (pcomplete-here))))))
 
+(defun nix-is-24 ()
+  "Whether Nix is a version with Flakes support."
+  ;; earlier versions reported as 3, now it’s just nix-2.4
+  (let ((version (nix-version)))
+    (or (string-prefix-p "nix (Nix) 3" version)
+        (string-prefix-p "nix (Nix) 2.4" version))))
+
+(defun nix-has-flakes ()
+  "Whether Nix is a version with Flakes support."
+  ;; earlier versions reported as 3, now it’s just nix-2.4
+  (and (nix-is-24)
+       (seq-contains-p (alist-get 'value (alist-get 'experimental-features (nix-show-config))) "flakes")))
+
 ;;;###autoload
 (defun pcomplete/nix ()
   "Completion for the nix command."
-  (if (string-prefix-p "nix (Nix) 3" (nix-version))
+  (if (nix-is-24)
       (let ((stdout (generate-new-buffer "nix-completions"))
             (process-environment
              (cons (format "NIX_GET_COMPLETIONS=%s" (1- (length pcomplete-args)))

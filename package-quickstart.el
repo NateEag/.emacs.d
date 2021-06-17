@@ -19512,10 +19512,10 @@ Enable `flymake-phpstan' as buffer-local Flymake backend." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20201126.603/flycheck-phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20210617.1036/flycheck-phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20201126.603/flycheck-phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flycheck-phpstan-20210617.1036/flycheck-phpstan-autoloads.el") (car load-path))))
 
 
 

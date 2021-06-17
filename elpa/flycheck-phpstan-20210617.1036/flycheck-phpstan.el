@@ -5,8 +5,8 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.5.0
-;; Package-Version: 20201126.603
-;; Package-Commit: 6863a5278fc656cddb604b0c6e165f05d0171d0a
+;; Package-Version: 20210617.1036
+;; Package-Commit: 9350e23969bf26de5b240d5eb7f5ac8d7c4889b6
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3") (flycheck "26") (phpstan "0.5.0"))
@@ -51,8 +51,7 @@
   (let ((enabled (phpstan-enabled)))
     (prog1 enabled
       (when (and phpstan-flycheck-auto-set-executable
-                 (not (and (boundp 'flycheck-phpstan-executable)
-                           (symbol-value 'flycheck-phpstan-executable)))
+                 (null (bound-and-true-p flycheck-phpstan-executable))
                  (or (stringp phpstan-executable)
                      (eq 'docker phpstan-executable)
                      (and (eq 'root (car-safe phpstan-executable))
@@ -60,11 +59,7 @@
                      (and (stringp (car-safe phpstan-executable))
                           (listp (cdr-safe phpstan-executable)))
                      (null phpstan-executable)))
-        (set (make-local-variable 'flycheck-phpstan-executable)
-             (cond
-              ((eq 'docker phpstan-executable) phpstan-docker-executable)
-              ((stringp phpstan-executable) phpstan-executable)
-              (t (car phpstan-executable))))))))
+        (setq-local flycheck-phpstan-executable (nth 0 (phpstan-get-executable)))))))
 
 (flycheck-define-checker phpstan
   "PHP static analyzer based on PHPStan."

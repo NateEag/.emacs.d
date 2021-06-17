@@ -18337,10 +18337,10 @@ If target path is not found in COMMITISH tree, go up path and try again until fo
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-timemachine-20200603.701/git-timemachine-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-timemachine-20210528.908/git-timemachine-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-timemachine-20200603.701/git-timemachine-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-timemachine-20210528.908/git-timemachine-autoloads.el") (car load-path))))
 
 
 

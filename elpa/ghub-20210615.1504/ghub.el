@@ -412,12 +412,12 @@ this function is called with nil for PAYLOAD."
               (setq-default ghub-response-headers headers))
             page)
         (cdr (assq 'link-alist ghub-response-headers)))
-  (when-let ((rels (cdr (assoc "Link" (or headers ghub-response-headers)))))
-    (mapcar (lambda (elt)
-              (pcase-let ((`(,url ,rel) (split-string elt "; ")))
-                (cons (intern (substring rel 5 -1))
-                      (substring url 1 -1))))
-            (split-string rels ", ")))))
+    (when-let ((rels (cdr (assoc "Link" (or headers ghub-response-headers)))))
+      (mapcar (lambda (elt)
+                (pcase-let ((`(,url ,rel) (split-string elt "; ")))
+                  (cons (intern (substring rel 5 -1))
+                        (substring url 1 -1))))
+              (split-string rels ", ")))))
 
 (cl-defun ghub-repository-id (owner name &key username auth host forge noerror)
   "Return the id of the specified repository.
@@ -816,13 +816,13 @@ or (info \"(ghub)Getting Started\") for instructions.
              (user-error "The empty string is not a valid username")
            (call-process
             "git" nil nil nil "config"
-            (and (eq (read-char-choice
-                      (format
-                       "Set %s=%s [g]lobally (recommended) or [l]ocally? "
-                       var user)
-                      (list ?g ?l))
-                     ?g)
-                 "--global")
+            (if (eq (read-char-choice
+                     (format "Set %s=%s [g]lobally (recommended) or [l]ocally? "
+                             var user)
+                     (list ?g ?l))
+                    ?g)
+                "--global"
+              "--local")
             var user)
            user))))))
 

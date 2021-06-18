@@ -18,6 +18,11 @@
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold 10000000)
 
+;; Get package fetching to work under Emacs 27.1:
+;;
+;; https://github.com/melpa/melpa/issues/7238
+(setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3")
+
 ;; TODO Ignore site lisp files, as much as we can. Mac OS X Mojave included
 ;; some that made make-process take a minimum of five seconds, at least with my
 ;; setup. :/

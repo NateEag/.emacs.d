@@ -90,8 +90,7 @@
 (use-package notmuch
   ;; I don't exactly love emoji, but people use them in emails, so I guess I'd
   ;; rather see what they're communicating than not.
-  :hook ((notmuch-search-mode . emojify-mode)
-         (notmuch-show-mode . emojify-mode))
+  :hook ((notmuch-search-mode notmuch-show-mode message-mode) . emojify-mode)
   :config
   (progn
     ;; TODO Stop marking deleted and spam messages as read.

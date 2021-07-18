@@ -85,7 +85,7 @@
 
 ;; If a directory doesn't exist on the way to a new file, create it.
 (defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
-  "Create parent directory if not exists while visiting file."
+  "Create non-existent parent directories on opening a file."
   (unless (file-exists-p filename)
     (let ((dir (file-name-directory filename)))
       (unless (file-exists-p dir)

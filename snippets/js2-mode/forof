@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: forof
+# key: forof
+# --
+for (var ${1:value} of $2) {
+    $0
+}

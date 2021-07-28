@@ -1,7 +1,11 @@
 # -*- mode: snippet -*-
 # name: forof
 # key: forof
+#
+# An ES 6-specific snippet. Use `let` in for/of loops because the loop variable
+# is then scoped to the loop and you won't inadvertantly use it elsewhere while
+# it's still holding the final value from the loop, as you could with `var`.
 # --
-for (var ${1:value} of $2) {
+for (let ${1:value} of $2) {
     $0
 }

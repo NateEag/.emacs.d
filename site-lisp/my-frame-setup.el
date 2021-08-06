@@ -29,7 +29,11 @@ in the gutter.")
          (*
           (/ (float (display-pixel-width)) (display-mm-width))
           ;; Multiplier chosen experimentally - there's no smarts to this.
-          4.44))
+          ;;
+          ;; N.B.: This is strongly impacted by what font you're using. I chose
+          ;; 4.0 arbitrarily and it seems to work okay for Anonymous Pro on a
+          ;; MacBook Pro, but it may well not hold up very well elsewhere.
+          4.0))
 
       ;; If we can't compute display density, 14 pixels is a decent default.
       14)))

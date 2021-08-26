@@ -795,6 +795,8 @@ With this alias I hope to not need to remember it.")
   :hook (todotxt-mode-hook . (lambda () (aggressive-fill-paragraph-mode -1))))
 
 (use-package apache-mode
+  ;; A rule specific to a system I use at $DAYJOB.
+  :mode "default-[[:digit:]]\\{8\\}\\'"
   :hook (apache-mode . conf-mode-init))
 
 (use-package nginx-mode)

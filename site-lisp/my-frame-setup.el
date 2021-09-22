@@ -137,7 +137,7 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
 (defun my-set-frame-width-by-window-count (num-windows)
   "Set frame width by number of desired 80-char windows."
 
-  (interactive "N")
+  (interactive "NHow many side-by-side windows? ")
 
   (set-frame-width (selected-frame) (* my-window-width num-windows))
 

@@ -1,0 +1,2 @@
+;;; Generated package description from qrencode.el  -*- no-byte-compile: t -*-
+(define-package "qrencode" "20211002.1215" "QRCode encoder" '((emacs "25.1")) :commit "eb2d5bad076b17a8c431200be7357460a7d3c088" :authors '(("Rüdiger Sonderfeld" . "ruediger@c-plusplus.net")) :maintainer '("Rüdiger Sonderfeld" . "ruediger@c-plusplus.net") :keywords '("qrcode" "comm") :url "https://github.com/ruediger/qrencode-el")

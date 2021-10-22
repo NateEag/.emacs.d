@@ -7100,6 +7100,42 @@ Minor mode for interactively reloading CSS stylesheets.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20211006.1413/sidecar-locals-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20211006.1413/sidecar-locals-autoloads.el") (car load-path))))
+
+
+
+(autoload 'sidecar-locals-report "sidecar-locals" "\
+Report paths that are used to detect locals.
+
+This creates a buffer with links that visit that file." t nil)
+
+(defvar sidecar-locals-mode nil "\
+Non-nil if Sidecar-Locals mode is enabled.
+See the `sidecar-locals-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `sidecar-locals-mode'.")
+
+(custom-autoload 'sidecar-locals-mode "sidecar-locals" nil)
+
+(autoload 'sidecar-locals-mode "sidecar-locals" "\
+Toggle variable `sidecar-locals-mode' in the current buffer.
+
+If called interactively, enable Sidecar-Locals mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sidecar-locals" '("sidecar-locals-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137/sicp-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8365,6 +8401,25 @@ commands directly to whatever keys you prefer.
 
 (add-to-list 'load-path (directory-file-name
                          (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/queue-0.2/queue-autoloads.el") (car load-path))))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/qrencode-20211002.1215/qrencode-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/qrencode-20211002.1215/qrencode-autoloads.el") (car load-path))))
+
+
+
+(autoload 'qrencode-region "qrencode" "\
+Encode region between BEG and END into a QR code and show in a buffer.
+
+\(fn BEG END)" t nil)
+
+(autoload 'qrencode-url-at-point "qrencode" "\
+Encode any URL found at point." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "qrencode" '("qrencode")))
 
 
 )
@@ -10946,6 +11001,37 @@ matched.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "rstdoc" '("rst")))
 
 
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20210703.2133/notmuch-transient-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20210703.2133/notmuch-transient-autoloads.el") (car load-path))))
+
+
+ (autoload 'notmuch-hello-mode-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-tree-mode-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-search-mode-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-search-stash-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-show-mode-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-show-stash-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-show-part-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-search-transient "notmuch-transient" nil t)
+ (autoload 'notmuch-tag-transient "notmuch-transient" nil t)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-transient" '("notmuch-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20210615.1512/notmuch-addr-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20210615.1512/notmuch-addr-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-addr" '("notmuch-addr")))
 
 
 )
@@ -16268,6 +16354,17 @@ Display the template of a media-type
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/khalel-20211003.1150/khalel-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/khalel-20211003.1150/khalel-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "khalel" '("khalel-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/key-chord-20201222.2030/key-chord-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -19915,6 +20012,36 @@ Start a evil-tutor session.
 \(fn)" t nil)
 
 (defalias 'evil-tutor-resume 'evil-tutor-start)
+
+
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20211008.1630/evil-textobj-tree-sitter-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20211008.1630/evil-textobj-tree-sitter-autoloads.el") (car load-path))))
+
+
+
+(autoload 'evil-textobj-tree-sitter-get-textobj "evil-textobj-tree-sitter" "\
+Macro to create a textobj function from `GROUP'.
+You can pass in multiple groups as a list and in that case as long as
+any one of them is available, it will be picked.
+
+You can optionally pass in a alist mapping `major-mode' to their
+respective tree-sitter query in `QUERY' with named captures to use
+that instead of the default query list.  Check the README file in the
+repo to see how to use it.
+
+Check this url for builtin objects
+https://github.com/nvim-treesitter/nvim-treesitter-textobjects#built-in-textobjects
+
+\(fn GROUP &optional QUERY)" nil t)
+
+(function-put 'evil-textobj-tree-sitter-get-textobj 'lisp-indent-function 'defun)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-textobj-tree-sitter" '("evil-textobj-tree-sitter-")))
 
 
 
@@ -24032,14 +24159,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg bind-key use-package unicode-troll-stopper undo-tree typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode ...)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" ...)
          Info-directory-list)))
 
 ;; Local Variables:

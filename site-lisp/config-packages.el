@@ -337,7 +337,9 @@ The shell command lives in my dotfiles repo."
 
 (use-package crontab-mode
   :mode "\\.cron\\(tab\\)?\\'"
-  :config (add-hook 'crontab-mode-hook 'conf-mode-init))
+  :config (add-hook 'crontab-mode-hook '(lambda () (aggressive-fill-paragraph-mode nil)))
+          (add-hook 'crontab-mode-hook 'conf-mode-init)
+          )
 
 (use-package evil-smartparens
   :commands evil-sp-smartparens-config)

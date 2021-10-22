@@ -33,6 +33,7 @@
  '(debug-on-quit nil)
  '(delete-selection-mode t)
  '(evil-mode-line-format nil nil nil "Since I use a block cursor in normal mode and a bar for insert, I don't need to see my evil-state in the modeline.")
+ '(evil-undo-system 'undo-tree)
  '(evil-want-fine-undo t)
  '(exec-path-from-shell-arguments '("-l"))
  '(exec-path-from-shell-variables '("PATH" "MANPATH" "EMAIL") nil nil "Since I use notmuch and mbsync at work and home, it's convenient to have Emacs pick up my EMAIL var.")
@@ -107,7 +108,7 @@
  '(package-enable-at-startup nil)
  '(package-quickstart t nil nil "I like my startup time to be as low as it reasonably can.")
  '(package-selected-packages
-   '(bufler separedit sexp-diff vcard ac-emmet ac-helm ac-html ac-html-csswatcher ac-ispell ac-slime ace-jump-mode aggressive-fill-paragraph anzu ascii backup-walker bats-mode beacon browse-kill-ring browse-url-dwim bug-hunter cask-mode compact-docstrings csv cycle-quotes cygwin-mount diffview dynamic-spaces el2markdown eldoc-overlay-mode elisp-def elpl elpygen esup evil-commentary evil-escape evil-indent-textobject evil-leader evil-tutor flycheck-css-colorguard focus-autosave-mode frame-cmds free-keys git-blamed git-gutter git-gutter-fringe+ git-walktree gitattributes-mode gitconfig-mode gitignore-mode gnuplot-mode goto-line-preview helm-git-files hideshowvis iss-mode js-doc jscs key-chord know-your-http-well literate-coffee-mode lsp-java lsp-origami macrostep magit-patch-changelog markdown-changelog minimap mo-git-blame names neotree nginx-mode origami osx-plist parse-it php-auto-yasnippets pip-requirements popwin puppet-mode pyenv-mode pyimpsort regex-tool reveal-in-folder reveal-in-osx-finder rfc-mode s sane-term scss-mode shell-pop sicp skewer-reload-stylesheets slack smart-tabs-mode string-edit string-inflection sublimity tagedit tea-time tern-auto-complete toggle-quotes undo-tree yasnippet-classic-snippets))
+   '(evil-textobj-tree-sitter khalel notmuch-addr notmuch-transient qrencode sidecar-locals bufler separedit sexp-diff vcard ac-emmet ac-helm ac-html ac-html-csswatcher ac-ispell ac-slime ace-jump-mode aggressive-fill-paragraph anzu ascii backup-walker bats-mode beacon browse-kill-ring browse-url-dwim bug-hunter cask-mode compact-docstrings csv cycle-quotes cygwin-mount diffview dynamic-spaces el2markdown eldoc-overlay-mode elisp-def elpl elpygen esup evil-commentary evil-escape evil-indent-textobject evil-leader evil-tutor flycheck-css-colorguard focus-autosave-mode frame-cmds free-keys git-blamed git-gutter git-gutter-fringe+ git-walktree gitattributes-mode gitconfig-mode gitignore-mode gnuplot-mode goto-line-preview helm-git-files hideshowvis iss-mode js-doc jscs key-chord know-your-http-well literate-coffee-mode lsp-java lsp-origami macrostep magit-patch-changelog markdown-changelog minimap mo-git-blame names neotree nginx-mode origami osx-plist parse-it php-auto-yasnippets pip-requirements popwin puppet-mode pyenv-mode pyimpsort regex-tool reveal-in-folder reveal-in-osx-finder rfc-mode s sane-term scss-mode shell-pop sicp skewer-reload-stylesheets slack smart-tabs-mode string-edit string-inflection sublimity tagedit tea-time tern-auto-complete toggle-quotes undo-tree yasnippet-classic-snippets))
  '(php-mode-coding-style 'psr2 nil nil "PSR-2 is not ideal, but it's a standard.")
  '(php-mode-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")
  '(php-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")
@@ -177,4 +178,5 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(default ((((class color) (min-colors 89)) (:foreground "#839496" :background "#002b36"))))
  '(fringe ((t nil))))

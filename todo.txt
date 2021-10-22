@@ -423,8 +423,8 @@
   I guess I should ask about this on emacs-devel (if git blame doesn't shed any
   light).
 
-  If this is actually the case, then I wasted a ton of my life duplicating
-  logic that was already supposed to be in comment-fill-paragraph. :/
+  If this is actually the case, then I spent hours of my life duplicating logic
+  that was already supposed to be in comment-fill-paragraph. :/
 
   Ah well, I did learn a fair bit from it.
 

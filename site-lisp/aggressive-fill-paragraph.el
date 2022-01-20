@@ -102,6 +102,10 @@ deletion, so it definitely feels like a workaround."
   ;; TODO Rename this as afp-point-on-blank-line? if this logic works out.
   (looking-at "^$"))
 
+(defun afp-in-email-headers? ()
+  (and (derived-mode-p 'message-mode)
+       (save-excursion (search-forward "--text follows this line--" nil t))))
+
 (defun afp-outside-comment-and-comment-only-mode? ()
 
   (and (afp-comment-only-mode?) (afp-outside-comment?)))
@@ -227,6 +231,7 @@ Note that `delete-region' will have no effect if entered here - see
    #'afp-markdown-inside-code-block?
    #'afp-point-in-blank-lines?
    #'afp-start-of-paragraph?
+   #'afp-in-email-headers?
    #'afp-in-bulleted-list?
    #'afp-in-formatted-paragraph?
    #'afp-in-org-table?

@@ -4,10 +4,10 @@
 
 ;; Author: ROCKTAKEY <rocktakey@gmail.com>
 ;; Keywords: languages, tex
-;; Package-Version: 20210608.1330
-;; Package-Commit: 0e4c96a625bd83930cac338eb7a998c024a15f38
+;; Package-Version: 20210815.1426
+;; Package-Commit: 3f6b2ac9585682828eef81f895757f74cfba7309
 
-;; Version: 2.0.3
+;; Version: 2.0.4
 
 ;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0"))
 ;; URL: https://github.com/ROCKTAKEY/lsp-latex
@@ -341,7 +341,7 @@ should be vector."
   (vconcat lsp-latex-forward-search-args))
 
 (defun lsp-latex-setup-variables ()
-  "Register texlab customization variables to lsp-mode."
+  "Register texlab customization variables to function `lsp-mode'."
   (interactive)
   (if (and
        (executable-find lsp-latex-texlab-executable)

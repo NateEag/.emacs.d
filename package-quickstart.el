@@ -15001,10 +15001,10 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210613.1645/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220201.852/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20210613.1645/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220201.852/lsp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -15036,6 +15036,11 @@ Explain a clang-tidy ERROR by scraping documentation from llvm.org.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clangd" '("lsp-c")))
 
 
+
+(autoload 'lsp-clojure-show-test-tree "lsp-clojure" "\
+Show a test tree and focus on it if IGNORE-FOCUS? is nil.
+
+\(fn IGNORE-FOCUS\\=\\?)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-clojure" '("lsp-clojure-")))
 
@@ -15169,6 +15174,10 @@ Load all of the provided PROJECTS.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-graphql" '("lsp-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-groovy" '("lsp-groovy-")))
 
 
@@ -15230,12 +15239,24 @@ language server doesn't support renaming.
 
 See also `lsp-enable-symbol-highlighting'." t nil)
 
+(autoload 'lsp-iedit-linked-ranges "lsp-iedit" "\
+Start an `iedit' for `textDocument/linkedEditingRange'" t nil)
+
 (autoload 'lsp-evil-multiedit-highlights "lsp-iedit" "\
 Start an `evil-multiedit' operation on the documentHighlights at point.
 This can be used as a primitive `lsp-rename' replacement if the
 language server doesn't support renaming.
 
 See also `lsp-enable-symbol-highlighting'." t nil)
+
+(autoload 'lsp-evil-multiedit-linked-ranges "lsp-iedit" "\
+Start an `evil-multiedit' for `textDocument/linkedEditingRange'" t nil)
+
+(autoload 'lsp-evil-state-highlights "lsp-iedit" "\
+Start `iedit-mode'. for `textDocument/documentHighlight'" t nil)
+
+(autoload 'lsp-evil-state-linked-ranges "lsp-iedit" "\
+Start `iedit-mode'. for `textDocument/linkedEditingRange'" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-iedit" '("lsp-iedit--on-ranges")))
 
@@ -15275,7 +15296,7 @@ ARG is `toggle'; disable the mode otherwise.
 (autoload 'lsp-avy-lens "lsp-lens" "\
 Click lsp lens using `avy' package." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lens" '("lsp-lens-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lens" '("lsp-")))
 
 
 
@@ -15287,7 +15308,40 @@ Click lsp lens using `avy' package." t nil)
 
 
 (put 'lsp-enable-file-watchers 'safe-local-variable #'booleanp)
+(put 'lsp-file-watch-ignored-directories 'safe-local-variable 'lsp--string-listp)
+(put 'lsp-file-watch-ignored-files 'safe-local-variable 'lsp--string-listp)
 (put 'lsp-file-watch-threshold 'safe-local-variable (lambda (i) (or (numberp i) (not i))))
+
+(autoload 'lsp--string-listp "lsp-mode" "\
+Return t if all elements of SEQUENCE are strings, else nil.
+
+\(fn SEQUENCE)" nil nil)
+
+(autoload 'lsp-load-vscode-workspace "lsp-mode" "\
+Load vscode workspace from FILE
+
+\(fn FILE)" t nil)
+
+(autoload 'lsp-save-vscode-workspace "lsp-mode" "\
+Save vscode workspace to FILE
+
+\(fn FILE)" t nil)
+
+(autoload 'lsp-install-server "lsp-mode" "\
+Interactively install or re-install server.
+When prefix UPDATE? is t force installation even if the server is present.
+
+\(fn UPDATE\\=\\? &optional SERVER-ID)" t nil)
+
+(autoload 'lsp-update-server "lsp-mode" "\
+Interactively update a server.
+
+\(fn &optional SERVER-ID)" t nil)
+
+(autoload 'lsp-ensure-server "lsp-mode" "\
+Ensure server SERVER-ID
+
+\(fn SERVER-ID)" nil nil)
 
 (autoload 'lsp "lsp-mode" "\
 Entry point for the server startup.
@@ -15304,7 +15358,12 @@ Entry point that defers server startup until buffer is visible.
 `lsp-deferred' will wait until the buffer is visible before invoking `lsp'.
 This avoids overloading the server with many files when starting Emacs." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
+(autoload 'lsp-start-plain "lsp-mode" "\
+Start `lsp-mode' using mininal configuration using the latest `melpa' version of the packages.
+
+In case the major-mode that you are using for " t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("defcustom-lsp" "lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
 
 
 
@@ -15344,6 +15403,10 @@ mode otherwise.
 \(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-modeline" '("lsp-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-nginx" '("lsp-nginx-server-command")))
 
 
 
@@ -15395,6 +15458,10 @@ mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-remark" '("lsp-remark-server-command")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-rf" '("expand-start-command" "lsp-rf-language-server-" "parse-rf-language-server-")))
 
 
@@ -15405,9 +15472,7 @@ mode otherwise.
 
 (autoload 'lsp--semantic-tokens-initialize-buffer "lsp-semantic-tokens" "\
 Initialize the buffer for semantic tokens.
-IS-RANGE-PROVIDER is non-nil when server supports range requests.
-
-\(fn IS-RANGE-PROVIDER)" nil nil)
+IS-RANGE-PROVIDER is non-nil when server supports range requests." nil nil)
 
 (autoload 'lsp--semantic-tokens-initialize-workspace "lsp-semantic-tokens" "\
 Initialize semantic tokens for WORKSPACE.
@@ -15459,6 +15524,14 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-tex" '("lsp-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-toml" '("lsp-toml-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-v" '("lsp-v-vls-executable")))
 
 
 

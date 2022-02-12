@@ -5,7 +5,7 @@
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Package-Requires: ((emacs "26.1") (cl-lib "0.5") (dash "2.11.0") (s "1.12.0") (ace-window "0.9.0") (pfuture "1.7") (hydra "0.13.2") (ht "2.2") (cfrs "1.3.2"))
 ;; Homepage: https://github.com/Alexander-Miller/treemacs
-;; Version: 2.8
+;; Version: 2.9.5
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -51,7 +51,7 @@
 
 (defconst treemacs-version
   (eval-when-compile
-    (format "v2.8 (installed %s) @ Emacs %s"
+    (format "v2.9.5 (installed %s) @ Emacs %s"
             (format-time-string "%Y.%m.%d" (current-time))
             emacs-version)))
 
@@ -68,18 +68,49 @@
   treemacs-version)
 
 ;;;###autoload
-(defun treemacs ()
+(defun treemacs (&optional arg)
   "Initialise or toggle treemacs.
-* If the treemacs window is visible hide it.
-* If a treemacs buffer exists, but is not visible show it.
-* If no treemacs buffer exists for the current frame create and show it.
-* If the workspace is empty additionally ask for the root path of the first
-  project to add."
-  (interactive)
+- If the treemacs window is visible hide it.
+- If a treemacs buffer exists, but is not visible show it.
+- If no treemacs buffer exists for the current frame create and show it.
+- If the workspace is empty additionally ask for the root path of the first
+  project to add.
+- With a prefix ARG launch treemacs and force it to select a workspace"
+  (interactive "P")
   (pcase (treemacs-current-visibility)
+    ((guard arg)
+     (treemacs-do-switch-workspace (treemacs--select-workspace-by-name))
+     (treemacs-select-window))
     ('visible (delete-window (treemacs-get-local-window)))
     ('exists  (treemacs-select-window))
     ('none    (treemacs--init))))
+
+;;;###autoload
+(defun treemacs-select-directory ()
+  "Select a directory to open in treemacs.
+This command will open *just* the selected directory in treemacs.  If there are
+other projects in the workspace they will be removed.
+
+To *add* a project to the current workspace use
+`treemacs-add-project-to-workspace' or
+`treemacs-add-and-display-current-project' instead."
+  (interactive)
+  (treemacs-block
+   (let* ((path (-> "Directory: "
+                    (read-directory-name)
+                    (treemacs-canonical-path)))
+          (name (treemacs--filename path))
+          (ws (treemacs-current-workspace)))
+     (treemacs-return-if
+         (and (= 1 (length (treemacs-workspace->projects ws)))
+              (string= path (-> ws
+                                (treemacs-workspace->projects)
+                                (car)
+                                (treemacs-project->path))))
+       (treemacs-select-window))
+     (treemacs--show-single-project path name)
+     (treemacs-pulse-on-success "Now showing %s"
+       (propertize path 'face 'font-lock-string-face)))))
 
 ;;;###autoload
 (defun treemacs-find-file (&optional arg)
@@ -141,16 +172,33 @@ visiting a file or Emacs cannot find any tags for the current file."
      (treemacs--do-follow-tag index treemacs-window buffer-file project))))
 
 ;;;###autoload
-(defun treemacs-select-window ()
+(defun treemacs-select-window (&optional arg)
   "Select the treemacs window if it is visible.
 Bring it to the foreground if it is not visible.
 Initialise a new treemacs buffer as calling `treemacs' would if there is no
-treemacs buffer for this frame."
-  (interactive)
+treemacs buffer for this frame.
+
+In case treemacs is already selected behaviour will depend on
+`treemacs-select-when-already-in-treemacs'.
+
+A non-nil prefix ARG will also force a workspace switch."
+  (interactive "P")
   (pcase (treemacs-current-visibility)
-    ('visible (treemacs--select-visible-window))
+    ((guard arg)
+     (treemacs-do-switch-workspace (treemacs--select-workspace-by-name))
+     (treemacs-select-window))
     ('exists  (treemacs--select-not-visible-window))
-    ('none    (treemacs--init))))
+    ('none    (treemacs--init))
+    ('visible
+     (if (not (eq treemacs--in-this-buffer t))
+         (treemacs--select-visible-window)
+       (pcase-exhaustive treemacs-select-when-already-in-treemacs
+           ('stay
+            (ignore))
+           ('close
+            (treemacs-quit))
+           ('move-back
+            (select-window (get-mru-window (selected-frame) nil :not-selected))))))))
 
 ;;;###autoload
 (defun treemacs-show-changelog ()
@@ -203,25 +251,9 @@ only project, all other projects *will be removed* from the current workspace."
            (and (= 1 (length (treemacs-workspace->projects ws)))
                 (treemacs-is-path path :in-workspace ws))
          (treemacs-select-window))
-       (if (treemacs-workspace->is-empty?)
-           (progn
-             (treemacs-do-add-project-to-workspace path name)
-             (treemacs-select-window)
-             (treemacs-pulse-on-success))
-         (setf (treemacs-workspace->projects ws)
-               (--filter (string= path (treemacs-project->path it))
-                         (treemacs-workspace->projects ws)))
-         (unless (treemacs-workspace->projects ws)
-           (let ((treemacs--no-messages t)
-                 (treemacs-pulse-on-success nil))
-             (treemacs-add-project-to-workspace path name)))
-         (treemacs-select-window)
-         (treemacs--consolidate-projects)
-         (goto-char 2)
-         (-let [btn (treemacs-current-button)]
-           (unless (treemacs-is-node-expanded? btn)
-             (treemacs--expand-root-node btn)))
-         (treemacs-pulse-on-success))))))
+       (treemacs--show-single-project path name)
+       (treemacs-pulse-on-success "Now showing %s"
+         (propertize path 'face 'font-lock-string-face))))))
 
 ;;;###autoload
 (defun treemacs-add-and-display-current-project ()

@@ -3,6 +3,20 @@
 
 * Changelog
 ** current master
+- Added ~treemacs-width-increment~ and the ability to resize the treemacs window incrementally
+- Added ~treemacs-indent-guide-mode~
+- Added option to close treemacs when visiting nodes with a double prefix arg
+- Added ~treemacs-visit-node-close-treemacs~
+- Added ~treemacs-fit-widdow-width~
+- Added ~treemacs-extra-wide-toggle~
+- Added ~treemacs-next-workspace~
+- Added ~treemacs-find-workspace-method~
+- Added option for ~treemacs-select-window~ to close treemacs when it is already selected
+- Added ~detailed~ option for ~treemacs-eldoc-display~
+- Added ~treemacs-select-directory~
+- Added option to select workspace when starting/selecting treemacs
+- Promoted peeking into a proper minor mode
+** v2.9
 - Published ~treemacs-all-the-icons~
 - Added ~treemacs-workspace-switch-cleanup~
 - Added support for disabling the mode line
@@ -22,6 +36,10 @@
 - Added ~treemacs-narrow-to-current-file~
 - Added ~treemacs-cleanup-litter~
 - Added ~treemacs-expand-after-init~
+- Added ~treemacs-width-is-initially-locked~
+- Added ~treemacs-hide-gitignored-files-mode~
+- Added ~treemacs-select-when-already-in-treemacs~
+- Added ~treemacs-text-scale~
 - Added option to only show the fringe indicator when the treemacs window is
   selected
 - Implemented one hand navigation with ~h~ collapsing nodes and ~l~ functioning like ~RET~, ~M-H/L~

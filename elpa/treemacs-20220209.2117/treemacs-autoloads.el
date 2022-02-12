@@ -14,11 +14,23 @@ Return the `treemacs-version'." t nil)
 
 (autoload 'treemacs "treemacs" "\
 Initialise or toggle treemacs.
-* If the treemacs window is visible hide it.
-* If a treemacs buffer exists, but is not visible show it.
-* If no treemacs buffer exists for the current frame create and show it.
-* If the workspace is empty additionally ask for the root path of the first
-  project to add." t nil)
+- If the treemacs window is visible hide it.
+- If a treemacs buffer exists, but is not visible show it.
+- If no treemacs buffer exists for the current frame create and show it.
+- If the workspace is empty additionally ask for the root path of the first
+  project to add.
+- With a prefix ARG launch treemacs and force it to select a workspace
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'treemacs-select-directory "treemacs" "\
+Select a directory to open in treemacs.
+This command will open *just* the selected directory in treemacs.  If there are
+other projects in the workspace they will be removed.
+
+To *add* a project to the current workspace use
+`treemacs-add-project-to-workspace' or
+`treemacs-add-and-display-current-project' instead." t nil)
 
 (autoload 'treemacs-find-file "treemacs" "\
 Find and focus the current file in the treemacs window.
@@ -42,7 +54,14 @@ visiting a file or Emacs cannot find any tags for the current file." t nil)
 Select the treemacs window if it is visible.
 Bring it to the foreground if it is not visible.
 Initialise a new treemacs buffer as calling `treemacs' would if there is no
-treemacs buffer for this frame." t nil)
+treemacs buffer for this frame.
+
+In case treemacs is already selected behaviour will depend on
+`treemacs-select-when-already-in-treemacs'.
+
+A non-nil prefix ARG will also force a workspace switch.
+
+\(fn &optional ARG)" t nil)
 
 (autoload 'treemacs-show-changelog "treemacs" "\
 Show the changelog of treemacs." t nil)
@@ -152,6 +171,53 @@ treemacs node is pointing to a valid buffer position." t nil)
 ;;; Generated autoloads from treemacs-extensions.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-extensions" '("treemacs-")))
+
+;;;***
+
+;;;### (autoloads nil "treemacs-file-management" "treemacs-file-management.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from treemacs-file-management.el
+
+(autoload 'treemacs-delete-file "treemacs-file-management" "\
+Delete node at point.
+A delete action must always be confirmed.  Directories are deleted recursively.
+By default files are deleted by moving them to the trash.  With a prefix ARG
+they will instead be wiped irreversibly.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'treemacs-move-file "treemacs-file-management" "\
+Move file (or directory) at point.
+Destination may also be a filename, in which case the moved file will also
+be renamed." t nil)
+
+(autoload 'treemacs-copy-file "treemacs-file-management" "\
+Copy file (or directory) at point.
+Destination may also be a filename, in which case the copied file will also
+be renamed." t nil)
+
+(autoload 'treemacs-rename-file "treemacs-file-management" "\
+Rename the file/directory at point.
+
+Buffers visiting the renamed file or visiting a file inside the renamed
+directory and windows showing them will be reloaded.  The list of recent files
+will likewise be updated." t nil)
+
+(autoload 'treemacs-create-file "treemacs-file-management" "\
+Create a new file.
+Enter first the directory to create the new file in, then the new file's name.
+The pre-selection for what directory to create in is based on the \"nearest\"
+path to point - the containing directory for tags and files or the directory
+itself, using $HOME when there is no path at or near point to grab." t nil)
+
+(autoload 'treemacs-create-dir "treemacs-file-management" "\
+Create a new directory.
+Enter first the directory to create the new dir in, then the new dir's name.
+The pre-selection for what directory to create in is based on the \"nearest\"
+path to point - the containing directory for tags and files or the directory
+itself, using $HOME when there is no path at or near point to grab." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-file-management" '("treemacs-")))
 
 ;;;***
 
@@ -321,12 +387,13 @@ Must be bound to a mouse click, or EVENT will not be supplied.
 
 (autoload 'treemacs-doubleclick-action "treemacs-mouse-interface" "\
 Run the appropriate double-click action for the current node.
-In the default configuration this means to do the same as `treemacs-RET-action'.
+In the default configuration this means to expand/collapse directories and open
+files and tags in the most recently used window.
 
 This function's exact configuration is stored in
 `treemacs-doubleclick-actions-config'.
 
-Must be bound to a mouse click, or EVENT will not be supplied.
+Must be bound to a mouse double click to properly handle a click EVENT.
 
 \(fn EVENT)" t nil)
 
@@ -373,11 +440,100 @@ Show a contextual right click menu based on click EVENT.
 
 ;;;***
 
+;;;### (autoloads nil "treemacs-peek-mode" "treemacs-peek-mode.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from treemacs-peek-mode.el
+
+(defvar treemacs-peek-mode nil "\
+Non-nil if Treemacs-Peek mode is enabled.
+See the `treemacs-peek-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `treemacs-peek-mode'.")
+
+(custom-autoload 'treemacs-peek-mode "treemacs-peek-mode" nil)
+
+(autoload 'treemacs-peek-mode "treemacs-peek-mode" "\
+Minor mode that allows you to peek at buffers before deciding to open them.
+
+If called interactively, enable Treemacs-Peek mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+While the mode is active treemacs will automatically display the file at point,
+without leaving the treemacs window.
+
+Peeking will stop when you leave the treemacs window, be it through a command
+like `treemacs-RET-action' or some other window selection change.
+
+Files' buffers that have been opened for peeking will be cleaned up if they did
+not exist before peeking started.
+
+The peeked window can be scrolled using
+`treemacs-next/previous-line-other-window' and
+`treemacs-next/previous-page-other-window'
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-peek-mode" '("treemacs--")))
+
+;;;***
+
 ;;;### (autoloads nil "treemacs-persistence" "treemacs-persistence.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from treemacs-persistence.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-persistence" '("treemacs-")))
+
+;;;***
+
+;;;### (autoloads nil "treemacs-project-follow-mode" "treemacs-project-follow-mode.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from treemacs-project-follow-mode.el
+
+(defvar treemacs-project-follow-mode nil "\
+Non-nil if Treemacs-Project-Follow mode is enabled.
+See the `treemacs-project-follow-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `treemacs-project-follow-mode'.")
+
+(custom-autoload 'treemacs-project-follow-mode "treemacs-project-follow-mode" nil)
+
+(autoload 'treemacs-project-follow-mode "treemacs-project-follow-mode" "\
+Toggle `treemacs-only-current-project-mode'.
+
+If called interactively, enable Treemacs-Project-Follow mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+This is a minor mode meant for those who do not care about treemacs' workspace
+features, or its preference to work with multiple projects simultaneously.  When
+enabled it will function as an automated version of
+`treemacs-display-current-project-exclusively', making sure that, after a small
+idle delay, the current project, and *only* the current project, is displayed in
+treemacs.
+
+The project detection is based on the current buffer, and will try to determine
+the project using the following methods, in the order they are listed:
+
+- the current projectile.el project, if `treemacs-projectile' is installed
+- the current project.el project
+- the current `default-directory'
+
+The update will only happen when treemacs is in the foreground, meaning a
+treemacs window must exist in the current scope.
+
+This mode requires at least Emacs version 27 since it relies on
+`window-buffer-change-functions' and `window-selection-change-functions'.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "treemacs-project-follow-mode" '("treemacs--")))
 
 ;;;***
 

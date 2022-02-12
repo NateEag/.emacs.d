@@ -194,7 +194,8 @@ ARG is optional and only available so this function can be used as an action."
 
 (defun treemacs-visit-node-vertical-split (&optional arg)
   "Open current file or tag by vertically splitting `next-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :split-function #'split-window-vertically
@@ -202,12 +203,13 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-horizontal-split (&optional arg)
   "Open current file or tag by horizontally splitting `next-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :split-function #'split-window-horizontally
@@ -215,27 +217,38 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
+(defun treemacs-visit-node-close-treemacs (&optional _)
+  "Open current node without and close treemacs.
+Works just like calling `treemacs-visit-node-no-split' with a double prefix
+arg."
+  (interactive "P")
+  (treemacs-visit-node-no-split '(16)))
+
 (defun treemacs-visit-node-no-split (&optional arg)
-  "Open current file or tag within the window the file is already opened in.
-If the file/tag is no visible opened in any window use `next-window' instead.
-Stay in current window with a prefix argument ARG."
+  "Open current node without performing any window split or window selection.
+The node will be displayed in the window next to treemacs, the exact selection
+is determined by `next-window'.  If the node is already opened in some other
+window then that window will be selected instead.
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :file-action (find-file (treemacs-safe-button-get btn :path))
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :ensure-window-split t
    :window  (-some-> btn (treemacs--nearest-path) (get-file-buffer) (get-buffer-window))
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-ace (&optional arg)
   "Open current file or tag in window selected by `ace-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :window (aw-select "Select window")
@@ -243,13 +256,14 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :ensure-window-split t
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-in-most-recently-used-window (&optional arg)
   "Open current file or tag in window selected by `get-mru-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :window (get-mru-window (selected-frame) nil :not-selected)
@@ -257,13 +271,14 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :ensure-window-split t
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-ace-horizontal-split (&optional arg)
   "Open current file by horizontally splitting window selected by `ace-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :split-function #'split-window-horizontally
@@ -272,12 +287,13 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-ace-vertical-split (&optional arg)
   "Open current file by vertically splitting window selected by `ace-window'.
-Stay in current window with a prefix argument ARG."
+Stay in the current window with a single prefix argument ARG, or close the
+treemacs window with a double prefix argument."
   (interactive "P")
   (treemacs--execute-button-action
    :split-function #'split-window-vertically
@@ -286,7 +302,7 @@ Stay in current window with a prefix argument ARG."
    :dir-action (dired (treemacs-safe-button-get btn :path))
    :tag-section-action (treemacs--visit-or-expand/collapse-tag-node btn arg nil)
    :tag-action (treemacs--goto-tag btn)
-   :save-window arg
+   :window-arg arg
    :no-match-explanation "Node is neither a file, a directory or a tag - nothing to do here."))
 
 (defun treemacs-visit-node-default (&optional arg)
@@ -337,7 +353,8 @@ In the default configuration this usually means to close the content of the
 currently selected node.  A potential prefix ARG is passed on to the executed
 action, if possible.
 
-This function's exact configuration is stored in `treemacs-COLLAPSE-actions-config'."
+This function's exact configuration is stored in
+`treemacs-COLLAPSE-actions-config'."
   (interactive "P")
   (-when-let (state (treemacs--prop-at-point :state))
     (--if-let (cdr (assq state treemacs-COLLAPSE-actions-config))
@@ -398,124 +415,11 @@ With a prefix ARG call `treemacs-kill-buffer' instead."
       (kill-buffer-and-window))
     (run-hooks 'treemacs-kill-hook)))
 
-(defun treemacs-delete (&optional arg)
-  "Delete node at point.
-A delete action must always be confirmed.  Directories are deleted recursively.
-By default files are deleted by moving them to the trash.  With a prefix ARG
-they will instead be wiped irreversibly."
-  (interactive "P")
-  (treemacs-block
-   (treemacs-unless-let (btn (treemacs-current-button))
-       (treemacs-pulse-on-failure "Nothing to delete here.")
-     (treemacs-error-return-if (not (memq (treemacs-button-get btn :state)
-                                          '(file-node-open file-node-closed dir-node-open dir-node-closed)))
-       "Only files and directories can be deleted.")
-     (treemacs--without-filewatch
-      (let* ((delete-by-moving-to-trash (not arg))
-             (path (treemacs-button-get btn :path))
-             (file-name (propertize (treemacs--filename path) 'face 'font-lock-string-face)))
-        (cond
-         ((file-symlink-p path)
-          (if (yes-or-no-p (format "Remove link '%s -> %s' ? "
-                                     file-name
-                                     (propertize (file-symlink-p path) 'face 'font-lock-face)))
-              (delete-file path delete-by-moving-to-trash)
-            (treemacs-return (treemacs-log "Cancelled."))))
-         ((file-regular-p path)
-          (if (yes-or-no-p (format "Delete '%s' ? " file-name))
-              (delete-file path delete-by-moving-to-trash)
-            (treemacs-return (treemacs-log "Cancelled."))))
-         ((file-directory-p path)
-          (if (yes-or-no-p (format "Recursively delete '%s' ? " file-name))
-              (delete-directory path t delete-by-moving-to-trash)
-            (treemacs-return (treemacs-log "Cancelled."))))
-         (t
-          (treemacs-error-return
-              (treemacs-pulse-on-failure
-                  "Item is neither a file, a link or a directory - treemacs does not know how to delete it. (Maybe it no longer exists?)"))))
-        (treemacs--on-file-deletion path)
-        (treemacs-without-messages
-         (treemacs-run-in-every-buffer
-          (treemacs-delete-single-node path)))
-        (run-hook-with-args 'treemacs-delete-file-functions path)
-        (treemacs-log "Deleted %s."
-          (propertize path 'face 'font-lock-string-face))))
-     (treemacs--evade-image))))
-
-(defun treemacs-create-file ()
-  "Create a new file.
-Enter first the directory to create the new file in, then the new file's name.
-The pre-selection for what directory to create in is based on the \"nearest\"
-path to point - the containing directory for tags and files or the directory
-itself, using $HOME when there is no path at or near point to grab."
-  (interactive)
-  (treemacs--create-file/dir t))
-
-(defun treemacs-move-file ()
-  "Move file (or directory) at point.
-Destination may also be a filename, in which case the moved file will also
-be renamed."
-  (interactive)
-  (treemacs--copy-or-move :move))
-
-(defun treemacs-copy-file ()
-  "Copy file (or directory) at point.
-Destination may also be a filename, in which case the copied file will also
-be renamed."
-  (interactive)
-  (treemacs--copy-or-move :copy))
-
-(cl-defun treemacs-rename ()
-  "Rename the currently selected node.
-Buffers visiting the renamed file or visiting a file inside a renamed directory
-and windows showing them will be reloaded.  The list of recent files will
-likewise be updated."
-  (interactive)
-  (treemacs-block
-   (-let [btn (treemacs-current-button)]
-     (treemacs-error-return-if (null btn)
-       "Nothing to rename here.")
-     (let* ((old-path (treemacs-button-get btn :path))
-            (project (treemacs--find-project-for-path old-path))
-            (new-path nil)
-            (new-name nil)
-            (dir nil))
-       (treemacs-error-return-if (null old-path)
-         "Found nothing to rename here.")
-       (treemacs-error-return-if (not (file-exists-p old-path))
-         "The file to be renamed does not exist.")
-       (setq new-name (treemacs--read-string "New name: " (file-name-nondirectory old-path))
-             dir      (treemacs--parent-dir old-path)
-             new-path (treemacs-join-path dir new-name))
-       (treemacs-error-return-if (file-exists-p new-path)
-         "A file named %s already exists."
-         (propertize new-name 'face font-lock-string-face))
-       (treemacs--without-filewatch (rename-file old-path new-path))
-       (treemacs--replace-recentf-entry old-path new-path)
-       (-let [treemacs-silent-refresh t]
-         (treemacs-run-in-every-buffer
-          (treemacs--on-rename old-path new-path treemacs-filewatch-mode)
-          (treemacs--do-refresh (current-buffer) project)))
-       (treemacs--reload-buffers-after-rename old-path new-path)
-       (treemacs-goto-file-node new-path project)
-       (run-hook-with-args
-        'treemacs-rename-file-functions
-        old-path new-path)
-       (treemacs-pulse-on-success "Renamed %s to %s."
-         (propertize (treemacs--filename old-path) 'face font-lock-string-face)
-         (propertize new-name 'face font-lock-string-face))))))
-
-(defun treemacs-create-dir ()
-  "Create a new directory.
-Enter first the directory to create the new dir in, then the new dir's name.
-The pre-selection for what directory to create in is based on the \"nearest\"
-path to point - the containing directory for tags and files or the directory
-itself, using $HOME when there is no path at or near point to grab."
-  (interactive)
-  (treemacs--create-file/dir nil))
-
 (defun treemacs-toggle-show-dotfiles ()
-  "Toggle the hiding and displaying of dotfiles."
+  "Toggle the hiding and displaying of dotfiles.
+
+For toggling the display of git-ignored files see
+`treemacs-hide-gitignored-files-mode'."
   (interactive)
   (setq treemacs-show-hidden-files (not treemacs-show-hidden-files))
   (treemacs-run-in-every-buffer
@@ -546,6 +450,38 @@ With a prefix ARG simply reset the width of the treemacs window."
                (format "New Width (current = %s): ")
                (read-number))))
   (treemacs--set-width treemacs-width))
+
+  (defun treemacs-increase-width (&optional arg)
+    "Increase the value for `treemacs-width' with `treemacs-width-increment'.
+With a prefix ARG add the increment value multiple times."
+    (interactive "P")
+    (let* ((treemacs-window (treemacs-get-local-window))
+            (multiplier (if (numberp arg) arg 1))
+            (old-width (window-body-width treemacs-window))
+            (new-width (+ old-width (* multiplier treemacs-width-increment))))
+      (setq treemacs-width new-width)
+      (treemacs--set-width new-width)
+      (let ((current-size (window-body-width treemacs-window)))
+        (when (not (eq current-size new-width))
+          (setq treemacs-width old-width)
+          (treemacs--set-width old-width)
+          (treemacs-pulse-on-failure "Could not increase window width!")))))
+
+  (defun treemacs-decrease-width (&optional arg)
+    "Decrease the value for `treemacs-width' with `treemacs-width-increment'.
+With a prefix ARG substract the increment value multiple times."
+    (interactive "P")
+    (let* ((treemacs-window (treemacs-get-local-window))
+            (multiplier (if (numberp arg) arg 1))
+            (old-width (window-body-width treemacs-window))
+            (new-width (- old-width (* multiplier treemacs-width-increment))))
+      (setq treemacs-width new-width)
+      (treemacs--set-width new-width)
+      (let ((current-size (window-body-width treemacs-window)))
+        (when (not (eq current-size new-width))
+          (setq treemacs-width old-width)
+          (treemacs--set-width old-width)
+          (treemacs-pulse-on-failure "Could not decrease window width!")))))
 
 (defun treemacs-copy-absolute-path-at-point ()
   "Copy the absolute path of the node at point."
@@ -835,12 +771,14 @@ With a prefix ARG select project to remove by name."
             save-pos (not (equal project (treemacs-project-at-point)))))
     (pcase (if save-pos
                (treemacs-save-position
-                (treemacs-do-remove-project-from-workspace project))
-             (treemacs-do-remove-project-from-workspace project))
+                (treemacs-do-remove-project-from-workspace project nil :ask))
+             (treemacs-do-remove-project-from-workspace project nil :ask))
       (`success
        (whitespace-cleanup)
        (treemacs-pulse-on-success "Removed project %s from the workspace."
          (propertize (treemacs-project->name project) 'face 'font-lock-type-face)))
+      (`user-cancel
+       (ignore))
       (`cannot-delete-last-project
        (treemacs-pulse-on-failure "Cannot delete the last project."))
       (`(invalid-project ,reason)
@@ -980,24 +918,6 @@ With a prefix ARG also forget about all the nodes opened in the projects."
   (treemacs--maybe-recenter 'on-distance)
   (treemacs-pulse-on-success "Collapsed all other projects"))
 
-(defun treemacs-peek ()
-  "Peek at the content of the node at point.
-This will display the file (or tag) at point in `next-window' much like
-`treemacs-visit-node-no-split' would.  The difference that the file is not
-really (or rather permanently) opened - any command other than `treemacs-peek',
-`treemacs-next-line-other-window', `treemacs-previous-line-other-window',
-`treemacs-next-page-other-window' or `treemacs-previous-page-other-window' will
-cause it to be closed again and the previously shown buffer to be restored.  The
-buffer visiting the peeked file will also be killed again, unless it was already
-open before being used for peeking."
-  (interactive)
-  (treemacs--execute-button-action
-   :save-window t
-   :ensure-window-split t
-   :window (-some-> btn (treemacs--nearest-path) (get-file-buffer) (get-buffer-window))
-   :no-match-explanation "Only files and tags are peekable."
-   :file-action (treemacs--setup-peek-buffer btn)
-   :tag-action (treemacs--setup-peek-buffer btn t)))
 
 (defun treemacs-root-up (&optional _)
   "Move treemacs' root one level upward.
@@ -1154,7 +1074,7 @@ Only works with a single project in the workspace."
          treemacs-persist-file
          nil :silent)
         (treemacs--restore)
-        (-if-let (ws (treemacs--select-workspace-by-name
+        (-if-let (ws (treemacs--find-workspace-by-name
                       (treemacs-workspace->name (treemacs-current-workspace))))
             (setf (treemacs-current-workspace) ws)
           (treemacs--find-workspace))
@@ -1165,6 +1085,8 @@ Only works with a single project in the workspace."
           (quit-window)
           (kill-buffer-and-window))
         (run-hooks 'treemacs-workspace-edit-hook)
+        (when treemacs-hide-gitignored-files-mode
+          (treemacs--prefetch-gitignore-cache 'all))
         (treemacs-log "Edit completed successfully."))))))
 
 (defun treemacs-collapse-parent-node (arg)
@@ -1327,6 +1249,62 @@ To programmatically set the scope type see `treemacs-set-scope-type'."
                   (goto-char it)
                   (treemacs-toggle-node :purge)))))))))
     (treemacs-pulse-on-success "Cleanup complete.")))
+
+(defun treemacs-fit-window-width ()
+  "Make treemacs wide enough to display its entire content.
+
+Specifically this will increase (or reduce) the width of the treemacs window to
+that of the longest line, counting all lines, not just the ones that are
+visible."
+  (interactive)
+  (let ((longest 0)
+        (depth 0))
+    (save-excursion
+      (goto-char (point-min))
+      (while (= 0 (forward-line 1))
+        (-let [new-len (- (point-at-eol) (point-at-bol))]
+          (when (> new-len longest)
+            (setf longest new-len
+                  depth (treemacs--prop-at-point :depth))))))
+    (let* ((icon-px-diff (* depth (- treemacs--icon-size (frame-char-width))))
+           (icon-offset (% icon-px-diff (frame-char-width)))
+           (new-width (+ longest icon-offset)))
+      (setf treemacs-width new-width)
+      (treemacs--set-width new-width)
+      (treemacs-pulse-on-success "Width set to %s"
+        (propertize (format "%s" new-width) 'face 'font-lock-string-face)))))
+
+(defun treemacs-extra-wide-toggle ()
+  "Expand the treemacs window to an extr-wide state (or turn it back).
+
+Specifically this will toggle treemacs' width between
+`treemacs-wide-toggle-width' and the normal `treemacs-width'."
+  (interactive)
+  (if (get 'treemacs-extra-wide-toggle :toggle-on)
+      (progn
+        (treemacs--set-width treemacs-width)
+        (put 'treemacs-extra-wide-toggle :toggle-on nil)
+        (treemacs-log "Switched to normal width display"))
+    (treemacs--set-width treemacs-wide-toggle-width)
+    (put 'treemacs-extra-wide-toggle :toggle-on t)
+    (treemacs-log "Switched to extra width display")))
+
+(defun treemacs-next-workspace (&optional arg)
+  "Switch to the next workspace.
+With a prefix ARG switch to the previous workspace instead."
+  (interactive)
+  (treemacs-block
+   (treemacs-error-return-if (= 1 (length treemacs--workspaces))
+     "There is only 1 workspace.")
+   (let* ((ws (treemacs-current-workspace))
+          (ws-count (length treemacs--workspaces))
+          (idx (--find-index (eq it ws) treemacs--workspaces))
+          (new-idx (% (+ ws-count (if arg (1- idx) (1+ idx))) ws-count))
+          (new-ws (nth new-idx treemacs--workspaces)))
+     (treemacs-do-switch-workspace new-ws)
+     (treemacs-pulse-on-success "Switched to workdpace '%s'"
+       (propertize (treemacs-workspace->name new-ws)
+                   'face 'font-lock-string-face)))))
 
 (defun treemacs-icon-catalogue ()
   "Showcase a catalogue of all treemacs themes and their icons."

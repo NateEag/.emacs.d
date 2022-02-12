@@ -102,12 +102,14 @@ Will be set by `treemacs--post-command'.")
     (define-key map (kbd "s")     'treemacs-switch-workspace)
     (define-key map (kbd "e")     'treemacs-edit-workspaces)
     (define-key map (kbd "f")     'treemacs-set-fallback-workspace)
+    (define-key map (kbd "n")     'treemacs-next-workspace)
     map)
   "Keymap for workspace-related commands in `treemacs-mode'.")
 
 (defvar treemacs-node-visit-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "v")        'treemacs-visit-node-vertical-split)
+    (define-key map (kbd "c")        'treemacs-visit-node-close-treemacs)
     (define-key map (kbd "h")        'treemacs-visit-node-horizontal-split)
     (define-key map (kbd "o")        'treemacs-visit-node-no-split)
     (define-key map (kbd "aa")       'treemacs-visit-node-ace)
@@ -121,11 +123,13 @@ Will be set by `treemacs--post-command'.")
 (defvar treemacs-toggle-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "h")        'treemacs-toggle-show-dotfiles)
+    (define-key map (kbd "i")        'treemacs-hide-gitignored-files-mode)
     (define-key map (kbd "w")        'treemacs-toggle-fixed-width)
     (define-key map (kbd "v")        'treemacs-fringe-indicator-mode)
     (define-key map (kbd "g")        'treemacs-git-mode)
     (define-key map (kbd "f")        'treemacs-follow-mode)
     (define-key map (kbd "a")        'treemacs-filewatch-mode)
+    (define-key map (kbd "n")        'treemacs-indent-guide-mode)
     map)
   "Keymap for commands that toggle state in `treemacs-mode'.")
 
@@ -151,15 +155,15 @@ Will be set by `treemacs--post-command'.")
     (define-key map [return]          'treemacs-RET-action)
     (define-key map (kbd "RET")       'treemacs-RET-action)
     (define-key map (kbd "r")         'treemacs-refresh)
-    (define-key map (kbd "d")         'treemacs-delete)
+    (define-key map (kbd "d")         'treemacs-delete-file)
     (define-key map (kbd "cf")        'treemacs-create-file)
     (define-key map (kbd "cd")        'treemacs-create-dir)
-    (define-key map (kbd "R")         'treemacs-rename)
+    (define-key map (kbd "R")         'treemacs-rename-file)
     (define-key map (kbd "u")         'treemacs-goto-parent-node)
     (define-key map (kbd "q")         'treemacs-quit)
     (define-key map (kbd "Q")         'treemacs-kill-buffer)
     (define-key map (kbd "o")         treemacs-node-visit-map)
-    (define-key map (kbd "P")         'treemacs-peek)
+    (define-key map (kbd "P")         'treemacs-peek-mode)
     (define-key map (kbd "n")         'treemacs-next-line)
     (define-key map (kbd "p")         'treemacs-previous-line)
     (define-key map (kbd "M-N")       'treemacs-next-line-other-window)
@@ -170,6 +174,8 @@ Will be set by `treemacs--post-command'.")
     (define-key map (kbd "M-p")       'treemacs-previous-neighbour)
     (define-key map (kbd "t")         treemacs-toggle-map)
     (define-key map (kbd "w")         'treemacs-set-width)
+    (define-key map (kbd "<")         'treemacs-decrease-width)
+    (define-key map (kbd ">")         'treemacs-increase-width)
     (define-key map (kbd "y")         treemacs-copy-map)
     (define-key map (kbd "m")         'treemacs-move-file)
     (define-key map (kbd "g")         'treemacs-refresh)
@@ -192,6 +198,8 @@ Will be set by `treemacs--post-command'.")
     (define-key map (kbd "!")         'treemacs-run-shell-command-for-current-node)
     (define-key map (kbd "M-!")       'treemacs-run-shell-command-in-project-root)
     (define-key map (kbd "C")         'treemacs-cleanup-litter)
+    (define-key map (kbd "=")         'treemacs-fit-window-width)
+    (define-key map (kbd "W")         'treemacs-extra-wide-toggle)
     map)
   "Keymap for `treemacs-mode'.")
 
@@ -225,6 +233,17 @@ If there is no node at point use \"~/\" instead.
 Also skip hidden buttons (as employed by variadic extensions).
 
 Used as a post command hook."
+  (let ((newline-char 10)
+        (point-max (point-max)))
+    (unless (= newline-char (char-before point-max))
+      (treemacs-with-writable-buffer
+       (save-excursion
+         (goto-char point-max)
+         (insert newline-char)
+         ;; make sure that the projects-end marker keeps pointing at
+         ;; the end of the last project button
+         (when (equal (point) (marker-position (treemacs--projects-end)))
+           (move-marker (treemacs--projects-end) (1- (point))))))))
   (-when-let (btn (treemacs-current-button))
     (when (treemacs-button-get btn 'invisible)
       (treemacs-next-line 1))
@@ -233,17 +252,55 @@ Used as a post command hook."
                          (treemacs--nearest-path btn))))
         (when (and (treemacs-project->is-readable? project)
                    (file-readable-p path))
-          (setq treemacs--eldoc-msg path
+          (setf treemacs--eldoc-msg (treemacs--get-eldoc-message path)
                 default-directory (treemacs--add-trailing-slash
                                    (if (file-directory-p path) path (file-name-directory path)))))
       (setq treemacs--eldoc-msg nil
             default-directory "~/"))))
 
+(defun treemacs--get-eldoc-message (path)
+  "Set the eldoc message for given PATH.
+Message will be either just the path, or the path plus meta info like file size,
+depending on the value of `treemacs-eldoc-display'."
+  (pcase treemacs-eldoc-display
+    ('detailed
+     (-let [attr (file-attributes path)]
+       (format "%s -- %s: %s %s: %s %s: %s"
+               (propertize path 'face 'font-lock-string-face)
+               (propertize "Size" 'face 'font-lock-keyword-face)
+               (propertize
+                (treemacs--human-readable-bytes (file-attribute-size attr))
+                'face 'font-lock-type-face)
+               (propertize "Last Modified" 'face 'font-lock-keyword-face)
+               (propertize
+                (format-time-string "%F %T" (file-attribute-modification-time attr))
+                'face 'font-lock-type-face)
+               (propertize "Permissions" 'face 'font-lock-keyword-face)
+               (propertize
+                (file-attribute-modes attr)
+                'face 'font-lock-type-face))))
+    ('simple (propertize path 'face 'font-lock-string-face))
+    (_       (propertize path 'face 'font-lock-string-face))))
+
+(define-inline treemacs--human-readable-bytes (bytes)
+  "Return a human-readable string version of BYTES."
+  (declare (pure t) (side-effect-free t))
+  (inline-letevals (bytes)
+    (inline-quote
+     (cl-loop with result = (cons "B" ,bytes)
+              for i in '("k" "M" "G" "T" "P" "E" "Z" "Y")
+              while (>= (cdr result) 1024.0)
+              do (setf result (cons i (/ (cdr result) 1024.0)))
+              finally return
+              (pcase (car result)
+                ("B" (format "%sb" ,bytes))
+                (_ (format "%.1f%s" (cdr result) (car result))))))))
+
 (defun treemacs--eldoc-function ()
   "Treemacs' implementation of `eldoc-documentation-function'.
 Will simply return `treemacs--eldoc-msg'."
   (when (and treemacs-eldoc-display treemacs--eldoc-msg)
-    (propertize treemacs--eldoc-msg 'face 'font-lock-string-face)))
+    treemacs--eldoc-msg))
 
 ;;;###autoload
 (define-derived-mode treemacs-mode special-mode "Treemacs"
@@ -253,7 +310,7 @@ Will simply return `treemacs--eldoc-msg'."
         truncate-lines           t
         indent-tabs-mode         nil
         desktop-save-buffer      nil
-        window-size-fixed        (when treemacs--width-is-locked 'width)
+        window-size-fixed        (when treemacs-width-is-initially-locked 'width)
         treemacs--in-this-buffer t)
 
   (unless treemacs-show-cursor
@@ -263,7 +320,7 @@ Will simply return `treemacs--eldoc-msg'."
       (setq evil-treemacs-state-cursor
             (if treemacs-show-cursor
                 evil-motion-state-cursor
-              '(hbar . 0)))))
+              '(bar . 0)))))
 
   ;; higher fuzz value makes it less likely to start a mouse drag
   ;; and make a switch to visual state
@@ -302,6 +359,9 @@ Will simply return `treemacs--eldoc-msg'."
     (face-remap-add-relative 'default :background (car treemacs-window-background-color))
     (face-remap-add-relative 'fringe  :background (car treemacs-window-background-color))
     (face-remap-add-relative 'hl-line :background (cdr treemacs-window-background-color)))
+
+  (when treemacs-text-scale
+    (text-scale-increase treemacs-text-scale))
 
   (add-hook 'window-configuration-change-hook #'treemacs--on-window-config-change)
   (add-hook 'kill-buffer-hook #'treemacs--on-buffer-kill nil t)

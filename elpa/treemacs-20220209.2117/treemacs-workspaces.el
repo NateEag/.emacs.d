@@ -60,6 +60,9 @@
   treemacs--forget-last-highlight
   treemacs-pulse-on-failure)
 
+(treemacs-import-functions-from "treemacs-async"
+  treemacs--prefetch-gitignore-cache)
+
 (cl-defstruct (treemacs-project
                (:conc-name treemacs-project->)
                (:constructor treemacs-project->create!))
@@ -152,16 +155,22 @@ PATH: String"
   (declare (side-effect-free t))
   (inline-letevals (path)
     (inline-quote
-     (setf (treemacs-current-workspace)
-           (or (--first (treemacs-is-path ,path :in-workspace it)
-                        treemacs--workspaces)
-               (car treemacs--workspaces))))))
+     (let ((ws-for-path (--first (treemacs-is-path ,path :in-workspace it)
+                                 treemacs--workspaces)))
+       (setf (treemacs-current-workspace)
+             (pcase-exhaustive treemacs-find-workspace-method
+               ('find-for-file-or-pick-first
+                (or ws-for-path (car treemacs--workspaces)))
+               ('find-for-file-or-manually-select
+                (or ws-for-path (treemacs--select-workspace-by-name)))
+               ('always-ask
+                (treemacs--select-workspace-by-name))))))))
 
 ;; TODO(2020/11/25): NAME
 (define-inline treemacs--find-project-for-buffer (&optional buffer-file)
   "In the current workspace find the project current buffer's file falls under.
 Optionally supply the BUFFER-FILE in case it is not available by calling the
-function `buffer-file-name' (like in dired).
+function `buffer-file-name' (like in Dired).
 
 FILE: Filepath"
   (inline-letevals (buffer-file)
@@ -336,7 +345,7 @@ Return values may be as follows:
 
 * If only a single workspace remains:
   - the symbol `only-one-workspace'
-* If the user cancel the deletion:
+* If the user cancels the deletion:
   - the symbol `user-cancel'
 * If the workspace cannot be found:
   - the symbol `workspace-not-found'
@@ -468,11 +477,11 @@ Return values may be as follows:
 PATH: Filepath
 NAME: String"
   (treemacs-block
-   (treemacs-error-return-if (null path)
+   (treemacs-return-if (null path)
      `(invalid-path "Path is nil."))
    (let ((path-status (treemacs--get-path-status path))
          (added-in-workspace (treemacs-current-workspace)))
-     (treemacs-error-return-if (not (file-readable-p path))
+     (treemacs-return-if (not (file-readable-p path))
        `(invalid-path "Path is not readable does not exist."))
      (setq path (-> path (file-truename) (treemacs-canonical-path)))
      (-when-let (project (treemacs--find-project-for-path path))
@@ -512,6 +521,8 @@ NAME: String"
            (when treemacs-expand-added-projects
              (treemacs--expand-root-node (treemacs-project->position project))))))
        (treemacs--persist)
+       (when (with-no-warnings treemacs-hide-gitignored-files-mode)
+         (treemacs--prefetch-gitignore-cache path))
        (run-hook-with-args 'treemacs-create-project-functions project)
        `(success ,project)))))
 
@@ -519,38 +530,51 @@ NAME: String"
 (with-no-warnings
   (make-obsolete #'treemacs-add-project-at #'treemacs-do-add-project-to-workspace "v.2.2.1"))
 
-(defun treemacs-do-remove-project-from-workspace (project &optional ignore-last-project-restriction)
-  "Add the given PROJECT to the current workspace.
+(defun treemacs-do-remove-project-from-workspace
+    (project &optional ignore-last-project-restriction ask-to-confirm)
+  "Remove the given PROJECT from the current workspace.
 
 PROJECT may either be a `treemacs-project' instance or a string path.  In the
 latter case the project containing the path will be selected.
 
-When IGNORE-LAST-PROJECT-RESTRICTION removing the last project will not count
-as an error.  This is meant to be used in non-interactive code, where another
-project is immediately added afterwards, as leaving the project list empty is
-probably a bad idea.
+When IGNORE-LAST-PROJECT-RESTRICTION is non-nil removing the last project will
+not count as an error.  This is meant to be used in non-interactive code, where
+another project is immediately added afterwards, as leaving the project list
+empty is generally a bad idea.
+
+Ask the user to confirm the deletion when ASK-TO-CONFIRM is t (it will be when
+this is called from `treemacs-remove-project-from-workspace').
 
 Return values may be as follows:
 
 * If the given path is invalid (is nil or does not exist):
   - the symbol `invalid-project'
   - a string describing the problem
+* If the user cancels the deletion:
+  - the symbol `user-cancel'
 * If there is only one project:
   - the symbol `cannot-delete-last-project'
 * If everything went well:
   - the symbol `success'"
   (treemacs-block
    (unless ignore-last-project-restriction
-     (treemacs-error-return-if (>= 1 (length (treemacs-workspace->projects (treemacs-current-workspace))))
+     (treemacs-return-if (>= 1 (length (treemacs-workspace->projects (treemacs-current-workspace))))
        'cannot-delete-last-project))
-   (treemacs-error-return-if (null project)
+   (treemacs-return-if (null project)
      `(invalid-project "Project is nil"))
    ;; when used from outside treemacs it is much easier to supply a path string than to
    ;; look up the project instance
    (when (stringp project)
-     (setf project (treemacs-is-path (treemacs-canonical-path project) :in-workspace)))
-   (treemacs-error-return-if (null project)
-     `(invalid-project "Given path is not in the workspace"))
+     (-let [found-project (treemacs-is-path (treemacs-canonical-path project) :in-workspace)]
+       (treemacs-return-if (null found-project)
+         `(invalid-project ,(format "Given path '%s' is not in the workspace" project)))
+       (setf project found-project)))
+   (treemacs-return-if
+       (and ask-to-confirm
+            (not (yes-or-no-p (format "Remove project %s from the current workspace?"
+                                      (propertize (treemacs-project->name project)
+                                                  'face 'font-lock-type-face)))))
+     'user-cancel)
    (treemacs-run-in-every-buffer
     (treemacs-with-writable-buffer
      (let* ((project-path (treemacs-project->path project))
@@ -631,6 +655,8 @@ Return values may be as follows:
      (setf (treemacs-current-workspace) new-workspace)
      (treemacs--invalidate-buffer-project-cache)
      (treemacs--rerender-after-workspace-change)
+     (when (with-no-warnings treemacs-hide-gitignored-files-mode)
+       (treemacs--prefetch-gitignore-cache 'all))
      (run-hooks 'treemacs-switch-workspace-hook)
      (treemacs-return
       `(success ,new-workspace)))))
@@ -690,7 +716,10 @@ PROJECT: Project Struct"
     (goto-char (treemacs-project->position project))
     (let* ((start (point-at-bol))
            (next  (treemacs--next-non-child-button (treemacs-project->position project)))
-           (end   (if next (-> next (treemacs-button-start) (previous-button) (treemacs-button-end)) (point-max))))
+           (end   (if next
+                      (-> next (treemacs-button-start) (previous-button) (treemacs-button-end))
+                    ;; final position minus the final newline
+                    (1- (point-max)))))
       (cons start end))))
 
 (defun treemacs--consolidate-projects ()
@@ -717,10 +746,11 @@ PROJECT: Project Struct"
        (-let [project-btn (treemacs-project->position project-in-buffer)]
          (when (eq 'root-node-open (treemacs-button-get project-btn :state))
            (push project-in-buffer expanded-projects-in-buffer)
+           (goto-char project-btn)
            (treemacs--collapse-root-node project-btn))))
      ;; figure out which ones have been deleted and and remove them from the dom
      (dolist (project-in-buffer projects-in-buffer)
-       (unless (treemacs-is-path (treemacs-project->path project-in-buffer) :in-workspace current-workspace)
+       (unless (member project-in-buffer projects-in-workspace)
          (treemacs-on-collapse (treemacs-project->path project-in-buffer) :purge)
          (ht-remove! treemacs-dom (treemacs-project->path project-in-buffer))
          (setf projects-in-buffer (delete project-in-buffer projects-in-buffer))))
@@ -780,14 +810,25 @@ PROJECT: Project Struct"
      (--when-let (funcall fun)
        (treemacs-return it)))))
 
-(defun treemacs--select-workspace-by-name (&optional name)
-  "Interactively select the workspace with the given NAME."
+(defun treemacs--find-workspace-by-name (name)
+  "Find a workspace with the given NAME.
+Returns nil when there is no match."
   (treemacs--maybe-load-workspaces)
-  (-let [name (or name
-                   (completing-read
-                    "Workspace: "
-                    (->> treemacs--workspaces
-                         (--map (cons (treemacs-workspace->name it) it)))))]
+  (--first (string= name (treemacs-workspace->name it))
+           treemacs--workspaces))
+
+(defun treemacs--select-workspace-by-name ()
+  "Interactively select the workspace.
+Selection is based on the list of names of all workspaces and still happens
+when there is only one workspace."
+  (treemacs--maybe-load-workspaces)
+  (let (name)
+    (while (or (null name) (string-empty-p name))
+      (setf name (completing-read
+                  "Workspace: "
+                  (->> treemacs--workspaces
+                       (--map (cons (treemacs-workspace->name it) it)))
+                  nil :require-match)))
     (--first (string= name (treemacs-workspace->name it))
              treemacs--workspaces)))
 

@@ -178,9 +178,6 @@ PATH: File Path"
   "Non-nil only in buffers meant to show treemacs.
 Used to show an error message if someone mistakenly activates `treemacs-mode'.")
 
-(defvar treemacs--pre-peek-state nil
-  "List of window, buffer to restore and buffer to kill treemacs used for peeking.")
-
 (define-inline treemacs--remove-trailing-newline (str)
   "Remove final newline in STR."
   (declare (pure t) (side-effect-free t))
@@ -451,8 +448,10 @@ In practice this means expand PATH and remove its final slash."
   (declare (pure t) (side-effect-free t))
   (inline-letevals (path)
     (inline-quote
-     (let (file-name-handler-alist)
-       (-> ,path (expand-file-name) (treemacs--unslash))))))
+     (if (file-remote-p ,path)
+         (treemacs--unslash ,path)
+       (let (file-name-handler-alist)
+         (-> ,path (expand-file-name) (treemacs--unslash)))))))
 ;; TODO(2020/12/28): alias is for backwards compatibility, remove it eventually
 (defalias 'treemacs--canonical-path #'treemacs-canonical-path)
 
@@ -570,50 +569,6 @@ selected tags or extension entry.  Must be called from treemacs buffer."
         path
       (-some-> (treemacs-button-get btn :parent)
                (treemacs--nearest-path)))))
-
-(defun treemacs--create-file/dir (is-file?)
-  "Interactively create either a file or directory, depending on IS-FILE.
-
-IS-FILE?: Bool"
-  (interactive)
-  (let* ((curr-path (--if-let (treemacs-current-button)
-                        (treemacs--nearest-path it)
-                      (expand-file-name "~")))
-         (path-to-create (read-file-name
-                          (if is-file? "Create File: " "Create Directory: ")
-                          (treemacs--add-trailing-slash
-                           (if (file-directory-p curr-path)
-                               curr-path
-                             (treemacs--parent-dir curr-path))))))
-    (treemacs-block
-     (treemacs-error-return-if (file-exists-p path-to-create)
-       "%s already exists." (propertize path-to-create 'face 'font-lock-string-face))
-     (treemacs--without-filewatch
-      (if is-file?
-          (-let [dir (treemacs--parent-dir path-to-create)]
-            (unless (file-exists-p dir)
-              (make-directory dir t))
-            (write-region "" nil path-to-create nil 0))
-        (make-directory path-to-create t))
-      (run-hook-with-args 'treemacs-create-file-functions path-to-create))
-     (-when-let (project (treemacs--find-project-for-path path-to-create))
-       (-when-let* ((created-under (treemacs--parent path-to-create))
-                    (created-under-pos (treemacs-find-visible-node created-under)))
-         ;; update only the part that changed to keep things smooth
-         ;; for files that's just their parent, for directories we have to take
-         ;; flattening into account
-         (if (and (treemacs-button-get created-under-pos :parent)
-                  (or (treemacs-button-get created-under-pos :collapsed)
-                      ;; count includes "." "..", so it'll be flattened
-                      (= 3 (length (directory-files created-under)))))
-             (treemacs-do-update-node (-> created-under-pos
-                                          (treemacs-button-get :parent)
-                                          (treemacs-button-get :path)))
-           (treemacs-do-update-node created-under)))
-       (treemacs-goto-file-node (treemacs-canonical-path path-to-create) project)
-       (recenter))
-     (treemacs-pulse-on-success
-         "Created %s." (propertize path-to-create 'face 'font-lock-string-face)))))
 
 (define-inline treemacs--follow-path-elements (btn items)
   "Starting at BTN follow (goto and open) every single element in ITEMS.
@@ -808,8 +763,8 @@ PATH: Node Path"
 
 (defun treemacs-find-node (path &optional project)
   "Find position of node identified by PATH under PROJECT in the current buffer.
-In spite of the signature this function effectively supports two different calling
-conventions.
+In spite of the signature this function effectively supports two different
+calling conventions.
 
 The first one is for movement towards a node that identifies a file.  In this
 case the signature is applied as is, and this function diverges simply into
@@ -818,16 +773,16 @@ optional, as treemacs is able to determine which project, if any, a given file
 belongs to.  Providing the project is therefore only a matter of efficiency and
 convenience.  If PROJECT is not given it will be found with
 `treemacs--find-project-for-path'.  No attempt is made to verify that PATH falls
-under a project in the workspace.  It is assumed that this check has already been
-made.
+under a project in the workspace.  It is assumed that this check has already
+been made.
 
 The second calling convention deals with custom nodes defined by an extension
-for treemacs.  In this case the PATH is made up of all the node keys that lead to
-the node to be moved to.
+for treemacs.  In this case the PATH is made up of all the node keys that lead
+to the node to be moved to.
 
 For a directory extension, created with `treemacs-define-directory-extension',
-that means that the path's first element must be the filepath of its parent.  For
-a project extension, created with `treemacs-define-project-extension', the
+that means that the path's first element must be the filepath of its parent.
+For a project extension, created with `treemacs-define-project-extension', the
 first element of the path must instead be the keyword `:custom', followed by the
 node's unique path.  The second argument is therefore ignored in this case.
 
@@ -845,8 +800,8 @@ PROJECT Project Struct"
 (defun treemacs-goto-node (path &optional project ignore-file-exists)
   "Move point to button identified by PATH under PROJECT in the current buffer.
 Falls under the same constraints as `treemacs-find-node', but will actually move
-point.  Will do nothing if file at PATH does not exist, unless IGNORE-FILE-EXISTS
-is non-nil.
+point.  Will do nothing if file at PATH does not exist, unless
+IGNORE-FILE-EXISTS is non-nil.
 
 PATH: Filepath | Node Path
 PROJECT Project Struct
@@ -1134,44 +1089,6 @@ Will refresh every project when PROJECT is 'all."
      (unless treemacs-silent-refresh
        (treemacs-log "Refresh complete.")))))
 
-(defun treemacs--setup-peek-buffer (btn &optional goto-tag?)
-  "Setup the peek buffer and window for BTN.
-Additionally also navigate to BTN's tag if GOTO-TAG is t.
-
-BTN: Button
-GOTO-TAG: Bool"
-  (let ((path (file-truename
-               (if goto-tag?
-                   (treemacs-with-button-buffer btn
-                     (treemacs--nearest-path btn))
-                 (treemacs-safe-button-get btn :path))))
-        (buffer-to-restore (current-buffer))
-        (buffer-to-kill nil))
-    (-if-let (buffer (get-file-buffer path))
-        (switch-to-buffer buffer)
-      (find-file path)
-      (setq buffer-to-kill (current-buffer)))
-    (when goto-tag?
-      (treemacs--goto-tag btn))
-    (unless treemacs--pre-peek-state
-      (setq treemacs--pre-peek-state `(,(selected-window) ,buffer-to-restore ,buffer-to-kill)))
-    (add-hook 'post-command-hook #'treemacs--restore-peeked-window)))
-
-(defun treemacs--restore-peeked-window ()
-  "Revert the buffer displayed in the peek window before it was used for peeking."
-  (unless (memq this-command
-                '(treemacs-peek treemacs-next-line-other-window treemacs-previous-line-other-window
-                         treemacs-next-page-other-window treemacs-previous-page-other-window))
-    (remove-hook 'post-command-hook #'treemacs--restore-peeked-window)
-    (treemacs-without-following
-      (when treemacs--pre-peek-state
-        (-let [(window buffer-to-restore buffer-to-kill) treemacs--pre-peek-state]
-          (setq treemacs--pre-peek-state nil)
-          (when (buffer-live-p buffer-to-kill)
-            (kill-buffer buffer-to-kill))
-          (with-selected-window window
-            (switch-to-buffer buffer-to-restore)))))))
-
 (define-inline treemacs-is-node-file-or-dir? (node)
   "Return t when NODE is a file or directory."
   (inline-letevals (node)
@@ -1190,65 +1107,6 @@ PATH: Node Path"
   (inline-letevals (path)
     (inline-quote
      (treemacs-find-in-dom ,path))))
-
-(defun treemacs--copy-or-move (action)
-  "Internal implementation for copying and moving files.
-ACTION will be either `:copy' or `:move', depending on whether we are calling
-from `treemacs-copy-file' or `treemacs-move-file'."
-  (let ((no-node-msg)
-        (wrong-type-msg)
-        (prompt)
-        (action-function)
-        (finish-msg))
-    (pcase action
-      (:copy
-       (setf no-node-msg     "There is nothing to copy here."
-             wrong-type-msg  "Only files and directories can be copied."
-             prompt          "Copy to: "
-             action-function (lambda (from to)
-                               (if (file-directory-p from)
-                                   (copy-directory from to)
-                                 (copy-file from to)))
-             finish-msg      "Copied %s to %s"))
-      (:move
-       (setf no-node-msg     "There is nothing to move here."
-             wrong-type-msg  "Only files and directories can be moved."
-             prompt          "Move to: "
-             action-function #'rename-file
-             finish-msg      "Moved %s to %s")))
-    (treemacs-block
-     (treemacs-unless-let (node (treemacs-node-at-point))
-         (treemacs-error-return no-node-msg)
-       (treemacs-error-return-if (not (treemacs-is-node-file-or-dir? node))
-         wrong-type-msg)
-       (let* ((source (treemacs-button-get node :path))
-              (source-name (treemacs--filename source))
-              (destination (treemacs--unslash (read-file-name prompt nil default-directory)))
-              (target-is-dir? (file-directory-p destination))
-              (target-name (if target-is-dir? (treemacs--filename source) (treemacs--filename destination)))
-              (destination-dir (if target-is-dir? destination (treemacs--parent-dir destination)))
-              (target (treemacs--find-repeated-file-name (treemacs-join-path destination-dir target-name))))
-         (unless (file-exists-p destination-dir)
-           (make-directory destination-dir :parents))
-         (when (eq action :move)
-           ;; do the deletion *before* moving the file, otherwise it will no longer exist and treemacs will
-           ;; not recognize it as a file path
-           (treemacs-do-delete-single-node source))
-         (treemacs--without-filewatch
-          (funcall action-function source target))
-         ;; no waiting for filewatch, if we copied to an expanded directory refresh it immediately
-         (-let [parent (treemacs--parent target)]
-           (when (treemacs-is-path-visible? parent)
-             (treemacs-do-update-node parent)))
-         (treemacs-goto-file-node target)
-         (run-hook-with-args
-          (pcase action
-            (:copy 'treemacs-copy-file-functions)
-            (:move 'treemacs-move-file-functions))
-          source target)
-         (treemacs-pulse-on-success finish-msg
-           (propertize source-name 'face 'font-lock-string-face)
-           (propertize destination 'face 'font-lock-string-face)))))))
 
 (defun treemacs--find-repeated-file-name (path)
   "Find a fitting copy name for given file PATH.

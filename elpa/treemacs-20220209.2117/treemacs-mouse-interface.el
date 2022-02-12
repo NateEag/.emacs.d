@@ -84,12 +84,13 @@ Must be bound to a mouse click, or EVENT will not be supplied."
 ;;;###autoload
 (defun treemacs-doubleclick-action (event)
   "Run the appropriate double-click action for the current node.
-In the default configuration this means to do the same as `treemacs-RET-action'.
+In the default configuration this means to expand/collapse directories and open
+files and tags in the most recently used window.
 
 This function's exact configuration is stored in
 `treemacs-doubleclick-actions-config'.
 
-Must be bound to a mouse click, or EVENT will not be supplied."
+Must be bound to a mouse double click to properly handle a click EVENT."
   (interactive "e")
   (when (eq 'double-mouse-1 (elt event 0))
     (goto-char (posn-point (cadr event)))
@@ -167,12 +168,12 @@ and ignore any prefix argument."
      :dir-action (find-file-noselect (treemacs-safe-button-get btn :path))
      :tag-action (treemacs--tag-noselect btn)
      :window (selected-window)
-     :save-window t
+     :window-arg '(4)
      :ensure-window-split nil
      :no-match-explanation "")))
 
 (defun treemacs--imenu-tag-noselect (file tag-path)
-  "Return a list of the source buffer for FILE and the position of the tag from TAG-PATH."
+  "Return a list of the source buffer for FILE and the tag's from TAG-PATH."
   (let ((tag (-last-item tag-path))
         (path (-butlast tag-path)))
     (condition-case e
@@ -265,10 +266,10 @@ and ignore any prefix argument."
                 ["Open Tags"  treemacs-toggle-node :visible ,(check (memq state '(file-node-closed tag-node-closed)))]
                 ["Close Tags" treemacs-toggle-node :visible ,(check (memq state '(file-node-open tag-node-open)))]
 
-                ["--" #'ignore                         :visible ,(check node)]
-                ["Rename"           treemacs-rename    :visible ,(check node)]
-                ["Delete"           treemacs-delete    :visible ,(check node)]
-                ["Move"             treemacs-move-file :visible ,(check node)]
+                ["--" #'ignore                           :visible ,(check node)]
+                ["Rename"           treemacs-rename-file :visible ,(check node)]
+                ["Delete"           treemacs-delete-file :visible ,(check node)]
+                ["Move"             treemacs-move-file   :visible ,(check node)]
                 ("Copy"
                  ["Copy File"          treemacs-copy-file                   :visible ,(check node)]
                  ["Copy Absolute Path" treemacs-copy-absolute-path-at-point :visible ,(check node)]
@@ -310,7 +311,7 @@ and ignore any prefix argument."
             (cmd (lookup-key menu (apply 'vector choice))))
        ;; In the terminal clicking on a nested menu item does not expand it, but actually
        ;; selects it as the chosen use option.  So as a workaround we need to manually go
-       ;; thtough the menus until we land on an executable command.
+       ;; through the menus until we land on an executable command.
        (while (and (not (commandp cmd))
                    (not (eq cmd menu)))
          (setf menu choice

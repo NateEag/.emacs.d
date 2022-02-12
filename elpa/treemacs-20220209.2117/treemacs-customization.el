@@ -39,12 +39,14 @@
                (s-lines)
                (--first
                 (when (file-exists-p it)
-                  (->> (concat (shell-quote-argument it) " --version")
-                       (shell-command-to-string)
-                       (s-trim)
-                       (s-replace "Python " "")
-                       (s-left 1)
-                       (version<= "3")))))
+                  (condition-case _
+                      (->> (concat (shell-quote-argument it) " --version")
+                           (shell-command-to-string)
+                           (s-trim)
+                           (s-replace "Python " "")
+                           (s-left 1)
+                           (version<= "3"))
+                    (error nil)))))
         (error nil)))))
 
 (cl-macrolet
@@ -149,10 +151,27 @@ There are 2 options:
   :type 'boolean
   :group 'treemacs)
 
-(defcustom treemacs-eldoc-display t
+(defcustom treemacs-eldoc-display 'simple
   "Enables eldoc display of the file path at point.
+
+There are 2 options:
+ - `simple': shows the absolute path of the file at point
+ - `detailed': shows the absolute path, size, last modification time and
+   permissions of the file at point
+
 Requires eldoc mode to be enabled."
-  :type 'boolean
+  :type '(choice (const :tag "Simple" 'simple)
+                 (const :tag "Detailed" 'detailed))
+  :group 'treemacs)
+
+(defcustom treemacs-indent-guide-style 'line
+  "Determines the appearance of `treemacs-indent-guide-mode'.
+The choices are
+ - `line' for indent guides to use the ' ┃ ' character for every indentation
+   level
+ - `block' to use a thick '██' block interspersed at every second indentation
+   level"
+  :type '(choice (const :tag "Line" 'line) (const :tag "Block" 'block))
   :group 'treemacs)
 
 (defcustom treemacs-indentation-string " "
@@ -164,7 +183,9 @@ used when there is no windowing system available."
   :group 'treemacs)
 
 (defcustom treemacs-show-hidden-files t
-  "Dotfiles will be shown if this is set to t and be hidden otherwise."
+  "Dotfiles will be shown if this is set to t and be hidden otherwise.
+
+Can be toggled by `treemacs-toggle-show-dotfiles'."
   :type 'boolean
   :group 'treemacs)
 
@@ -196,11 +217,11 @@ of how this config works and how to modify it."
     (root-node-closed . treemacs-toggle-node)
     (dir-node-open    . treemacs-toggle-node)
     (dir-node-closed  . treemacs-toggle-node)
-    (file-node-open   . treemacs-visit-node-default)
-    (file-node-closed . treemacs-visit-node-default)
+    (file-node-open   . treemacs-visit-node-in-most-recently-used-window)
+    (file-node-closed . treemacs-visit-node-in-most-recently-used-window)
     (tag-node-open    . treemacs-toggle-node)
     (tag-node-closed  . treemacs-toggle-node)
-    (tag-node         . treemacs-visit-node-default))
+    (tag-node         . treemacs-visit-node-in-most-recently-used-window))
   "Defines the behaviour of `treemacs-doubleclick-action'.
 
 See the doc string of `treemacs-RET-actions-config' for a detailed description
@@ -311,9 +332,9 @@ treemacs views containing hundreds or even thousands of nodes."
   (pcase system-type
     ('darwin '(treemacs--std-ignore-file-predicate treemacs--mac-ignore-file-predicate))
     (_       '(treemacs--std-ignore-file-predicate)))
-  "List of predicates to test for files and directories ignored by Emacs.
+  "List of predicates to test for files and directories ignored by treemacs.
 
-Ignored files will *never* be shown in the treemacs buffer (unlike dotfiles)
+Ignored files will *never* be shown in the treemacs buffer (unlike dotfiles
 whose presence is controlled by `treemacs-show-hidden-files').
 
 Each predicate is a function that takes 2 arguments: a file's name and its
@@ -321,9 +342,10 @@ absolute path and returns t if the file should be ignored and nil otherwise.  A
 file which returns t for *any* function in this list counts as ignored.
 
 By default this list contains `treemacs--std-ignore-file-predicate' which
-filters out '.', '..', Emacs' lock files as well temp files created by flycheck,
-and therefore should not be directly overwritten, but added to and removed from
-instead.
+filters out '.', '..', Emacs' lock files as well temp files created by flycheck.
+This means that this variable should *not* be set directly, but instead modified
+with functions like `add-to-list'.
+
 Additionally `treemacs--mac-ignore-file-predicate' is also included on
 Mac-derived operating systems (when `system-type' is `darwin')."
   :type 'list
@@ -334,7 +356,9 @@ Mac-derived operating systems (when `system-type' is `darwin')."
 The difference between this and `treemacs-ignored-file-predicates' is that the
 functions in this list will be called on files just before they would be
 rendered, when the files' git status information is now available.  This for
-example allows to make files ignored by git invisible.
+example allows to make files ignored by git invisible (however this particular
+use-case is already covered by `treemacs-hide-gitignored-files-mode').
+
 The functions in this list are therefore expected to have a different signature:
 They must take two arguments - a file's absolute path and a hash table that maps
 files to their git status.  The files' paths are the table's keys, its values
@@ -350,10 +374,7 @@ map map as follows: (the pattern is derived from 'git status --porcelain')
 
 Otherwise the behaviour is the same as `treemacs-ignored-file-predicates', in
 that any one function returning t for a file means that this file will not
-be rendered.
-
-Since removing files ignored by git is the most likely use-case treemacs offers
-`treemacs-is-file-git-ignored?' to quickly make this possible."
+be rendered."
   :type 'list
   :group 'treemacs)
 
@@ -396,7 +417,11 @@ performance cap and to prevent too long directory names in the treemacs view.
 
 To minimise this option's impact on display performance the search for
 directories to collapse is done asynchronously in a python script and will thus
-only work when python installed.  The script should work both on python 2 and 3."
+only work when python installed.  The script should work both on python 2 and 3.
+
+If you experience incorrect display of CJK characters while using this feature
+you have to inform Emacs about your language environment using
+`set-language-environment'."
   :type 'integer
   :group 'treemacs)
 
@@ -726,6 +751,13 @@ In practice it means that treemacs will become invisible to commands like
   :type 'boolean
   :group 'treemacs-window)
 
+(defcustom treemacs-width-is-initially-locked t
+  "Indicates whether the width of the treemacs window is initially locked.
+A locked width means that changes it is only possible with the commands
+`treemacs-set-width' or `treemacs-toggle-fixed-width'."
+  :type 'boolean
+  :group 'treemacs-window)
+
 (defcustom treemacs-window-background-color nil
   "Custom background colours for the treemacs window.
 Value must be a cons cell consisting of two colours: first the background of the
@@ -736,6 +768,16 @@ marking the selected line."
 
 (defcustom treemacs-width 35
   "Width of the treemacs window."
+  :type 'integer
+  :group 'treemacs-window)
+
+(defcustom treemacs-wide-toggle-width 70
+  "When resizing, this value is added or subtracted from the window width."
+  :type 'integer
+  :group 'treemacs-window)
+
+(defcustom treemacs-width-increment 1
+  "When resizing, this value is added or subtracted from the window width."
   :type 'integer
   :group 'treemacs-window)
 
@@ -767,6 +809,26 @@ Can be set either to `treemacs-header-buttons-format' or any one of its
 constituent parts, or any other value acceptable for `header-line-format'."
   :type 'string
   :group 'treemacs-window)
+
+(defcustom treemacs-text-scale nil
+  "Optional scale for the text (not the icons) in the treemacs window.
+If set the value will be passed to `text-scale-increase'.  Both positive and
+negative values are possible."
+  :type 'integer
+  :group 'treemacs-window)
+
+(defcustom treemacs-select-when-already-in-treemacs 'move-back
+  "How `treemacs-select-window' behaves when treemacs is already selected.
+
+Possible values are:
+ - `stay' - remain in the treemacs windows, effectively doing nothing
+ - `close' - close the treemacs window
+ - `move-back' - move point back to the most recently used window (as selected
+    by `get-mru-window')"
+  :type '(choice (const stay)
+                 (const close)
+                 (const move-back))
+  :group 'treemacs)
 
 (defcustom treemacs-position 'left
   "Position of treemacs buffer.
@@ -827,6 +889,28 @@ the original file's location, and the copy's location, both as absolute paths."
 Will be called with the deleted project as the sole argument *after* it has been
 deleted."
   :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-find-workspace-method 'find-for-file-or-pick-first
+  "The method by which treemacs selects a workspace when first starting.
+There are 3 options:
+ - `find-for-file-or-pick-first' means treemacs will select the first workspace
+   with a project that contains the current buffer's file.  If no such workspace
+   exists, or if the current buffer is not visiting a file, the first workspace
+   in the list (as seen in `treemacs-edit-workspaces' or picked with
+   `treemacs-set-fallback-workspace') is selected
+ - `find-for-file-or-manually-select' works the same, but an interactive
+   selection is used as fallback instead
+ - `always-ask' means the workspace *always* has to be manually selected
+
+Note that the selection process will be skipped if there is only one workspace."
+  :type '(choice (const
+                  :tag "Find workspace for current file, pick the first workspace as falback"
+                  find-for-file-or-pick-first)
+                 (const
+                  :tag "Find workspace for current file, interactively select workspace as falback"
+                  find-for-file-or-manually-select)
+                 (const :tag "Always ask" always-ask))
   :group 'treemacs-hooks)
 
 (defcustom treemacs-rename-project-functions nil

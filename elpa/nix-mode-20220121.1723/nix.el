@@ -34,12 +34,12 @@
   :type 'string)
 
 (defcustom nix-instantiate-executable "nix-instantiate"
-  "Nix executable location."
+  "Nix-instantiate executable location."
   :group 'nix
   :type 'string)
 
 (defcustom nix-store-executable "nix-store"
-  "Nix executable location."
+  "Nix-store executable location."
   :group 'nix
   :type 'string)
 
@@ -51,37 +51,31 @@
 (defcustom nix-store-dir "/nix/store"
   "Nix store directory."
   :group 'nix
-  :type 'string)
+  :type 'directory)
 
 (defcustom nix-state-dir "/nix/var"
-  "Nix store directory."
+  "Nix state directory."
   :group 'nix
-  :type 'string)
+  :type 'directory)
 
 (defun nix-system ()
   "Get the current system tuple."
-  (with-temp-buffer
-    (if (nix-is-24)
-	(call-process nix-executable nil (list t nil) nil "eval" "--impure" "--raw" "--expr" "(builtins.currentSystem)")
-      (call-process nix-executable nil (list t nil) nil "eval" "--raw" "(builtins.currentSystem)"))
-    (buffer-string)))
+  (nix--process-string "eval"
+    "--raw"
+    (if (nix-is-24) "--impure" )
+    (if (nix-is-24) "--expr" )
+    "(builtins.currentSystem)"))
 
 (defvar nix-version nil)
 (defun nix-version ()
   "Get the version of Nix"
-  (or nix-version
-    (with-temp-buffer
-      (call-process nix-executable nil (list t nil) nil "--version")
-      (buffer-string))))
+  (or nix-version (nix--process-string "--version")))
 
 (defun nix-show-config ()
   "Show nix config."
-  (with-temp-buffer
-    (call-process nix-executable nil (list t nil) nil "show-config" "--json")
-    (goto-char (point-min))
-    (json-read)))
+  (nix--process-json "show-config" "--json"))
 
-(defvar nix-commands
+(defconst nix-commands
   '("add-to-store"
     "build"
     "cat-nar"
@@ -112,7 +106,7 @@
     "verify"
     "why-depends"))
 
-(defvar nix-toplevel-options
+(defconst nix-toplevel-options
   '("-v"
     "--verbose"
     "-h"
@@ -122,7 +116,7 @@
     "--option"
     "--version"))
 
-(defvar nix-config-options
+(defconst nix-config-options
   '("allowed-uris"
     "allow-import-from-derivation"
     "allow-new-priveleges"
@@ -192,10 +186,11 @@ OPTIONS a list of options to accept."
 
 (defun nix-is-24 ()
   "Whether Nix is a version with Flakes support."
-  ;; earlier versions reported as 3, now it’s just nix-2.4
   (let ((version (nix-version)))
-    (or (string-prefix-p "nix (Nix) 3" version)
-        (string-prefix-p "nix (Nix) 2.4" version))))
+    (save-match-data
+      (when (string-match (rx bol "nix (Nix) " (group (+ digit) (?  "." (+ digit))))
+                          version)
+        (version<= "2.4" (match-string 1 version))))))
 
 (defun nix-has-flakes ()
   "Whether Nix is a version with Flakes support."
@@ -330,6 +325,39 @@ OPTIONS a list of options to accept."
                                          "-f" "--file" "-I" "--include"))))
         (_ (nix--pcomplete-flags nix-toplevel-options)))
       (pcomplete-here (pcomplete-entries)))))
+
+(defun nix--process (&rest args)
+  (with-temp-buffer
+    (let* ((tmpfile  (make-temp-file "nix--process-stderr"))
+	 (cleaned-args (seq-filter #'stringp args))
+	 (exitcode (apply #'call-process `(,nix-executable nil (t ,tmpfile) nil ,@cleaned-args )))
+	 (stderr (with-temp-buffer
+		   (insert-file-contents tmpfile)
+		   (buffer-string))))
+      (delete-file tmpfile)
+      (list (buffer-string) stderr exitcode))))
+
+(defun nix--process-string (&rest args)
+  (cl-multiple-value-bind (stdout stderr exitcode) (apply #'nix--process args)
+    (if (not (eq exitcode 0))
+      (error stderr))
+    ;; cut-off the trailing newline
+    (string-trim-right stdout)))
+
+(defun nix--process-json (&rest args)
+  (json-read-from-string
+    (apply #'nix--process-string args)))
+
+(defun nix--process-lines (&rest args)
+  (seq-filter (lambda (el) (not (string= "" el)))
+    (split-string
+      (apply #'nix--process-string args) "\n")))
+
+(defun nix--process-json-nocheck (&rest args)
+  ;; No checking of exitcode is possible here until
+  ;; https://github.com/NixOS/nix/issues/2474 is resolved
+  (let ((result (apply #'nix--process args)))
+    (json-read-from-string (car result))))
 
 (provide 'nix)
 ;;; nix.el ends here

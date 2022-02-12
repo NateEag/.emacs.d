@@ -44,8 +44,34 @@ Pretty print Nix’s .drv files.
 
 ;;;***
 
+;;;### (autoloads nil "nix-flake" "nix-flake.el" (0 0 0 0))
+;;; Generated autoloads from nix-flake.el
+ (autoload 'nix-flake-dispatch "nix-flake" nil t)
+
+(autoload 'nix-flake "nix-flake" "\
+Dispatch a transient interface for Nix commands.
+
+DIR is a directory on the file system in which flake.nix resides.
+
+Alternatively, you can specify FLAKE-REF which follows the syntax
+of flake-url. It can refer to a remote url, a local file path, or
+whatever supported by Nix.
+
+\(fn DIR &key FLAKE-REF)" t nil)
+ (autoload 'nix-flake-init "nix-flake" nil t)
+
+(autoload 'nix-flake-init "nix-flake" "\
+Run \"nix flake init\" command via a transient interface." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-flake" '("nix-flake-")))
+
+;;;***
+
 ;;;### (autoloads nil "nix-format" "nix-format.el" (0 0 0 0))
 ;;; Generated autoloads from nix-format.el
+
+(autoload 'nix-format-before-save "nix-format" "\
+Add this to `before-save-hook' to run nixfmt when saving." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-format" '("nix-")))
 
@@ -280,7 +306,7 @@ ATTR an attribute of the Nix file to use.
 ;;;### (autoloads nil "nix-store" "nix-store.el" (0 0 0 0))
 ;;; Generated autoloads from nix-store.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-store" '("nix-store-realise")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-store" '("nix-")))
 
 ;;;***
 

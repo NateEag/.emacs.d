@@ -4,7 +4,7 @@
 ;; Homepage: https://github.com/NixOS/nix-mode
 ;; Version: 1.4.4
 ;; Keywords: nix, languages, tools, unix
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "25.1") magit-section (transient "0.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -733,8 +733,8 @@ not to any other arguments."
                                 (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
                                   ;; Then regex-match strings at the end of the line to detect if we need to indent the line after.
                                   ;; We could probably add more things to look for here in the future.
-                                  (if (or (string-match "let$" line)
-                                          (string-match "import$" line)
+                                  (if (or (string-match "\\blet$" line)
+                                          (string-match "\\bimport$" line)
                                           (string-match "\\[$" line)
                                           (string-match "=$" line)
                                           (string-match "\($" line)
@@ -913,11 +913,9 @@ location of STR. If `nix-instantiate' has a nonzero exit code,
 don’t do anything"
   (when (and (string-match nix-re-bracket-path str)
              (executable-find nix-instantiate-executable))
-    (with-temp-buffer
-      (when (eq (call-process nix-instantiate-executable nil (current-buffer)
-                              nil "--eval" "-E" str) 0)
-        ;; Remove trailing newline
-        (substring (buffer-string) 0 (- (buffer-size) 1))))))
+    (let ((nix-executable nix-instantiate-executable))
+      (ignore-errors
+	(nix--process-string "--eval" "-E" str)))))
 
 ;; Key maps
 

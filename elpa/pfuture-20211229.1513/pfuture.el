@@ -5,8 +5,9 @@
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Homepage: https://github.com/Alexander-Miller/pfuture
 ;; Package-Requires: ((emacs "25.2"))
-;; Package-Version: 20200425.1357
-;; Version: 1.9
+;; Package-Version: 20211229.1513
+;; Package-Commit: bde5b06795e3e35bfb2bba4c34b538d506a0856e
+;; Version: 1.10.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -47,7 +48,14 @@
       (process-put process 'stderr-process nil)
       ;; delete-process may trigger other sentinels. If there are many pfutures,
       ;; this will overflow the stack.
-      (run-with-idle-timer 0 nil #'pfuture--delete-process stderr-process))))
+      (run-with-idle-timer 0 nil #'pfuture--delete-process stderr-process))
+    ;; Make sure the stdout buffer is deleted even if the future
+    ;; is never awaited
+    (unless (process-get process 'result)
+      (let* ((buffer (process-get process 'buffer))
+             (result (with-current-buffer buffer (buffer-string))))
+        (kill-buffer buffer)
+        (process-put process 'result result)))))
 
 ;;;###autoload
 (defun pfuture-new (&rest cmd)
@@ -75,16 +83,20 @@ this is right: (pfuture-new \"git\" \"status\")"
     ;; cannot receive input.
     (set-process-buffer stderr nil)
     (condition-case err
-        (let ((process
-               (make-process
-                :name "Process Future"
-                :stderr stderr
-                :sentinel #'pfuture--sentinel
-                :filter #'pfuture--append-stdout
-                :command cmd
-                :noquery t))
-              ;; Make the processes share their plist so that 'stderr is easily accessible.
-              (plist (list 'stdout "" 'stderr "" 'stderr-process stderr)))
+        (let* ((name (format "Pfuture-Buffer %s" cmd))
+               (pfuture-buffer
+                (let (buffer-list-update-hook)
+                  (generate-new-buffer name)))
+               (process
+                (make-process
+                 :name "Process Future"
+                 :stderr stderr
+                 :sentinel #'pfuture--sentinel
+                 :filter #'pfuture--append-output-to-buffer
+                 :command cmd
+                 :noquery t))
+               ;; Make the processes share their plist so that 'stderr is easily accessible.
+               (plist (list 'buffer pfuture-buffer 'stdout "" 'stderr "" 'stderr-process stderr)))
           (set-process-plist process plist)
           (set-process-plist stderr plist)
           process)
@@ -150,10 +162,11 @@ ON-SUCCESS and ON-ERROR, including the (potentially incomplete) process output
 buffer. Otherwise the same conditions as for ON-SUCCESS and ON-ERROR apply.
 
 DIRECTORY is the value given to `default-directory' for the context of the
-process. If not given it will fall back the current value of `default-directory'.
+process. If not given it will fall back the current value of
+`default-directory'.
 
-NAME will be passed to the :name property of `make-process'. If not given it will
-fall back to \"Pfuture Callback [$COMMAND]\".
+NAME will be passed to the :name property of `make-process'. If not given it
+will fall back to \"Pfuture Callback [$COMMAND]\".
 
 CONNECTION-TYPE will be passed to the :connection-process property of
 `make-process'. If not given it will fall back to 'pipe.
@@ -224,18 +237,35 @@ details see documentation of `accept-process-output'."
   (let (inhibit-quit)
     (accept-process-output
      process timeout nil just-this-one))
-  (process-get process 'result))
+  (pfuture-result process))
 
-(cl-macrolet
-    ((define-getter (name doc variable )
-       `(define-inline ,name (process)
-          ,doc
-          (declare (side-effect-free t))
-          (inline-letevals (process)
-            (inline-quote
-             (process-get ,',process ',variable))))))
-  (define-getter pfuture-result "Return the output of a pfuture PROCESS." stdout)
-  (define-getter pfuture-stderr "Return the error output of a pfuture PROCESS." stderr))
+(define-inline pfuture-result (process)
+  "Return the output of a pfuture PROCESS.
+If the PROCESS is still alive only the output collected so far will be returned.
+To get the full output use either `pfuture-await' or `pfuture-await-to-finish'."
+  (declare (side-effect-free t))
+  (inline-letevals (process)
+    (inline-quote
+     (let* ((result (process-get ,process 'result)))
+       (cond
+        (result result)
+        ((process-live-p ,process)
+         (let ((buffer (process-get ,process 'buffer)))
+           (with-current-buffer buffer (buffer-string))))
+        (t
+         (let* ((buffer (process-get ,process 'buffer))
+                (output (with-current-buffer buffer
+                          (buffer-string))))
+           (process-put ,process 'result output)
+           (kill-buffer buffer)
+           output)))))))
+
+(define-inline pfuture-stderr (process)
+  "Return the error output of a pfuture PROCESS."
+  (declare (side-effect-free t))
+  (inline-letevals (process)
+    (inline-quote
+     (process-get ,process 'stderr))))
 
 (defun pfuture-await-to-finish (process)
   "Keep reading the output of PROCESS until it is done.
@@ -252,22 +282,13 @@ If the process never quits this method will block forever. Use with caution!"
          (stderr-process (plist-get plist 'stderr-process)))
     (when stderr-process
       (pfuture--delete-process stderr-process))
-    (plist-get plist 'stdout)))
+    (pfuture-result process)))
 
 (defun pfuture--append-output-to-buffer (process msg)
   "Append PROCESS' MSG to its output buffer."
   (with-current-buffer (process-get process 'buffer)
     (goto-char (point-max))
     (insert msg)))
-
-(defun pfuture--append-stdout (process msg)
-  "Append PROCESS' MSG to the already saved stdout output."
-  (let* ((process-plist (process-plist process))
-         (previous-output (plist-get process-plist 'stdout)))
-    (plist-put process-plist 'stdout
-               (if (zerop (string-bytes previous-output))
-                   msg
-                 (concat previous-output msg)))))
 
 (defun pfuture--append-stderr (process msg)
   "Append PROCESS' MSG to the already saved stderr output."

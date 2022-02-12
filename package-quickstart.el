@@ -1542,10 +1542,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20200425.1357/pfuture-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20211229.1513/pfuture-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pfuture-20200425.1357/pfuture-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pfuture-20211229.1513/pfuture-autoloads.el") (car load-path))))
 
 
 

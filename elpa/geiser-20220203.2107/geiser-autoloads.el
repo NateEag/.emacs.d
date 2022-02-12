@@ -144,7 +144,7 @@ add, defaulting to the current buffer's directory.
 ;;;### (autoloads nil "geiser-eval" "geiser-eval.el" (0 0 0 0))
 ;;; Generated autoloads from geiser-eval.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-eval" '("geiser-eval--")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "geiser-eval" '("geiser-eval-")))
 
 ;;;***
 

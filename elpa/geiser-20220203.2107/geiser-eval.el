@@ -1,6 +1,6 @@
-;;; geiser-eval.el -- sending scheme code for evaluation
+;;; geiser-eval.el -- sending scheme code for evaluation  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2015 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2015, 2021 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -25,7 +25,6 @@
 ;;; Plug-able functions:
 
 (defvar-local geiser-eval--get-module-function nil)
-(set-default 'geiser-eval--get-module-function nil)
 
 (defvar geiser-eval--get-impl-module nil)
 (geiser-impl--register-local-method
@@ -35,11 +34,13 @@ an optional argument, for cases where we want to force its
 value.")
 
 (defun geiser-eval--get-module (&optional module)
-  (if geiser-eval--get-module-function
-      (funcall geiser-eval--get-module-function module)
-    (funcall geiser-eval--get-impl-module module)))
+  (cond (geiser-eval--get-module-function
+         (funcall geiser-eval--get-module-function module))
+        (geiser-eval--get-impl-module
+         (funcall geiser-eval--get-impl-module module))
+        (t module)))
 
-(defvar geiser-eval--geiser-procedure-function)
+(defvar geiser-eval--geiser-procedure-function nil)
 (geiser-impl--register-local-method
  'geiser-eval--geiser-procedure-function 'marshall-procedure 'identity
  "Function to translate a bare procedure symbol to one executable
@@ -64,18 +65,16 @@ module-exports, autodoc, callers, callees and generic-methods.")
   (when (not (geiser-eval--supported-p (car args)))
     (error "Sorry, the %s scheme implementation does not support Geiser's %s"
            geiser-impl--implementation (car args)))
-  (apply geiser-eval--geiser-procedure-function args))
+  (apply (or geiser-eval--geiser-procedure-function 'ignore) args))
 
 
 ;;; Code formatting:
 
 (defsubst geiser-eval--load-file (file)
-  (geiser-eval--form 'load-file
-                     (geiser-eval--scheme-str file)))
+  (geiser-eval--form 'load-file (geiser-eval--scheme-str file)))
 
 (defsubst geiser-eval--comp-file (file)
-  (geiser-eval--form 'compile-file
-                     (geiser-eval--scheme-str file)))
+  (geiser-eval--form 'compile-file (geiser-eval--scheme-str file)))
 
 (defsubst geiser-eval--module (code)
   (geiser-eval--scheme-str
@@ -95,15 +94,18 @@ module-exports, autodoc, callers, callees and generic-methods.")
                      (geiser-eval--scheme-str (nth 0 code))))
 
 (defsubst geiser-eval--ge (proc args)
-  (apply 'geiser-eval--form (cons proc
-                                  (mapcar 'geiser-eval--scheme-str args))))
+  (apply 'geiser-eval--form (cons proc (mapcar 'geiser-eval--scheme-str args))))
+
+(defsubst geiser-eval--debug (args)
+  (geiser-eval--ge 'debug args))
 
 (defun geiser-eval--scheme-str (code)
   (cond ((null code) "'()")
         ((eq code :f) "#f")
         ((eq code :t) "#t")
         ((listp code)
-         (cond ((eq (car code) :eval) (geiser-eval--eval (cdr code)))
+         (cond ((eq (car code) :debug) (geiser-eval--debug (cdr code)))
+               ((eq (car code) :eval) (geiser-eval--eval (cdr code)))
                ((eq (car code) :comp) (geiser-eval--comp (cdr code)))
                ((eq (car code) :load-file)
                 (geiser-eval--load-file (cadr code)))
@@ -135,11 +137,18 @@ module-exports, autodoc, callers, callees and generic-methods.")
 (defsubst geiser-eval--code-str (code)
   (if (stringp code) code (geiser-eval--scheme-str code)))
 
+(defvar geiser-eval--async-retort nil)
 (defsubst geiser-eval--send (code cont &optional buffer)
+  (setq geiser-eval--async-retort nil)
   (geiser-con--send-string (geiser-eval--connection)
                            (geiser-eval--code-str code)
-                           cont
+                           (lambda (s)
+                             (setq geiser-eval--async-retort s)
+                             (funcall cont s))
                            buffer))
+
+(defun geiser-eval--wait (req timeout)
+  (or (geiser-con--wait req timeout) geiser-eval--async-retort))
 
 (defvar geiser-eval--sync-retort nil)
 (defun geiser-eval--set-sync-retort (s)
@@ -153,6 +162,11 @@ module-exports, autodoc, callers, callees and generic-methods.")
                                 timeout
                                 buffer)
   geiser-eval--sync-retort)
+
+(defun geiser-eval-interrupt ()
+  "Interrupt on-going evaluation, if any."
+  (interactive)
+  (geiser-con--interrupt (geiser-eval--connection)))
 
 
 ;;; Retort parsing:

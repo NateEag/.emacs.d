@@ -1,6 +1,6 @@
 ;;; geiser-completion.el -- tab completion
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2018, 2020 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2018, 2020, 2021 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -63,14 +63,10 @@
   (geiser-eval--send/result `(:eval (:ge module-completions ,prefix))))
 
 (defvar geiser-completion-module-list-func
-  (if (< emacs-major-version 25)
-      (completion-table-dynamic 'geiser-completion--module-list)
-    (completion-table-dynamic 'geiser-completion--module-list t)))
+  (completion-table-dynamic 'geiser-completion--module-list t))
 
 (defvar geiser-completion-symbol-list-func
-  (if (< emacs-major-version 25)
-      (completion-table-dynamic 'geiser-completion--symbol-list)
-    (completion-table-dynamic 'geiser-completion--symbol-list t)))
+  (completion-table-dynamic 'geiser-completion--symbol-list t))
 
 (defun geiser-completion--complete (prefix modules)
   (if modules
@@ -86,13 +82,13 @@
                                   nil nil nil
                                   (or history
                                       geiser-completion--symbol-history)
-                                  (or default (geiser--symbol-at-point))))))
+                                  (or default
+                                      (symbol-name (geiser--symbol-at-point)))))))
 
 (defvar geiser-completion--module-history nil)
 
 (defun geiser-completion--read-module (&optional prompt default history)
-  (let ((minibuffer-local-completion-map
-         geiser-completion--module-minibuffer-map))
+  (let ((minibuffer-local-completion-map geiser-completion--module-minibuffer-map))
     (completing-read (or prompt "Module name: ")
                      geiser-completion-module-list-func
                      nil nil nil
@@ -157,7 +153,7 @@ we're looking for a module name.")
 (defun geiser-completion--for-filename ()
   (when (geiser-syntax--in-string-p)
     (let ((comint-completion-addsuffix "\""))
-      (comint-dynamic-complete-filename))))
+      (ignore-errors (comint-filename-completion)))))
 
 (defun geiser-completion--setup (enable)
   (set (make-local-variable 'completion-at-point-functions)

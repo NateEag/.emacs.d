@@ -1,6 +1,6 @@
 ;;; geiser-mode.el -- minor mode for scheme buffers
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2020 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2020, 2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -95,11 +95,24 @@ result is an error msg."
   (push-mark)
   (goto-char (point-max)))
 
+(defun geiser-wait-eval (req timeout)
+  "Use REQ, the result of computing an evaluation, to wait for its result.
+
+TIMEOUT is the number of seconds to wait for evaluation
+completion.  Functions returning a waitable REQ are
+`geiser-eval-region' and its derivatives evaluating buffers or
+individual sexps."
+  (geiser-eval--wait req (* 1000 timeout)))
+
 (defun geiser-eval-region (start end &optional and-go raw nomsg)
   "Eval the current region in the Geiser REPL.
 
 With prefix, goes to the REPL buffer afterwards (as
-`geiser-eval-region-and-go')"
+`geiser-eval-region-and-go').  The evaluation is performed
+asynchronously: this function's return value can be used to wait
+for its completion using `geiser-eval-wait'.  See also
+`geiser-eval-region/wait' if you just need to eval a region
+programmatically in a synchronous way."
   (interactive "rP")
   (save-restriction
     (narrow-to-region start end)
@@ -110,6 +123,12 @@ With prefix, goes to the REPL buffer afterwards (as
                              (and and-go 'geiser--go-to-repl)
                              (not raw)
                              nomsg))
+
+(defun geiser-eval-region/wait (start end &optional timeout)
+  "Like `geiser-eval-region', but waiting for the evaluation to finish.
+Returns its raw result, rather than displaying it. TIMEOUT is the
+number of seconds to wait for the evaluation to finish."
+  (geiser-debug--send-region/wait nil start end (* 1000 (or timeout 10))))
 
 (defun geiser-eval-region-and-go (start end)
   "Eval the current region in the Geiser REPL and visit it afterwads."
@@ -175,6 +194,7 @@ With a prefix, revert the effect of `geiser-mode-eval-last-sexp-to-buffer' "
                                     nil
                                     t
                                     print-to-buffer-p)))
+         (ret (geiser-wait-eval ret 30))
          (err (geiser-eval--retort-error ret))
          (will-eval-to-buffer (if print-to-buffer-p
                                   (not geiser-mode-eval-last-sexp-to-buffer)
@@ -273,6 +293,11 @@ With prefix, try to enter the current buffer's module."
     (goto-char (point-max))
     (pop-to-buffer b)))
 
+(defun geiser-exit-repl ()
+  "Issues the command `geiser-repl-exit' in this buffer's associated REPL."
+  (interactive)
+  (geiser-repl--call-in-repl #'geiser-repl-exit))
+
 
 ;;; Keys:
 
@@ -292,6 +317,8 @@ With prefix, try to enter the current buffer's module."
       ("Eval buffer" "\C-c\C-b" geiser-eval-buffer)
       ("Eval buffer and go" "\C-c\M-b" geiser-eval-buffer-and-go)
       ("Load scheme file..." "\C-c\C-l" geiser-load-file)
+      ("Abort evaluation" ("\C-c\C-i" "\C-c\C-e\C-i" "\C-c\C-ei")
+       geiser-eval-interrupt)
       (menu "Macroexpand"
             ("Sexp before point" ("\C-c\C-m\C-e" "\C-c\C-me")
              geiser-expand-last-sexp)
@@ -312,6 +339,7 @@ With prefix, try to enter the current buffer's module."
       ("Switch to REPL and enter module" "\C-c\C-a"
        geiser-mode-switch-to-repl-and-enter)
       ("Set Scheme..." "\C-c\C-s" geiser-set-scheme)
+      ("Exit REPL or debugger" "\C-c\C-q" geiser-exit-repl)
       --
       ("Edit symbol at point" "\M-." geiser-edit-symbol-at-point
        :enable (geiser--symbol-at-point))

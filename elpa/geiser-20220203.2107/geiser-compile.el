@@ -1,4 +1,4 @@
-;;; geiser-compile.el -- compile/load scheme files
+;;; geiser-compile.el -- compile/load scheme files  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2016, 2018, 2021 Jose Antonio Ortega Ruiz
 
@@ -38,13 +38,13 @@
 
 (defun geiser-compile--file-op (path compile-p msg)
   (let* ((b/p (geiser-compile--buffer/path path))
-         (buffer (car b/p))
          (path (cdr b/p))
          (msg (format "%s %s ..." msg path))
-         (code `(,(if compile-p :comp-file :load-file) ,path)))
+         (code `(,(if compile-p :comp-file :load-file) ,path))
+         (cont (lambda (ret) (geiser-compile--display-result msg ret))))
     (message msg)
     (geiser-autodoc--clean-cache)
-    (geiser-compile--display-result msg (geiser-eval--send/wait code))))
+    (geiser-eval--send code cont)))
 
 
 ;;; User commands:
@@ -83,7 +83,7 @@ add, defaulting to the current buffer's directory."
   (interactive "DDirectory to add: ")
   (let* ((c `(:eval (:ge add-to-load-path ,(expand-file-name path))))
          (r (geiser-eval--send/result c)))
-    (message "%s" (if r "Added" "Failed!"))))
+    (message "%s%s added to load path" path (if r "" "couldn't be"))))
 
 
 (provide 'geiser-compile)

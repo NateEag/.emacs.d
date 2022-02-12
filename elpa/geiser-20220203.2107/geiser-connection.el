@@ -1,6 +1,6 @@
 ;;; geiser-connection.el -- talking to a scheme process
 
-;; Copyright (C) 2009, 2010, 2011, 2013 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2013, 2021 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -92,11 +92,11 @@
             (tq-queue-pop tq)))))))
 
 (defun geiser-con--combined-prompt (prompt debug)
-  (format "\\(%s%s\\)" prompt (if debug (format "\\|%s" debug) "")))
+  (if debug (format "\\(%s\\)\\|\\(%s\\)" prompt debug) prompt))
 
 (defun geiser-con--connection-eot-re (prompt debug)
-  (geiser-con--combined-prompt (format "\n%s" prompt)
-                               (and debug (format "\n%s" debug))))
+  (geiser-con--combined-prompt (format "\n\\(%s\\)" prompt)
+                               (and debug (format "\n\\(%s\\)" debug))))
 
 (defun geiser-con--make-connection (proc prompt debug-prompt)
   (list t
@@ -157,9 +157,9 @@
     new))
 
 (defun geiser-con--has-entered-debugger (con answer)
-  (and (not (geiser-con--connection-is-debugging con))
-       (let ((p (car (last (split-string answer "\n" t)))))
-         (and p (geiser-con--connection-update-debugging con p)))))
+  (when-let ((p (car (last (split-string answer "\n" t)))))
+    (geiser-con--connection-update-debugging con p))
+  (geiser-con--connection-is-debugging con))
 
 (defun geiser-con--connection-eot-p (con txt)
   (and txt
@@ -199,17 +199,18 @@
 ;;; Requests handling:
 
 (defun geiser-con--req-form (req answer)
-  (let ((con (geiser-con--request-connection req)))
-    (if (geiser-con--has-entered-debugger con answer)
-        `((error (key . geiser-debugger))
-          (output . ,answer))
-      (condition-case err
-          (let ((start (string-match "((\\(?:result)?\\|error\\) " answer)))
-            (or (and start (car (read-from-string answer start)))
-                `((error (key . retort-syntax)) (output . ,answer))))
-        (error `((error (key . geiser-con-error))
-                 (output . ,(format "%s\n(%s)"
-                                    answer (error-message-string err)))))))))
+  (let* ((con (geiser-con--request-connection req))
+         (debugging (geiser-con--has-entered-debugger con answer)))
+    (condition-case err
+        (let ((start (string-match "((\\(?:result)?\\|error\\) " answer)))
+          (or (and start (car (read-from-string answer start)))
+              `((error (key . retort-syntax))
+                (output . ,answer)
+                (debug . ,debugging))))
+      (error `((error (key . geiser-con-error))
+               (debug . debugging)
+               (output . ,(format "%s\n(%s)"
+                                  answer (error-message-string err))))))))
 
 (defun geiser-con--process-completed-request (req answer)
   (let ((cont (geiser-con--request-continuation req))
@@ -253,19 +254,33 @@
 (defvar geiser-connection-timeout 30000
   "Time limit, in msecs, blocking on synchronous evaluation requests")
 
+(defun geiser-con--interrupt (con)
+  "Interrupt any request being currently in process."
+  (when-let (proc (and con (geiser-con--connection-process con)))
+    (when (process-live-p proc)
+      (interrupt-process proc))))
+
+(defun geiser-con--wait (req timeout)
+  "Wait for the given request REQ to finish, up to TIMEOUT msecs, returning its result."
+  (let* ((con (or (geiser-con--request-connection req)
+                  (error "Geiser connection not active")))
+         (proc (geiser-con--connection-process con))
+         (id (geiser-con--request-id req))
+         (timeout (/ (or timeout geiser-connection-timeout) 1000.0))
+         (step (/ timeout 10)))
+    (with-timeout (timeout (geiser-con--request-deactivate req))
+      (condition-case e
+          (while (and (geiser-con--connection-process con)
+                      (not (geiser-con--connection-completed-p con id)))
+            (accept-process-output proc step))
+        (error (geiser-con--request-deactivate req))))))
+
 (defun geiser-con--send-string/wait (con str cont &optional timeout sbuf)
   (save-current-buffer
     (let ((proc (and con (geiser-con--connection-process con))))
       (unless proc (error "Geiser connection not active"))
-      (let* ((req (geiser-con--send-string con str cont sbuf))
-             (id (geiser-con--request-id req))
-             (timeout (/ (or timeout geiser-connection-timeout) 1000.0)))
-        (with-timeout (timeout (geiser-con--request-deactivate req))
-          (condition-case nil
-              (while (and (geiser-con--connection-process con)
-                          (not (geiser-con--connection-completed-p con id)))
-                (accept-process-output proc (/ timeout 10)))
-            (error (geiser-con--request-deactivate req))))))))
+      (let ((req (geiser-con--send-string con str cont sbuf)))
+        (geiser-con--wait req timeout)))))
 
 
 (provide 'geiser-connection)

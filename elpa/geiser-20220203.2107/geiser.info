@@ -243,7 +243,8 @@ add to the fun.
 
    You'll also need Geiser itself.  The quickest installation is via
 your favourite implementation's ELPA packages (as of this writing,
-they're all available in MELPA).
+they're all available in MELPA and (most of them) also in NonGNU ELPA,
+which comes included with the batteries of Emacs 28 or better).
 
 
 File: geiser.info,  Node: The quick and easy way,  Next: From the source's mouth,  Prev: Must needs,  Up: Installation
@@ -258,19 +259,16 @@ versions, the page i just linked to twice will tell you where to find
 the goodies.
 
    ELPA packages live in repositories accessible via HTTP. You can find
-Geiser's package in either MELPA stable
-(http://stable.melpa.org/#/geiser) or, if you like living on the
-bleeding edge, MELPA (http://melpa.org/#/geiser) (directly from the git
-repo).  To tell Emacs that an ELPA repo exists, you add it to
-'package-archives':
+Geiser's package in either NonGNU ELPA
+(https://elpa.nongnu.org/nongnu/geiser.html) or, if you like living on
+the bleeding edge, MELPA (http://melpa.org/#/geiser) (directly from the
+git repo).  To tell Emacs that an ELPA repo exists, you add it to
+'package-archives'(1):
 
      (require 'package)
-     ;;; either the stable version:
 
      (add-to-list 'package-archives
-       ;; choose either the stable or the latest git version:
-       ;; '("melpa-stable" . "http://stable.melpa.org/packages/")
-       '("melpa-unstable" . "http://melpa.org/packages/"))
+       '("nongnu" . "https://elpa.nongnu.org/nongnu/"))
 
      (package-initialize)
 
@@ -286,6 +284,12 @@ respective package documentation.
 
    With that, you are pretty much all set up.  See *note The REPL:: to
 start using Geiser.
+
+   ---------- Footnotes ----------
+
+   (1) If you're using Emacs 28 or better, 'package-archives' already
+comes with the non-gnu archive preconfigured, so you're lucky in more
+than one way.
 
 
 File: geiser.info,  Node: From the source's mouth,  Next: Friends,  Prev: The quick and easy way,  Up: Installation
@@ -729,35 +733,36 @@ wrong Scheme version will be much more informative.  If you one to avoid
 version checks, just check 'geiser-repl-skip-version-check-p' to 't' in
 your configuration.
 
-   You can also specify a couple more initialisation parameters.  For
-Guile, 'geiser-guile-load-path' is a list of paths to add to its load
-path (and its compiled load path) when it's started, while
-'geiser-guile-init-file' is the path to an initialisation file to be
-loaded on start-up.  The equivalent variables for Racket are
-'geiser-racket-collects' and 'geiser-racket-init-file'.
+Init files and load paths
+.........................
 
-   Note, however, that specifying 'geiser-guile-init-file' is not
-equivalent to changing Guile's initialization file ('~/.guile'), because
-the former is loaded using the '-l' flag, together with '-q' to disable
-loading the second.  But there are subtle differences in the way Guile
-loads the initialization file versus how it loads a file specified via
-the '-l' flag.  If what you want is just loading '~/.guile', leave
-'geiser-guile-init-file' alone and set 'geiser-guile-load-init-file-p'
-to 't' instead.
+The startup behaviour of the REPL can be also fine tuned with a couple
+more initialisation parameters.
+
+   Many Scheme implementations provide a configuration variable to
+specify a Geiser-specific init file (e.g., 'geiser-guile-init-file' for
+Guile), and, sometimes a global list of paths to add to the
+interpreter's load path (that'd be 'geiser-guile-load-path' for Guile).
+
+   There is also a generic mechanism to specify how to add directories
+to the initial load path when 'geiser-repl-current-project-function' is
+set: you can then customize 'geiser-repl-add-project-paths' to a list of
+subdirectories of the project's root to add to the load path.
 
    These variables controlling your scheme's initialisation process are
 good candidates for an entry in a project's '.dir-locals.el' file, so
 that they are automatically set to a sensible value whenever you start a
 REPL in the project's directory.
 
-Racket startup time
-...................
+Startup waiting time
+....................
 
-When starting Racket in little computers, Geiser might have to wait a
-bit more than it expects (which is ten seconds, or ten thousand
-milliseconds, by default).  If you find that Geiser is giving up too
-quickly and complaining that no prompt was found, try to increase the
-value of 'geiser-repl-startup-time' to, say, twenty seconds:
+When starting a scheme implementation in old or very busy computers,
+Geiser might have to wait a bit more than it expects (which is ten
+seconds, or ten thousand milliseconds, by default).  If you find that
+Geiser is giving up too quickly and complaining that no prompt was
+found, try to increase the value of 'geiser-repl-startup-time' to, say,
+twenty seconds:
 
      (setq geiser-repl-startup-time 20000)
 
@@ -982,13 +987,21 @@ projects with separate dependencies and include paths.
 project, which can be enabled by customizing
 'geiser-repl-current-project-function' and selecting your Emacs
 project-management library of choice (eg.  'project.el' or
-'projectile').  With this configured, new REPLs will automatically
-associate themselves with the current project, and all Geiser commands
-will ignore REPLs that are not associated with the project.
+'projectile').  With this configured, if you want new REPLs to
+automatically associate themselves with the current project, so that all
+Geiser commands will ignore REPLs that are not associated with the
+project, customize the toggle 'geiser-repl-per-project-p' to 't' and
+you're all set up.
 
    This can be very convenient when used with a '.dir-locals.el' in the
 project root to set include paths, ensuring that Geiser REPLs will
 always know where to find your project's modules or dependencies.
+Geiser automatically handles the common case of the project root
+belonging to the load path: unless you tell it otherwise (using the
+customisable flag 'geiser-repl-add-project-path-p', which defaults to
+'t'), it will add the result of calling
+'geiser-repl-current-project-function' to the REPLs load path on
+startup.
 
 Switching between source files and the REPL
 ...........................................
@@ -1168,8 +1181,8 @@ File: geiser.info,  Node: To eval or not to eval,  Next: To err perchance to deb
 
 One of Geiser's main goals is to facilitate incremental development.
 You might have noticed that i've made a big fuss of Geiser's ability to
-recognize context, by being aware of the namespace where its operations
-happen.
+recognize context, by dint of being aware of the namespace where its
+operations happen.
 
    That awareness is especially important when evaluating code in your
 scheme buffers, using the commands described below.  They allow you to
@@ -1197,7 +1210,7 @@ something like 'C-u C-c C-k' for compilation, for instance), to tell
 Geiser to restart the REPL associated with a buffer before compiling or
 loading its current contents.
 
-   For all of you bearded old lispers still with me, here are some of
+   For all of you auld bearded lispers still with me, here are some of
 the commands performing incremental evaluation in Geiser.
 
    'geiser-eval-last-sexp', bound to 'C-x C-e', will eval the
@@ -1221,8 +1234,10 @@ in the minibuffer, unless it causes a (Scheme-side) error (*note To err
 perchance to debug::), or, for schemes supporting them (such as Racket),
 the evaluation yields an image, in which case you'll see it in popping
 up in the Geiser debug buffer (if your Emacs runs under the auspices of
-a graphical toolkit), or via an external viewer if you set program (see
-also *note Seeing is believing:: for more on image support).
+a graphical toolkit), or via an external viewer if you set
+'geiser-image-viewer' to the path of an appropriate visualization
+program (see also *note Seeing is believing:: for more on image
+support).
 
    At the risk of repeating myself, i'll remind you that all these
 evaluations will take place in the namespace of the module corresponding
@@ -1236,6 +1251,23 @@ macro-expand them.  The corresponding key bindings start with the prefix
 'C-c C-m' and end, respectively, with 'C-e', 'C-x' and 'C-r'.  The
 result of the macro expansion always appears in a pop up buffer.
 
+   All the evaluations and expansions performed by the commands above
+are asynchronous(1), so that you can move around while the answer is
+being computed.  The command 'geiser-eval-interrupt', bound to 'C-c C-i'
+will interrupt any on-going evaluation and, when the scheme
+implementation supports a debugger, bring you to a buffer where you can
+perform buffer actions in the interrupted evaluation's context.
+
+   Oh, didn't i mention we have support for debuggers?  Let's talk about
+that next.
+
+   ---------- Footnotes ----------
+
+   (1) For local REPLs, where we can easily send an interrupt signal to
+the scheme process; remote REPLs are another kettle of fish in this
+regard, and generally interruptions are supported: you'll just have to
+kill the connection if caught in a loop.
+
 
 File: geiser.info,  Node: To err perchance to debug,  Next: Jumping around,  Prev: To eval or not to eval,  Up: Between the parens
 
@@ -1245,42 +1277,28 @@ File: geiser.info,  Node: To err perchance to debug,  Next: Jumping around,  Pre
 When an error occurs during evaluation, it will be reported according to
 the capabilities of the underlying Scheme REPL.
 
-   In Racket, you'll be presented with a backtrace, in a new buffer
-where file paths locating the origin of the error are click-able (you
-can navigate them using the <TAB> key, and use <RET> or the mouse to
-jump to the offending spot; or invoke Emacs' stock commands 'next-error'
-and 'previous-error', bound to 'M-g n' and 'M-g p' by default).
-
-   The Racket backtrace also highlights the exception type, making it
-click-able.  Following the link will open the documentation
-corresponding to said exception type.  Both the error and exception link
-faces are customizable ('geiser-font-lock-error-link' and
-'geiser-font-lock-doc-link').
+   In most schemes, you'll be presented with a backtrace, in a new
+buffer where file paths locating the origin of the error are click-able
+(you can navigate them using the <TAB> key, and use <RET> or the mouse
+to jump to the offending spot; or invoke Emacs' stock commands
+'next-error' and 'previous-error', bound to 'M-g n' and 'M-g p' by
+default).
 
    By default, Geiser will tele-transport your pointer to the debug
 buffer: if you prefer to stay in the source buffer, set
-'geiser-debug-jump-to-debug-p' to nil.  And if, in addition, you don't
-even want to see the error trace, customize 'geiser-debug-show-debug-p',
-again, to nil.
+'geiser-debug-jump-to-debug-p' to nil.
 
-   On the other hand, Guile's reaction to evaluation errors is
-different: it enters the debugger in its REPL. Accordingly, the REPL
-buffer will pop up if your evaluation fails in a Guile file, and the
-error message and backtrace will be displayed in there, again click-able
-and all.  But there you have the debugger at your disposal, with the
-REPL's current module set to that of the offender, and a host of special
-debugging commands that are described in Guile's fine documentation.
+   For schemes with good debug support (Guile is one), the debug buffers
+offer a debugging menu, accesible via the ',' (that's a comma) key.  If
+you press it, a transient menu will appear, offering you a variety of
+actions, including showing local variable values or a more detailed
+backtrace or frame display.  This is the same interface you'll encounter
+the in case of interrupted evaluations, either by your explicit 'C-c
+C-i' command or because a breakpoint has been previosuly set.
 
-   In addition, Guile will sometimes report warnings for otherwise
+   In addition, Geiser will sometimes report warnings for otherwise
 successful evaluations.  In those cases, it won't enter the debugger,
-and Geiser will report the warnings in a debug buffer, as it does for
-Racket.  You can control how picky Guile is reporting warnings by
-customizing the variable 'geiser-guile-warning-level', whose detailed
-docstring (which see, using, e.g.  'C-h v') allows me to offer no
-further explanation here.  The customization group geiser-guile is also
-worth a glance, for a couple of options to fine-tune how Geiser
-interacts with Guile's debugger (and more).  Same thing for racketeers
-and geiser-racket.
+just report the warnings in a debug buffer.
 
 
 File: geiser.info,  Node: Jumping around,  Next: Geiser writes for you,  Prev: To err perchance to debug,  Up: Between the parens
@@ -1405,6 +1423,8 @@ C-c C-e C-[    'geiser-squarify'             Toggle between () and []
                                              for current form
 C-c C-\        'geiser-insert-lambda'        Insert greek lambda or,
                                              with prefix, a lambda form
+C-c C-i        'geiser-eval-interrupt'       Interrupt ongoing
+                                             evaluation
 C-M-x          'geiser-eval-definition'      Eval definition around
                                              point
 C-c C-c        'geiser-eval-definition'      Eval definition around
@@ -1557,6 +1577,14 @@ came.
    Aleix Conchillo has been my favourite spammer, beta tester and patch
 sender during more years and for more projects than i can remember.
 
+   Philip K. prepared the NonGNU ELPA packages for Geiser, making them
+available by default starting in Emacs 28, very generously volunteering
+all the work (i just had to update the docs!).
+
+   Jonas Bernoulli, as it's his indefatigable wont, has improved
+Geiser's compliance to current Emacs packaging standards, making it a
+respectful member of the ELPA community.
+
    Eduardo Cavazos' contagious enthusiasm has helped in many ways to
 keep Geiser alive, and he's become its best evangelist in R6RS circles.
 
@@ -1606,7 +1634,7 @@ Index
 * ,enter vs. enter!:                     Switching context.   (line   6)
 * ac-geiser:                             Friends.             (line   9)
 * ask on kill, don't:                    Customization and tips.
-                                                              (line 129)
+                                                              (line 130)
 * autocomplete:                          Friends.             (line   9)
 * autodoc customized:                    Documentation helpers.
                                                               (line  64)
@@ -1615,7 +1643,7 @@ Index
 * autodoc for variables:                 Documentation helpers.
                                                               (line  58)
 * autodoc, disabling:                    Customization and tips.
-                                                              (line 111)
+                                                              (line 112)
 * autodoc, in scheme buffers:            Documentation helpers.
                                                               (line   9)
 * autodoc, in the REPL:                  Autodoc and friends. (line  11)
@@ -1624,7 +1652,7 @@ Index
 * backtraces:                            To err perchance to debug.
                                                               (line   6)
 * bug tracker:                           No hacker is an island.
-                                                              (line  68)
+                                                              (line  76)
 * company:                               Friends.             (line   9)
 * completion for module names:           Geiser writes for you.
                                                               (line  33)
@@ -1656,10 +1684,18 @@ Index
                                                               (line  37)
 * external image viewer:                 Seeing is believing. (line  10)
 * faces, in the REPL:                    Starting the REPL.   (line  35)
+* geiser-add-to-load-path:               Customization and tips.
+                                                              (line  58)
 * geiser-mode:                           Activating Geiser.   (line   6)
 * geiser-mode commands:                  Activating Geiser.   (line  21)
-* gmane:                                 No hacker is an island.
+* geiser-repl-add-project-path-p:        The source and the REPL.
+                                                              (line 102)
+* geiser-repl-add-project-paths:         Customization and tips.
                                                               (line  58)
+* geiser-repl-per-project-p:             The source and the REPL.
+                                                              (line  92)
+* gmane:                                 No hacker is an island.
+                                                              (line  66)
 * Guile info nodes:                      Documentation helpers.
                                                               (line 120)
 * Guile's REPL server:                   Starting the REPL.   (line  48)
@@ -1669,7 +1705,7 @@ Index
                                                               (line  58)
 * help on identifier:                    Autodoc and friends. (line  29)
 * host, default:                         Customization and tips.
-                                                              (line 120)
+                                                              (line 121)
 * image cache:                           Seeing is believing. (line  16)
 * image display:                         To eval or not to eval.
                                                               (line  56)
@@ -1681,35 +1717,39 @@ Index
                                                               (line  18)
 * incremental development, not evil:     To eval or not to eval.
                                                               (line  37)
+* interrupt evaluation:                  To eval or not to eval.
+                                                              (line  78)
 * IRC channel:                           No hacker is an island.
-                                                              (line  71)
+                                                              (line  79)
 * jump, at the REPL:                     Autodoc and friends. (line  51)
 * jumping customized:                    Jumping around.      (line  22)
 * jumping in scheme buffers:             Jumping around.      (line   6)
 * macrostep:                             Friends.             (line   9)
 * mailing list:                          No hacker is an island.
-                                                              (line  58)
+                                                              (line  66)
 * manual autodoc:                        Documentation helpers.
                                                               (line  22)
 * module exports:                        Autodoc and friends. (line  39)
 * modus operandi:                        Modus operandi.      (line   6)
+* NonGNU ELPA:                           The quick and easy way.
+                                                              (line   6)
 * opening manual pages:                  Documentation helpers.
                                                               (line 128)
 * paredit:                               Friends.             (line   9)
 * partial completion:                    Geiser writes for you.
                                                               (line  18)
 * peace and quiet:                       Customization and tips.
-                                                              (line 111)
+                                                              (line 112)
 * philosophy:                            Top.                 (line  79)
 * philosophy <1>:                        To eval or not to eval.
                                                               (line   6)
-* PLTCOLLECTS:                           Customization and tips.
-                                                              (line  58)
 * port, default:                         Customization and tips.
-                                                              (line 120)
+                                                              (line 121)
 * project.el:                            The source and the REPL.
                                                               (line  87)
 * projectile:                            The source and the REPL.
+                                                              (line  87)
+* projects:                              The source and the REPL.
                                                               (line  87)
 * quick install:                         The quick and easy way.
                                                               (line   6)
@@ -1744,13 +1784,13 @@ Index
 * supported versions:                    Must needs.          (line   6)
 * swanking:                              Showing off.         (line   6)
 * switching schemes:                     The source and the REPL.
-                                                              (line 123)
+                                                              (line 131)
 * switching to module:                   The source and the REPL.
-                                                              (line 111)
+                                                              (line 119)
 * switching to REPL:                     The source and the REPL.
-                                                              (line 107)
+                                                              (line 115)
 * switching to source:                   The source and the REPL.
-                                                              (line 107)
+                                                              (line 115)
 * thanks:                                No hacker is an island.
                                                               (line   6)
 * timeout:                               Customization and tips.
@@ -1772,42 +1812,44 @@ Ref: current-module4364
 Node: Showing off5829
 Node: Installation7107
 Node: Must needs7320
-Node: The quick and easy way8898
-Node: From the source's mouth10495
-Node: Friends11280
-Ref: paredit11554
-Node: The REPL12691
-Ref: quick-start12810
-Node: Starting the REPL13201
-Node: First aids17588
-Node: Switching context19421
-Node: Completion and error handling21346
-Ref: completion-caveat23054
-Node: Autodoc and friends24968
-Ref: repl-mod27038
-Node: Seeing is believing28044
-Node: Customization and tips29056
-Ref: choosing-impl29785
-Ref: active-implementations30020
-Ref: impl-binary30402
-Node: Between the parens34759
-Node: Activating Geiser35821
-Node: The source and the REPL38431
-Ref: repl-association39475
-Ref: repl-per-project42723
-Ref: switching-repl-buff43726
-Node: Documentation helpers45411
-Ref: doc-browser49679
-Node: To eval or not to eval52406
-Node: To err perchance to debug56545
-Node: Jumping around58907
-Node: Geiser writes for you60184
-Node: Cheat sheet62688
-Node: Scheme buffers63072
-Node: REPL67397
-Node: Documentation browser69990
-Node: No hacker is an island71058
-Node: Index74142
+Node: The quick and easy way9000
+Ref: The quick and easy way-Footnote-110478
+Node: From the source's mouth10633
+Node: Friends11418
+Ref: paredit11692
+Node: The REPL12829
+Ref: quick-start12948
+Node: Starting the REPL13339
+Node: First aids17726
+Node: Switching context19559
+Node: Completion and error handling21484
+Ref: completion-caveat23192
+Node: Autodoc and friends25106
+Ref: repl-mod27176
+Node: Seeing is believing28182
+Node: Customization and tips29194
+Ref: choosing-impl29923
+Ref: active-implementations30158
+Ref: impl-binary30540
+Node: Between the parens34740
+Node: Activating Geiser35802
+Node: The source and the REPL38412
+Ref: repl-association39456
+Ref: repl-per-project42704
+Ref: switching-repl-buff44117
+Node: Documentation helpers45802
+Ref: doc-browser50070
+Node: To eval or not to eval52797
+Ref: To eval or not to eval-Footnote-157541
+Node: To err perchance to debug57794
+Node: Jumping around59299
+Node: Geiser writes for you60576
+Node: Cheat sheet63080
+Node: Scheme buffers63464
+Node: REPL67908
+Node: Documentation browser70501
+Node: No hacker is an island71569
+Node: Index75021
 
 End Tag Table
 

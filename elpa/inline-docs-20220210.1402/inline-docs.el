@@ -2,8 +2,9 @@
 
 ;; Author: stardiviner <numbchild@gmail.com>
 ;; Keywords: inline docs overlay
-;; Package-Version: 20170523.450
-;; URL: https://github.com/stardiviner/inline-docs.el
+;; Package-Version: 20220210.1402
+;; Package-Commit: cda596d9ff4c2aa5035692a97c430f6589eafbb1
+;; URL: https://repo.or.cz/inline-docs.git
 ;; Created: 20th Jan 2017
 ;; Version: 1.0.1
 ;; Package-Requires: ((emacs "24.3"))
@@ -13,7 +14,7 @@
 ;; This is a library for showing inline contextual docs above or below.
 ;;
 ;; You can use this library function `inline-docs` in packages like
-;; https://github.com/stardiviner/eldoc-overlay-mode.
+;; https://repo.or.cz/eldoc-overlay.git
 ;;
 ;; ```eldoc
 ;; (setq eldoc-message-function #'inline-docs)

@@ -16969,8 +16969,11 @@ Similar to `insert-char` in interactive mode, but with char preview.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/inline-docs-20170523.450/inline-docs-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/inline-docs-20170523.450/inline-docs-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/inline-docs-20220210.1402/inline-docs-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/inline-docs-20220210.1402/inline-docs-autoloads.el") (car load-path))))
+
 
 
 (autoload 'inline-docs-display-docs-momentary "inline-docs" "\
@@ -16979,6 +16982,8 @@ Display inline docs FORMAT-STRING under point with extra ARGS.
 \(fn FORMAT-STRING &rest ARGS)" nil nil)
 
 (defalias 'inline-docs 'inline-docs-display-docs-momentary)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inline-docs" '("inline-docs-")))
 
 
 )

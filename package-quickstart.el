@@ -10501,10 +10501,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/omnisharp-20201220.906/omnisharp-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/omnisharp-20210725.1955/omnisharp-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/omnisharp-20201220.906/omnisharp-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/omnisharp-20210725.1955/omnisharp-autoloads.el") (car load-path))))
 
 
 

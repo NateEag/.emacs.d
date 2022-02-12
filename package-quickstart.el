@@ -6412,10 +6412,10 @@ Setup a new text sample to practice touch or speed typing." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20210519.925/solarized-theme-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20211114.807/solarized-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20210519.925/solarized-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20211114.807/solarized-theme-autoloads.el") (car load-path))))
 
 
 
@@ -6474,6 +6474,22 @@ The Returned color-palette has the same format as `solarized-color-palette'
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-palettes" '("solarized-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-black-theme" '("solarized-selenized-black")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-dark-theme" '("solarized-selenized-dark")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-light-theme" '("solarized-selenized-light")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-white-theme" '("solarized-selenized-white")))
 
 
 

@@ -1,8 +1,8 @@
 ;;; solarized.el --- Solarized theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2019 Bozhidar Batsov
+;; Copyright (C) 2011-2021 Bozhidar Batsov
 
-;; Author: Bozhidar Batsov <bozhidar@batsov.com>
+;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -104,6 +104,11 @@ Related discussion: https://github.com/bbatsov/solarized-emacs/issues/158"
 
 (defcustom solarized-scale-org-headlines t
   "Whether `org-mode' headlines should be scaled."
+  :type 'boolean
+  :group 'solarized)
+
+(defcustom solarized-scale-markdown-headlines nil
+  "Whether `markdown-mode' headlines should be scaled."
   :type 'boolean
   :group 'solarized)
 

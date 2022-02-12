@@ -99,6 +99,38 @@ The Returned color-palette has the same format as `solarized-color-palette'
 
 ;;;***
 
+;;;### (autoloads nil "solarized-selenized-black-theme" "solarized-selenized-black-theme.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from solarized-selenized-black-theme.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-black-theme" '("solarized-selenized-black")))
+
+;;;***
+
+;;;### (autoloads nil "solarized-selenized-dark-theme" "solarized-selenized-dark-theme.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from solarized-selenized-dark-theme.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-dark-theme" '("solarized-selenized-dark")))
+
+;;;***
+
+;;;### (autoloads nil "solarized-selenized-light-theme" "solarized-selenized-light-theme.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from solarized-selenized-light-theme.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-light-theme" '("solarized-selenized-light")))
+
+;;;***
+
+;;;### (autoloads nil "solarized-selenized-white-theme" "solarized-selenized-white-theme.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from solarized-selenized-white-theme.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-white-theme" '("solarized-selenized-white")))
+
+;;;***
+
 ;;;### (autoloads nil "solarized-theme-utils" "solarized-theme-utils.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from solarized-theme-utils.el

@@ -1578,10 +1578,10 @@ this is right: (pfuture-new \"git\" \"status\")
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/hydra-20201115.1055/hydra-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/hydra-20220102.803/hydra-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/hydra-20201115.1055/hydra-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/hydra-20220102.803/hydra-autoloads.el") (car load-path))))
 
 
 

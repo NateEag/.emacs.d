@@ -43,6 +43,8 @@
 ;; Set to non-nil to use TestNG instead of the default JUnit
 (defvar dap-java-use-testng nil)
 
+(defvar dap-java--latest-test nil)
+
 (defcustom dap-java-java-command "java"
   "Path of the java executable."
   :group 'dap-java
@@ -87,10 +89,10 @@ If the port is taken, DAP will try the next port."
                  (const 'externalTerminal)
                  (const 'internalConsole)))
 
-(defcustom dap-java-args []
+(defcustom dap-java-args ""
   "Default java args."
   :group 'dap-java
-  :type 'lsp-string-vector)
+  :type 'string)
 
 (defcustom dap-java-test-additional-args ()
   "Additional arguments for JUnit standalone runner."
@@ -278,9 +280,17 @@ surrounding method.  Otherwise it will run the surronding test."
   "Run JUnit test.
 If there is no method under cursor it will fallback to test class."
   (interactive)
-  (-> (dap-java--run-unit-test-command dap-java-java-command t)
-      (plist-put :skip-debug-session t)
-      dap-start-debugging))
+  (setq dap-java--latest-test
+        (-> (dap-java--run-unit-test-command dap-java-java-command t)
+            (plist-put :skip-debug-session t)))
+  (dap-start-debugging dap-java--latest-test))
+
+(defun dap-java-run-last-test ()
+  "Run again latest class/method test"
+  (interactive)
+  (if dap-java--latest-test
+      (dap-start-debugging dap-java--latest-test)
+      (message "No previous tests to rerun")))
 
 (defun dap-java-debug-test-method (port)
   "Debug JUnit test.
@@ -303,9 +313,10 @@ attaching to the test."
 (defun dap-java-run-test-class ()
   "Run JUnit test."
   (interactive)
-  (-> (dap-java--run-unit-test-command dap-java-java-command nil)
-      (plist-put :skip-debug-session t)
-      dap-start-debugging))
+  (setq dap-java--latest-test
+        (-> (dap-java--run-unit-test-command dap-java-java-command nil)
+            (plist-put :skip-debug-session t)))
+  (dap-start-debugging dap-java--latest-test))
 
 (defun dap-java-debug-test-class (port)
   "Debug JUnit test class.

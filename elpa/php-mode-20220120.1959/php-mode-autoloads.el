@@ -228,6 +228,13 @@ Return list of bootstrap script." nil nil)
 (autoload 'php-project-get-root-dir "php-project" "\
 Return path to current PHP project." nil nil)
 
+(autoload 'php-project-project-find-function "php-project" "\
+Return path to current PHP project from DIR.
+
+This function is compatible with `project-find-functions'.
+
+\(fn DIR)" nil nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-project" '("php-project-")))
 
 ;;;***

@@ -9190,10 +9190,10 @@ Major mode for editing pip requirements files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20210519.1728/php-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/php-mode-20220120.1959/php-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20210519.1728/php-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/php-mode-20220120.1959/php-mode-autoloads.el") (car load-path))))
 
 
 
@@ -9395,6 +9395,13 @@ Return list of bootstrap script." nil nil)
 
 (autoload 'php-project-get-root-dir "php-project" "\
 Return path to current PHP project." nil nil)
+
+(autoload 'php-project-project-find-function "php-project" "\
+Return path to current PHP project from DIR.
+
+This function is compatible with `project-find-functions'.
+
+\(fn DIR)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-project" '("php-project-")))
 

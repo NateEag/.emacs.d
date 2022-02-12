@@ -87,10 +87,31 @@ Key bindings:
   (if pm-debug-minor-mode
       (progn
         ;; this is global hook. No need to complicate with local hooks
-        (add-hook 'post-command-hook 'pm-debug-highlight-current-span))
+        (add-hook 'post-command-hook 'pm-debug-highlight-current-span)
+        ;; (add-hook 'before-save-hook 'pm-debug-beore-change -99 t)
+        ;; (add-hook 'after-save-hook 'pm-debug-after-change -99)
+        )
+    ;; (remove-hook 'before-save-hook 'pm-debug-beore-change)
+    ;; (remove-hook 'after-save-hook 'pm-debug-after-change)
     (delete-overlay pm--underline-overlay)
     (delete-overlay pm--highlight-overlay)
     (remove-hook 'post-command-hook 'pm-debug-highlight-current-span)))
+
+;; use to track point movements (#295)
+(defun pm--debug-report-point (msg &optional r)
+  (when polymode-mode
+    (message "%s %s buffer[%s:%s %s:%s] window[%s:%s]"
+             msg (if r r "")
+             (pm-base-buffer) (with-current-buffer (pm-base-buffer) (point))
+             (buffer-name) (point)
+             (get-buffer-window (pm-base-buffer))
+             (with-current-buffer (pm-base-buffer) (window-point))  (window-point))))
+
+;; (defun pm-debug-beore-change (&rest r)
+;;   (pm--debug-report-point "|before|" this-command))
+
+;; (defun pm-debug-after-change (&rest r)
+;;   (pm--debug-report-point "|after|" this-command))
 
 ;;;###autoload
 (defun pm-debug-minor-mode-on ()
@@ -249,61 +270,67 @@ With NO-CACHE prefix, don't use cached values of the span."
 
 (defvar pm-traced-functions
   '(
-    ;; core initialization
-    (0 (pm-initialize
-        pm--common-setup
-        pm--mode-setup))
+    ;; core initialization (traced even when polymode-mode is not yet installed)
+    (0 (pm--common-setup
+        pm--mode-setup
+        pm--run-derived-mode-hooks
+        pm--run-init-hooks
+        pm-initialize
+        hack-local-variables
+        run-hooks
+        run-mode-hooks))
     ;; core hooks
-    (1 (polymode-post-command-select-buffer
+    (1 (polymode-pre-command
+        polymode-post-command
         polymode-after-kill-fixes
         ;; this one indicates the start of a sequence
         poly-lock-after-change))
     ;; advises
     (2 (pm-override-output-cons
         pm-around-advice
-        polymode-with-current-base-buffer))
+        polymode-with-current-base-buffer
+        polymode-inhibit-during-initialization
+        pm-check-for-real-change-in-extend-multiline
+        poly-lock-no-jit-lock-in-polymode-buffers
+        pm-override-output-position))
+    ;; (2.5 . "^markdown-fontify-.*")
+    ;; init
+    (3  (pm-map-over-spans
+         pm-map-over-modes
+         pm-innermost-span
+         pm-next-chunk))
     ;; font-lock
-    (3 (font-lock-default-fontify-region
-        font-lock-fontify-keywords-region
-        font-lock-fontify-region
-        font-lock-fontify-syntactically-region
-        font-lock-unfontify-region
-        jit-lock--run-functions
-        jit-lock-fontify-now
-        poly-lock--after-change-internal
-        poly-lock--extend-region
-        poly-lock--extend-region-span
-        poly-lock-after-change
-        poly-lock-flush
-        poly-lock-fontify-now
-        poly-lock-function))
+    (4 . ".*\\(font\\|jit\\|poly\\)-lock.*")
     ;; syntax
-    (4 (syntax-ppss
+    (5 (syntax-ppss
         pm--call-syntax-propertize-original
         polymode-syntax-propertize
         polymode-restrict-syntax-propertize-extension
         pm-flush-syntax-ppss-cache
         pm--reset-ppss-cache))
     ;; core functions
-    (5 (pm-select-buffer
+    (6 (pm-select-buffer
         pm-map-over-spans
         pm--get-intersected-span
         pm--cached-span))
-    ;; (13 . "^syntax-")
-    (14 . "^polymode-")
-    (15 . "^pm-")))
+    (6 . "^polymode-")
+    (7 . "^pm-")
+    (20 . "^syntax-")
+    ))
 
 (defvar pm--do-trace nil)
 ;;;###autoload
 (defun pm-toggle-tracing (level)
   "Toggle polymode tracing.
 With numeric prefix toggle tracing for that LEVEL. Currently
-universal argument toggles maximum level of tracing (4). Default
-level is 3."
+universal argument toggles maximum level of tracing (15). See
+`pm-traced-functions'. Default level is 4."
   (interactive "P")
-  (setq level (prefix-numeric-value (or level 3)))
-  (with-current-buffer (get-buffer-create "*Messages*")
+  (setq level (prefix-numeric-value (or level 4)))
+  (with-current-buffer (get-buffer-create "*TMessages*")
     (read-only-mode -1))
+  (when pm--do-trace
+    (untrace-all))
   (setq pm--do-trace (not pm--do-trace))
   (if pm--do-trace
       (progn (dolist (kv pm-traced-functions)
@@ -313,7 +340,6 @@ level is 3."
                    (dolist (fn (cadr kv))
                      (pm-trace fn)))))
              (message "Polymode tracing activated"))
-    (untrace-all)
     (message "Polymode tracing deactivated")))
 
 
@@ -322,7 +348,7 @@ level is 3."
   "Trace function FN.
 Use `untrace-function' to untrace or `untrace-all' to untrace all
 currently traced functions."
-  (interactive (trace--read-args "Trace: "))
+  (interactive (trace--read-args "Trace:"))
   (let ((buff (get-buffer "*Messages*")))
     (unless (advice-member-p trace-advice-name fn)
       (advice-add
@@ -332,11 +358,15 @@ currently traced functions."
                       #'pm-trace--tracing-context)))
          (lambda (body &rest args)
            (when (eq fn 'polymode-flush-syntax-ppss-cache)
+             ;; waf is this?
              (with-current-buffer buff
                (save-excursion
                  (goto-char (point-max))
                  (insert "\n"))))
-           (if polymode-mode
+           (if (or (memq fn (nth 1 (car pm-traced-functions)))
+                   polymode-mode
+                   ;; (derived-mode-p 'markdown-mode)
+                   )
                (apply advice body args)
              (apply body args))))
        `((name . ,trace-advice-name)
@@ -359,8 +389,8 @@ currently traced functions."
 (defun pm-trace--tracing-context ()
   (let ((span (or *span*
                   (get-text-property (point) :pm-span))))
-    (format " [%s pos:%d(%d-%d) %s%s (%f)]"
-            (current-buffer) (point) (point-min) (point-max)
+    (format " [%s pos:%d/%d(%d-%d) %s%s (%f)]"
+            (current-buffer) (point) (window-point) (point-min) (point-max)
             (or (when span
                   (when (not (and (= (point-min) (nth 1 span))
                                   (= (point-max) (nth 2 span))))
@@ -379,10 +409,14 @@ currently traced functions."
    (arg)))
 
 (defun pm-trace--fix-args-for-tracing (orig-fn fn level args context)
-  (let ((args (or (and (listp args)
-                       (listp (cdr args))
-                       (ignore-errors (mapcar #'pm-trace--fix-1-arg-for-tracing args)))
-                  args)))
+  (let* ((args (or (and (listp args)
+                        (listp (cdr args))
+                        (ignore-errors (mapcar #'pm-trace--fix-1-arg-for-tracing args)))
+                   args))
+         (print-circle t)
+         (sargs (format "%s" args)))
+    (when (> (length sargs) 200)
+      (setq args "[...]"))
     (funcall orig-fn fn level args context)))
 
 (advice-add #'trace-entry-message :around #'pm-trace--fix-args-for-tracing)
@@ -446,15 +480,18 @@ buffer, if 'message issue a message, if nil just return a list of values."
     (require 'pp)
     (cond
      ((eq out-type 'buffer)
-      (with-current-buffer (get-buffer-create "*polymode-vars*")
-        (erase-buffer)
-        (goto-char (point-max))
-        (insert (format "\n================== %s ===================\n" cbuff))
-        (insert (pp-to-string vars))
-        (toggle-truncate-lines -1)
-        (goto-char (point-max))
-        (view-mode)
-        (display-buffer (current-buffer))))
+      (let ((inhibit-read-only t)
+            (buf (get-buffer-create "*polymode-vars*")))
+        (with-current-buffer buf
+          (erase-buffer)
+          (goto-char (point-max))
+          (insert (format "\n================== %s ===================\n" cbuff))
+          (insert (pp-to-string vars))
+          (toggle-truncate-lines -1)
+          (goto-char (point-max))
+          (view-mode)
+          (display-buffer (current-buffer)))
+        (pop-to-buffer buf)))
      ((eq out-type 'message)
       (message "%s" (pp-to-string vars)))
      (t vars))))

@@ -35,6 +35,21 @@
 (cl-defgeneric pm-initialize (object)
   "Initialize current buffer with OBJECT.")
 
+(defun pm--instantiate-innermodes (config)
+  "Instantiate CONFIG's innermodes respecting inheritance."
+  (let ((inner-syms (delete-dups
+                     (delq :inherit
+                           (apply #'append
+                                  (pm--collect-parent-slots
+                                   config 'innermodes
+                                   (lambda (obj)
+                                     (memq :inherit
+                                           (eieio-oref obj 'innermodes)))))))))
+    (oset config -innermodes
+          (mapcar (lambda (sub-name)
+                    (clone (symbol-value sub-name)))
+                  inner-syms))))
+
 (cl-defmethod pm-initialize ((config pm-polymode))
   "Initialization of host buffers.
 Ran by the polymode mode function."
@@ -49,7 +64,8 @@ Ran by the polymode mode function."
           ;; minor modes.
           (host-mode (or (eieio-oref hostmode 'mode)
                          (oset hostmode :mode major-mode))))
-      ;; host-mode hooks are run here, but polymode is not initialized
+      ;; FIXME: mode hooks and local var hacking happens here. Need to move it
+      ;; to the end.
       (pm--mode-setup host-mode)
       (oset hostmode -buffer (current-buffer))
       (oset config -hostmode hostmode)
@@ -58,27 +74,13 @@ Ran by the polymode mode function."
             pm/chunkmode hostmode
             pm/current t
             pm/type nil)
+      (pm--instantiate-innermodes config)
       (pm--common-setup)
-      ;; Initialize innermodes
-      (pm--initialize-innermodes config)
-      ;; FIXME: must go into polymode-compat.el
-      (add-hook 'flyspell-incorrect-hook
-                'pm--flyspel-dont-highlight-in-chunkmodes nil t))
-    (pm--run-init-hooks hostmode 'host 'polymode-init-host-hook)))
-
-(defun pm--initialize-innermodes (config)
-  (let ((inner-syms (delete-dups
-                     (delq :inherit
-                           (apply #'append
-                                  (pm--collect-parent-slots
-                                   config 'innermodes
-                                   (lambda (obj)
-                                     (memq :inherit
-                                           (eieio-oref obj 'innermodes)))))))))
-    (oset config -innermodes
-          (mapcar (lambda (sub-name)
-                    (clone (symbol-value sub-name)))
-                  inner-syms))))
+      (add-hook 'after-save-hook #'polymode-after-save nil t)
+      (add-hook 'before-save-hook #'polymode-before-save nil t))
+    (pm--run-init-hooks hostmode 'host 'polymode-init-host-hook)
+    ;; (run-mode-hooks) ;; FIXME
+    ))
 
 (cl-defmethod pm-initialize ((chunkmode pm-inner-chunkmode) &optional type mode)
   "Initialization of the innermodes' (indirect) buffers."
@@ -91,6 +93,11 @@ Ran by the polymode mode function."
                                 post-fix)))
          (new-name (generate-new-buffer-name core-name)))
     (rename-buffer new-name)
+    ;; FIXME: Mode hooks and local var hacking happens here. Need to move it to
+    ;; the end. But then font-lock is not activated and buffers not installed
+    ;; correctly.
+    ;; FIXME: One severe problem is that --*- mode: poly-xyz; does not
+    ;; currently work. See poly-noweb/samples/hello.nw.
     (pm--mode-setup mode)
     (pm--move-vars '(pm/polymode buffer-file-coding-system) (pm-base-buffer))
     ;; FIXME: This breaks if different chunkmodes use same-mode buffer. Even for
@@ -112,7 +119,10 @@ Ran by the polymode mode function."
   (pm--run-init-hooks chunkmode type 'polymode-init-inner-hook)
   ;; Call polymode mode for the sake of the keymap and hook. Same minor mode
   ;; which runs in the host buffer but without recursive call to `pm-initialize'.
-  (funcall (eieio-oref pm/polymode '-minor-mode)))
+  (funcall (eieio-oref pm/polymode '-minor-mode))
+  ;; finally run the mode's native hooks (FIXME)
+  ;; (run-mode-hooks)
+  )
 
 (defvar poly-lock-allow-fontification)
 (defun pm--mode-setup (mode &optional buffer)
@@ -164,25 +174,31 @@ initialized. Return the buffer."
     (object-add-to-list pm/polymode '-buffers (current-buffer))
 
     ;; INDENTATION
-    (setq-local pm--indent-line-function-original
-                (if (memq indent-line-function '(indent-relative indent-relative-maybe pm-indent-line-dispatcher))
-                    #'pm--indent-line-basic
-                  indent-line-function))
+    ;; If poly-minor-mode is called twice don't overwrite the original (#289)
+    (unless pm--indent-line-function-original
+      (setq-local pm--indent-line-function-original
+                  (if (memq indent-line-function '(nil indent-relative indent-relative-maybe))
+                      #'pm--indent-line-basic
+                    indent-line-function)))
     (setq-local indent-line-function #'pm-indent-line-dispatcher)
-    (setq-local pm--indent-region-function-original
-                (if (memq indent-region-function '(nil indent-region-line-by-line pm-indent-region))
-                    #'pm--indent-region-line-by-line
-                  indent-region-function))
+    (unless pm--indent-region-function-original
+      (setq-local pm--indent-region-function-original
+                  (if (memq indent-region-function '(nil indent-region-line-by-line))
+                      #'pm--indent-region-line-by-line
+                    indent-region-function)))
     (setq-local indent-region-function #'pm-indent-region)
 
     ;; FILL
-    (setq-local pm--fill-forward-paragraph-original fill-forward-paragraph-function)
+    (unless pm--fill-forward-paragraph-original
+      (setq-local pm--fill-forward-paragraph-original fill-forward-paragraph-function))
     (setq-local fill-forward-paragraph-function #'polymode-fill-forward-paragraph)
 
     ;; HOOKS
     (add-hook 'kill-buffer-hook #'polymode-after-kill-fixes nil t)
-    (add-hook 'post-command-hook #'polymode-post-command-select-buffer nil t)
-    (add-hook 'pre-command-hook #'polymode-pre-command-synchronize-state nil t)
+    (add-hook 'pre-command-hook #'polymode-pre-command -99 t)
+    (add-hook 'post-command-hook #'polymode-post-command 99 t)
+    (add-hook 'before-change-functions #'polymode-before-change -95 t)
+    (add-hook 'after-change-functions #'polymode-after-change 95 t)
 
     ;; FONT LOCK (see poly-lock.el)
     (setq-local font-lock-function 'poly-lock-mode)
@@ -193,16 +209,14 @@ initialized. Return the buffer."
     ;; inner buffers are installed) but use `poly-lock-allow-fontification' to
     ;; disallow fontification in buffers which don't want font-lock (aka those
     ;; buffers where `turn-on-font-lock-if-desired' doesn't activate font-lock).
-    (turn-on-font-lock-if-desired) ; <- need this for the sake of poly-minor-modes
     ;; FIXME: can poly-lock-mode be used here instead?
     (setq-local poly-lock-allow-fontification font-lock-mode)
     ;; Make sure to re-install with our font-lock-function as
     ;; `turn-on-font-lock-if-desired' from above might actually not call it.
     (font-lock-mode t)
-    (font-lock-flush)
+    ;; (font-lock-flush)
 
     ;; SYNTAX (must be done after font-lock for after-change order)
-
     (with-no-warnings
       ;; [OBSOLETE as of 25.1 but we still protect it]
       (pm-around-advice syntax-begin-function 'pm-override-output-position))
@@ -219,7 +233,7 @@ initialized. Return the buffer."
     ;; https://lists.gnu.org/archive/html/emacs-devel/2019-03/msg00500.html)
     ;; TODO: Consider just advising syntax-ppss-flush-cache once the above is
     ;; fixed in emacs.
-    (add-hook 'after-change-functions 'polymode-flush-syntax-ppss-cache nil t)
+    (add-hook 'after-change-functions #'polymode-flush-syntax-ppss-cache -99 t)
 
     (current-buffer)))
 
@@ -353,7 +367,7 @@ TYPE can be 'body, 'head or 'tail. SELF is the CHUNKMODE."
 
 (cl-defgeneric pm-next-chunk (chunkmode &optional pos)
   "Ask the CHUNKMODE for the chunk after POS.
-Return a list of three elements (CHUNKMODE HEAD-BEG HEAD-END
+Return a list of five elements (CHUNKMODE HEAD-BEG HEAD-END
 TAIL-BEG TAIL-END).")
 
 (cl-defmethod pm-next-chunk (_chunkmode &optional _pos)
@@ -606,23 +620,31 @@ to indent."
         (goto-char (+ (point) delta))))))
 
 (defun pm--first-line-indent (&optional span)
-  (save-excursion
-    (let ((pos (point)))
-      (goto-char (nth 1 (or span (pm-innermost-span))))
-      ;; when body starts at bol move to previous line
-      (when (and (= (point) (point-at-bol))
-                 (not (bobp)))
-        (backward-char 1))
-      (skip-chars-forward " \t\n")
+  "Return indentation of first line if not on a first line."
+  (setq span (or span (pm-innermost-span)))
+  (let ((pos (point)))
+    (save-excursion
+      (goto-char (nth 1 span))
+      (when (not (bolp)) ; for spans which don't start at bol, first line is next line
+        (forward-line 1))
+      (skip-chars-forward " \t\n\r")
       (when (< (point-at-eol) pos)
-        (- (point) (point-at-bol))))))
+        ;; not on first line -> compute indent of the first line
+        (goto-char (nth 1 span))
+        (skip-chars-forward " \t\n\r")
+        (back-to-indentation)
+        (when (< (point-at-eol) pos)
+          (- (point) (point-at-bol)))))))
 
 ;; SPAN is a body span; do nothing if narrowed to body
 (defun pm--head-indent (&optional span)
   (save-restriction
     (widen)
     (save-excursion
-      (let ((sbeg (nth 1 (or span (pm-innermost-span)))))
+      (let* ((span (or span (pm-innermost-span)))
+             ;; span is innermost, thus can be truncated due to nested innermodes
+             (span (pm-get-span (nth 3 span) (nth 1 span)))
+             (sbeg (nth 1 span)))
         (goto-char sbeg)
         (backward-char 1)
         (let ((head-span (pm-innermost-span)))

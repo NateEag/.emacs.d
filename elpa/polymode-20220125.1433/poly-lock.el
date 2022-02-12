@@ -78,11 +78,11 @@
 (defvar poly-lock-defer-after-change t)
 (defvar-local poly-lock-mode nil)
 
-(eval-when-compile
+(eval-and-compile
   (defmacro with-buffer-prepared-for-poly-lock (&rest body)
     "Execute BODY in current buffer, overriding several variables.
 Preserves the `buffer-modified-p' state of the current buffer."
-    (declare (debug t))
+    (declare (debug (body)) (indent 1))
     `(let ((inhibit-point-motion-hooks t))
        (with-silent-modifications
          ,@body))))
@@ -178,11 +178,13 @@ scope as `jit-lock-function'."
       (with-buffer-prepared-for-poly-lock
        (put-text-property start (point-max) 'fontified t)))))
 
-(defun poly-lock-fontify-now (beg end &optional _verbose)
+(defun poly-lock-fontify-now (&optional beg end _verbose)
   "Polymode main fontification function.
 Fontifies chunk-by chunk within the region BEG END."
   (unless (or poly-lock-fontification-in-progress
               pm-initialization-in-progress)
+    (setq beg (or beg (point-min))
+          end (or end (point-max)))
     (let* ((font-lock-dont-widen t)
            ;; For now we fontify entire chunks at once. This simplicity is
            ;; warranted in multi-mode use cases.
@@ -281,7 +283,7 @@ Fontifies chunk-by chunk within the region BEG END."
 
 (defun poly-lock-flush (&optional beg end)
   "Force refontification of the region BEG..END.
-This function is placed in `font-lock-flush-function''"
+This function is placed in `font-lock-flush-function'."
   (unless poly-lock-fontification-in-progress
     (let ((beg (or beg (point-min)))
           (end (or end (point-max))))

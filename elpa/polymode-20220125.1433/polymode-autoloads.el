@@ -84,6 +84,8 @@ most frequently used slots are:
 
 \(fn MODE &optional PARENT DOC &rest BODY)" nil t)
 
+(function-put 'define-polymode 'lisp-indent-function 'defun)
+
 (function-put 'define-polymode 'doc-string-elt '3)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode" '("pm-" "poly")))
@@ -135,6 +137,8 @@ possible values.
 
 (function-put 'define-hostmode 'doc-string-elt '3)
 
+(function-put 'define-hostmode 'lisp-indent-function 'defun)
+
 (autoload 'define-innermode "polymode-core" "\
 Ddefine an innermode with name NAME.
 Optional PARENT is a name of a innermode to be derived (cloned)
@@ -147,6 +151,8 @@ possible values.
 
 (function-put 'define-innermode 'doc-string-elt '3)
 
+(function-put 'define-innermode 'lisp-indent-function 'defun)
+
 (autoload 'define-auto-innermode "polymode-core" "\
 Ddefine an auto innermode with name NAME.
 Optional PARENT is a name of an auto innermode to be
@@ -158,6 +164,8 @@ key-value pairs. See the documentation of the class
 \(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
 
 (function-put 'define-auto-innermode 'doc-string-elt '3)
+
+(function-put 'define-auto-innermode 'lisp-indent-function 'defun)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-core" '("*span*" "polymode-")))
 
@@ -209,8 +217,8 @@ See `pm-debug-minor-mode' for more information on Pm-Debug minor mode.
 (autoload 'pm-toggle-tracing "polymode-debug" "\
 Toggle polymode tracing.
 With numeric prefix toggle tracing for that LEVEL. Currently
-universal argument toggles maximum level of tracing (4). Default
-level is 3.
+universal argument toggles maximum level of tracing (15). See
+`pm-traced-functions'. Default level is 4.
 
 \(fn LEVEL)" t nil)
 

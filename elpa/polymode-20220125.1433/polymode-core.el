@@ -85,7 +85,9 @@
 ;; SHIELDS
 
 (defvar pm-allow-after-change-hook t)
+(defvar pm-allow-before-change-hook t)
 
+(defvar pm-allow-pre-command-hook t)
 (defvar pm-allow-post-command-hook t)
 (defun polymode-disable-post-command ()
   (when polymode-mode
@@ -166,9 +168,18 @@ than the input file."
 (define-obsolete-variable-alias 'polymode-mode-name-override-alist 'polymode-mode-name-aliases "2018-08")
 (define-obsolete-variable-alias 'polymode-mode-name-alias-alist 'polymode-mode-name-aliases "2019-04")
 (defcustom polymode-mode-name-aliases
-  '((elisp . emacs-lisp)
-    (el . emacs-lisp)
-    (bash . sh-mode))
+  '(
+    (asymptote  . asy-mode)
+    (bash       . sh-mode)
+    (cpp        . c++-mode)
+    (ditaa      . artist-mode)
+    (el         . emacs-lisp)
+    (elisp      . emacs-lisp)
+    (ocaml      . tuareg)
+    (screen     . shell-script-mode)
+    (shell      . sh-mode)
+    (sqlite     . sql-mode)
+    )
   "An alist of inner mode overrides.
 When inner mode is automatically detected from the header of the
 inner chunk (such as in markdown mode), the detected symbol might
@@ -271,7 +282,7 @@ from. If missing, the optional documentation string DOC is
 generated automatically. KEY-ARGS is a list of key-value pairs.
 See the documentation of the class `pm-host-chunkmode' for
 possible values."
-  (declare (doc-string 3))
+  (declare (doc-string 3) (indent defun))
   (polymode--define-chunkmode 'pm-host-chunkmode name parent doc key-args))
 
 ;;;###autoload
@@ -282,7 +293,7 @@ from. If missing the optional documentation string DOC is
 generated automatically. KEY-ARGS is a list of key-value pairs.
 See the documentation of the class `pm-inner-chunkmode' for
 possible values."
-  (declare (doc-string 3))
+  (declare (doc-string 3) (indent defun))
   (polymode--define-chunkmode 'pm-inner-chunkmode name parent doc key-args))
 
 ;;;###autoload
@@ -293,7 +304,7 @@ derived (cloned) from. If missing the optional documentation
 string DOC is generated automatically. KEY-ARGS is a list of
 key-value pairs. See the documentation of the class
 `pm-inner-auto-chunkmode' for possible values."
-  (declare (doc-string 3))
+  (declare (doc-string 3) (indent defun))
   (polymode--define-chunkmode 'pm-inner-auto-chunkmode name parent doc key-args))
 
 
@@ -379,13 +390,14 @@ case TYPE is ignored."
 
 (defun pm-cache-span (span)
   ;; cache span
-  (unless pm-initialization-in-progress
-    (with-silent-modifications
-      ;; (message "caching: %s %s" (car span) (pm-span-to-range span))
-      (let ((sbeg (nth 1 span))
-            (send (nth 2 span)))
-        (put-text-property sbeg send :pm-span span)
-        (put-text-property sbeg send :pm-mode (pm-span-mode span))))))
+  (when pm-use-cache
+    (unless pm-initialization-in-progress
+      (with-silent-modifications
+        ;; (message "caching: %s %s" (car span) (pm-span-to-range span))
+        (let ((sbeg (nth 1 span))
+              (send (nth 2 span)))
+          (put-text-property sbeg send :pm-span span)
+          (put-text-property sbeg send :pm-mode (pm-span-mode span)))))))
 
 (defun pm-flush-span-cache (beg end &optional buffer)
   (with-silent-modifications
@@ -434,16 +446,29 @@ the front)."
     (let ((allow-nested (eieio-oref (nth 3 span) 'allow-nested))
           (is-host (null (car span))))
       (cond
-       ;; 1. nil means host and it can be an intersection of spans returned
-       ;; by two neighboring inner chunkmodes. When `allow-nested` is
-       ;; 'always the innermode essentially behaves like the host-mode.
+       ;; 1. nil means host and it can be an intersection of spans returned by
+       ;; two neighboring inner chunkmodes. When `allow-nested` is 'always the
+       ;; innermode behaves like the host-mode (i.e. nest other spans regardless
+       ;; of :can-nest slot)
        ((or is-host (eq allow-nested 'always))
-        ;; when span is already an inner span, new host spans are irrelevant
-        (unless (car thespan)
+        (if (car thespan)
+            ;; 1) inner thespan:
+            ;;   a) inner span [thespan ..|.. [span ...] ...]
+            ;;   b) outer span [thespan ..|..] ... [span ...]
+            ;;   c) host-like span [span ... [thespan ..|..] ]
+            (setq thespan
+                  (list (car thespan)
+                        (max (nth 1 span) (nth 1 thespan))
+                        (min (nth 2 span) (nth 2 thespan))
+                        (nth 3 thespan)))
+          ;; 2) host thespan
+          ;;    a) hosts span [thespan ...] ..|.. [span ..]
+          ;;    b) host-like span [span ..|.. [thespan ...] ..]
           (setq thespan
-                (list (unless is-host (car span))
+                (list (car span)
                       (max (nth 1 span) (nth 1 thespan))
                       (min (nth 2 span) (nth 2 thespan))
+                      ;; first host span has precedence for clarity
                       (nth 3 (if is-host thespan span))))))
        ;; 2. Inner span
        ((and (>= (nth 1 span) (nth 1 thespan))
@@ -548,6 +573,7 @@ the front)."
               (pm--chop-span (copy-sequence span) omin omax))))))))
 
 (define-obsolete-function-alias 'pm-get-innermost-span 'pm-innermost-span "2018-08")
+(defvar pm-use-cache t)
 (defun pm-innermost-span (&optional pos no-cache)
   "Get span object at POS.
 If NO-CACHE is non-nil, don't use cache and force re-computation
@@ -559,7 +585,7 @@ defaults to point. Guarantied to return a non-empty span."
                   :point-min (point-min)
                   :point-max (point-max))))
   (save-match-data
-    (or (unless no-cache
+    (or (when (and pm-use-cache (not no-cache))
           (pm--cached-span pos))
         (pm--innermost-span pm/polymode pos))))
 
@@ -590,6 +616,18 @@ MATCHER is one of the forms accepted by \=`pm-inner-chunkmode''s
         (cons (match-beginning (cdr matcher))
               (match-end (cdr matcher))))))
    (t (error "Head and tail matchers must be either regexp strings, cons cells or functions"))))
+
+(defun pm-forward-sexp-tail-matcher (arg)
+  "A simple tail matcher for a common closing-sexp character.
+Use this matcher if an inner mode is delimited by a closing
+construct like ${...}, xyz[...], html! {...} etc. In order to
+match the tail `forward-sexp' is matched from HEAD-END - 1
+position. ARG is ignored - always match forward."
+  (when (> (point) 0)
+    (backward-char 1)
+    (ignore-errors
+      (forward-sexp 1)
+      (cons (1- (point)) (point)))))
 
 (defun pm-same-indent-tail-matcher (_arg)
   "Get the end position of block with the higher indent than the current column.
@@ -933,7 +971,7 @@ Parents' hooks are run first."
     outline-level
     polymode-default-inner-mode
     tab-width)
-  "Variables transferred from base buffer on buffer switch.")
+  "Variables transferred from base buffer on switch to inner mode buffer.")
 
 (define-obsolete-variable-alias 'pm-move-vars-from-old-buffer 'polymode-move-these-vars-from-old-buffer "v0.1.6")
 (defvar polymode-move-these-vars-from-old-buffer
@@ -962,17 +1000,17 @@ Parents' hooks are run first."
     ;; and executes it for all cursors in a post-command-hook so we
     ;; need to transfer in case the buffer was switched.
     mc--this-command)
-  "Variables transferred from old buffer on buffer switch.")
+  "Variables transferred from old buffer to new buffer on buffer switch.")
 
 (defvar polymode-move-these-minor-modes-from-base-buffer nil
-  "List of minor modes to move from base buffer.")
+  "Minor modes to move from base buffer on buffer switch.")
 (defvar polymode-move-these-minor-modes-from-old-buffer
   '(linum-mode
     visual-line-mode
     visual-fill-column-mode
     writeroom-mode
     multiple-cursors-mode)
-  "List of minor modes to move from the old buffer.")
+  "Minor modes to move from the old buffer during buffer switch.")
 
 (defun pm-own-buffer-p (&optional buffer)
   "Return t if BUFFER is owned by polymode.
@@ -1009,7 +1047,6 @@ switch."
                                 ;; be installed yet and there is no way install it
                                 ;; from here
                                 buffer))))))
-    ;; (message "setting buffer %d-%d [%s]" (nth 1 span) (nth 2 span) cbuf)
     ;; no further action if BUFFER is already the current buffer
     (unless (eq buffer cbuf)
       (when (and own visibly)
@@ -1033,7 +1070,8 @@ switch."
         (window-start (window-start))
         (visible (pos-visible-in-window-p))
         (ractive (region-active-p))
-        (mkt (mark t)))
+        (mkt (mark t))
+        (hlf header-line-format))
 
     (when pm-hide-implementation-buffers
       (rename-buffer (pm--hidden-buffer-name)))
@@ -1050,6 +1088,11 @@ switch."
     (switch-to-buffer new-buffer)
     (bury-buffer-internal old-buffer)
     (set-window-prev-buffers nil (assq-delete-all old-buffer (window-prev-buffers nil)))
+
+    ;; if header line is active in some modes, make it active everywhere
+    (unless header-line-format
+      (when hlf
+        (setq header-line-format '(""))))
 
     (setq pm/current t)
 
@@ -1129,74 +1172,106 @@ transport) are performed."
                 pos-or-span)))
     (pm-select-buffer span 'visibly)))
 
+;; NB: save-excursion saves window-point only when current buffer is the
+;; selected buffer. Thus when we iterate from a non-window buffer, and within
+;; some of the iterations are performed in selected-buffer the point is moved
+;; which might results in undesirable consequences (#295). Thus `save-excursion`
+;; must be applied on each iteration.
+
+;; TOTHINK: This function is used for font-lock, and thus we cannot rely on
+;; cached spans. For other use-cases relying on cached spans would be faster.
+;; Without cache `pm-get-span' is less efficient than this function which is
+;; essentially a forward search of spans.
 (defun pm-map-over-modes (fn beg end)
+  "Apply function FN for each major mode between BEG and END.
+FN is a function of two arguments mode-beg and mode-end. This is
+different from `pm-map-over-spans' which maps over polymode
+spans. Two adjacent spans might have same major mode, thus
+`pm-map-over-modes' will iterate over same or bigger regions than
+`pm-map-over-spans'."
   (when (< beg end)
     (save-restriction
       (widen)
       (let* ((hostmode (eieio-oref pm/polymode '-hostmode))
              (pos beg)
              (ttype 'dummy)
-             span nspan nttype)
-        (when (< (point-min) beg)
-          (setq span (pm-innermost-span beg)
-                beg (nth 1 span)
-                pos (nth 2 span)
-                ttype (pm-true-span-type span))
-          (while (and (memq (car span) '(head body))
-                      (< pos end))
-            (setq nspan (pm-innermost-span (nth 2 span))
-                  nttype (pm-true-span-type nspan))
-            (if (eq ttype nttype)
-                (setq pos (nth 2 nspan))
-              (with-current-buffer (pm-span-buffer span)
-                (funcall fn beg pos))
-              (setq beg (nth 1 nspan)
-                    pos (nth 2 nspan)))
-            (setq span nspan
-                  ttype nttype)))
+             (span (pm-innermost-span beg))
+             (nspan span)
+             (ttype (pm-true-span-type span))
+             (nttype ttype))
+        ;; 1. Use pm-innermost-span to get to the first tail. From there on rely
+        ;; on `pm-next-chunk' for efficiency.
+        (setq beg (nth 1 span)
+              pos (nth 2 span))
+        (while (and (< pos end)
+                    (memq (car span) '(head body)))
+          (while (and (< pos end)
+                      (eq ttype nttype))
+            (setq pos (nth 2 nspan)
+                  nspan (pm-innermost-span pos)
+                  nttype (pm-true-span-type nspan)))
+          (with-current-buffer (pm-span-buffer span)
+            (funcall fn beg pos))
+          (setq span nspan
+                ttype nttype
+                beg (nth 1 nspan)
+                pos (nth 2 nspan)))
+        ;; 2. Forward chunk search
         (when (< pos end)
-          (let ((ichunks (cl-loop for im in (eieio-oref pm/polymode '-innermodes)
+          ;; Extended chunks: car is the original innermode. Cannot use
+          ;; autochunk modes (i.e. markdwon fortran-inner-mode) in calls to
+          ;; pm-next-chunk. It would return fortran chunks.
+          (let ((echunks (cl-loop for im in (eieio-oref pm/polymode '-innermodes)
                                   collect (cons im nil)))
-                (tichunks nil)
-                (spans nil))
+                spans)
             (while (< pos end)
-              ;; 1. recompute outdated chunks
-              (setq tichunks nil)
-              (dolist (ichunk ichunks)
-                (if (and (cdr ichunk)
-                         (< pos (nth 5 ichunk)))
-                    (push ichunk tichunks)
-                  (let ((nchunk (pm-next-chunk (car ichunk) pos)))
-                    (when nchunk
-                      (push (cons (car ichunk) nchunk) tichunks)))))
-              (setq ichunks (reverse tichunks))
-              ;; 2. Compute all (next) spans
+              ;; 1. Recompute outdated chunks - if pos behind a chunk, replace
+              ;; this chunk with next chunk of the same type.
+              (let (tchunks)
+                (dolist (echunk echunks)
+                  (if (and (cdr echunk)
+                           (< pos (nth 5 echunk)))
+                      (push echunk tchunks)
+                    (let ((nchunk (pm-next-chunk (car echunk) pos)))
+                      (if nchunk
+                          (push (cons (car echunk) nchunk) tchunks)
+                        ;; If nil, chunk is the last of this type in the buffer,
+                        ;; or there are no such chunks at all (on 1st iteration).
+                        ;; Keep it in the list in order to correctly compute last
+                        ;; intersections with nested innermodes.
+                        (when (cdr echunk)
+                          (push echunk tchunks))))))
+                (setq echunks (reverse tchunks)))
+              ;; 2. Compute all (next) spans from spans
               (setq spans nil)
-              (dolist (ichunk ichunks)
-                (let ((chunk (cdr ichunk)))
-                  (let ((span (cond
-                               ((< pos (nth 1 chunk)) (list nil pos (nth 1 chunk) (car chunk)))
-                               ((< pos (nth 2 chunk)) (list 'head (nth 1 chunk) (nth 2 chunk) (car chunk)))
-                               ((< pos (nth 3 chunk)) (list 'body (nth 2 chunk) (nth 3 chunk) (car chunk)))
-                               ((< pos (nth 4 chunk)) (list 'tail (nth 3 chunk) (nth 4 chunk) (car chunk))))))
-                    (push span spans))))
+              (dolist (echunk echunks)
+                (let ((chunk (cdr echunk)))
+                  (let ((s (cond
+                            ((< pos (nth 1 chunk)) (list nil pos (nth 1 chunk) (car chunk)))
+                            ((< pos (nth 2 chunk)) (list 'head (nth 1 chunk) (nth 2 chunk) (car chunk)))
+                            ((< pos (nth 3 chunk)) (list 'body (nth 2 chunk) (nth 3 chunk) (car chunk)))
+                            ((< pos (nth 4 chunk)) (list 'tail (nth 3 chunk) (nth 4 chunk) (car chunk)))
+                            (t (list nil (nth 4 chunk) (point-max) (car chunk))))))
+                    (push s spans))))
               (setq spans (nreverse spans))
-              ;; 3. Intersect
+              ;; 3. Intersect the spans
               (setq nspan (list nil pos (point-max) hostmode))
               (dolist (s spans)
                 (setq nspan (pm--intersect-spans nspan s)))
-              ;; (setq pm--span-counter (1+ pm--span-counter)) ;; for debugging
+              ;; NB: If there is a bug in the core, this caching is likely
+              ;; causing major issues (runs in font-lock). Disable during
+              ;; debugging.
               (pm-cache-span nspan)
               (setq nttype (pm-true-span-type nspan))
-              ;; 4. funcall on region if type changed
+              ;; 4. funcall on (previous) region if type changed
               (unless (eq ttype nttype)
-                (when span
-                  (with-current-buffer (pm-span-buffer span)
-                    (funcall fn beg pos)))
+                (with-current-buffer (pm-span-buffer span)
+                  (funcall fn beg pos))
                 (setq ttype nttype
                       beg (nth 1 nspan)))
               (setq span nspan
                     pos (nth 2 nspan)))))
+        ;; 5. funcall on last region
         (with-current-buffer (pm-span-buffer span)
           (funcall fn beg pos))))))
 
@@ -1228,10 +1303,11 @@ transport) are performed."
 FUN is a function of one argument a span object (also available
 in a dynamic variable *span*). Buffer is *not* narrowed to the
 span, nor point is moved. If COUNT is non-nil, jump at most that
-many times. If BACKWARDP is non-nil, map backwards. Point
-synchronization across indirect buffers is not taken care of.
-Modification of the buffer during mapping is an undefined
-behavior."
+many times. If BACKWARDP is non-nil, map backwards. If VISIBLY is
+non-nil select buffers with the full synchronization (as if
+performed by the user), otherwise point synchronization across
+indirect buffers is not taken care of. Modification of the buffer
+during mapping is an undefined behavior."
   ;; Important! Don't forget to save-excursion when calling map-overs-spans and
   ;; synchronize points if needed. Mapping can end in different buffer and
   ;; invalidate the caller assumptions.
@@ -1278,7 +1354,7 @@ behavior."
         (narrow-to-region sbeg send)))))
 
 (defmacro pm-with-narrowed-to-span (span &rest body)
-  (declare (indent 1) (debug body))
+  (declare (indent 1) (debug (sexp body)))
   `(save-restriction
      (pm-narrow-to-span ,span)
      ,@body))
@@ -1287,9 +1363,9 @@ behavior."
 
 ;;; HOOKS
 ;; There is also `poly-lock-after-change' in poly-lock.el
-
 (defun polymode-flush-syntax-ppss-cache (beg end _)
-  "Run `syntax-ppss-flush-cache' from BEG to END in all polymode buffers."
+  "Run `syntax-ppss-flush-cache' from BEG to END in all polymode buffers.
+Placed with high priority in `after-change-functions' hook."
   ;; Modification hooks are run only in current buffer and not in other (base or
   ;; indirect) buffers. Thus some actions like flush of ppss cache must be taken
   ;; care explicitly. We run some safety hooks checks here as well.
@@ -1303,7 +1379,8 @@ behavior."
         (unless (eq (car after-change-functions)
                     'polymode-flush-syntax-ppss-cache)
           (delq 'polymode-flush-syntax-ppss-cache after-change-functions)
-          (add-hook 'after-change-functions 'polymode-flush-syntax-ppss-cache nil t))
+          (setq after-change-functions (cons 'polymode-flush-syntax-ppss-cache
+                                             after-change-functions)))
         (syntax-ppss-flush-cache beg end)
         ;; Check if something has changed our hooks. (Am I theoretically paranoid or
         ;; this is indeed needed?) `fontification-functions' (and others?) should be
@@ -1314,21 +1391,120 @@ behavior."
         ;;   (remove-hook 'after-change-functions 'jit-lock-after-change t))
         ))))
 
-(defun polymode-pre-command-synchronize-state ()
-  "Synchronize state between buffers.
-Currently synchronize points only. Runs in local `pre-command-hook'."
-  (pm--synchronize-points (current-buffer)))
+(defun pm--run-other-hooks (allow syms hook &rest args)
+  (when (and allow polymode-mode pm/polymode)
+    (dolist (sym syms)
+      (dolist (buf (eieio-oref pm/polymode '-buffers))
+        (unless (eq buf (current-buffer))
+          (with-current-buffer buf
+            (when (memq sym (symbol-value hook))
+              (if args
+                  (apply sym args)
+                (funcall sym)))))))))
 
-(defun polymode-post-command-select-buffer ()
-  "Select the appropriate (indirect) buffer corresponding to point's context.
-This funciton is placed in local `post-command-hook'."
+;; BUFFER SAVE
+;; TOTHINK: add auto-save-hook?
+(defvar polymode-run-these-before-save-functions-in-other-buffers nil
+  "Beore-save functions to run in indirect buffers.
+Saving happens from the base buffer, thus only `before-save-hook'
+declared in the base buffer is triggered.")
+
+(defvar polymode-run-these-after-save-functions-in-other-buffers nil
+  "After-save functions to run in indirect buffers.
+Saving happens from the base buffer, thus only `after-save-hook'
+declared in the base buffer is triggered.")
+
+(defun polymode-before-save ()
+  "Run after-save-hooks in indirect buffers.
+Only those in `polymode-run-these-after-save-functions-in-other-buffers'
+are triggered if present."
+  (pm--run-other-hooks t
+                       polymode-run-these-before-save-functions-in-other-buffers
+                       'after-save-hook))
+
+(defun polymode-after-save ()
+  "Run after-save-hooks in indirect buffers.
+Only those in `polymode-run-these-after-save-functions-in-other-buffers'
+are triggered if present."
+  (pm--run-other-hooks t
+                       polymode-run-these-after-save-functions-in-other-buffers
+                       'after-save-hook))
+
+
+;; change hooks
+(defvar polymode-run-these-before-change-functions-in-other-buffers nil
+  "Before-change functions to run in all other buffers.")
+(defvar polymode-run-these-after-change-functions-in-other-buffers nil
+  "After-change functions to run in all other buffers.")
+
+(defun polymode-before-change (beg end)
+  "Polymode before-change fixes.
+Run `polymode-run-these-before-change-functions-in-other-buffers'.
+Placed with low priority in `before-change-functions' hook."
+  (pm--prop-put :before-change-range (cons beg end))
+  ;; FIXME: LSP specific move this out somehow
+  (when (boundp 'lsp-mode)
+    (dolist (buf (eieio-oref pm/polymode '-buffers))
+      (with-current-buffer buf
+        (when lsp-mode
+          (setq pm--lsp-before-change-end-position (pm--lsp-position end))))))
+  (pm--run-other-hooks pm-allow-before-change-hook
+                       polymode-run-these-before-change-functions-in-other-buffers
+                       'before-change-functions
+                       beg end))
+
+(defun polymode-after-change (beg end len)
+  "Polymode after-change fixes.
+Run `polymode-run-these-after-change-functions-in-other-buffers'.
+Placed with low priority in `after-change-functions' hook."
+  (pm--run-other-hooks pm-allow-after-change-hook
+                       polymode-run-these-after-change-functions-in-other-buffers
+                       'after-change-functions
+                       beg end len))
+
+(defvar polymode-run-these-pre-commands-in-other-buffers nil
+  "These commands, if present in `pre-command-hook', are run in other bufers.")
+(defvar polymode-run-these-post-commands-in-other-buffers nil
+  "These commands, if present in `post-command-hook', are run in other bufers.")
+
+(defun polymode-pre-command ()
+  "Synchronize state between buffers and run pre-commands in other buffers.
+Currently synchronize points and runs
+`polymode-run-these-pre-commands-in-other-buffers' if any. Runs in
+local `pre-command-hook' with very high priority."
+  (pm--synchronize-points (current-buffer))
+  (condition-case err
+      (pm--run-other-hooks pm-allow-pre-command-hook
+                           polymode-run-these-pre-commands-in-other-buffers
+                           'pre-command-hook)
+    (error (message "error polymode-pre-command run other hooks: (%s) %s"
+                    (point) (error-message-string err)))))
+
+(defun polymode-post-command ()
+  "Select the buffer relevant buffer and run post-commands in other buffers.
+Run all the `post-command-hooks' in the new buffer and those
+command defined in
+`polymode-run-these-post-commands-in-other-buffers' whenever
+appropriate. This function is placed into local
+`post-command-hook' with very low priority."
   (when (and pm-allow-post-command-hook
              polymode-mode
-             pm/chunkmode)
-    (condition-case err
-        (pm-switch-to-buffer)
-      (error (message "(pm-switch-to-buffer %s): %s"
-                      (point) (error-message-string err))))))
+             pm/polymode)
+    (let ((cbuf (current-buffer)))
+      (condition-case err
+          (pm-switch-to-buffer)
+        (error (message "error in polymode-post-command: (pm-switch-to-buffer %s): %s"
+                        (point) (error-message-string err))))
+      (condition-case err
+          (if (eq cbuf (current-buffer))
+              ;; 1. same buffer, run hooks in other buffers
+              (pm--run-other-hooks pm-allow-post-command-hook
+                                   polymode-run-these-post-commands-in-other-buffers
+                                   'post-command-hook)
+            ;; 2. Run all hooks in this (newly switched to) buffer
+            (run-hooks 'post-command-hook))
+        (error (message "error in polymode-post-command run other hooks: (%s) %s"
+                        (point) (error-message-string err)))))))
 
 (defvar-local pm--killed nil)
 (defun polymode-after-kill-fixes ()
@@ -1386,6 +1562,8 @@ NEW-MODE can be t in which case mode is picked from the
 
 (add-hook 'after-change-major-mode-hook #'polymode-after-change-major-mode-cleanup)
 
+
+
 
 ;;; CORE ADVICE
 
@@ -1403,9 +1581,23 @@ If FUN is a list, apply ADVICE to each element of it."
   (unless pm-initialization-in-progress
     (apply orig-fun args)))
 
+(defun polymode-inhibit-in-indirect-buffers (orig-fun &rest args)
+  "Don't run ORIG-FUN (with ARGS) in polymode indirect buffers (aka inner modes).
+Use this function to around advice delicate functions:
+   (advice-add #'xyz :around #'polymode-inhibit-in-indirect-buffers)
+or with `pm-around-advice' which allows for multiple advises at once:
+   (pm-around-advice '(foo bar) #'polymode-inhibit-in-indirect-buffers)"
+  (unless (and polymode-mode (buffer-base-buffer))
+    (apply orig-fun args)))
+
 (defun polymode-with-current-base-buffer (orig-fun &rest args)
   "Switch to base buffer and apply ORIG-FUN to ARGS.
-Used in advises."
+Use this function to around advice of functions that should run
+in base buffer only like this:
+   (advice-add #'foo :around #'polymode-with-current-base-buffer)
+or with `pm-around-advice' which allows for multiple advises at
+once:
+   (pm-around-advice '(foo bar) #'polymode-with-current-base-buffer)"
   (if (and polymode-mode
            (not pm--killed)
            (buffer-live-p (buffer-base-buffer)))
@@ -1430,12 +1622,11 @@ Used in advises."
             (pm--synchronize-points base))))
     (apply orig-fun args)))
 
+;; Most importat Core
 ;; (pm-around-advice #'kill-buffer #'polymode-with-current-base-buffer)
 (pm-around-advice #'find-alternate-file #'polymode-with-current-base-buffer)
 (pm-around-advice #'write-file #'polymode-with-current-base-buffer)
 (pm-around-advice #'basic-save-buffer #'polymode-with-current-base-buffer)
-;; (advice-remove #'kill-buffer #'polymode-with-current-base-buffer)
-;; (advice-remove #'find-alternate-file #'polymode-with-current-base-buffer)
 
 
 ;;; FILL
@@ -1464,7 +1655,8 @@ ARG is the same as in `forward-paragraph'"
 
 (defun pm--call-syntax-propertize-original (start end)
   (condition-case err
-      (funcall pm--syntax-propertize-function-original start end)
+      (save-excursion
+        (funcall pm--syntax-propertize-function-original start end))
     (error
      (message "ERROR: (%s %d %d) -> %s"
               (if (symbolp pm--syntax-propertize-function-original)

@@ -77,7 +77,7 @@
   :type 'boolean
   :group 'lsp-ui-sideline)
 
-(defcustom lsp-ui-sideline-show-code-actions t
+(defcustom lsp-ui-sideline-show-code-actions nil
   "Whether to show code actions in sideline."
   :type 'boolean
   :group 'lsp-ui-sideline)
@@ -210,7 +210,8 @@ This face have a low priority over the others."
 
 (defun lsp-ui-sideline--first-line-p (pos)
   "Return non-nil if POS is on the first line."
-  (save-excursion (goto-char 1) (forward-line 1) (> (point) pos)))
+  (when (integerp pos)
+    (save-excursion (goto-char 1) (forward-line 1) (> (point) pos))))
 
 (defun lsp-ui-sideline--calc-space (win-width str-len index)
   "Calculate whether there is enough space on line.
@@ -291,7 +292,7 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
     (->> (if (> (length marked-string) (/ win-width 2))
              (car (split-string (string-trim-left marked-string) "[\r\n]+"))
            marked-string)
-      (replace-regexp-in-string "[\n\r\t ]+" " "))))
+         (replace-regexp-in-string "[\n\r\t ]+" " "))))
 
 (defun lsp-ui-sideline--align (&rest lengths)
   "Align sideline string by LENGTHS from the right of the window."
@@ -457,8 +458,8 @@ Push sideline overlays on `lsp-ui-sideline--ovs'."
     (lsp-ui-sideline--delete-kind 'diagnostics)
     (dolist (e (flycheck-overlay-errors-in bol (1+ eol)))
       (let* ((lines (--> (flycheck-error-format-message-and-id e)
-                      (split-string it "\n")
-                      (lsp-ui-sideline--split-long-lines it)))
+                         (split-string it "\n")
+                         (lsp-ui-sideline--split-long-lines it)))
              (display-lines (butlast lines (- (length lines) lsp-ui-sideline-diagnostic-max-lines)))
              (offset 1))
         (dolist (line (nreverse display-lines))
@@ -499,15 +500,15 @@ Push sideline overlays on `lsp-ui-sideline--ovs'."
 
 Argument HEIGHT is an actual image height in pixel."
   (--> (- (frame-char-height) 1)
-    (/ (float it) height)))
+       (/ (float it) height)))
 
 (defun lsp-ui-sideline--code-actions-make-image nil
   (let ((is-default (equal lsp-ui-sideline-actions-icon lsp-ui-sideline-actions-icon-default)))
     (--> `(image :type png :file ,lsp-ui-sideline-actions-icon :ascent center)
-      (append it `(:scale ,(->> (cond (is-default 128)
-                                      ((fboundp 'image-size) (cdr (image-size it t)))
-                                      (t (error "Function image-size undefined.  Use default icon")))
-                             (lsp-ui-sideline--scale-lightbulb)))))))
+         (append it `(:scale ,(->> (cond (is-default 128)
+                                         ((fboundp 'image-size) (cdr (image-size it t)))
+                                         (t (error "Function image-size undefined.  Use default icon")))
+                                   (lsp-ui-sideline--scale-lightbulb)))))))
 
 (defun lsp-ui-sideline--code-actions-image nil
   (when lsp-ui-sideline-actions-icon
@@ -528,10 +529,10 @@ Argument HEIGHT is an actual image height in pixel."
     (lsp-ui-sideline--delete-kind 'actions)
     (seq-doseq (action actions)
       (-let* ((title (->> (lsp:code-action-title action)
-                       (replace-regexp-in-string "[\n\t ]+" " ")
-                       (replace-regexp-in-string " " " ")
-                       (concat (unless lsp-ui-sideline-actions-icon
-                                 lsp-ui-sideline-code-actions-prefix))))
+                          (replace-regexp-in-string "[\n\t ]+" " ")
+                          (replace-regexp-in-string " " " ")
+                          (concat (unless lsp-ui-sideline-actions-icon
+                                    lsp-ui-sideline-code-actions-prefix))))
               (image (lsp-ui-sideline--code-actions-image))
               (margin (lsp-ui-sideline--margin-width))
               (keymap (let ((map (make-sparse-keymap)))
@@ -565,12 +566,12 @@ Argument HEIGHT is an actual image height in pixel."
   (->> (--remove
         (when (eq (overlay-get it 'kind) kind)
           (--> (overlay-get it 'position)
-            (remq it lsp-ui-sideline--occupied-lines)
-            (setq lsp-ui-sideline--occupied-lines it))
+               (remq it lsp-ui-sideline--occupied-lines)
+               (setq lsp-ui-sideline--occupied-lines it))
           (delete-overlay it)
           t)
         lsp-ui-sideline--ovs)
-    (setq lsp-ui-sideline--ovs)))
+       (setq lsp-ui-sideline--ovs)))
 
 (defvar-local lsp-ui-sideline--last-tick-info nil)
 (defvar-local lsp-ui-sideline--previous-line nil)
@@ -584,7 +585,7 @@ Argument HEIGHT is an actual image height in pixel."
           (or (-some-> range (lsp-get :start) (lsp-get :line) (= line))
               (-some-> range (lsp-get :end) (lsp-get :line) (= line))))
         (lsp--get-buffer-diagnostics))
-    (apply 'vector)))
+       (apply 'vector)))
 
 (defun lsp-ui-sideline--run (&optional buffer bol eol this-line)
   "Show information (flycheck + lsp).

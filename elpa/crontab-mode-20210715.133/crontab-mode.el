@@ -4,10 +4,11 @@
 
 ;; Author: Mario Rodas <marsam@users.noreply.github.com>
 ;; URL: https://github.com/emacs-pe/crontab-mode
-;; Package-Version: 20200330.920
+;; Package-Version: 20210715.133
+;; Package-Commit: 7412f3df0958812bfcacd5875a409fa795fa8ecc
 ;; Keywords: languages
 ;; Version: 0.1
-;; Package-Requires: ((emacs "24"))
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -78,8 +79,7 @@
     `((unit    . ,(rx (+ (in "-,*" num))))
       (step    . ,(rx (? "/" (+ num))))
       (month   . ,(rx (or "jan" "feb" "mar" "apr" "may" "jun" "jul" "aug" "sep" "oct" "nov" "dec")))
-      (weekday . ,(rx (or "sun" "mon" "tue" "wed" "thu" "fri" "sat")))
-      )
+      (weekday . ,(rx (or "sun" "mon" "tue" "wed" "thu" "fri" "sat"))))
     "Additional specific sexps for `crontab-rx'")
 
   (defmacro crontab-rx (&rest regexps)
@@ -137,7 +137,7 @@
   (interactive)
   (indent-line-to 0))
 
-(defun crontab-eldoc-function ()
+(defun crontab-eldoc-function (&rest _ignored)
   "`eldoc-documentation-function' for Crontab."
   (let* ((point (point))
          (end-of-line (point-at-eol))
@@ -150,7 +150,7 @@
                        if (or (>= (point) point) (>= field 5))
                        return field))))
     (when n
-      (setcar (nthcdr n fields) (propertize (elt fields n) 'face 'font-lock-constant-face)))
+      (setcar (nthcdr n fields) (propertize (elt fields n) 'face 'eldoc-highlight-function-argument)))
     (mapconcat 'identity fields "  ")))
 
 ;;;###autoload
@@ -159,20 +159,18 @@
 
 \\{crontab-mode-map}"
   :syntax-table sh-mode-syntax-table
-  (set (make-local-variable 'comment-start) "# ")
-  (set (make-local-variable 'comment-start-skip) "#+\\s-*")
+  (setq-local comment-start "# ")
+  (setq-local comment-start-skip "#+\\s-*")
 
   (if (null eldoc-documentation-function) ; Emacs<25
-      (set (make-local-variable 'eldoc-documentation-function)
-           #'crontab-eldoc-function)
-    (add-function :before-until (local 'eldoc-documentation-function)
-                  #'crontab-eldoc-function))
+      (setq-local eldoc-documentation-function #'crontab-eldoc-function)
+    (if (boundp 'eldoc-documentation-functions)
+        (add-hook 'eldoc-documentation-functions #'crontab-eldoc-function nil t)
+      (add-function :before-until (local 'eldoc-documentation-function)
+                    #'crontab-eldoc-function)))
 
-  (set (make-local-variable 'font-lock-defaults)
-       '(crontab-font-lock-keywords nil t))
-
-  (set (make-local-variable 'indent-line-function)
-       'crontab-indent-line))
+  (setq-local font-lock-defaults '(crontab-font-lock-keywords nil t))
+  (setq-local indent-line-function #'crontab-indent-line))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("/crontab\\(\\.X*[[:alnum:]]+\\)?\\'" . crontab-mode))

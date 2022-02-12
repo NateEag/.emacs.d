@@ -22019,10 +22019,10 @@ Major mode for editing files of tab-separated value type.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/crontab-mode-20200330.920/crontab-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/crontab-mode-20210715.133/crontab-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/crontab-mode-20200330.920/crontab-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/crontab-mode-20210715.133/crontab-mode-autoloads.el") (car load-path))))
 
 
 

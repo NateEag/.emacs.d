@@ -19429,10 +19429,10 @@ or zero, and enabled otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/emacsql-20210615.1539/emacsql-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/emacsql-20220101.1820/emacsql-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/emacsql-20210615.1539/emacsql-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/emacsql-20220101.1820/emacsql-autoloads.el") (car load-path))))
 
 
 

@@ -8222,10 +8222,10 @@ Deactivate python virtual environment." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20210601.1845/python-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/python-mode-20211229.1002/python-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20210601.1845/python-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/python-mode-20211229.1002/python-mode-autoloads.el") (car load-path))))
 
 
 
@@ -8279,13 +8279,15 @@ Run auto-completion
 (autoload 'python-mode "python-mode" "\
 Major mode for editing Python files.
 
-To submit a problem report, enter `\\[py-submit-bug-report]' from a
-`python-mode' buffer.  Do `\\[py-describe-mode]' for detailed
-documentation.  To see what version of `python-mode' you are running,
+To submit a report, enter `\\[py-submit-bug-report]'
+from a`python-mode' buffer.
+Do `\\[py-describe-mode]' for detailed documentation.
+To see what version of `python-mode' you are running,
 enter `\\[py-version]'.
 
-This mode knows about Python indentation, tokens, comments and
-continuation lines.  Paragraphs are separated by blank lines only.
+This mode knows about Python indentation,
+tokens, comments (and continuation lines.
+Paragraphs are separated by blank lines only.
 
 COMMANDS
 
@@ -8303,8 +8305,6 @@ VARIABLES
 `py-shell-name'		shell command to invoke Python interpreter
 `py-split-window-on-execute'		When non-nil split windows
 `py-switch-buffers-on-execute-p'	When non-nil switch to the Python output buffer
-
-See available customizations listed in files variables-python-mode at directory doc
 
 \\{python-mode-map}
 

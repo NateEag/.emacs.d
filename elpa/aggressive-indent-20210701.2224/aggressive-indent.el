@@ -1,12 +1,12 @@
-;;; aggressive-indent.el --- Minor mode to aggressively keep your code always indented
+;;; aggressive-indent.el --- Minor mode to aggressively keep your code always indented  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2014 Free Software Foundation, Inc.
+;; Copyright (C) 2014-2021 Free Software Foundation, Inc
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20200824.2352
-;; Package-Commit: b0ec0047aaae071ad1647159613166a253410a63
-;; Version: 1.8.4
+;; Package-Version: 20210701.2224
+;; Package-Commit: cb416faf61c46977c06cf9d99525b04dc109a33c
+;; Version: 1.10.0
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -72,7 +72,7 @@
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
-;; as published by the Free Software Foundation; either version 2
+;; as published by the Free Software Foundation; either version 3
 ;; of the License, or (at your option) any later version.
 ;;
 ;; This program is distributed in the hope that it will be useful,
@@ -356,8 +356,7 @@ Return non-nil only if the line's indentation actually changed."
 Call `aggressive-indent-region-function' between L and R, and
 then keep indenting until nothing more happens."
   (interactive "r")
-  (let ((p (point-marker))
-        was-begining-of-line)
+  (let ((p (point-marker)))
     (set-marker-insertion-type p t)
     (unwind-protect
         (progn

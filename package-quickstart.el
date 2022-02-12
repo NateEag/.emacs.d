@@ -24750,10 +24750,10 @@ anzu version of `isearch-query-replace-regexp'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/aggressive-indent-20200824.2352/aggressive-indent-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/aggressive-indent-20210701.2224/aggressive-indent-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/aggressive-indent-20200824.2352/aggressive-indent-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/aggressive-indent-20210701.2224/aggressive-indent-autoloads.el") (car load-path))))
 
 
 

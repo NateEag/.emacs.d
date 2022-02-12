@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20210410.2218
-;; Package-Commit: f3a5b4352e9f444ace2a332939abff504b573887
+;; Package-Version: 20211107.1907
+;; Package-Commit: 3336eaa97de923f74b90dda3e35985e122d40805
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.3
 
@@ -217,8 +217,7 @@ Slots                                          Backends
 request-response-url                  yes            yes
 request-response-header               yes            no
 other functions                       no             no
-==================================== ============== ==============
-")
+==================================== ============== ==============")
 
 (request--document-response request-response-data
   "Response parsed by the given parser.")
@@ -830,7 +829,28 @@ Currently it is used only for testing.")
       "\\n(:num-redirects %{num_redirects} :url-effective %{url_effective})"
     "\\n(:num-redirects %{num_redirects} :url-effective \"%{url_effective}\")"))
 
-(cl-defun request--curl-command
+(defun request--curl-stdin-config (&rest args)
+  "Split ARGS such that we \"Only write one option per physical line\".
+Fragile.  Some escaping will be necessary for special characters
+in user `request-curl-options'."
+  (let (result)
+    (dolist (arg args (mapconcat #'identity (reverse (cons "" result)) "\n"))
+      (if (or (not result)
+              (string-prefix-p "-" arg))
+          (push arg result)
+        (setcar result (format "%s %s" (car result)
+                               (if (cl-search " " arg)
+                                   (format "\"%s\""
+                                           (replace-regexp-in-string
+                                            "\""
+                                            (regexp-quote "\\\"") arg))
+                                 arg)))))))
+
+(defun request--curl-command ()
+  "Stub for test-request.el to override."
+  (list request-curl "--config" "-"))
+
+(cl-defun request--curl-command-args
     (url &key type data headers files unix-socket auth
          &allow-other-keys
          &aux (cookie-jar (convert-standard-filename
@@ -842,8 +862,7 @@ in the request subdirectory of `user-emacs-directory'.
 
 BUG: Simultaneous requests are a known cause of cookie-jar corruption."
   (append
-   (list request-curl
-         "--silent" "--location"
+   (list "--silent" "--location"
          "--cookie" cookie-jar "--cookie-jar" cookie-jar)
    (when auth
      (let* ((host (url-host (url-generic-parse-url url)))
@@ -863,6 +882,15 @@ BUG: Simultaneous requests are a known cause of cookie-jar corruption."
    request-curl-options
    (when (plist-get (request--curl-capabilities) :compression) (list "--compressed"))
    (when unix-socket (list "--unix-socket" unix-socket))
+   (when type (if (equal "head" (downcase type))
+		  (list "--head")
+		(list "--request" type)))
+   (cl-loop for (k . v) in headers
+            collect "--header"
+            collect (format "%s: %s" k v))
+   (list "--url" url)
+   (when data
+     (split-string "--data-binary @-"))
    (cl-loop with stdin-p = data
             for (name . item) in files
             collect "--form"
@@ -872,32 +900,23 @@ BUG: Simultaneous requests are a known cause of cookie-jar corruption."
                           (list name item (file-name-nondirectory item) ""))
                          ((bufferp item)
                           (if stdin-p
-                              (error (concat "request--curl-command: "
+                              (error (concat "request--curl-command-args: "
                                              "only one buffer or data entry permitted"))
                             (setq stdin-p t))
                           (list name "-" (buffer-name item) ""))
                          ((listp item)
                           (unless (plist-get (cdr item) :file)
                             (if stdin-p
-                                (error (concat "request--curl-command: "
+                                (error (concat "request--curl-command-args: "
                                                "only one buffer or data entry permitted"))
                               (setq stdin-p t)))
                           (list name (or (plist-get (cdr item) :file) "-") (car item)
                                 (if (plist-get item :mime-type)
                                     (format ";type=%s" (plist-get item :mime-type))
                                   "")))
-                         (t (error (concat "request--curl-command: "
+                         (t (error (concat "request--curl-command-args: "
                                            "%S not string, buffer, or list")
-                                   item)))))
-   (when data
-     (split-string "--data-binary @-"))
-   (when type (if (equal "head" (downcase type))
-		  (list "--head")
-		(list "--request" type)))
-   (cl-loop for (k . v) in headers
-            collect "--header"
-            collect (format "%s: %s" k v))
-   (list url)))
+                                   item)))))))
 
 (defun request--install-timeout (timeout response)
   "Out-of-band trigger after TIMEOUT seconds to forestall a hung RESPONSE."
@@ -947,8 +966,6 @@ removed from the buffer before it is shown to the parser function."
          (home-directory (or (file-remote-p default-directory) "~/"))
          (default-directory (expand-file-name home-directory))
          (buffer (generate-new-buffer " *request curl*"))
-         (command (apply #'request--curl-command url settings))
-         (proc (apply #'start-process "request curl" buffer command))
          (file-items (mapcar #'cdr files))
          (file-buffer (or (cl-some (lambda (item)
                                      (when (bufferp item) item))
@@ -960,14 +977,19 @@ removed from the buffer before it is shown to the parser function."
          (file-data (cl-some (lambda (item)
                                (and (listp item)
                                     (plist-get (cdr item) :data)))
-                             file-items)))
+                             file-items))
+         (command-args (apply #'request--curl-command-args url settings))
+         (stdin-config (apply #'request--curl-stdin-config command-args))
+         (command (request--curl-command))
+         (proc (apply #'start-process "request curl" buffer command)))
     (request--install-timeout timeout response)
     (request-log 'debug "request--curl: %s"
-                 (request--curl-occlude-secret (mapconcat #'identity command " ")))
+                 (request--curl-occlude-secret (mapconcat #'identity command-args " ")))
     (setf (request-response--buffer response) buffer)
     (process-put proc :request-response response)
     (set-process-coding-system proc 'no-conversion 'no-conversion)
     (set-process-query-on-exit-flag proc nil)
+    (process-send-string proc stdin-config)
     (when (or data file-buffer file-data)
       ;; We dynamic-let the global `buffer-file-coding-system' to `no-conversion'
       ;; in case the user-configured `encoding' doesn't fly.
@@ -987,10 +1009,10 @@ removed from the buffer before it is shown to the parser function."
                               (with-current-buffer file-buffer
                                 (buffer-substring-no-properties (point-min) (point-max))))
                             file-data))
-                (process-send-region proc (point-min) (point-max))
-                (process-send-eof proc)))
+                (process-send-region proc (point-min) (point-max))))
           (setf (default-value 'buffer-file-coding-system)
                 buffer-file-coding-system-orig))))
+    (process-send-eof proc)
     (let ((callback-2 (apply-partially #'request--curl-callback url)))
       (if semaphore
           (set-process-sentinel proc (lambda (&rest args)
@@ -1142,29 +1164,33 @@ See info entries on sentinels regarding PROC and EVENT."
 (cl-defun request--curl-sync (url &rest settings &key response &allow-other-keys)
   "Internal synchronous curl call to URL with SETTINGS bespeaking RESPONSE."
   (let (finished)
+    (auto-revert-set-timer)
+    (when auto-revert-use-notify
+      (dolist (buf (buffer-list))
+        (with-current-buffer buf
+          (request-auto-revert-notify-rm-watch))))
     (prog1 (apply #'request--curl url
                   :semaphore (lambda (&rest _) (setq finished t))
                   settings)
-      (let* ((proc (get-buffer-process (request-response--buffer response)))
-	     (interval 0.05)
-	     (timeout 5)
-	     (maxiter (truncate (/ timeout interval))))
-        (auto-revert-set-timer)
-        (when auto-revert-use-notify
-          (dolist (buf (buffer-list))
-            (with-current-buffer buf
-              (request-auto-revert-notify-rm-watch))))
-        (with-local-quit
-          (cl-loop with iter = 0
-                   until (or (>= iter maxiter) finished)
-                   do (accept-process-output nil interval)
-                   unless (process-live-p proc)
-                     do (cl-incf iter)
-                   end
-                   finally (when (>= iter maxiter)
-                             (let ((m "request--curl-sync: semaphore never called"))
-                               (princ (format "%s\n" m) #'external-debugging-output)
-                               (request-log 'error m)))))))))
+      (cl-loop with interval = 0.05
+               with timeout = 5
+               with maxiter = (truncate (/ timeout interval))
+               with iter = 0
+               until (or (>= iter maxiter) finished)
+               do (accept-process-output nil interval)
+               for buf = (request-response--buffer response)
+               for proc = (and (bufferp buf) (get-buffer-process buf))
+               if (or (not proc) (not (process-live-p proc)))
+               do (cl-incf iter)
+               end
+               finally (when (>= iter maxiter)
+                         (let ((m "request--curl-sync: semaphore never called"))
+                           (princ (format "%s %s %s\n"
+                                          m
+                                          (buffer-name buf)
+                                          (buffer-live-p buf))
+                                  #'external-debugging-output)
+                           (request-log 'error m)))))))
 
 (defun request--curl-get-cookies (host localpart secure)
   "Return entry for HOST LOCALPART SECURE in cookie jar."

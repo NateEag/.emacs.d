@@ -1,0 +1,2 @@
+;;; Generated package description from pair-tree.el  -*- no-byte-compile: t -*-
+(define-package "pair-tree" "20211219.1816" "Visualize a list" '((emacs "27.1") (dash "2.17.0")) :commit "6fe6143954bb4025ce6b05aad41e777fcbf413d9" :authors '(("Zainab Ali <zainab @kebab-ca.se>")) :maintainer '("Zainab Ali <zainab @kebab-ca.se>") :keywords '("lisp" "tools") :url "https://github.com/zainab-ali/pair-tree")

@@ -266,6 +266,22 @@ Jump to the matching tag using INFO and NUM.
 
 ;;;***
 
+;;;### (autoloads nil "evil-matchit-prog" "evil-matchit-prog.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from evil-matchit-prog.el
+
+(autoload 'evilmi-prog-get-tag "evil-matchit-prog" "\
+Get tag at point." nil nil)
+
+(autoload 'evilmi-prog-jump "evil-matchit-prog" "\
+Use INFO to jump NUM times.
+
+\(fn INFO NUM)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-prog" '("evilmi-prog-")))
+
+;;;***
+
 ;;;### (autoloads nil "evil-matchit-python" "evil-matchit-python.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-python.el

@@ -4,9 +4,9 @@
 
 ;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/evil-matchit
-;; Version: 2.3.12
+;; Version: 2.4.1
 ;; Keywords: matchit vim evil
-;; Package-Requires: ((evil "1.2.0") (emacs "25.1"))
+;; Package-Requires: ((evil "1.14.0") (emacs "25.1"))
 ;;
 ;; This file is not part of GNU Emacs.
 
@@ -64,6 +64,12 @@ If nil, `50%' jumps 50 times.")
   "The keybinding of `evilmi-jump-items' and then text object shortcut.
 Some people prefer using \"m\" instead.")
 
+;; {{ make linter happy
+(defvar evil-visual-char)
+(defvar evil-visual-direction)
+(defvar evil-this-type-modified)
+;; }}
+
 (defun evilmi--operate-on-item (num &optional func)
   "Jump NUM times and apply function FUNC."
   (when evilmi-debug
@@ -74,6 +80,10 @@ Some people prefer using \"m\" instead.")
          ideal-dest)
 
     (unless num (setq num 1))
+
+    (when (derived-mode-p 'prog-mode)
+      (setq jump-rules
+            (append (plist-get evilmi-plugins 'prog-mode) jump-rules)))
 
     (when jump-rules
       (dolist (rule jump-rules)
@@ -117,9 +127,15 @@ Some people prefer using \"m\" instead.")
              (fn-prefix (concat "evilmi-" (symbol-name rule)))
              (get-tag-function (intern (concat fn-prefix "-get-tag")))
              (jump-function (intern (concat fn-prefix "-jump"))))
-        (autoload get-tag-function rule-filename nil)
-        (autoload jump-function rule-filename nil)
+
+        ;; functions might be defined in another file
+        (unless (and (fboundp get-tag-function) (fboundp jump-function))
+          (autoload get-tag-function rule-filename nil)
+          (autoload jump-function rule-filename nil))
+
+        ;; load function
         (push (list get-tag-function jump-function) rlt)))
+
     (nreverse rlt)))
 
 ;;;###autoload
@@ -134,6 +150,10 @@ Some people prefer using \"m\" instead.")
 (defun evilmi-init-plugins ()
   "Load plugins."
   (interactive)
+
+  ;; rules for `prog-mode'
+  (evilmi-load-plugin-rules '(prog-mode) '(prog))
+
   ;; simple matching for languages containing brackets
   (evilmi-load-plugin-rules '(java-mode perl-mode cperl-mode go-mode)
                             '(simple))
@@ -176,6 +196,7 @@ Some people prefer using \"m\" instead.")
 
   ;; Octave
   (evilmi-load-plugin-rules '(octave-mode) '(simple octave))
+  (evilmi-load-plugin-rules '(matlab-mode) '(simple octave))
 
   ;; Python
   (evilmi-load-plugin-rules '(python-mode) '(simple python))
@@ -315,7 +336,7 @@ If IS-INNER is t, the region is inner text object."
 (defun evilmi-version()
   "Print version."
   (interactive)
-  (message "2.3.12"))
+  (message "2.4.1"))
 
 (defvar evil-matchit-mode-map (make-sparse-keymap)
   "Keymap used by the minor mode.")

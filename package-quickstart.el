@@ -20312,10 +20312,10 @@ you want to go to the end of the textobj instead.  You can pass in
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210609.1311/evil-matchit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210923.931/evil-matchit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210609.1311/evil-matchit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-matchit-20210923.931/evil-matchit-autoloads.el") (car load-path))))
 
 
 
@@ -20525,6 +20525,18 @@ Jump to the matching tag using INFO and NUM.
 \(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-org" '("evilmi-")))
+
+
+
+(autoload 'evilmi-prog-get-tag "evil-matchit-prog" "\
+Get tag at point." nil nil)
+
+(autoload 'evilmi-prog-jump "evil-matchit-prog" "\
+Use INFO to jump NUM times.
+
+\(fn INFO NUM)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-prog" '("evilmi-prog-")))
 
 
 

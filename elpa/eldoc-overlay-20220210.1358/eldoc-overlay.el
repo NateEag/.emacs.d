@@ -4,9 +4,9 @@
 ;; Author: Robert Weiner <rsw@gnu.org>
 ;; Maintainer: stardiviner <numbchild@gmail.com>
 ;; Keywords: documentation, eldoc, overlay
-;; Package-Version: 20200715.1214
-;; Package-Commit: 563ca285a510d1cbd5129cc3a8f8a3cdded065de
-;; URL: https://github.com/stardiviner/eldoc-overlay
+;; Package-Version: 20220210.1358
+;; Package-Commit: b96f5864a47407ec608c807e0d890f62b891ee03
+;; URL: https://repo.or.cz/eldoc-overlay.git
 ;; Created:  14th Jan 2017
 ;; Modified: 18th Dec 2017
 ;; Version: 0.1.1
@@ -51,9 +51,11 @@ enabled, it displays function signatures in the modeline."
   "A timer delay with `sleep-for' for eldoc-overlay display.")
 
 ;; Variables
-(defvar eldoc-overlay-backend 'quick-peek
+(defcustom eldoc-overlay-backend 'quick-peek
   "The backend library that displays eldoc overlays.
-Two backends are supported: `inline-docs' and `quick-peek'.")
+Two backends are supported: `inline-docs' and `quick-peek'."
+  :type 'function
+  :safe #'functionp)
 
 ;; Functions
 (defun eldoc-overlay-inline-docs (format-string &rest args)
@@ -106,7 +108,7 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
   :group 'eldoc-overlay
   :init-value nil
   :global nil
-  :lighter " ElDoc/overlay"
+  :lighter nil
   (if eldoc-overlay-mode
       (eldoc-overlay-enable)
     (eldoc-overlay-disable)))

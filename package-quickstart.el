@@ -21436,10 +21436,10 @@ Show the bookmarked entry saved in the `RECORD'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eldoc-overlay-20200715.1214/eldoc-overlay-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eldoc-overlay-20220210.1358/eldoc-overlay-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eldoc-overlay-20200715.1214/eldoc-overlay-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eldoc-overlay-20220210.1358/eldoc-overlay-autoloads.el") (car load-path))))
 
 
 

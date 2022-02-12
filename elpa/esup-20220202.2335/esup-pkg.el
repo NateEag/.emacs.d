@@ -1,13 +1,13 @@
-(define-package "esup" "20200814.1400" "The Emacs StartUp Profiler (ESUP)"
+(define-package "esup" "20220202.2335" "The Emacs StartUp Profiler (ESUP)"
   '((cl-lib "0.5")
     (s "1.2")
     (emacs "25.1"))
-  :commit "0de8af8233d9ce1b67f05a50f25c481c4f1118d8" :keywords
-  '("convenience" "processes")
-  :authors
+  :commit "4b49c8d599d4cc0fbf994e9e54a9c78e5ab62a5f" :authors
   '(("Joe Schafer" . "joe@jschaf.com"))
   :maintainer
   '("Serghei Iakovlev" . "egrep@protonmail.ch")
+  :keywords
+  '("convenience" "processes")
   :url "https://github.com/jschaf/esup")
 ;; Local Variables:
 ;; no-byte-compile: t

@@ -20938,10 +20938,10 @@ Move the cursor out of the nearest enclosing matching pairs.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/esup-20200814.1400/esup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/esup-20220202.2335/esup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/esup-20200814.1400/esup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/esup-20220202.2335/esup-autoloads.el") (car load-path))))
 
 
 

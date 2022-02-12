@@ -155,7 +155,7 @@ ARGS."
 (defun sp-ess-roxy-str-p (_id action _context)
   "Test if looking back at `ess-roxy-re'.
 ID, ACTION, CONTEXT."
-  (when (and (boundp 'ess-roxy-re) (eq action 'insert))
+  (when (and (bound-and-true-p ess-roxy-re) (eq action 'insert))
     (sp--looking-back-p ess-roxy-re)))
 
 (sp-with-modes 'ess-mode
@@ -229,6 +229,9 @@ ID, ACTION, CONTEXT."
                  :post-handlers '((sp-ess-open-sexp-indent "M-j"))
                  :suffix "{[^}]*}"))
 
+(sp-with-modes '(ess-r-mode inferior-ess-r-mode)
+  (sp-local-pair "\\(" nil
+                 :unless '(:add sp-in-code-p)))
 
 (provide 'smartparens-ess)
 ;;; smartparens-ess ends here

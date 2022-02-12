@@ -570,6 +570,8 @@ Symbol is defined as a chunk of text recognized by
                            common-lisp-mode
                            emacs-lisp-mode
                            eshell-mode
+                           fennel-mode
+                           fennel-repl-mode
                            geiser-repl-mode
                            gerbil-mode
                            inf-clojure-mode
@@ -822,7 +824,9 @@ that depend on the active `major-mode'."
         (setq sp-escape-char (string char))))
     (unless sp-comment-char
       (when (= ?< (char-syntax char))
-        (setq sp-comment-char (string char))))))
+        (setq sp-comment-char (string char)))))
+  ;; in case no escape syntax is found, just assume the backspace
+  (unless sp-escape-char (setq sp-escape-char "\\")))
 
 (defun sp--maybe-init ()
   "Initialize the buffer if it is not already initialized.
@@ -2951,9 +2955,10 @@ This predicate is only tested on \"insert\" action."
 (defun sp-char-escaped-p (_id action _context)
   "Return non-nil if character before point is escaped with \\."
   (when (eq action 'insert)
-    (save-excursion
-      (backward-char 1)
-      (looking-back "\\\\" 1))))
+    (unless (= (point) (point-min))
+      (save-excursion
+        (backward-char 1)
+        (looking-back "\\\\" 1)))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -3669,7 +3674,19 @@ delimiter insertion separately."
                ;; do not escape if we are looking at a closing
                ;; delimiter, that means we closed an opened string,
                ;; most likely.
-               (sp--buffer-is-string-balanced-p))
+               (sp--buffer-is-string-balanced-p)
+               ;; in some text modes like org-mode which do not
+               ;; respect escapes, an "escaped" quote will still
+               ;; behave as regular quote, but we want to ignore it to
+               ;; be logically consistent.  This will prevent a buffer
+               ;; with \" followed by newly inserted " auto-escaping
+               ;; the inserted quotes (which actually closes the
+               ;; string and makes the buffer balanced)
+               (save-excursion
+                 (backward-char (length open))
+                 (-when-let (string-start (nth 8 (sp--syntax-ppss)))
+                   (goto-char string-start)
+                   (not (sp-char-is-escaped-p)))))
       (sp--escape-region (list open) (- (point) (length open)) (point)))))
 
 ;; kept to not break people's config... remove later

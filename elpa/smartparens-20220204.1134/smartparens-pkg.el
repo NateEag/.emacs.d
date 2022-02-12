@@ -1,7 +1,7 @@
-(define-package "smartparens" "20210529.1129" "Automatic insertion, wrapping and paredit-like navigation with user defined pairs."
+(define-package "smartparens" "20220204.1134" "Automatic insertion, wrapping and paredit-like navigation with user defined pairs."
   '((dash "2.13.0")
     (cl-lib "0.3"))
-  :commit "911cc896a0f2eb8b5fbdd6fc8331523ad9889a3a" :authors
+  :commit "37f77bf2e2199be9fe27e981317b02cfd0e8c70e" :authors
   '(("Matus Goljer" . "matus.goljer@gmail.com"))
   :maintainer
   '("Matus Goljer" . "matus.goljer@gmail.com")

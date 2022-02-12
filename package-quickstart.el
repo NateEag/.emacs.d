@@ -1176,10 +1176,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ts-20201212.1041/ts-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ts-20210813.1617/ts-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ts-20201212.1041/ts-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ts-20210813.1617/ts-autoloads.el") (car load-path))))
 
 
 

@@ -2,11 +2,11 @@
 
 ;; Copyright (C) 2018-2019 Adam Porter
 
-;; Author: Adam Porter <adam@alphapapa.net
+;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: http://github.com/alphapapa/ts.el
-;; Package-Version: 20201212.1041
-;; Package-Commit: b7ca357a0ed57694e0b25ec1b1ca12e24a4ce541
-;; Version: 0.2
+;; Package-Version: 20210813.1617
+;; Package-Commit: 3fee71ceefac71ba55eb34829d7e94bb3df37cee
+;; Version: 0.3-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (s "1.12.0"))
 ;; Keywords: calendar, lisp
 
@@ -400,15 +400,15 @@ to `make-ts'."
 (defmacro ts-define-fill ()
   "Define `ts-fill' function that fills all applicable slots of `ts' object from its `unix' slot."
   (let* ((slots (->> (cl-struct-slot-info 'ts)
-                     (--select (and (not (member (car it) '(unix internal cl-tag-slot)))
-                                    (plist-get (cddr it) :constructor)))
+                  (--select (and (not (member (car it) '(unix internal cl-tag-slot)))
+                                 (plist-get (cddr it) :constructor)))
 
-                     (--map (list (intern (concat ":" (symbol-name (car it))))
-                                  (cddr it)))))
+                  (--map (list (intern (concat ":" (symbol-name (car it))))
+                               (cddr it)))))
          (keywords (-map #'car slots))
          (constructors (->> slots
-                            (--map (plist-get (cadr it) :constructor))
-                            -non-nil))
+                         (--map (plist-get (cadr it) :constructor))
+                         -non-nil))
          (types (--map (plist-get (cadr it) :type) slots))
          (format-string (s-join "\f" constructors))
          (value-conversions (cl-loop for type in types
@@ -419,12 +419,13 @@ to `make-ts'."
                                                             ('integer `(string-to-number ,val))
                                                             (_ val))))))
     ;; MAYBE: Construct the record manually?  Probably not worth it, but might eke out a bit more speed.
-    `(defun ts-fill (ts)
+    `(defun ts-fill (ts &optional zone)
        "Return TS having filled all slots from its Unix timestamp.
-This is non-destructive."
+This is non-destructive.  ZONE is passed to `format-time-string',
+which see."
        ;; MAYBE: Use `decode-time' instead of `format-time-string'?  It provides most of the values we need.  Should benchmark.
        (let ((time-values (save-match-data
-                            (split-string (format-time-string ,format-string (ts-unix ts)) "\f"))))
+                            (split-string (format-time-string ,format-string (ts-unix ts) zone) "\f"))))
          (make-ts :unix (ts-unix ts) ,@value-conversions)))))
 (ts-define-fill)
 
@@ -455,28 +456,41 @@ seconds, etc."
            (minutes (dividef seconds 60)))
       (list :years years :days days :hours hours :minutes minutes :seconds seconds))))
 
+;; See also the built-in function `format-seconds', which I seem to have
+;; overlooked before writing this.  However, a quick benchmark, run
+;; 100,000 times, shows that, when controllable formatting is not needed,
+;; `ts-human-format-duration' is much faster and generates less garbage:
+
+;; | Form                     | x faster than next | Total runtime | # of GCs | Total GC runtime |
+;; |--------------------------+--------------------+---------------+----------+------------------|
+;; | ts-human-format-duration | 5.82               |      0.832945 |        3 |         0.574929 |
+;; | format-seconds           | slowest            |      4.848253 |       17 |         3.288799 |
+
 (cl-defun ts-human-format-duration (seconds &optional abbreviate)
   "Return human-formatted string describing duration SECONDS.
-If ABBREVIATE is non-nil, return a shorter version, without
-spaces.  This is a simple calculation that does not account for
-leap years, leap seconds, etc."
+If SECONDS is less than 1, returns \"0 seconds\".  If ABBREVIATE
+is non-nil, return a shorter version, without spaces.  This is a
+simple calculation that does not account for leap years, leap
+seconds, etc."
   ;; FIXME: Doesn't work with negative values, even though `ts-human-duration' does.
-  (cl-macrolet ((format> (place)
-                         ;; When PLACE is greater than 0, return formatted string using its symbol name.
-                         `(when (> ,place 0)
-                            (format "%d%s%s" ,place
-                                    (if abbreviate "" " ")
-                                    (if abbreviate
-                                        ,(substring (symbol-name place) 0 1)
-                                      ,(symbol-name place)))))
-                (join-places (&rest places)
-                             ;; Return string joining the names and values of PLACES.
-                             `(->> (list ,@(cl-loop for place in places
-                                                    collect `(format> ,place)))
-                                   -non-nil
-                                   (s-join (if abbreviate "" ", ")))))
-    (-let* (((&plist :years :days :hours :minutes :seconds) (ts-human-duration seconds)))
-      (join-places years days hours minutes seconds))))
+  (if (< seconds 1)
+      (if abbreviate "0s" "0 seconds")
+    (cl-macrolet ((format> (place)
+                           ;; When PLACE is greater than 0, return formatted string using its symbol name.
+                           `(when (> ,place 0)
+                              (format "%d%s%s" ,place
+                                      (if abbreviate "" " ")
+                                      (if abbreviate
+                                          ,(substring (symbol-name place) 0 1)
+                                        ,(symbol-name place)))))
+                  (join-places (&rest places)
+                               ;; Return string joining the names and values of PLACES.
+                               `(->> (list ,@(cl-loop for place in places
+                                                      collect `(format> ,place)))
+                                  -non-nil
+                                  (s-join (if abbreviate "" ", ")))))
+      (-let* (((&plist :years :days :hours :minutes :seconds) (ts-human-duration seconds)))
+        (join-places years days hours minutes seconds)))))
 
 ;;;;; Adjustors
 

@@ -67,8 +67,18 @@ Keymap used within overlays:
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'iedit-mode-from-isearch "iedit" "\
+Start Iedit mode using last search string as the regexp.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'iedit-mode-toggle-on-function "iedit" "\
 Toggle Iedit mode on current function." t nil)
+
+(autoload 'iedit-execute-last-modification "iedit" "\
+Apply last modification in Iedit mode to the current buffer or an active region.
+
+\(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iedit" '("iedit-")))
 

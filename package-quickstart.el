@@ -4346,10 +4346,10 @@ The thesaurus backend can be configured with
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20210612.546/iedit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20220119.658/iedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20210612.546/iedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20220119.658/iedit-autoloads.el") (car load-path))))
 
 
 
@@ -4411,8 +4411,18 @@ Keymap used within overlays:
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'iedit-mode-from-isearch "iedit" "\
+Start Iedit mode using last search string as the regexp.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'iedit-mode-toggle-on-function "iedit" "\
 Toggle Iedit mode on current function." t nil)
+
+(autoload 'iedit-execute-last-modification "iedit" "\
+Apply last modification in Iedit mode to the current buffer or an active region.
+
+\(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iedit" '("iedit-")))
 

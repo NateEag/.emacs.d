@@ -1,12 +1,12 @@
 ;;; string-inflection.el --- underscore -> UPCASE -> CamelCase -> lowerCamelCase conversion of names -*- lexical-binding: t -*-
 
-;; Copyright (C) 2004,2014,2016,2017,2018,2020 Free Software Foundation, Inc.
+;; Copyright (C) 2004,2014,2016,2017,2018,2020,2021 Free Software Foundation, Inc.
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20200927.747
-;; Package-Commit: c4a519be102cb99dd86be3ee8c387f008d097635
-;; Version: 1.0.11
+;; Package-Version: 20210918.419
+;; Package-Commit: fd7926ac17293e9124b31f706a4e8f38f6a9b855
+;; Version: 1.0.16
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,15 +25,15 @@
 
 ;;; Commentary:
 
-;; Main functions are three
+;; There are three main functions:
 ;;
-;;   1. For Ruby -> string-inflection-ruby-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   2. For Python -> string-inflection-python-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   3. For Java -> string-inflection-java-style-cycle  (fooBar  => FOO_BAR => FooBar => fooBar)
-;;   4. For All  -> string-inflection-all-cycle         (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
+;;   1. For Ruby   -> string-inflection-ruby-style-cycle   (foo_bar => FOO_BAR => FooBar => foo_bar)
+;;   2. For Python -> string-inflection-python-style-cycle (foo_bar => FOO_BAR => FooBar => foo_bar)
+;;   3. For Java   -> string-inflection-java-style-cycle   (fooBar  => FOO_BAR => FooBar => fooBar)
+;;   4. For All    -> string-inflection-all-cycle          (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
 ;;
 ;;
-;; Setting Example 1
+;; Example 1:
 ;;
 ;;   (require 'string-inflection)
 ;;   (global-unset-key (kbd "C-q"))
@@ -58,7 +58,7 @@
 ;;       (string-inflection-ruby-style-cycle))))
 ;;
 ;;
-;; Setting Example 2
+;; Example 2:
 ;;
 ;;   (require 'string-inflection)
 ;;
@@ -80,16 +80,33 @@
 ;;             '(lambda ()
 ;;                (local-set-key (kbd "C-c C-u") 'string-inflection-java-style-cycle)))
 ;;
-;; You may also consider setting `string-inflection-skip-backward-when-done' to
-;; `t' if you don't like `string-inflect' moving your point to the end of the
-;; word
+;; You can also set `string-inflection-skip-backward-when-done' to `t' if
+;; you don't like `string-inflect' moving your point to the end of the word.
 
 ;;; Code:
 
+(defgroup string-inflection nil
+  "Change the casing of words."
+  :group 'convenience)
+
+(defcustom string-inflection-skip-backward-when-done nil
+  "Controls the position of the cursor after an inflection.
+
+If nil remain at the end of the string after inflecting, else move backward to
+the beginning."
+  :group 'string-inflection
+  :type 'boolean)
+
 (defconst string-inflection-word-chars "a-zA-Z0-9_-")
 
-(defvar string-inflection-skip-backward-when-done nil
-  "Whether point just move backward to the beginning of the word after inflecting.")
+(defcustom string-inflection-erase-chars-when-region "./"
+  "When selected in the region, this character is included in the transformation as part of the string.
+
+Exactly assume that the underscore exists.
+For example, when you select `Foo/Bar', it is considered that `Foo_Bar' is selected.
+If include `:', select `FOO::VERSION' to run `M-x\ string-inflection-underscore' to `foo_version'."
+  :group 'string-inflection
+  :type 'string)
 
 ;; --------------------------------------------------------------------------------
 
@@ -207,8 +224,20 @@
                   (point))))
          (str (buffer-substring start end)))
     (prog1
-        (if (use-region-p)
-            (replace-regexp-in-string "[[:space:].:/]+" "_" str) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc_dd_ee'
+        (progn
+          (when (use-region-p)
+            ;; https://github.com/akicho8/string-inflection/issues/31
+            ;; Multiple lines will be one line because [:space:] are included to line breaks
+            (setq str (replace-regexp-in-string (concat "[" string-inflection-erase-chars-when-region "]+") "_" str)) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc dd_ee'
+
+            ;; kebabing a region can insert an unexpected hyphen
+            ;; https://github.com/akicho8/string-inflection/issues/34
+            (with-syntax-table (copy-syntax-table)
+              (modify-syntax-entry ?_ "w")
+              (setq str (replace-regexp-in-string "_+\\b" "" str)) ; '__aA__ __aA__' => '__aA __aA'
+              (setq str (replace-regexp-in-string "\\b_+" "" str)) ; '__aA __aA'     => 'aA aA'
+              )
+            )
           str)
       (delete-region start end))))
 

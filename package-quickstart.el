@@ -6179,10 +6179,10 @@ It defaults to the UCS character \"Horizontal Ellipsis\", or
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/string-inflection-20200927.747/string-inflection-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/string-inflection-20210918.419/string-inflection-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-inflection-20200927.747/string-inflection-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-inflection-20210918.419/string-inflection-autoloads.el") (car load-path))))
 
 
 

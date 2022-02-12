@@ -5,7 +5,7 @@
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: https://github.com/alphapapa/bufler.el
 ;; Package-Version: 0.3-pre
-;; Package-Requires: ((emacs "26.3") (dash "2.17") (dash-functional "2.17") (f "0.17") (pretty-hydra "0.2.2") (magit-section "0.1"))
+;; Package-Requires: ((emacs "26.3") (dash "2.18") (f "0.17") (pretty-hydra "0.2.2") (magit-section "0.1") (map "2.1"))
 ;; Keywords: convenience
 
 ;;; License:
@@ -52,7 +52,6 @@
 (require 'outline)
 
 (require 'dash)
-(require 'dash-functional)
 (require 'f)
 (require 'magit-section)
 
@@ -115,6 +114,8 @@ See `bufler-cache-related-dirs-p'.")
   :link '(custom-manual "(Bufler)Top")
   :group 'convenience)
 
+;;;;; Options
+
 (defcustom bufler-use-cache t
   "Cache computed buffer groups.
 Since a buffer's directory, mode, project directory, etc rarely
@@ -165,7 +166,7 @@ must be called to get up-to-date results."
                      magit-diff-mode magit-process-mode magit-revision-mode magit-section-mode
                      special-mode timer-list-mode)
   "List of major modes whose buffers are not shown by default."
-  :type '(repeat string))
+  :type '(repeat symbol))
 
 (defcustom bufler-filter-buffer-name-regexps
   (list (rx "*Compile-Log*") (rx "*Disabled Command*")
@@ -229,6 +230,13 @@ The cache should not be allowed to grow unbounded, so it's
 cleared with a timer that runs this many seconds after the last
 `bufler-list' command."
   :type 'boolean)
+
+(defcustom bufler-list-display-buffer-action
+  '((display-buffer-reuse-window display-buffer-in-previous-window display-buffer-same-window))
+  "The ACTION argument passed to `display-buffer' (which see).
+Used when `bufler-list' is called."
+  :type '(cons (repeat :tag "Action functions" function)
+               (alist :tag "Action alist")))
 
 (defcustom bufler-list-mode-hook
   '(hl-line-mode)
@@ -382,7 +390,7 @@ which are otherwise filtered by `bufler-filter-buffer-fns'."
               (insert-thing it nil 0)))
           (setf header-line-format header)
           (setf buffer-read-only t)
-          (pop-to-buffer (current-buffer))
+          (pop-to-buffer (current-buffer) bufler-list-display-buffer-action)
           (goto-char pos))
         ;; Cancel cache-clearing idle timer and start a new one.
         (when bufler-cache-related-dirs-timer
@@ -523,29 +531,42 @@ NAME, okay, `checkdoc'?"
   "Return buffers grouped by GROUPS.
 If PATH, return only buffers from the group at PATH.  If
 FILTER-FNS, remove buffers that match any of them."
-  (cl-flet ((buffers
-             () (bufler-group-tree groups
-                  (if filter-fns
-                      (cl-loop with buffers = (cl-delete-if-not #'buffer-live-p (buffer-list))
-                               for fn in filter-fns
-                               do (setf buffers (cl-remove-if fn buffers))
-                               finally return buffers)
-                    (buffer-list)))))
-    (let ((buffers (if bufler-use-cache
-                       (let ((key (sxhash (buffer-list))))
-                         (if (eq key (car bufler-cache))
-                             ;; Buffer list unchanged.
-                             (or (map-elt (cdr bufler-cache) filter-fns)
-                                 ;; Different filters.
-                                 (setf (map-elt (cdr bufler-cache) filter-fns) (buffers)))
-                           ;; Buffer list has changed.
-                           (let ((buffers (buffers)))
-                             (setf bufler-cache (cons key (list (cons filter-fns buffers))))
-                             buffers)))
-                     (buffers))))
-      (if path
-          (bufler-group-tree-at path buffers)
-        buffers))))
+  ;; TODO: Probably would be clearer to call it IGNORE-FNS or REJECT-FNS rather than FILTER-FNS.
+  (cl-labels ((grouped-buffers
+               () (bufler-group-tree groups
+                    (if filter-fns
+                        (cl-loop with buffers = (cl-delete-if-not #'buffer-live-p (buffer-list))
+                                 for fn in filter-fns
+                                 do (setf buffers (cl-remove-if fn buffers))
+                                 finally return buffers)
+                      (buffer-list))))
+              (cached-buffers
+               (key) (when (eql key (car bufler-cache))
+                       ;; Buffer list unchanged: return cached result.
+                       (or (map-elt (cdr bufler-cache) filter-fns)
+                           ;; Different filters: group and filter and return cached result.
+
+                           ;; NOTE: (setf (map-elt ...) VALUE), when used with alists, has a bug
+                           ;; that does not return the VALUE, so we must return it explicitly.
+                           ;; The bug is fixed in Emacs commit 896384b of 6 May 2021, and the
+                           ;; fix will also be in the next stable release of map.el on ELPA.  See
+                           ;; <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=47572>.
+
+                           ;; TODO: Remove workaround when we can target the fixed version of map.
+                           (let ((grouped-buffers (grouped-buffers)))
+                             (setf (map-elt (cdr bufler-cache) filter-fns) grouped-buffers)
+                             grouped-buffers))))
+              (buffers
+               () (if bufler-use-cache
+                      (let ((key (sxhash (buffer-list))))
+                        (or (cached-buffers key)
+                            ;; Buffer list has changed: group buffers and cache result.
+                            (cdadr
+                             (setf bufler-cache (cons key (list (cons filter-fns (grouped-buffers))))))))
+                    (grouped-buffers))))
+    (if path
+        (bufler-group-tree-at path (buffers))
+      (buffers))))
 
 (cl-defun bufler-buffer-alist-at (path &key filter-fns)
   "Return alist of (display . buffer) cells at PATH.
@@ -688,42 +709,67 @@ That is, if its name starts with \"*\"."
 
 ;;
 
+(defcustom bufler-indent-per-level 2
+  "How much indentation to apply per level of depth."
+  :type 'integer)
+
 (defvar bufler-column-format-fns nil
   "Alist mapping column names to formatting functions.
 Each function takes two arguments, the buffer and its depth in
 the group tree, and returns a string as its column value.")
 
-(defcustom bufler-column-name-width nil
-  "Maximum width of buffer name column."
-  :type '(choice (integer :tag "Number of characters")
-                 (const :tag "Unlimited" nil)))
-
 (defcustom bufler-column-name-modified-buffer-sigil "*"
   "Displayed after the name of modified, file-backed buffers."
   :type 'string)
 
-(defmacro bufler-define-column (name face &rest body)
+(defmacro bufler-define-column (name plist &rest body)
   "Define a column formatting function with NAME.
-NAME should be a string.  BODY should return a string or nil.
-FACE, if non-nil, is applied to the string.  In the BODY,
-`buffer' is bound to the buffer, and `depth' is bound to the
-buffer's depth in the group tree."
+NAME should be a string.  BODY should return a string or nil.  In
+the BODY, `buffer' is bound to the buffer, and `depth' is bound
+to the buffer's depth in the group tree.
+
+PLIST may be a plist setting the following options:
+
+  `:face' is a face applied to the string.
+
+  `:max-width' defines a customization option for the column's
+  maximum width with the specified value as its default: an
+  integer limits the width, while nil does not."
   (declare (indent defun))
   (cl-check-type name string)
-  (let ((fn-name (intern (concat "bufler-column-format-" (downcase name)))))
+  (pcase-let* ((fn-name (intern (concat "bufler-column-format-" (downcase name))))
+               ;; NOTE: Emacs 27 inexplicably fails to expand this `pcase' binding form correctly at compile time,
+               ;; so we use the more explicit form.  See <https://github.com/alphapapa/bufler.el/issues/70>.
+               ;;  ((map :face :max-width) plist)
+               ((map (:face face) (:max-width max-width)) plist)
+               (max-width-variable (intern (concat "bufler-column-" name "-max-width")))
+               (max-width-docstring (format "Maximum width of the %s column." name)))
     `(progn
+       ,(when (plist-member plist :max-width)
+          `(defcustom ,max-width-variable
+             ,max-width
+             ,max-width-docstring
+             :type '(choice (integer :tag "Maximum width")
+                            (const :tag "Unlimited width" nil))))
        (defun ,fn-name (buffer depth)
          (if-let ((string (progn ,@body)))
-             (if ,face
-                 (propertize string 'face ,face)
+             (progn
+               ,(when max-width
+                  `(when ,max-width-variable
+                     (setf string (truncate-string-to-width string ,max-width-variable))))
+               ,(when face
+                  ;; Faces are not defined until load time, while this checks type at expansion
+                  ;; time, so we can only test that the argument is a symbol, not a face.
+                  (cl-check-type face symbol ":face must be a face symbol")
+                  `(setf string (propertize string 'face ',face)))
                string)
            ""))
        (setf (map-elt bufler-column-format-fns ,name) #',fn-name))))
 
-(bufler-define-column "Name" nil
+(bufler-define-column "Name" (:max-width nil)
   ;; MAYBE: Move indentation back to `bufler-list'.  But this seems to
   ;; work well, and that might be more complicated.
-  (let ((indentation (make-string (* 2 depth) ? ))
+  (let ((indentation (make-string (* 2 bufler-indent-per-level) ? ))
         (mode-annotation (when (cl-loop for fn in bufler-buffer-mode-annotate-preds
                                         thereis (funcall fn buffer))
                            (propertize (concat (replace-regexp-in-string
@@ -732,20 +778,18 @@ buffer's depth in the group tree."
                                                 t t)
                                                " ")
                                        'face 'bufler-mode)))
-        (buffer-name (if bufler-column-name-width
-                         (truncate-string-to-width (buffer-name buffer) bufler-column-name-width)
-                       (buffer-name buffer)))
+        (buffer-name (buffer-name buffer))
         (modified (when (and (buffer-file-name buffer)
                              (buffer-modified-p buffer))
                     (propertize bufler-column-name-modified-buffer-sigil
                                 'face 'font-lock-warning-face))))
     (concat indentation mode-annotation buffer-name modified)))
 
-(bufler-define-column "Size" 'bufler-size
+(bufler-define-column "Size" (:face bufler-size)
   (ignore depth)
   (file-size-human-readable (buffer-size buffer)))
 
-(bufler-define-column "Mode" 'bufler-mode
+(bufler-define-column "Mode" (:face bufler-mode)
   (ignore depth)
   (string-remove-suffix
    "-mode" (symbol-name (buffer-local-value 'major-mode buffer))))
@@ -758,7 +802,7 @@ accessed via TRAMP) can be slow, which delays the displaying of
 have their state displayed."
   :type 'boolean)
 
-(bufler-define-column "VC" nil
+(bufler-define-column "VC" ()
   (ignore depth)
   (when (and (buffer-file-name buffer)
              (or (not (file-remote-p (buffer-file-name buffer)))
@@ -773,7 +817,7 @@ have their state displayed."
       ((and 'edited it) (propertize (symbol-name it) 'face 'bufler-vc))
       (it (propertize (symbol-name it) 'face 'bufler-dim)))))
 
-(bufler-define-column "Path" 'bufler-path
+(bufler-define-column "Path" (:face bufler-path :max-width nil)
   (ignore depth)
   (or (buffer-file-name buffer)
       (buffer-local-value 'list-buffers-directory buffer)
@@ -1032,9 +1076,8 @@ NAME, okay, `checkdoc'?"
     "*indirect*"))
 
 (bufler-defauto-group special
-  (if (bufler--buffer-special-p buffer)
-      "*special*"
-    "non-special buffers"))
+  (when (bufler--buffer-special-p buffer)
+    "*special*"))
 
 (bufler-defauto-group project
   (when-let* ((project (with-current-buffer buffer
@@ -1107,6 +1150,7 @@ See documentation for details."
                  (auto-project () `(bufler-group 'auto-project))
                  (auto-parent-project () `(bufler-group 'auto-parent-project))
                  (auto-projectile () `(bufler-group 'auto-projectile))
+                 (auto-special () `(bufler-group 'auto-special))
                  (auto-tramp () `(bufler-group 'auto-tramp))
                  (auto-workspace () `(bufler-group 'auto-workspace)))
      (list ,@groups)))
@@ -1127,17 +1171,17 @@ See documentation for details."
                (mode-match "*Help*" (rx bos "help-"))
                (mode-match "*Info*" (rx bos "info-"))))
     (group
-     ;; Subgroup collecting all special buffers (i.e. ones that are not
-     ;; file-backed), except `magit-status-mode' buffers (which are allowed to fall
-     ;; through to other groups, so they end up grouped with their project buffers).
-     (group-and "*Special*"
-                (lambda (buffer)
-                  (unless (or (funcall (mode-match "Magit" (rx bos "magit-status"))
-                                       buffer)
-                              (funcall (mode-match "Dired" (rx bos "dired"))
-                                       buffer)
-                              (funcall (auto-file) buffer))
-                    "*Special*")))
+     ;; Subgroup collecting all special buffers (i.e. ones that are not file-backed),
+     ;; except certain ones like Dired, Forge, or Magit buffers (which are allowed to
+     ;; fall through to other groups, so they end up grouped with their project buffers).
+     (group-not "*Special"
+                (group-or "*Special*"
+                          (mode-match "Magit" (rx bos "magit-"))
+                          (mode-match "Forge" (rx bos "forge-"))
+                          (mode-match "Dired" (rx bos "dired"))
+                          (mode-match "grep" (rx bos "grep-"))
+                          (mode-match "compilation" (rx bos "compilation-"))
+                          (auto-file)))
      (group
       ;; Subgroup collecting these "special special" buffers
       ;; separately for convenience.
@@ -1145,7 +1189,7 @@ See documentation for details."
                   (rx bos "*" (or "Messages" "Warnings" "scratch" "Backtrace") "*")))
      (group
       ;; Subgroup collecting all other Magit buffers, grouped by directory.
-      (mode-match "*Magit* (non-status)" (rx bos (or "magit" "forge") "-"))
+      (mode-match "*Magit* (non-status)" (rx bos "magit-"))
       (auto-directory))
      ;; Subgroup for Helm buffers.
      (mode-match "*Helm*" (rx bos "helm-"))
@@ -1169,11 +1213,26 @@ See documentation for details."
      (auto-mode))
     (group
      ;; Subgroup collecting buffers in a projectile project.
-     (auto-projectile))
+     (auto-projectile)
+     (group-not "special"
+                ;; This subgroup collects special buffers so they are
+                ;; easily distinguished from file buffers.
+                (group-or "Non-file-backed and neither Dired nor Magit"
+                          (mode-match "Magit Status" (rx bos "magit-status"))
+                          (mode-match "Dired" (rx bos "dired-"))
+                          (auto-file))))
     (group
      ;; Subgroup collecting buffers in a version-control project,
-     ;; grouping them by directory.
-     (auto-project))
+     ;; grouping them by directory (using the parent project keeps,
+     ;; e.g. git worktrees with their parent repos).
+     (auto-parent-project)
+     (group-not "special"
+                ;; This subgroup collects special buffers so they are
+                ;; easily distinguished from file buffers.
+                (group-or "Non-file-backed and neither Dired nor Magit"
+                          (mode-match "Magit Status" (rx bos "magit-status"))
+                          (mode-match "Dired" (rx bos "dired-"))
+                          (auto-file))))
     ;; Group remaining buffers by directory, then major mode.
     (auto-directory)
     (auto-mode))

@@ -9123,10 +9123,10 @@ Ansible documentation lookup:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jinja2-mode-20200718.730/jinja2-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/jinja2-mode-20220117.807/jinja2-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jinja2-mode-20200718.730/jinja2-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jinja2-mode-20220117.807/jinja2-mode-autoloads.el") (car load-path))))
 
 
 

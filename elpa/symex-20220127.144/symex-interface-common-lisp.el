@@ -1,4 +1,4 @@
-;;; symex-interface-clojure.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-interface-common-lisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,60 +21,64 @@
 
 ;;; Commentary:
 
-;; Interface for the Clojure language
+;; Interface for the Common Lisp language
 
 ;;; Code:
 
-(require 'cider nil 'noerror)
+(require 'slime nil 'noerror)
+(require 'slime-repl nil 'noerror)
+(require 'symex-interop)
 
-(declare-function cider-eval-last-sexp "ext:cider")
-(declare-function cider-eval-defun-at-point "ext:cider")
-(declare-function cider-eval-print-last-sexp "ext:cider")
-(declare-function cider-doc "ext:cider")
-(declare-function cider-switch-to-repl-buffer "ext:cider")
-(declare-function cider-eval-buffer "ext:cider")
+(declare-function slime-eval-last-expression "ext:slime")
+(declare-function slime-eval-defun "ext:slime")
+(declare-function slime-eval-buffer "ext:slime")
+(declare-function slime-repl "ext:slime-repl")
+(declare-function slime-eval-print-last-expression "ext:slime")
+(declare-function slime-documentation "ext:slime")
 
-(defun symex-eval-clojure ()
+(defun symex-eval-common-lisp ()
   "Eval last sexp.
 
 Accounts for different point location in evil vs Emacs mode."
   (interactive)
-  (cider-eval-last-sexp))
+  (slime-eval-last-expression))
 
-(defun symex-eval-definition-clojure ()
+(defun symex-eval-definition-common-lisp ()
   "Eval entire containing definition."
-  (cider-eval-defun-at-point nil))
+  (slime-eval-defun))
 
-(defun symex-eval-pretty-clojure ()
+(defun symex-eval-pretty-common-lisp ()
   "Evaluate symex and render the result in a useful string form."
   (interactive)
-  (symex-eval-clojure))
+  (symex-eval-common-lisp))
 
-(defun symex-eval-thunk-clojure ()
+(defun symex-eval-thunk-common-lisp ()
   "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
   (interactive)
-  (message "eval as thunk currently not supported for Clojure"))
+  ;; can use slime-interactive-eval
+  (message "eval as thunk currently not supported for Common Lisp"))
 
-(defun symex-eval-print-clojure ()
+(defun symex-eval-print-common-lisp ()
   "Eval symex and print result in buffer."
   (interactive)
-  (cider-eval-print-last-sexp))
+  (call-interactively #'slime-eval-print-last-expression))
 
-(defun symex-describe-symbol-clojure ()
+(defun symex-describe-symbol-common-lisp ()
   "Describe symbol at point."
   (interactive)
-  (cider-doc nil))
+  (call-interactively #'slime-documentation))
 
-(defun symex-repl-clojure ()
+(defun symex-repl-common-lisp ()
   "Go to REPL."
   ;; this already goes to the active repl prompt
   ;; so there's no need to move point there
-  (cider-switch-to-repl-buffer))
+  (slime-repl)
+  (symex-enter-lowest))
 
-(defun symex-run-clojure ()
+(defun symex-run-common-lisp ()
   "Evaluate buffer."
-  (cider-eval-buffer))
+  (slime-eval-buffer))
 
 
-(provide 'symex-interface-clojure)
-;;; symex-interface-clojure.el ends here
+(provide 'symex-interface-common-lisp)
+;;; symex-interface-common-lisp.el ends here

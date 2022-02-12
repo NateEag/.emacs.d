@@ -60,7 +60,7 @@ features." t nil)
 ;;;### (autoloads nil "symex-dsl" "symex-dsl.el" (0 0 0 0))
 ;;; Generated autoloads from symex-dsl.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-dsl" '("deftraversal" "symex-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-dsl" '("symex-")))
 
 ;;;***
 

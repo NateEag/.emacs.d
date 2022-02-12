@@ -129,11 +129,15 @@
 (defvar symex-racket-modes (list 'racket-mode
                                  'racket-repl-mode))
 
+(defvar symex-clojure-modes (list 'clojure-mode
+                                  'clojurescript-mode
+                                  'clojurec-mode))
+
 (defvar symex-lisp-modes (append symex-elisp-modes
                                  symex-racket-modes
+                                 symex-clojure-modes
                                  (list 'scheme-mode
                                        'arc-mode
-                                       'clojure-mode
                                        'lisp-mode)))
 
 ;;;###autoload
@@ -179,12 +183,7 @@ configuration to be disabled and the new one adopted."
   (advice-remove #'symex-go-up #'symex--return-to-branch-position)
   (advice-remove #'symex-go-backward #'symex--forget-branch-positions)
   (advice-remove #'symex-go-forward #'symex--forget-branch-positions)
-  (symex--remove-selection-advice)
-  (unless (symex--rigpa-enabled-p)
-    (remove-hook 'evil-normal-state-entry-hook #'symex-disable-editing-minor-mode)
-    (remove-hook 'evil-insert-state-entry-hook #'symex-disable-editing-minor-mode)
-    (remove-hook 'evil-emacs-state-entry-hook #'symex-disable-editing-minor-mode)
-    (remove-hook 'evil-replace-state-entry-hook #'symex-disable-editing-minor-mode)))
+  (symex--remove-selection-advice))
 
 ;;;###autoload
 (defun symex-mode-interface ()

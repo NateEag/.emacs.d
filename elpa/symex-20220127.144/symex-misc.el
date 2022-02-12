@@ -65,9 +65,8 @@
   :message "-- NORMALE --"
   :enable (normal))
 
-(defun symex-evaluate ()
-  "Evaluate Symex."
-  (interactive)
+(defun symex--evaluate ()
+  "Evaluate symex."
   (let ((original-evil-state evil-state))
     (unwind-protect
         (save-excursion
@@ -85,7 +84,7 @@
                  (symex-eval-elisp))
                 ((equal major-mode 'scheme-mode)
                  (symex-eval-scheme))
-                ((equal major-mode 'clojure-mode)
+                ((member major-mode symex-clojure-modes)
                  (symex-eval-clojure))
                 ((equal major-mode 'lisp-mode)
                  (symex-eval-common-lisp))
@@ -105,6 +104,44 @@
       ;; transitions
       (funcall (intern (concat "evil-" (symbol-name original-evil-state) "-state"))))))
 
+(defun symex-evaluate (count)
+  "Evaluate COUNT symexes."
+  (interactive "p")
+  (save-excursion
+    (let ((i 0)
+          (movedp t))
+      (while (or (not movedp)
+                 (< i count))
+        (symex--evaluate)
+        (symex--go-forward)
+        (setq i (1+ i))))))
+
+(defun symex-eval-recursive ()
+  "Evaluate a symex recursively.
+
+Eval starting at the leaves and proceed down to the root, similarly
+to how the Lisp interpreter does it (when it is following
+'applicative-order evaluation')."
+  (interactive)
+  (save-excursion
+    (symex-execute-traversal (symex-traversal
+                              (circuit symex--traversal-preorder-in-tree)))
+    ;; do it once first since it will be executed as a side-effect
+    ;; _after_ each step in the traversal
+    (symex--evaluate)
+    (symex--do-while-traversing #'symex--evaluate
+                                symex--traversal-postorder-in-tree)))
+
+(defun symex-evaluate-remaining ()
+  "Evaluate the remaining symexes at this level."
+  (interactive)
+  (save-excursion
+    ;; do it once first since it will be executed as a side-effect
+    ;; _after_ each step in the traversal
+    (symex--evaluate)
+    (symex--do-while-traversing #'symex--evaluate
+                                (symex-make-move 1 0))))
+
 (defun symex-evaluate-definition ()
   "Evaluate entire containing symex definition."
   (interactive)
@@ -114,7 +151,7 @@
          (symex-eval-definition-elisp))
         ((equal major-mode 'scheme-mode)
          (symex-eval-definition-scheme))
-        ((equal major-mode 'clojure-mode)
+        ((member major-mode symex-clojure-modes)
          (symex-eval-definition-clojure))
         ((equal major-mode 'lisp-mode)
          (symex-eval-definition-common-lisp))
@@ -133,7 +170,7 @@
            (symex-eval-pretty-elisp))
           ((equal major-mode 'scheme-mode)
            (symex-eval-pretty-scheme))
-          ((equal major-mode 'clojure-mode)
+          ((member major-mode symex-clojure-modes)
            (symex-eval-pretty-clojure))
           ((equal major-mode 'lisp-mode)
            (symex-eval-pretty-common-lisp))
@@ -152,7 +189,7 @@
            (symex-eval-print-elisp))
           ((equal major-mode 'scheme-mode)
            (symex-eval-print-scheme))
-          ((equal major-mode 'clojure-mode)
+          ((member major-mode symex-clojure-modes)
            (symex-eval-print-clojure))
           ((equal major-mode 'lisp-mode)
            (symex-eval-print-common-lisp))
@@ -175,7 +212,7 @@ executing it."
            (symex-eval-thunk-elisp))
           ((equal major-mode 'scheme-mode)
            (symex-eval-thunk-scheme))
-          ((equal major-mode 'clojure-mode)
+          ((member major-mode symex-clojure-modes)
            (symex-eval-thunk-clojure))
           ((equal major-mode 'lisp-mode)
            (symex-eval-thunk-common-lisp))
@@ -194,7 +231,7 @@ executing it."
            (symex-describe-symbol-elisp))
           ((equal major-mode 'scheme-mode)
            (symex-describe-symbol-scheme))
-          ((equal major-mode 'clojure-mode)
+          ((member major-mode symex-clojure-modes)
            (symex-describe-symbol-clojure))
           ((equal major-mode 'lisp-mode)
            (symex-describe-symbol-common-lisp))
@@ -211,14 +248,13 @@ executing it."
          (symex-repl-elisp))
         ((equal major-mode 'scheme-mode)
          (symex-repl-scheme))
-        ((equal major-mode 'clojure-mode)
+        ((member major-mode symex-clojure-modes)
          (symex-repl-clojure))
         ((equal major-mode 'lisp-mode)
          (symex-repl-common-lisp))
         ((equal major-mode 'arc-mode)
          (symex-repl-arc))
-        (t (error "Symex mode: Lisp flavor not recognized!")))
-  (symex-enter-lowest))
+        (t (error "Symex mode: Lisp flavor not recognized!"))))
 
 (defun symex-run ()
   "Send to REPL."
@@ -229,7 +265,7 @@ executing it."
          (symex-run-elisp))
         ((equal major-mode 'scheme-mode)
          (symex-run-scheme))
-        ((equal major-mode 'clojure-mode)
+        ((member major-mode symex-clojure-modes)
          (symex-run-clojure))
         ((equal major-mode 'lisp-mode)
          (symex-run-common-lisp))
@@ -264,7 +300,7 @@ Version 2017-11-01"
                              "*scratch*")
                             ((equal major-mode 'scheme-mode)
                              "*scratch - Scheme*")
-                            ((equal major-mode 'clojure-mode)
+                            ((member major-mode symex-clojure-modes)
                              "*scratch - Clojure*")
                             ((equal major-mode 'lisp-mode)
                              "*scratch - Common Lisp*")
@@ -294,6 +330,18 @@ Version 2017-11-01"
                            (symex--go-forward))))
   (point))
 
+(defun symex-select-nearest-in-line ()
+  "Select symex nearest to point that's on the current line."
+  (interactive)
+  (unless (symex--current-line-empty-p)
+    (let ((original-pos (point)))
+      (symex-select-nearest)
+      (unless (= (line-number-at-pos)
+                 (line-number-at-pos original-pos))
+        (goto-char original-pos)
+        (beginning-of-line)
+        (symex-select-nearest)))))
+
 (defun symex-index ()  ; TODO: may be better framed as a computation
   "Get relative (from start of containing symex) index of current symex."
   (interactive)
@@ -321,6 +369,24 @@ Version 2017-11-01"
 
 This interface will be removed in a future version."
   (symex-height))
+
+(defun symex-next-visual-line (&optional count)
+  "Coordinate navigation to move down.
+
+This moves down COUNT lines in terms of buffer coordinates, rather than
+structurally in terms of the tree."
+  (interactive "p")
+  (evil-next-visual-line count)
+  (symex-select-nearest-in-line))
+
+(defun symex-previous-visual-line (&optional count)
+  "Coordinate navigation to move up.
+
+This moves up COUNT lines in terms of buffer coordinates, rather than
+structurally in terms of the tree."
+  (interactive "p")
+  (evil-previous-visual-line count)
+  (symex-select-nearest-in-line))
 
 (defun symex-soar-backward (count)
   "Leap backwards, crossing to a neighboring tree.
@@ -610,9 +676,11 @@ ORIG-FN applied to ARGS is the invocation being advised."
 
 (defun symex-exit-mode ()
   "Take necessary action upon symex mode exit."
-  (deactivate-mark)
-  (when symex-refocus-p
-    (symex--restore-scroll-margin)))
+  (unless (member evil-next-state '(emacslike normallike))
+    ;; these are "internal" state transitions, used in e.g. symex-evaluate
+    (deactivate-mark)
+    (when symex-refocus-p
+      (symex--restore-scroll-margin))))
 
 (provide 'symex-misc)
 ;;; symex-misc.el ends here

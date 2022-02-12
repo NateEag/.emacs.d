@@ -142,6 +142,13 @@
          (progn (forward-char 2) ;; need to go forward by 2 for some reason
                 (lispy-right-p)))))
 
+(defun symex-empty-string-p ()
+  "Check if we're looking at an empty list."
+  (save-excursion
+    (and (symex-string-p)
+         (progn (forward-char 1)
+                (symex-string-p)))))
+
 (defun symex--racket-syntax-object-p ()
   "Check if the symex is a racket syntax object."
   (looking-at (concat "#['`]" lispy-left)))
@@ -162,8 +169,12 @@
   "Check if the symex is an unquoted list."
   (looking-at (concat "," lispy-left)))
 
+(defun symex--clojure-deref-reader-macro-p ()
+  "Check if the symex is a Clojure deref reader macro."
+  (looking-at (concat "@" lispy-left)))
+
 (defun symex--clojure-literal-lambda-p ()
-  "Check if the symex is a clojurescript anonymous function literal."
+  "Check if the symex is a Clojure anonymous function literal."
   (looking-at (concat "#" lispy-left)))
 
 (defun symex--special-left-p ()
@@ -179,6 +190,7 @@ as special cases here."
       (symex--racket-syntax-object-p)
       (symex--splicing-unquote-p)
       (symex--racket-splicing-unsyntax-p)
+      (symex--clojure-deref-reader-macro-p)
       (symex--clojure-literal-lambda-p)))
 
 (defun symex--special-empty-list-p ()
@@ -188,7 +200,9 @@ as special cases here."
              (progn (forward-char 4)
                     (lispy-right-p))))
       (save-excursion
-        (and (or (symex--quoted-list-p) (symex--clojure-literal-lambda-p))
+        (and (or (symex--quoted-list-p)
+                 (symex--clojure-deref-reader-macro-p)
+                 (symex--clojure-literal-lambda-p))
              (progn (forward-char 3)
                     (lispy-right-p))))))
 
@@ -336,6 +350,7 @@ of symex mode (use the public `symex-go-backward` instead)."
            (forward-char 4))
           ((and (or (symex--quoted-list-p)
                     (symex--unquoted-list-p)
+                    (symex--clojure-deref-reader-macro-p)
                     (symex--clojure-literal-lambda-p))
                 (not (symex--special-empty-list-p)))
            (forward-char 2))
@@ -370,6 +385,8 @@ of symex mode (use the public `symex-go-up` instead)."
              (cond ((looking-back "#['`]" (line-beginning-position))
                     (backward-char 2))
                    ((looking-back "[#'`]" (line-beginning-position))
+                    (backward-char))
+                   ((looking-back "@" (line-beginning-position))
                     (backward-char)))
              1)
     (error 0)))

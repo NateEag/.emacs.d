@@ -8473,10 +8473,10 @@ Run PsySH interactive-shell in `BUFFER-NAME' and `PROCESS'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/project-shells-20201026.748/project-shells-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/project-shells-20210625.647/project-shells-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/project-shells-20201026.748/project-shells-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/project-shells-20210625.647/project-shells-autoloads.el") (car load-path))))
 
 
 

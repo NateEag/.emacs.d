@@ -5,9 +5,9 @@
 ;; Author: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
-;; Package-Commit: 382b3d48a797ea56383732ebf9cd219aeec676df
+;; Package-Commit: 900369828f1a213c60a2207a71d46bc43fd5405c
 ;; Version: 20170311
-;; Package-Version: 20201026.748
+;; Package-Version: 20210625.647
 ;; Package-X-Original-Version: 20171107.851
 ;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
@@ -109,6 +109,14 @@ function (symbol or lambda)."
   "Keys used to create shell buffers.
 
 One shell will be created for each key.  Usually these key will
+be bound in a non-global keymap."
+  :group 'project-shells
+  :type '(repeat string))
+
+(defcustom project-shells-vterm-keys nil
+  "Keys used to create vterm buffers.
+
+One vterm will be created for each key.  Usually these key will
 be bound in a non-global keymap."
   :group 'project-shells
   :type '(repeat string))
@@ -300,6 +308,7 @@ name, and the project root directory."
 		    ((cl-third shell-info))
 		    ((member key project-shells-term-keys) 'term)
 		    ((member key project-shells-eshell-keys) 'eshell)
+		    ((member key project-shells-vterm-keys) 'vterm)
 		    (t 'shell)))
 	     (dir (or (cl-second shell-info) proj-root))
 	     (func (cl-fourth shell-info))

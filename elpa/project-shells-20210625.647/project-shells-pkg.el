@@ -1,0 +1,2 @@
+;;; Generated package description from project-shells.el  -*- no-byte-compile: t -*-
+(define-package "project-shells" "20210625.647" "Manage the shell buffers of each project" '((emacs "24.3") (seq "2.19")) :commit "900369828f1a213c60a2207a71d46bc43fd5405c" :authors '(("\"Huang, Ying\"" . "huang.ying.caritas@gmail.com")) :maintainer '("\"Huang, Ying\"" . "huang.ying.caritas@gmail.com") :keywords '("processes" "terminals") :url "https://github.com/hying-caritas/project-shells")

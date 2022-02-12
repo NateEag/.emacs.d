@@ -8635,10 +8635,10 @@ Radio is considered on when STATUS is non-nil, otherwise off.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nvm-20210217.744/nvm-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nvm-20210826.1000/nvm-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nvm-20210217.744/nvm-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nvm-20210826.1000/nvm-autoloads.el") (car load-path))))
 
 
 

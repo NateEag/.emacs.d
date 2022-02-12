@@ -5,8 +5,8 @@
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;; Version: 0.3.0
-;; Package-Version: 20210217.744
-;; Package-Commit: 6f47fac1bc42526a7474488f560d064c08f8dd6e
+;; Package-Version: 20210826.1000
+;; Package-Commit: c214762fd6f539ec3e1fd8198cefbdb4b428b19c
 ;; Keywords: node, nvm
 ;; URL: http://github.com/rejeep/nvm.el
 ;; Package-Requires: ((s "1.8.0") (dash "2.18.0") (f "0.14.0"))
@@ -98,12 +98,12 @@
     (concat (nvm--clean-runtime-name runtime) "-" (f-filename path))))
 
 (defun nvm--version-directories-new (match-fn)
-  (when (nvm--using-new-path-schema?))
+  (when (nvm--using-new-path-schema?)
     (let ((runtime-options
            (lambda (runtime)
              (--map (list (nvm--version-name (f-filename runtime) it) it)
                     (f-directories runtime match-fn)))))
-      (-flatten-n 1 (-map runtime-options (f-directories (f-join nvm-dir "versions"))))))
+      (-flatten-n 1 (-map runtime-options (f-directories (f-join nvm-dir "versions")))))))
 
 (defun nvm--version-installed? (version)
   "Return true if VERSION is installed, false otherwise."

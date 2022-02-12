@@ -1,12 +1,12 @@
 ;;; bicycle.el --- cycle outline and code visibility  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021 Jonas Bernoulli
+;; Copyright (C) 2018-2022 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20210615.1459
-;; Package-Commit: 2f0d6fbe0e363a0ed1f878316d1c0d7c1d6e1082
+;; Package-Version: 20220101.1042
+;; Package-Commit: c69b010c7b4899b6c016f926ad3a6e11ebfec0bc
 
 ;; Package-Requires: ((emacs "25.1"))
 

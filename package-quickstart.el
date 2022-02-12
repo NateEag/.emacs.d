@@ -24133,10 +24133,10 @@ Turning on BNF Mode calls the value of `prog-mode-hook' and then of
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bicycle-20210615.1459/bicycle-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bicycle-20220101.1042/bicycle-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bicycle-20210615.1459/bicycle-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/bicycle-20220101.1042/bicycle-autoloads.el") (car load-path))))
 
 
 

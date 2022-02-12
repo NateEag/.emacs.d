@@ -15689,10 +15689,10 @@ With prefix 2 show both.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-origami-20210126.843/lsp-origami-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-origami-20211016.1045/lsp-origami-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-origami-20210126.843/lsp-origami-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-origami-20211016.1045/lsp-origami-autoloads.el") (car load-path))))
 
 
 

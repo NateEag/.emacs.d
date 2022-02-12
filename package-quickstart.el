@@ -7199,10 +7199,10 @@ The input format is the same as that of `kbd'.")
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20210901.1134/sesman-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sesman-20190909.1754/sesman-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sesman-20210901.1134/sesman-autoloads.el") (car load-path))))
 
 
 
@@ -7265,7 +7265,11 @@ buffer.
 \(fn &optional SESSION)" t nil)
 
 (autoload 'sesman-unlink "sesman" "\
-Break any of the previously created links." t nil)
+Break sesman LINKS.
+If LINKS is nil, ask interactively for a link. With a prefix argument break all
+links.
+
+\(fn &optional LINKS)" t nil)
  (autoload 'sesman-map "sesman" "Session management prefix keymap." t 'keymap)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman" '("sesman-")))

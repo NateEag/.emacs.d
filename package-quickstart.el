@@ -17030,10 +17030,10 @@ Major mode for editing Inform 7 files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/htmlize-20200816.746/htmlize-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/htmlize-20210825.2150/htmlize-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/htmlize-20200816.746/htmlize-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/htmlize-20210825.2150/htmlize-autoloads.el") (car load-path))))
 
 
 

@@ -6,9 +6,9 @@
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
-;; URL: https://github.com/joostkremers/visual-fill-column
-;; Package-Version: 20210419.857
-;; Package-Commit: 6fa9e7912af412533aec0da8b8f62c227f9f3f54
+;; URL: https://codeberg.org/joostkremers/visual-fill-column
+;; Package-Version: 20211118.33
+;; Package-Commit: cf3e2bc632b68d54145c79beede85d3458a337de
 ;; Created: 2015
 ;; Version: 2.4
 ;; Package-Requires: ((emacs "25.1"))
@@ -33,8 +33,14 @@
 ;; `visual-fill-column-mode' is a small Emacs minor mode that mimics the effect
 ;; of `fill-column' in `visual-line-mode'.  Instead of wrapping lines at the
 ;; window edge, which is the standard behaviour of `visual-line-mode', it wraps
-;; lines at `fill-column'.  If `fill-column' is too large for the window, the
-;; text is wrapped at the window edge.
+;; lines at `fill-column' (or `visual-fill-column-width', if set).  This is
+;; accomplished by widening the margins, which narrows the text area.  When the
+;; window size changes, the margins are adjusted automatically.
+;;
+;; When `visual-fill-column-center-text' is set, the text is centered in the
+;; window.  This can also be used in combination with `auto-fill-mode' instead
+;; of `visual-line-mode', or in programming modes.
+
 
 ;;; Code:
 
@@ -90,6 +96,15 @@ If this option is set, `visual-fill-column' sets the variable
   :group 'visual-fill-column
   :type '(choice (const :tag "Allow vertical window split" nil)
                  (const :tag "Use standard window split" t)))
+
+(defcustom visual-fill-column-adjust-for-text-scale t
+  "Adjust the margins for text scaling.
+If set to t, the calculated margins are additionally adjusted for
+the text scale factor, so that the text is wrapped at
+`fill-column'."
+  :group 'visual-fill-column
+  :type '(choice (const :tag "Adjust margins for text scaling" t)
+                 (const :tag "Do not adjust margins for text scaling" nil)))
 
 (defvar visual-fill-column--use-split-window-parameter nil "If set, the window parameter `split-window' is used.")
 
@@ -269,7 +284,8 @@ and `text-scale-mode-step'."
   (or window (setq window (selected-window)))
   (let* ((margins (window-margins window))
          (buffer (window-buffer window))
-         (scale (if (and (boundp 'text-scale-mode-step)
+         (scale (if (and visual-fill-column-adjust-for-text-scale
+                         (boundp 'text-scale-mode-step)
                          (boundp 'text-scale-mode-amount))
                     (with-current-buffer buffer
                       (expt text-scale-mode-step
@@ -283,8 +299,8 @@ and `text-scale-mode-step'."
 (defun visual-fill-column--add-extra-width (left right add-width)
   "Calculate new margins given additional text width.
 LEFT and RIGHT are the current margins, ADD-WIDTH a cons cell of
-  additional columns to be added to the text area.  Return a cons
-  cell of the new margins, which will never be less than zero."
+additional columns to be added to the text area.  Return a cons
+cell of the new margins, which will never be less than zero."
   (cons (max 0 (- left (car add-width)))
         (max 0 (- right (cdr add-width)))))
 

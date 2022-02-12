@@ -18019,10 +18019,10 @@ Face for quarantines." :group 'haskell)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/groovy-mode-20210510.317/groovy-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/groovy-mode-20220108.555/groovy-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/groovy-mode-20210510.317/groovy-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/groovy-mode-20220108.555/groovy-mode-autoloads.el") (car load-path))))
 
 
 
@@ -18050,7 +18050,7 @@ have Font Lock enabled. ${ } is expanded when in a GString
 
 (add-to-list 'auto-mode-alist '("\\.g\\(?:ant\\|roovy\\|radle\\)\\'" . groovy-mode))
 
-(add-to-list 'auto-mode-alist '("Jenkinsfile" . groovy-mode))
+(add-to-list 'auto-mode-alist '("^Jenkinsfile\\'" . groovy-mode))
 
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 

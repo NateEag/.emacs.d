@@ -8,7 +8,7 @@
 ;; Maintainer:  Russel Winder <russel@winder.org.uk>
 ;; Created: 2006-08-01
 ;; Keywords: languages
-;; Version: 2.1
+;; Version: 2.2
 ;; Package-Requires: ((s "1.12.0") (emacs "24.3") (dash "2.13.0"))
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -64,7 +64,7 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.g\\(?:ant\\|roovy\\|radle\\)\\'" . groovy-mode))
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("Jenkinsfile" . groovy-mode))
+(add-to-list 'auto-mode-alist '("^Jenkinsfile\\'" . groovy-mode))
 ;;;###autoload
 (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 

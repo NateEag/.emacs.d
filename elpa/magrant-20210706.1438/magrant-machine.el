@@ -97,8 +97,8 @@ This forces Vagrant to refresh its cache for each machine."
 (defun magrant-machine-parse (line)
   "Convert a LINE from \"vagrant global-status\" to a `tabulated-list-entries' entry."
   (let* ((tab-line (apply #'vector
-                          (-remove 's-blank?
-                                   (s-split " " line))))
+                          (-map #'s-trim
+                                (s-split-up-to " +" line 4))))
          (state (aref tab-line 3)))
     (aset tab-line 3 (propertize state 'font-lock-face (magrant-machine-state-face state)))
     (list (aref tab-line 0) tab-line)))

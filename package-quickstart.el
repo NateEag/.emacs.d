@@ -19838,10 +19838,10 @@ Automatically save this buffer when the frame loses its focus.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20201122.950/flymake-phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20210714.1805/flymake-phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20201122.950/flymake-phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/flymake-phpstan-20210714.1805/flymake-phpstan-autoloads.el") (car load-path))))
 
 
 

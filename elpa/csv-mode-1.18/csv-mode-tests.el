@@ -98,5 +98,13 @@
    '("aaa, \"b,b\", ccc"
      "1  , 2    , 3")))
 
+;; Bug#14053
+(ert-deftest csv-mode-tests-align-fields-double-quote-comma ()
+  (csv-mode-tests--align-fields
+   '("1,2,3"
+     "a,\"b\"\"c,\",d")
+   '("1, 2      , 3"
+     "a, \"b\"\"c,\", d")))
+
 (provide 'csv-mode-tests)
 ;;; csv-mode-tests.el ends here

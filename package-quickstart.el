@@ -21949,10 +21949,10 @@ Cycle between string quote styles.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csv-mode-1.15/csv-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csv-mode-1.18/csv-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csv-mode-1.15/csv-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csv-mode-1.18/csv-mode-autoloads.el") (car load-path))))
 
 
 

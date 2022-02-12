@@ -19,7 +19,7 @@
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/dap-mode
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3"))
-;; Version: 0.6
+;; Version: 0.7
 
 ;;; Commentary:
 ;; Debug Adapter Protocol client for Emacs.
@@ -149,7 +149,7 @@ based on DAP protocol category."
 (defcustom dap-terminated-hook nil
   "List of functions to be called after a debug session has been terminated.
 
-The functions will received the debug dession that
+The functions will receive the debug session that
 has been terminated."
   :type 'hook
   :group 'dap-mode)
@@ -489,16 +489,16 @@ FILE-NAME is the filename in which the breakpoints have been udpated."
     (let ((set-breakpoints-req (dap--set-breakpoints-request
                                 file-name
                                 updated-file-breakpoints)))
-      (-as-> (dap--get-sessions) $
-             (-filter 'dap--session-running $)
-             (--each $
-               (dap--send-message set-breakpoints-req
-                                  (dap--resp-handler
-                                   (lambda (resp)
-                                     (dap--update-breakpoints it
-                                                              resp
-                                                              file-name)))
-                                  it))))
+      (mapc (lambda (session)
+              (dap--send-message
+               set-breakpoints-req
+               (dap--resp-handler
+                (lambda (resp)
+                  (dap--update-breakpoints session
+                                           resp
+                                           file-name)))
+               session))
+            (-filter #'dap--session-running (dap--get-sessions))))
     (dap--persist-breakpoints breakpoints)))
 
 (defun dap-breakpoint-toggle ()
@@ -763,6 +763,28 @@ will be reversed."
         (dap-debug (dap--debug-session-launch-args debug-session)))
     (user-error "There is session to restart")))
 
+(defun dap--request-source-for-frame-by-reference (debug-session stack-frame line column name)
+  "Request source string for a STACK-FRAME using the sourceReference."
+  (with-lsp-workspace (dap--debug-session-workspace debug-session)
+    (-when-let* ((source (gethash "source" stack-frame))
+                 (sourceReference (gethash "sourceReference" source))
+                 (sourceReferenceKey (format "%s-%s" name sourceReference)))
+      (select-window (get-mru-window (selected-frame) nil))
+      (if-let* ((existing-buffer (get-buffer sourceReferenceKey)))
+          (switch-to-buffer existing-buffer)
+        (dap--send-message
+         (dap--make-request "source" (list :sourceReference sourceReference))
+         (dap--resp-handler
+          (-lambda ((&hash "body" (&hash "content" content)))
+            (switch-to-buffer (generate-new-buffer sourceReferenceKey))
+            (insert content)
+            (goto-char (point-min))
+            (forward-line (1- line))
+            (forward-char column))
+          (lambda (errmsg)
+            (message "No source code for %s. Cursor at %s:%s. Error: %s." name line column errmsg)))
+         debug-session)))))
+
 (defun dap--get-path-for-frame (stack-frame)
   "Get file path for a STACK-FRAME."
   (-when-let* ((source (gethash "source" stack-frame))
@@ -788,7 +810,7 @@ will be reversed."
               (goto-char (point-min))
               (forward-line (1- line))
               (forward-char column))
-          (message "No source code for %s. Cursor at %s:%s." name line column))))
+          (dap--request-source-for-frame-by-reference debug-session stack-frame line column name))))
     (run-hook-with-args 'dap-stack-frame-changed-hook debug-session)))
 
 (defun dap--select-thread-id (debug-session thread-id &optional force)
@@ -1037,17 +1059,19 @@ terminal configured (probably xterm)."
                 (when dap-print-io
                   (let ((inhibit-message dap-inhibit-io))
                     (message "Received:\n%s" (dap--json-encode parsed-msg))))
-                (pcase (gethash "type" parsed-msg)
-                  ("event" (dap--on-event debug-session parsed-msg))
-                  ("response" (if-let (callback (gethash key handlers nil))
-                                  (progn
-                                    (funcall callback parsed-msg)
-                                    (remhash key handlers)
-                                    (run-hook-with-args 'dap-executed-hook
-                                                        debug-session
-                                                        (gethash "command" parsed-msg)))
-                                (message "Unable to find handler for %s." (pp parsed-msg))))
-                  ("request" (dap--start-process debug-session parsed-msg)))))
+                (condition-case _
+                    (pcase (gethash "type" parsed-msg)
+                      ("event" (dap--on-event debug-session parsed-msg))
+                      ("response" (if-let (callback (gethash key handlers nil))
+                                      (progn
+                                        (funcall callback parsed-msg)
+                                        (remhash key handlers)
+                                        (run-hook-with-args 'dap-executed-hook
+                                                            debug-session
+                                                            (gethash "command" parsed-msg)))
+                                    (message "Unable to find handler for %s." (pp parsed-msg))))
+                      ("request" (dap--start-process debug-session parsed-msg)))
+                  (quit))))
             (dap--parser-read parser msg)))))
 
 (defun dap--create-output-buffer (session-name)
@@ -1335,6 +1359,29 @@ RESULT to use for the callback."
              error))
     (error "No thread is currently active %s" (dap--debug-session-name (dap--cur-session)))))
 
+(defun dap-up-stack-frame (frames)
+  "Switch stackframe up FRAMES frames on the current thread.
+A negative value will move down frames."
+  (interactive "p")
+  (-if-let* ((session (dap--cur-session-or-die))
+             (thread-id (dap--debug-session-thread-id session))
+             (stack-frames (gethash thread-id
+                                    (dap--debug-session-thread-stack-frames session)))
+             (cur-frame (dap--debug-session-active-frame session))
+             (pos (cl-position cur-frame stack-frames))
+             (len (length stack-frames))
+             (new-pos (min (1- len) (max 0 (+ pos frames)))))
+      (if (eq pos new-pos)
+          (error "Already at the %s of the stack" (if (<= pos 0) "bottom" "top"))
+        (dap--go-to-stack-frame session (nth new-pos stack-frames)))
+    (error "Unable to find active session, thread, or frame.")))
+
+(defun dap-down-stack-frame (frames)
+    "Switch stackframe down FRAMES frames on the current thread.
+A negative value will move up frames."
+  (interactive "p")
+  (dap-up-stack-frame (- frames)))
+
 (defun dap--calculate-unique-name (debug-session-name debug-sessions)
   "Calculate unique name with prefix DEBUG-SESSION-NAME.
 DEBUG-SESSIONS - list of the currently active sessions."
@@ -1418,9 +1465,8 @@ DEBUG-SESSIONS - list of the currently active sessions."
         (format "%s (%s)" name status)
       name)))
 
-(defun dap-switch-thread ()
-  "Switch current thread."
-  (interactive)
+(defun dap--switch-thread ()
+  "Switch current thread using current session."
   (let ((debug-session (dap--cur-active-session-or-die)))
     (dap--send-message
      (dap--make-request "threads")
@@ -1432,6 +1478,33 @@ DEBUG-SESSIONS - list of the currently active sessions."
                                       (apply-partially 'dap--thread-label debug-session))]
          (dap--select-thread-id debug-session thread-id t)))
      debug-session)))
+
+(defun dap--switch-thread-all-sessions ()
+  "Switch current thread selecting from all sessions."
+  (interactive)
+  (-when-let ((debug-session . (&hash "id"))
+              (dap--completing-read
+               "Select active thread: "
+               (->> (dap--get-sessions)
+                    (-filter #'dap--session-running)
+                    (-mapcat (lambda (debug-session)
+                               (->> (dap-request debug-session "threads")
+                                    (gethash "threads")
+                                    (-map (-partial #'cons debug-session))))))
+               (-lambda ((debug-session . thread))
+                 (format "%-80s%s"
+                         (dap--thread-label debug-session thread)
+                         (dap--debug-session-name debug-session)))))
+    (dap--switch-to-session debug-session)
+    (dap--select-thread-id debug-session id t)))
+
+(defun dap-switch-thread (&optional all?)
+  "Switch current thread.
+When ALL? is non-nil select from threads in all debug sessions."
+  (interactive "P")
+  (if all?
+      (dap--switch-thread-all-sessions )
+    (dap--switch-thread)))
 
 (defun dap-stop-thread-1 (debug-session thread-id)
   (dap--send-message

@@ -88,7 +88,7 @@ https://github.com/pyenv/pyenv-which-ext."
 (lsp-defun dap-python--parse-lsp-symbol
   ((&DocumentSymbol
     :name :kind
-    :selection-range (&Range :start (&Position :line start-line
+    :range (&Range :start (&Position :line start-line
                                                :character start-character)
                              :end (&Position :line end-line
                                              :character end-character))))
@@ -113,8 +113,9 @@ https://github.com/pyenv/pyenv-which-ext."
 
 (defun dap-python--test-p (lsp-symbol)
   (let ((name (dap-python--symbol-name lsp-symbol)))
-    (and (string= (dap-python--symbol-type lsp-symbol) "Function")
-         (s-starts-with? "test_" name))))
+    (and (or (string= (dap-python--symbol-type lsp-symbol) "Function")
+             (string= (dap-python--symbol-type lsp-symbol) "Method"))
+         (s-starts-with? "test" name))))
 
 (defun dap-python--test-class-p (test-symbol lsp-symbol)
   (when (string= (dap-python--symbol-type lsp-symbol) "Class")
@@ -142,6 +143,7 @@ https://github.com/pyenv/pyenv-which-ext."
 
 (defun dap-python--test-at-point ()
   (->> (lsp--get-document-symbols)
+       (lsp--symbols->document-symbols-hierarchy)
        (mapcar #'dap-python--parse-lsp-symbol)
        (dap-python--symbols-before-point (dap-python--cursor-position))
        dap-python--nearest-test))
@@ -150,7 +152,7 @@ https://github.com/pyenv/pyenv-which-ext."
   "Return the debug template whose name is TEMPLATE-NAME.
 For the name, only the template's `car' is checked, not its
 `:name' property."
-  (--first (string= template-name it) dap-debug-template-configurations))
+  (cdr (--first (string= template-name (car it)) dap-debug-template-configurations)))
 
 (defalias 'dap-python--debug-test-at-point #'dap-python-debug-test-at-point)
 (defun dap-python-debug-test-at-point ()
@@ -278,7 +280,7 @@ strings, for the sake of launch.json feature parity."
 
 (dap-register-debug-provider "python-test-at-point" 'dap-python--populate-test-at-point)
 (dap-register-debug-template "Python :: Run pytest (at point)"
-                             (list :type "python-test-at-point"
+                             (list :type "python"
                                    :args ""
                                    :program nil
                                    :module "pytest"

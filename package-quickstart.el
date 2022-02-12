@@ -15772,10 +15772,10 @@ This function is partially copied from
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20210519.1554/dap-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20211117.1555/dap-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20210519.1554/dap-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20211117.1555/dap-mode-autoloads.el") (car load-path))))
 
 
 
@@ -15796,6 +15796,10 @@ This function is partially copied from
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-elixir" '("dap-elixir--populate-start-file-args")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-erlang" '("dap-erlang--populate-start-file-args")))
 
 
 
@@ -15931,6 +15935,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ruby" '("dap-ruby-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-swi-prolog" '("dap-swi-prolog-")))
 
 
 

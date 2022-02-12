@@ -41,6 +41,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "dap-erlang" "dap-erlang.el" (0 0 0 0))
+;;; Generated autoloads from dap-erlang.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-erlang" '("dap-erlang--populate-start-file-args")))
+
+;;;***
+
 ;;;### (autoloads nil "dap-firefox" "dap-firefox.el" (0 0 0 0))
 ;;; Generated autoloads from dap-firefox.el
 
@@ -218,6 +225,14 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;; Generated autoloads from dap-ruby.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ruby" '("dap-ruby-")))
+
+;;;***
+
+;;;### (autoloads nil "dap-swi-prolog" "dap-swi-prolog.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from dap-swi-prolog.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-swi-prolog" '("dap-swi-prolog-")))
 
 ;;;***
 

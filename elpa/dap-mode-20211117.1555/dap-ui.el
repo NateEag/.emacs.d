@@ -151,6 +151,11 @@ number - expand N levels."
   "Face for enabled breakpoint icon in fringe."
   :group 'dap-ui)
 
+(defface dap-ui-controls-fringe
+  '((t :inherit fringe))
+  "Face used for the background of debugger icons in fringe."
+  :group 'dap-ui)
+
 (defcustom  dap-ui-default-fetch-count 30
   "Default number of variables to load in inspect variables view for
 array variables."
@@ -218,7 +223,7 @@ VISUALS and MSG will be used for the overlay."
 
 (defun dap-ui--clear-breakpoint-overlays ()
   "Remove all overlays that ensime-debug has created."
-  (mapc #'delete-overlay dap-ui--breakpoint-overlays)
+  (mapc #'delete-overlay (-filter #'identity dap-ui--breakpoint-overlays))
   (setq dap-ui--breakpoint-overlays '()))
 
 (defun dap-ui--breakpoint-visuals (breakpoint breakpoint-dap)
@@ -494,7 +499,7 @@ DEBUG-SESSION is the debug session triggering the event."
               'display `(image :type png
                                :file ,(f-join dap-ui--control-images-root-dir image)
                                :ascent center
-                               :background ,(face-attribute 'fringe :background nil t))
+                               :background ,(face-attribute 'dap-ui-controls-fringe :background nil 'default))
               'local-map (--doto (make-sparse-keymap)
                            (define-key it [mouse-1] command))
               'pointer 'hand
@@ -693,7 +698,7 @@ DEBUG-SESSION is the debug session triggering the event."
                             (funcall
                              callback
                              (-map
-                              (-lambda ((stack-frame &as &hash "name" "line" "source"))
+                              (-lambda ((stack-frame &as &hash "name" "line" "source" "instructionPointerReference"))
                                 (let* ((current-session (dap--cur-session))
                                        (icon (if (and
                                                   (equal session current-session)
@@ -726,6 +731,9 @@ DEBUG-SESSION is the debug session triggering the event."
                                                                                     (gethash "name"))))
                                                                  'dap-ui-sessions-thread-active-face
                                                                'dap-ui-sessions-thread-face))
+                                                      (if instructionPointerReference
+                                                          (propertize (format " [%s]" instructionPointerReference) 'face 'dap-ui-sessions-thread-face)
+                                                        "")
                                                       (propertize (format " (%s:%s)" (or (gethash "name" source)
                                                                                          (gethash "path" source))
                                                                           line)
@@ -1330,26 +1338,29 @@ evaluate python in the context of the debugee, ...."
 (defun dap-ui-repl--calculate-candidates ()
   "Calculate completion candidates.
 TEXT is the current input."
-  (let ((text (comint-get-old-input-default))
-        (debug-session (dap--cur-active-session-or-die)))
-    (if-let (frame-id (-some->> debug-session
-                                dap--debug-session-active-frame
-                                (gethash "id")))
-        (cons :async
-              (lambda (callback)
-                (dap--send-message
-                 (dap--make-request "completions"
-                                    (list :frameId frame-id
-                                          :text text
-                                          :column (- (length text) (- (point-at-eol) (point)))))
-                 (dap--resp-handler
-                  (lambda (result)
-                    (-if-let (targets (-some->> result (gethash "body") (gethash "targets")))
-                        (funcall callback (-map (-lambda ((item &as &hash "label" "text" "type"))
-                                                  (propertize label :text text :type type :dap-completion-item item))
-                                                targets))
-                      (funcall callback ()))))
-                 debug-session))))))
+  (when (-some->> (dap--cur-session)
+          (dap--debug-session-current-capabilities)
+          (gethash "supportsCompletionsRequest"))
+    (let ((text (comint-get-old-input-default))
+          (debug-session (dap--cur-active-session-or-die)))
+      (if-let (frame-id (-some->> debug-session
+                          dap--debug-session-active-frame
+                          (gethash "id")))
+          (cons :async
+                (lambda (callback)
+                  (dap--send-message
+                   (dap--make-request "completions"
+                                      (list :frameId frame-id
+                                            :text text
+                                            :column (- (length text) (- (point-at-eol) (point)))))
+                   (dap--resp-handler
+                    (lambda (result)
+                      (-if-let (targets (-some->> result (gethash "body") (gethash "targets")))
+                          (funcall callback (-map (-lambda ((item &as &hash "label" "text" "type"))
+                                                    (propertize label :text text :type type :dap-completion-item item))
+                                                  targets))
+                        (funcall callback ()))))
+                   debug-session)))))))
 
 (defun dap-ui-repl--post-completion (candidate)
   "Post completion handling for CANDIDATE."

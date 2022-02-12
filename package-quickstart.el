@@ -21632,10 +21632,10 @@ be used:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/edebug-inline-result-20210213.25/edebug-inline-result-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/edebug-inline-result-20220210.1357/edebug-inline-result-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edebug-inline-result-20210213.25/edebug-inline-result-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edebug-inline-result-20220210.1357/edebug-inline-result-autoloads.el") (car load-path))))
 
 
 

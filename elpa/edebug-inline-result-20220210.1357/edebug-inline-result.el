@@ -2,11 +2,11 @@
 
 ;; Authors: stardiviner <numbchild@gmail.com>
 ;; Package-Requires: ((emacs "25.1"))
-;; Package-Version: 20210213.25
-;; Package-Commit: 86a9ed9e4f58c2e9870b8918dc898ccd78d2d3f8
+;; Package-Version: 20220210.1357
+;; Package-Commit: 9fb3c48434da24f800833a5ee3419452d5fb83cb
 ;; Version: 0.1
 ;; Keywords: extensions lisp tools
-;; homepage: https://www.github.com/stardiviner/edebug-inline-result
+;; homepage: https://repo.or.cz/edebug-inline-result.git
 
 ;; edebug-inline-result is free software; you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by

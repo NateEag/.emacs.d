@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/edebug-inline-result-20210213.25/edebug-inline-result.el  -*- no-byte-compile: t -*-
-(define-package "edebug-inline-result" "20210213.25" "Show Edebug result inline" '((emacs "25.1")) :commit "86a9ed9e4f58c2e9870b8918dc898ccd78d2d3f8" :keywords '("extensions" "lisp" "tools") :url "https://www.github.com/stardiviner/edebug-inline-result")

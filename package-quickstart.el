@@ -6715,10 +6715,10 @@ Start the web server with given `directory' as `httpd-root'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20210613.1605/js2-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20211229.135/js2-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20210613.1605/js2-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20211229.135/js2-mode-autoloads.el") (car load-path))))
 
 
 

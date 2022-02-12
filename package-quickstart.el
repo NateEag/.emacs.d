@@ -18152,10 +18152,10 @@ Preview goto line relative." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20210509.2353/go-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/go-mode-20220114.2239/go-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20210509.2353/go-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/go-mode-20220114.2239/go-mode-autoloads.el") (car load-path))))
 
 
 

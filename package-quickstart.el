@@ -21857,10 +21857,10 @@ Since .envrc files are shell scripts, this mode inherits from ‘sh-mode’.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/diminish-20191127.1326/diminish-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/diminish-20220104.1539/diminish-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/diminish-20191127.1326/diminish-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/diminish-20220104.1539/diminish-autoloads.el") (car load-path))))
 
 
 
@@ -21877,7 +21877,7 @@ The mode-line displays of minor modes usually begin with a space, so
 the modes' names appear as separate words on the mode line.  However, if
 you're having problems with a cramped mode line, you may choose to use single
 letters for some modes, without leading spaces.  Capitalizing them works
-best; if you then diminish some mode to \"X\" but have abbrev-mode enabled as
+best; if you then diminish some mode to \"X\" but have `abbrev-mode' enabled as
 well, you'll get a display like \"AbbrevX\".  This function prepends a space
 to TO-WHAT if it's > 1 char long & doesn't already begin with a space.
 

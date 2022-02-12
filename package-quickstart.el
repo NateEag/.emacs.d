@@ -1159,10 +1159,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20210320.1052/tsc-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tsc-20220129.1630/tsc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20210320.1052/tsc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tsc-20220129.1630/tsc-autoloads.el") (car load-path))))
 
 
 

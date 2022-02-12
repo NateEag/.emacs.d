@@ -5,8 +5,8 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;;         Jorge Javier Araya Navarro <jorgejavieran@yahoo.com.mx>
 ;; Keywords: languages tools parsers dynamic-modules tree-sitter
-;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.15.1
+;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
+;; Version: 0.17.0
 ;; Package-Requires: ((emacs "25.1"))
 ;; SPDX-License-Identifier: MIT
 
@@ -24,7 +24,7 @@
 
 ;; Load the dynamic module at compile time as well, to satisfy the byte compiler.
 (eval-and-compile
-  (defconst tsc--dyn-version "0.15.1"
+  (defconst tsc--dyn-version "0.17.0"
     "Required version of the dynamic module `tsc-dyn'.")
   (require 'tsc-dyn-get)
   (tsc-dyn-get-ensure tsc--dyn-version))
@@ -88,6 +88,8 @@ A \"point\" in this context is a (LINE-NUMBER . BYTE-COLUMN) pair. See
 
 ;;; Extracting buffer's text.
 
+(defvar tsc--buffer-input-chunk-size 4096)
+
 (defun tsc--buffer-input (bytepos _line-number _byte-column)
   "Return a portion of the current buffer's text, starting from BYTEPOS.
 BYTEPOS is automatically clamped to the range valid for the current buffer.
@@ -96,8 +98,7 @@ This function must be called with narrowing disabled, e.g. within a
 `tsc--without-restriction' block."
   (let* ((max-pos (point-max))
          (beg-byte (max 1 bytepos))
-         ;; ;; TODO: Don't hard-code read length.
-         (end-byte (+ 1024 beg-byte))
+         (end-byte (+ tsc--buffer-input-chunk-size beg-byte))
          ;; nil means > max-pos, since we already made sure they are non-negative.
          (beg-pos (or (byte-to-position beg-byte) max-pos))
          (end-pos (or (byte-to-position end-byte) max-pos)))

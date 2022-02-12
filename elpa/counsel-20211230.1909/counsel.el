@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210509.830
-;; Package-Commit: e8ac2e23ffccb23600c5a3883805560927a54202
+;; Package-Version: 20211230.1909
+;; Package-Commit: c97ea72285f2428ed61b519269274d27f2b695f9
 ;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.4") (swiper "0.13.4"))
 ;; Keywords: convenience, matching, tools
@@ -2058,7 +2058,8 @@ The preselect behavior can be customized via user options
   "Forward to `find-file'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
-  (let ((default-directory (or initial-directory default-directory)))
+  (let ((tramp-archive-enabled nil)
+        (default-directory (or initial-directory default-directory)))
     (counsel--find-file-1 "Find file: " initial-input
                           #'counsel-find-file-action
                           'counsel-find-file)))
@@ -2492,7 +2493,8 @@ By default `counsel-bookmark' opens a dired buffer for directories."
 
 (ivy-set-actions
  'counsel-bookmark
- `(("d" bookmark-delete "delete")
+ `(("j" bookmark-jump-other-window "other window")
+   ("d" bookmark-delete "delete")
    ("e" bookmark-rename "edit")
    ("s" bookmark-set "overwrite")
    ("x" ,(counsel--apply-bookmark-fn #'counsel-find-file-extern)
@@ -3102,7 +3104,9 @@ prompt additionally for EXTRA-AG-ARGS."
   :exit-codes '(1 "No matches found"))
 
 (defun counsel-read-directory-name (prompt &optional default)
-  "Read a directory name from user, a (partial) replacement of `read-directory-name'."
+  "Read a directory name.
+This is intended as a (partial) replacement for
+`read-directory-name'."
   (let ((counsel--find-file-predicate #'file-directory-p))
     (ivy-read prompt
               #'read-file-name-internal
@@ -4832,6 +4836,7 @@ An extra action allows to switch to the process buffer."
     (ivy-read "History: " (ivy-history-contents minibuffer-history-variable)
               :keymap ivy-reverse-i-search-map
               :action (lambda (x)
+                        (delete-minibuffer-contents)
                         (insert (substring-no-properties (car x))))
               :caller 'counsel-minibuffer-history)))
 
@@ -5256,7 +5261,7 @@ the face to apply."
 NAME specifies the name of the buffer (defaults to \"*Ibuffer*\")."
   (interactive)
   (setq counsel-ibuffer--buffer-name (or name "*Ibuffer*"))
-  (ivy-read "Switch to buffer: " (counsel-ibuffer--get-buffers)
+  (ivy-read "Switch to buffer: " (counsel--ibuffer-get-buffers)
             :history 'counsel-ibuffer-history
             :action #'counsel-ibuffer-visit-buffer
             :caller 'counsel-ibuffer))
@@ -5266,8 +5271,10 @@ NAME specifies the name of the buffer (defaults to \"*Ibuffer*\")."
 (declare-function ibuffer-forward-line "ibuffer")
 (defvar ibuffer-movement-cycle)
 
-(defun counsel-ibuffer--get-buffers ()
-  "Return list of buffer-related lines in Ibuffer as strings."
+(defun counsel--ibuffer-get-buffers ()
+  "Return an alist with buffer completion candidates from Ibuffer.
+The keys are buffer-related lines from Ibuffer as strings, and
+the values are the corresponding buffer objects."
   (let ((oldbuf (get-buffer counsel-ibuffer--buffer-name)))
     (unless oldbuf
       ;; Avoid messing with the user's precious window/frame configuration.
@@ -5297,11 +5304,11 @@ NAME specifies the name of the buffer (defaults to \"*Ibuffer*\")."
 
 (defun counsel-ibuffer-visit-buffer (x)
   "Switch to buffer of candidate X."
-  (switch-to-buffer (cdr x)))
+  (switch-to-buffer (or (cdr-safe x) x)))
 
 (defun counsel-ibuffer-visit-buffer-other-window (x)
   "Switch to buffer of candidate X in another window."
-  (switch-to-buffer-other-window (cdr x)))
+  (switch-to-buffer-other-window (or (cdr-safe x) x)))
 
 (defun counsel-ibuffer-visit-ibuffer (_)
   "Switch to Ibuffer buffer."
@@ -5637,8 +5644,9 @@ value of a macro, using them for a new macro."
 
 (defun counsel--kmacro-candidates ()
   "Create the list of keyboard macros used by `counsel-kmacro'.
-This is a combination of `kmacro-ring' and, together in a list, `last-kbd-macro',
-`kmacro-counter-format-start', and `kmacro-counter-value-start'."
+This is a combination of `kmacro-ring' and, together in a list,
+`last-kbd-macro', `kmacro-counter-format-start', and
+`kmacro-counter-value-start'."
   (mapcar
    (lambda (kmacro)
      (cons
@@ -5699,7 +5707,10 @@ to 0."
     (kmacro-set-counter number)))
 
 (defun counsel-kmacro-action-copy-counter-format-for-new-macro (x)
-  "Set `kmacro-default-counter-format' to an existing keyboard macro's counter format.
+  "Set the default keyboard macro counter format.
+This sets `kmacro-default-counter-format' to the counter format
+of an existing keyboard macro.
+
 This will apply to the next macro a user defines."
   (let* ((actual-kmacro (cdr x))
          (format (nth 2 actual-kmacro)))

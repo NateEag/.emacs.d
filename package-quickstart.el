@@ -4643,10 +4643,10 @@ Like `swiper-isearch' but the first result is before the point.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20210509.830/counsel-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20211230.1909/counsel-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20210509.830/counsel-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20211230.1909/counsel-autoloads.el") (car load-path))))
 
 
 

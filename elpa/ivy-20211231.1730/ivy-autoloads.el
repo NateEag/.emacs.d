@@ -36,7 +36,7 @@ PREDICATE is applied to filter out the COLLECTION immediately.
 This argument is for compatibility with `completing-read'.
 
 When REQUIRE-MATCH is non-nil, only members of COLLECTION can be
-selected.
+selected. In can also be a lambda.
 
 If INITIAL-INPUT is non-nil, then insert that input in the
 minibuffer initially.

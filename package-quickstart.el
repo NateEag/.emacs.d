@@ -7151,10 +7151,10 @@ EXIT-CODE-SUCCESS-P
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20200421.103/shfmt-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shfmt-20200421.103/shfmt-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el") (car load-path))))
 
 
  (autoload 'shfmt-buffer "shfmt" nil t)

@@ -4,7 +4,8 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: languages
-;; Package-Version: 20200421.103
+;; Package-Version: 20210803.222
+;; Package-Commit: 8496b0df2209cf6792c5197b924dd55807f0cffd
 ;; URL: https://github.com/purcell/emacs-shfmt
 ;; Package-Requires: ((emacs "24") (reformatter "0.3"))
 ;; Version: 0
@@ -31,7 +32,7 @@
 
 ;; Enable `shfmt-on-save-mode' in shell script buffers like this:
 
-;;     (add-hook 'shell-mode-hook 'shfmt-on-save-mode)
+;;     (add-hook 'sh-mode-hook 'shfmt-on-save-mode)
 
 ;; or locally to your project with a form in your .dir-locals.el like
 ;; this:

@@ -10169,14 +10169,18 @@ See `rxt-mode' for more information on Rxt mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/parseclj-20220207.1351/parseclj-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseclj-20201012.712/parseclj-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/parseclj-20220207.1351/parseclj-autoloads.el") (car load-path))))
 
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj" '("parseclj-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parseclj-alist" '("parseclj-")))
 
 
 

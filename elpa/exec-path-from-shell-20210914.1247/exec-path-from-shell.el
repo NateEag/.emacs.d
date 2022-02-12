@@ -4,9 +4,9 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: unix, environment
-;; Package-Commit: d14d6d2966efe5a1409f84a6b9d998268f74761d
+;; Package-Commit: 3a8d97c096c2c5714b667130fd8a80d5622ee067
 ;; URL: https://github.com/purcell/exec-path-from-shell
-;; Package-Version: 20201215.33
+;; Package-Version: 20210914.1247
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.6"))
 
@@ -91,7 +91,7 @@
   :group 'exec-path-from-shell)
 
 (defcustom exec-path-from-shell-warn-duration-millis 500
-  "Print a warning message if shell execution takes longer than this many milliseconds."
+  "Print a warning if shell execution takes longer than this many milliseconds."
   :type 'integer)
 
 (defcustom exec-path-from-shell-shell-name nil

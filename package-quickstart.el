@@ -20215,10 +20215,10 @@ Whether expand-region should use subword expansions.")
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20201215.33/exec-path-from-shell-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20210914.1247/exec-path-from-shell-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20201215.33/exec-path-from-shell-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/exec-path-from-shell-20210914.1247/exec-path-from-shell-autoloads.el") (car load-path))))
 
 
 

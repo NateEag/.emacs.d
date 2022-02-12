@@ -69,10 +69,10 @@ See `yas-minor-mode' for more information on Yas minor mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-mode-20210508.1641/yaml-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-mode-20220104.1503/yaml-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-mode-20210508.1641/yaml-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-mode-20220104.1503/yaml-mode-autoloads.el") (car load-path))))
 
 
 
@@ -86,6 +86,8 @@ Simple mode to edit YAML.
 \(fn)" t nil)
 
 (add-to-list 'auto-mode-alist '("\\.\\(e?ya?\\|ra\\)ml\\'" . yaml-mode))
+
+(add-to-list 'magic-mode-alist '("^%YAML\\s-+[0-9]+\\.[0-9]+\\(\\s-+#\\|\\s-*$\\)" . yaml-mode))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml-mode" '("yaml-")))
 

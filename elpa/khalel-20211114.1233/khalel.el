@@ -6,9 +6,9 @@
 ;; Maintainer: Hanno Perrey <hanno@hoowl.se>
 ;; Created: september 10, 2021
 ;; Modified: october 3, 2021
-;; Version: 0.1.5
-;; Package-Version: 20211003.1150
-;; Package-Commit: c6f2adfd7211c747d443bf85618833820078ca4b
+;; Version: 0.1.6
+;; Package-Version: 20211114.1233
+;; Package-Commit: a0503498ae43a50157549c661381d94578ad2bd7
 ;; Keywords: event, calendar, ics, khal
 ;; Homepage: https://gitlab.com/hperrey/khalel
 ;; Package-Requires: ((emacs "27.1"))
@@ -125,6 +125,11 @@ When set to nil then it will be guessed."
   :group 'khalel
   :type 'string)
 
+(defcustom khalel-update-upcoming-events-after-capture 't
+  "Whether to automatically update the imported events after a new capture."
+  :group 'khalel
+  :type 'boolean)
+
 
 ;;;; Commands
 
@@ -146,13 +151,16 @@ on. Khal only supports certain (basic) fields when creating lists.
 Examples of missing fields are timezone information, categories,
 alarms or settings for repeating events."
   (interactive)
-  (let
+  (let*
       ( ;; call khal directly.
        (khal-bin (or khalel-khal-command
                      (executable-find "khal")))
-       (dst (generate-new-buffer "khalel-output")))
-    (call-process khal-bin nil dst nil "list" "--format"
-                  "* {title} {cancelled}\n\
+       (dst (generate-new-buffer "*khal-output*"))
+       (err (get-buffer-create "*khal-errors*"))
+       (errfn (make-temp-file "khalel-khal-errors"))
+       (exitval (call-process khal-bin nil
+                              (list dst errfn) nil "list" "--format"
+                              "* {title} {cancelled}\n\
 :PROPERTIES:\n:CALENDAR: {calendar}\n\
 :LOCATION: {location}\n\
 :ID: {uid}\n\
@@ -164,8 +172,11 @@ alarms or settings for repeating events."
     [[elisp:(progn (khalel-run-vdirsyncer) (khalel-import-upcoming-events))]\
 [Sync and update all]]\n"
                   "--day-format" ""
-                  "today" khalel-import-time-delta)
+                  "today" khalel-import-time-delta)))
     (save-excursion
+      (with-current-buffer err
+        (goto-char (point-max))
+        (insert-file-contents errfn))
       (with-current-buffer dst
           ;; cosmetic fix for all-day events w/o start or end times:
           ;; remove spaces after dates
@@ -195,7 +206,9 @@ alarms or settings for repeating events."
           (message "Imported %d future events from khal into %s"
                    (length (org-map-entries nil nil nil))
                    khalel-import-org-file)))))
-    (kill-buffer dst)
+    (if (/= 0 exitval)
+        (message "khal exited with non-zero exit code; see buffer `*khal-errors*' for details.")
+      (kill-buffer dst))
     ;; revert any buffer visisting the file
     (let ((buf (find-buffer-visiting khalel-import-org-file)))
       (when buf (with-current-buffer buf (revert-buffer :ignore-auto :noconfirm))))))
@@ -209,7 +222,9 @@ for details of the supported fields.
 
 Note that the UID used in the ics file is based upon but not
 identical to the ID of the org entry. Export of imported
-entries will likely result in duplicates in the calendar."
+entries will likely result in duplicates in the calendar.
+
+Return t on success and nil otherwise."
   (interactive)
   (save-excursion
     ;; org-icalendar-export-to-ics doesn't reliably export the full event when
@@ -222,9 +237,9 @@ entries will likely result in duplicates in the calendar."
          (org-icalendar-use-scheduled '(event-if-not-todo))
          (khal-bin (or khalel-khal-command
                        (executable-find "khal")))
-         (path (file-name-directory
-                (buffer-file-name
-                 (buffer-base-buffer))))
+         (capturefn (buffer-file-name
+                 (buffer-base-buffer)))
+         (path (file-name-directory capturefn))
          (entriescal (org-entry-get nil "calendar"))
          (calendar (or
                     (when (and entriescal (string-match "[^[:blank:]]" entriescal)) entriescal)
@@ -232,42 +247,50 @@ entries will likely result in duplicates in the calendar."
          ;; export to ics
          (ics (khalel--sanitize-ics
           (org-icalendar-export-to-ics nil nil 't)))
-         ;; call khal import
+         ;; call khal import only if ics verification succeeds
          (import
-          (with-temp-buffer
-            (list
-             :exit-status
-             (if calendar
-                 (call-process khal-bin nil t nil
-                               "import" "-a" calendar
-                               "--batch"
-                               (concat path ics))
-               (call-process khal-bin nil t nil
-                             "import"
-                             "--batch"
-                             (concat path ics)))
-             :output
-             (buffer-string)))))
+          (or (khalel--verify-exported-ics ics)
+              (with-temp-buffer
+                (list
+                 :process khal-bin
+                 :exit-status
+                 (if calendar
+                     (call-process khal-bin nil t nil
+                                   "import" "-a" calendar
+                                   "--batch"
+                                   (concat path ics))
+                   (call-process khal-bin nil t nil
+                                 "import"
+                                 "--batch"
+                                 (concat path ics)))
+                 :output
+                 (buffer-string))))))
       (widen)
-      (when
-          (/= 0 (plist-get import :exit-status))
-        (let ((buf (generate-new-buffer "*khal-errors*")))
-          (khalel--make-temp-window buf 16)
-          (with-current-buffer buf
-          (insert
-           (format
-            "%s failed importing %s into calendar '%s' and exited with status %d: %s\n"
-            khal-bin
-            ics
-            calendar
-            (plist-get import :exit-status)
-            (plist-get import :output)))
-          (insert "Once the issue in the captured entry are fixed, you can re-run \
-the export by calling `khalel-export-org-subtree-to-calendar'")
-          (special-mode)))
-        ;; show captured file to fix issues
-        (find-file (buffer-file-name
-                    (buffer-base-buffer)))))))
+      (let ((exitstat (plist-get import :exit-status)))
+        (when
+            (/= 0 exitstat)
+          (let ((buf (generate-new-buffer "*khalel-capture-errors*")))
+            (khalel--make-temp-window buf 16)
+            (with-current-buffer buf
+              (insert
+               (message
+                (format
+                 "%s failed on %s for calendar '%s' and exited with status %d\n"
+                 (plist-get import :process)
+                 ics
+                 calendar
+                 exitstat)))
+              (insert "\n" (plist-get import :output) "\n")
+              (insert
+               (format
+               "Once the issues in the captured entry (%s) \
+are fixed, you can re-run the export \
+by calling `khalel-export-org-subtree-to-calendar'"
+               capturefn))
+              (special-mode)))
+          ;; show captured file to fix issues
+          (find-file capturefn))
+        (zerop exitstat)))))
 
 
 (defun khalel-add-capture-template (&optional key)
@@ -327,14 +350,29 @@ Works on imported events and used their ID to search for the
 ;;;; Functions
 (defun khalel--make-temp-file ()
   "Create and visit a temporary file for capturing and exporting events."
-  (find-file (make-temp-file "khalel-capture" nil ".org")))
+  (set-buffer (find-file-noselect (make-temp-file "khalel-capture" nil ".org")))
+  ;; mark buffer as new and appropriate to kill after capture process.
+  (org-capture-put :new-buffer t)
+  (org-capture-put :kill-buffer t))
 
 (defun khalel--capture-finalize-calendar-export ()
   "Export current event capture.
 To be added as hook to `org-capture-before-finalize-hook'."
   (let ((key  (plist-get org-capture-plist :key)))
-    (when (and (not org-note-abort) (equal key khalel-capture-key))
-      (khalel-export-org-subtree-to-calendar))))
+    (when (and
+           (not org-note-abort)
+           (equal key khalel-capture-key))
+      (if
+          (not (khalel-export-org-subtree-to-calendar))
+          ;; export finished with non-zero exit status,
+          ;; do not clean up buffer/wconf to leave error msg intact and visible
+          (progn
+            (org-capture-put :new-buffer nil)
+            (org-capture-put :kill-buffer nil)
+            (org-capture-put :return-to-wconf (current-window-configuration)))
+        (when
+            khalel-update-upcoming-events-after-capture
+          (khalel-import-upcoming-events))))))
 
 (defun khalel--sanitize-ics (ics)
   "Remove some modifications to data fields in ICS file.
@@ -352,6 +390,23 @@ here where appropriate for our use case."
     (while (re-search-forward "^\\(DESCRIPTION:[[:blank:]]*\\)S: " nil t)
       (replace-match "\\1" nil nil)))
   ics)
+
+
+(defun khalel--verify-exported-ics (ics)
+  "Check the exported ICS file for potential issues.
+
+Return a plist with details of problems or nil if no issues were found."
+  (let ((result nil))
+  (with-temp-buffer
+    (insert-file-contents ics)
+    (goto-char (point-min))
+    ;; make sure that the file contains a VEVENT
+    (when (not (re-search-forward "^BEGIN:VEVENT" nil t))
+      (setq result "`org-icalendar-export-to-ics' did not produce a VEVENT. Please check that the org heading contains a valid 'SCHEDULED: <TIMESTAMP>' line right after the heading.")))
+  (and result (list
+               :exit-status 1
+               :process "org-icalendar-export-to-ics output verification"
+               :output result))))
 
 (defun khalel--get-buffer-content-list ()
   "Copy the entire content of each subtree of the current buffer into a list and return it."

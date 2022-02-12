@@ -1,0 +1,2 @@
+;;; Generated package description from khalel.el  -*- no-byte-compile: t -*-
+(define-package "khalel" "20211114.1233" "Import, edit and create calendar events through khal" '((emacs "27.1")) :commit "a0503498ae43a50157549c661381d94578ad2bd7" :authors '(("Hanno Perrey <http://gitlab.com/hperrey>")) :maintainer '("Hanno Perrey" . "hanno@hoowl.se") :keywords '("event" "calendar" "ics" "khal") :url "https://gitlab.com/hperrey/khalel")

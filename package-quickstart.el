@@ -16429,10 +16429,10 @@ Display the template of a media-type
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/khalel-20211003.1150/khalel-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/khalel-20211114.1233/khalel-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/khalel-20211003.1150/khalel-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/khalel-20211114.1233/khalel-autoloads.el") (car load-path))))
 
 
 

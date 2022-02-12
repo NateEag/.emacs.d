@@ -105,6 +105,17 @@ backward through lists, which is useful to move into special.
 
 ;;;***
 
+;;;### (autoloads nil "lispy-occur" "lispy-occur.el" (0 0 0 0))
+;;; Generated autoloads from lispy-occur.el
+
+(autoload 'lispy-occur "lispy-occur" "\
+Select a line within current top level sexp.
+See `lispy-occur-backend' for the selection back end." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-occur" '("lispy-")))
+
+;;;***
+
 ;;;### (autoloads nil "lispy-tags" "lispy-tags.el" (0 0 0 0))
 ;;; Generated autoloads from lispy-tags.el
 

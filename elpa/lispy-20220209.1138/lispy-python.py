@@ -45,6 +45,7 @@ class Stack:
     line_numbers = {}
     def __init__(self, tb):
         self.stack = []
+        self.stack_idx = 0
         while tb:
             name = tb.tb_frame.f_code.co_name
             fname = tb.tb_frame.f_code.co_filename
@@ -55,7 +56,8 @@ class Stack:
             self.stack.append((fname, lineno, tb.tb_frame))
             tb = tb.tb_next
         self.stack_top = len(self.stack) - 1
-        self.set_frame(self.stack_top)
+        if self.stack_top >= 0:
+            self.set_frame(self.stack_top)
 
     def frame_string(self, i):
         (fname, line, f) = self.stack[i]
@@ -73,29 +75,30 @@ class Stack:
         return "\n".join(frames)
 
     def set_frame(self, i):
-        f = self.stack[i][2]
-        self.stack_idx = i
-        tf = top_level()
-        tf.f_globals["lnames"] = f.f_locals.keys()
-        for (k, v) in f.f_locals.items():
-            tf.f_globals[k] = v
-        for (k, v) in f.f_globals.items():
-            tf.f_globals[k] = v
+        if i >= 0:
+            f = self.stack[i][2]
+            self.stack_idx = i
+            tf = top_level()
+            tf.f_globals["lnames"] = f.f_locals.keys()
+            for (k, v) in f.f_locals.items():
+                tf.f_globals[k] = v
+            for (k, v) in f.f_globals.items():
+                tf.f_globals[k] = v
 
-        print(self.frame_string(self.stack_idx))
+            print(self.frame_string(self.stack_idx))
 
     def up(self, delta = 1):
         if self.stack_idx <= 0:
-            print("top frame already")
-            print(self.frame_string(self.stack_idx))
+            if self.stack:
+                print(self.frame_string(self.stack_idx))
         else:
             self.stack_idx = max(self.stack_idx - delta, 0)
             self.set_frame(self.stack_idx)
 
     def down(self, delta = 1):
         if self.stack_idx >= self.stack_top:
-            print("bottom frame already")
-            print(self.frame_string(self.stack_idx))
+            if self.stack:
+                print(self.frame_string(self.stack_idx))
         else:
             self.stack_idx = min(self.stack_idx + delta, self.stack_top)
             self.set_frame(self.stack_idx)
@@ -108,7 +111,10 @@ class Autocall:
         self.f(n)
 
     def __repr__(self):
-        self.f()
+        try:
+            self.f()
+        except:
+            pass
         return ""
 
 #* Functions
@@ -216,7 +222,7 @@ def print_elisp(obj, end="\n"):
         for (k, v) in obj:
             print_elisp((k, v), end="\n")
         print(")")
-    elif isinstance(obj, collections.KeysView):
+    elif isinstance(obj, collections.abc.KeysView):
         print_elisp(list(obj))
     elif isinstance(obj, int):
         print(obj)
@@ -228,6 +234,8 @@ def print_elisp(obj, end="\n"):
                     print_elisp(x)
                 print(")")
             elif type(obj) is str:
+                # quote strings?
+                # print("\"'" + re.sub("\"", "\\\"", obj) + "'\"", end=" ")
                 print('"' + re.sub("\"", "\\\"", obj) + '"', end=" ")
             else:
                 print('"' +  repr(obj) + '"', end=" ")
@@ -235,7 +243,7 @@ def print_elisp(obj, end="\n"):
             print('nil', end=end)
 
 def argspec(sym):
-    arg_info = inspect.getargspec(sym)
+    arg_info = inspect.getfullargspec(sym)
     if arg_info:
         di = arg_info._asdict()
         fn = sym.__init__ if type(sym) is type else sym
@@ -266,8 +274,8 @@ def arglist_jedi(line, column, filename):
         return delete('', mapcar(lambda x: str(x.name), defs[0].params))
 
 def jedi_completions(line):
-    script=jedi.Script(source=line, line=1, column=len(line), sys_path=sys.path)
-    return [_x_.name for _x_ in script.completions()]
+    script=jedi.Script(code=line)
+    return [_x_.name for _x_ in script.complete()]
 
 def is_assignment(code):
     ops = ast.parse(code).body
@@ -336,3 +344,9 @@ def pprint(x):
             print("{" + ",\n ".join([str(k) + ": " + str(v) for (k, v) in x.items()]) + "}")
         else:
             pp1.pprint(x)
+
+def step_in(fn, *args):
+    spec = inspect.getargspec(fn)
+    f_globals = top_level().f_globals
+    for (arg_name, arg_val) in zip(spec.args, args):
+        f_globals[arg_name] = arg_val

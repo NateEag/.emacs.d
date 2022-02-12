@@ -9060,10 +9060,10 @@ buffer, if 'message issue a message, if nil just return a list of values.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ansible-20210103.543/ansible-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ansible-20220114.45/ansible-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ansible-20210103.543/ansible-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ansible-20220114.45/ansible-autoloads.el") (car load-path))))
 
 
 

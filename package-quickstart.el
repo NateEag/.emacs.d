@@ -7610,71 +7610,18 @@ ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20220210.1543/racket-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20220210.1543/racket-mode-autoloads.el") (car load-path))))
 
 
 
-(autoload 'faceup-view-buffer "faceup" "\
-Display the faceup representation of the current buffer.
-
-\(fn)" t nil)
-
-(autoload 'faceup-write-file "faceup" "\
-Save the faceup representation of the current buffer to the file FILE-NAME.
-
-Unless a name is given, the file will be named xxx.faceup, where
-xxx is the file name associated with the buffer.
-
-If optional second arg CONFIRM is non-nil, this function
-asks for confirmation before overwriting an existing file.
-Interactively, confirmation is required unless you supply a prefix argument.
-
-\(fn &optional FILE-NAME CONFIRM)" t nil)
-
-(autoload 'faceup-render-view-buffer "faceup" "\
-Convert BUFFER containing Faceup markup to a new buffer and display it.
-
-\(fn &optional BUFFER)" t nil)
-
-(autoload 'faceup-clean-buffer "faceup" "\
-Remove faceup markup from buffer.
-
-\(fn)" t nil)
-
-(autoload 'faceup-defexplainer "faceup" "\
-Defines an Ert explainer function for FUNCTION.
-
-FUNCTION must return an explanation when the test fails and
-`faceup-test-explain' is set.
-
-\(fn FUNCTION)" nil t)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "faceup" '("faceup-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el") (car load-path))))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-back-end" '("racket-")))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pos-tip" '("pos-tip-")))
-
-
-)
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237/racket-mode-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237/racket-mode-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-url")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-")))
 
 
 
@@ -7684,21 +7631,24 @@ Fill a buffer with data to make a Racket Mode bug report." t nil)
 
 
 (defvar racket-start-back-end-hook nil "\
-Hook run after `racket-start-back-end'.")
+Hook run after `racket-start-back-end' finishes successfully.")
+
+(defvar racket-stop-back-end-hook nil "\
+Hook run before `racket-stop-back-end'.")
 
 (autoload 'racket-start-back-end "racket-cmd" "\
-Start the back end process used by Racket Mode.
+Start a back end process used by Racket Mode.
 
-If the process is already started, this command will stop and restart it.
+If a process is already started, this command will stop and restart it.
 
-As the final step, runs the hook `racket-start-back-end-hook'." t nil)
+When successful runs the hook `racket-start-back-end-hook'." t nil)
 
 (autoload 'racket-stop-back-end "racket-cmd" "\
-Stop the back end process used by Racket Mode.
+Stop a back end process used by Racket Mode.
 
-If the process is not already started, this does nothing." t nil)
+Before doing anything runs the hook `racket-stop-back-end-hook'." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket--")))
 
 
 
@@ -7707,6 +7657,10 @@ If the process is not already started, this does nothing." t nil)
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-common" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-company-doc" '("racket--")))
 
 
 
@@ -7839,18 +7793,19 @@ Show a Racket REPL buffer in some window.
 *IMPORTANT*
 
 The main, intended use of Racket Mode's REPL is that you
-`find-file' some specific .rkt file, then `racket-run' it. The
-REPL will then match that file.
+`find-file' some specific .rkt file, then run it using
+`racket-run' or `racket-run-module-at-point'. The resulting REPL
+will correspond to those definitions and match your expectations.
 
-If the REPL isn't running, and you want to start it for no file
-in particular? Then you could use this command. But the resulting
+If you really want to start a REPL for no file in particular,
+then you could use this `racket-repl' command. But the resulting
 REPL will have a minimal \"#lang racket/base\" namespace. You
 could enter \"(require racket)\" if you want the equivalent of
 \"#lang racket\". You could also \"(require racket/enter)\" if
 you want things like \"enter!\". But in some sense you'd be
-\"using it wrong\". If you really don't want to use Racket Mode's
-REPL as intended, then you might as well use a plain Emacs shell
-buffer to run command-line Racket.
+\"using it wrong\". If you actually don't want to use Racket
+Mode's REPL as intended, then consider using a plain Emacs
+`shell' buffer to run command-line Racket.
 
 \(fn &optional NOSELECT)" t nil)
 
@@ -7913,8 +7868,10 @@ simply the outermost, file module.
 
 
 
+(autoload 'racket-call-racket-repl-buffer-name-function "racket-repl-buffer-name" nil nil nil)
+
 (autoload 'racket-repl-buffer-name-shared "racket-repl-buffer-name" "\
-All `racket-mode' edit buffers share one `racket-repl-mode' buffer.
+All `racket-mode' edit buffers share one `racket-repl-mode' buffer per back end.
 
 A value for the variable `racket-repl-buffer-name-function'." t nil)
 
@@ -7931,6 +7888,10 @@ A value for the variable `racket-repl-buffer-name-function'.
 The \"project\" is determined by `racket-project-root'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-repl-buffer-name" '("racket-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-scribble" '("racket--")))
 
 
 
@@ -8770,6 +8731,17 @@ See `prettier-mode' for more information on Prettier mode.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "prettier" '("prettier-")))
 
 
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pos-tip-20191227.1356/pos-tip-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pos-tip" '("pos-tip-")))
 
 
 )
@@ -19778,6 +19750,52 @@ Turn on fci-mode unconditionally." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/faceup-20170925.1946/faceup-autoloads.el") (car load-path))))
+
+
+
+(autoload 'faceup-view-buffer "faceup" "\
+Display the faceup representation of the current buffer.
+
+\(fn)" t nil)
+
+(autoload 'faceup-write-file "faceup" "\
+Save the faceup representation of the current buffer to the file FILE-NAME.
+
+Unless a name is given, the file will be named xxx.faceup, where
+xxx is the file name associated with the buffer.
+
+If optional second arg CONFIRM is non-nil, this function
+asks for confirmation before overwriting an existing file.
+Interactively, confirmation is required unless you supply a prefix argument.
+
+\(fn &optional FILE-NAME CONFIRM)" t nil)
+
+(autoload 'faceup-render-view-buffer "faceup" "\
+Convert BUFFER containing Faceup markup to a new buffer and display it.
+
+\(fn &optional BUFFER)" t nil)
+
+(autoload 'faceup-clean-buffer "faceup" "\
+Remove faceup markup from buffer.
+
+\(fn)" t nil)
+
+(autoload 'faceup-defexplainer "faceup" "\
+Defines an Ert explainer function for FUNCTION.
+
+FUNCTION must return an explanation when the test fails and
+`faceup-test-explain' is set.
+
+\(fn FUNCTION)" nil t)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "faceup" '("faceup-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/expand-region-20200304.1839/expand-region-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -24879,14 +24897,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220210.1512" "/Users/neagleson/.emacs.d/elpa/evil-20220202.1351" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20220130.1941" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220210.1543" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220210.1512" "/Users/neagleson/.emacs.d/elpa/evil-20220202.1351" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20220130.1941" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
          Info-directory-list)))
 
 ;; Local Variables:

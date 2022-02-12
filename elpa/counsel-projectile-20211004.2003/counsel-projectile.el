@@ -1,14 +1,14 @@
 ;;; counsel-projectile.el --- Ivy integration for Projectile -*- lexical-binding: t -*-
 
-;; Copyright (C) 2016-2019 Eric Danan
+;; Copyright (C) 2016-2021 Eric Danan
 
 ;; Author: Eric Danan
 ;; URL: https://github.com/ericdanan/counsel-projectile
-;; Package-Version: 20201015.1109
-;; Package-Commit: 06b03c1080d3ccc3fa9b9c41b1ccbcf13f058e4b
+;; Package-Version: 20211004.2003
+;; Package-Commit: e30150792a96968f55f34638cbfe63eaa30839cc
 ;; Keywords: project, convenience
-;; Version: 0.3.1
-;; Package-Requires: ((counsel "0.13.0") (projectile "2.0.0"))
+;; Version: 0.3.2
+;; Package-Requires: ((counsel "0.13.4") (projectile "2.5.0"))
 
 ;; This file is NOT part of GNU Emacs.
 

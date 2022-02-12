@@ -22553,10 +22553,10 @@ Local bindings (`counsel-mode-map'):
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-projectile-20201015.1109/counsel-projectile-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-projectile-20211004.2003/counsel-projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-projectile-20201015.1109/counsel-projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-projectile-20211004.2003/counsel-projectile-autoloads.el") (car load-path))))
 
 
 

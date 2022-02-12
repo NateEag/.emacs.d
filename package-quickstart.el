@@ -289,10 +289,10 @@ See `writeroom-mode' for more information on Writeroom mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654/with-editor-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034/with-editor-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654/with-editor-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034/with-editor-autoloads.el") (car load-path))))
 
 
 
@@ -440,10 +440,10 @@ Minor mode to provide key-bindings for web-mode-edit-element functions
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330/dash-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149/dash-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330/dash-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149/dash-autoloads.el") (car load-path))))
 
 
 
@@ -2577,10 +2577,10 @@ if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20220130.1941/transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20220130.1941/transient-autoloads.el") (car load-path))))
 
 
 
@@ -2638,7 +2638,7 @@ See info node `(transient)Modifying Existing Transients'.
 
 (function-put 'transient-remove-suffix 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("transient-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("magit--fit-window-to-buffer" "transient-")))
 
 
 
@@ -12514,10 +12514,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20220130.2254/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20220130.2254/git-commit-autoloads.el") (car load-path))))
 
 
 (put 'git-commit-major-mode 'safe-local-variable
@@ -12531,11 +12531,13 @@ Add a new release to the change log." t nil)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-commit" '("git-commit-" "global-git-commit-mode")))
 
 
+
+
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007/magit-section-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007/magit-section-autoloads.el") (car load-path))))
 
 
 
@@ -12545,10 +12547,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958/magit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231/magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958/magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231/magit-autoloads.el") (car load-path))))
 
 
 
@@ -12589,7 +12591,7 @@ C-x g           magit-status
 C-x M-g         magit-dispatch
 C-c M-g         magit-file-dispatch
 
-These bindings may be added when `after-init-hook' is called.
+These bindings may be added when `after-init-hook' is run.
 Each binding is added if and only if at that time no other key
 is bound to the same command and no other command is bound to
 the same key.  In other words we try to avoid adding bindings
@@ -12603,8 +12605,14 @@ is loaded or autoloaded) and to increase the likelihood that
 all the potentially conflicting user bindings have already
 been added.
 
-Setting this variable after the hook has already been called
-has no effect.
+To set this variable use either `setq' or the Custom interface.
+Do not use the function `customize-set-variable' because doing
+that would cause Magit to be loaded immediately when that form
+is evaluated (this differs from `custom-set-variables', which
+doesn't load the libraries that define the customized variables).
+
+Setting this variable to nil has no effect if that is done after
+the key bindings have already been added.
 
 We recommend that you bind \"C-c g\" instead of \"C-c M-g\" to
 `magit-file-dispatch'.  The former is a much better binding
@@ -12619,6 +12627,9 @@ Also see info node `(magit)Commands for Buffers Visiting Files'.")
 
 (if after-init-time (magit-maybe-define-global-key-bindings) (add-hook 'after-init-hook 'magit-maybe-define-global-key-bindings t))
  (autoload 'magit-dispatch "magit" nil t)
+
+(autoload 'magit-info "magit" "\
+Show Magit's Info manual." t nil)
  (autoload 'magit-run "magit" nil t)
 
 (autoload 'magit-git-command "magit" "\
@@ -12967,6 +12978,32 @@ and also rename the respective reflog file.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-branch" '("magit-")))
 
 
+ (autoload 'magit-bundle "magit-bundle" nil t)
+ (autoload 'magit-bundle-import "magit-bundle" nil t)
+
+(autoload 'magit-bundle-create-tracked "magit-bundle" "\
+Create and track a new bundle.
+
+\(fn FILE TAG BRANCH REFS ARGS)" t nil)
+
+(autoload 'magit-bundle-update-tracked "magit-bundle" "\
+Update a bundle that is being tracked using TAG.
+
+\(fn TAG)" t nil)
+
+(autoload 'magit-bundle-verify "magit-bundle" "\
+Check whether FILE is valid and applies to the current repository.
+
+\(fn FILE)" t nil)
+
+(autoload 'magit-bundle-list-heads "magit-bundle" "\
+List the refs in FILE.
+
+\(fn FILE)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-bundle" '("magit-")))
+
+
  (autoload 'magit-clone "magit-clone" nil t)
 
 (autoload 'magit-clone-regular "magit-clone" "\
@@ -13008,6 +13045,11 @@ Then show the status buffer for the new repository.
 (autoload 'magit-clone-mirror "magit-clone" "\
 Create a mirror of REPOSITORY in DIRECTORY.
 Then show the status buffer for the new repository.
+
+\(fn REPOSITORY DIRECTORY ARGS)" t nil)
+
+(autoload 'magit-clone-sparse "magit-clone" "\
+Clone REPOSITORY into DIRECTORY and create a sparse checkout.
 
 \(fn REPOSITORY DIRECTORY ARGS)" t nil)
 
@@ -13344,6 +13386,13 @@ Show log for all marked files, or the current file.
 
 \(fn &optional FOLLOW)" t nil)
 
+(autoload 'magit-dired-am-apply-patches "magit-extras" "\
+In Dired, apply the marked (or next ARG) files as patches.
+If inside a repository, then apply in that.  Otherwise prompt
+for a repository.
+
+\(fn REPO &optional ARG)" t nil)
+
 (autoload 'magit-do-async-shell-command "magit-extras" "\
 Open FILE with `dired-do-async-shell-command'.
 Interactively, open the file at point.
@@ -13388,6 +13437,15 @@ with two prefix arguments remove ignored files only.
 \(git clean -f -d [-x|-X])
 
 \(fn &optional ARG)" t nil)
+
+(autoload 'magit-generate-changelog "magit-extras" "\
+Insert ChangeLog entries into the current buffer.
+
+The entries are generated from the diff being committed.
+If prefix argument, AMENDING, is non-nil, include changes
+in HEAD as well as staged changes in the diff to check.
+
+\(fn &optional AMENDING)" t nil)
 
 (autoload 'magit-add-change-log-entry "magit-extras" "\
 Find change log file and add date entry and item for current change.
@@ -13531,6 +13589,27 @@ When `magit-copy-revision-abbreviated' is non-nil, save the
 abbreviated revision to the `kill-ring' and the
 `magit-revision-stack'." t nil)
 
+(autoload 'magit-display-repository-buffer "magit-extras" "\
+Display a Magit buffer belonging to the current Git repository.
+The buffer is displayed using `magit-display-buffer', which see.
+
+\(fn BUFFER)" t nil)
+
+(autoload 'magit-switch-to-repository-buffer "magit-extras" "\
+Switch to a Magit buffer belonging to the current Git repository.
+
+\(fn BUFFER)" t nil)
+
+(autoload 'magit-switch-to-repository-buffer-other-window "magit-extras" "\
+Switch to a Magit buffer belonging to the current Git repository.
+
+\(fn BUFFER)" t nil)
+
+(autoload 'magit-switch-to-repository-buffer-other-frame "magit-extras" "\
+Switch to a Magit buffer belonging to the current Git repository.
+
+\(fn BUFFER)" t nil)
+
 (autoload 'magit-abort-dwim "magit-extras" "\
 Abort current operation.
 Depending on the context, this will abort a merge, a rebase, a
@@ -13570,16 +13649,7 @@ removed on the respective remote." t nil)
 
 (autoload 'magit-fetch-all-no-prune "magit-fetch" "\
 Fetch from all remotes." t nil)
-
-(autoload 'magit-fetch-modules "magit-fetch" "\
-Fetch all submodules.
-
-Option `magit-fetch-modules-jobs' controls how many submodules
-are being fetched in parallel.  Also fetch the super-repository,
-because `git-fetch' does not support not doing that.  With a
-prefix argument fetch all remotes.
-
-\(fn &optional ALL)" t nil)
+ (autoload 'magit-fetch-modules "magit-fetch" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-fetch" '("magit-")))
 
@@ -13778,6 +13848,19 @@ one or more revs read from the minibuffer.
 
 \(fn REVS &optional ARGS FILES)" t nil)
 
+(autoload 'magit-log-head "magit-log" "\
+Show log for `HEAD'.
+
+\(fn &optional ARGS FILES)" t nil)
+
+(autoload 'magit-log-related "magit-log" "\
+Show log for the current branch, its upstream and its push target.
+When the upstream is a local branch, then also show its own
+upstream.  When `HEAD' is detached, then show log for that, the
+previously checked out branch and its upstream and push-target.
+
+\(fn REVS &optional ARGS FILES)" t nil)
+
 (autoload 'magit-log-other "magit-log" "\
 Show log for one or more revs read from the minibuffer.
 The user can input any revision or revisions separated by a
@@ -13786,11 +13869,6 @@ representation of the commit at point, are available as
 completion candidates.
 
 \(fn REVS &optional ARGS FILES)" t nil)
-
-(autoload 'magit-log-head "magit-log" "\
-Show log for `HEAD'.
-
-\(fn &optional ARGS FILES)" t nil)
 
 (autoload 'magit-log-branches "magit-log" "\
 Show log for all local branches and `HEAD'.
@@ -13912,7 +13990,7 @@ provided the respective remote branch already exists, ensuring
 that the respective pull-request (if any) won't get stuck on some
 obsolete version of the commits that are being merged.  Finally
 if `forge-branch-pullreq' was used to create the merged branch,
-branch, then also remove the respective remote branch.
+then also remove the respective remote branch.
 
 \(fn BRANCH &optional ARGS)" t nil)
 
@@ -14176,6 +14254,14 @@ Unset the local representation of REMOTE's default branch.
 Delete the symbolic-ref \"refs/remotes/<remote>/HEAD\".
 
 \(fn REMOTE)" t nil)
+
+(autoload 'magit-remote-unshallow "magit-remote" "\
+Convert a shallow remote into a full one.
+If only a single refspec is set and it does not contain a
+wildcard, then also offer to replace it with the standard
+refspec.
+
+\(fn REMOTE)" t nil)
  (autoload 'magit-remote-configure "magit-remote" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-remote" '("magit-")))
@@ -14287,7 +14373,7 @@ process manually.
 Move COMMITS from the current branch onto another existing BRANCH.
 Remove COMMITS from the current branch and stay on that branch.
 If a conflict occurs, then you have to fix that and finish the
-process manually.
+process manually.  `HEAD' is allowed to be detached initially.
 
 \(fn COMMITS BRANCH &optional ARGS)" t nil)
 
@@ -14406,6 +14492,42 @@ Abort the current rebase operation, restoring the original branch." t nil)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-sequence" '("magit-")))
 
 
+ (autoload 'magit-sparse-checkout "magit-sparse-checkout" nil t)
+
+(autoload 'magit-sparse-checkout-enable "magit-sparse-checkout" "\
+Convert the working tree to a sparse checkout.
+
+\(fn &optional ARGS)" t nil)
+
+(autoload 'magit-sparse-checkout-set "magit-sparse-checkout" "\
+Restrict working tree to DIRECTORIES.
+To extend rather than override the currently configured
+directories, call `magit-sparse-checkout-add' instead.
+
+\(fn DIRECTORIES)" t nil)
+
+(autoload 'magit-sparse-checkout-add "magit-sparse-checkout" "\
+Add DIRECTORIES to the working tree.
+To override rather than extend the currently configured
+directories, call `magit-sparse-checkout-set' instead.
+
+\(fn DIRECTORIES)" t nil)
+
+(autoload 'magit-sparse-checkout-reapply "magit-sparse-checkout" "\
+Reapply the sparse checkout rules to the working tree.
+Some operations such as merging or rebasing may need to check out
+files that aren't included in the sparse checkout.  Call this
+command to reset to the sparse checkout state." t nil)
+
+(autoload 'magit-sparse-checkout-disable "magit-sparse-checkout" "\
+Convert sparse checkout to full checkout.
+Note that disabling the sparse checkout does not clear the
+configured directories.  Call `magit-sparse-checkout-enable' to
+restore the previous sparse checkout." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-sparse-checkout" '("magit-sparse-checkout-")))
+
+
  (autoload 'magit-stash "magit-stash" nil t)
 
 (autoload 'magit-stash-both "magit-stash" "\
@@ -14460,11 +14582,20 @@ One prefix argument is equivalent to `--include-untracked'
 while two prefix arguments are equivalent to `--all'.
 
 \(fn &optional INCLUDE-UNTRACKED)" t nil)
+ (autoload 'magit-stash-push "magit-stash" nil t)
 
 (autoload 'magit-stash-apply "magit-stash" "\
 Apply a stash to the working tree.
 Try to preserve the stash index.  If that fails because there
 are staged changes, apply without preserving the stash index.
+
+\(fn STASH)" t nil)
+
+(autoload 'magit-stash-pop "magit-stash" "\
+Apply a stash to the working tree and remove it from stash list.
+Try to preserve the stash index.  If that fails because there
+are staged changes, apply without preserving the stash index
+and forgo removing the stash.
 
 \(fn STASH)" t nil)
 
@@ -14565,6 +14696,22 @@ also contains other useful hints.")
 
 (autoload 'magit-status-here "magit-status" "\
 Like `magit-status' but with non-nil `magit-status-goto-file-position'." t nil)
+
+(autoload 'magit-status-quick "magit-status" "\
+Show the status of the current Git repository, maybe without refreshing.
+
+If the status buffer of the current Git repository exists but
+isn't being displayed in the selected frame, then display it
+without refreshing it.
+
+If the status buffer is being displayed in the selected frame,
+then also refresh it.
+
+Prefix arguments have the same meaning as for `magit-status',
+and additionally cause the buffer to be refresh.
+
+To use this function instead of `magit-status', add this to your
+init file: (global-set-key (kbd \"C-x g\") 'magit-status-quick)." t nil)
 
 (autoload 'magit-status-setup-buffer "magit-status" "\
 
@@ -14699,13 +14846,15 @@ Offer to delete tags missing locally from REMOTE, and vice versa.
 \(fn TAGS REMOTE-TAGS REMOTE)" t nil)
 
 (autoload 'magit-tag-release "magit-tag" "\
-Create a release tag.
+Create a release tag for `HEAD'.
 
 Assume that release tags match `magit-release-tag-regexp'.
 
-First prompt for the name of the new tag using the highest
-existing tag as initial input and leaving it to the user to
-increment the desired part of the version string.
+If `HEAD's message matches `magit-release-commit-regexp', then
+base the tag on the version string specified by that.  Otherwise
+prompt for the name of the new tag using the highest existing
+tag as initial input and leaving it to the user to increment the
+desired part of the version string.
 
 If `--annotate' is enabled, then prompt for the message of the
 new tag.  Base the proposed tag message on the message of the
@@ -14736,12 +14885,12 @@ See info node `(magit)Debugging Tools' for more information." t nil)
 
 (advice-add 'Info-follow-nearest-node :around 'Info-follow-nearest-node--magit-gitman)
 
+(advice-add 'org-man-export :around 'org-man-export--magit-gitman)
+
 (autoload 'org-man-export--magit-gitman "magit-utils" "\
 
 
 \(fn FN LINK DESCRIPTION FORMAT)" nil nil)
-
-(advice-add 'org-man-export :around 'org-man-export--magit-gitman)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-utils" '("magit-")))
 
@@ -24454,7 +24603,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20220130.1941" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

@@ -23079,10 +23079,10 @@ Major mode for editing ClojureC code.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20210524.832/cider-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20220211.1414/cider-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20210524.832/cider-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20220211.1414/cider-autoloads.el") (car load-path))))
 
 
 
@@ -23435,6 +23435,10 @@ current buffer's namespace.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-jar" '("cider-jar-")))
+
+
+
 (autoload 'cider-macroexpand-1 "cider-macroexpansion" "\
 Invoke \\=`macroexpand-1\\=` on the expression preceding point.
 If invoked with a PREFIX argument, use \\=`macroexpand\\=` instead of
@@ -23462,7 +23466,7 @@ variable to nil to disable the mode line entirely.")
 
 (custom-autoload 'cider-mode-line "cider-mode" t)
 
-(with-eval-after-load 'clojure-mode (easy-menu-define cider-clojure-mode-menu-open clojure-mode-map "Menu for Clojure mode.\n  This is displayed in `clojure-mode' buffers, if `cider-mode' is not active." `("CIDER" :visible (not cider-mode) ["Start a Clojure REPL" cider-jack-in-clj :help "Starts an nREPL server and connects a Clojure REPL to it."] ["Connect to a Clojure REPL" cider-connect-clj :help "Connects to a REPL that's already running."] ["Start a ClojureScript REPL" cider-jack-in-cljs :help "Starts an nREPL server and connects a ClojureScript REPL to it."] ["Connect to a ClojureScript REPL" cider-connect-cljs :help "Connects to a ClojureScript REPL that's already running."] ["Start a Clojure REPL, and a ClojureScript REPL" cider-jack-in-clj&cljs :help "Starts an nREPL server, connects a Clojure REPL to it, and then a ClojureScript REPL."] "--" ["View manual online" cider-view-manual])))
+(with-eval-after-load 'clojure-mode (easy-menu-define cider-clojure-mode-menu-open clojure-mode-map "Menu for Clojure mode.\n  This is displayed in `clojure-mode' buffers, if `cider-mode' is not active." `("CIDER" :visible (not cider-mode) ["Start a Clojure REPL" cider-jack-in-clj :help "Starts an nREPL server and connects a Clojure REPL to it."] ["Connect to a Clojure REPL" cider-connect-clj :help "Connects to a REPL that's already running."] ["Start a ClojureScript REPL" cider-jack-in-cljs :help "Starts an nREPL server and connects a ClojureScript REPL to it."] ["Connect to a ClojureScript REPL" cider-connect-cljs :help "Connects to a ClojureScript REPL that's already running."] ["Start a Clojure REPL, and a ClojureScript REPL" cider-jack-in-clj&cljs :help "Starts an nREPL server, connects a Clojure REPL to it, and then a ClojureScript REPL."] "--" ["View user manual" cider-view-manual])))
 
 (autoload 'cider-mode "cider-mode" "\
 Minor mode for REPL interaction from a Clojure buffer.

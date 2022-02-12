@@ -119,14 +119,14 @@ mode."
     (cond
      ((string= status "good")
       (let ((fingerprint (concat "0x" (plist-get sigstatus :fingerprint)))
-	    (userid (plist-get sigstatus :userid)))
-	;; If userid is present it has full or greater validity.
-	(if userid
-	    (progn
-	      (setq label (concat "Good signature by: " userid))
-	      (setq face 'notmuch-crypto-signature-good))
-	  (setq label (concat "Good signature by key: " fingerprint))
-	  (setq face 'notmuch-crypto-signature-good-key))
+	    (email-or-userid (or (plist-get sigstatus :email)
+				  (plist-get sigstatus :userid))))
+	;; If email or userid are present, they have full or greater validity.
+	(setq label (concat "Good signature by key: " fingerprint))
+	(setq face 'notmuch-crypto-signature-good-key)
+	(when email-or-userid
+	  (setq label (concat "Good signature by: " email-or-userid))
+	  (setq face 'notmuch-crypto-signature-good))
 	(setq button-action 'notmuch-crypto-sigstatus-good-callback)
 	(setq help-msg (concat "Click to list key ID 0x" fingerprint "."))))
      ((string= status "error")
@@ -164,7 +164,7 @@ mode."
 	(goto-char (point-max))
 	(insert (format "-- Key %s in message %s:\n"
 			fingerprint id))
-	(call-process notmuch-crypto-gpg-program nil t t
+	(notmuch--call-process notmuch-crypto-gpg-program nil t t
 		      "--batch" "--no-tty" "--list-keys" fingerprint))
       (recenter -1))))
 
@@ -224,7 +224,7 @@ corresponding key when the status button is pressed."
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
 	    (insert (format "--- Retrieving key %s:\n" keyid)))
-	  (let ((p (make-process
+	  (let ((p (notmuch--make-process
 		    :name "notmuch GPG key retrieval"
 		    :connection-type 'pipe
 		    :buffer buffer
@@ -240,9 +240,9 @@ corresponding key when the status button is pressed."
 	  (with-current-buffer buffer
 	    (goto-char (point-max))
 	    (insert (format "--- Retrieving key %s:\n" keyid))
-	    (call-process notmuch-crypto-gpg-program nil t t "--recv-keys" keyid)
+	    (notmuch--call-process notmuch-crypto-gpg-program nil t t "--recv-keys" keyid)
 	    (insert "\n")
-	    (call-process notmuch-crypto-gpg-program nil t t "--list-keys" keyid))
+	    (notmuch--call-process notmuch-crypto-gpg-program nil t t "--list-keys" keyid))
 	  (recenter -1))
 	(notmuch-show-refresh-view)))))
 

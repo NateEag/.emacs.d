@@ -21,6 +21,8 @@
 
 ;;; Code:
 
+(require 'seq)
+
 (require 'message)
 
 (require 'notmuch-lib)
@@ -39,16 +41,17 @@ Three types of values are permitted:
 - a string: the value of `notmuch-fcc-dirs' is the Fcc header to
   be used.
 
-- a list: the folder is chosen based on the From address of the
-  current message using a list of regular expressions and
-  corresponding folders:
+- an alist: the folder is chosen based on the From address of
+  the current message according to an alist mapping regular
+  expressions to folders or nil:
 
      ((\"Sebastian@SSpaeth.de\" . \"privat\")
       (\"spaetz@sspaeth.de\" . \"OUTBOX.OSS\")
       (\".*\" . \"defaultinbox\"))
 
-  If none of the regular expressions match the From address, no
-  Fcc header will be added.
+  If none of the regular expressions match the From address, or
+  if the cdr of the matching entry is nil, then no Fcc header
+  will be added.
 
 If `notmuch-maildir-use-notmuch-insert' is set (the default) then
 the header should be of the form \"folder +tag1 -tag2\" where
@@ -72,7 +75,8 @@ directory if it does not exist yet when sending a mail."
 	  (const :tag "No FCC header" nil)
 	  (string :tag "A single folder")
 	  (repeat :tag "A folder based on the From header"
-		  (cons regexp (string :tag "Folder"))))
+		  (cons regexp (choice (const :tag "No FCC header" nil)
+				       (string :tag "Folder")))))
   :require 'notmuch-fcc-initialization
   :group 'notmuch-send)
 
@@ -103,13 +107,14 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 	   ;; Old style - no longer works.
 	   (error "Invalid `notmuch-fcc-dirs' setting (old style)"))
 	  ((listp notmuch-fcc-dirs)
-	   (or (seq-some (let ((from (message-field-value "From")))
-			   (pcase-lambda (`(,regexp . ,folder))
-			     (and (string-match-p regexp from)
-				  folder)))
-			 notmuch-fcc-dirs)
-	       (progn (message "No Fcc header added.")
-		      nil)))
+	   (if-let ((match (seq-some (let ((from (message-field-value "From")))
+				       (pcase-lambda (`(,regexp . ,folder))
+					 (and (string-match-p regexp from)
+					      (cons t folder))))
+				     notmuch-fcc-dirs)))
+               (cdr match)
+             (message "No Fcc header added.")
+	     nil))
 	  (t
 	   (error "Invalid `notmuch-fcc-dirs' setting (neither string nor list)")))))
     (when subdir
@@ -144,6 +149,7 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 	 (buf (current-buffer))
 	 (mml-externalize-attachments message-fcc-externalize-attachments))
      (with-current-buffer (get-buffer-create " *message temp*")
+       (message-clone-locals buf) ;; for message-encoded-mail-cache
        (erase-buffer)
        (insert-buffer-substring buf)
        ,@body)))
@@ -153,7 +159,10 @@ Otherwise set it according to `notmuch-fcc-dirs'."
 
 This should be called on a temporary copy.
 This is taken from the function message-do-fcc."
-  (message-encode-message-body)
+  (if (not message-encoded-mail-cache)
+      (message-encode-message-body)
+    (erase-buffer)
+    (insert message-encoded-mail-cache))
   (save-restriction
     (message-narrow-to-headers)
     (mail-encode-encoded-word-buffer))
@@ -174,12 +183,12 @@ This is a rearranged version of message mode's message-do-fcc."
 	(setq file (message-fetch-field "fcc" t)))
       (when file
 	(with-temporary-notmuch-message-buffer
+	 (notmuch-maildir-setup-message-for-saving)
 	 (save-restriction
 	   (message-narrow-to-headers)
 	   (while (setq file (message-fetch-field "fcc" t))
 	     (push file files)
 	     (message-remove-header "fcc" nil t)))
-	 (notmuch-maildir-setup-message-for-saving)
 	 ;; Process FCC operations.
 	 (mapc #'notmuch-fcc-handler files)
 	 (kill-buffer (current-buffer)))))))

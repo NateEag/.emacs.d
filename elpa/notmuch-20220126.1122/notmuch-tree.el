@@ -74,24 +74,55 @@
       notmuch-unthreaded-show-out
     notmuch-tree-show-out))
 
+(defcustom notmuch-tree-thread-symbols
+  '((prefix . " ")
+    (top . "─")
+    (top-tee . "┬")
+    (vertical . "│")
+    (vertical-tee . "├")
+    (bottom . "╰")
+    (arrow . "►"))
+  "Strings used to draw trees in notmuch tree results.
+Symbol keys denote where the corresponding string value is used:
+`prefix' is used at the top of the tree, followed by `top' if it
+has no children or `top-tee' if it does; `vertical' is a bar
+connecting with a response down the list skipping the current
+one, while `vertical-tee' marks the current message as a reply to
+the previous one; `bottom' is used at the bottom of threads.
+Finally, the `arrrow' string in the list is used as a pointer to
+every message.
+
+Common customizations include setting `prefix' to \"-\", to see
+equal-length prefixes, and `arrow' to an empty string or to a
+different kind of arrow point."
+  :type '(alist :key-type symbol :value-type string)
+  :group 'notmuch-tree)
+
 (defcustom notmuch-tree-result-format
   `(("date" . "%12s  ")
     ("authors" . "%-20s")
-    ((("tree" . "%s")("subject" . "%s")) ." %-54s ")
+    ((("tree" . "%s")
+      ("subject" . "%s"))
+     . " %-54s ")
     ("tags" . "(%s)"))
-  "Result formatting for tree view. Supported fields are: date,
-authors, subject, tree, tags.  Tree means the thread tree
-box graphics. The field may also be a list in which case
-the formatting rules are applied recursively and then the
-output of all the fields in the list is inserted
-according to format-string.
+  "Result formatting for tree view.
 
-Note the author string should not contain
-whitespace (put it in the neighbouring fields instead).
-For example:
-        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
-                                          \(\"subject\" . \"%s\"\)\)\)"
-  :type '(alist :key-type (string) :value-type (string))
+Supported fields are: date, authors, subject, tree, tags.
+
+Tree means the thread tree box graphics. The field may
+also be a list in which case the formatting rules are
+applied recursively and then the output of all the fields
+in the list is inserted according to format-string.
+
+Note that the author string should not contain whitespace
+\(put it in the neighbouring fields instead). For example:
+    (setq notmuch-tree-result-format
+          '((\"authors\" . \"%-40s\")
+            (\"subject\" . \"%s\")))"
+  :type '(alist :key-type (choice string
+				  (alist :key-type string
+					 :value-type string))
+		:value-type string)
   :group 'notmuch-tree)
 
 (defcustom notmuch-unthreaded-result-format
@@ -99,19 +130,24 @@ For example:
     ("authors" . "%-20s")
     ((("subject" . "%s")) ." %-54s ")
     ("tags" . "(%s)"))
-  "Result formatting for unthreaded tree view. Supported fields are: date,
-authors, subject, tree, tags.  Tree means the thread tree
-box graphics. The field may also be a list in which case
-the formatting rules are applied recursively and then the
-output of all the fields in the list is inserted
-according to format-string.
+  "Result formatting for unthreaded tree view.
 
-Note the author string should not contain
-whitespace (put it in the neighbouring fields instead).
-For example:
-        (setq notmuch-tree-result-format \(\(\"authors\" . \"%-40s\"\)
-                                          \(\"subject\" . \"%s\"\)\)\)"
-  :type '(alist :key-type (string) :value-type (string))
+Supported fields are: date, authors, subject, tree, tags.
+
+Tree means the thread tree box graphics. The field may
+also be a list in which case the formatting rules are
+applied recursively and then the output of all the fields
+in the list is inserted according to format-string.
+
+Note that the author string should not contain whitespace
+\(put it in the neighbouring fields instead). For example:
+    (setq notmuch-unthreaded-result-format
+          '((\"authors\" . \"%-40s\")
+            (\"subject\" . \"%s\")))"
+  :type '(alist :key-type (choice string
+				  (alist :key-type string
+					 :value-type string))
+		:value-type string)
   :group 'notmuch-tree)
 
 (defun notmuch-tree-result-format ()
@@ -143,7 +179,7 @@ For example:
      (:foreground "dark blue"))
     (t
      (:bold t)))
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for the author in messages matching the query."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -200,7 +236,7 @@ For example:
 
 (defface notmuch-tree-no-match-author-face
   nil
-  "Face used in tree mode for the date in messages matching the query."
+  "Face used in tree mode for non-matching authors."
   :group 'notmuch-tree
   :group 'notmuch-faces)
 
@@ -321,11 +357,12 @@ then NAME behaves like CMD."
     ;; These bindings shadow common bindings with variants
     ;; that additionally close the message window.
     (define-key map [remap notmuch-bury-or-kill-this-buffer] 'notmuch-tree-quit)
-    (define-key map [remap notmuch-search]       'notmuch-tree-to-search)
-    (define-key map [remap notmuch-help]         'notmuch-tree-help)
-    (define-key map [remap notmuch-mua-new-mail] 'notmuch-tree-new-mail)
-    (define-key map [remap notmuch-jump-search]  'notmuch-tree-jump-search)
+    (define-key map [remap notmuch-search]        'notmuch-tree-to-search)
+    (define-key map [remap notmuch-help]          'notmuch-tree-help)
+    (define-key map [remap notmuch-mua-new-mail]  'notmuch-tree-new-mail)
+    (define-key map [remap notmuch-jump-search]   'notmuch-tree-jump-search)
 
+    (define-key map "o" 'notmuch-tree-toggle-order)
     (define-key map "S" 'notmuch-search-from-tree-current-query)
     (define-key map "U" 'notmuch-unthreaded-from-tree-current-query)
     (define-key map "Z" 'notmuch-tree-from-unthreaded-current-query)
@@ -348,6 +385,8 @@ then NAME behaves like CMD."
     (define-key map "r" 'notmuch-tree-reply-sender)
     (define-key map "R" 'notmuch-tree-reply)
     (define-key map "V" 'notmuch-tree-view-raw-message)
+    (define-key map "l" 'notmuch-tree-filter)
+    (define-key map "t" 'notmuch-tree-filter-by-tag)
 
     ;; The main tree view bindings
     (define-key map (kbd "RET") 'notmuch-tree-show-message)
@@ -575,7 +614,7 @@ NOT change the database."
       (with-selected-window notmuch-tree-message-window
 	(let (;; Since we are only displaying one message do not indent.
 	      (notmuch-show-indent-messages-width 0)
-	      (notmuch-show-only-matching-messages t)
+	      (notmuch-show-single-message t)
 	      ;; Ensure that `pop-to-buffer-same-window' uses the
 	      ;; window we want it to use.
 	      (display-buffer-overriding-action
@@ -599,7 +638,9 @@ NOT change the database."
     (when id
       ;; We close the window to kill off un-needed buffers.
       (notmuch-tree-close-message-window)
-      (notmuch-show id))))
+      ;; n-s-s-m is buffer local, so use inner let.
+      (let ((notmuch-show-single-message t))
+	(notmuch-show id)))))
 
 (defun notmuch-tree-show-message (arg)
   "Show the current message.
@@ -749,7 +790,8 @@ nil otherwise."
 			 query-context
 			 target
 			 nil
-			 unthreaded)))
+			 unthreaded
+			 notmuch-search-oldest-first)))
 
 (defun notmuch-tree-thread-top ()
   (when (notmuch-tree-get-message-properties)
@@ -867,6 +909,9 @@ unchanged ADDRESS if parsing fails."
      ((listp field)
       (format format-string (notmuch-tree-format-field-list field msg)))
 
+     ((functionp field)
+      (funcall field format-string msg))
+
      ((string-equal field "date")
       (let ((face (if match
 		      'notmuch-tree-match-date-face
@@ -950,7 +995,8 @@ unchanged ADDRESS if parsing fails."
       (goto-char (point-max))
       (forward-line -1)
       (when notmuch-tree-open-target
-	(notmuch-tree-show-message-in)))))
+	(notmuch-tree-show-message-in)
+	(notmuch-tree-command-hook)))))
 
 (defun notmuch-tree-insert-tree (tree depth tree-status first last)
   "Insert the message tree TREE at depth DEPTH in the current thread.
@@ -961,20 +1007,20 @@ message together with all its descendents."
 	(replies (cadr tree)))
     (cond
      ((and (< 0 depth) (not last))
-      (push "├" tree-status))
+      (push (alist-get 'vertical-tee  notmuch-tree-thread-symbols) tree-status))
      ((and (< 0 depth) last)
-      (push "╰" tree-status))
+      (push (alist-get 'bottom notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) first last)
-      ;; Choice between these two variants is a matter of taste.
-      ;; (push "─" tree-status))
-      (push " " tree-status))
+      (push (alist-get 'prefix notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) first (not last))
-      (push "┬" tree-status))
+      (push (alist-get 'top-tee notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) (not first) last)
-      (push "╰" tree-status))
+      (push (alist-get 'bottom notmuch-tree-thread-symbols) tree-status))
      ((and (eq 0 depth) (not first) (not last))
-      (push "├" tree-status)))
-    (push (concat (if replies "┬" "─") "►") tree-status)
+      (push (alist-get 'vertical-tee notmuch-tree-thread-symbols) tree-status)))
+    (push (concat (alist-get (if replies 'top-tee 'top) notmuch-tree-thread-symbols)
+		  (alist-get 'arrow notmuch-tree-thread-symbols))
+	  tree-status)
     (setq msg (plist-put msg :first (and first (eq 0 depth))))
     (setq msg (plist-put msg :tree-status tree-status))
     (setq msg (plist-put msg :orig-tags (plist-get msg :tags)))
@@ -983,7 +1029,7 @@ message together with all its descendents."
     (pop tree-status)
     (if last
 	(push " " tree-status)
-      (push "│" tree-status))
+      (push (alist-get 'vertical notmuch-tree-thread-symbols) tree-status))
     (notmuch-tree-insert-thread replies (1+ depth) tree-status)))
 
 (defun notmuch-tree-insert-thread (thread depth tree-status)
@@ -997,10 +1043,9 @@ message together with all its descendents."
 
 (defun notmuch-tree-insert-forest-thread (forest-thread)
   "Insert a single complete thread."
-  (let (tree-status)
-    ;; Reset at the start of each main thread.
-    (setq notmuch-tree-previous-subject nil)
-    (notmuch-tree-insert-thread forest-thread 0 tree-status)))
+  ;; Reset at the start of each main thread.
+  (setq notmuch-tree-previous-subject nil)
+  (notmuch-tree-insert-thread forest-thread 0 nil))
 
 (defun notmuch-tree-insert-forest (forest)
   "Insert a forest of threads.
@@ -1062,7 +1107,8 @@ Complete list of currently available key bindings:
 	(notmuch-sexp-parse-partial-list 'notmuch-tree-insert-forest-thread
 					 results-buf)))))
 
-(defun notmuch-tree-worker (basic-query &optional query-context target open-target unthreaded)
+(defun notmuch-tree-worker (basic-query &optional query-context target
+					open-target unthreaded oldest-first)
   "Insert the tree view of the search in the current buffer.
 
 This is is a helper function for notmuch-tree. The arguments are
@@ -1070,6 +1116,7 @@ the same as for the function notmuch-tree."
   (interactive)
   (notmuch-tree-mode)
   (add-hook 'post-command-hook #'notmuch-tree-command-hook t t)
+  (setq notmuch-search-oldest-first oldest-first)
   (setq notmuch-tree-unthreaded unthreaded)
   (setq notmuch-tree-basic-query basic-query)
   (setq notmuch-tree-query-context (if (or (string= query-context "")
@@ -1088,14 +1135,15 @@ the same as for the function notmuch-tree."
   (let* ((search-args (concat basic-query
 			      (and query-context
 				   (concat " and (" query-context ")"))))
+	 (sort-arg (if oldest-first "--sort=oldest-first" "--sort=newest-first"))
 	 (message-arg (if unthreaded "--unthreaded" "--entire-thread")))
-    (when (equal (car (process-lines notmuch-command "count" search-args)) "0")
+    (when (equal (car (notmuch--process-lines notmuch-command "count" search-args)) "0")
       (setq search-args basic-query))
     (notmuch-tag-clear-cache)
     (let ((proc (notmuch-start-notmuch
 		 "notmuch-tree" (current-buffer) #'notmuch-tree-process-sentinel
-		 "show" "--body=false" "--format=sexp" "--format-version=4"
-		 message-arg search-args))
+		 "show" "--body=false" "--format=sexp" "--format-version=5"
+		 sort-arg message-arg search-args))
 	  ;; Use a scratch buffer to accumulate partial output.
 	  ;; This buffer will be killed by the sentinel, which
 	  ;; should be called no matter how the process dies.
@@ -1113,8 +1161,17 @@ the same as for the function notmuch-tree."
 	      ")")
     notmuch-tree-basic-query))
 
+(defun notmuch-tree-toggle-order ()
+  "Toggle the current search order.
+
+This command toggles the sort order for the current search. The
+default sort order is defined by `notmuch-search-oldest-first'."
+  (interactive)
+  (setq notmuch-search-oldest-first (not notmuch-search-oldest-first))
+  (notmuch-tree-refresh-view))
+
 (defun notmuch-tree (&optional query query-context target buffer-name
-			       open-target unthreaded parent-buffer)
+			       open-target unthreaded parent-buffer oldest-first)
   "Display threads matching QUERY in tree view.
 
 The arguments are:
@@ -1134,23 +1191,60 @@ The arguments are:
     (setq query (notmuch-read-query (concat "Notmuch "
 					    (if unthreaded "unthreaded " "tree ")
 					    "view search: "))))
-  (let ((buffer (get-buffer-create (generate-new-buffer-name
-				    (or buffer-name
-					(concat "*notmuch-"
-						(if unthreaded "unthreaded-" "tree-")
-						query "*")))))
+  (let* ((name
+	  (or buffer-name
+	      (notmuch-search-buffer-title query
+					   (if unthreaded "unthreaded" "tree"))))
+	 (buffer (get-buffer-create (generate-new-buffer-name name)))
 	(inhibit-read-only t))
     (pop-to-buffer-same-window buffer))
   ;; Don't track undo information for this buffer
   (setq buffer-undo-list t)
-  (notmuch-tree-worker query query-context target open-target unthreaded)
+  (notmuch-tree-worker query query-context target open-target unthreaded oldest-first)
   (setq notmuch-tree-parent-buffer parent-buffer)
   (setq truncate-lines t))
 
 (defun notmuch-unthreaded (&optional query query-context target buffer-name
 				     open-target)
+  "Display threads matching QUERY in unthreaded view.
+
+See function NOTMUCH-TREE for documentation of the arguments"
   (interactive)
   (notmuch-tree query query-context target buffer-name open-target t))
+
+(defun notmuch-tree-filter (query)
+  "Filter or LIMIT the current search results based on an additional query string.
+
+Runs a new tree search matching only messages that match both the
+current search results AND the additional query string provided."
+  (interactive (list (notmuch-read-query "Filter search: ")))
+  (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto))
+	(grouped-query (notmuch-group-disjunctive-query-string query))
+	(grouped-original-query (notmuch-group-disjunctive-query-string
+				 (notmuch-tree-get-query))))
+    (notmuch-tree-close-message-window)
+    (notmuch-tree (if (string= grouped-original-query "*")
+		      grouped-query
+		    (concat grouped-original-query " and " grouped-query)))))
+
+(defun notmuch-tree-filter-by-tag (tag)
+  "Filter the current search results based on a single TAG.
+
+Run a new search matching only messages that match the current
+search results and that are also tagged with the given TAG."
+  (interactive
+   (list (notmuch-select-tag-with-completion "Filter by tag: "
+					     notmuch-tree-basic-query)))
+  (let ((notmuch-show-process-crypto (notmuch-tree--message-process-crypto)))
+    (notmuch-tree-close-message-window)
+    (notmuch-tree (concat notmuch-tree-basic-query " and tag:" tag)
+		  notmuch-tree-query-context
+		  nil
+		  nil
+		  nil
+		  notmuch-tree-unthreaded
+		  nil
+		  notmuch-search-oldest-first)))
 
 ;;; _
 

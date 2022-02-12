@@ -10611,10 +10611,10 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20210605.1839/notmuch-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-20220126.1122/notmuch-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20210605.1839/notmuch-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-20220126.1122/notmuch-autoloads.el") (car load-path))))
 
 
 

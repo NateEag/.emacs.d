@@ -235,7 +235,7 @@ Typically this is added to `notmuch-mua-send-hook'."
 ;;; Mua reply
 
 (defun notmuch-mua-reply (query-string &optional sender reply-all)
-  (let ((args '("reply" "--format=sexp" "--format-version=4"))
+  (let ((args '("reply" "--format=sexp" "--format-version=5"))
 	(process-crypto notmuch-show-process-crypto)
 	reply
 	original)
@@ -341,8 +341,8 @@ Typically this is added to `notmuch-mua-send-hook'."
 
 (defvar notmuch-message-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c") #'notmuch-mua-send-and-exit)
-    (define-key map (kbd "C-c C-s") #'notmuch-mua-send)
+    (define-key map [remap message-send-and-exit] #'notmuch-mua-send-and-exit)
+    (define-key map [remap message-send] #'notmuch-mua-send)
     (define-key map (kbd "C-c C-p") #'notmuch-draft-postpone)
     (define-key map (kbd "C-x C-s") #'notmuch-draft-save)
     map)
@@ -474,7 +474,7 @@ the From: address."
 		(with-current-buffer temp-buffer
 		  (erase-buffer)
 		  (let ((coding-system-for-read 'no-conversion))
-		    (call-process notmuch-command nil t nil
+		    (notmuch--call-process notmuch-command nil t nil
 				  "show" "--format=raw" id))
 		  ;; Because we process the messages in reverse order,
 		  ;; always generate a forwarded subject, then use the

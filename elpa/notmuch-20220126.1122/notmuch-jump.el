@@ -25,6 +25,10 @@
 (require 'notmuch-lib)
 (require 'notmuch-hello)
 
+(declare-function notmuch-search "notmuch")
+(declare-function notmuch-tree "notmuch-tree")
+(declare-function notmuch-unthreaded "notmuch-tree")
+
 ;;;###autoload
 (defun notmuch-jump-search ()
   "Jump to a saved search by shortcut key.
@@ -50,17 +54,22 @@ fast way to jump to a saved search from anywhere in Notmuch."
 	    (push (list key name
 			(cond
 			 ((eq (plist-get saved-search :search-type) 'tree)
-			  `(lambda () (notmuch-tree ',query)))
+			  (lambda () (notmuch-tree query)))
 			 ((eq (plist-get saved-search :search-type) 'unthreaded)
-			  `(lambda () (notmuch-unthreaded ',query)))
+			  (lambda () (notmuch-unthreaded query)))
 			 (t
-			  `(lambda () (notmuch-search ',query ',oldest-first)))))
+			  (lambda () (notmuch-search query oldest-first)))))
 		  action-map)))))
     (setq action-map (nreverse action-map))
     (if action-map
 	(notmuch-jump action-map "Search: ")
       (error "To use notmuch-jump, %s"
 	     "please customize shortcut keys in notmuch-saved-searches."))))
+
+(defface notmuch-jump-key
+  '((t :inherit minibuffer-prompt))
+  "Default face used for keys in `notmuch-jump' and related."
+  :group 'notmuch-faces)
 
 (defvar notmuch-jump--action nil)
 
@@ -123,7 +132,7 @@ buffer."
     ;; Format each action
     (mapcar (pcase-lambda (`(,key ,desc))
 	      (setq key (format-kbd-macro key))
-	      (concat (propertize key 'face 'minibuffer-prompt)
+	      (concat (propertize key 'face 'notmuch-jump-key)
 		      (make-string (- key-width (length key)) ? )
 		      " " desc))
 	    action-map)))
@@ -163,9 +172,10 @@ buffer."
     (pcase-dolist (`(,key ,_name ,fn) action-map)
       (when (= (length key) 1)
 	(define-key map key
-	  `(lambda () (interactive)
-	     (setq notmuch-jump--action ',fn)
-	     (exit-minibuffer)))))
+	  (lambda ()
+	    (interactive)
+	    (setq notmuch-jump--action fn)
+	    (exit-minibuffer)))))
     ;; By doing this in two passes (and checking if we already have a
     ;; binding) we avoid problems if the user specifies a binding which
     ;; is a prefix of another binding.
@@ -186,12 +196,13 @@ buffer."
 		  action-submap)
 	    (setq action-submap (nreverse action-submap))
 	    (define-key map keystr
-	      `(lambda () (interactive)
-		 (setq notmuch-jump--action
-		       ',(apply-partially #'notmuch-jump
-					  action-submap
-					  new-prompt))
-		 (exit-minibuffer)))))))
+	      (lambda ()
+		(interactive)
+		(setq notmuch-jump--action
+		      (apply-partially #'notmuch-jump
+				       action-submap
+				       new-prompt))
+		(exit-minibuffer)))))))
     map))
 
 (provide 'notmuch-jump)

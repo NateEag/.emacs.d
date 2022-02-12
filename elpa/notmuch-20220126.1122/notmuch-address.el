@@ -217,7 +217,7 @@ requiring external commands."
       ;; harvest if necessary.
       (notmuch-address-harvest-trigger)))
    (t
-    (process-lines notmuch-address-command original))))
+    (notmuch--process-lines notmuch-address-command original))))
 
 (defun notmuch-address-expand-name ()
   (cond
@@ -308,7 +308,7 @@ execution, CALLBACK is called when harvesting finishes."
 			    (and config-query
 				 (format " and (%s)" config-query)))
 		  from-or-to-me-query))
-	 (args `("address" "--format=sexp" "--format-version=4"
+	 (args `("address" "--format=sexp" "--format-version=5"
 		 ,(if sent "--output=recipients" "--output=sender")
 		 "--deduplicate=address"
 		 ,query)))

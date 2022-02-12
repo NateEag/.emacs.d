@@ -10395,10 +10395,10 @@ See `rxt-mode' for more information on Rxt mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/a-20201203.1927/a-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/a-20210929.1510/a-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/a-20201203.1927/a-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/a-20210929.1510/a-autoloads.el") (car load-path))))
 
 
 

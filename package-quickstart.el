@@ -11461,10 +11461,10 @@ Use the `names--inside-make-autoload' variable to indicate to
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20210323.1128/multiple-cursors-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20211112.2223/multiple-cursors-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20210323.1128/multiple-cursors-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20211112.2223/multiple-cursors-autoloads.el") (car load-path))))
 
 
 

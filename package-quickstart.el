@@ -9510,10 +9510,10 @@ NIL
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210531.1613/pdf-tools-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pdf-tools-20220125.1708/pdf-tools-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20210531.1613/pdf-tools-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pdf-tools-20220125.1708/pdf-tools-autoloads.el") (car load-path))))
 
 
 
@@ -9889,7 +9889,8 @@ MODES defaults to `pdf-tools-enabled-modes'.
 
 \(fn &optional MODES)" t nil)
 
-(autoload 'pdf-tools-help "pdf-tools" nil t nil)
+(autoload 'pdf-tools-help "pdf-tools" "\
+Show a Help buffer for `pdf-tools'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-tools" '("pdf-tools-")))
 

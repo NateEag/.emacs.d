@@ -420,7 +420,8 @@ MODES defaults to `pdf-tools-enabled-modes'.
 
 \(fn &optional MODES)" t nil)
 
-(autoload 'pdf-tools-help "pdf-tools" nil t nil)
+(autoload 'pdf-tools-help "pdf-tools" "\
+Show a Help buffer for `pdf-tools'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-tools" '("pdf-tools-")))
 

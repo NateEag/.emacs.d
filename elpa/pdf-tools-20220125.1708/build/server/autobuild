@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 ##
 ## Installs package dependencies and builds the application.
@@ -64,16 +64,7 @@ which()
     if [ -z "$1" ]; then
         return 1
     fi
-    IFS=:
-    for dir in $PATH; do
-        if [ -x "$dir/$1" ]; then
-            printf "%s" "$dir/$1"
-            unset IFS
-            return 0
-        fi
-    done
-    unset IFS
-    return 1
+    command -v "$1"
 }
 
 # Quote $@ for the shell.
@@ -258,7 +249,7 @@ os_openbsd() {
     fi
     PKGCMD=pkg_add
     PKGARGS="-uU"
-    PACKAGES="autoconf-2.69p2 automake-1.15.1 poppler poppler-utils png"
+    PACKAGES="autoconf%2.69 automake%1.15 poppler poppler-utils png"
     export AUTOCONF_VERSION=2.69
     export AUTOMAKE_VERSION=1.15
     if whereis clang++ ;then
@@ -327,15 +318,21 @@ os_msys2() {
     case $MSYSTEM in
         MINGW64)
             PACKAGES="base-devel
+                      autoconf
                       mingw-w64-x86_64-libpng
                       mingw-w64-x86_64-poppler
+                      mingw-w64-x86_64-imagemagick
                       mingw-w64-x86_64-toolchain
+                      mingw-w64-x86_64-openssl
                       mingw-w64-x86_64-zlib" ;;
         MINGW32)
             PACKAGES="base-devel
+                      autoconf
                       mingw-w64-i686-libpng
                       mingw-w64-i686-poppler
+                      mingw-w64-i686-imagemagick
                       mingw-w64-i686-toolchain
+                      mingw-w64-i686-openssl
                       mingw-w64-i686-zlib" ;;
         MSYS)
             case $(uname -m) in
@@ -392,6 +389,10 @@ os_nixos() {
     if [ -n "$DRY_RUN" ]; then
         return 0
     fi
+    if ! nix-instantiate --eval -E "<nixpkgs>" &>/dev/null; then
+      echo "File 'nixpkgs' was not found in the Nix path. Using NixOS/nixpkgs"
+      NIX_PATH="nixpkgs=https://github.com/nixos/nixpkgs/archive/master.tar.gz:$NIX_PATH"
+    fi
     command="AUTOBUILD_NIX_SHELL=true"
     command="$command;export AUTOBUILD_NIX_SHELL"
     command="$command;$(quote "$0" "$@")"
@@ -407,13 +408,36 @@ os_gentoo() {
     PKGCMD=emerge
     PKGARGS=--noreplace
     PACKAGES="app-text/poppler
-              dev-util/pkgconfig
+              dev-util/pkgconf
               media-libs/libpng
               sys-devel/autoconf
               sys-devel/automake
               sys-devel/gcc
               sys-devel/make
               sys-libs/zlib"
+    return 0
+}
+
+# Void
+os_void() {
+    if [ -f "/etc/os-release" ]; then
+        . /etc/os-release
+        if [ "$NAME" != "void" ]; then
+          return 1
+        fi
+    else
+      return 1
+    fi
+    PACKAGES="autoconf
+              automake
+              libpng-devel
+              poppler-devel
+              poppler-glib-devel
+              zlib-devel
+              make
+              pkgconf"
+    PKGCMD=xbps-install
+    PKGARGS="-Sy"
     return 0
 }
 
@@ -431,6 +455,7 @@ os_argument() {
         gentoo)  os_gentoo  "$@";;
         msys2)   os_msys2   "$@";;
         nixos)   os_nixos   "$@";;
+        void)    os_void    "$@";;
         *)       echo "Invalid --os argument: $OS"
                  exit 1
     esac || {
@@ -456,6 +481,7 @@ os_debian   "$@" || \
 os_gentoo   "$@" || \
 os_msys2    "$@" || \
 os_nixos    "$@" || \
+os_void     "$@" || \
 {
     OS_IS_HANDLED=
     if [ -z "$DRY_RUN" ]; then

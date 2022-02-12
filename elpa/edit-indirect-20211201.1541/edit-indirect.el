@@ -2,8 +2,8 @@
 
 ;; Author: Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/Fanael/edit-indirect
-;; Package-Version: 20200805.1840
-;; Package-Commit: bdc8f542fe8430ba55f9a24a7910639d4c434422
+;; Package-Version: 20211201.1541
+;; Package-Commit: 7fffd87ac3b027d10a26e8492629da01a4cd7633
 ;; Version: 0.1.6
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -343,9 +343,11 @@ No error is signaled if `inhibit-read-only' or
            'edit-indirect-before-commit-functions beg-marker end-marker)
           (save-match-data
             (set-match-data (list beg-marker end-marker))
-            (replace-match (with-current-buffer buffer
-                             (buffer-substring-no-properties 1 (1+ (buffer-size))))
-                           t t))
+            (let ((new-data
+                   (with-current-buffer buffer
+                     (buffer-substring-no-properties 1 (1+ (buffer-size))))))
+              (unless (string= new-data (match-string 0))
+                (replace-match new-data t t))))
           (edit-indirect--run-hook-with-positions
            'edit-indirect-after-commit-functions beg-marker (point))
           (set-marker beg-marker nil)

@@ -649,10 +649,10 @@ Returns a list of contact objects." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20201210.157/vc-msg-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20211224.1354/vc-msg-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20201210.157/vc-msg-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20211224.1354/vc-msg-autoloads.el") (car load-path))))
 
 
 

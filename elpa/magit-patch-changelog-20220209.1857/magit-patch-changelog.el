@@ -4,8 +4,8 @@
 
 ;; Authors: dickmao <github id: dickmao>
 ;; Version: 0.1.0
-;; Package-Version: 20210616.1302
-;; Package-Commit: 623d1a6a3bfa0f01bcaaffa13ad5ce5ae29cdb0a
+;; Package-Version: 20220209.1857
+;; Package-Commit: e792755514cb5a98b94fcd1c5eacd487f7e04d7b
 ;; Keywords: git tools vc
 ;; URL: https://github.com/dickmao/magit-patch-changelog
 ;; Package-Requires: ((emacs "25.1") (magit "2.91.0"))
@@ -33,6 +33,11 @@
 
 (require 'magit)
 (require 'magit-patch)
+
+(defcustom magit-patch-changelog-master-branch "master"
+  "The branch to patch against."
+  :group 'magit-patch-changelog
+  :type 'string)
 
 (defcustom magit-patch-changelog-fancy-xref nil
   "Jump to diff referenced by ChangeLog entry after idling one second."
@@ -485,13 +490,28 @@ Limit patch to FILES, if non-nil."
    (let ((args (transient-args 'magit-patch-create)))
      (list (-filter #'stringp args)
            (cdr (assoc "--" args)))))
-  (let* ((feature-branch (magit-get-current-branch))
+  (let* (commit-buffer
+         (feature-branch (magit-get-current-branch))
          (ephemeral-branch (make-temp-name (concat feature-branch "-")))
          (git-commit-major-mode 'magit-patch-changelog-mode)
+         (auto-stubber
+          (lambda (&rest _args)
+            (and (eq major-mode 'magit-patch-changelog-mode)
+                 (or (magit-patch-changelog--contains
+                      'magit-patch-changelog-header)
+                     (magit-patch-changelog--contains
+                      'magit-patch-changelog-loc)))))
          (cleanup
           (apply-partially
            (lambda (toplevel)
              (let ((default-directory toplevel))
+               (when auto-fill-function
+                 (remove-function
+                  (symbol-function auto-fill-function)
+                  auto-stubber))
+               (when (buffer-live-p commit-buffer)
+                 (with-current-buffer commit-buffer
+                   (ignore-errors (with-editor-cancel t))))
                (when (timerp magit-patch-changelog-local-timer)
                  (cancel-timer magit-patch-changelog-local-timer)
                  (setq-local magit-patch-changelog-local-timer nil))
@@ -559,21 +579,22 @@ Limit patch to FILES, if non-nil."
                   (add-hook hook
                             (apply-partially #'remove-hook 'kill-emacs-hook cleanup)
                             nil t)))))))
-    (condition-case err
+    (condition-case-unless-debug err
         (progn
-          (magit-branch-checkout ephemeral-branch "master")
+          (magit-branch-checkout ephemeral-branch magit-patch-changelog-master-branch)
           (magit-merge-assert)
           (magit-run-git "merge" "--squash" feature-branch)
           (cl-assert (memq 'magit-commit-diff server-switch-hook))
           (magit-commit-create)
+
           (cl-loop repeat 50
                    until (magit-commit-message-buffer)
                    do (accept-process-output nil 0.1)
                    finally
                    (unless (magit-commit-message-buffer)
                      (user-error "`magit-commit-create' failed")))
-          (cl-loop with commit-buffer = (magit-commit-message-buffer)
-                   repeat 50
+          (setq commit-buffer (magit-commit-message-buffer))
+          (cl-loop repeat 50
                    for diff-buffer = (with-current-buffer commit-buffer
                                        (magit-get-mode-buffer 'magit-diff-mode))
                    until diff-buffer
@@ -598,22 +619,16 @@ Limit patch to FILES, if non-nil."
                      (user-error "`magit-commit-diff' failed"))
                    (with-current-buffer commit-buffer
                      (let ((inhibit-message t))
-                       (message (buffer-string))) ;; without this, point appears mid-buffer
-                     (message "")              ;; without this, minibuffer explodes
+                       ;; without this, point appears mid-buffer
+                       (message "%s" (buffer-string)))
+                     ;; without this, minibuffer explodes
+                     (message "")
                      (when with-editor-show-usage
                        (with-editor-usage-message))
-
-                     ;; The variable `auto-fill-function' should be buffer local
-                     ;; so this advise shouldn't pollute.
                      (when auto-fill-function
                        (add-function
                         :before-until (symbol-function auto-fill-function)
-                        (lambda (&rest _args)
-                          (and (eq major-mode 'magit-patch-changelog-mode)
-                               (or (magit-patch-changelog--contains
-                                    'magit-patch-changelog-header)
-                                   (magit-patch-changelog--contains
-                                    'magit-patch-changelog-loc))))))
+                        auto-stubber))
                      (goto-char (point-min)))))
       (error (funcall cleanup)
              (user-error "%s" (error-message-string err))))))

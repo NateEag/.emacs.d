@@ -27,8 +27,11 @@
 
 ;;; Code:
 
-(require 'polymode)
+(require 'ansible)
+(require 'ansible-doc)
+(require 'jinja2-mode)
 (require 'poly-ansible-jinja2-filters)
+(require 'polymode)
 
 
 (defcustom pm-inner/jinja2

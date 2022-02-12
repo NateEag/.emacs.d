@@ -9143,10 +9143,10 @@ Major mode for editing jinja2 files
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/poly-ansible-20200826.1542/poly-ansible-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/poly-ansible-20220113.1656/poly-ansible-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/poly-ansible-20200826.1542/poly-ansible-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/poly-ansible-20220113.1656/poly-ansible-autoloads.el") (car load-path))))
 
 
  (autoload 'poly-ansible-mode "poly-ansible")

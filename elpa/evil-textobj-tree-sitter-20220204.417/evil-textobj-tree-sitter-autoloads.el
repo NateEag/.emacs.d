@@ -27,6 +27,15 @@ https://github.com/nvim-treesitter/nvim-treesitter-textobjects#built-in-textobje
 
 (function-put 'evil-textobj-tree-sitter-get-textobj 'lisp-indent-function 'defun)
 
+(autoload 'evil-textobj-tree-sitter-goto-textobj "evil-textobj-tree-sitter" "\
+Got to the start/end of the textobj of type `GROUP'.
+By default it goes to the start of the textobj, but pass in `END' if
+you want to go to the end of the textobj instead.  You can pass in
+`PREVIOUS' if you want to search backwards.  Optionally pass in
+`QUERY' if you want to define a custom query.
+
+\(fn GROUP &optional PREVIOUS END QUERY)" nil nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-textobj-tree-sitter" '("evil-textobj-tree-sitter-")))
 
 ;;;***

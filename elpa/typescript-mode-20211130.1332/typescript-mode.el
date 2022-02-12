@@ -21,7 +21,7 @@
 ;; -------------------------------------------------------------------------------------------
 
 ;; URL: http://github.com/ananthakumaran/typescript.el
-;; Version: 0.1
+;; Version: 0.4
 ;; Keywords: typescript languages
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -270,7 +270,7 @@ Match group 1 is MUMBLE.")
      "enum" "export" "extends" "extern" "false" "finally" "for"
      "function" "from" "get" "goto" "if" "implements" "import" "in" "instanceof"
      "interface" "keyof" "let" "module" "namespace" "never" "new" "null" "number" "object" "of"
-     "private" "protected" "public" "readonly" "return" "set" "static" "string"
+     "override" "private" "protected" "public" "readonly" "return" "set" "static" "string"
      "super" "switch"  "this" "throw" "true"
      "try" "type" "typeof" "unknown" "var" "void"
      "while")) ; yield is handled separately
@@ -992,11 +992,11 @@ one at the end of the line with \"let a\"."
   (let ((saved-point (point))
         (search-expr
          (cond ((null count)
-                '(typescript--re-search-backward-inner regexp bound 1))
+                `(typescript--re-search-backward-inner ,regexp ,bound 1))
                ((< count 0)
-                '(typescript--re-search-forward-inner regexp bound (- count)))
+                `(typescript--re-search-forward-inner ,regexp ,bound (- ,count)))
                ((> count 0)
-                '(typescript--re-search-backward-inner regexp bound count)))))
+                `(typescript--re-search-backward-inner ,regexp ,bound ,count)))))
     (condition-case err
         (eval search-expr)
       (search-failed
@@ -2308,6 +2308,8 @@ starts the member expression.
     (typescript--backward-syntactic-ws)
     (while (eq (char-before) ?\;)
       (backward-char))
+    (when (memq (char-before) '(?\? ?\!))
+      (backward-char))
     (while (memq (char-before) '(?\] ?} ?\) ?>))
       (if (not (eq (char-before) ?>))
           (backward-list)
@@ -2944,6 +2946,7 @@ Key bindings:
         c-paragraph-start "$"
         c-paragraph-separate "$"
         c-block-comment-prefix "* "
+        c-block-comment-ender-regexp "\\*/"
         c-line-comment-starter "//"
         c-comment-start-regexp "/[*/]\\|\\s!"
         comment-start-skip "\\(//+\\|/\\*+\\)\\s *")

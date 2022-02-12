@@ -99,6 +99,7 @@ commands opening a new line."
                  evil-open-below
                  evil-append
                  evil-append-line
+                 evil-change-whole-line
                  newline
                  newline-and-indent
                  indent-and-newline)))
@@ -363,16 +364,17 @@ otherwise exit Visual state."
 (put 'evil-visual-post-command 'permanent-local-hook t)
 
 (defun evil-visual-update-x-selection (&optional buffer)
-  "Update the X selection with the current visual region."
+  "Update the X selection with the current visual region of BUFFER."
   (let ((buf (or buffer (current-buffer))))
-    (when (buffer-live-p buf)
+    (when (and evil-visual-update-x-selection-p
+               (buffer-live-p buf)
+               (evil-visual-state-p)
+               (display-selections-p)
+               (not (eq evil-visual-selection 'block)))
       (with-current-buffer buf
-        (when (and (evil-visual-state-p)
-                   (display-selections-p)
-                   (not (eq evil-visual-selection 'block)))
-          (evil-set-selection 'PRIMARY (buffer-substring-no-properties
-                                        evil-visual-beginning
-                                        evil-visual-end)))))))
+        (evil-set-selection 'PRIMARY (buffer-substring-no-properties
+                                      evil-visual-beginning
+                                      evil-visual-end))))))
 
 (defun evil-visual-activate-hook (&optional _command)
   "Enable Visual state if the region is activated."
@@ -902,6 +904,17 @@ CORNER defaults to `upper-left'."
         (delete-char 1)
         (when char
           (insert char))))))
+
+(defun evil-update-replace-alist (opoint count chars-to-delete &optional offset)
+  "Add CHARS-TO-DELETE chars to evil-replace-alist, starting at OPOINT.
+If COUNT is greater than CHARS-TO-DELETE, pad the alist with nils.
+Decrement recorded position by optional offset, or 0."
+  (when (evil-replace-state-p)
+    (dotimes (c count)
+      (let ((pos (+ c opoint)))
+        (add-to-list 'evil-replace-alist
+                     (cons (- pos (or offset 0)) (when (< c chars-to-delete)
+                                                   (char-after pos))))))))
 
 ;;; Motion state
 

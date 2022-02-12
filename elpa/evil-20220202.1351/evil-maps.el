@@ -66,13 +66,18 @@
 (define-key evil-normal-state-map "g8" 'what-cursor-position)
 (define-key evil-normal-state-map "ga" 'what-cursor-position)
 (define-key evil-normal-state-map "gi" 'evil-insert-resume)
+(define-key evil-normal-state-map "gI" 'evil-insert-0-line)
 (define-key evil-normal-state-map "gJ" 'evil-join-whitespace)
 (define-key evil-normal-state-map "gq" 'evil-fill-and-move)
 (define-key evil-normal-state-map "gw" 'evil-fill)
 (define-key evil-normal-state-map "gu" 'evil-downcase)
 (define-key evil-normal-state-map "gU" 'evil-upcase)
 (define-key evil-normal-state-map "gf" 'find-file-at-point)
+(define-key evil-normal-state-map "]f" 'find-file-at-point)
+(define-key evil-normal-state-map "[f" 'find-file-at-point)
 (define-key evil-normal-state-map "gF" 'evil-find-file-at-point-with-line)
+(define-key evil-normal-state-map "]F" 'evil-find-file-at-point-with-line)
+(define-key evil-normal-state-map "[F" 'evil-find-file-at-point-with-line)
 (define-key evil-normal-state-map "gx" 'browse-url-at-point)
 (define-key evil-normal-state-map "g?" 'evil-rot13)
 (define-key evil-normal-state-map "g~" 'evil-invert-case)
@@ -168,7 +173,7 @@
 ;;; Motion state
 
 ;; "0" is a special command when called first
-(evil-redirect-digit-argument evil-motion-state-map "0" 'evil-beginning-of-line)
+(define-key evil-motion-state-map "0" 'evil-beginning-of-line)
 (define-key evil-motion-state-map "1" 'digit-argument)
 (define-key evil-motion-state-map "2" 'digit-argument)
 (define-key evil-motion-state-map "3" 'digit-argument)
@@ -207,13 +212,18 @@
 (define-key evil-motion-state-map "gE" 'evil-backward-WORD-end)
 (define-key evil-motion-state-map "gg" 'evil-goto-first-line)
 (define-key evil-motion-state-map "gj" 'evil-next-visual-line)
+(define-key evil-motion-state-map (vconcat "g" [down]) 'evil-next-visual-line)
 (define-key evil-motion-state-map "gk" 'evil-previous-visual-line)
+(define-key evil-motion-state-map (vconcat "g" [up]) 'evil-previous-visual-line)
 (define-key evil-motion-state-map "g0" 'evil-beginning-of-visual-line)
 (define-key evil-motion-state-map "g_" 'evil-last-non-blank)
 (define-key evil-motion-state-map "g^" 'evil-first-non-blank-of-visual-line)
+(define-key evil-motion-state-map (vconcat "g" [home]) 'evil-first-non-blank-of-visual-line)
 (define-key evil-motion-state-map "gm" 'evil-middle-of-visual-line)
+(define-key evil-motion-state-map "gM" 'evil-percentage-of-line)
 (define-key evil-motion-state-map "go" 'evil-goto-char)
 (define-key evil-motion-state-map "g$" 'evil-end-of-visual-line)
+(define-key evil-motion-state-map (vconcat "g" [end]) 'evil-end-of-visual-line)
 (define-key evil-motion-state-map "g\C-]" 'evil-jump-to-tag)
 (define-key evil-motion-state-map "{" 'evil-backward-paragraph)
 (define-key evil-motion-state-map "}" 'evil-forward-paragraph)
@@ -373,19 +383,22 @@
 ;;; Insert state
 
 (defvar evil-insert-state-bindings
-  `(("\C-v" . quoted-insert)
+  `(([insert] . evil-replace-state)
+    ("\C-q" . evil-quoted-insert)
+    ("\C-v" . evil-quoted-insert)
     ("\C-k" . evil-insert-digraph)
     ("\C-o" . evil-execute-in-normal-state)
     ("\C-r" . evil-paste-from-register)
     ("\C-y" . evil-copy-from-above)
     ("\C-e" . evil-copy-from-below)
-    ("\C-n" . evil-complete-next)
-    ("\C-p" . evil-complete-previous)
-    ("\C-x\C-n" . evil-complete-next-line)
-    ("\C-x\C-p" . evil-complete-previous-line)
+    ("\C-n" . evil-complete-next)              ;; Completion commands
+    ("\C-p" . evil-complete-previous)          ;; don't yet behave correctly
+    ("\C-x\C-n" . evil-complete-next-line)     ;; in replace state
+    ("\C-x\C-p" . evil-complete-previous-line) ;; TODO - fix this
     ("\C-t" . evil-shift-right-line)
     ("\C-d" . evil-shift-left-line)
     ("\C-a" . evil-paste-last-insertion)
+    ("\C-@" . evil-paste-last-insertion-and-stop-insert)
     ([remap delete-backward-char] . evil-delete-backward-char-and-join)
     ,(if evil-want-C-w-delete
          '("\C-w" . evil-delete-backward-word)
@@ -393,9 +406,9 @@
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
     ([mouse-2] . mouse-yank-primary))
-  "Evil's bindings for insert state (for
-`evil-insert-state-map'), excluding <delete>, <escape>, and
-`evil-toggle-key'.")
+  "Evil's bindings for insert & replace states.
+Used in `evil-insert-state-map' and `evil-replace-state-map',
+excluding <delete>, <escape>, and `evil-toggle-key'.")
 
 (defun evil-update-insert-state-bindings (&optional _option-name remove force)
   "Update bindings in `evil-insert-state-map'.
@@ -430,8 +443,11 @@ included in `evil-insert-state-bindings' by default."
 
 ;;; Replace state
 
+(dolist (binding evil-insert-state-bindings)
+  (define-key evil-replace-state-map (car binding) (cdr binding)))
 (define-key evil-replace-state-map (kbd "DEL") 'evil-replace-backspace)
 (define-key evil-replace-state-map [escape] 'evil-normal-state)
+(define-key evil-replace-state-map [insert] 'evil-append)
 
 ;;; Emacs state
 

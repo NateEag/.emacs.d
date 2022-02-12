@@ -27,6 +27,7 @@
 (require 'evil-common)
 (require 'evil-digraphs)
 (require 'evil-search)
+(require 'evil-states)
 (require 'evil-ex)
 (require 'evil-types)
 (require 'evil-command-window)
@@ -234,18 +235,14 @@ move COUNT - 1 screen lines downward first."
                        -1
                        (/ (with-no-warnings (window-body-width)) 2)))))
 
-(evil-define-motion evil-beginning-of-line-or-digit-argument ()
-  "Move the cursor to the beginning of the current line.
-This function passes its command to `digit-argument' (usually a 0)
-if it is not the first event."
+(evil-define-motion evil-percentage-of-line (count)
+  "Move the cursor to COUNT % of the width of the current line.
+If no COUNT is given, default to 50%."
   :type exclusive
-  (cond
-   (current-prefix-arg
-    (setq this-command #'digit-argument)
-    (call-interactively #'digit-argument))
-   (t
-    (setq this-command #'evil-beginning-of-line)
-    (call-interactively #'evil-beginning-of-line))))
+  (let ((line-length (- (line-end-position)
+                        (line-beginning-position)
+                        (if evil-move-beyond-eol -1 0))))
+    (move-to-column (truncate (* line-length (/ (or count 50) 100.0))))))
 
 (evil-define-motion evil-first-non-blank ()
   "Move the cursor to the first non-blank character of the current line."
@@ -293,19 +290,17 @@ of the current screen line."
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-line (count)
-  "Go to the first non-blank character of line COUNT.
-By default the last line."
+  "Go to line COUNT. By default the last line."
   :jump t
   :type line
-  (if (null count)
-      (with-no-warnings (end-of-buffer))
-    (goto-char (point-min))
-    (forward-line (1- count)))
-  (evil-first-non-blank))
+  (evil-ensure-column
+    (if (null count)
+        (goto-char (point-max))
+      (goto-char (point-min))
+      (forward-line (1- count)))))
 
 (evil-define-motion evil-goto-first-line (count)
-  "Go to the first non-blank character of line COUNT.
-By default the first line."
+  "Go to line COUNT. By default the first line."
   :jump t
   :type line
   (evil-goto-line (or count 1)))
@@ -492,14 +487,14 @@ and jump to the corresponding one."
   (cond
    ;; COUNT% jumps to a line COUNT percentage down the file
    (count
-    (goto-char
-     (evil-normalize-position
-      (let ((size (- (point-max) (point-min))))
-        (+ (point-min)
-           (if (> size 80000)
-               (* count (/ size 100))
-             (/ (* count size) 100))))))
-    (back-to-indentation)
+    (evil-ensure-column
+      (goto-char
+       (evil-normalize-position
+        (let ((size (- (point-max) (point-min))))
+          (+ (point-min)
+             (if (> size 80000)
+                 (* count (/ size 100))
+               (/ (* count size) 100)))))))
     (setq evil-this-type 'line))
    ((and (evil-looking-at-start-comment t)
          (let ((pnt (point)))
@@ -746,7 +741,7 @@ Loop back to the top of buffer if the end is reached."
         (evil-first-non-blank))
     (user-error "No marks in this buffer")))
 
-(evil-define-command evil-set-col-0-mark (_beg end mark)
+(evil-define-command evil-set-col-0-mark (beg end mark)
   "Set MARK at column 0 of line of END. Default is cursor line."
   (interactive "<r><a>")
   (if (< 1 (length mark))
@@ -976,32 +971,29 @@ In Insert state, insert a newline and indent."
   (evil-ret-gen count t))
 
 (evil-define-motion evil-window-top (count)
-  "Move the cursor to line COUNT from the top of the window
-on the first non-blank character."
+  "Move the cursor to line COUNT from the top of the window."
   :jump t
   :type line
-  (move-to-window-line (max (or count 0)
-                            (if (= (point-min) (window-start))
-                                0
-                              scroll-margin)))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line (max (or count 0)
+                              (if (= (point-min) (window-start))
+                                  0
+                                scroll-margin)))))
 
 (evil-define-motion evil-window-middle ()
-  "Move the cursor to the middle line in the window
-on the first non-blank character."
+  "Move the cursor to the middle line in the window."
   :jump t
   :type line
-  (move-to-window-line
-   (/ (1+ (save-excursion (move-to-window-line -1))) 2))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line
+     (/ (1+ (save-excursion (move-to-window-line -1))) 2))))
 
 (evil-define-motion evil-window-bottom (count)
-  "Move the cursor to line COUNT from the bottom of the window
-on the first non-blank character."
+  "Move the cursor to line COUNT from the bottom of the window."
   :jump t
   :type line
-  (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))
-  (back-to-indentation))
+  (evil-ensure-column
+    (move-to-window-line (- (max (or count 1) (1+ scroll-margin))))))
 
 ;; scrolling
 (evil-define-command evil-scroll-line-up (count)
@@ -1037,9 +1029,10 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+  (evil-ensure-column
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (= (point-min) (line-beginning-position))
       (signal 'beginning-of-buffer nil))
     (when (zerop count)
@@ -1062,9 +1055,10 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "<c>")
-  (evil-save-column
-    (setq count (or count (max 0 evil-scroll-count)))
-    (setq evil-scroll-count count)
+  (evil-ensure-column
+    (setq count (or count (max 0 evil-scroll-count))
+          evil-scroll-count count
+          this-command 'next-line)
     (when (eobp) (signal 'end-of-buffer nil))
     (when (zerop count)
       (setq count (/ (window-body-height) 2)))
@@ -1098,7 +1092,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "p")
-  (evil-save-column
+  (evil-ensure-column
     (dotimes (i count)
       (condition-case err
           (scroll-down nil)
@@ -1112,7 +1106,7 @@ If the scroll count is zero the command scrolls half the screen."
   :repeat nil
   :keep-visual t
   (interactive "p")
-  (evil-save-column
+  (evil-ensure-column
     (dotimes (i count)
       (condition-case err
           (scroll-up nil)
@@ -1399,39 +1393,57 @@ or line COUNT to the top of the window."
   :extend-selection nil
   (evil-select-xml-tag beg end type count))
 
+(defun evil-match (direction count)
+  "Find COUNTth next match in DIRECTION."
+  (unless (and (boundp 'evil-search-module)
+               (eq evil-search-module 'evil-search))
+    (user-error "Match text objects only work with Evil search module"))
+  (let ((pnt (point))
+        (count (abs count)) ;; Undo effect of evil-visual-direction
+        (evil-ex-search-direction 'backward)
+        (visual-state (evil-visual-state-p))
+        on-start-match in-match on-end-match)
+    (save-excursion
+      (unless (eobp) (forward-char)) ;; If on start of a match, stay there
+      (evil-ex-search 1)
+      (setq on-start-match (= evil-ex-search-match-beg pnt)
+            in-match (<= evil-ex-search-match-beg pnt (1- evil-ex-search-match-end))
+            on-end-match (= (1- evil-ex-search-match-end) pnt)
+            evil-ex-search-direction direction)
+      (cond
+       ((and visual-state on-start-match (eq 'backward direction))
+        (evil-ex-search count))
+       ((and visual-state on-end-match (eq 'forward direction))
+        (evil-ex-search count))
+       ((or in-match (eq 'backward direction))
+        (evil-ex-search (1- count)))
+       (t (evil-ex-search count)))
+      (setq pnt (point)))
+    (goto-char pnt)
+    (cond
+     ((evil-normal-state-p)
+      (evil-visual-select evil-ex-search-match-beg
+                          evil-ex-search-match-end
+                          'inclusive
+                          (cl-case direction ('forward +1) ('backward -1))
+                          t)
+      (list evil-ex-search-match-beg evil-ex-search-match-end))
+     ((and visual-state (eq 'forward direction))
+      (goto-char (1- evil-ex-search-match-end)))
+     ((and visual-state (eq 'backward direction))
+      (goto-char evil-ex-search-match-beg))
+     ;; e.g. operator pending...
+     (t (list evil-ex-search-match-beg evil-ex-search-match-end)))))
+
 (evil-define-text-object evil-next-match (count &optional beg end type)
   "Select next match."
-  (unless (and (boundp 'evil-search-module)
-               (eq evil-search-module 'evil-search))
-    (user-error "next-match text objects only work with Evil search module."))
-  (let ((pnt (point)))
-    (cond
-     ((eq evil-ex-search-direction 'forward)
-      (unless (eobp) (forward-char))
-      (evil-ex-search-previous 1)
-      (when (and (<= evil-ex-search-match-beg pnt)
-                 (> evil-ex-search-match-end pnt)
-                 (not (evil-visual-state-p)))
-        (setq count (1- count)))
-      (if (> count 0) (evil-ex-search-next count)))
-     (t
-      (unless (eobp) (forward-char))
-      (evil-ex-search-next count))))
-  ;; active visual state if command is executed in normal state
-  (when (evil-normal-state-p)
-    (evil-visual-select evil-ex-search-match-beg evil-ex-search-match-end 'inclusive +1 t))
-  (list evil-ex-search-match-beg evil-ex-search-match-end))
+  :extend-selection t
+  (evil-match 'forward count))
 
 (evil-define-text-object evil-previous-match (count &optional beg end type)
-  "Select next match."
-  (unless (and (boundp 'evil-search-module)
-               (eq evil-search-module 'evil-search))
-    (user-error "previous-match text objects only work with Evil search module."))
-  (let ((evil-ex-search-direction
-         (if (eq evil-ex-search-direction 'backward)
-             'forward
-           'backward)))
-    (evil-next-match count beg end type)))
+  "Select previous match."
+  :extend-selection t
+  (evil-match 'backward count))
 
 ;;; Operator commands
 
@@ -1476,29 +1488,44 @@ or line COUNT to the top of the window."
   "Delete text from BEG to END with TYPE.
 Save in REGISTER or in the kill-ring with YANK-HANDLER."
   (interactive "<R><x><y>")
-  (unless register
-    (let ((text (filter-buffer-substring beg end)))
-      (unless (string-match-p "\n" text)
-        ;; set the small delete register
-        (evil-set-register ?- text))))
-  (let ((evil-was-yanked-without-register nil))
-    (evil-yank beg end type register yank-handler))
-  (cond
-   ((eq type 'block)
-    (evil-apply-on-block #'delete-region beg end nil))
-   ((and (eq type 'line)
-         (= end (point-max))
-         (or (= beg end)
-             (/= (char-before end) ?\n))
-         (/= beg (point-min))
-         (=  (char-before beg) ?\n))
-    (delete-region (1- beg) end))
-   (t
-    (delete-region beg end)))
-  ;; place cursor on beginning of line
-  (when (and (called-interactively-p 'any)
-             (eq type 'line))
-    (evil-first-non-blank)))
+  (if (and (memq type '(inclusive exclusive))
+           (not (evil-visual-state-p))
+           (eq 'evil-delete evil-this-operator)
+           (save-excursion (goto-char beg) (bolp))
+           (save-excursion (goto-char end) (eolp))
+           (<= 1 (evil-count-lines beg end)))
+      ;; Imitate Vi strangeness: if motion meets above criteria,
+      ;; delete linewise. Not for change operator or visual state.
+      (let ((new-range (evil-expand beg end 'line)))
+        (evil-delete (nth 0 new-range) (nth 1 new-range) 'line register yank-handler))
+    (unless register
+      (let ((text (filter-buffer-substring beg end)))
+        (unless (string-match-p "\n" text)
+          ;; set the small delete register
+          (evil-set-register ?- text))))
+    (let ((evil-was-yanked-without-register nil))
+      (evil-yank beg end type register yank-handler))
+    (cond
+     ((eq type 'block)
+      (evil-apply-on-block #'delete-region beg end nil))
+     ((and (eq type 'line)
+           (= end (point-max))
+           (or (= beg end)
+               (/= (char-before end) ?\n))
+           (/= beg (point-min))
+           (=  (char-before beg) ?\n))
+      (delete-region (1- beg) end))
+     (t
+      (delete-region beg end)))
+    (when (and (called-interactively-p 'any)
+               (eq type 'line))
+      (evil-first-non-blank)
+      (when (and (not evil-start-of-line)
+                 evil-operator-start-col
+                 ;; Special exceptions to ever saving column:
+                 (not (memq evil-this-motion '(evil-forward-word-begin
+                                               evil-forward-WORD-begin))))
+        (move-to-column evil-operator-start-col)))))
 
 (evil-define-operator evil-delete-line (beg end type register yank-handler)
   "Delete to end of line."
@@ -1570,16 +1597,15 @@ be joined with the previous line if and only if
 
 (evil-define-command evil-delete-backward-word ()
   "Delete previous word."
-  (if (and (bolp) (not (bobp)))
-      (progn
-        (unless evil-backspace-join-lines (user-error "Beginning of line"))
-        (delete-char -1))
-    (delete-region (max
-                    (save-excursion
-                      (evil-backward-word-begin)
-                      (point))
-                    (line-beginning-position))
-                   (point))))
+  (let ((beg (save-excursion (evil-backward-word-begin) (point)))
+        (end (point)))
+    (cond
+     ((evil-replace-state-p) (while (< beg (point))
+                               (evil-replace-backspace)))
+     ((or (not (bolp)) (bobp)) (delete-region (max beg (line-beginning-position))
+                                              end))
+     (evil-backspace-join-lines (delete-char -1))
+     (t (user-error "Beginning of line")))))
 
 (evil-define-command evil-delete-back-to-indentation ()
   "Delete back to the first non-whitespace character.
@@ -1587,14 +1613,17 @@ If point is before the first non-whitespace character of a
 current line then delete from the point to the beginning of the
 current line.  If point is on the beginning of the line, behave
 according to `evil-backspace-join-lines'."
-  (if (bolp)
-      (evil-delete-backward-char-and-join 1)
-    (delete-region (if (<= (current-column) (current-indentation))
-                       (line-beginning-position)
-                     (save-excursion
-                       (evil-first-non-blank)
-                       (point)))
-                   (point))))
+  (let ((beg (if (<= (current-column) (current-indentation))
+                 (line-beginning-position)
+               (save-excursion
+                 (evil-first-non-blank)
+                 (point)))))
+    (cond
+     ((and (bolp) (evil-replace-state-p)) (evil-replace-backspace))
+     ((bolp) (evil-delete-backward-char-and-join 1))
+     ((evil-replace-state-p) (while (< beg (point))
+                               (evil-replace-backspace)))
+     (t (delete-region beg (point))))))
 
 (defun evil-ex-delete-or-yank (should-delete beg end type register count yank-handler)
   "Execute evil-delete or evil-yank on the given region.
@@ -1627,7 +1656,7 @@ given."
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
-(evil-define-command evil-ex-put (_beg end ex-arg &optional force)
+(evil-define-command evil-ex-put (beg end ex-arg &optional force)
   (interactive "<r><a><!>")
   (let* ((arg-chars (remove ?\s (string-to-list ex-arg)))
          (reg (or (car arg-chars) ?\"))
@@ -1673,6 +1702,7 @@ of the block."
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
+      (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
       (if (= opoint (point))
           (evil-open-above 1)
         (evil-open-below 1)))
@@ -1917,10 +1947,9 @@ but doesn't insert or remove any spaces."
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
-indented, too, otherwise they are ignored.  The relative column
-of point is preserved if this function is not called
-interactively. Otherwise, if the function is called as an
-operator, point is moved to the first non-blank character.
+indented, too, otherwise they are ignored.  Location of point
+is preserved relative to text when called from insert state.
+Otherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.
 See also `evil-shift-right'."
   :type line
   (interactive "<r><vc>")
@@ -1931,17 +1960,17 @@ See also `evil-shift-right'."
 The text is shifted to the nearest multiple of `evil-shift-width'
 \(the rounding can be disabled by setting `evil-shift-round').
 If PRESERVE-EMPTY is non-nil, lines that contain only spaces are
-indented, too, otherwise they are ignored.  The relative column
-of point is preserved if this function is not called
-interactively. Otherwise, if the function is called as an
-operator, point is moved to the first non-blank character.
+indented, too, otherwise they are ignored.  Location of point
+is preserved relative to text when called from insert or replace states.
+Otherwise, it is determined by `evil-start-of-line' and/or `evil-track-eol'.
 See also `evil-shift-left'."
   :type line
+  :move-point nil ; point is moved according to `evil-start-of-line' and state
   (interactive "<r><vc>")
   (setq count (or count 1))
   (let ((beg (set-marker (make-marker) beg))
         (end (set-marker (make-marker) end))
-        (pnt-indent (current-column))
+        (col-for-insert (current-column))
         first-shift) ; shift of first line
     (save-excursion
       (goto-char beg)
@@ -1974,10 +2003,21 @@ See also `evil-shift-left'."
         (setq first-shift (* count evil-shift-width))
         (indent-to first-shift)))
     ;; When called from insert state (C-t or C-d) the cursor should shift with the line,
-    ;; otherwise (normal state) it should end up on the first non-whitespace character
-    (if (evil-insert-state-p)
-        (move-to-column (max 0 (+ pnt-indent first-shift)))
-      (evil-first-non-blank))))
+    ;; otherwise (normal state) its position is determined by `evil-start-of-line'.
+    (cond
+     ((or (evil-insert-state-p) (evil-replace-state-p))
+      (move-to-column (max 0 (+ col-for-insert first-shift))))
+     (evil-start-of-line (evil-first-non-blank))
+     ((evil--stick-to-eol-p) (move-end-of-line 1))
+     (t (move-to-column (or goal-column evil-operator-start-col))))
+    (setq temporary-goal-column 0)))
+
+(defun evil-delete-indentation ()
+  "Delete all indentation on current line."
+  (interactive)
+  (save-excursion
+    (evil-beginning-of-line)
+    (delete-region (point) (progn (skip-chars-forward " \t") (point)))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
@@ -1993,10 +2033,14 @@ The text is shifted to the nearest multiple of
 `evil-shift-width'. Like `evil-shift-left' but always works on
 the current line."
   (interactive "<c>")
-  (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t))
+  (if (and (eq 'self-insert-command last-command)
+           (eq ?0 (char-before)))
+      (progn (backward-delete-char 1)
+             (evil-delete-indentation))
+    (evil-shift-left (line-beginning-position) (line-beginning-position 2) count t)))
 
 (evil-define-operator evil-align-left (beg end type &optional width)
-  "Right-align lines in the region at WIDTH columns.
+  "Left-align lines in the region at WIDTH columns.
 The default for width is the value of `fill-column'."
   :motion evil-line
   :type line
@@ -2208,6 +2252,11 @@ The return value is the yanked text."
             (evil-paste-before count register))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
+      ;; Ensure that gv can restore visually pasted area...
+      (setq evil-visual-previous-mark evil-visual-mark
+            evil-visual-mark (evil-get-marker ?\[ t)
+            evil-visual-previous-point evil-visual-point
+            evil-visual-point (evil-get-marker ?\] t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
@@ -2220,25 +2269,37 @@ The return value is the yanked text."
 (defun evil-paste-from-register (register)
   "Paste from REGISTER."
   (interactive
-   (let ((overlay (make-overlay (point) (point)))
-         (string "\""))
+   (let* ((opoint (point))
+          (overlay (make-overlay opoint (+ opoint (if (evil-replace-state-p) 1 0)))))
      (unwind-protect
          (progn
-           ;; display " in the buffer while reading register
-           (put-text-property 0 1 'face 'minibuffer-prompt string)
-           (put-text-property 0 1 'cursor t string)
-           (overlay-put overlay 'after-string string)
+           (overlay-put overlay 'invisible t)
+           (overlay-put overlay 'after-string (propertize "\""
+                                                          'face 'minibuffer-prompt
+                                                          'cursor 1))
            (list (or evil-this-register (read-char))))
        (delete-overlay overlay))))
-  (when (evil-paste-before nil register t)
-    ;; go to end of pasted text
-    (unless (eobp)
-      (forward-char))))
+  (let ((opoint (point))
+        (evil-move-cursor-back nil)
+        reg-length chars-to-delete)
+    (evil-paste-before nil register t)
+    (when (evil-replace-state-p)
+      (setq reg-length (- (point) opoint)
+            chars-to-delete (min (- (point-at-eol) (point)) reg-length))
+      ;; TODO: handle multi-line paste backspacing
+      (evil-update-replace-alist (point) reg-length chars-to-delete chars-to-delete)
+      (delete-char chars-to-delete))))
 
 (defun evil-paste-last-insertion ()
   "Paste last insertion."
   (interactive)
   (evil-paste-from-register ?.))
+
+(defun evil-paste-last-insertion-and-stop-insert ()
+  "Paste last insertion and change to normal state."
+  (interactive)
+  (evil-paste-last-insertion)
+  (evil-normal-state))
 
 (evil-define-command evil-use-register (register)
   "Use REGISTER for the next command."
@@ -2250,6 +2311,18 @@ The return value is the yanked text."
 (defvar evil-macro-buffer nil
   "The buffer that has been active on macro recording.")
 
+(defun evil-end-and-return-macro ()
+  "Like `kmacro-end-macro' but also return the macro.
+Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
+  (kmacro-end-macro nil)
+  (let ((end-keys-seq (append evil-execute-normal-keys nil))
+        (last-kbd-macro-seq (append last-kbd-macro nil)))
+    (unless last-kbd-macro-seq
+      (setq last-kbd-macro nil))
+    (if (and end-keys-seq last-kbd-macro-seq)
+        (apply #'vector (butlast last-kbd-macro-seq (length end-keys-seq)))
+      last-kbd-macro)))
+
 (evil-define-command evil-record-macro (register)
   "Record a keyboard macro into REGISTER.
 If REGISTER is :, /, or ?, the corresponding command line window
@@ -2259,34 +2332,33 @@ will be opened instead."
   (interactive
    (list (unless (and evil-this-macro defining-kbd-macro)
            (or evil-this-register (evil-read-key)))))
-  (cond
-   ((eq register ?\C-g)
-    (keyboard-quit))
-   ((and evil-this-macro defining-kbd-macro)
-    (setq evil-macro-buffer nil)
-    (condition-case nil
-        (end-kbd-macro)
-      (error nil))
-    (when last-kbd-macro
-      (when (member last-kbd-macro '("" []))
-        (setq last-kbd-macro nil))
-      (evil-set-register evil-this-macro last-kbd-macro))
-    (setq evil-this-macro nil))
-   ((eq register ?:)
-    (evil-command-window-ex))
-   ((eq register ?/)
-    (evil-command-window-search-forward))
-   ((eq register ??)
-    (evil-command-window-search-backward))
-   ((or (and (>= register ?0) (<= register ?9))
-        (and (>= register ?a) (<= register ?z))
-        (and (>= register ?A) (<= register ?Z)))
-    (when defining-kbd-macro (end-kbd-macro))
-    (setq evil-this-macro register)
-    (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil)
-    (setq evil-macro-buffer (current-buffer)))
-   (t (error "Invalid register"))))
+  (let (last-macro)
+    (cond
+     ((eq register ?\C-g)
+      (keyboard-quit))
+     ((and evil-this-macro defining-kbd-macro)
+      (setq evil-macro-buffer nil)
+      (condition-case nil
+          (setq last-macro (evil-end-and-return-macro))
+        (error nil))
+      (when last-macro
+        (evil-set-register evil-this-macro last-macro))
+      (setq evil-this-macro nil))
+     ((eq register ?:)
+      (evil-command-window-ex))
+     ((eq register ?/)
+      (evil-command-window-search-forward))
+     ((eq register ??)
+      (evil-command-window-search-backward))
+     ((or (<= ?0 register ?9)
+          (<= ?a register ?z)
+          (<= ?A register ?Z))
+      (when defining-kbd-macro (end-kbd-macro))
+      (setq evil-this-macro register)
+      (evil-set-register evil-this-macro nil)
+      (kmacro-start-macro nil)
+      (setq evil-macro-buffer (current-buffer)))
+     (t (error "Invalid register")))))
 
 (evil-define-command evil-execute-macro (count macro)
   "Execute keyboard macro MACRO, COUNT times.
@@ -2331,7 +2403,8 @@ when called interactively."
    (t
     (condition-case err
         (evil-with-single-undo
-          (execute-kbd-macro macro count))
+          (dotimes (_ (or count 1))
+            (execute-kbd-macro macro)))
       ;; enter Normal state if the macro fails
       (error
        (evil-normal-state)
@@ -2344,27 +2417,14 @@ when called interactively."
   "Restore previous selection."
   (let* ((point (point))
          (mark (or (mark t) point))
-         (dir evil-visual-direction)
-         (type (evil-visual-type))
-         range)
+         (type (evil-visual-type)))
+    ;; TODO handle swapping selection in visual state...
     (unless (evil-visual-state-p)
       (cond
        ;; No previous selection.
        ((or (null evil-visual-selection)
             (null evil-visual-mark)
             (null evil-visual-point)))
-       ;; If the type was one-to-one, it is preferable to infer
-       ;; point and mark from the selection's boundaries. The reason
-       ;; is that a destructive operation may displace the markers
-       ;; inside the selection.
-       ((evil-type-property type :one-to-one)
-        (setq range (evil-contract-range (evil-visual-range))
-              mark (evil-range-beginning range)
-              point (evil-range-end range))
-        (when (< dir 0)
-          (evil-swap mark point)))
-       ;; If the type wasn't one-to-one, we have to restore the
-       ;; selection on the basis of the previous point and mark.
        (t
         (setq mark evil-visual-mark
               point evil-visual-point)))
@@ -2536,6 +2596,29 @@ switch to insert state."
   (unless (evil-visual-state-p)
     (evil-insert count)))
 
+(defun evil-quoted-insert (count)
+  "Like `quoted-insert' but delete COUNT chars forward in replace state.
+Adds a `^' overlay as an input prompt."
+  (interactive "p")
+  (let* ((opoint (point))
+         chars-to-delete insert-prompt)
+    (unwind-protect
+        (progn
+          (if (evil-replace-state-p)
+              (progn
+                (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+                      insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
+                (evil-update-replace-alist opoint count chars-to-delete))
+            (setq insert-prompt (make-overlay opoint opoint)))
+          (overlay-put insert-prompt 'invisible t)
+          (overlay-put insert-prompt 'after-string (propertize "^"
+                                                               'face 'escape-glyph
+                                                               'cursor 1))
+          (let (overwrite-mode) ;; Force `read-quoted-char'
+            (quoted-insert count))
+          (when (evil-replace-state-p) (delete-char chars-to-delete)))
+      (when insert-prompt (delete-overlay insert-prompt)))))
+
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
@@ -2565,6 +2648,35 @@ The insertion will be repeated COUNT times."
   (when evil-auto-indent
     (indent-according-to-mode)))
 
+(defun evil--insert-line (count vcount non-blank-p)
+  "Switch to insert state at the beginning of the current line.
+If NON-BLANK-P is non-nil, point is placed at the first non-blank character
+on the current line.  If NON-BLANK-P is nil, point is placed at column 0,
+or the beginning of visual line.  The insertion will be repeated COUNT times.
+If VCOUNT is non nil it should be number > 0. The insertion will be repeated
+in the next VCOUNT - 1 lines below the current one."
+  (push (point) buffer-undo-list)
+  (let ((move-fn (if non-blank-p #'back-to-indentation #'evil-beginning-of-line)))
+    (if (and visual-line-mode
+             evil-respect-visual-line-mode)
+        (goto-char
+         (max (save-excursion
+                (funcall move-fn)
+                (point))
+              (save-excursion
+                (beginning-of-visual-line)
+                (point))))
+      (funcall move-fn)))
+  (setq evil-insert-count count
+        evil-insert-lines nil
+        evil-insert-vcount
+        (and vcount
+             (> vcount 1)
+             (list (line-number-at-pos)
+                   (if non-blank-p #'evil-first-non-blank #'evil-beginning-of-line)
+                   vcount)))
+  (evil-insert-state 1))
+
 (defun evil-insert-line (count &optional vcount)
   "Switch to insert state at beginning of current line.
 Point is placed at the first non-blank character on the current
@@ -2572,26 +2684,16 @@ line.  The insertion will be repeated COUNT times.  If VCOUNT is
 non nil it should be number > 0. The insertion will be repeated
 in the next VCOUNT - 1 lines below the current one."
   (interactive "p")
-  (push (point) buffer-undo-list)
-  (if (and visual-line-mode
-           evil-respect-visual-line-mode)
-      (goto-char
-       (max (save-excursion
-              (back-to-indentation)
-              (point))
-            (save-excursion
-              (beginning-of-visual-line)
-              (point))))
-    (back-to-indentation))
-  (setq evil-insert-count count
-        evil-insert-lines nil
-        evil-insert-vcount
-        (and vcount
-             (> vcount 1)
-             (list (line-number-at-pos)
-                   #'evil-first-non-blank
-                   vcount)))
-  (evil-insert-state 1))
+  (evil--insert-line count vcount t))
+
+(defun evil-insert-0-line (count &optional vcount)
+  "Switch to insert state at beginning of current line.
+Point is placed at column 0, or the beginning of the visual line.
+The insertion will be repeated COUNT times.  If VCOUNT is
+non nil it should be number > 0. The insertion will be repeated
+in the next VCOUNT - 1 lines below the current one."
+  (interactive "p")
+  (evil--insert-line count vcount nil))
 
 (defun evil-append-line (count &optional vcount)
   "Switch to Insert state at the end of the current line.
@@ -2617,8 +2719,16 @@ next VCOUNT - 1 lines below the current one."
   "Insert COUNT digraphs."
   :repeat change
   (interactive "p")
-  (let ((digraph (evil-read-digraph-char 0)))
-    (insert-char digraph count)))
+  (let ((opoint (point))
+        chars-to-delete insert-prompt)
+    (if (evil-replace-state-p)
+        (progn
+          (setq chars-to-delete (min (- (point-at-eol) opoint) count)
+                insert-prompt (make-overlay opoint (+ chars-to-delete opoint)))
+          (evil-update-replace-alist opoint count chars-to-delete))
+      (setq insert-prompt (make-overlay opoint opoint)))
+    (insert-char (evil-read-digraph-char-with-overlay insert-prompt) count)
+    (when chars-to-delete (delete-char chars-to-delete))))
 
 (evil-define-command evil-ex-show-digraphs ()
   "Shows a list of all available digraphs."
@@ -3438,21 +3548,28 @@ If FORCE is non-nil and MARKS is blank, all local marks except 0-9 are removed."
 
 (eval-when-compile (require 'ffap))
 (evil-define-command evil-find-file-at-point-with-line ()
-  "Opens the file at point and goes to line-number."
+  "Opens the file at point and goes to position if present."
   (require 'ffap)
   (let ((fname (with-no-warnings (ffap-file-at-point))))
-    (if fname
-        (let ((line
-               (save-excursion
-                 (goto-char (cadr ffap-string-at-point-region))
-                 (and (re-search-backward ":\\([0-9]+\\)\\="
-                                          (line-beginning-position) t)
-                      (string-to-number (match-string 1))))))
-          (with-no-warnings (ffap-other-window fname))
-          (when line
-            (goto-char (point-min))
-            (forward-line (1- line))))
-      (user-error "File does not exist."))))
+    (unless fname
+      (user-error "File does not exist."))
+    (let* ((line-number-pattern ":\\([0-9]+\\)\\=" )
+           (line-and-column-numbers-pattern ":\\([0-9]+\\):\\([0-9]+\\)\\=")
+           (get-number (lambda (pattern match-number)
+                         (save-excursion
+                           (goto-char (cadr ffap-string-at-point-region))
+                           (and (re-search-backward pattern (line-beginning-position) t)
+                                (string-to-number (match-string match-number))))))
+           (line-number (or (funcall get-number line-and-column-numbers-pattern 1)
+                            (funcall get-number line-number-pattern 1)))
+           (column-number (funcall get-number line-and-column-numbers-pattern 2)))
+      (message "line: %s, column: %s" line-number column-number)
+      (with-no-warnings (find-file-at-point fname))
+      (when line-number
+        (goto-char (point-min))
+        (forward-line (1- line-number))
+        (when column-number
+          (move-to-column (1- column-number)))))))
 
 (evil-define-command evil-find-file-at-point-visual ()
   "Find the filename selected by the visual region.
@@ -3546,12 +3663,13 @@ resp.  after executing the command."
     (evil-repeat-record (this-command-keys))
     (evil-clear-command-keys))
    ((and (evil-operator-state-p) (eq flag 'post))
-    ;; The value of (this-command-keys) at this point should be the
-    ;; key-sequence that called the last command that finished the
-    ;; search, usually RET. Therefore this key-sequence will be
-    ;; recorded in the post-command of the operator. Alternatively we
-    ;; could do it here.
-    (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern)))
+    (evil-repeat-record (evil-ex-pattern-regex evil-ex-search-pattern))
+    ;; If it weren't for the fact that `exit-minibuffer' throws an `exit'
+    ;; tag, which bypasses the source of `this-command-keys', we'd be able
+    ;; to capture the key(s) in the post-command of the operator as usual.
+    ;; Fortunately however, `last-input-event' can see the key (by default, `return')
+    (unless (append (this-command-keys) nil)
+      (evil-repeat-record (vector last-input-event))))
    (t (evil-repeat-motion flag))))
 
 (evil-define-motion evil-ex-search-forward (count)
@@ -3923,7 +4041,7 @@ range. The given argument is passed straight to
   "Go to POSITION in the buffer.
 Default position is the beginning of the buffer."
   :jump t
-  (interactive "<N>Goto position: ")
+  (interactive "<N>")
   (let ((position (evil-normalize-position
                    (or position (point-min)))))
     (goto-char position)))
@@ -4636,6 +4754,11 @@ if the previous state was Emacs state."
       (when (evil-emacs-state-p)
         (evil-normal-state (and message 1))))))
 
+(defvar evil-execute-normal-keys nil
+  "The keys used to invoke the current `evil-execute-in-normal-state'.
+Can be used to detect if we are currently in that quasi-state.
+With current bindings, it will be \\<evil-insert-state-map>\\[evil-execute-in-normal-state]")
+
 (evil-define-local-var evil--execute-normal-eol-pos nil
   "Vim has special behaviour for executing in normal state at eol.
 This var stores the eol position, so it can be restored when necessary.")
@@ -4672,19 +4795,21 @@ Restore the disabled repeat hooks on insert-state exit."
                       (not (memq this-command '(evil-insert
                                                 evil-goto-mark))))
              (forward-char))
-           (unless (eq 'replace evil-state)
+           (unless (memq evil-state '(replace insert))
              (evil-change-state ',evil-state))
            (when (eq 'insert evil-state)
              (remove-hook 'pre-command-hook 'evil-repeat-pre-hook)
              (remove-hook 'post-command-hook 'evil-repeat-post-hook)
              (add-hook 'evil-insert-state-exit-hook 'evil--restore-repeat-hooks))
            (setq evil-move-cursor-back ',evil-move-cursor-back
-                 evil-move-beyond-eol ',evil-move-beyond-eol)))
+                 evil-move-beyond-eol ',evil-move-beyond-eol
+                 evil-execute-normal-keys nil)))
     'post-command-hook)
   (setq evil-insert-count nil
         evil--execute-normal-return-state evil-state
         evil--execute-normal-eol-pos (when (eolp) (point))
-        evil-move-cursor-back nil)
+        evil-move-cursor-back nil
+        evil-execute-normal-keys (this-command-keys))
   (evil-normal-state)
   (setq evil-move-beyond-eol t)
   (evil-echo "Switched to Normal state for the next command ..."))

@@ -204,6 +204,13 @@ cursor, or a list of the above."
 (defvar evil-force-cursor nil
   "Overwrite the current states default cursor.")
 
+(defcustom evil-start-of-line nil
+  "Analogue of vim's `startofline'.
+If nil, preserve column when making relevant movements of the cursor.
+Otherwise, move the cursor to the start of the line."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-repeat-move-cursor t
   "\\<evil-normal-state-map>
 Whether repeating commands with \\[evil-repeat] may move the cursor.
@@ -599,6 +606,11 @@ in insert state."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-search-wrap-ring-bell nil
+  "Whether to ring the bell when search wraps around the buffer."
+  :type  'boolean
+  :group 'evil)
+
 (defvar dabbrev-search-these-buffers-only)
 (defvar dabbrev-case-distinction)
 (defcustom evil-complete-next-func
@@ -894,18 +906,7 @@ expression matching the buffer's name and STATE is one of `normal',
 (defvar evil-pending-intercept-maps nil
   "An alist of pending intercept maps.")
 
-(defcustom evil-overriding-maps
-  '((Buffer-menu-mode-map . nil)
-    (color-theme-mode-map . nil)
-    (comint-mode-map . nil)
-    (compilation-mode-map . nil)
-    (grep-mode-map . nil)
-    (dictionary-mode-map . nil)
-    (ert-results-mode-map . motion)
-    (Info-mode-map . motion)
-    (speedbar-key-map . nil)
-    (speedbar-file-key-map . nil)
-    (speedbar-buffers-key-map . nil))
+(defcustom evil-overriding-maps '()
   "Keymaps that should override Evil maps.
 Entries have the form (MAP-VAR . STATE), where MAP-VAR is
 a keymap variable and STATE is the state whose bindings
@@ -1446,14 +1447,17 @@ of `evil-inhibit-operator' from one local scope to another.")
 (defvar evil-operator-range-motion nil
   "Motion of `evil-operator-range'.")
 
+(defvar evil-operator-start-col nil
+  "Used to restore column (where possible) after an operator has moved it.")
+
 (defvar evil-restriction-stack nil
   "List of previous restrictions.
 Using `evil-with-restriction' stores the previous values of
 `point-min' and `point-max' as a pair in this list.")
 
 (evil-define-local-var evil-markers-alist
-  '((?\( . evil-backward-sentence)
-    (?\) . evil-forward-sentence)
+  '((?\( . evil-backward-sentence-begin)
+    (?\) . evil-forward-sentence-begin)
     (?{ . evil-backward-paragraph)
     (?} . evil-forward-paragraph)
     (?' . evil-jump-backward-swap)
@@ -1649,6 +1653,9 @@ instead of `buffer-undo-list'.")
 
 (evil-define-local-var evil-visual-point nil
   "The position of point in Visual state, a marker.")
+
+(evil-define-local-var evil-visual-previous-point nil
+  "The position of point before Visual state, a marker.")
 
 (evil-define-local-var evil-visual-mark nil
   "The position of mark in Visual state, a marker.")
@@ -1936,6 +1943,11 @@ Otherwise the previous command is assumed as substitute.")
 (define-key evil-ex-search-keymap [escape] 'abort-recursive-edit)
 (set-keymap-parent evil-ex-search-keymap minibuffer-local-map)
 
+(defcustom evil-want-empty-ex-last-command t
+  "Whether to default to evil-ex-previous-command at empty ex prompt."
+  :type 'boolean
+  :group 'evil)
+
 (defconst evil-version
   (eval-when-compile
     (with-temp-buffer
@@ -2024,6 +2036,11 @@ to `undo-redo', Evil uses commands natively available in Emacs 28."
   :set #'(lambda (sym value)
            (evil-set-undo-system value)
            (set-default sym value)))
+
+(defcustom evil-visual-update-x-selection-p t
+  "Whether to update the X PRIMARY selection with the current visual region automatically."
+  :type  'boolean
+  :group 'evil)
 
 (defun evil-version ()
   (interactive)

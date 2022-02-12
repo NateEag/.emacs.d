@@ -11793,27 +11793,60 @@ Select the `multi-term' dedicated window." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20210615.1511/moody-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/moody-20220120.1155/moody-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20210615.1511/moody-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/moody-20220120.1155/moody-autoloads.el") (car load-path))))
 
 
 
 (autoload 'moody-replace-mode-line-buffer-identification "moody" "\
+Use moody's variant of `mode-line-buffer-identification'.
 
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
 
-\(fn &optional REVERSE)" t nil)
+\(fn &optional RESTORE)" t nil)
 
 (autoload 'moody-replace-sml/mode-line-buffer-identification "moody" "\
+Use moody's variant of `mode-line-buffer-identification'.
 
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
 
-\(fn &optional REVERSE)" t nil)
+Use instead of `moody-replace-mode-line-buffer-identification'
+if you use the `smart-mode-line' package, after `sml/setup' has
+already been called.
+
+\(fn &optional RESTORE)" t nil)
 
 (autoload 'moody-replace-vc-mode "moody" "\
+Use moody's variant of `vc-mode' mode-line element.
 
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
 
-\(fn &optional REVERSE)" t nil)
+\(fn &optional RESTORE)" t nil)
+
+(autoload 'moody-replace-eldoc-minibuffer-message-function "moody" "\
+Use moody's variant of `eldoc-minibuffer-message'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
+
+\(fn &optional RESTORE)" t nil)
+
+(autoload 'moody-replace-mode-line-front-space "moody" "\
+Use moody's variant of `mode-line-front-space'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
+
+Adjust the display width so that subsequent character in the
+mode-line are aligned with those in the buffer.  Unlike other
+moody variants do not use any tab or ribbon.
+
+\(fn &optional RESTORE)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "moody" '("moody-")))
 

@@ -1,13 +1,13 @@
 ;;; moody.el --- Tabs and ribbons for the mode line  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20210615.1511
-;; Package-Commit: 9d8b2f758098d19781c7c5cdaeda5785e41be039
+;; Package-Version: 20220120.1155
+;; Package-Commit: aa6666eb344947bf1eb9d14619f4249403048321
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -63,13 +63,19 @@
 ;;         (set-face-attribute 'mode-line-inactive nil :box        nil)
 ;;         (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
 
+;; * Note that the above example is for `solarized-theme' and that for
+;;   your theme (face-attribute 'mode-line :underline) may return nil.
+;;   If you want borders, use something like (let ((line "red")) ...),
+;;   in that case.
+
 ;; * Add something like this to your init file:
 ;;
 ;;     (use-package moody
 ;;       :config
 ;;       (setq x-underline-at-descent-line t)
 ;;       (moody-replace-mode-line-buffer-identification)
-;;       (moody-replace-vc-mode))
+;;       (moody-replace-vc-mode)
+;;       (moody-replace-eldoc-minibuffer-message-function))
 
 ;; * Such replacement functions are defines as commands, making it
 ;;   quicker to try them out without having to add anything to your
@@ -87,16 +93,42 @@
 ;;; Options
 
 (defcustom moody-mode-line-height
-  (let ((font (face-font 'mode-line)))
-    (if font (* 2 (aref (font-info font) 2)) 30))
+  (and (fboundp 'font-info)
+       (let ((font (face-font 'mode-line)))
+         (if font (* 2 (aref (font-info font) 2)) 30)))
   "When using `moody', height of the mode line in pixels.
-This should be an even number."
-  :type 'integer
+
+This should be an even number or nil to leave this unspecified,
+in which case the value of `window-mode-line-height' is used.
+
+Increasing the height of the mode-line triggers a bug in Emacs
+releases before version 29.1, causing only parts of the buffer
+to be displayed in the window even though it would fix exactly.
+Moody provides a workaround but that in turn can result in some
+flickering.  If you notice such flickering and it bothers you,
+then either update to the development version of Emacs or do
+not increase the height of the mode-line."
+  :type '(choice (const :tag "unspecified" nil) integer)
   :group 'mode-line)
 
 (defcustom moody-slant-function 'moody-slant
   "Function used to create tab slants."
   :type 'function
+  :group 'mode-line)
+
+(defcustom moody-ribbon-background '(default :background)
+  "Indirect specification of the background color used for ribbons.
+
+This has the form (FACE ATTRIBUTE), and the color to be used is
+determined using (face-attribute FACE ATTRIBUTE).  If FACE is
+the special value `base', then, depending on whether the window
+is active or not either `mode-line' or `mode-line-inactive' is
+used (or if `moody-wrap's optional arguments FACE-ACTIVE and/or
+FACE-INACTIVE are specified, then those faces).
+
+To get the color used until v0.6.0, then use (base :underline)."
+  :type '(list (symbol  :tag "Face")
+               (keyword :tag "Attribute"))
   :group 'mode-line)
 
 ;;; Core
@@ -114,6 +146,14 @@ If optional REVERSE is non-nil, then replace WRAPPED with PLAIN."
     (if (eq format (default-value 'mode-line-format))
         (message "Cannot find %s and use %s in its place" plain wrapped)
       (setq-default mode-line-format format))))
+
+(defun moody-format-find (elt &optional format)
+  (cl-labels ((find (elt tree)
+                    (cond ((eq tree elt) tree)
+                          ((consp tree)
+                           (or (find elt (car tree))
+                               (find elt (cdr tree)))))))
+    (find elt (or format (default-value 'mode-line-format)))))
 
 (defun moody-tab (string &optional width direction)
   "Return STRING as a tab.
@@ -155,20 +195,20 @@ not specified, then faces based on `default', `mode-line' and
          (line  (if (listp line) (plist-get line :color) line))
          (line  (if (eq line 'unspecified) outer line))
          (inner (if (eq type 'ribbon)
-                    (face-attribute base :underline)
+                    (pcase-let ((`(,face ,attribute) moody-ribbon-background))
+                      (face-attribute (if (eq face 'base) base face)
+                                      attribute))
                   (face-attribute 'default :background)))
          (slant (if (eq direction 'down)
                     (list outer line inner)
                   (list inner line outer)))
-         (face  (if (eq direction 'down)
-                    (list :overline (and (eq type 'ribbon) line)
-                          :underline line
-                          :background inner)
-                  (list :overline line
-                        :underline (and (or (eq type 'ribbon)
-                                            (not (window-at-side-p nil 'bottom)))
-                                        line)
-                        :background inner)))
+         (face  (list :overline  (and (or (eq direction 'up)
+                                          (eq type 'ribbon))
+                                      line)
+                      :underline (and (or (eq direction 'down)
+                                          (eq type 'ribbon))
+                                      line)
+                      :background inner))
          (pad   (max (- (or width 0) (length string)) 2)))
     (setq string
           (concat (make-string (ceiling pad 2) ?\s)
@@ -193,7 +233,7 @@ not specified, then faces based on `default', `mode-line' and
 
 (defun moody-slant (direction c1 c2 c3 &optional height)
   (unless height
-    (setq height moody-mode-line-height))
+    (setq height (or moody-mode-line-height (window-mode-line-height))))
   (unless (cl-evenp height)
     (cl-incf height))
   (let ((key (list direction c1 c2 c3 height)))
@@ -222,62 +262,179 @@ not specified, then faces based on `default', `mode-line' and
 ;;; Element Definitions
 ;;;; mode-line-buffer-identification
 
-(defvar moody-mode-line-buffer-identification
-  '(:eval (moody-tab (format-mode-line (propertized-buffer-identification "%b"))
+(defvar-local moody-mode-line-buffer-identification
+  '(:eval (moody-tab (car (propertized-buffer-identification (buffer-name)))
                      20 'down)))
+
 (put 'moody-mode-line-buffer-identification 'risky-local-variable t)
-(make-variable-buffer-local 'moody-mode-line-buffer-identification)
 
 ;;;###autoload
-(defun moody-replace-mode-line-buffer-identification (&optional reverse)
-  (interactive "P")
+(defun moody-replace-mode-line-buffer-identification (&optional restore)
+  "Use moody's variant of `mode-line-buffer-identification'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants."
+  (interactive (list (moody-format-find
+                      'moody-mode-line-buffer-identification)))
   (moody-replace-element 'mode-line-buffer-identification
                          'moody-mode-line-buffer-identification
-                         reverse))
+                         restore))
 
 ;;;; sml/mode-line-buffer-identification
 
 (defvar sml/mode-line-buffer-identification) ; defined in `smart-mode-line.el'
 
-(defvar moody-sml/mode-line-buffer-identification
+(defvar-local moody-sml/mode-line-buffer-identification
   '(:eval (moody-tab
            (or sml/buffer-identification
                (sml/generate-buffer-identification)
                ;; Just in case the above are both nil.
-               (format-mode-line (propertized-buffer-identification "%b")))
+               (car (propertized-buffer-identification (buffer-name))))
            20 'down)))
+
 (put 'moody-sml/mode-line-buffer-identification 'risky-local-variable t)
-(make-variable-buffer-local 'moody-sml/mode-line-buffer-identification)
 
 (defvar moody--default-mode-line-buffer-identification
   mode-line-buffer-identification)
 
 ;;;###autoload
-(defun moody-replace-sml/mode-line-buffer-identification (&optional reverse)
-  (interactive "P")
+(defun moody-replace-sml/mode-line-buffer-identification (&optional restore)
+  "Use moody's variant of `mode-line-buffer-identification'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
+
+Use instead of `moody-replace-mode-line-buffer-identification'
+if you use the `smart-mode-line' package, after `sml/setup' has
+already been called."
+  (interactive (list (moody-format-find
+                      'moody-sml/mode-line-buffer-identification)))
   ;; Without this `sml/generate-buffer-identification' would always return nil.
   (setq-default mode-line-buffer-identification
-                (if reverse
+                (if restore
                     moody--default-mode-line-buffer-identification
                   sml/mode-line-buffer-identification))
   (moody-replace-element 'mode-line-buffer-identification
                          'moody-sml/mode-line-buffer-identification
-                         reverse))
+                         restore))
 
 ;;;; vc-mode
 
-(defvar moody-vc-mode
-  ;;'(:eval (moody-ribbon (substring vc-mode 1) nil 'up))
-  '(:eval (moody-tab (substring vc-mode 1) nil 'up)))
+(defvar-local moody-vc-mode
+  '(:eval (moody-ribbon (substring vc-mode 1) nil 'up)))
+
 (put 'moody-vc-mode 'risky-local-variable t)
-(make-variable-buffer-local 'moody-vc-mode)
 
 ;;;###autoload
-(defun moody-replace-vc-mode (&optional reverse)
-  (interactive "P")
+(defun moody-replace-vc-mode (&optional restore)
+  "Use moody's variant of `vc-mode' mode-line element.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants."
+  (interactive (list (moody-format-find 'moody-vc-mode)))
   (moody-replace-element '(vc-mode vc-mode)
                          '(vc-mode moody-vc-mode)
-                         reverse))
+                         restore))
+
+;;;; eldoc
+
+(defvar moody-eldoc-minibuffer-message-function
+  (lambda ()  ;; Only display in a mode-line right above minibuffer.
+    (and (window-at-side-p nil 'bottom)
+         ;; Side windows tend to be too narrow; so if there
+         ;; are any, then display in all bottom mode-lines.
+         (or (not (eq (window-main-window) (frame-root-window)))
+             (window-at-side-p nil 'left))
+         (list " " (moody-tab eldoc-mode-line-string nil 'up)))))
+
+(put 'moody-eldoc-minibuffer-message-function 'risky-local-variable t)
+
+(defun moody-eldoc-minibuffer-message (format-string &rest args)
+  "Display messages in the mode-line when in the minibuffer.
+
+Otherwise work like `message'.
+
+Use `moody-replace-eldoc-minibuffer-message-function' to use
+this modified copy of `eldoc-minibuffer-message'.
+
+Set `moody-eldoc-minibuffer-message-function' if you want to
+change how the message is shown and/or in which mode-line(s)."
+  (if (minibufferp)
+      (progn
+        (add-hook 'minibuffer-exit-hook
+                  (lambda () (setq eldoc-mode-line-string nil
+                              ;; https://debbugs.gnu.org/16920
+                              eldoc-last-message nil))
+                  nil t)
+        (with-current-buffer
+            (window-buffer
+             (or (window-in-direction 'above (minibuffer-window))
+                 (minibuffer-selected-window)
+                 (get-largest-window)))
+          (when mode-line-format
+            ;; Undo eldoc-minibuffer-message's addition if necessary.
+            (when (eq (ignore-errors (cadr (cadr (cadr mode-line-format))))
+                      'eldoc-mode-line-string)
+              (setq mode-line-format (car (cddr mode-line-format))))
+            ;; Add our own variant, if it isn't present already.
+            (unless (and (listp mode-line-format)
+                         (assq 'eldoc-mode-line-string mode-line-format))
+              (setq mode-line-format
+                    (list ""
+                          '(eldoc-mode-line-string
+                            (:eval
+                             (funcall moody-eldoc-minibuffer-message-function)))
+                          mode-line-format))))
+          (setq eldoc-mode-line-string
+                (when (stringp format-string)
+                  (apply #'format-message format-string args)))
+          (force-mode-line-update)))
+    (apply #'message format-string args)))
+
+;;;###autoload
+(defun moody-replace-eldoc-minibuffer-message-function (&optional restore)
+  "Use moody's variant of `eldoc-minibuffer-message'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants."
+  (interactive (list (or (moody-format-find
+                          'moody-eldoc-minibuffer-message-function
+                          mode-line-format)
+                         (not (moody-format-find
+                               'eldoc-minibuffer-message-function
+                               mode-line-format)))))
+  (if (not restore)
+      (setq eldoc-message-function #'moody-eldoc-minibuffer-message)
+    (setq eldoc-message-function #'eldoc-minibuffer-message)
+    (dolist (buffer (buffer-list))
+      (with-current-buffer buffer
+        (when (eq (ignore-errors (car (cadr mode-line-format)))
+                  'eldoc-mode-line-string)
+          (setq mode-line-format (car (cddr mode-line-format))))))))
+
+;;;; mode-line-front-space
+
+(defvar-local moody-mode-line-front-space
+  '(:eval (if (display-graphic-p)
+              (propertize " " 'display `((space :align-to 0)))
+            "-")))
+
+(put 'moody-mode-line-front-space 'risky-local-variable t)
+
+;;;###autoload
+(defun moody-replace-mode-line-front-space (&optional restore)
+  "Use moody's variant of `mode-line-front-space'.
+
+If optional RESTORE is true, then go back to the default.
+If called interactively, then toggle between the variants.
+
+Adjust the display width so that subsequent character in the
+mode-line are aligned with those in the buffer.  Unlike other
+moody variants do not use any tab or ribbon."
+  (interactive (list (moody-format-find 'moody-mode-line-front-space)))
+  (moody-replace-element 'mode-line-front-space
+                         'moody-mode-line-front-space
+                         restore))
 
 ;;; Active Window
 
@@ -288,25 +445,17 @@ not specified, then faces based on `default', `mode-line' and
 Or put differently, return t if the possibly only temporarily
 selected window is still going to be selected when we return
 to the command loop."
-  (if (fboundp 'old-selected-window)
-      (or (eq (selected-window)
-              (old-selected-window))
-          (and (not (zerop (minibuffer-depth)))
-               (eq (selected-window)
-                   (with-selected-window (minibuffer-window)
-                     (minibuffer-selected-window)))))
-    (eq (selected-window) moody--active-window)))
+  (eq (selected-window) moody--active-window))
 
-(unless (fboundp 'old-selected-window)
-  (defun moody--set-active-window (_)
-    (let ((win (selected-window)))
-      (unless (minibuffer-window-active-p win)
-        (setq moody--active-window win))))
-  (add-hook 'pre-redisplay-functions 'moody--set-active-window))
+(defun moody--set-active-window (_)
+  (let ((win (selected-window)))
+    (setq moody--active-window
+          (if (minibuffer-window-active-p win)
+              (minibuffer-selected-window)
+            win))))
+(add-hook 'pre-redisplay-functions 'moody--set-active-window)
 
 ;;; Kludges
-
-(defvar-local moody--size-hacked-p nil)
 
 (defun moody-redisplay (&optional _force &rest _ignored)
   "Call `redisplay' to trigger mode-line height calculations.
@@ -321,16 +470,17 @@ These calculations can be triggered by calling `redisplay'
 explicitly at the appropriate time and this functions purpose
 is to make it easier to do so.
 
-This function is like `redisplay' with non-nil FORCE argument.
-It accepts an arbitrary number of arguments making it suitable
-as a `:before' advice for any function.  If the current buffer
-has no mode-line or this function has already been called in
-it, then this function does nothing."
-  (when (and mode-line-format (not moody--size-hacked-p))
-    (setq moody--size-hacked-p t)
+This function is like `redisplay' with non-nil FORCE argument,
+except that it only triggers redisplay when there is a non-nil
+`mode-line-format' and the height of the mode-line is different
+from that of the `default' face.  This function is intended to
+be used as an advice to window creation functions."
+  (when (and mode-line-format
+             (/= (frame-char-height) (window-mode-line-height)))
     (redisplay t)))
 
-(advice-add 'fit-window-to-buffer :before #'moody-redisplay)
+(unless (>= emacs-major-version 29)
+  (advice-add 'split-window :after #'moody-redisplay))
 
 (declare-function color-srgb-to-xyz "color" (red green blue))
 (declare-function color-rgb-to-hex "color" (red green blue &optional

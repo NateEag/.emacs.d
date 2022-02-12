@@ -24664,10 +24664,10 @@ Major mode for editing Apache configuration files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/anzu-20201203.529/anzu-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/anzu-20211002.2255/anzu-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/anzu-20201203.529/anzu-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/anzu-20211002.2255/anzu-autoloads.el") (car load-path))))
 
 
 

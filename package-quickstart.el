@@ -21795,10 +21795,10 @@ Major mode for `.env' files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/direnv-20210419.1851/direnv-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/direnv-20220103.1342/direnv-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/direnv-20210419.1851/direnv-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/direnv-20220103.1342/direnv-autoloads.el") (car load-path))))
 
 
 
@@ -21846,7 +21846,7 @@ visited (local) file.
 (autoload 'direnv-envrc-mode "direnv" "\
 Major mode for .envrc files as used by direnv.
 
-Since .envrc files are shell scripts, this mode inherits from sh-mode.
+Since .envrc files are shell scripts, this mode inherits from ‘sh-mode’.
 \\{direnv-envrc-mode-map}
 
 \(fn)" t nil)

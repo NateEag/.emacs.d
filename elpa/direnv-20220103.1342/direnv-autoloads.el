@@ -53,7 +53,7 @@ visited (local) file.
 (autoload 'direnv-envrc-mode "direnv" "\
 Major mode for .envrc files as used by direnv.
 
-Since .envrc files are shell scripts, this mode inherits from sh-mode.
+Since .envrc files are shell scripts, this mode inherits from ‘sh-mode’.
 \\{direnv-envrc-mode-map}
 
 \(fn)" t nil)

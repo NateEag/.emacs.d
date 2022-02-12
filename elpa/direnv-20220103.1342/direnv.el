@@ -1,9 +1,9 @@
-;;; direnv.el --- Support for direnv -*- lexical-binding: t; -*-
+;;; direnv.el --- direnv integration -*- lexical-binding: t; -*-
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
-;; Version: 2.1.0
-;; Package-Version: 20210419.1851
-;; Package-Commit: 4b94393a9adf677c7c037215e233eef5fbca553d
+;; Version: 2.2.0
+;; Package-Version: 20220103.1342
+;; Package-Commit: d71ceb415732c3b76a2948147fa3559622aceba2
 ;; Package-Requires: ((emacs "25.1") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -16,8 +16,19 @@
 
 ;;; Commentary:
 
-;; This package provides direnv integration for Emacs.
-;; See the README for more information.
+;; direnv (https://direnv.net/) integration for emacs. see the readme
+;; at https://github.com/wbolster/emacs-direnv for details.
+;;
+;; quick usage instructions for those familiar with direnv:
+;;
+;; - use ‘direnv-update-environment’ to manually update the emacs
+;;   environment so that inferior shells, linters, compilers, and test
+;;   runners start with the intended environmental variables.
+;;
+;; - enable the global ‘direnv-mode’ minor mode to do this
+;;   automagically upon switching buffers.
+;;
+;; - use ‘direnv-allow’ to mark a ‘.envrc’ file as safe.
 
 ;;; Code:
 
@@ -27,7 +38,7 @@
 (require 'subr-x)
 
 (defgroup direnv nil
-  "direnv integration for emacs"
+  "direnv integration for Emacs"
   :group 'environment
   :prefix "direnv-")
 
@@ -97,7 +108,7 @@ use `default-directory', since there is no file name (or directory)."
   (unless direnv--executable
     (setq direnv--executable (direnv--detect)))
   (unless direnv--executable
-    (user-error "Could not find the direnv executable. Is exec-path correct?"))
+    (user-error "Could not find the direnv executable. Is ‘exec-path’ correct?"))
   (let ((environment process-environment)
         (stderr-tempfile (make-temp-file "direnv-stderr"))) ;; call-process needs a file for stderr output
     (unwind-protect
@@ -113,7 +124,8 @@ use `default-directory', since there is no file name (or directory)."
                 (unless (zerop (buffer-size))
                   (goto-char (point-max))
                   (re-search-backward "^{")
-                  (let ((json-key-type 'string))
+                  (let ((json-key-type 'string)
+                        (json-object-type 'alist))
                     (json-read-object)))
               (unless (zerop (direnv--file-size stderr-tempfile))
                 (goto-char (point-max))
@@ -287,7 +299,7 @@ visited (local) file."
   sh-mode "envrc"
   "Major mode for .envrc files as used by direnv.
 
-Since .envrc files are shell scripts, this mode inherits from sh-mode.
+Since .envrc files are shell scripts, this mode inherits from ‘sh-mode’.
 \\{direnv-envrc-mode-map}")
 
 ;;;###autoload

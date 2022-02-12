@@ -1,0 +1,2 @@
+;;; Generated package description from todotxt.el  -*- no-byte-compile: t -*-
+(define-package "todotxt" "20220204.1903" "A major mode for editing todo.txt files" 'nil :commit "ddb25fb931b4bbc1af14c4c712d412af454794c4" :authors '(("Rick Dillon" . "rpdillon@killring.org")) :maintainer '("Rick Dillon" . "rpdillon@killring.org") :keywords '("todo.txt" "todotxt" "todotxt.el") :url "https://github.com/rpdillon/todotxt.el")

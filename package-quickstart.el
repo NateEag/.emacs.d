@@ -2879,10 +2879,10 @@ Toggle between single quotes and double quotes.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/todotxt-20200530.2337/todotxt-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/todotxt-20220204.1903/todotxt-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/todotxt-20200530.2337/todotxt-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/todotxt-20220204.1903/todotxt-autoloads.el") (car load-path))))
 
 
 

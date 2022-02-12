@@ -9,8 +9,8 @@
 
 ;; Created: 14 March 2011
 ;; Version: 0.2.5
-;; Package-Version: 20200530.2337
-;; Package-Commit: b51f7fa1357d2cbc1b72b10d15f8c6f009ce5a46
+;; Package-Version: 20220204.1903
+;; Package-Commit: ddb25fb931b4bbc1af14c4c712d412af454794c4
 ;; URL: https://github.com/rpdillon/todotxt.el
 ;; Keywords: todo.txt, todotxt, todotxt.el
 ;; Compatibility: GNU Emacs 22 ~ 26
@@ -367,6 +367,11 @@ format."
             (tail (substring str var-end)))
         (concat head declaration tail)))))
 
+(defun todotxt-delete-line ()
+  "Delete whole current line up to newline."
+  (beginning-of-line)
+  (delete-region (point) (line-end-position)))
+
 ;;; externally visible functions
 ;;;###autoload
 (defun todotxt ()
@@ -469,9 +474,8 @@ removed."
   (interactive)
   (save-excursion
     (let ((new-text (read-from-minibuffer "Edit: " (todotxt-get-current-line-as-string))))
-      (beginning-of-line)
       (setq inhibit-read-only 't)
-      (kill-line)
+      (todotxt-delete-line)
       (insert new-text)
       (todotxt-prioritize 'todotxt-get-due-priority-sort-key)
       (if todotxt-save-after-change (save-buffer))
@@ -482,22 +486,21 @@ removed."
   (let* ((new-tag (completing-read "Tags: " (todotxt-get-tag-completion-list-from-string
                                              (concat (todotxt-archive-file-contents) (buffer-string)))))
          (new-text (concat (todotxt-get-current-line-as-string) " " new-tag)))
-    (beginning-of-line)
     (setq inhibit-read-only 't)
-    (kill-line)
+    (todotxt-delete-line)
     (insert new-text)
     (if todotxt-save-after-change (save-buffer))
     (setq inhibit-read-only nil)))
 
 (defun todotxt-add-due-date ()
   (interactive)
+  (require 'org)
   (let* ((current-line (todotxt-get-current-line-as-string))
         (current-date (todotxt-get-variable current-line "due"))
         (date (org-read-date))
         (new-line (todotxt-set-variable current-line "due" date)))
-    (beginning-of-line)
     (setq inhibit-read-only 't)
-    (kill-line)
+    (todotxt-delete-line)
     (insert new-line)
     (todotxt-prioritize 'todotxt-get-due-priority-sort-key)
     (if todotxt-save-after-change (save-buffer))

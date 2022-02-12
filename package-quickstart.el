@@ -390,10 +390,10 @@ else like the former.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20210131.1758/web-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20220119.1026/web-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20210131.1758/web-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20220119.1026/web-mode-autoloads.el") (car load-path))))
 
 
 

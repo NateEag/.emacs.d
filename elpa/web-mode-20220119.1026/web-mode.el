@@ -4,8 +4,8 @@
 ;; Copyright 2011-2021 François-Xavier Bois
 
 ;; Version: 17.0.4
-;; Package-Version: 20210131.1758
-;; Package-Commit: 8ef47935d638902ba35a557cae5edd6ab6ab1346
+;; Package-Version: 20220119.1026
+;; Package-Commit: d95e0db1bd042d1a8c9bb6bf744eb07ecbf62d73
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -13,7 +13,7 @@
 ;; Repository: http://github.com/fxbois/web-mode
 ;; Created: July 2011
 ;; Keywords: languages
-;; License: GNU General Public License >= 2
+;; License: GNU General Public License >= 3
 ;; Distribution: This file is not part of Emacs
 
 ;;; Commentary:
@@ -972,7 +972,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("ctemplate"        . "\\.\\(chtml\\|mustache\\)\\'")
     ("django"           . "\\.\\(djhtml\\|tmpl\\|dtl\\|liquid\\|j2\\|njk\\)\\'")
     ("dust"             . "\\.dust\\'")
-    ("elixir"           . "\\.l?eex\\'")
+    ("elixir"           . "\\.[hl]?eex\\'")
     ("ejs"              . "\\.ejs\\'")
     ("erb"              . "\\.\\(erb\\|rhtml\\|erb\\.html\\)\\'")
     ("expressionengine" . "\\.ee\\'")
@@ -1423,7 +1423,7 @@ shouldn't be moved back.)")
   (regexp-opt
    (append
     (cdr (assoc "elixir" web-mode-extra-keywords))
-    '("do" "end" "case" "bc" "lc" "for" "if" "cond" "with" "unless" "try" "receive" "fn" "defmodule" "defprotocol" "defimpl" "defrecord" "defrecordp" "defstruct" "defdelegate" "defcallback" "defexception" "defoverridable" "defguard" "defgaurdp" "exit" "after" "rescue" "catch" "else" "raise" "throw" "quote" "unquote" "super" "when" "and" "or" "not" "in"))))
+    '("after" "and" "bc" "case" "catch" "cond" "defcallback" "defdelegate" "defexception" "defgaurdp" "defguard" "defimpl" "defmodule" "defoverridable" "defprotocol" "defrecord" "defrecordp" "defstruct" "do" "else" "end" "exit" "fn" "for" "form_for" "if" "in" "lc" "not" "or" "quote" "raise" "receive" "rescue" "super" "throw" "try" "unless" "unquote" "when" "with"))))
 
 
 (defvar web-mode-elixir-constants
@@ -2838,6 +2838,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
   (when (or (null web-mode-change-end) (> font-lock-end web-mode-change-end))
     (when web-mode-trace (message "extend-region: font-lock-end(%S) > web-mode-change-end(%S)" font-lock-end web-mode-change-end))
     (setq web-mode-change-end font-lock-end))
+  (when font-lock-dont-widen
+    (setq web-mode-change-beg (max web-mode-change-beg (point-min))
+          web-mode-change-end (min web-mode-change-end (point-max))))
   (let ((region (web-mode-scan web-mode-change-beg web-mode-change-end)))
     (when region
       ;;(message "region: %S" region)

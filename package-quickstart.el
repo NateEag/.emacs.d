@@ -7546,10 +7546,10 @@ In a dired buffer, it will open the current directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20210129.1921/reveal-in-folder-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20220110.1821/reveal-in-folder-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20210129.1921/reveal-in-folder-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20220110.1821/reveal-in-folder-autoloads.el") (car load-path))))
 
 
 

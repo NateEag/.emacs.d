@@ -1,14 +1,14 @@
 ;;; reveal-in-folder.el --- Reveal current file in folder  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh
 ;; Created date 2019-11-06 23:14:19
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Reveal current file in folder.
 ;; Keyword: folder finder reveal file explorer
 ;; Version: 0.1.2
-;; Package-Version: 20210129.1921
-;; Package-Commit: f62be2d11c8a9182cf84f0efe7ed054cc304262d
+;; Package-Version: 20220110.1821
+;; Package-Commit: 8d4dd03f8c12ea4b40fea90d0ae1de122caa5451
 ;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
 ;; URL: https://github.com/jcs-elpa/reveal-in-folder
 
@@ -66,11 +66,11 @@
      ;; Windows
      ((memq system-type '(cygwin windows-nt ms-dos))
       (cond (buf-name
-             (setq buf-name (s-replace "/" "\\" buf-name))
-             (setq cmd (format "explorer /select,%s" buf-name)))
+             (setq buf-name (s-replace "/" "\\" buf-name)
+                   cmd (format "explorer /select,%s" buf-name)))
             ((ignore-errors (file-directory-p path))
-             (setq path (s-replace "/" "\\" path))
-             (setq cmd (format "explorer /select,%s" path)))
+             (setq path (s-replace "/" "\\" path)
+                   cmd (format "explorer /select,%s" path)))
             (t (setq cmd "explorer ."))))
      ;; macOS
      ((eq system-type 'darwin)

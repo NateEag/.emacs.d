@@ -19329,10 +19329,10 @@ format recognized by `kbd', for example \"C-x\".
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20210608.2033/format-all-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/format-all-20211119.1042/format-all-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20210608.2033/format-all-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/format-all-20211119.1042/format-all-autoloads.el") (car load-path))))
 
 
 
@@ -19365,6 +19365,18 @@ they are shown in a buffer called *format-all-errors*.
 
 \(fn &optional PROMPT)" t nil)
 
+(autoload 'format-all-region "format-all" "\
+Auto-format the source code in the current region.
+
+Like `format-all-buffer' but format only the active region
+instead of the entire buffer.  This requires support from the
+formatter.
+
+Called non-interactively, START and END delimit the region.
+The PROMPT argument works as for `format-all-buffer'.
+
+\(fn START END &optional PROMPT)" t nil)
+
 (autoload 'format-all-mode "format-all" "\
 Toggle automatic source code formatting before save.
 
@@ -19389,7 +19401,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-" "fish-indent" "fprettify" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "purty" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "yapf")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dart" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-" "fantomas" "fish-indent" "fprettify" "gawk" "gleam" "hindent" "html-tidy" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nginxfmt" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "pur" "raco-fmt" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "v-fmt" "yapf")))
 
 
 )

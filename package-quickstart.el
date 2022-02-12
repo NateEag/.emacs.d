@@ -18495,10 +18495,10 @@ and call `auth-source-forget+'." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/github-review-20210314.2203/github-review-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/github-review-20211029.243/github-review-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/github-review-20210314.2203/github-review-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/github-review-20211029.243/github-review-autoloads.el") (car load-path))))
 
 
 

@@ -7328,10 +7328,10 @@ In any case, return the edit-indirect buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20210521.1050/separedit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220202.1359/separedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20210521.1050/separedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20220202.1359/separedit-autoloads.el") (car load-path))))
 
 
 

@@ -2,10 +2,10 @@
 
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.3
-;; Package-Version: 20210504.2207
-;; Package-Commit: 0d2fd02c160cf2a09ca4b5b4ffa544833df5afed
-;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, convenience
+;; Version: 0.8.5
+;; Package-Version: 20220206.1802
+;; Package-Commit: a715c116341162ff1a49fff684a45dec8ac0b0af
+;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, aws, azure, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -37,6 +37,16 @@
 
 ;;; Change Log:
 
+;; 2022-02-06 - v0.8.5
+;; * URL escape pathnames (thanks David Ongaro)
+;; * Mark misspelled Savannah functions as obsolete (thanks Hendursaga)
+;; * Add support for AWS CodeCommit (thanks Ram Krishnan)
+;; * Add support for cgit (thanks Hendursaga)
+;;
+;; 2020-01-20 - v0.8.4
+;; * Add support for Codeberg (thanks Jeremy Friesen)
+;; * Add git-link-homepage-remote-alist (thanks Wim Van Deun)
+;;
 ;; 2020-01-20 - v0.8.3
 ;; * Add support for Savannah
 ;;
@@ -197,13 +207,15 @@ See its docs."
 
 (defcustom git-link-remote-alist
   '(("git.sr.ht" git-link-sourcehut)
+    ("codeberg.org" git-link-codeberg)
     ("github" git-link-github)
     ("bitbucket" git-link-bitbucket)
     ("gitorious" git-link-gitorious)
     ("gitlab" git-link-gitlab)
     ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-savannah)
     ("visualstudio\\|azure" git-link-azure)
-    ("sourcegraph" git-link-sourcegraph))
+    ("sourcegraph" git-link-sourcegraph)
+    ("\\(amazonaws\\|amazon\\)\\.com" git-link-codecommit))
   "Alist of host names and functions creating file links for those.
 Each element looks like (REGEXP FUNCTION) where REGEXP is used to
 match the remote's host name and FUNCTION is used to generate a link
@@ -216,14 +228,36 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 
 (defcustom git-link-commit-remote-alist
   '(("git.sr.ht" git-link-commit-github)
+    ("codeberg.org" git-link-commit-codeberg)
     ("github" git-link-commit-github)
     ("bitbucket" git-link-commit-bitbucket)
     ("gitorious" git-link-commit-gitorious)
     ("gitlab" git-link-commit-github)
     ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-commit-savannah)
     ("visualstudio\\|azure" git-link-commit-azure)
-    ("sourcegraph" git-link-commit-sourcegraph))
+    ("sourcegraph" git-link-commit-sourcegraph)
+    ("\\(amazonaws\\|amazon\\)\\.com" git-link-commit-codecommit))
   "Alist of host names and functions creating commit links for those.
+Each element looks like (REGEXP FUNCTION) where REGEXP is used to
+match the remote's host name and FUNCTION is used to generate a link
+to the commit on remote host.
+
+As an example, \"gitlab\" will match with both \"gitlab.com\" and
+\"gitlab.example.com\"."
+  :type '(alist :key-type string :value-type (group function))
+  :group 'git-link)
+
+(defcustom git-link-homepage-remote-alist
+  '(("git.sr.ht" git-link-homepage-github)
+    ("github" git-link-homepage-github)
+    ("bitbucket" git-link-homepage-bitbucket)
+    ("gitorious" git-link-homepage-github)
+    ("gitlab" git-link-homepage-github)
+    ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-homepage-savannah)
+    ("visualstudio\\|azure" git-link-homepage-github)
+    ("sourcegraph" git-link-homepage-github)
+    ("\\(amazonaws\\|amazon\\)\\.com" git-link-homepage-codecommit))
+  "Alist of host names and functions creating homepage links for those.
 Each element looks like (REGEXP FUNCTION) where REGEXP is used to
 match the remote's host name and FUNCTION is used to generate a link
 to the commit on remote host.
@@ -404,6 +438,18 @@ return (FILENAME . REVISION) otherwise nil."
          ((string-match "\\`srv/git/" path)
           (setq path (substring path 8)))))
 
+      ;; For AWS CodeCommit
+      (when (string-match "git-codecommit\\.\\(.*\\)\\.amazonaws.com" host)
+        (let* ((matchp (string-match "\\([^\\.]*\\)\\.\\([^\\.]*\\)" host))
+               (region (when matchp
+                         (match-string 2 host)))
+               (domainname ".console.aws.amazon.com"))
+          (when region
+            (setq host (concat region domainname))))
+        (when (string-match "v1/repos/" path)
+          (setq path (concat "codesuite/codecommit/repositories/"
+                             (substring path 9)))))
+
       (list host path))))
 
 (defun git-link--using-git-timemachine ()
@@ -458,6 +504,18 @@ return (FILENAME . REVISION) otherwise nil."
   (setq deactivate-mark t)
   (when git-link-open-in-browser
     (browse-url link)))
+
+(defun git-link-codeberg (hostname dirname filename branch commit start end)
+    (format "https://%s/%s/src/%s/%s"
+	    hostname
+	    dirname
+	    (or branch commit)
+            (concat filename
+                    (when start
+                      (concat "#"
+                              (if end
+                                  (format "L%s-%s" start end)
+                                (format "L%s" start)))))))
 
 (defun git-link-gitlab (hostname dirname filename branch commit start end)
   (format "https://%s/%s/blob/%s/%s"
@@ -519,6 +577,12 @@ return (FILENAME . REVISION) otherwise nil."
       ;; Azure only supports full 32 characters SHA
       (car (git-link--exec "rev-parse" commit))))
 
+(defun git-link-commit-codeberg (hostname dirname commit)
+    (format "https://%s/%s/commit/%s"
+	    hostname
+	    dirname
+	    commit))
+
 (defun git-link-gitorious (hostname dirname filename _branch commit start _end)
   (format "https://%s/%s/source/%s:%s#L%s"
 	  hostname
@@ -556,8 +620,8 @@ return (FILENAME . REVISION) otherwise nil."
 	  dirname
 	  commit))
 
-(defun git-link-savannah (hostname dirname filename branch commit start _end)
-  (format "https://%s/cgit/%s.git/tree/%s?h=%s"
+(defun git-link-cgit (hostname dirname filename branch commit start _end)
+  (format "https://%s/%s/tree/%s?h=%s"
 	  hostname
 	  dirname
           filename
@@ -566,11 +630,25 @@ return (FILENAME . REVISION) otherwise nil."
            (when start
              (concat "#" (format "n%s" start))))))
 
-(defun git-link-commit-savannah (hostname dirname commit)
-  (format "http://%s/cgit/%s.git/commit/?id=%s"
+(defun git-link-commit-cgit (hostname dirname commit)
+  (format "https://%s/%s/commit/?id=%s"
 	  hostname
-	  dirname
+          dirname
 	  commit))
+
+(defun git-link-savannah (hostname dirname filename branch commit start end)
+  (git-link-cgit hostname
+                 (format "cgit/%s.git" dirname) ; unique to Savannah
+                 filename
+                 branch
+                 commit
+                 start
+                 end))
+
+(defun git-link-commit-savannah (hostname dirname commit)
+  (git-link-commit-cgit hostname
+                        (format "cgit/%s.git" dirname) ; also unique to Savannah
+                        commit))
 
 (defun git-link-sourcegraph (hostname dirname filename branch commit start end)
   (let ((line-or-range (cond ((and start end) (format "#L%s-%s" start end))
@@ -591,6 +669,42 @@ return (FILENAME . REVISION) otherwise nil."
             hostname
             dir-file-name
             commit)))
+
+(defun git-link-homepage-github (hostname dirname)
+  (format "https://%s/%s"
+	  hostname
+	  dirname))
+
+(defun git-link-homepage-savannah (hostname dirname)
+  (format "https://%s/cgit/%s.git/"
+	  hostname
+	  dirname))
+
+(defun git-link-codecommit (hostname
+                            dirname
+                            filename
+                            branch
+                            commit
+                            start
+                            end)
+  (format "https://%s/%s/browse/refs/heads/%s/--/%s"
+          hostname
+          dirname
+          (or branch commit)
+          (concat filename
+                  (when start
+                    (format "?lines=%s-%s"
+                            start
+                            (or end start))))))
+
+(defun git-link-commit-codecommit (hostname dirname commit)
+  (format "https://%s/%s/commit/%s" hostname dirname commit))
+
+(defun git-link-homepage-codecommit (hostname dirname)
+  (format "https://%s/%s/browse" hostname dirname))
+
+(define-obsolete-function-alias
+  'git-link-homepage-svannah 'git-link-homepage-savannah "cf947f9")
 
 (defun git-link--select-remote ()
   (if current-prefix-arg
@@ -647,7 +761,7 @@ Defaults to \"origin\"."
                 (funcall handler
                          (car remote-info)
                          (cadr remote-info)
-                         filename
+                         (url-hexify-string filename (cons ?/ url-unreserved-chars))
                          (if (or (git-link--using-git-timemachine)
                                  (git-link--using-magit-blob-mode)
                                  vc-revison
@@ -691,23 +805,30 @@ Defaults to \"origin\"."
 
 ;;;###autoload
 (defun git-link-homepage (remote)
-  "Create a URL for the current buffer's REMOTE repository homepage.
-The URL will be added to the kill ring.  If `git-link-open-in-browser'
-is non-nil also call `browse-url'."
+  "Create a URL representing the homepage of the current
+buffer's GitHub/Bitbucket/GitLab/... repository. The
+URL will be added to the kill ring.
+
+With a prefix argument prompt for the remote's name.
+Defaults to \"origin\"."
 
   (interactive (list (git-link--select-remote)))
-  (let* ((remote-url (git-link--remote-url remote))
-         (remote-info (when remote-url (git-link--parse-remote remote-url)))
-         (base (car remote-info)))
+  (let* (handler remote-info (remote-url (git-link--remote-url remote)))
+    (if (null remote-url)
+        (message "Remote `%s' not found" remote)
 
-    ;; For Savannah
-    (when (string-match "gnu\\.org\\'" base)
-      (setq base (concat base  "/cgit")))
+      (setq remote-info (git-link--parse-remote remote-url)
+            handler (git-link--handler git-link-homepage-remote-alist (car remote-info)))
 
-    (if remote-info
-	;;TODO: shouldn't assume https, need service specific handler like others
-	(git-link--new (format "https://%s/%s" base (cadr remote-info)))
-      (error  "Remote `%s' is unknown or contains an unsupported URL" remote))))
+      (cond ((null (car remote-info))
+             (message "Remote `%s' contains an unsupported URL" remote))
+            ((not (functionp handler))
+             (message "No handler for %s" (car remote-info)))
+            ;; null ret val
+            ((git-link--new
+              (funcall handler
+                       (car remote-info)
+                       (cadr remote-info))))))))
 
 (provide 'git-link)
 ;;; git-link.el ends here

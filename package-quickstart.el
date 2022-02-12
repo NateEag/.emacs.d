@@ -18638,10 +18638,10 @@ A major mode for editing .gitignore files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20210504.2207/git-link-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20220206.1802/git-link-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20210504.2207/git-link-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20220206.1802/git-link-autoloads.el") (car load-path))))
 
 
 
@@ -18670,9 +18670,12 @@ Defaults to \"origin\".
 \(fn REMOTE)" t nil)
 
 (autoload 'git-link-homepage "git-link" "\
-Create a URL for the current buffer's REMOTE repository homepage.
-The URL will be added to the kill ring.  If `git-link-open-in-browser'
-is non-nil also call `browse-url'.
+Create a URL representing the homepage of the current
+buffer's GitHub/Bitbucket/GitLab/... repository. The
+URL will be added to the kill ring.
+
+With a prefix argument prompt for the remote's name.
+Defaults to \"origin\".
 
 \(fn REMOTE)" t nil)
 

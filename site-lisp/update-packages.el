@@ -27,9 +27,12 @@
 (defun update-packages-get-package-desc (package src)
   "Return the package-desc for PACKAGE in SRC."
   (if (eq (assq package src) nil)
-      (error "Package %s is not in package list!
+      (progn
+        (message "%S" package)
+        (error "Package %s is not in package list!
 
-It probably got removed from MELPA - uninstall it manually" package))
+It probably got removed from MELPA or had its name changed.
+Uninstall or upgrade it manually" package)))
 
   (car (cdr (assq package src))))
 

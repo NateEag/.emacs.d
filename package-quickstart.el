@@ -20910,10 +20910,10 @@ instead of the modes in `evil-collection-mode-list'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-args-20180908.2157/evil-args-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-args-20220125.1626/evil-args-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-args-20180908.2157/evil-args-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-args-20220125.1626/evil-args-autoloads.el") (car load-path))))
 
 
 

@@ -7,8 +7,8 @@
 ;; Description: Automatically rename paired HTML/XML tag.
 ;; Keyword: auto-complete html rename tag xml
 ;; Version: 0.3.5
-;; Package-Version: 20210418.1758
-;; Package-Commit: 8dbf13b344f6d5eba5c4876b18905d30b3118bb9
+;; Package-Version: 20210805.1344
+;; Package-Commit: 77f66b75209628a267a5ced84cd85774e0e26b9a
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/auto-rename-tag
 
@@ -360,24 +360,14 @@ DIRECT can be either only 'backward and 'forward."
       (forward
        (unless is-closing-tag (auto-rename-tag--resolve-nested direct))))))
 
-(defun auto-rename-tag--disabled-minor-modes-p ()
-  "Check currently any disabled minor mode active.
-Return non-nil, if there is at least one minor mode active.
-Return nil, meaning is safe to do rename tag action."
-  (let ((index 0) ret m-mode)
-    (while (and (not ret)
-                (< index (length auto-rename-tag-disabled-minor-modes)))
-      (setq m-mode (nth index auto-rename-tag-disabled-minor-modes)
-            ret (ignore-errors (symbol-value m-mode)))
-      (setq index (1+ index)))
-    ret))
-
 (defun auto-rename-tag--valid-do-p ()
   "See if current change are valid to do rename tag action."
   (and (not undo-in-progress)
-       (not (auto-rename-tag--disabled-minor-modes-p))
+       (not (cl-some (lambda (m) (ignore-errors (symbol-value m))) auto-rename-tag-disabled-minor-modes))
        (not (memq this-command auto-rename-tag-disabled-commands))
        (auto-rename-tag--inside-tag-p)
+       (not (nth 4 (syntax-ppss)))  ; check inside comment
+       (not (nth 8 (syntax-ppss)))  ; check inside string
        (not (auto-rename-tag--self-tag-p))))
 
 (defun auto-rename-tag--before-action ()

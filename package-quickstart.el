@@ -24228,10 +24228,10 @@ with universal arg, ask for a file-name.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-rename-tag-20210418.1758/auto-rename-tag-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/auto-rename-tag-20210805.1344/auto-rename-tag-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-rename-tag-20210418.1758/auto-rename-tag-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-rename-tag-20210805.1344/auto-rename-tag-autoloads.el") (car load-path))))
 
 
 

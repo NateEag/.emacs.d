@@ -14949,10 +14949,10 @@ Limit patch to FILES, if non-nil.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-delta-20210104.1541/magit-delta-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-delta-20220125.50/magit-delta-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-delta-20210104.1541/magit-delta-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-delta-20220125.50/magit-delta-autoloads.el") (car load-path))))
 
 
 

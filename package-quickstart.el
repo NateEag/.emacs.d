@@ -1211,10 +1211,10 @@ Key bindings:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/avy-20201226.1734/avy-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/avy-20220102.805/avy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/avy-20201226.1734/avy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/avy-20220102.805/avy-autoloads.el") (car load-path))))
 
 
 

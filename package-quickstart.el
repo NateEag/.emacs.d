@@ -19304,8 +19304,11 @@ This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS devel
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/free-keys-20160726.2050/free-keys-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/free-keys-20160726.2050/free-keys-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/free-keys-20211116.1501/free-keys-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/free-keys-20211116.1501/free-keys-autoloads.el") (car load-path))))
+
 
 
 (autoload 'free-keys "free-keys" "\
@@ -19321,6 +19324,8 @@ hitting 'p' in the *Free keys* buffer.  Prefix is supplied in
 format recognized by `kbd', for example \"C-x\".
 
 \(fn &optional PREFIX BUFFER)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "free-keys" '("free-keys-")))
 
 
 )

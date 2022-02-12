@@ -4,8 +4,9 @@
 
 ;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
-;; Version: 0.1
-;; Package-Version: 20160726.2050
+;; Version: 1.0
+;; Package-Version: 20211116.1501
+;; Package-Commit: 7348ce68192871b8a69b687ec124d9f816d493ca
 ;; Created: 3rd November 2013
 ;; Keywords: convenience
 ;; Package-Requires: ((cl-lib "0.3"))

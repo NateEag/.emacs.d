@@ -1,6 +1,6 @@
 ;;; forge-post.el --- Post support                 -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -134,7 +134,8 @@
                 (concat "magit/posts/" filename)))))
     (make-directory (file-name-directory file) t)
     (let ((prevbuf (current-buffer))
-          (resume (file-exists-p file))
+          (resume (and (file-exists-p file)
+                       (> (file-attribute-size (file-attributes file)) 0)))
           (buf (find-file-noselect file)))
       (with-current-buffer buf
         (forge-post-mode)
@@ -152,11 +153,18 @@
           (let-alist (forge--topic-template
                       (forge-get-repository t)
                       (if source 'forge-pullreq 'forge-issue))
-            (if .name
-                ;; A Github issue with yaml frontmatter.
-                (progn
-                  (save-excursion (insert .text))
-                  (re-search-forward "^title: "))
+            (cond
+             (.url
+              (browse-url .url)
+              (forge-post-cancel)
+              (setq buf nil)
+              (message "Using browser to visit %s instead of opening an issue"
+                       .url))
+             (.name
+              ;; A Github issue with yaml frontmatter.
+              (save-excursion (insert .text))
+              (re-search-forward "^title: "))
+             (t
               (insert "# ")
               (let ((single
                      (and source
@@ -169,7 +177,7 @@
                     (if single
                         (insert "-------\n")
                       (insert "\n"))
-                    (insert "\n" .text))))))))
+                    (insert "\n" .text)))))))))
       buf)))
 
 (defun forge--display-post-buffer (buf)
@@ -216,7 +224,7 @@
                  (or (and (fboundp 'forge-pullreq-p)
                           (forge-pullreq-p topic))
                      (oref repo selective-p)))
-            (forge--pull-topic repo (oref topic number))
+            (forge--pull-topic repo topic)
           (forge-pull))))))
 
 (defun forge--post-submit-errorback ()
@@ -240,7 +248,7 @@
   (delete-file buffer-file-name t)
   (let ((dir (file-name-directory buffer-file-name)))
     (unless (cddr (directory-files dir nil nil t))
-      (delete-directory dir nil t)))
+      (delete-directory dir)))
   (let ((prevbuf forge--pre-post-buffer))
     (magit-mode-bury-buffer 'kill)
     (when (buffer-live-p prevbuf)

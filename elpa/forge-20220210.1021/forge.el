@@ -1,6 +1,6 @@
 ;;; forge.el --- Access Git forges from Magit     -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -62,48 +62,66 @@
 
 ;;; Add Sections
 
-(when forge--sqlite-available-p
+(defvar forge-add-default-sections t
+  "Whether to add Forge's sections to `magit-status-sections-hook'.
+If you want to disable this, then you must set this to nil before
+`forge' is loaded.")
+
+(when (and forge-add-default-sections forge--sqlite-available-p)
   (magit-add-section-hook 'magit-status-sections-hook 'forge-insert-pullreqs nil t)
   (magit-add-section-hook 'magit-status-sections-hook 'forge-insert-issues   nil t))
 
 ;;; Add Bindings
 
 ;;;###autoload
+(defvar forge-add-default-bindings t
+  "Whether to add Forge's bindings to various Magit keymaps.
+If you want to disable this, then you must set this to nil before
+`magit' is loaded.  If you do it before `forge' but after `magit'
+is loaded, then `magit-mode-map' ends up being modified anyway.")
+
+;;;###autoload
 (with-eval-after-load 'magit-mode
-  (define-key magit-mode-map "'" 'forge-dispatch))
+  (when forge-add-default-bindings
+    (define-key magit-mode-map "'" 'forge-dispatch)
+    (define-key magit-mode-map "N" 'forge-dispatch)))
 
-(define-key magit-commit-section-map [remap magit-browse-thing] 'forge-browse-dwim)
-(define-key magit-remote-section-map [remap magit-browse-thing] 'forge-browse-remote)
-(define-key magit-branch-section-map [remap magit-browse-thing] 'forge-browse-branch)
+(when forge-add-default-bindings
+  (define-key magit-commit-section-map [remap magit-browse-thing] 'forge-browse-dwim)
+  (define-key magit-remote-section-map [remap magit-browse-thing] 'forge-browse-remote)
+  (define-key magit-branch-section-map [remap magit-browse-thing] 'forge-browse-branch)
 
-(define-key magit-commit-section-map (kbd "C-c C-v") 'forge-visit-topic)
-(define-key magit-branch-section-map (kbd "C-c C-v") 'forge-visit-topic)
+  (define-key magit-commit-section-map (kbd "C-c C-v") 'forge-visit-topic)
+  (define-key magit-branch-section-map (kbd "C-c C-v") 'forge-visit-topic)
 
-(transient-append-suffix 'magit-dispatch "%"
-  '("'" "Forge" forge-dispatch))
+  (transient-insert-suffix 'magit-dispatch "o"
+    '("N" "Forge" forge-dispatch))
 
-(transient-append-suffix 'magit-fetch "m"
-  '("y" "forge topics" forge-pull))
-(transient-append-suffix 'magit-fetch "y"
-  '("Y" "forge notifications" forge-pull-notifications))
+  (transient-append-suffix 'magit-fetch "m"
+    '("n" "forge topics" forge-pull))
+  (transient-append-suffix 'magit-fetch "n"
+    '("N" "forge notifications" forge-pull-notifications))
 
-(transient-append-suffix 'magit-pull "m"
-  '("y" "forge topics" forge-pull))
-(transient-append-suffix 'magit-pull "y"
-  '("Y" "forge notifications" forge-pull-notifications))
+  (transient-append-suffix 'magit-pull "m"
+    '("n" "forge topics" forge-pull))
+  (transient-append-suffix 'magit-pull "n"
+    '("N" "forge notifications" forge-pull-notifications))
 
-(transient-append-suffix 'magit-branch "w"
-  '("y" "pull-request" forge-checkout-pullreq))
-(transient-append-suffix 'magit-branch "W"
-  '("Y" "from pull-request" forge-branch-pullreq))
+  (transient-append-suffix 'magit-branch "w"
+    '("f" "pull-request" forge-checkout-pullreq))
+  (transient-append-suffix 'magit-branch "W"
+    '("F" "from pull-request" forge-branch-pullreq))
 
-(transient-append-suffix 'magit-worktree "c"
-  '("y" "pull-request worktree" forge-checkout-worktree))
+  (transient-append-suffix 'magit-worktree "c"
+    '("n" "pull-request worktree" forge-checkout-worktree))
 
-(transient-append-suffix 'magit-status-jump "w"
-  '("'p" "pull-requests" forge-jump-to-pullreqs))
-(transient-append-suffix 'magit-status-jump "'p"
-  '("'i" "issues" forge-jump-to-issues))
+  (transient-append-suffix 'magit-status-jump "w"
+    '("Np" "Pull requests" forge-jump-to-pullreqs))
+  (transient-append-suffix 'magit-status-jump "Np"
+    '("Ni" "Issues" forge-jump-to-issues))
+
+  (transient-append-suffix 'magit-merge "a"
+    '(7 "M" "Merge using API" forge-merge)))
 
 ;;; Startup Asserts
 

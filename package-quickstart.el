@@ -91,6 +91,17 @@ Simple mode to edit YAML.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20210730.143/yaml-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-20210730.143/yaml-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml" '("yaml-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/xterm-color-20200605.2017/xterm-color-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -19316,14 +19327,20 @@ A prefix argument causes the SQL to be printed into the current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235/forge-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021/forge-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235/forge-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021/forge-autoloads.el") (car load-path))))
 
 
 
-(with-eval-after-load 'magit-mode (define-key magit-mode-map "'" 'forge-dispatch))
+(defvar forge-add-default-bindings t "\
+Whether to add Forge's bindings to various Magit keymaps.
+If you want to disable this, then you must set this to nil before
+`magit' is loaded.  If you do it before `forge' but after `magit'
+is loaded, then `magit-mode-map' ends up being modified anyway.")
+
+(with-eval-after-load 'magit-mode (when forge-add-default-bindings (define-key magit-mode-map "'" 'forge-dispatch) (define-key magit-mode-map "N" 'forge-dispatch)))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge" '("forge-")))
 
@@ -19352,9 +19369,9 @@ Fetch notifications for all repositories from the current forge." t nil)
 (autoload 'forge-pull-topic "forge-commands" "\
 Pull the API data for the current topic.
 If there is no current topic or with a prefix argument read a
-topic N to pull instead.
+TOPIC to pull instead.
 
-\(fn N)" t nil)
+\(fn TOPIC)" t nil)
 
 (autoload 'forge-browse-dwim "forge-commands" "\
 Visit a topic, branch or commit using a browser.
@@ -19378,6 +19395,11 @@ Visit the url corresponding to REMOTE using a browser.
 
 \(fn REMOTE)" t nil)
 
+(autoload 'forge-browse-repository "forge-commands" "\
+View the current repository in a separate buffer.
+
+\(fn REPO)" t nil)
+
 (autoload 'forge-browse-topic "forge-commands" "\
 Visit the current topic using a browser." t nil)
 
@@ -19385,9 +19407,9 @@ Visit the current topic using a browser." t nil)
 Visit the pull-requests of the current repository using a browser." t nil)
 
 (autoload 'forge-browse-pullreq "forge-commands" "\
-Visit the url corresponding to pullreq N using a browser.
+Visit the url corresponding to PULLREQ using a browser.
 
-\(fn N)" t nil)
+\(fn PULLREQ)" t nil)
 
 (autoload 'forge-browse-issues "forge-commands" "\
 Visit the issues of the current repository using a browser." t nil)
@@ -19395,9 +19417,9 @@ Visit the issues of the current repository using a browser." t nil)
 (autoload 'forge-browse-issue "forge-commands" "\
 Visit the current issue using a browser.
 If there is no current issue or with a prefix argument
-read an issue N to visit.
+read an ISSUE to visit.
 
-\(fn N)" t nil)
+\(fn ISSUE)" t nil)
 
 (autoload 'forge-browse-post "forge-commands" "\
 Visit the current post using a browser." t nil)
@@ -19412,16 +19434,16 @@ read a topic to visit instead.
 (autoload 'forge-visit-pullreq "forge-commands" "\
 View the current pull-request in a separate buffer.
 If there is no current pull-request or with a prefix argument
-read pull-request N to visit instead.
+read a PULLREQ to visit instead.
 
-\(fn N)" t nil)
+\(fn PULLREQ)" t nil)
 
 (autoload 'forge-visit-issue "forge-commands" "\
 Visit the current issue in a separate buffer.
 If there is no current issue or with a prefix argument
-read an issue N to visit instead.
+read an ISSUE to visit instead.
 
-\(fn N)" t nil)
+\(fn ISSUE)" t nil)
 
 (autoload 'forge-visit-repository "forge-commands" "\
 View the current repository in a separate buffer.
@@ -19432,13 +19454,13 @@ View the current repository in a separate buffer.
 Create and configure a new branch from a pull-request.
 Please see the manual for more information.
 
-\(fn N)" t nil)
+\(fn PULLREQ)" t nil)
 
 (autoload 'forge-checkout-pullreq "forge-commands" "\
 Create, configure and checkout a new branch from a pull-request.
 Please see the manual for more information.
 
-\(fn N)" t nil)
+\(fn PULLREQ)" t nil)
 
 (autoload 'forge-checkout-worktree "forge-commands" "\
 Create, configure and checkout a new worktree from a pull-request.
@@ -19446,7 +19468,7 @@ This is like `forge-checkout-pullreq', except that it also
 creates a new worktree. Please see the manual for more
 information.
 
-\(fn PATH N)" t nil)
+\(fn PATH PULLREQ)" t nil)
 
 (autoload 'forge-fork "forge-commands" "\
 Fork the current repository to FORK and add it as a REMOTE.
@@ -19485,6 +19507,20 @@ This may take a while.  Only Github is supported at the moment.
 
 \(fn HOST ORGANIZATION)" t nil)
 
+(autoload 'forge-merge "forge-commands" "\
+Merge the current pull-request using METHOD using the forge's API.
+
+If there is no current pull-request or with a prefix argument,
+then read pull-request PULLREQ to visit instead.
+
+Use of this command is discouraged.  Unless the remote repository
+is configured to disallow that, you should instead merge locally
+and then push the target branch.  Forges detect that you have
+done that and respond by automatically marking the pull-request
+as merged.
+
+\(fn PULLREQ METHOD)" t nil)
+
 (autoload 'forge-remove-repository "forge-commands" "\
 Remove a repository from the database.
 
@@ -19497,7 +19533,7 @@ automatically remove topics from the local datbase that were
 removed from the forge.  The purpose of this command is to allow
 you to manually clean up the local database.
 
-\(fn N)" t nil)
+\(fn TOPIC)" t nil)
 
 (autoload 'forge-reset-database "forge-commands" "\
 Move the current database file to the trash.
@@ -19547,6 +19583,12 @@ List issues of the current repository in a separate buffer.
 
 \(fn ID)" t nil)
 
+(autoload 'forge-list-labeled-issues "forge-list" "\
+List issues of the current repository that have LABEL.
+List them in a separate buffer.
+
+\(fn ID LABEL)" t nil)
+
 (autoload 'forge-list-assigned-issues "forge-list" "\
 List issues of the current repository that are assigned to you.
 List them in a separate buffer.
@@ -19563,6 +19605,12 @@ Only Github is supported for now." t nil)
 List pull-requests of the current repository in a separate buffer.
 
 \(fn ID)" t nil)
+
+(autoload 'forge-list-labeled-pullreqs "forge-list" "\
+List pull-requests of the current repository that have LABEL.
+List them in a separate buffer.
+
+\(fn ID LABEL)" t nil)
 
 (autoload 'forge-list-assigned-pullreqs "forge-list" "\
 List pull-requests of the current repository that are assigned to you.
@@ -19633,7 +19681,7 @@ Only Github is supported for now." t nil)
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge-topic" '("bug-reference-fontify" "forge-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge-topic" '("forge-")))
 
 
 
@@ -24399,14 +24447,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

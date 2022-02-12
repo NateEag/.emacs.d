@@ -1,6 +1,6 @@
 ;;; forge-notify.el --- Notify support             -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -58,7 +58,7 @@
                                                (= topic $s2))]
                                   (oref topic repository)
                                   (oref topic number)))))
-    (closql--remake-instance 'forge-notification (forge-db) row t)))
+    (closql--remake-instance 'forge-notification (forge-db) row)))
 
 ;;; Utilities
 

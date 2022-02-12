@@ -1,6 +1,6 @@
 ;;; forge-repo.el --- Repository support          -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -109,7 +109,13 @@ forges and hosts."
            (format "%s:%s" id
                    (cond (stub path)
                          ((eq class 'forge-github-repository)
-                          (base64-decode-string their-id))
+                          ;; This is base64 encoded, according to
+                          ;; https://docs.github.com/en/graphql/reference/scalars#id.
+                          ;; Unfortunately that is not always true.
+                          ;; E.g. https://github.com/dit7ya/roamex.
+                          (condition-case nil
+                              (base64-decode-string their-id)
+                            (error their-id)))
                          (t their-id)))
            t)
           (or their-id path))))
@@ -163,7 +169,8 @@ repository, if any."
                      (remotes "Cannot decide on remote to use.")
                      (t       "No remote configured."))
                "You might have to set `forge.remote'."
-               "See https://magit.vc/manual/forge/Token-Creation.html.")))))))
+               "See https://magit.vc/manual/forge/Repository-Detection.html."
+               )))))))
 
 (cl-defmethod forge-get-repository ((url string) &optional remote demand)
   "Return the repository at URL."
@@ -289,7 +296,7 @@ Return the repository identified by HOST, OWNER and NAME."
 (cl-defmethod forge--topics-until ((repo forge-repository) until table)
   (if (oref repo sparse-p)
       until
-    (caar (forge-sql [:select [updated] :from $s1
+    (caar (forge-sql [:select [updated] :from $i1
                       :where (= repository $s2)
                       :order-by [(desc updated)]
                       :limit 1]

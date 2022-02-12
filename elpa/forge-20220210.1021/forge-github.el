@@ -1,6 +1,6 @@
 ;;; forge-github.el --- Github support            -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -51,7 +51,8 @@
 (cl-defmethod forge--pull ((repo forge-github-repository) until
                            &optional callback)
   (let ((buf (current-buffer))
-        (dir default-directory))
+        (dir default-directory)
+        (selective-p (oref repo selective-p)))
     (ghub-fetch-repository
      (oref repo owner)
      (oref repo name)
@@ -71,6 +72,7 @@
          (oset repo sparse-p nil))
        (forge--msg repo t t   "Storing REPO")
        (cond
+        (selective-p)
         (callback (funcall callback))
         (forge-pull-notifications
          (forge--pull-notifications (eieio-object-class repo)
@@ -80,30 +82,35 @@
      `((issues-until       . ,(forge--topics-until repo until 'issue))
        (pullRequests-until . ,(forge--topics-until repo until 'pullreq)))
      :host (oref repo apihost)
-     :auth 'forge)))
+     :auth 'forge
+     :sparse selective-p)))
 
-(cl-defmethod forge--pull-topic ((repo forge-github-repository) n
-                                 &optional pullreqp)
-  (unless pullreqp
-    (setq pullreqp (forge-get-pullreq repo n)))
-  (let ((buffer (current-buffer)))
+(cl-defmethod forge--pull-topic ((repo forge-github-repository)
+                                 (topic forge-topic))
+  (let ((buffer (current-buffer))
+        (fetch #'ghub-fetch-issue)
+        (update #'forge--update-issue)
+        (errorback (lambda (err _headers _status _req)
+                     (when (equal (cdr (assq 'type (cadr err))) "NOT_FOUND")
+                       (forge--pull-topic
+                        repo (forge-pullreq :repository (oref repo id)
+                                            :number (oref topic number)))))))
+    (when (cl-typep topic 'forge-pullreq)
+      (setq fetch #'ghub-fetch-pullreq)
+      (setq update #'forge--update-pullreq)
+      (setq errorback nil))
     (funcall
-     (if pullreqp #'ghub-fetch-pullreq #'ghub-fetch-issue)
+     fetch
      (oref repo owner)
      (oref repo name)
-     n
+     (oref topic number)
      (lambda (data)
-       (funcall (if pullreqp #'forge--update-pullreq #'forge--update-issue)
-                repo data nil)
+       (funcall update repo data nil)
        (with-current-buffer
            (if (buffer-live-p buffer) buffer (current-buffer))
          (magit-refresh)))
      nil
-     :errorback
-     (and (not pullreqp)
-          (lambda (err _headers _status _req)
-            (when (equal (cdr (assq 'type (cadr err))) "NOT_FOUND")
-              (forge--pull-topic repo n t))))
+     :errorback errorback
      :host (oref repo apihost)
      :auth 'forge)))
 
@@ -140,6 +147,7 @@
                          (forge-issue :id         issue-id
                                       :repository (oref repo id)
                                       :number     .number)))))
+        (oset issue id         issue-id)
         (oset issue state      (pcase-exhaustive .state
                                  ("CLOSED" 'closed)
                                  ("OPEN"   'open)))
@@ -347,7 +355,7 @@
                                       page pages)
                           (ghub--graphql-vacuum
                            (cons 'query (-keep #'caddr (pop groups)))
-                           nil #'cb nil :auth 'forge))
+                           nil #'cb nil :auth 'forge :host apihost))
                  (forge--msg nil t t   "Pulling notifications")
                  (forge--msg nil t nil "Storing notifications")
                  (emacsql-with-transaction (forge-db)
@@ -446,7 +454,7 @@
      (funcall callback
               (--map (alist-get 'name it)
                      (let-alist d .user.repositories))))
-   nil :host host))
+   nil :auth 'forge :host host))
 
 (cl-defmethod forge--fetch-organization-repos
   ((_ (subclass forge-github-repository)) host org callback)
@@ -459,7 +467,7 @@
      (funcall callback
               (--map (alist-get 'name it)
                      (let-alist d .organization.repositories))))
-   nil :host host))
+   nil :auth 'forge :host host))
 
 (defun forge--batch-add-callback (host owner names)
   (let ((repos (cl-mapcan (lambda (name)
@@ -479,15 +487,16 @@
 ;;; Mutations
 
 (cl-defmethod forge--create-pullreq-from-issue ((repo forge-github-repository)
-                                                issue source target)
+                                                (issue forge-issue)
+                                                source target)
   (pcase-let* ((`(,base-remote . ,base-branch)
                 (magit-split-branch-name target))
                (`(,head-remote . ,head-branch)
                 (magit-split-branch-name source))
                (head-repo (forge-get-repository 'stub head-remote))
-               (issue-obj (forge-get-issue repo issue)))
+               (issue (forge-get-issue repo issue)))
     (forge--ghub-post repo "/repos/:owner/:repo/pulls"
-      `((issue . ,issue)
+      `((issue . ,(oref issue number))
         (base  . ,base-branch)
         (head  . ,(if (equal head-remote base-remote)
                       head-branch
@@ -495,7 +504,7 @@
                             head-branch)))
         (maintainer_can_modify . t))
       :callback  (lambda (&rest _)
-                   (closql-delete issue-obj)
+                   (closql-delete issue)
                    (forge-pull))
       :errorback (lambda (&rest _) (forge-pull)))))
 
@@ -626,9 +635,16 @@
 \\`\\(\\|docs/\\|\\.github/\\)issue_template\\(\\.[a-zA-Z0-9]+\\)?\\'" it)
                               files)))
           (list file)
-        (--filter (and (string-match-p "\\`\\.github/ISSUE_TEMPLATE/[^/]*" it)
-                       (not (equal (file-name-nondirectory it) "config.yml")))
-                  files)))))
+        (setq files
+              (--filter (string-match-p "\\`\\.github/ISSUE_TEMPLATE/[^/]*" it)
+                        files))
+        (if-let ((conf (cl-find-if
+                        (lambda (f)
+                          (equal (file-name-nondirectory f) "config.yml"))
+                        files)))
+            (nconc (delete conf files)
+                   (list conf))
+          files)))))
 
 (cl-defmethod forge--topic-templates ((repo forge-github-repository)
                                       (_ (subclass forge-pullreq)))
@@ -651,6 +667,13 @@
       (and (not (equal fork (ghub--username (ghub--host nil))))
            `((organization . ,fork))))
     (ghub-wait (format "/repos/%s/%s" fork name) nil :auth 'forge)))
+
+(cl-defmethod forge--merge-pullreq ((_repo forge-github-repository)
+                                    topic hash method)
+  (forge--ghub-put topic
+    "/repos/:owner/:repo/pulls/:number/merge"
+    `((merge_method . ,(symbol-name method))
+      ,@(and hash `((sha . ,hash))))))
 
 ;;; Utilities
 

@@ -1,6 +1,6 @@
 ;;; forge-pullreq.el --- Pullreq support          -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -114,6 +114,9 @@
 (cl-defmethod forge-get-topic ((post forge-pullreq-post))
   (forge-get-pullreq post))
 
+(cl-defmethod forge-get-pullreq ((pullreq forge-pullreq))
+  pullreq)
+
 (cl-defmethod forge-get-pullreq ((repo forge-repository) number)
   (closql-get (forge-db)
               (forge--object-id 'forge-pullreq repo number)
@@ -131,8 +134,8 @@
               (oref post pullreq)
               'forge-pullreq))
 
-(cl-defmethod forge-ls-pullreqs ((repo forge-repository) &optional type)
-  (forge-ls-topics repo 'forge-pullreq type))
+(cl-defmethod forge-ls-pullreqs ((repo forge-repository) &optional type select)
+  (forge-ls-topics repo 'forge-pullreq type select))
 
 ;;; Utilities
 
@@ -141,19 +144,16 @@
     (setq type (if current-prefix-arg nil 'open)))
   (let* ((default (forge-current-pullreq))
          (repo    (forge-get-repository (or default t)))
-         (format  (lambda (topic)
-                    (format "%s  %s"
-                            (oref topic number)
-                            (oref topic title))))
-         (choices (forge-ls-pullreqs repo type))
-         (choice  (magit-completing-read
-                   prompt
-                   (mapcar format choices)
-                   nil nil nil nil
-                   (and default
-                        (funcall format default)))))
-    (and (string-match "\\`\\([0-9]+\\)" choice)
-         (string-to-number (match-string 1 choice)))))
+         (choices (mapcar
+                   (apply-partially #'forge--topic-format-choice repo)
+                   (forge-ls-pullreqs repo type [number title id class]))))
+    (cdr (assoc (magit-completing-read
+                 prompt choices nil nil nil nil
+                 (and default
+                      (setq default (forge--topic-format-choice default))
+                      (member default choices)
+                      (car default)))
+                choices))))
 
 (defun forge--pullreq-branch-internal (pullreq)
   (let ((branch (oref pullreq head-ref)))

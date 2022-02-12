@@ -1,6 +1,6 @@
 ;;; forge-core.el --- Core functionality           -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -61,6 +61,8 @@
      "salsa.debian.org" forge-gitlab-repository)
     ("framagit.org" "framagit.org/api/v4"
      "framagit.org" forge-gitlab-repository)
+    ("gitlab.gnome.org" "gitlab.gnome.org/api/v4"
+     "gitlab.gnome.org" forge-gitlab-repository)
     ;; Forges (API unsupported)
     ("codeberg.org" "codeberg.org/api/v1"
      "codeberg.org" forge-gitea-repository)
@@ -237,7 +239,7 @@ at that time."
   (concat "\\`\\(?:git://\\|"
           "[^/@]+@\\|"
           "\\(?:ssh\\|ssh\\+git\\|git\\+ssh\\)://\\(?:[^/@]+@\\)?\\|"
-          "https?://\\(?:[^/@]+@\\)?\\)"
+          "https?://\\(?:[^/@]+@\\)?\\)?"
           (regexp-opt (mapcar #'car forge-alist) t)
           "\\(?::[0-9]+\\)?"
           "\\(?:/\\|:/?\\)"

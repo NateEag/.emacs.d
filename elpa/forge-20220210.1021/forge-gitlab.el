@@ -1,6 +1,6 @@
 ;;; forge-gitlab.el --- Gitlab support            -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -82,14 +82,20 @@
                       (dolist (v .pullreqs) (forge--update-pullreq repo v))
                       (oset repo sparse-p nil))
                     (forge--msg repo t t "Storing REPO")
-                    (forge--git-fetch buf dir repo))))))))
+                    (unless (oref repo selective-p)
+                      (forge--git-fetch buf dir repo)))))))))
     (funcall cb cb)))
 
 (cl-defmethod forge--fetch-repository ((repo forge-gitlab-repository) callback)
   (forge--glab-get repo "/projects/:project" nil
     :callback (lambda (value _headers _status _req)
-                (when (magit-get-boolean "forge.omitExpensive")
-                  (setq value (append '((assignees) (forks) (labels)) value)))
+                (cond ((oref repo selective-p)
+                       (setq value (append '((assignees) (forks) (labels)
+                                             (issues) (pullreqs))
+                                           value)))
+                      ((magit-get-boolean "forge.omitExpensive")
+                       (setq value (append '((assignees) (forks) (labels))
+                                           value))))
                 (funcall callback callback value))))
 
 (cl-defmethod forge--update-repository ((repo forge-gitlab-repository) data)
@@ -542,6 +548,13 @@
       :noerror t)
     (ghub-wait (format "/projects/%s%%2F%s" fork name)
                nil :auth 'forge :forge 'gitlab)))
+
+(cl-defmethod forge--merge-pullreq ((_repo forge-gitlab-repository)
+                                    topic hash method)
+  (forge--glab-put topic
+    "/projects/:project/merge_requests/:number/merge"
+    `((squash . ,(if (eq method 'squash) "true" "false"))
+      ,@(and hash `((sha . ,hash))))))
 
 ;;; Utilities
 

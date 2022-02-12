@@ -1,6 +1,6 @@
 ;;; forge-topic.el --- Topics support              -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2021  Jonas Bernoulli
+;; Copyright (C) 2018-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -26,6 +26,7 @@
 (require 'bug-reference)
 (require 'markdown-mode)
 (require 'parse-time)
+(require 'yaml)
 
 (require 'forge)
 (require 'forge-post)
@@ -98,6 +99,11 @@ This variable has to be customized before `forge' is loaded."
 (defvar-local forge-display-in-status-buffer t
   "Whether to display topics in the current Magit status buffer.")
 (put 'forge-display-in-status-buffer 'permanent-local t)
+
+(defvar forge-format-avatar-function nil
+  "Function used to insert avatars in certain locations.
+This is experimental and intended for users who wish to
+implement such a function themselves.  See #447.")
 
 ;;; Faces
 
@@ -206,40 +212,33 @@ This variable has to be customized before `forge' is loaded."
   (or (forge-get-issue id)
       (forge-get-pullreq id)))
 
-(defun forge--topic-string-to-number (s)
-  (save-match-data
-    (if (string-match "\\`\\([!#]\\)?\\([0-9]+\\)" s)
-        (* (if (equal (match-string 1 s) "!") -1 1)
-           (string-to-number (match-string 2 s)))
-      (error "forge--topic-string-to-number: Invalid argument %S" s))))
-
 (cl-defmethod forge-ls-recent-topics ((repo forge-repository) table)
   (magit--with-repository-local-cache (list 'forge-ls-recent-topics table)
     (let* ((id (oref repo id))
            (limit forge-topic-list-limit)
            (open-limit   (if (consp limit) (car limit) limit))
            (closed-limit (if (consp limit) (cdr limit) limit))
-           (topics (forge-sql [:select * :from $s1
+           (topics (forge-sql [:select * :from $i1
                                :where (and (= repository $s2)
                                            (notnull unread-p))]
                               table id)))
       (mapc (lambda (row)
               (cl-pushnew row topics :test #'equal))
             (if (consp limit)
-                (forge-sql [:select * :from $s1
+                (forge-sql [:select * :from $i1
                             :where (and (= repository $s2)
                                         (isnull closed))
                             :order-by [(desc updated)]
                             :limit $s3]
                            table id open-limit)
-              (forge-sql [:select * :from $s1
+              (forge-sql [:select * :from $i1
                           :where (and (= repository $s2)
                                       (isnull closed))]
                          table id)))
       (when (> closed-limit 0)
         (mapc (lambda (row)
                 (cl-pushnew row topics :test #'equal))
-              (forge-sql [:select * :from $s1
+              (forge-sql [:select * :from $i1
                           :where (and (= repository $s2)
                                       (notnull closed))
                           :order-by [(desc updated)]
@@ -254,26 +253,30 @@ This variable has to be customized before `forge' is loaded."
                (cdr forge-topic-list-order)
                :key (lambda (it) (eieio-oref it (car forge-topic-list-order)))))))
 
-(cl-defmethod forge-ls-topics ((repo forge-repository) class &optional type)
-  (mapcar (lambda (row)
-            (closql--remake-instance class (forge-db) row))
-          (let ((table (oref-default class closql-table))
-                (id (oref repo id)))
-            (pcase-exhaustive type
-              (`open   (forge-sql [:select * :from $s1
-                                   :where (and (= repository $s2)
-                                               (isnull closed))
-                                   :order-by [(desc number)]]
-                                  table id))
-              (`closed (forge-sql [:select * :from $s1
-                                   :where (and (= repository $s2)
-                                               (notnull closed))
-                                   :order-by [(desc number)]]
-                                  table id))
-              (`nil    (forge-sql [:select * :from $s1
-                                   :where (= repository $s2)
-                                   :order-by [(desc number)]]
-                                  table id))))))
+(cl-defmethod forge-ls-topics ((repo forge-repository)
+                               class &optional type select)
+  (let* ((table (oref-default class closql-table))
+         (id (oref repo id))
+         (rows (pcase-exhaustive type
+                 (`open   (forge-sql [:select $i1 :from $i2
+                                      :where (and (= repository $s3)
+                                                  (isnull closed))
+                                      :order-by [(desc number)]]
+                                     (or select '*) table id))
+                 (`closed (forge-sql [:select $i1 :from $i2
+                                      :where (and (= repository $s3)
+                                                  (notnull closed))
+                                      :order-by [(desc number)]]
+                                     (or select '*) table id))
+                 (`nil    (forge-sql [:select $i1 :from $i2
+                                      :where (= repository $s3)
+                                      :order-by [(desc number)]]
+                                     (or select '*) table id)))))
+    (if select
+        rows
+      (mapcar (lambda (row)
+                (closql--remake-instance class (forge-db) row))
+              rows))))
 
 ;;; Utilities
 
@@ -362,6 +365,8 @@ identifier."
     (define-key map (kbd "C-c C-n") 'forge-create-post)
     (define-key map (kbd "C-c C-r") 'forge-create-post)
     (define-key map [remap magit-browse-thing] 'forge-browse-topic)
+    (define-key map [remap magit-visit-thing] 'markdown-follow-link-at-point)
+    (define-key map [mouse-2] 'markdown-follow-link-at-point)
     map))
 
 (define-derived-mode forge-topic-mode magit-mode "View Topic"
@@ -433,7 +438,8 @@ identifier."
             (let ((heading
                    (format-spec
                     forge-post-heading-format
-                    `((?a . ,(propertize (or author "(ghost)")
+                    `((?a . ,(propertize (concat (forge--format-avatar author)
+                                                 (or author "(ghost)"))
                                          'font-lock-face 'forge-post-author))
                       (?c . ,(propertize created 'font-lock-face 'forge-post-date))
                       (?C . ,(propertize (apply #'format "%s %s ago"
@@ -471,9 +477,16 @@ identifier."
 (cl-defun forge-insert-topic-state
     (&optional (topic forge-buffer-topic))
   (magit-insert-section (topic-state)
-    (insert (format "%-11s" "State: ")
-            (symbol-name (oref topic state))
-            "\n")))
+    (insert (format
+             "%-11s%s\n" "State: "
+             (let ((state (oref topic state)))
+               (magit--propertize-face
+                (symbol-name state)
+                (pcase (list state (forge-pullreq-p (forge-topic-at-point)))
+                  (`(merged) 'forge-topic-merged)
+                  (`(closed) 'forge-topic-closed)
+                  (`(open t) 'forge-topic-unmerged)
+                  (`(open)   'forge-topic-open))))))))
 
 (defvar forge-topic-milestone-section-map
   (let ((map (make-sparse-keymap)))
@@ -619,7 +632,9 @@ Return a value between 0 and 1."
     (insert (format "%-11s" "Assignees: "))
     (if-let ((assignees (closql--iref topic 'assignees)))
         (insert (mapconcat (pcase-lambda (`(,login ,name))
-                             (format "%s (@%s)" name login))
+                             (format "%s%s (@%s)"
+                                     (forge--format-avatar login)
+                                     name login))
                            assignees ", "))
       (insert (propertize "none" 'font-lock-face 'magit-dimmed)))
     (insert ?\n)))
@@ -637,7 +652,9 @@ Return a value between 0 and 1."
       (insert (format "%-11s" "Review-Requests: "))
       (if-let ((review-requests (closql--iref topic 'review-requests)))
           (insert (mapconcat (pcase-lambda (`(,login ,name))
-                               (format "%s (@%s)" name login))
+                               (format "%s%s (@%s)"
+                                       (forge--format-avatar login)
+                                       name login))
                              review-requests ", "))
         (insert (propertize "none" 'font-lock-face 'magit-dimmed)))
       (insert ?\n))))
@@ -668,35 +685,52 @@ Return a value between 0 and 1."
               (and (not (string-prefix-p "/" file)) "/")
               file))))
 
+(defun forge--format-avatar (author)
+  (if forge-format-avatar-function
+      (funcall forge-format-avatar-function author)
+    ""))
+
 ;;; Completion
 
-(defun forge-read-topic (prompt)
+(defun forge-read-topic (prompt &optional type allow-number)
+  (when (eq type t)
+    (setq type (if current-prefix-arg nil 'open)))
   (let* ((default (forge-current-topic))
          (repo    (forge-get-repository (or default t)))
-         (gitlabp (forge--childp repo 'forge-gitlab-repository))
-         (choices (sort
-                   (nconc
-                    (let ((prefix (if gitlabp "!" "")))
-                      (mapcar (lambda (topic)
-                                (forge--topic-format-choice topic prefix))
-                              (oref repo pullreqs)))
-                    (let ((prefix (if gitlabp "#" "")))
-                      (mapcar (lambda (topic)
-                                (forge--topic-format-choice topic prefix))
-                              (oref repo issues))))
-                   #'string>))
+         (choices (mapcar
+                   (apply-partially #'forge--topic-format-choice repo)
+                   (cl-sort
+                    (nconc
+                     (forge-ls-pullreqs repo type [number title id class])
+                     (forge-ls-issues   repo type [number title id class]))
+                    #'> :key #'car)))
          (choice  (magit-completing-read
                    prompt choices nil nil nil nil
                    (and default
-                        (forge--topic-format-choice
-                         default (and (not gitlabp) ""))))))
-    (forge--topic-string-to-number choice)))
+                        (setq default (forge--topic-format-choice default))
+                        (member default choices)
+                        (car default)))))
+    (or (cdr (assoc choice choices))
+        (and allow-number
+             (let ((number (string-to-number choice)))
+               (if (= number 0)
+                   (user-error "Not an existing topic or number: %s")
+                 number))))))
 
-(defun forge--topic-format-choice (topic &optional prefix)
-  (format "%s%s  %s"
-          (or prefix (forge--topic-type-prefix topic) "")
-          (oref topic number)
-          (oref topic title)))
+(cl-defmethod forge--topic-format-choice ((topic forge-topic))
+  (cons (format "%s%s  %s"
+                (forge--topic-type-prefix topic)
+                (oref topic number)
+                (oref topic title))
+        (oref topic id)))
+
+(cl-defmethod forge--topic-format-choice ((repo forge-repository) args)
+  (pcase-let ((`(,number ,title ,id ,class) args))
+    (cons (format "%s%s  %s"
+                  (forge--topic-type-prefix repo class)
+                  number
+                  title)
+          id)))
 
 (defun forge-topic-completion-at-point ()
   (let ((bol (line-beginning-position))
@@ -767,34 +801,18 @@ Return a value between 0 and 1."
       (forward-line)
       (setq beg (point))
       (when (re-search-forward "^---[\s\t]*$" nil t)
-        (setq end (match-end 0))
-        (push (cons 'head (magit--buffer-string nil end ?\n)) alist)
-        ;; Appending a newline would be correct, but Github does it
-        ;; too, regardless of whether one is there already or not.
-        (push (cons 'body (magit--buffer-string end nil t)) alist)
-        (goto-char beg)
-        (while (re-search-forward "^\\([a-zA-Z]*\\):[\s\t]\\(.+\\)" end t)
-          (push (cons (intern (match-string-no-properties 1))
-                      (let ((v (match-string-no-properties 2)))
-                        ;; This works if the template generator was
-                        ;; used, but yaml allows for other formats.
-                        ;; Do you want to implement a yaml parser?
-                        (cond
-                         ((string-match "^\\([\"']\\)\\1[\s\t]*$" v) nil)
-                         ((string-match "^\\([\"']\\)\\(.+\\)\\1[\s\t]*$" v)
-                          (string-trim (match-string 2 v)))
-                         ((string-match "," v)
-                          (split-string v ",[\s\t]+"))
-                         (t (string-trim v)))))
-                alist))
+        (setq end (match-beginning 0))
+        (setq alist (yaml-parse-string
+                     (buffer-substring-no-properties beg end)
+                     :object-type 'alist))
         (let-alist alist
           (setf (alist-get 'prompt alist)
                 (format "[%s] %s" .name .about))
           (when (and .labels (atom .labels))
             (setf (alist-get 'labels alist) (list .labels)))
           (when (and .assignees (atom .assignees))
-            (setf (alist-get 'assignees alist) (list .assignees))))
-        alist))))
+            (setf (alist-get 'assignees alist) (list .assignees))))))
+    alist))
 
 (defun forge--topic-parse-plain ()
   (let (title body)
@@ -805,6 +823,24 @@ Return a value between 0 and 1."
     (setq body (magit--buffer-string (point) nil ?\n))
     `((title . ,(string-trim title))
       (body  . ,(string-trim body)))))
+
+(defun forge--topic-parse-link-buffer ()
+  (save-match-data
+    (save-excursion
+      (goto-char (point-min))
+      (mapcar (lambda (alist)
+                (cons (cons 'prompt (concat (alist-get 'name alist) " -- "
+                                            (alist-get 'about alist)))
+                      alist))
+              (forge--topic-parse-yaml-links)))))
+
+(defun forge--topic-parse-yaml-links ()
+  (alist-get 'contact_links
+             (yaml-parse-string (buffer-substring-no-properties
+                                 (point-min)
+                                 (point-max))
+                                :object-type 'alist
+                                :sequence-type 'list)))
 
 ;;; Templates
 
@@ -817,15 +853,19 @@ If there are multiple templates, then the user is asked to select
 one of them.  It there are no templates, then return a very basic
 alist, containing just `text' and `position'.")
 
+(defun forge--topic-templates-data (repo class)
+  (let ((branch (oref repo default-branch)))
+    (mapcan (lambda (f)
+              (with-temp-buffer
+                (magit-git-insert "cat-file" "-p" (concat branch ":" f))
+                (if (equal (file-name-nondirectory f) "config.yml")
+                    (forge--topic-parse-link-buffer)
+                  (list (forge--topic-parse-buffer f)))))
+            (forge--topic-templates repo class))))
+
 (cl-defmethod forge--topic-template ((repo forge-repository)
                                      (class (subclass forge-topic)))
-  (let* ((branch  (oref repo default-branch))
-         (choices (mapcar (lambda (f)
-                            (with-temp-buffer
-                              (magit-git-insert "cat-file" "-p"
-                                                (concat branch ":" f))
-                              (forge--topic-parse-buffer f)))
-                          (forge--topic-templates repo class))))
+  (let ((choices (forge--topic-templates-data repo class)))
     (if (cdr choices)
         (let ((c (magit-completing-read
                   (if (eq class 'forge-pullreq)
@@ -838,65 +878,80 @@ alist, containing just `text' and `position'.")
 
 ;;; Bug-Reference
 
-(defun bug-reference-fontify (start end)
-  "Apply bug reference overlays to region."
-  (save-excursion
-    (let ((beg-line (progn (goto-char start) (line-beginning-position)))
-          (end-line (progn (goto-char end) (line-end-position))))
-      ;; Remove old overlays.
-      (bug-reference-unfontify beg-line end-line)
-      (goto-char beg-line)
-      (while (and (< (point) end-line)
-                  (re-search-forward bug-reference-bug-regexp end-line 'move))
-        (when (and (or (not bug-reference-prog-mode)
-                       ;; This tests for both comment and string syntax.
-                       (nth 8 (syntax-ppss)))
-                   ;; This is the part where this redefinition differs
-                   ;; from the original defined in "bug-reference.el".
-                   (not (and (derived-mode-p 'magit-status-mode
-                                             'forge-notifications-mode)
-                             (= (match-beginning 0)
-                                (line-beginning-position))))
-                   ;; End of additions.
-                   )
-          (let ((overlay (make-overlay (match-beginning 0) (match-end 0)
-                                       nil t nil)))
-            (overlay-put overlay 'category 'bug-reference)
-            ;; Don't put a link if format is undefined
-            (when bug-reference-url-format
-              (overlay-put overlay 'bug-reference-url
-                           (if (stringp bug-reference-url-format)
-                               (format bug-reference-url-format
-                                       (match-string-no-properties 2))
-                             (funcall bug-reference-url-format))))))))))
+(when (< emacs-major-version 28)
+  (defun bug-reference-fontify (start end)
+    "Apply bug reference overlays to region."
+    (save-excursion
+      (let ((beg-line (progn (goto-char start) (line-beginning-position)))
+            (end-line (progn (goto-char end) (line-end-position))))
+        ;; Remove old overlays.
+        (bug-reference-unfontify beg-line end-line)
+        (goto-char beg-line)
+        (while (and (< (point) end-line)
+                    (re-search-forward bug-reference-bug-regexp end-line 'move))
+          (when (and (or (not bug-reference-prog-mode)
+                         ;; This tests for both comment and string syntax.
+                         (nth 8 (syntax-ppss)))
+                     ;; This is the part where this redefinition differs
+                     ;; from the original defined in "bug-reference.el".
+                     (not (and (derived-mode-p 'magit-status-mode
+                                               'forge-notifications-mode)
+                               (= (match-beginning 0)
+                                  (line-beginning-position))))
+                     ;; End of additions.
+                     )
+            (let ((overlay (make-overlay (match-beginning 0) (match-end 0)
+                                         nil t nil)))
+              (overlay-put overlay 'category 'bug-reference)
+              ;; Don't put a link if format is undefined
+              (when bug-reference-url-format
+                (overlay-put overlay 'bug-reference-url
+                             (if (stringp bug-reference-url-format)
+                                 (format bug-reference-url-format
+                                         (match-string-no-properties 2))
+                               (funcall bug-reference-url-format)))))))))))
 
 (defun forge-bug-reference-setup ()
   "Setup `bug-reference' in the current buffer.
 If forge data has been fetched for the current repository, then
-enable `bug-reference-mode' or `bug-reference-prog-mode' and set
-some `bug-reference' variables to the appropriate values."
-  (magit--with-safe-default-directory nil
-    (when-let ((repo (forge-get-repository 'full))
-               (format (oref repo issue-url-format)))
-      (unless bug-reference-url-format
-        (setq-local bug-reference-url-format
-                    (if (forge--childp repo 'forge-gitlab-repository)
-                        (lambda ()
-                          (forge--format repo
-                                         (if (equal (match-string 3) "#")
-                                             'issue-url-format
-                                           'pullreq-url-format)
-                                         `((?i . ,(match-string 2)))))
-                      (forge--format repo 'issue-url-format '((?i . "%s")))))
-        (setq-local bug-reference-bug-regexp
-                    (if (forge--childp repo 'forge-gitlab-repository)
-                        "\\(?3:[!#]\\)\\(?2:[0-9]+\\)"
-                      "#\\(?2:[0-9]+\\)")))
-      (if (derived-mode-p 'prog-mode)
-          (bug-reference-prog-mode 1)
-        (bug-reference-mode 1))
-      (add-hook 'completion-at-point-functions
-                'forge-topic-completion-at-point nil t))))
+enable `bug-reference-mode' or `bug-reference-prog-mode' and
+modify `bug-reference-bug-regexp' if appropriate."
+  (unless bug-reference-url-format
+    (magit--with-safe-default-directory nil
+      (when-let ((repo (forge-get-repository 'full)))
+        (if (>= emacs-major-version 28)
+            (when (derived-mode-p 'magit-status-mode
+                                  'forge-notifications-mode)
+              (setq-local
+               bug-reference-auto-setup-functions
+               (let ((hook bug-reference-auto-setup-functions))
+                 (list (lambda ()
+                         ;; HOOK is not allowed to be a lexical var:
+                         ;; (run-hook-with-args-until-success 'hook)
+                         (catch 'success
+                           (dolist (f hook)
+                             (when (funcall f)
+                               (setq bug-reference-bug-regexp
+                                     (concat "." bug-reference-bug-regexp))
+                               (throw 'success t)))))))))
+          (setq-local bug-reference-url-format
+                      (if (forge--childp repo 'forge-gitlab-repository)
+                          (lambda ()
+                            (forge--format repo
+                                           (if (equal (match-string 3) "#")
+                                               'issue-url-format
+                                             'pullreq-url-format)
+                                           `((?i . ,(match-string 2)))))
+                        (forge--format repo 'issue-url-format '((?i . "%s")))))
+          (setq-local bug-reference-bug-regexp
+                      (if (forge--childp repo 'forge-gitlab-repository)
+                          "\\(?3:[!#]\\)\\(?2:[0-9]+\\)"
+                        "#\\(?2:[0-9]+\\)")))
+        (if (derived-mode-p 'prog-mode)
+            (bug-reference-prog-mode 1)
+          (bug-reference-mode 1))
+        (add-hook 'completion-at-point-functions
+                  'forge-topic-completion-at-point nil t)))))
 
 (when (and (not noninteractive) forge--sqlite-available-p)
   (dolist (hook forge-bug-reference-hooks)

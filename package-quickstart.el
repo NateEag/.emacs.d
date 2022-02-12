@@ -15616,10 +15616,10 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210502.1804/lsp-treemacs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20220102.1517/lsp-treemacs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20210502.1804/lsp-treemacs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-treemacs-20220102.1517/lsp-treemacs-autoloads.el") (car load-path))))
 
 
 
@@ -15627,7 +15627,7 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 Show symbols view." t nil)
 
 (autoload 'lsp-treemacs-java-deps-list "lsp-treemacs" "\
-Display error list." t nil)
+Display java dependencies." t nil)
 
 (autoload 'lsp-treemacs-java-deps-follow "lsp-treemacs" nil t nil)
 
@@ -15679,7 +15679,7 @@ With prefix 2 show both.
 
 (autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-tree")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-treemacs-")))
 
 
 

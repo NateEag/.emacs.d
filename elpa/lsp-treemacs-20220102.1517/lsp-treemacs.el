@@ -6,7 +6,7 @@
 ;; Keywords: languages
 ;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (f "0.20.0") (ht "2.0") (treemacs "2.5") (lsp-mode "6.0"))
 ;; Homepage: https://github.com/emacs-lsp/lsp-treemacs
-;; Version: 0.3
+;; Version: 0.4
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -48,12 +48,22 @@
   `((side . ,treemacs-position)
     (slot . 1)
     (window-width . ,treemacs-width))
-  "The params which will be used by `display-buffer-in-side-window'.")
+  "The params which will be used by
+  `display-buffer-in-side-window' in
+  `lsp-treemacs-java-deps-list'.")
 
 (defvar lsp-treemacs-symbols-position-params
   `((side . ,treemacs-position)
     (slot . 2)
-    (window-width . ,treemacs-width)))
+    (window-width . ,treemacs-width))
+  "The params which will be used by
+  `display-buffer-in-side-window' in `lsp-treemacs-symbols'.")
+
+(defvar lsp-treemacs-errors-position-params
+  `((side . bottom))
+  "The params which will be used by
+  `display-buffer-in-side-window' in
+  `lsp-treemacs-errors-list'.")
 
 (defface lsp-treemacs-project-root-error
   '((t :inherit font-lock-keyword-face))
@@ -539,7 +549,7 @@ will be rendered an empty line between them."
 
 ;;;###autoload
 (defun lsp-treemacs-java-deps-list ()
-  "Display error list."
+  "Display java dependencies."
   (interactive)
   (-if-let (buffer (get-buffer lsp-treemacs-deps-buffer-name))
       (select-window
@@ -574,7 +584,7 @@ will be rendered an empty line between them."
 
 (define-minor-mode lsp-treemacs-deps-list-mode ""
   :keymap lsp-treemacs-deps-list-mode-map
-  :group 'lsp-treeemacs)
+  :group 'lsp-treemacs)
 
 ;;;###autoload
 (defun lsp-treemacs-java-deps-follow ()
@@ -858,7 +868,7 @@ will be rendered an empty line between them."
      0.001 nil
      (lambda ()
        (-when-let* ((actions (if-let (node (treemacs-node-at-point))
-                                 (plist-get (button-get node :item) :actions)
+                                 (lsp-resolve-value (plist-get (button-get node :item) :actions))
                                lsp-treemacs--right-click-actions))
                     (menu (easy-menu-create-menu nil actions))
                     (choice (x-popup-menu event menu)))
@@ -919,6 +929,8 @@ will be rendered an empty line between them."
       (setq-local treemacs-space-between-root-nodes nil)
       (lsp-treemacs--set-mode-line-format search-buffer title)
       (lsp-treemacs-generic-refresh)
+      (when treemacs-text-scale
+        (text-scale-set treemacs-text-scale))
       (when expand-depth (lsp-treemacs--expand 'LSP-Generic expand-depth))
       (current-buffer))))
 
@@ -1132,7 +1144,7 @@ With prefix 2 show both."
 
 ;; errors
 
-(defun lsp-treeemacs--error-list-diags (_folder file &rest _)
+(defun lsp-treemacs--error-list-diags (_folder file &rest _)
   (->> (lsp-diagnostics)
        (gethash file)
        (-filter #'lsp-treemacs--match-diagnostic-severity)
@@ -1191,7 +1203,7 @@ With prefix 2 show both."
                                  (propertize (f-dirname (f-relative file folder))
                                              'face 'lsp-details-face))
                   :icon (if (f-directory? file) 'dir-closed (f-ext file))
-                  :children (-partial #'lsp-treeemacs--error-list-diags folder file)
+                  :children (-partial #'lsp-treemacs--error-list-diags folder file)
                   :ret-action (lambda (&rest _)
                                 (interactive)
                                 (lsp-treemacs--open-file-in-mru file))))))))
@@ -1269,10 +1281,10 @@ With prefix 2 show both."
   (setq lsp-treemacs--current-workspaces (lsp-workspaces))
   (-if-let (buffer (get-buffer lsp-treemacs-errors-buffer-name))
       (progn
-        (select-window (display-buffer-in-side-window buffer '((side . bottom))))
+        (select-window (display-buffer-in-side-window buffer lsp-treemacs-errors-position-params))
         (lsp-treemacs-errors-list--refresh))
     (let* ((buffer (lsp-treemacs-errors-list--refresh))
-           (window (display-buffer-in-side-window buffer '((side . bottom)))))
+           (window (display-buffer-in-side-window buffer lsp-treemacs-errors-position-params)))
       (select-window window)
       (set-window-dedicated-p window t)
       (lsp-treemacs-error-list-mode 1)
@@ -1305,7 +1317,7 @@ With prefix 2 show both."
 
 (define-minor-mode lsp-treemacs-error-list-mode ""
   :keymap lsp-treemacs-error-list-mode-map
-  :group 'lsp-treeemacs)
+  :group 'lsp-treemacs)
 
 (defun lsp-treemacs--match-diagnostic-severity (diagnostic)
   (<= (lsp:diagnostic-severity? diagnostic)

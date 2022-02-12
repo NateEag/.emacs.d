@@ -13,7 +13,7 @@
 Show symbols view." t nil)
 
 (autoload 'lsp-treemacs-java-deps-list "lsp-treemacs" "\
-Display error list." t nil)
+Display java dependencies." t nil)
 
 (autoload 'lsp-treemacs-java-deps-follow "lsp-treemacs" nil t nil)
 
@@ -65,7 +65,7 @@ With prefix 2 show both.
 
 (autoload 'lsp-treemacs-errors-list "lsp-treemacs" nil t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-tree")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-treemacs" '("lsp-treemacs-")))
 
 ;;;***
 

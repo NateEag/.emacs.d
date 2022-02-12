@@ -6998,10 +6998,10 @@ call this function in `noninteractive' sessions." nil nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/show-eol-20200921.1201/show-eol-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/show-eol-20210715.1227/show-eol-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/show-eol-20200921.1201/show-eol-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/show-eol-20210715.1227/show-eol-autoloads.el") (car load-path))))
 
 
 

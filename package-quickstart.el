@@ -20025,10 +20025,10 @@ FUNCTION must return an explanation when the test fails and
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/expand-region-20200304.1839/expand-region-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/expand-region-20210708.1952/expand-region-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/expand-region-20200304.1839/expand-region-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/expand-region-20210708.1952/expand-region-autoloads.el") (car load-path))))
 
 
 
@@ -20206,6 +20206,10 @@ Whether expand-region should use subword expansions.")
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "web-mode-expansions" '("er/add-web-mode-expansions")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml-mode-expansions" '("er--" "er/" "yaml-indent")))
 
 
 

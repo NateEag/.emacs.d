@@ -290,6 +290,14 @@ Whether expand-region should use subword expansions.")
 
 ;;;***
 
+;;;### (autoloads nil "yaml-mode-expansions" "yaml-mode-expansions.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from yaml-mode-expansions.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml-mode-expansions" '("er--" "er/" "yaml-indent")))
+
+;;;***
+
 ;;;### (autoloads nil nil ("expand-region-pkg.el") (0 0 0 0))
 
 ;;;***

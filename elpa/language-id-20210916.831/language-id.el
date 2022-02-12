@@ -1,32 +1,32 @@
 ;;; language-id.el --- Library to work with programming language identifiers -*- lexical-binding: t -*-
-;;
+
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20210411.1332
-;; Package-Commit: 30a5bc267af7de167d0a835ead828016e6e7e14c
-;; Version: 0.12
+;; Package-Version: 20210916.831
+;; Package-Commit: 906fac7d91994d02120cfb5f547c1d06cea1ad69
+;; Version: 0.16.1
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
-;;
+
 ;; This file is not part of GNU Emacs.
-;;
+
 ;;; Commentary:
-;;
+
 ;; language-id is a small, focused library that helps other Emacs
 ;; packages identify the programming languages and markup languages
 ;; used in Emacs buffers.  The main point is that it contains an
 ;; evolving table of language definitions that doesn't need to be
 ;; replicated in other packages.
-;;
+
 ;; Right now there is only one public function, `language-id-buffer'.
 ;; It looks at the major mode and other variables and returns the
 ;; language's GitHub Linguist identifier.  We can add support for
 ;; other kinds of identifiers if there is demand.
-;;
+
 ;; This library does not do any statistical text matching to guess the
 ;; language.
-;;
+
 ;;; Code:
 
 (defvar language-id--file-name-extension nil
@@ -38,6 +38,13 @@
 
     ;;; Definitions that need special attention to precedence order.
 
+    ;; It is not uncommon for C++ mode to be used when writing Cuda.
+    ;; In this case, the only way to correctly identify Cuda is by
+    ;; looking at the extension.
+    ("Cuda"
+     (c++-mode (language-id--file-name-extension ".cu"))
+     (c++-mode (language-id--file-name-extension ".cuh")))
+
     ;; json-mode is derived from javascript-mode.
     ("JSON"
      json-mode
@@ -48,6 +55,11 @@
 
     ;; scss-mode is derived from css-mode.
     ("SCSS" scss-mode)
+
+    ;; svelte-mode is derived from html-mode.
+    ("Svelte"
+     svelte-mode
+     (web-mode (web-mode-content-type "html") (web-mode-engine "svelte")))
 
     ;; terraform-mode is derived from hcl-mode.
     ("Terraform" terraform-mode)
@@ -90,6 +102,7 @@
 
     ("Assembly" asm-mode nasm-mode)
     ("ATS" ats-mode)
+    ("Awk" awk-mode)
     ("Bazel" bazel-mode)
     ("BibTeX" bibtex-mode)
     ("C" c-mode)
@@ -103,6 +116,7 @@
     ("CSS"
      css-mode
      (web-mode (web-mode-content-type "css") (web-mode-engine "none")))
+    ("Cuda" cuda-mode)
     ("D" d-mode)
     ("Dart" dart-mode)
     ("Dhall" dhall-mode)
@@ -110,7 +124,10 @@
     ("Elixir" elixir-mode)
     ("Elm" elm-mode)
     ("Emacs Lisp" emacs-lisp-mode)
+    ("F#" fsharp-mode)
     ("Fish" fish-mode)
+    ("Fortran" fortran-mode)
+    ("Fortran Free Form" f90-mode)
     ("GLSL" glsl-mode)
     ("Go" go-mode)
     ("GraphQL" graphql-mode)
@@ -156,6 +173,7 @@
     ("SQL" sql-mode)
     ("Swift" swift-mode swift3-mode)
     ("TOML" toml-mode conf-toml-mode)
+    ("V" v-mode)
     ("Verilog" verilog-mode)
     ("XML"
      nxml-mode xml-mode

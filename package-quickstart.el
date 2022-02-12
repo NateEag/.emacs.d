@@ -14972,14 +14972,10 @@ https://github.com/dandavison/delta
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lua-mode-20201110.1250/lua-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lua-mode-20210809.1320/lua-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lua-mode-20201110.1250/lua-mode-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "init-tryout" '("add-trace-for")))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lua-mode-20210809.1320/lua-mode-autoloads.el") (car load-path))))
 
 
 
@@ -15002,8 +14998,6 @@ When called interactively, switch to the process buffer.
 \(fn &optional NAME PROGRAM STARTFILE &rest SWITCHES)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lua-mode" '("lua-")))
-
-
 
 
 )

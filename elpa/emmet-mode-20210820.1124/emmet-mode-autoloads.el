@@ -1,10 +1,12 @@
 ;;; emmet-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "emmet-mode" "emmet-mode.el" (23400 19125 0
-;;;;;;  0))
+;;;### (autoloads nil "emmet-mode" "emmet-mode.el" (0 0 0 0))
 ;;; Generated autoloads from emmet-mode.el
 
 (autoload 'emmet-expand-line "emmet-mode" "\
@@ -21,6 +23,11 @@ For more information see `emmet-mode'.
 (autoload 'emmet-mode "emmet-mode" "\
 Minor mode for writing HTML and CSS markup.
 With emmet for HTML and CSS you can write a line like
+
+If called interactively, enable Emmet mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
   ul#name>li.item*2
 
@@ -41,10 +48,7 @@ See also `emmet-expand-line'.
 
 \(fn &optional ARG)" t nil)
 
-(autoload 'emmet-expand-yas "emmet-mode" "\
-
-
-\(fn)" t nil)
+(autoload 'emmet-expand-yas "emmet-mode" nil t nil)
 
 (autoload 'emmet-preview "emmet-mode" "\
 Expand emmet between BEG and END interactively.
@@ -68,11 +72,14 @@ Wrap region with markup.
 
 \(fn COUNT)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "emmet-mode" '("emmet-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; emmet-mode-autoloads.el ends here

@@ -2692,12 +2692,33 @@ The buffer on focus when the command is called is set as the target buffer." t n
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210314.1704/tree-sitter-langs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220129.1702/tree-sitter-langs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20210314.1704/tree-sitter-langs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220129.1702/tree-sitter-langs-autoloads.el") (car load-path))))
 
 
+
+(autoload 'tree-sitter-langs--init-load-path "tree-sitter-langs" "\
+Add the directory containing compiled grammars to `tree-sitter-load-path'.
+
+\(fn &rest ARGS)" nil nil)
+
+(advice-add 'tree-sitter-load :before #'tree-sitter-langs--init-load-path)
+
+(autoload 'tree-sitter-langs--init-major-mode-alist "tree-sitter-langs" "\
+Link known major modes to languages provided by the bundle.
+
+\(fn &rest ARGS)" nil nil)
+
+(advice-add 'tree-sitter--setup :before #'tree-sitter-langs--init-major-mode-alist)
+
+(autoload 'tree-sitter-langs--set-hl-default-patterns "tree-sitter-langs" "\
+Use syntax highlighting patterns provided by `tree-sitter-langs'.
+
+\(fn &rest ARGS)" nil nil)
+
+(advice-add 'tree-sitter-hl--setup :before #'tree-sitter-langs--set-hl-default-patterns)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-langs" '("tree-sitter-langs-")))
 

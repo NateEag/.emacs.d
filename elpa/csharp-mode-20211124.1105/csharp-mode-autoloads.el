@@ -19,11 +19,6 @@
 
 (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-mode))
 
-(defvar csharp-mode-hook nil "\
-*Hook called by `csharp-mode'.")
-
-(custom-autoload 'csharp-mode-hook "csharp-mode" t)
-
 (autoload 'csharp-mode "csharp-mode" "\
 Major mode for editing Csharp code.
 

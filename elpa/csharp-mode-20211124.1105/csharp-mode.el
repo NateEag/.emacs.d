@@ -1,14 +1,16 @@
 ;;; csharp-mode.el --- C# mode derived mode  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
+
 ;; Author     : Theodor Thornhill <theo@thornhill.no>
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
-;;            : Theodor Thornhill <theo@thornhill.no>
+;;              Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 0.11.0
+;; Version    : 1.1.1
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
-;; Package-Requires: ((emacs "26.1") (tree-sitter "0.15.1") (tree-sitter-indent "0.1") (tree-sitter-langs "0.10.0"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -27,8 +29,6 @@
 ;;; Code:
 
 
-(when (version< emacs-version "25.1")
-  (require 'cl))
 (require 'cc-mode)
 (require 'cc-langs)
 
@@ -94,6 +94,39 @@
 
 (c-lang-defconst c-multiline-string-start-char
   csharp ?@)
+
+(c-lang-defconst c-ml-string-opener-re
+  ;; "\\(\\(?:@\\$?\\)\\(\"\\)\\)"
+  csharp
+  (rx
+   (group
+    (or "@" "@$")
+    (group "\""))))
+
+(c-lang-defconst c-ml-string-max-opener-len
+  csharp 3)
+
+(c-lang-defconst c-ml-string-max-closer-len
+  csharp 2)
+
+(c-lang-defconst c-ml-string-any-closer-re
+  ;; "\\(?:\"\"\\)*\\(\\(\"\\)\\)\\(?:[^\"]\\|\\'\\)"
+  csharp
+  (rx
+   (seq
+    (zero-or-more "\"\"")
+    (group
+     (group "\""))
+    (or (not (any "\"")) eos))))
+
+(c-lang-defconst c-ml-string-back-closer-re
+  ;; "\\(?:\\`\\|[^\"]\\)\"*"
+  csharp
+  (rx
+   (seq
+    (or bos
+        (not (any "\"")))
+    (zero-or-more "\""))))
 
 (c-lang-defconst c-type-prefix-kwds
   csharp '("class" "interface" "struct"))
@@ -348,8 +381,7 @@ Should be one of the font lock faces, such as
 
 Needs to be set before `csharp-mode' is loaded, because of
 compilation and evaluation time conflicts."
-  :type 'symbol
-  :group 'csharp)
+  :type 'symbol)
 
 (defcustom csharp-font-lock-extra-types
   (list csharp--regex-type-name)
@@ -402,7 +434,7 @@ compilation and evaluation time conflicts."
 ;;; Adding syntax constructs
 
 (advice-add 'c-looking-at-inexpr-block
-            :around 'csharp-looking-at-inexpr-block)
+            :around #'csharp-looking-at-inexpr-block)
 
 (defun csharp-looking-at-inexpr-block (orig-fun &rest args)
   (let ((res (csharp-at-lambda-header)))
@@ -422,7 +454,7 @@ compilation and evaluation time conflicts."
         (cons 'inexpr (point))))))
 
 (advice-add 'c-guess-basic-syntax
-            :around 'csharp-guess-basic-syntax)
+            :around #'csharp-guess-basic-syntax)
 
 (defun csharp-guess-basic-syntax (orig-fun &rest args)
   (cond
@@ -546,12 +578,6 @@ compilation and evaluation time conflicts."
 
 ;; Custom variables
 ;;;###autoload
-(defcustom csharp-mode-hook nil
-  "*Hook called by `csharp-mode'."
-  :type 'hook
-  :group 'csharp)
-
-;;;###autoload
 (define-derived-mode csharp-mode prog-mode "C#"
   "Major mode for editing Csharp code.
 
@@ -561,9 +587,8 @@ Key bindings:
   (c-initialize-cc-mode t)
   (c-init-language-vars csharp-mode)
   (c-common-init 'csharp-mode)
-  (easy-menu-add csharp-mode-menu)
   (setq-local c-doc-comment-style '((csharp-mode . codedoc)))
-  (c-run-mode-hooks 'c-mode-common-hook 'csharp-mode-hook))
+  (run-mode-hooks 'c-mode-common-hook))
 
 (provide 'csharp-mode)
 

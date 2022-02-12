@@ -10462,10 +10462,10 @@ See `origami-mode' for more information on Origami mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210328.2004/csharp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/csharp-mode-20211124.1105/csharp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20210328.2004/csharp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/csharp-mode-20211124.1105/csharp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -10474,11 +10474,6 @@ See `origami-mode' for more information on Origami mode.
 
 
 (add-to-list 'auto-mode-alist '("\\.cs\\'" . csharp-mode))
-
-(defvar csharp-mode-hook nil "\
-*Hook called by `csharp-mode'.")
-
-(custom-autoload 'csharp-mode-hook "csharp-mode" t)
 
 (autoload 'csharp-mode "csharp-mode" "\
 Major mode for editing Csharp code.

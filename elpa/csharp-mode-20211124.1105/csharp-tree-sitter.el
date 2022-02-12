@@ -1,11 +1,13 @@
 ;;; csharp-tree-sitter.el --- tree sitter support for C#  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
+
 ;; Author     : Theodor Thornhill <theo@thornhill.no>
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
-;;            : Theodor Thornhill <theo@thornhill.no>
+;;              Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 0.11.0
+;; Version    : 1.1.1
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
 ;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (tree-sitter-indent "0.1") (tree-sitter-langs "0.9.1"))
@@ -29,10 +31,22 @@
 (require 'cl-extra)
 (require 'seq)
 
-(require 'tree-sitter)
-(require 'tree-sitter-hl)
-(require 'tree-sitter-indent)
-(require 'tree-sitter-langs)
+(when t
+  ;; In order for the package to be usable and installable (and hence
+  ;; compilable) without tree-sitter, wrap the `require's within a dummy `when'
+  ;; so they're only executed when loading this file but not when compiling it.
+  (require 'tree-sitter)
+  (require 'tree-sitter-hl)
+  (require 'tree-sitter-indent)
+  (require 'tree-sitter-langs))
+;; Vars and functions defined by the above packages:
+(defvar tree-sitter-major-mode-language-alist) ;From `tree-sitter-langs'.
+(declare-function tree-sitter-indent-mode "ext:tree-sitter-indent")
+(declare-function tree-sitter-indent-line "ext:tree-sitter-indent")
+(declare-function tree-sitter-hl-mode "ext:tree-sitter-hl")
+(declare-function tsc-node-end-position "ext:tree-sitter")
+(declare-function tsc-node-start-position "ext:tree-sitter")
+(declare-function tree-sitter-node-at-point "ext:tree-sitter")
 
 (require 'csharp-compilation)
 
@@ -41,7 +55,7 @@
 
 ;;; Tree-sitter
 
-(setq csharp-mode-tree-sitter-patterns
+(defconst csharp-mode-tree-sitter-patterns
   [ ;; Various constructs
    (comment) @comment
    (modifier) @keyword
@@ -69,7 +83,7 @@
     "foreach" "in" "yield" "get" "set" "when" "as" "out"
     "is" "while" "continue" "this" "ref" "goto" "interface"
     "from" "where" "select" "lock" "base" "record" "init"
-    "with" "let"
+    "with" "let" "static"
     ] @keyword
 
    ;; Linq
@@ -272,57 +286,58 @@
   :group 'csharp)
 
 (defvar tree-sitter-indent-csharp-tree-sitter-scopes
-  '((indent-all . ;; these nodes are always indented
-                (accessor_declaration
-                 break_statement
-                 arrow_expression_clause
-                 parameter_list
-                 conditional_expression
-                 constructor_initializer
-                 argument_list
-                 "."))
-    (indent-rest . ;; if parent node is one of these and node is not first → indent
-                 (
-                  binary_expression
-                  switch_section
-                  ))
-    (indent-body . ;; if parent node is one of these and current node is in middle → indent
-                 (enum_member_declaration_list
-                  base_list
-                  block
-                  anonymous_object_creation_expression
-                  initializer_expression
-                  expression_statement
-                  declaration_list
-                  attribute_argument_list
-                  switch_body))
-
-    (paren-indent . ;; if parent node is one of these → indent to paren opener
-                  (parenthesized_expression))
-    (align-char-to . ;; chaining char → node types we move parentwise to find the first chaining char
-                   ())
-    (aligned-siblings . ;; siblings (nodes with same parent) should be aligned to the first child
-                      (parameter))
-
-    (multi-line-text . ;; if node is one of these, then don't modify the indent
-                     ;; this is basically a peaceful way out by saying "this looks like something
-                     ;; that cannot be indented using AST, so best I leave it as-is"
-                     (comment
-                      preprocessor_call
-                      labeled_statement))
-    (outdent . ;; these nodes always outdent (1 shift in opposite direction)
-             (;; "}"
-              case_switch_label
-
-              ))
-
-    (align-to-node-line . ;; this group has lists of alist (node type . (node types... ))
-                          ;; we move parentwise, searching for one of the node
-                          ;; types associated with the key node type. if found,
-                          ;; align key node with line where the ancestor node
-                          ;; was found.
-             ((block . (lambda_expression))))
-    )
+  '((indent-all
+     ;; these nodes are always indented
+     . (accessor_declaration
+        break_statement
+        arrow_expression_clause
+        parameter_list
+        conditional_expression
+        constructor_initializer
+        argument_list
+        "."))
+    (indent-rest
+     ;; if parent node is one of these and node is not first → indent
+     . (binary_expression
+        switch_section))
+    (indent-body
+     ;; if parent node is one of these and current node is in middle → indent
+     . (enum_member_declaration_list
+        base_list
+        block
+        anonymous_object_creation_expression
+        initializer_expression
+        expression_statement
+        declaration_list
+        attribute_argument_list
+        switch_body
+        switch_expression))
+    (paren-indent
+     ;; if parent node is one of these → indent to paren opener
+     . (parenthesized_expression))
+    (align-char-to
+     ;; chaining char → node types we move parentwise to find the first chaining char
+     . ())
+    (aligned-siblings
+     ;; siblings (nodes with same parent) should be aligned to the first child
+     . (parameter
+        argument))
+    (multi-line-text
+     ;; if node is one of these, then don't modify the indent
+     ;; this is basically a peaceful way out by saying "this looks like something
+     ;; that cannot be indented using AST, so best I leave it as-is"
+     . (preprocessor_call
+        labeled_statement))
+    (outdent
+     ;; these nodes always outdent (1 shift in opposite direction)
+     . (case_switch_label))
+    (align-to-node-line
+     ;; this group has lists of alist (node type . (node types... ))
+     ;; we move parentwise, searching for one of the node
+     ;; types associated with the key node type. if found,
+     ;; align key node with line where the ancestor node
+     ;; was found.
+     . ((block . (lambda_expression)))))
   "Scopes for indenting in C#.")
 
 ;;; tree-sitter helper-functions. navigation, editing, etc.

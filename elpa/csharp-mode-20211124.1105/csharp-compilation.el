@@ -1,11 +1,13 @@
 ;;; csharp-compilation.el --- compilation support for C#  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
+
 ;; Author     : Theodor Thornhill <theo@thornhill.no>
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
-;;            : Theodor Thornhill <theo@thornhill.no>
+;;              Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 0.11.0
+;; Version    : 1.1.1
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
 

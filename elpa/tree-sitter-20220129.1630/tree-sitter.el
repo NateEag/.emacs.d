@@ -4,9 +4,9 @@
 ;;
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
-;; Homepage: https://github.com/ubolonton/emacs-tree-sitter
-;; Version: 0.15.1
-;; Package-Requires: ((emacs "25.1") (tsc "0.15.1"))
+;; Homepage: https://github.com/emacs-tree-sitter/elisp-tree-sitter
+;; Version: 0.17.0
+;; Package-Requires: ((emacs "25.1") (tsc "0.17.0"))
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -141,7 +141,7 @@ OLD-LEN is the char length of the old text."
   "Parse the current buffer and update the syntax tree."
   (let ((old-tree tree-sitter-tree))
     (setq tree-sitter-tree
-          ;; https://github.com/ubolonton/emacs-tree-sitter/issues/3
+          ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/3
           (tsc--without-restriction
             (tsc-parse-chunks tree-sitter-parser #'tsc--buffer-input old-tree)))
     (run-hook-with-args 'tree-sitter-after-change-functions old-tree)))
@@ -269,21 +269,42 @@ Both SETUP-FUNCTION and TEARDOWN-FUNCTION should be idempotent."
        ,teardown)))
 
 ;;;###autoload
-(defun tree-sitter-node-at-point (&optional node-type)
-  "Return the smallest syntax node at point whose type is NODE-TYPE.
-If NODE-TYPE is nil, return the smallest syntax node at point."
+(define-obsolete-function-alias 'tree-sitter-node-at-point 'tree-sitter-node-at-pos "2021-08-30")
+
+(define-error 'tree-sitter-invalid-node-type "No such node-type")
+
+;;;###autoload
+(defun tree-sitter-node-at-pos (&optional node-type pos ignore-invalid-type)
+  "Return the smallest syntax node of type NODE-TYPE at POS.
+NODE-TYPE may be a symbol, corresponding to a named syntax node; a string,
+corresponding to an anonymous node, or a keyword, holding a special value. For
+the special value `:named', return the smallest named node at POS. For the
+special value `:anonymous', return the smallest anonymous node at POS. IF POS is
+nil, POS defaults to the point. Unless IGNORE-INVALID-TYPE is non-nil, signal an
+error when a specified named NODE-TYPE does not exist in the current grammar.
+Whenever NODE-TYPE is non-nil (other than `:named'), it is possible for the
+function to return nil."
+  (when (and (not ignore-invalid-type)
+             node-type
+             (not (keywordp node-type)))
+    (when (= 0 (tsc-lang-node-type-id tree-sitter-language node-type))
+      (signal 'tree-sitter-invalid-node-type (list node-type))))
   (let* ((root (tsc-root-node tree-sitter-tree))
-         (p (point))
-         (node (tsc-get-descendant-for-position-range root p p)))
-    (if node-type
-        (let ((this node) result)
-          (while this
-            (if (equal node-type (tsc-node-type this))
-                (setq result this
-                      this nil)
-              (setq this (tsc-get-parent this))))
-          result)
-      node)))
+         (p (or pos (point)))
+         (node (if (eq node-type :named)
+                   (tsc-get-named-descendant-for-position-range root p p)
+                 (tsc-get-descendant-for-position-range root p p))))
+    (pcase node-type
+      ('nil node)
+      (:named node)
+      (:anonymous (unless (tsc-node-named-p node) node))
+      (_ (let ((this node) result)
+           (while this
+             (if (equal node-type (tsc-node-type this))
+                 (setq result this
+                       this nil)
+               (setq this (tsc-get-parent this))))
+           result)))))
 
 (provide 'tree-sitter)
 ;;; tree-sitter.el ends here

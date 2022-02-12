@@ -275,7 +275,10 @@ the following code disables keyword highlighting:
 (defvar-local tree-sitter-hl-default-patterns nil
   "Default syntax highlighting patterns.
 This should be set by major modes that want to integrate with `tree-sitter-hl'.
-It plays a similar role to `font-lock-defaults'.")
+It plays a similar role to `font-lock-defaults'.
+
+It is either a string, or a vector of S-expressions. For more details on the
+syntax, see https://emacs-tree-sitter.github.io/syntax-highlighting/queries/.")
 
 (defvar tree-sitter-hl--patterns-alist nil
   "Additional language-specific syntax highlighting patterns.
@@ -374,6 +377,14 @@ See `tree-sitter-hl-add-patterns'."
 The assumption is that: in any syntax highlighting pattern, the captures do not
 lie deeper than this.")
 
+;; https://github.com/tree-sitter/tree-sitter/pull/1130.
+(defvar-local tree-sitter-hl-enable-query-region-extension nil
+  "Whether to extend query region used for highlighting.
+If you get incorrect highlighting, try setting this to t.
+
+See `tree-sitter-hl--extend-regions' for more details.")
+
+;;; TODO: Improve this function's docstring. It's no longer accurate.
 (defun tree-sitter-hl--extend-regions (hl-region query-region)
   "Extend HL-REGION and QUERY-REGION before highlighting, mutably.
 For performance reason, we execute the highlighting query on a region, instead
@@ -405,31 +416,35 @@ See https://github.com/tree-sitter/tree-sitter/issues/598."
                (level 0))
     (when (< delta tree-sitter-hl--extend-region-limit)
       (setcar hl-region beg)
-      (setcdr hl-region end))
+      (setcdr hl-region end)
+      (setcar query-region beg)
+      (setcdr query-region end))
     ;; Repeatedly extend the region, within the limit. TODO: What if the region
     ;; of the minimal enclosing node is already too large?
-    (while (and node
-                (< delta tree-sitter-hl--extend-region-limit))
-      (setcar query-region beg)
-      (setcdr query-region end)
-      ;; Walk up to the parent node.
-      (when (setq node (when (<= (cl-incf level)
-                                 tree-sitter-hl--extend-region-levels)
-                         (tsc-get-parent node)))
-        (let ((range (tsc-node-position-range node)))
-          (setf `(,beg . ,end) range)
-          (setq size (- end beg))
-          (setq delta (- size orig-size)))))
-    ;; Extend to whole lines.
-    (goto-char (car query-region))
-    (setcar query-region (line-beginning-position 0))
-    (goto-char (cdr query-region))
-    (setcdr query-region (line-beginning-position 2))))
+    (when tree-sitter-hl-enable-query-region-extension
+      (while (and node
+                  (< delta tree-sitter-hl--extend-region-limit))
+        (setcar query-region beg)
+        (setcdr query-region end)
+        ;; Walk up to the parent node.
+        (when (setq node (when (<= (cl-incf level)
+                                   tree-sitter-hl--extend-region-levels)
+                           (tsc-get-parent node)))
+          (let ((range (tsc-node-position-range node)))
+            (setf `(,beg . ,end) range)
+            (setq size (- end beg))
+            (setq delta (- size orig-size)))))
+      ;; Extend to whole lines.
+      (goto-char (car query-region))
+      (setcar query-region (line-beginning-position 0))
+      (goto-char (cdr query-region))
+      (setcdr query-region (line-beginning-position 2)))))
 
 (defun tree-sitter-hl--append-text-property (start end prop value &optional object)
   "Append VALUE to PROP of the text from START to END.
 This is similar to `font-lock-append-text-property', but deduplicates values. It
-also expects VALUE to be a single value, not a list."
+also expects VALUE to be a single value, not a list. Additionally, if PROP was
+previously nil, it will be set to VALUE, not (list VALUE)."
   (let (next prev)
     (while (/= start end)
       (setq next (next-single-property-change start prop object end)
@@ -444,29 +459,11 @@ also expects VALUE to be a single value, not a list."
         (setq prev (list prev)))
       (unless (memq value prev)
         (put-text-property start next prop
-                           (append prev (list value))
-                           object))
-      (setq start next))))
-
-(defun tree-sitter-hl--prepend-text-property (start end prop value &optional object)
-  "Prepend VALUE to PROP of the text from START to END.
-This is similar to `font-lock-prepend-text-property', but deduplicates values.
-It also expects VALUE to be a single value, not a list."
-  (let (next prev)
-    (while (/= start end)
-      (setq next (next-single-property-change start prop object end)
-            prev (get-text-property start prop object))
-      ;; Canonicalize old forms of face property.
-      (and (memq prop '(face font-lock-face))
-           (listp prev)
-           (or (keywordp (car prev))
-               (memq (car prev) '(foreground-color background-color)))
-           (setq prev (list prev)))
-      (unless (listp prev)
-        (setq prev (list prev)))
-      (unless (memq value prev)
-        (put-text-property start next prop
-                           (cons value prev)
+                           ;; Reduce GC pressure by not making a list if it's
+                           ;; just a single face.
+                           (if prev
+                               (append prev (list value))
+                             value)
                            object))
       (setq start next))))
 
@@ -522,6 +519,18 @@ If LOUDLY is non-nil, print debug messages."
         ;; We may have highlighted more, but are only reasonably sure about
         ;; HL-REGION.
         `(jit-lock-bounds ,beg . ,end)))))
+
+(defun tree-sitter-hl--highlight-region-with-fallback (old-fontify-fn beg end &optional loudly)
+  "Highlight the region (BEG . END).
+
+This is a wrapper around `tree-sitter-hl--highlight-region' that falls back to
+OLD-FONTIFY-FN when the current buffer doesn't have `tree-sitter-hl-mode'
+enabled. An example is `jupyter-repl-mode', which copies and uses other major
+modes' fontification functions to highlight its input cells. See
+https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/78#issuecomment-1005987817."
+  (if tree-sitter-hl--query
+      (tree-sitter-hl--highlight-region beg end loudly)
+    (funcall old-fontify-fn beg end loudly)))
 
 (defun tree-sitter-hl--invalidate (&optional old-tree)
   "Mark regions of text to be rehighlighted after a text change.
@@ -593,8 +602,8 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; highlighting without setting `font-lock-defaults'. At the moment,
     ;; `font-lock-mode' somehow helps with making sure that fontification is
     ;; updated in-time, instead of eventually.
-    (add-function :override (local 'font-lock-fontify-region-function)
-                  #'tree-sitter-hl--highlight-region)
+    (add-function :around (local 'font-lock-fontify-region-function)
+                  #'tree-sitter-hl--highlight-region-with-fallback)
     (tree-sitter-hl--minimize-font-lock-keywords)
     ;; XXX: We used to have a hack that calls`font-lock-turn-on-thing-lock',
     ;; which allows turning on tree-based syntax highlighting by temporarily
@@ -608,13 +617,13 @@ This assumes both `tree-sitter-mode' and `font-lock-mode' were already enabled."
     ;; value of `font-lock-ensure-function', calling `font-lock-ensure' will
     ;; signal an error. For example, this happens when org-mode's code blocks
     ;; are highlighted). Therefore, we disabled that hack. See
-    ;; https://github.com/ubolonton/emacs-tree-sitter/issues/74
+    ;; https://github.com/emacs-tree-sitter/elisp-tree-sitter/issues/74
     ))
 
 (defun tree-sitter-hl--teardown ()
   "Tear down `tree-sitter-hl' in the current buffer."
   (remove-function (local 'font-lock-fontify-region-function)
-                   #'tree-sitter-hl--highlight-region)
+                   #'tree-sitter-hl--highlight-region-with-fallback)
   (remove-hook 'tree-sitter-after-change-functions
                #'tree-sitter-hl--invalidate
                :local)

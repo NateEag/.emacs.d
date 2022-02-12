@@ -3,29 +3,27 @@
 ;;
 ;; Copyright (C) 2002-2008,2013 David Andersson
 ;;
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2 of
-;; the License, or (at your option) any later version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 ;;
-;; This program is distributed in the hope that it will be
-;; useful, but WITHOUT ANY WARRANTY; without even the implied
-;; warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
-;; PURPOSE.  See the GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
-;; You should have received a copy of the GNU General Public
-;; License along with this program; if not, write to the Free
-;; Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301 USA
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;-------------------------------------------------------------------
 ;;
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Maintainer: Vasilij Schneidermann <mail@vasilij.de>
 ;; Created: 16 May 2002
-;; Version: 1.7.4
-;; Package-Version: 20210508.1632
-;; Package-Commit: 3ce1389fea12edde4e343bc7d54c8da97a1a6136
+;; Version: 1.7.5
+;; Package-Version: 20220107.1733
+;; Package-Commit: 278cd3e6d5107693aa2bb33189ca503f22f227d0
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: convenience, matching
 ;; URL: https://github.com/emacs-evil/goto-chg
@@ -53,6 +51,8 @@
 ;;--------------------------------------------------------------------
 ;; History
 ;;
+;; Ver 1.7.5 2022-01-04 Axel Foesman, Stefan Kangas
+;;    Consider all entries in undo-tree changesets, bump license to GPL3+
 ;; Ver 1.7.4 2020-10-08 Vasilij Schneidermann
 ;;    Remove hard dependency on undo-tree
 ;; Ver 1.7.3 2019-01-07 Vasilij Schneidermann
@@ -104,7 +104,8 @@
 
 (require 'undo-tree nil t)
 
-(defvar glc-default-span 8 "*goto-last-change don't visit the same point twice. glc-default-span tells how far around a visited point not to visit again.")
+(defvar glc-default-span 8 "*goto-last-change don't visit the same point twice.
+glc-default-span tells how far around a visited point not to visit again.")
 (defvar glc-current-span 8 "Internal for goto-last-change.\nA copy of glc-default-span or the ARG passed to goto-last-change.")
 (defvar glc-probe-depth 0 "Internal for goto-last-change.\nIt is non-zero between successive goto-last-change.")
 (defvar glc-direction 1 "Direction goto-last-change moves towards.")
@@ -285,72 +286,53 @@ discarded. See variable `undo-limit'."
         ((consp arg)                    ; C-u's multiply previous span by 4
          (setq glc-current-span (* (abs (car arg)) glc-default-span))
          (message "Current span is %d chars" glc-current-span))) ;todo: keep message with "waiting" and "is saved"
-  (cond ((< (prefix-numeric-value arg) 0)
-         (setq glc-direction -1))
-        (t
-         (setq glc-direction 1)))
-  (let (rev                             ; Reversed (and filtered) undo list
-        pos                             ; The pos we look for, nil until found
-        (n 0)                           ; Steps in undo list (length of 'rev')
-        (l buffer-undo-list)
-        (passed-save-entry (not (buffer-modified-p)))
-        (new-probe-depth glc-probe-depth)
-        (undo-tree-p (bound-and-true-p undo-tree-mode))
-        glc-seen-canary)
+  (setq glc-direction (if (< (prefix-numeric-value arg) 0) -1 1))
+  (let* (rev                            ; Reversed (and filtered) undo list
+         pos                            ; The pos we look for, nil until found
+         (n 0)                          ; Steps in undo list (length of 'rev')
+         (undo-tree-p (bound-and-true-p undo-tree-mode))
+         (orig-l (if (not undo-tree-p)
+                     buffer-undo-list
+                   (undo-list-transfer-to-tree)
+                   ;; Each node has a list of undo entries: Need to flatten.
+                   ;; Keep current entries and next node to consider in tuple.
+                   (cons nil (undo-tree-current buffer-undo-tree))))
+         (l orig-l)
+         (passed-save-entry (not (buffer-modified-p)))
+         (new-probe-depth glc-probe-depth))
     ;; Walk back and forth in the buffer-undo-list, each time one step deeper,
     ;; until we can walk back the whole list with a 'pos' that is not coming
     ;; too close to another edit.
     (while (null pos)
       (setq new-probe-depth (+ new-probe-depth glc-direction))
-      (if (< glc-direction 0)
-          (setq rev ()
-                n 0
-                l buffer-undo-list
-                passed-save-entry (not (buffer-modified-p))))
-      (if (< new-probe-depth 1)
-          (error "No later change info"))
-      (if (> n 150)
-          (message "working..."))
+      (when (< glc-direction 0)
+        (setq rev ()
+              n 0
+              l orig-l
+              passed-save-entry (not (buffer-modified-p))))
+      (when (< new-probe-depth 1)
+        (error "No later change info"))
+      (when (> n 150)
+        (message "working..."))
       ;; Walk forward in buffer-undo-list, glc-probe-depth steps.
       ;; Build reverse list along the way
-      (if (not undo-tree-p)
-          (while (< n new-probe-depth)
-            (cond ((null l)
-                   ;(setq this-command t)   ; Disrupt repeat sequence
-                   (error "No further change info"))
-                  ((glc-is-positionable (car l))
-                   (setq n (1+ n)
-                         rev (cons (car l) rev)))
-                  ((or passed-save-entry (glc-is-filetime (car l)))
-                   (setq passed-save-entry t)))
-            (setq l (cdr l)))
-        (undo-list-transfer-to-tree)
-        (when (not glc-seen-canary)
-          (while (and (not (null l)) (not glc-seen-canary) (< n new-probe-depth))
-            (cond ((eq 'undo-tree-canary (car l))  ; used by buffer-undo-tree
-                   (message "Canary found...")
-                   (setq l (undo-tree-current buffer-undo-tree)
-                         glc-seen-canary t))
-                  ((glc-is-positionable (car l))
-                   (setq n (1+ n)
-                         rev (cons (car l) rev)))
-                  ((or passed-save-entry (glc-is-filetime (car l)))
-                   (setq passed-save-entry t)))
-            (when (not glc-seen-canary)
-              (setq l (cdr l)))))
-        (when glc-seen-canary
-          (while (and (< n new-probe-depth) (eval '(undo-tree-node-p l)))
-            (cond ((null l)
-                   ;(setq this-command t)	; Disrupt repeat sequence
-                   (error "No further change info"))
-                  ((glc-is-positionable (car (undo-tree-node-undo l)))
-                   (setq n (1+ n)
-                         rev (cons (car (undo-tree-node-undo l)) rev)))
-                  ((or passed-save-entry (glc-is-filetime (car (undo-tree-node-undo l))))
-                   (setq passed-save-entry t)))
-            (setq l (undo-tree-node-previous l))))
-        (when (null l)
-          (error "No further change info")))
+      (while (< n new-probe-depth)
+        (let ((entry (if (not undo-tree-p)
+                         (if l
+                             (pop l)
+                           (error "No further change info"))
+                       (when (null (car l))
+                         (setq l (cons (cons nil
+                                             (undo-tree-node-undo
+                                              (or (cdr l)
+                                                  (error "No further change info"))))
+                                       (undo-tree-node-previous (cdr l)))))
+                       (pop (car l)))))
+          (cond ((glc-is-positionable entry)
+                 (setq n (1+ n)
+                       rev (cons entry rev)))
+                ((or passed-save-entry (glc-is-filetime entry))
+                 (setq passed-save-entry t)))))
       ;; Walk back in reverse list, from older to newer edits.
       ;; Adjusting pos along the way.
       (setq pos (glc-adjust-list rev)))

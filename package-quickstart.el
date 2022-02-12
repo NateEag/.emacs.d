@@ -4763,10 +4763,10 @@ Turn on pseudo-structural editing of Lisp code." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20210508.1632/goto-chg-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20220107.1733/goto-chg-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-chg-20210508.1632/goto-chg-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-chg-20220107.1733/goto-chg-autoloads.el") (car load-path))))
 
 
 

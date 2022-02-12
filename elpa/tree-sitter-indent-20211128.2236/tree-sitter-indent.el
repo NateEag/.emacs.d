@@ -4,8 +4,8 @@
 
 ;; Author: Felipe Lema <felipelema@mortemale.org>
 ;; Keywords: convenience, internal
-;; Package-Version: 20210322.2033
-;; Package-Commit: 18d263720c5a8f7fde0db368c7c36ea70437fc0b
+;; Package-Version: 20211128.2236
+;; Package-Commit: 5f80e89b7da2074ea7f083b769448eb7026865dc
 ;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (seq "2.20"))
 ;; URL: https://codeberg.org/FelipeLema/tree-sitter-indent.el
 ;; Version: 0.3
@@ -522,6 +522,7 @@ See `tree-sitter-indent-line'.  ORIGINAL-COLUMN is forwarded to
              (tsc-node-type indenting-node)
              tree-sitter-tree-before)))
 
+;;;###autoload
 (define-minor-mode tree-sitter-indent-mode
   "Use Tree-sitter as backend for indenting buffer."
   nil nil nil

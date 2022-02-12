@@ -730,6 +730,29 @@ Format the message to display from INFO.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/uuidgen-20200816.1308/uuidgen-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/uuidgen-20200816.1308/uuidgen-autoloads.el") (car load-path))))
+
+
+
+(autoload 'insert-uuid-cid "uuidgen" "\
+Insert UUID string in CID format that is suitable for COM definition.
+If UUID is nil will generate UUIDGEN-4 automatically.
+You customize `uuidgen-cid-format-string' to change the default format.
+
+\(fn UUID)" t nil)
+
+(autoload 'uuidgen "uuidgen" "\
+Insert UUIDv4 at point. If TIME-BASED is non-nil, insert UUIDv1 instead.
+
+\(fn TIME-BASED)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "uuidgen" '("uuidgen-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/bind-key-20210210.1609/bind-key-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -1062,6 +1085,33 @@ See `undo-tree-mode' for more information on Undo-Tree mode.
 \(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "undo-tree" '("*undo-tree-id-counter*" "buffer-undo-tree" "turn-on-undo-tree-mode" "undo-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tzc-20220126.604/tzc-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tzc-20220126.604/tzc-autoloads.el") (car load-path))))
+
+
+
+(autoload 'tzc-world-clock-previous-or-next "tzc" "\
+Get the `tzc-world-clock' buffer for PREVIOUS-OR-NEXT hour.
+
+\(fn PREVIOUS-OR-NEXT)" nil nil)
+
+(autoload 'tzc-world-clock-previous "tzc" "\
+Get the `tzc-world-clock` for the previous hour." t nil)
+
+(autoload 'tzc-world-clock-next "tzc" "\
+Get the `tzc-world-clock` for the next hour." t nil)
+
+(defvar tzc-world-clock-mode-map (let ((map (make-sparse-keymap))) (define-key map "n" #'tzc-world-clock-next) (define-key map "p" #'tzc-world-clock-previous) map))
+
+(autoload 'tzc-world-clock "tzc" "\
+Display a world clock buffer for time zones in `tzc-favourite-time-zones-alist`." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tzc" '("tzc-")))
 
 
 )
@@ -21983,6 +22033,183 @@ See `compact-docstrings-mode' for more information on Compact-Docstrings mode.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/code-review-20220107.1355/code-review-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/code-review-20220107.1355/code-review-autoloads.el") (car load-path))))
+
+
+
+(autoload 'code-review-forge-pr-at-point "code-review" "\
+Review the forge pull request at point.
+OUTDATED." t nil)
+
+(autoload 'code-review-start "code-review" "\
+Start review given PR URL.
+
+\(fn URL)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review" '("code-review-")))
+
+
+
+(autoload 'code-review--submit "code-review-actions" "\
+Submit your review with a final verdict (EVENT).
+If you already have a FEEDBACK string use it.
+If you want only to submit replies, use ONLY-REPLY? as non-nil.
+
+\(fn EVENT &optional FEEDBACK ONLY-REPLY\\=\\?)" t nil)
+
+(autoload 'code-review-submit-approve "code-review-actions" "\
+Approve current PR.
+Optionally set a FEEDBACK message.
+
+\(fn &optional FEEDBACK)" t nil)
+
+(autoload 'code-review-submit-comments "code-review-actions" "\
+Submit a Review Comment for the current PR." t nil)
+
+(autoload 'code-review-submit-request-changes "code-review-actions" "\
+Submit a Request Change for the current PR." t nil)
+
+(autoload 'code-review-submit-lgtm "code-review-actions" "\
+Submit an Approve Review with a LGTM message." t nil)
+
+(autoload 'code-review-submit-only-replies "code-review-actions" "\
+Submit only replies comments." t nil)
+
+(autoload 'code-review-submit-single-top-level-comment "code-review-actions" "\
+Submit a single comment without an attached Review." t nil)
+
+(autoload 'code-review-submit-single-diff-comment-at-point "code-review-actions" "\
+Submit a single diff comment without an attached Review." t nil)
+
+(autoload 'code-review-save-unfinished-review "code-review-actions" "\
+Save unfinished Review." t nil)
+
+(autoload 'code-review-recover-unfinished-review "code-review-actions" "\
+Recover unfinished Review for the given URL.
+
+\(fn URL)" t nil)
+
+(autoload 'code-review-open-unfinished-review "code-review-actions" "\
+Choose an unfinished Review from the previous unfinished list." t nil)
+
+(autoload 'code-review-merge-merge "code-review-actions" "\
+Merge PR with MERGE strategy." t nil)
+
+(autoload 'code-review-merge-rebase "code-review-actions" "\
+Merge PR with REBASE strategy." t nil)
+
+(autoload 'code-review-merge-squash "code-review-actions" "\
+Merge PR with SQUASH strategy." t nil)
+
+(autoload 'code-review-set-feedback "code-review-actions" "\
+Add review FEEDBACK locally.  Required to Comment and Request Change reviews." t nil)
+
+(autoload 'code-review-set-title "code-review-actions" "\
+Change the title of current PR.  Sent immediately." t nil)
+
+(autoload 'code-review-set-label "code-review-actions" "\
+Change the labels of current PR.  Sent immediately.
+Rewrite all current labels with the options chosen here." t nil)
+
+(autoload 'code-review-set-description "code-review-actions" "\
+Submit new PR description.  Sent immediately." t nil)
+
+(autoload 'code-review-delete-feedback "code-review-actions" "\
+Delete review FEEDBACK locally." t nil)
+
+(autoload 'code-review-reload "code-review-actions" "\
+Reload the buffer.  All your local comments will be lost." t nil)
+
+(autoload 'code-review-promote-comment-at-point-to-new-issue "code-review-actions" "\
+Promote comment at point to a new issue.  Sent immediately." t nil)
+
+(autoload 'code-review-request-reviews "code-review-actions" "\
+Request reviewers for current PR using LOGIN if available.
+
+\(fn &optional LOGIN)" t nil)
+
+(autoload 'code-review-request-review-at-point "code-review-actions" "\
+Request reviewer at point.
+
+\(fn &rest _)" t nil)
+
+(autoload 'code-review-toggle-display-all-comments "code-review-actions" "\
+Toggle display comments." t nil)
+
+(autoload 'code-review-toggle-display-top-level-comments "code-review-actions" "\
+Toggle display the top level comments." t nil)
+
+(autoload 'code-review-toggle-display-diff-comments "code-review-actions" "\
+Toggle display the top level comments." t nil)
+
+(autoload 'code-review-comment-code-suggestion "code-review-actions" "\
+Add code suggestion box." t nil)
+
+(autoload 'code-review-comment-jump-next "code-review-actions" "\
+Go to next comment in the buffer." t nil)
+
+(autoload 'code-review-comment-jump-previous "code-review-actions" "\
+Go to previous comment in the buffer." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-actions" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-bitbucket" '("code-review-")))
+
+
+
+(autoload 'code-review-comment-add-or-edit "code-review-comment" "\
+Add or edit comment depending on context.
+Inform if a SUGGESTION-CODE? is being proposed.
+
+\(fn &optional SUGGESTION-CODE\\=\\?)" t nil)
+
+(autoload 'code-review-comment-commit "code-review-comment" "\
+Commit comment." t nil)
+
+(autoload 'code-review-input-mention-user-at-point "code-review-comment" "\
+Insert @USERNAME at current point to mention an user." t nil)
+
+(autoload 'code-review-comment-quit "code-review-comment" "\
+Quit the comment window." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-comment" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-db" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-github" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-gitlab" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-parse-hunk" '("code-review-parse-")))
+
+
+
+(autoload 'code-review-section-delete-comment "code-review-section" "\
+Delete a local comment." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-section" '("code-review-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-utils" '("code-review-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210505.712/clojure-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -23443,6 +23670,22 @@ Stop websocket server for atomic-chrome." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-backup-20220131.1438/async-backup-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-backup-20220131.1438/async-backup-autoloads.el") (car load-path))))
+
+
+
+(autoload 'async-backup "async-backup" "\
+Backup FILE, or file visited by current buffer.
+
+\(fn &optional FILE)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "async-backup" '("async-backup-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20210501.1527/async-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -24025,6 +24268,20 @@ You can constrol whether use the case sensitive via
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/accent-20220202.1312/accent-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/accent-20220202.1312/accent-autoloads.el") (car load-path))))
+
+
+
+(autoload 'accent-menu "accent" "\
+Display a popup menu with available accents if current character is matching." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "accent" '("accent-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/ac-slime-20171027.2100/ac-slime-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ac-slime-20171027.2100/ac-slime-autoloads.el") (car load-path))))
 
@@ -24159,14 +24416,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode ...)
+       '(zoutline yasnippet yaml-mode xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper counsel lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode faceup pos-tip racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el a parseclj parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit-section magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot gitignore-mode ghub github-review gitconfig-mode gitattributes-mode git git-walktree git-timemachine git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" ...)
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20201226.2149" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210407.407" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20210616.2235" "/Users/neagleson/.emacs.d/elpa/geiser-20210428.1942" "/Users/neagleson/.emacs.d/elpa/ghub-20210615.1504" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20210507.2243" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20210516.2045" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20210616.1958" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20210606.1152" "/Users/neagleson/.emacs.d/elpa/racket-mode-20210616.1237" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20210614.1523" "/Users/neagleson/.emacs.d/elpa/evil-20210615.2111" "/Users/neagleson/.emacs.d/elpa/ivy-20210602.1349" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20201229.2242")
          Info-directory-list)))
 
 ;; Local Variables:

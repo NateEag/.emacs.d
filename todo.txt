@@ -1,5 +1,8 @@
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
+  new-init.el has none of my custom setup for it yet and magit runs nice and
+  snappy. Guess I can start moving it towards doing what I want and see when it
+  starts bogging down.
 
 - Fix aggressive-fill-paragraph mode's "only fill inside comments" behavior.
   See afp-mode-comment-bug.md for details.
@@ -16,11 +19,24 @@
   that indicates one of my ad-hoc todo.txt files, not one that follows the
   standard rules.
 
+- Give code-review package a test run. I could see advantages to being able to
+  review in Emacs; it'd be awesome to be able to do things like jump straight
+  to the file in question to get a closer look at what's going on.
+
 - Snag and adapt
    https://takeonrules.com/2020/11/11/synchronizing-osx-terminal-and-emacs-dark-light-appearance/
   for my own config.
 
+- Remember I have a way to enter accented characters now (accent-menu).
+
 - Add wgrep-ag to my setup so global find-and-replace can be massively easier.
+
+- integrate tzc into my workflows; it's a timezone converter that might be more
+  useful than the CLI one I hacked up.
+
+- Try out async-backup? Maybe it would be superior to my hand-rolled backup on
+  save? It claims that backup-on-save is slow by default, but I can't claim
+  I've ever noticed that...
 
 - Bind C-k to previous result in ivy buffer switching. Make sure I'm taking the
   right approach to general ivy-based keybinds, as it works in projectile file
@@ -85,6 +101,11 @@
   a hard time keeping up with the latest PHP syntax changes, so it might be
   worth starting there. Might also be helpful for yaml-mode's difficulties in
   syntax coloration: https://github.com/ikatyang/tree-sitter-yaml
+
+- Try evil-tree-edit, which uses tree-sitter to offer syntactically-aware
+  editing for non-lisps. Think paredit/lispy/smartparens, but with an actual
+  syntax tree for any supported language. tree-edit is a sibling package
+  apparently aimed more at refactoring.
 
 - Keep a history of caught spelling errors, so I can correct words I get wrong
   regularly. This is really a spellchecker feature request, not an Emacs thing,
@@ -491,6 +512,12 @@
 - Add ne/yas-copy-snippet. I occasionally want to populate then copy / paste a
   snippet (often for pasting into a prompt in another system, like a bash shell
   or a browser console). It would be nice to have it be easier than it is.
+
+- Consider trying dtache package for managing project-specific dev processes.
+  It apparently uses a program to actually manage processes so that a crashed
+  or killed Emacs doesn't kill the processes. Doesn't sound super-compelling to
+  me but could be interesting, and maybe an alternative to the main reasons I'm
+  tempted to use terminals in Emacs.
 
 - Make the ansi-term tweaks suggested in this article:
   http://echosa.github.io/blog/2012/06/06/improving-ansi-term/

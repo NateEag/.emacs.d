@@ -386,30 +386,7 @@ The shell command lives in my dotfiles repo."
   (diminish 'evil-commentary-mode)
 
   ;; Set up my custom textobjects.
-  (ne/install-textobjects)
-
-  ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
-  ;; because we'll almost certainly want to start typing.
-  ;;
-  ;; An empty buffer isn't the *only* case where this is the case, but it's a
-  ;; starting point.
-  (add-hook 'evil-local-mode-hook
-            '(lambda ()
-               ;; HACK Magit buffers seem to start at size 0, but they
-               ;; populate very quickly, so waiting just a bit before
-               ;; checking whether we should be in insert-mode seems to work
-               ;; okay in practice. Doesn't work for *scratch*, though.
-               (run-at-time "0.1 sec"
-                            nil
-                            (lambda ()
-                              (when (and evil-local-mode
-                                         (= (buffer-size) 0)
-                                         ;; HACK *scratch* buffer seems to
-                                         ;; start out at 0 length, so I
-                                         ;; explicitly ignore it.
-                                         (not (string-equal (buffer-name)
-                                                            "*scratch*")))
-                                (evil-insert-state)))))))
+  (ne/install-textobjects))
 
 (use-package evil-collection
   :init (evil-collection-init))
@@ -423,7 +400,7 @@ The shell command lives in my dotfiles repo."
               ("C-j" . scratch-comment-eval-sexp)))
 
 (use-package svn-msg
-  :mode ("svn-commit\(.[[:digit]]+\).tmp" . svn-msg-mode))
+  :mode ("svn-commit\(.[[:digit]]+\)*.tmp" . svn-msg-mode))
 
 (use-package git-gutter
   :diminish

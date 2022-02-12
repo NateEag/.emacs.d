@@ -1,0 +1,2 @@
+;;; Generated package description from accent.el  -*- no-byte-compile: t -*-
+(define-package "accent" "20220202.1312" "Popup for accented characters (diacritics)" '((emacs "24.3") (popup "0.5.8")) :commit "6b502df6940587dae2dfbd349c22dfd44c803a86" :authors '(("Elia Scotto" . "eliascotto94@gmail.com")) :maintainer '("Elia Scotto" . "eliascotto94@gmail.com") :keywords '("i18n") :url "https://github.com/elias94/accent")

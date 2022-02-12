@@ -16,6 +16,13 @@ This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS devel
 
 (setq use-package--frontside-javascript--pre-config-hook #'frontside-javascript)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "frontside-javascript" '("frontside-javascript--deno-project-p")))
+
+;;;***
+
+;;;### (autoloads nil nil ("frontside-javascript-pkg.el" "test-suppport.el")
+;;;;;;  (0 0 0 0))
+
 ;;;***
 
 ;; Local Variables:

@@ -19285,10 +19285,10 @@ shadow backends that come after it.  Recommended usages:
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210515.1811/frontside-javascript-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20220201.2048/frontside-javascript-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20210515.1811/frontside-javascript-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/frontside-javascript-20220201.2048/frontside-javascript-autoloads.el") (car load-path))))
 
 
 
@@ -19297,6 +19297,10 @@ Make Emacs have your back no matter what JavaScript project you'refaced with.
 This is the main entry point which configures JS, JSX, TS, TSX, and NodeJS development" t nil)
 
 (setq use-package--frontside-javascript--pre-config-hook #'frontside-javascript)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "frontside-javascript" '("frontside-javascript--deno-project-p")))
+
+
 
 
 )

@@ -1,11 +1,11 @@
 ;;; dtrt-indent.el --- Adapt to foreign indentation offsets
 
 ;; Copyright (C) 2003, 2007, 2008 Julian Scheid
-;; Copyright (C) 2014-2021 Reuben Thomas
+;; Copyright (C) 2014-2022 Reuben Thomas
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
 ;; Maintainer: Reuben Thomas <rrt@sc3d.org>
-;; Version: 1.4
+;; Version: 1.6
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -41,7 +41,8 @@
 ;; only be made if the guess is considered reliable.  This way it
 ;; should leave you off no worse than before.
 ;;
-;; To install, M-x customize-variable dtrt-indent-mode, and turn it on.
+;; To install, M-x customize-group dtrt-indent-global, and turn on "Dtrt
+;; Indent Global Mode".
 ;;
 ;; The default settings have been carefully chosen and tested to work
 ;; reliably on a wide range of source files.  However, if it doesn't work
@@ -200,6 +201,8 @@ adjusted transparently."
             (when dtrt-indent-run-after-smie
               (dtrt-indent-try-set-offset)))
         (dtrt-indent-try-set-offset))
+        ;; (unless (and (featurep 'editorconfig) editorconfig-mode)
+        ;;   (dtrt-indent-try-set-offset)))
     (dtrt-indent-undo)))
 
 ;;;###autoload
@@ -344,12 +347,17 @@ quote, for example.")
     (ada-mode        ada           ada-indent)           ; Ada
     (sgml-mode       sgml          sgml-basic-offset)    ; SGML
     (nxml-mode       sgml          nxml-child-indent)    ; XML
+    (web-mode        sgml          (web-mode-markup-indent-offset
+                                    web-mode-code-indent-offset
+                                    web-mode-sql-indent-offset
+                                    web-mode-css-indent-offset)) ; HTML
     (pascal-mode     pascal        pascal-indent-level)  ; Pascal
     (typescript-mode javascript    typescript-indent-level) ; Typescript
     (protobuf-mode   c/c++/java    c-basic-offset)       ; Protobuf
     (plantuml-mode   default       plantuml-indent-level) ; PlantUML
     (pug-mode        default       pug-tab-width)         ; Pug
     (cmake-mode      cmake         cmake-tab-width)       ; CMake
+    (xquery-mode     sgml          xquery-mode-indent-width) ; XQuery
 
     ;; Modes that use SMIE if available
     (sh-mode         default       sh-basic-offset)      ; Shell Script
@@ -917,11 +925,12 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
               (cdr (assoc :indent-tabs-mode-setting result)))
              (best-indent-offset
               (nth 0 best-guess))
-             (indent-offset-variable
-              (nth 1 language-and-variable))
+             (indent-offset-mode-variables
+              (let ((v (nth 1 language-and-variable)))
+                (if (listp v) v (list v))))
              (indent-offset-variables
-              (cons
-               indent-offset-variable
+              (append
+               indent-offset-mode-variables
                (remove nil
                        (mapcar
                         (lambda (x)

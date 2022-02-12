@@ -3,7 +3,7 @@
 ;; URL: https://github.com/slime/slime
 ;; Package-Requires: ((cl-lib "0.5") (macrostep "0.9"))
 ;; Keywords: languages, lisp, slime
-;; Version: 2.26.1
+;; Version: 2.27
 
 ;;;; License and Commentary
 
@@ -75,6 +75,7 @@
 (require 'outline)
 (require 'arc-mode)
 (require 'etags)
+(require 'xref)
 (require 'compile)
 (require 'gv)
 
@@ -672,9 +673,9 @@ If BOTHP is true also add bindings with control modifier."
 (define-minor-mode slime-editing-mode
   "Minor mode which makes slime-editing-map available.
 \\{slime-editing-map}"
-  nil
-  nil
-  slime-editing-map)
+  :init-value nil
+  :lighter nil
+  :keymap slime-editing-map)
 
 
 ;;;; Framework'ey bits
@@ -919,7 +920,9 @@ MODE is the name of a major mode which will be enabled.
 
 (define-minor-mode slime-popup-buffer-mode
   "Mode for displaying read only stuff"
-  nil nil nil
+  :init-value nil
+  :lighter nil
+  :keymap nil
   (setq buffer-read-only t))
 
 (add-to-list 'minor-mode-alist
@@ -3670,14 +3673,13 @@ alist but ignores CDRs."
 ;;;; Edit definition
 
 (defun slime-push-definition-stack ()
-  "Add point to find-tag-marker-ring."
-  (require 'etags)
-  (ring-insert find-tag-marker-ring (point-marker)))
+  "Add point to find-tag-marker-stack."
+  (xref-push-marker-stack (point-marker)))
 
 (defun slime-pop-find-definition-stack ()
   "Pop the edit-definition stack and goto the location."
   (interactive)
-  (pop-tag-mark))
+  (xref-pop-marker-stack))
 
 (cl-defstruct (slime-xref (:conc-name slime-xref.) (:type list))
   dspec location)
@@ -4173,9 +4175,9 @@ in Lisp when committed with \\[slime-edit-value-commit]."
 
 (define-minor-mode slime-edit-value-mode
   "Mode for editing a Lisp value."
-  nil
-  " Edit-Value"
-  '(("\C-c\C-c" . slime-edit-value-commit)))
+  :init-value nil
+  :lighter " Edit-Value"
+  :keymap '(("\C-c\C-c" . slime-edit-value-commit)))
 
 (defun slime-edit-value-callback (form-string current-value package)
   (let* ((name (generate-new-buffer-name (format "*Edit %s*" form-string)))
@@ -4856,9 +4858,9 @@ When displaying XREF information, this goes to the previous reference."
 
 (define-minor-mode slime-macroexpansion-minor-mode
   "SLIME mode for macroexpansion"
-  nil
-  " Macroexpand"
-  '(("g" . slime-macroexpand-again)))
+  :init-value nil
+  :lighter " Macroexpand"
+  :keymap '(("g" . slime-macroexpand-again)))
 
 (cl-macrolet ((remap (from to)
                      `(dolist (mapping

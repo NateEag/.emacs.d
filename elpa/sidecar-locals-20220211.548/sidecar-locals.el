@@ -1,28 +1,16 @@
 ;;; sidecar-locals.el --- A flexible alternative to built-in dir-locals -*- lexical-binding: t -*-
 
+;; SPDX-License-Identifier: GPL-2.0-or-later
 ;; Copyright (C) 2021  Campbell Barton
 
 ;; Author: Campbell Barton <ideasman42@gmail.com>
 
 ;; URL: https://gitlab.com/ideasman42/emacs-sidecar-locals
-;; Package-Version: 20211006.1413
-;; Package-Commit: ee6b399ebda994b9ea6db095947386e3b7f063f7
+;; Package-Version: 20220211.548
+;; Package-Commit: b69943575bfa7f13ee99c8b8871d3216ad24c85f
 ;; Keywords: convenience
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "27.1"))
-
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
-
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -324,7 +312,7 @@ When NO-TEST is non-nil checking for existing paths is disabled."
         ;; report them as messages instead.
         (condition-case-unless-debug err
           (load filepath :nomessage t)
-          (error (message "sidecar-locals: error %S in %S" err filepath))))
+          (error (message "sidecar-locals: error %s in %S" (error-message-string err) filepath))))
       ;; Only run for files that exist.
       nil)))
 

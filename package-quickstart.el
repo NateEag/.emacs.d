@@ -6915,10 +6915,10 @@ Minor mode for interactively reloading CSS stylesheets.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20211006.1413/sidecar-locals-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20211006.1413/sidecar-locals-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el") (car load-path))))
 
 
 

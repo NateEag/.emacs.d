@@ -9409,10 +9409,10 @@ This function is compatible with `project-find-functions'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/phpstan-20201122.950/phpstan-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/phpstan-20210714.1805/phpstan-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/phpstan-20201122.950/phpstan-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/phpstan-20210714.1805/phpstan-autoloads.el") (car load-path))))
 
 
 

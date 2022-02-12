@@ -1,6 +1,6 @@
-(define-package "gnuplot" "20210609.834" "Major-mode and interactive frontend for gnuplot"
+(define-package "gnuplot" "20220102.1637" "Major-mode and interactive frontend for gnuplot"
   '((emacs "24.3"))
-  :commit "7138b139d2dca9683f1a81325c643b2744aa1ea3" :authors
+  :commit "d1a6a606dcb389a7c91a6b0d9fb995434df561be" :authors
   '(("Jon Oddie")
     ("Bruce Ravel")
     ("Phil Type"))

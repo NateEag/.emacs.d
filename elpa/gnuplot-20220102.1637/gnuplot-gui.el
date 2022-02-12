@@ -1,4 +1,4 @@
-;;;; gnuplot-gui.el -- GUI interface to setting options in gnuplot-mode
+;;;; gnuplot-gui.el -- GUI interface to setting options in gnuplot-mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1998-2000 Bruce Ravel
 
@@ -58,37 +58,9 @@
 ;;; Code:
 
 (require 'gnuplot)
-(eval-and-compile
-  (condition-case ()
-      (progn
-        (require 'widget)
-        (require 'wid-edit))
-    (error nil)))
+(require 'widget)
+(require 'wid-edit)
 (require 'cl-lib)
-(eval-when-compile          ; suppress some compiler warnings
-  (defvar gnuplot-quote-character nil)
-  (defvar gnuplot-info-display nil)
-  (defvar gnuplot-mode-map nil))
-
-;; (eval-when-compile
-;;   (require 'wid-edit))
-
-(eval-and-compile           ; I need this!
-  (if (fboundp 'split-string)
-      ()
-    (defun split-string (string &optional pattern)
-      "Return a list of substrings of STRING which are separated by PATTERN.
-If PATTERN is omitted, it defaults to \"[ \\f\\t\\n\\r\\v]+\"."
-      (or pattern
-          (setq pattern "[ \f\t\n\r\v]+"))
-      ;; The FSF version of this function takes care not to cons in case
-      ;; of infloop.  Maybe we should synch?
-      (let (parts (start 0))
-        (while (string-match pattern string start)
-          (setq parts (cons (substring string start (match-beginning 0)) parts)
-                start (match-end 0)))
-        (nreverse (cons (substring string start) parts)))) ))
-
 
 
 ;;; customizable variables
@@ -833,6 +805,7 @@ This alist is formed at load time by appending together
                                     gnuplot-gui-test-type))
 
 
+;;;###autoload
 (defun gnuplot-gui-swap-simple-complete ()
   (interactive)
   (setq gnuplot-gui-plot-splot-fit-style
@@ -854,16 +827,16 @@ This alist is formed at load time by appending together
 
 ;;; user interface to the widget-y stuff
 
+;;;###autoload
 (defun gnuplot-gui-mouse-set (event)
   "Use the mouse to begin setting options using a GUI interface.
 EVENT is a mouse event.  Bound to \\[gnuplot-gui-mouse-set]
 Note that \"plot\", \"splot\", \"fit\", and \"cntrparam\" are not
 currently supported."
   (interactive "@e")
-  (when (fboundp 'widget-create)
-    (save-excursion
-      (mouse-set-point event)
-      (gnuplot-gui-set-options-and-insert))))
+  (save-excursion
+    (mouse-set-point event)
+    (gnuplot-gui-set-options-and-insert)))
 
 (defun gnuplot-gui-get-frame-param (param)
   (cdr (assoc param gnuplot-gui-frame-parameters)))
@@ -871,88 +844,89 @@ currently supported."
 (defun gnuplot-gui-set-frame-param (param value)
   (setcdr (assoc param gnuplot-gui-frame-parameters) value))
 
+;;;###autoload
 (defun gnuplot-gui-set-options-and-insert ()
   "Insert arguments using a GUI interface.
 Determine contents of current line and set up the appropriate GUI
 frame.  Bound to \\[gnuplot-gui-set-options-and-insert]
 Note that \"cntrparam\" is not currently supported."
   (interactive)
-  (when (fboundp 'widget-create)
-    (let ((begin  (gnuplot-point-at-beginning-of-command))
-          (end    (save-excursion (end-of-line)       (point-marker)))
-          (termin (concat "\\(,\\s-*" (regexp-quote "\\") "\\|;\\)"))
-          (set nil) (term nil))
-      (save-excursion
-        ;; there can be more then one command per line
-        (if (re-search-forward termin end "to_limit")
-            (progn (backward-char (length (match-string 1)))
-                   (setq end (point-marker))))
-        (goto-char begin)
-        (skip-syntax-forward "-" end)
-        ;; various constructions are recognized here. at the end of this
-        ;; cond, point should be just after the word whose arguments are
-        ;; to be set
-        (cond ((looking-at "set\\s-+")
-               (setq set t)
-               (goto-char (match-end 0))
-               (if (looking-at "\\sw+") (goto-char (match-end 0)))
-               (when (string-match "^ter" (gnuplot-this-word)) ; terminal?
-                 (setq term t)
-                 (forward-word 1))
-               (when (string-match "^\\(da\\|fu\\)" (gnuplot-this-word))
-                 (unless (looking-at "\\s-+st")
-                   (insert " style") (forward-word 1))
-                 (forward-word 1)))
-              ((looking-at (concat "\\(cd\\|ca\\|lo\\|pa\\|pr\\|sa\\|u\\)"
-                                   "\\w*"
-                                   "[\\s-\\']"))
+  (let ((begin  (gnuplot-point-at-beginning-of-command))
+        (end    (save-excursion (end-of-line)       (point-marker)))
+        (termin (concat "\\(,\\s-*" (regexp-quote "\\") "\\|;\\)"))
+        (set nil) (term nil))
+    (save-excursion
+      ;; there can be more then one command per line
+      (if (re-search-forward termin end "to_limit")
+          (progn (backward-char (length (match-string 1)))
+                 (setq end (point-marker))))
+      (goto-char begin)
+      (skip-syntax-forward "-" end)
+      ;; various constructions are recognized here. at the end of this
+      ;; cond, point should be just after the word whose arguments are
+      ;; to be set
+      (cond ((looking-at "set\\s-+")
+             (setq set t)
+             (goto-char (match-end 0))
+             (if (looking-at "\\sw+") (goto-char (match-end 0)))
+             (when (string-match "^ter" (gnuplot-this-word)) ; terminal?
+               (setq term t)
                (forward-word 1))
-              ;;(goto-char (match-end 0)))
-              (t
+             (when (string-match "^\\(da\\|fu\\)" (gnuplot-this-word))
+               (unless (looking-at "\\s-+st")
+                 (insert " style") (forward-word 1))
                (forward-word 1)))
-        (if (> (point) end) (goto-char end))
-        (let* ((w (gnuplot-this-word))
-               (wd (try-completion w gnuplot-gui-all-types))
-               (word "") wrd list)
-          (cond ((equal wd t)                     (setq word w))
-                ((equal wd nil)                   (setq word w))
-                ((assoc wd gnuplot-gui-all-types) (setq word wd))
-                (t                                (setq wd nil)))
-          (cond ((equal (string-match "^\\s-*$" w) 0)
-                 (message "Blank line"))
-                ((and wd (stringp word))
-                 (gnuplot-gui-correct-command word set term begin)
-                 (setq gnuplot-gui-alist nil
-                       gnuplot-gui-current-string
-                       (buffer-substring-no-properties (point) end))
-                 (gnuplot-gui-set-alist word gnuplot-gui-current-string)
-                 (let* ((old-height (gnuplot-gui-get-frame-param 'height))
-                        (old-top    (gnuplot-gui-get-frame-param 'top)))
-                   (when (or
-                          (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
-                               (cl-member word '("plot" "splot" "fit")
+            ((looking-at (concat "\\(cd\\|ca\\|lo\\|pa\\|pr\\|sa\\|u\\)"
+                                 "\\w*"
+                                 "[\\s-\\']"))
+             (forward-word 1))
+            ;;(goto-char (match-end 0)))
+            (t
+             (forward-word 1)))
+      (if (> (point) end) (goto-char end))
+      (let* ((w (gnuplot-this-word))
+             (wd (try-completion w gnuplot-gui-all-types))
+             (word "") wrd list)
+        (cond ((equal wd t)                     (setq word w))
+              ((equal wd nil)                   (setq word w))
+              ((assoc wd gnuplot-gui-all-types) (setq word wd))
+              (t                                (setq wd nil)))
+        (cond ((equal (string-match "^\\s-*$" w) 0)
+               (message "Blank line"))
+              ((and wd (stringp word))
+               (gnuplot-gui-correct-command word set term begin)
+               (setq gnuplot-gui-alist nil
+                     gnuplot-gui-current-string
+                     (buffer-substring-no-properties (point) end))
+               (gnuplot-gui-set-alist word gnuplot-gui-current-string)
+               (let* ((old-height (gnuplot-gui-get-frame-param 'height))
+                      (old-top    (gnuplot-gui-get-frame-param 'top)))
+                 (when (or
+                        (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
+                             (cl-member word '("plot" "splot" "fit")
                                         :test 'string=))
-                          (equal word "test"))
-                     (gnuplot-gui-set-frame-param 'height 32)
-                     (gnuplot-gui-set-frame-param 'top    50))
-                   (gnuplot-gui-prompt-for-frame word)
-                   (when (or
-                          (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
-                               (cl-member word '("plot" "splot" "fit")
+                        (equal word "test"))
+                   (gnuplot-gui-set-frame-param 'height 32)
+                   (gnuplot-gui-set-frame-param 'top    50))
+                 (gnuplot-gui-prompt-for-frame word)
+                 (when (or
+                        (and (equal gnuplot-gui-plot-splot-fit-style 'complete)
+                             (cl-member word '("plot" "splot" "fit")
                                         :test 'string=))
-                          (equal word "test"))
-                     (gnuplot-gui-set-frame-param 'height old-height)
-                     (gnuplot-gui-set-frame-param 'top    old-top)) ))
-                ((setq wrd (car (all-completions w '(("cntrparam")))))
-                 (message
-                  "Setting arguments for %S is currently unsuported in gnuplot-mode"
-                  wrd))
-                ((setq list (all-completions w gnuplot-gui-all-types))
-                 (message "%S could be one of %S" w list))
-                (t
-                 (message
-                  "%S is not a gnuplot command which takes options" w)))) ))))
+                        (equal word "test"))
+                   (gnuplot-gui-set-frame-param 'height old-height)
+                   (gnuplot-gui-set-frame-param 'top    old-top)) ))
+              ((setq wrd (car (all-completions w '(("cntrparam")))))
+               (message
+                "Setting arguments for %S is currently unsuported in gnuplot-mode"
+                wrd))
+              ((setq list (all-completions w gnuplot-gui-all-types))
+               (message "%S could be one of %S" w list))
+              (t
+               (message
+                "%S is not a gnuplot command which takes options" w)))) )))
 
+;;;###autoload
 (defun gnuplot-gui-toggle-popup ()
   (interactive)
   (setq gnuplot-gui-popup-flag (not gnuplot-gui-popup-flag))
@@ -961,7 +935,6 @@ Note that \"cntrparam\" is not currently supported."
              "Argument popup will no longer appear after insertions.")))
 
 
-(defun gnuplot-gui-y-n (foo))
 (defalias 'gnuplot-gui-y-n 'y-or-n-p)
 
 (defun gnuplot-gui-correct-command (word set term begin)
@@ -1342,7 +1315,7 @@ SAVE-FRAME is non-nil when the widgets are being reset."
                  :button-face 'gnuplot-gui-button-face
                  :help-echo "Push this button to set options"
                  :notify
-                 (lambda (widget &rest ignore)
+                 (lambda (widget &rest _ignore)
                    (kill-buffer (get-buffer-create "*Gnuplot GUI*"))
                    (delete-frame)
                    (select-frame gnuplot-current-frame)
@@ -1382,7 +1355,7 @@ SAVE-FRAME is non-nil when the widgets are being reset."
                  :button-face 'gnuplot-gui-button-face
                  :doc item
                  :notify
-                 (lambda (widget &rest ignore)
+                 (lambda (widget &rest _ignore)
                    (let ((word (widget-get widget :doc)))
                      (gnuplot-gui-set-alist word gnuplot-gui-current-string)
                      (gnuplot-gui-prompt-for-frame word t))))
@@ -1392,7 +1365,7 @@ SAVE-FRAME is non-nil when the widgets are being reset."
                  :button-face 'gnuplot-gui-button-face
                  :doc item
                  :notify
-                 (lambda (widget &rest ignore)
+                 (lambda (widget &rest _ignore)
                    (let* ((word (widget-get widget :doc))
                           (alist (cdr (assoc word gnuplot-gui-all-types))))
                      (while alist
@@ -1405,7 +1378,7 @@ SAVE-FRAME is non-nil when the widgets are being reset."
   (widget-create 'push-button :value "Cancel"
                  :help-echo "Quit setting options and dismiss frame"
                  :button-face 'gnuplot-gui-button-face
-                 :notify (lambda (widget &rest ignore)
+                 :notify (lambda (_widget &rest _ignore)
                            (kill-buffer (get-buffer-create "*Gnuplot GUI*"))
                            (setq gnuplot-gui-alist nil
                                  gnuplot-gui-current-string nil)
@@ -1455,7 +1428,7 @@ menu.  STARRED is true if this a 'list* widget."
                 :button-prefix "[" :button-suffix "]"
                 :help-echo (format "Mouse-2 to view the %S menu" (downcase item))
                 :notify
-                (lambda (widget &rest ignore)
+                (lambda (widget &rest _ignore)
                   (let ((lab (if (widget-get widget :doc)
                                  (concat (downcase (widget-get widget :tag)) " ")
                                "" )))
@@ -1480,7 +1453,7 @@ the numerical argument."
     (widget-create 'editable-field
                    :size 2 :tag item :value default :doc prefix
                    :help-echo (format "Insert new value of %S here" help-label)
-                   :notify (lambda (widget &rest ignore)
+                   :notify (lambda (widget &rest _ignore)
                              (let ((val (widget-value widget))
                                    (pre (concat (widget-get widget :doc) " ")))
                                (setcdr (assoc (widget-get widget :tag)
@@ -1516,7 +1489,7 @@ prefix for the string.  STARRED is t if quotes are not to be used."
      'editable-field
      :size width :tag item :doc prefix :value default
      :help-echo (format "Insert new value of %S here" help-label)
-     :notify (lambda (widget &rest ignore)
+     :notify (lambda (widget &rest _ignore)
                (let ((val (widget-value widget))
                      (q gnuplot-quote-character)
                      (p (widget-get widget :doc)) )
@@ -1550,7 +1523,7 @@ prefix for the string."
   (widget-create 'editable-field
                  :size (/ (frame-width) 3) :tag item :value default
                  :help-echo (format "Insert new format string here")
-                 :notify (lambda (widget &rest ignore)
+                 :notify (lambda (widget &rest _ignore)
                            (let ((val (widget-value widget)))
                              (setcdr (assoc (widget-get widget :tag)
                                             gnuplot-gui-alist)
@@ -1604,7 +1577,7 @@ the default value for the argument.  TAG is non-nil if ITEM rather than
                :doc item :help-echo "Insert a filename here"
                :complete 'gnuplot-gui-file-completion
                :notify
-               (lambda (widget &rest ignore)
+               (lambda (widget &rest _ignore)
                  (setcdr (assoc (widget-get widget :doc) gnuplot-gui-alist)
                          (format "%s%s%s" gnuplot-quote-character
                                  (widget-value widget)
@@ -1614,7 +1587,7 @@ the default value for the argument.  TAG is non-nil if ITEM rather than
      'push-button :value "Browse"
      :doc item :help-echo "Browse directories for a filename."
      :parent widg
-     :notify (lambda (widget &rest ignore)
+     :notify (lambda (widget &rest _ignore)
                (let ((fname (file-relative-name (read-file-name "File: ")
                                                 default-directory))
                      (q gnuplot-quote-character))
@@ -1640,7 +1613,7 @@ the default value for the argument."
    :format "%{%t%}:\n%v\t  %i\n"
    :entry-format "\t  %i %d %v\n"
    :button-face 'gnuplot-gui-labels-face
-   :notify (lambda (widget &rest ignore)
+   :notify (lambda (widget &rest _ignore)
              (setcdr (assoc (upcase (widget-get widget :tag))
                             gnuplot-gui-alist)
                      (widget-value widget)))))
@@ -1657,7 +1630,7 @@ is non-nil if this is a 'range widget."
                  :size 4 :tag item :value (car default)
                  :help-echo (format "Insert the first value of the %S here"
                                     (downcase item))
-                 :notify (lambda (widget &rest ignore)
+                 :notify (lambda (widget &rest _ignore)
                            (setcar (cdr (assoc (widget-get widget :tag)
                                                gnuplot-gui-alist))
                                    (format "%s" (widget-value widget)))))
@@ -1666,7 +1639,7 @@ is non-nil if this is a 'range widget."
                  :size 4 :tag item :value (cdr default)
                  :help-echo (format "Insert the second value of the %S here"
                                     (downcase item))
-                 :notify (lambda (widget &rest ignore)
+                 :notify (lambda (widget &rest _ignore)
                            (setcdr (cdr (assoc (widget-get widget :tag)
                                                gnuplot-gui-alist))
                                    (format "%s" (widget-value widget)))))

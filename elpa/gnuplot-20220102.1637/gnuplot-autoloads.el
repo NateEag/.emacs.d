@@ -85,12 +85,73 @@ Run an inferior Gnuplot process." t nil)
 ;;;;;;  0 0))
 ;;; Generated autoloads from gnuplot-context.el
 
+(autoload 'gnuplot-context-sensitive-mode "gnuplot-context" "\
+Use context-sensitive completion and help in gnuplot-mode.
+
+If called interactively, enable Gnuplot-Context-Sensitive mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
+
+When context-sensitive mode is enabled, gnuplot-mode tries to
+provide more useful completions and help suggestions for built-in
+keywords and functions by parsing each command as you type.  It
+attempts to take into account Gnuplot's many abbreviated
+keywords.  For example, with point at the end of a line reading
+\"plot 'datafile' w \", typing \\[completion-at-point] will pop
+up a list of plotting styles.
+
+Key bindings:
+
+\\[completion-at-point] will complete the keyword at point based
+on its context in the command. To make keyword completion work on
+pressing TAB, set `tab-always-indent' to `complete', or customize
+`gnuplot-tab-completion' to make this automatic in gnuplot-mode
+buffers.
+
+\\[gnuplot-info-at-point] will try to find the most relevant
+Gnuplot info node for the construction at point, prompting for a
+node name if nothing is found.
+
+\\[gnuplot-help-function] will pop up a brief summary of the
+syntax at point in the minibuffer. To have one-line syntax
+summaries appear in the echo area as you type, toggle
+`eldoc-mode' or customize `gnuplot-eldoc-mode'.
+
+To choose whether to use this mode by default in Gnuplot buffers,
+customize the variable
+`gnuplot-use-context-sensitive-completion'.
+
+Note: help strings for eldoc-mode and \\[gnuplot-help-function]
+need to be provided in an Emacs-readable form by the Gnuplot
+distribution. See gnuplot-context.el for details.
+
+\(fn &optional ARG)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-context" '("gnuplot-")))
 
 ;;;***
 
 ;;;### (autoloads nil "gnuplot-gui" "gnuplot-gui.el" (0 0 0 0))
 ;;; Generated autoloads from gnuplot-gui.el
+
+(autoload 'gnuplot-gui-swap-simple-complete "gnuplot-gui" nil t nil)
+
+(autoload 'gnuplot-gui-mouse-set "gnuplot-gui" "\
+Use the mouse to begin setting options using a GUI interface.
+EVENT is a mouse event.  Bound to \\[gnuplot-gui-mouse-set]
+Note that \"plot\", \"splot\", \"fit\", and \"cntrparam\" are not
+currently supported.
+
+\(fn EVENT)" t nil)
+
+(autoload 'gnuplot-gui-set-options-and-insert "gnuplot-gui" "\
+Insert arguments using a GUI interface.
+Determine contents of current line and set up the appropriate GUI
+frame.  Bound to \\[gnuplot-gui-set-options-and-insert]
+Note that \"cntrparam\" is not currently supported." t nil)
+
+(autoload 'gnuplot-gui-toggle-popup "gnuplot-gui" nil t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-gui" '("gnuplot-")))
 

@@ -123,6 +123,8 @@ Major mode for editing ClojureC code.
 
 (add-to-list 'auto-mode-alist '("\\(?:build\\|profile\\)\\.boot\\'" . clojure-mode))
 
+(add-to-list 'interpreter-mode-alist '("bb" . clojure-mode))
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent")))
 
 ;;;***

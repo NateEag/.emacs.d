@@ -22952,10 +22952,10 @@ Delete a local comment." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210505.712/clojure-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220202.1341/clojure-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20210505.712/clojure-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220202.1341/clojure-mode-autoloads.el") (car load-path))))
 
 
 
@@ -23072,6 +23072,8 @@ Major mode for editing ClojureC code.
 (add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojurescript-mode))
 
 (add-to-list 'auto-mode-alist '("\\(?:build\\|profile\\)\\.boot\\'" . clojure-mode))
+
+(add-to-list 'interpreter-mode-alist '("bb" . clojure-mode))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent")))
 

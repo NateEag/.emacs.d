@@ -625,10 +625,10 @@ Returns a list of contact objects." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/popup-20210317.138/popup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/popup-20211231.1823/popup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/popup-20210317.138/popup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/popup-20211231.1823/popup-autoloads.el") (car load-path))))
 
 
 

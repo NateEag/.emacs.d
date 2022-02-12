@@ -1,6 +1,6 @@
 ;;; company-capf.el --- company-mode completion-at-point-functions backend -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2019, 2021  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2021  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 
@@ -152,6 +152,10 @@ so we can't just use the preceding variable instead.")
     (`kind
      (let ((f (plist-get (nthcdr 4 company-capf--current-completion-data)
                          :company-kind)))
+       (when f (funcall f arg))))
+    (`deprecated
+     (let ((f (plist-get (nthcdr 4 company-capf--current-completion-data)
+                         :company-deprecated)))
        (when f (funcall f arg))))
     (`require-match
      (plist-get (nthcdr 4 (company--capf-data)) :company-require-match))

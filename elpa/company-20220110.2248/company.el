@@ -1,6 +1,6 @@
 ;;; company.el --- Modular text completion framework  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009-2021  Free Software Foundation, Inc.
+;; Copyright (C) 2009-2022  Free Software Foundation, Inc.
 
 ;; Author: Nikolaj Schumacher
 ;; Maintainer: Dmitry Gutov <dgutov@yandex.ru>
@@ -69,7 +69,8 @@
   "Extensible inline text completion mechanism."
   :group 'abbrev
   :group 'convenience
-  :group 'matching)
+  :group 'matching
+  :link '(custom-manual "(company) Top"))
 
 (defgroup company-faces nil
   "Faces used by Company."
@@ -91,6 +92,10 @@
      (:background "gray31"))
     (t (:background "green")))
   "Face used for the selection in the tooltip.")
+
+(defface company-tooltip-deprecated
+  '((t (:strike-through t)))
+  "Face used for the deprecated items.")
 
 (defface company-tooltip-search
   '((default :inherit highlight))
@@ -128,27 +133,37 @@
 
 (defface company-tooltip-quick-access
   '((default :inherit company-tooltip-annotation))
-  "Face used for the quick-access keys shown in the tooltip."
+  "Face used for the quick-access hints shown in the tooltip."
   :package-version '(company . "0.9.14"))
 
 (defface company-tooltip-quick-access-selection
   '((default :inherit company-tooltip-annotation-selection))
-  "Face used for the selected quick-access keys shown in the tooltip."
+  "Face used for the selected quick-access hints shown in the tooltip."
   :package-version '(company . "0.9.14"))
 
-(defface company-scrollbar-fg
+(define-obsolete-face-alias
+ 'company-scrollbar-fg
+ 'company-tooltip-scrollbar-thumb
+ "0.9.14")
+
+(defface company-tooltip-scrollbar-thumb
   '((((background light))
      :background "darkred")
     (((background dark))
      :background "gray33"))
-  "Face used for the tooltip scrollbar thumb.")
+  "Face used for the tooltip scrollbar thumb (bar).")
 
-(defface company-scrollbar-bg
+(define-obsolete-face-alias
+ 'company-scrollbar-bg
+ 'company-tooltip-scrollbar-track
+ "0.9.14")
+
+(defface company-tooltip-scrollbar-track
   '((((background light))
      :background "wheat")
     (((background dark))
      :background "gray28"))
-  "Face used for the tooltip scrollbar background.")
+  "Face used for the tooltip scrollbar track (trough).")
 
 (defface company-preview
   '((default :inherit (company-tooltip-selection company-tooltip)))
@@ -251,8 +266,9 @@ The visualized data is stored in `company-prefix', `company-candidates',
   :type 'integer)
 
 (defcustom company-tooltip-minimum 6
-  "The minimum height of the tooltip.
-If this many lines are not available, prefer to display the tooltip above."
+  "Ensure visibility of this number of candidates.
+When that many lines are not available between point and the bottom of the
+window, display the tooltip above point."
   :type 'integer)
 
 (defcustom company-tooltip-minimum-width 0
@@ -403,6 +419,9 @@ be kept if they have different annotations.  For that to work properly,
 backends should store the related information on candidates using text
 properties.
 
+`deprecated': The second argument is a completion candidate.  Return
+non-nil if the completion candidate is deprecated.
+
 `match': The second argument is a completion candidate.  Return a positive
 integer, the index after the end of text matching `prefix' within the
 candidate string.  Alternatively, return a list of (CHUNK-START
@@ -547,7 +566,8 @@ doesn't match anything or finish it manually, e.g. with RET."
 This can be a function do determine if a match is required.
 
 This can be overridden by the backend, if it returns t or `never' to
-`require-match'.  `company-auto-commit' also takes precedence over this."
+`require-match'.  `company-insertion-on-trigger' also takes precedence over
+this."
   :type '(choice (const :tag "Off" nil)
                  (function :tag "Predicate function")
                  (const :tag "On, if user interaction took place"
@@ -556,14 +576,21 @@ This can be overridden by the backend, if it returns t or `never' to
 
 (define-obsolete-variable-alias
   'company-auto-complete
-  'company-auto-commit
+  'company-insertion-on-trigger
   "0.9.14")
 
-(defcustom company-auto-commit nil
-  "Determines whether to auto-commit.
-If this is enabled, all characters from `company-auto-commit-chars'
-trigger insertion of the selected completion candidate.
-This can also be a function."
+(define-obsolete-variable-alias
+  'company-auto-commit
+  'company-insertion-on-trigger
+  "0.9.14")
+
+(defcustom company-insertion-on-trigger nil
+  "If enabled, allow triggering insertion of the selected candidate.
+This can also be a predicate function, for example,
+`company-explicit-action-p'.
+
+See `company-insertion-triggers' for more details on how to define
+triggers."
   :type '(choice (const :tag "Off" nil)
                  (function :tag "Predicate function")
                  (const :tag "On, if user interaction took place"
@@ -573,19 +600,27 @@ This can also be a function."
 
 (define-obsolete-variable-alias
   'company-auto-complete-chars
-  'company-auto-commit-chars
+  'company-insertion-triggers
   "0.9.14")
 
-(defcustom company-auto-commit-chars '(?\  ?\) ?.)
-  "Determines which characters trigger auto-commit.
-See `company-auto-commit'.  If this is a string, each character in it
-triggers auto-commit.  If it is a list of syntax description characters (see
-`modify-syntax-entry'), characters with any of those syntaxes do that.
+(define-obsolete-variable-alias
+  'company-auto-commit-chars
+  'company-insertion-triggers
+  "0.9.14")
 
-This can also be a function, which is called with the new input and should
-return non-nil if company should auto-commit.
+(defcustom company-insertion-triggers '(?\  ?\) ?.)
+  "Determine triggers for `company-insertion-on-trigger'.
 
-A character that is part of a valid completion never triggers auto-commit."
+If this is a string, then each character in it can trigger insertion of the
+selected candidate.  If it is a list of syntax description characters (see
+`modify-syntax-entry'), then characters with any of those syntaxes can act
+as triggers.
+
+This can also be a function, which is called with the new input.  To
+trigger insertion, the function should return a non-nil value.
+
+Note that a character that is part of a valid completion never triggers
+insertion."
   :type '(choice (string :tag "Characters")
                  (set :tag "Syntax"
                       (const :tag "Whitespace" ?\ )
@@ -655,18 +690,126 @@ commands in the `company-' namespace, abort completion."
                         (repeat :tag "Commands" function))
                  (repeat :tag "Commands" function)))
 
-(defcustom company-show-numbers nil
-  "If enabled, show quick-access numbers for the first ten candidates."
-  :type '(choice (const :tag "off" nil)
-                 (const :tag "left" 'left)
-                 (const :tag "on" 't)))
+(defun company-custom--set-quick-access (option value)
+  "Re-bind quick-access key sequences on OPTION VALUE change."
+  (when (boundp 'company-active-map)
+    (company-keymap--unbind-quick-access company-active-map))
+  (when (boundp 'company-search-map)
+    (company-keymap--unbind-quick-access company-search-map))
+  (custom-set-default option value)
+  (when (boundp 'company-active-map)
+    (company-keymap--bind-quick-access company-active-map))
+  (when (boundp 'company-search-map)
+    (company-keymap--bind-quick-access company-search-map)))
 
-(defcustom company-show-numbers-function #'company--show-numbers
+(defcustom company-quick-access-keys '("1" "2" "3" "4" "5" "6" "7" "8" "9" "0")
+  "Character strings used as a part of quick-access key sequences.
+To change this value without Customize interface, use `customize-set-variable'.
+
+To change the quick-access key sequences modifier, customize
+`company-quick-access-modifier'.
+
+If `company-show-quick-access' is non-nil, show quick-access hints
+beside the candidates."
+  :set #'company-custom--set-quick-access
+  :type '(choice
+          (const :tag "Digits" ("1" "2" "3" "4" "5" "6" "7" "8" "9" "0"))
+          (const :tag "QWERTY home row" ("a" "s" "d" "f" "g" "h" "j" "k" "l" ";"))
+          ;; TODO un-comment on removal of `M-n' `company--select-next-and-warn'.
+          ;; (const :tag "Dvorak home row" ("a" "o" "e" "u" "i" "d" "h" "t" "n" "s"))
+          (repeat :tag "User defined" string))
+  :package-version '(company . "0.9.14"))
+
+(defcustom company-quick-access-modifier 'meta
+  "Modifier key used for quick-access keys sequences.
+To change this value without Customize interface, use `customize-set-variable'.
+See `company-quick-access-keys' for more details."
+  :set #'company-custom--set-quick-access
+  :type '(choice (const :tag "Meta key" meta)
+                 (const :tag "Super key" super)
+                 (const :tag "Hyper key" hyper)
+                 (const :tag "Control key" control))
+  :package-version '(company . "0.9.14"))
+
+(defun company-keymap--quick-access-modifier ()
+  "Return string representation of the `company-quick-access-modifier'."
+  (if-let ((modifier (assoc-default company-quick-access-modifier
+                                    '((meta . "M")
+                                      (super . "s")
+                                      (hyper . "H")
+                                      (control . "C")))))
+      modifier
+    (warn "company-quick-access-modifier value unknown: %S"
+          company-quick-access-modifier)
+    "M"))
+
+(defun company-keymap--unbind-quick-access (keymap)
+  (let ((modifier (company-keymap--quick-access-modifier)))
+    (dolist (key company-quick-access-keys)
+      (let ((key-seq (company-keymap--kbd-quick-access modifier key)))
+        (when (equal (lookup-key keymap key-seq) 'company-complete-quick-access)
+          (define-key keymap key-seq nil))))))
+
+(defun company-keymap--bind-quick-access (keymap)
+  (let ((modifier (company-keymap--quick-access-modifier)))
+    (dolist (key company-quick-access-keys)
+      (let ((key-seq (company-keymap--kbd-quick-access modifier key)))
+        (if (lookup-key keymap key-seq)
+            (warn "Key sequence %s already bound" (key-description key-seq))
+          (define-key keymap key-seq #'company-complete-quick-access))))))
+
+(defun company-keymap--kbd-quick-access (modifier key)
+  (kbd (format "%s-%s" modifier key)))
+
+(define-obsolete-variable-alias
+  'company-show-numbers
+  'company-show-quick-access
+  "0.9.14")
+
+(defcustom company-show-quick-access nil
+  "If non-nil, show quick-access hints beside the candidates.
+
+For a tooltip frontend, non-nil value enables a column with the hints
+on the right side of the tooltip, unless the configured value is `left'.
+
+To change the quick-access key bindings, customize `company-quick-access-keys'
+and `company-quick-access-modifier'.
+
+To change the shown quick-access hints, customize
+`company-quick-access-hint-function'."
+  :type '(choice (const :tag "off" nil)
+                 (const :tag "left" left)
+                 (const :tag "on" t)))
+
+(defcustom company-show-numbers-function nil
   "Function called to get quick-access numbers for the first ten candidates.
 
 The function receives the candidate number (starting from 1) and should
 return a string prefixed with one space."
   :type 'function)
+(make-obsolete-variable
+ 'company-show-numbers-function
+ "use `company-quick-access-hint-function' instead,
+but adjust the expected values appropriately."
+ "0.9.14")
+
+(defcustom company-quick-access-hint-function #'company-quick-access-hint-key
+  "Function called to get quick-access hints for the candidates.
+
+The function receives a candidate's 0-based number
+and should return a string.
+See `company-show-quick-access' for more details."
+  :type 'function)
+
+(defun company-quick-access-hint-key (candidate)
+  "Return a quick-access key for the CANDIDATE number.
+This is a default value of `company-quick-access-hint-function'."
+  (if company-show-numbers-function
+      (funcall company-show-numbers-function (1+ candidate))
+    (format "%s"
+            (if (< candidate (length company-quick-access-keys))
+                (nth candidate company-quick-access-keys)
+              ""))))
 
 (defcustom company-selection-wrap-around nil
   "If enabled, selecting item before first or after last wraps around."
@@ -719,8 +862,7 @@ asynchronous call into synchronous.")
     (define-key keymap "\C-w" 'company-show-location)
     (define-key keymap "\C-s" 'company-search-candidates)
     (define-key keymap "\C-\M-s" 'company-filter-candidates)
-    (dotimes (i 10)
-      (define-key keymap (read-kbd-macro (format "M-%d" i)) 'company-complete-number))
+    (company-keymap--bind-quick-access keymap)
      keymap)
   "Keymap that is enabled during an active completion.")
 
@@ -1421,13 +1563,14 @@ end of the match."
     (module . "symbol-namespace.svg")
     (numeric . "symbol-numeric.svg")
     (operator . "symbol-operator.svg")
-    (parameter . "symbol-parameter.svg")
     (property . "symbol-property.svg")
-    (ruler . "symbol-ruler.svg")
+    (reference . "references.svg")
     (snippet . "symbol-snippet.svg")
     (string . "symbol-string.svg")
     (struct . "symbol-structure.svg")
     (text . "symbol-key.svg")
+    (type-parameter . "symbol-parameter.svg")
+    (unit . "symbol-ruler.svg")
     (value . "symbol-enumerator.svg")
     (variable . "symbol-variable.svg")
     (t . "symbol-misc.svg")))
@@ -1443,6 +1586,10 @@ end of the match."
                  (cons :tag "Size in pixels, scaled 2x on HiDPI screens"
                        (const auto-scale)
                        (integer :value 16))))
+
+(defcustom company-icon-margin 2
+  "Width of the margin that shows the icons, in characters."
+  :type 'integer)
 
 (defun company--render-icons-margin (icon-mapping root-dir candidate selected)
   (if-let ((ws (window-system))
@@ -1468,7 +1615,7 @@ end of the match."
                              (if (> dfh (* 2 base-size))
                                  (* 2 base-size)
                                base-size)
-                             (* 2 dfw))))))
+                             (* company-icon-margin dfw))))))
              (spec (list 'image
                          :file (expand-file-name icon-file root-dir)
                          :type 'svg
@@ -1477,10 +1624,11 @@ end of the match."
                          :ascent 'center
                          :background (unless (eq bkg 'unspecified)
                                        bkg)))
-             (spacer-px-width (- (* 2 dfw) icon-size)))
+             (spacer-px-width (- (* company-icon-margin dfw) icon-size)))
         (concat
          (propertize " " 'display spec)
-         (propertize " " 'display `(space . (:width (,spacer-px-width))))))
+         (propertize (company-space-string (1- company-icon-margin))
+                     'display `(space . (:width (,spacer-px-width))))))
     nil))
 
 (defun company-vscode-dark-icons-margin (candidate selected)
@@ -1503,6 +1651,7 @@ end of the match."
     (class "c" font-lock-type-face)
     (color "#" success)
     (constant "c" font-lock-constant-face)
+    (constructor "c" font-lock-function-name-face)
     (enum-member "e" font-lock-builtin-face)
     (enum "e" font-lock-builtin-face)
     (field "f" font-lock-variable-name-face)
@@ -1515,13 +1664,14 @@ end of the match."
     (module "{" font-lock-type-face)
     (numeric "n" font-lock-builtin-face)
     (operator "o" font-lock-comment-delimiter-face)
-    (parameter "p" font-lock-builtin-face)
     (property "p" font-lock-variable-name-face)
-    (ruler "r" shadow)
+    (reference "r" font-lock-doc-face)
     (snippet "S" font-lock-string-face)
     (string "s" font-lock-string-face)
     (struct "%" font-lock-variable-name-face)
     (text "w" shadow)
+    (type-parameter "p" font-lock-type-face)
+    (unit "u" shadow)
     (value "v" font-lock-builtin-face)
     (variable "v" font-lock-variable-name-face)
     (t "." shadow))
@@ -1537,14 +1687,15 @@ The only mandatory element in CONF is ICON, you can omit both the FG and BG
 fields without issue.
 
 When BG is omitted and `company-text-icons-add-background' is non-nil, a BG
-color will be generated using a gradient between the active tooltip color and
+color is generated using a gradient between the active tooltip color and
 the FG color."
   :type 'list)
 
 (defcustom company-text-face-extra-attributes '(:weight bold)
-  "Additional attributes to add to text icons' faces.
-If non-nil, an anonymous face will be generated.
-Only affects `company-text-icons-margin'."
+  "Additional attributes to add to text/dot icons faces.
+If non-nil, an anonymous face is generated.
+
+Affects `company-text-icons-margin' and `company-dot-icons-margin'."
   :type 'list)
 
 (defcustom company-text-icons-format " %s "
@@ -1552,7 +1703,7 @@ Only affects `company-text-icons-margin'."
   :type 'string)
 
 (defcustom company-text-icons-add-background nil
-  "When non-nil, generate a background color for text icons when none is given.
+  "Generate a background color for text/dot icons when none is given.
 See `company-text-icons-mapping'."
   :type 'boolean)
 
@@ -1763,9 +1914,10 @@ prefix match (same case) will be prioritized."
        (eq win (selected-window))
        (eq tick (buffer-chars-modified-tick))
        (eq pos (point))
-       (when (company-auto-begin)
-         (let ((this-command 'company-idle-begin))
-           (company-post-command)))))
+       (let ((non-essential t))
+         (when (company-auto-begin)
+           (let ((this-command 'company-idle-begin))
+             (company-post-command))))))
 
 (defun company-auto-begin ()
   (and company-mode
@@ -1818,18 +1970,20 @@ prefix match (same case) will be prioritized."
                  (funcall company-require-match)
                (eq company-require-match t))))))
 
-(defun company-auto-commit-p (input)
-  "Return non-nil if INPUT should trigger auto-commit."
-  (and (if (functionp company-auto-commit)
-           (funcall company-auto-commit)
-         company-auto-commit)
-       (if (functionp company-auto-commit-chars)
-           (funcall company-auto-commit-chars input)
-         (if (consp company-auto-commit-chars)
+(defun company-insertion-on-trigger-p (input)
+  "Return non-nil if INPUT should trigger insertion.
+For more details see `company-insertion-on-trigger' and
+`company-insertion-triggers'."
+  (and (if (functionp company-insertion-on-trigger)
+           (funcall company-insertion-on-trigger)
+         company-insertion-on-trigger)
+       (if (functionp company-insertion-triggers)
+           (funcall company-insertion-triggers input)
+         (if (consp company-insertion-triggers)
              (memq (char-syntax (string-to-char input))
-                   company-auto-commit-chars)
+                   company-insertion-triggers)
            (string-match (regexp-quote (substring input 0 1))
-                          company-auto-commit-chars)))))
+                         company-insertion-triggers)))))
 
 (defun company--incremental-p ()
   (and (> (point) company-point)
@@ -1894,8 +2048,8 @@ prefix match (same case) will be prioritized."
       (company-update-candidates c)
       c)
      ((and (characterp last-command-event)
-           (company-auto-commit-p (string last-command-event)))
-      ;; auto-commit
+           (company-insertion-on-trigger-p (string last-command-event)))
+      ;; Insertion on trigger.
       (save-excursion
         (goto-char company-point)
         (company-complete-selection)
@@ -2067,7 +2221,7 @@ prefix match (same case) will be prioritized."
                                           company-complete
                                           company-complete-common
                                           company-complete-selection
-                                          company-complete-number)
+                                          company-complete-tooltip-row)
   "List of commands after which idle completion is (still) disabled when
 `company-begin-commands' is t.")
 
@@ -2144,7 +2298,7 @@ each one wraps a part of the input string."
   (let ((re (funcall company-search-regexp-function text))
         (i 0))
     (cl-dolist (line lines)
-      (when (string-match-p re line (length company-prefix))
+      (when (string-match-p re line)
         (cl-return i))
       (cl-incf i))))
 
@@ -2285,8 +2439,7 @@ each one wraps a part of the input string."
     (define-key keymap "\C-s" 'company-search-repeat-forward)
     (define-key keymap "\C-r" 'company-search-repeat-backward)
     (define-key keymap "\C-o" 'company-search-toggle-filtering)
-    (dotimes (i 10)
-      (define-key keymap (read-kbd-macro (format "M-%d" i)) 'company-complete-number))
+    (company-keymap--bind-quick-access keymap)
     keymap)
   "Keymap used for incrementally searching the completion candidates.")
 
@@ -2422,24 +2575,6 @@ With ARG, move by that many elements."
         (company-set-selection (- company-selection
                                   company-tooltip-limit))))))
 
-(defvar company-pseudo-tooltip-overlay)
-
-(defvar company-tooltip-offset)
-
-(defun company--inside-tooltip-p (event-col-row row height)
-  (let* ((ovl company-pseudo-tooltip-overlay)
-         (column (overlay-get ovl 'company-column))
-         (width (overlay-get ovl 'company-width))
-         (evt-col (car event-col-row))
-         (evt-row (cdr event-col-row)))
-    (and (>= evt-col column)
-         (< evt-col (+ column width))
-         (if (> height 0)
-             (and (> evt-row row)
-                  (<= evt-row (+ row height) ))
-           (and (< evt-row row)
-                (>= evt-row (+ row height)))))))
-
 (defun company--event-col-row (event)
   (company--posn-col-row (event-start event)))
 
@@ -2492,6 +2627,18 @@ With ARG, move by that many elements."
               (current-prefix-arg arg))
           (call-interactively 'company-select-next))))))
 
+(defun company-complete-common-or-show-delayed-tooltip ()
+  "Insert the common part of all candidates, or show a tooltip."
+  (interactive)
+  (when (company-manual-begin)
+    (let ((tick (buffer-chars-modified-tick)))
+      (call-interactively 'company-complete-common)
+      (when (eq tick (buffer-chars-modified-tick))
+          (let ((company-tooltip-idle-delay 0.0))
+            (company-complete)
+            (and company-candidates
+                 (company-call-frontends 'post-command)))))))
+
 (defun company-indent-or-complete-common (arg)
   "Indent the current line or region, or complete the common part."
   (interactive "P")
@@ -2534,11 +2681,22 @@ inserted."
       (when company-candidates
         (setq this-command 'company-complete-common)))))
 
-(defun company-complete-number (n)
-  "Insert the Nth candidate visible in the tooltip.
-To show the number next to the candidates in some backends, enable
-`company-show-numbers'.  When called interactively, uses the last typed
-character, stripping the modifiers.  That character must be a digit."
+(define-obsolete-function-alias
+  'company-complete-number
+  'company-complete-tooltip-row
+  "0.9.14")
+
+(defun company-complete-tooltip-row (number)
+  "Insert a candidate visible on the tooltip's row NUMBER.
+
+Inserts one of the first ten candidates,
+numbered according to the current scrolling position starting with 1.
+
+When called interactively, uses the last typed digit, stripping the
+modifiers and translating 0 into 10, so `M-1' inserts the first visible
+candidate, and `M-0' insert to 10th one.
+
+To show hint numbers beside the candidates, enable `company-show-quick-access'."
   (interactive
    (list (let* ((type (event-basic-type last-command-event))
                 (char (if (characterp type)
@@ -2546,14 +2704,34 @@ character, stripping the modifiers.  That character must be a digit."
                           type
                         ;; Keypad number, if bound directly.
                         (car (last (string-to-list (symbol-name type))))))
-                (n (- char ?0)))
-           (if (zerop n) 10 n))))
+                (number (- char ?0)))
+           (if (zerop number) 10 number))))
+  (company--complete-nth (1- number)))
+
+(defun company-complete-quick-access (row)
+  "Insert a candidate visible on a ROW matched by a quick-access key binding.
+See `company-quick-access-keys' for more details."
+  (interactive
+   (list (let* ((event-type (event-basic-type last-command-event))
+                (event-string (if (characterp event-type)
+                                  (string event-type)
+                                (error "Unexpected input"))))
+           (cl-position event-string company-quick-access-keys :test 'equal))))
+  (when row
+    (company--complete-nth row)))
+
+(defvar-local company-tooltip-offset 0
+  "Current scrolling state of the tooltip.
+Represented by the index of the first visible completion candidate
+from the candidates list.")
+
+(defun company--complete-nth (row)
+  "Insert a candidate visible on the tooltip's zero-based ROW."
   (when (company-manual-begin)
-    (and (or (< n 1) (> n (- company-candidates-length
-                             company-tooltip-offset)))
-         (user-error "No candidate number %d" n))
-    (cl-decf n)
-    (company-finish (nth (+ n company-tooltip-offset)
+    (and (or (< row 0) (>= row (- company-candidates-length
+                                  company-tooltip-offset)))
+         (user-error "No candidate on the row number %d" row))
+    (company-finish (nth (+ row company-tooltip-offset)
                          company-candidates))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2801,10 +2979,6 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
 
 ;;; pseudo-tooltip ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar-local company-pseudo-tooltip-overlay nil)
-
-(defvar-local company-tooltip-offset 0)
-
 (defvar-local company--tooltip-current-width 0)
 
 (defun company-tooltip--lines-update-offset (selection num-lines limit)
@@ -2852,12 +3026,25 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
       (pop copy))
     (apply 'concat pieces)))
 
+(defun company--common-or-matches (value)
+  (let ((matches (company-call-backend 'match value)))
+    (when (and matches
+               company-common
+               (listp matches)
+               (= 1 (length matches))
+               (= 0 (caar matches))
+               (> (length company-common) (cdar matches)))
+      (setq matches nil))
+    (when (integerp matches)
+      (setq matches `((0 . ,matches))))
+    (or matches
+        (and company-common `((0 . ,(length company-common))))
+        nil)))
+
 (defun company-fill-propertize (value annotation width selected left right)
   (let* ((margin (length left))
-         (common (or (company-call-backend 'match value)
-                     (if company-common
-                         (string-width company-common)
-                       0)))
+         (company-common (and company-common (company--clean-string company-common)))
+         (common (company--common-or-matches value))
          (_ (setq value (company-reformat (company--pre-render value))
                   annotation (and annotation (company--pre-render annotation t))))
          (ann-ralign company-tooltip-align-annotations)
@@ -2896,7 +3083,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                               t line))
     (cl-loop
      with width = (- width (length right))
-     for (comp-beg . comp-end) in (if (integerp common) `((0 . ,common)) common)
+     for (comp-beg . comp-end) in common
      for inline-beg = (+ margin comp-beg)
      for inline-end = (min (+ margin comp-end) width)
      when (< inline-beg width)
@@ -2908,7 +3095,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
     (when (let ((re (funcall company-search-regexp-function
                              company-search-string)))
             (and (not (string= re ""))
-                 (string-match re value (length company-prefix))))
+                 (string-match re value)))
       (pcase-dolist (`(,mbeg . ,mend) (company--search-chunks))
         (let ((beg (+ margin mbeg))
               (end (+ margin mend))
@@ -2921,6 +3108,14 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                                     nil line)))))
     (when selected
       (add-face-text-property 0 width 'company-tooltip-selection t line))
+
+    (when (company-call-backend 'deprecated value)
+      (add-face-text-property margin
+                              (min
+                               (+ margin (length value))
+                               (- width (length right)))
+                              'company-tooltip-deprecated t line))
+
     (add-face-text-property 0 width 'company-tooltip t line)
     line))
 
@@ -3002,14 +3197,11 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
   (format " %s" (if (<= numbered 10)
                     (mod numbered 10)
                   " ")))
-
-(defun company--format-quick-access-key (numbered selected)
-  "Produce a quick-access key to show beside a candidate."
-  (propertize (funcall company-show-numbers-function numbered)
-              'face
-              (if selected
-                  'company-tooltip-quick-access-selection
-                'company-tooltip-quick-access)))
+(make-obsolete
+ 'company--show-numbers
+ "use `company-quick-access-hint-key' instead,
+but adjust the expected values appropriately."
+ "0.9.14")
 
 (defsubst company--window-height ()
   (if (fboundp 'window-screen-lines)
@@ -3178,7 +3370,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
     (setq width (min window-width
                      company-tooltip-maximum-width
                      (max company-tooltip-minimum-width
-                          (if company-show-numbers
+                          (if company-show-quick-access
                               (+ 2 width)
                             width))))
 
@@ -3187,7 +3379,7 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
       (setq company--tooltip-current-width width))
 
     (let ((items (nreverse items))
-          (numbered (if company-show-numbers 0 99999))
+          (row (if company-show-quick-access 0 99999))
           new)
       (when previous
         (push (company--scrollpos-line previous width left-margin-size) new))
@@ -3200,13 +3392,15 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                (right (company-space-string company-tooltip-margin))
                (width width)
                (selected (equal selection i)))
-          (when company-show-numbers
-            (let ((numbers-place (gv-ref (if (eq company-show-numbers 'left) left right))))
-              (cl-decf width 2)
-              (cl-incf numbered)
-              (setf (gv-deref numbers-place)
-                    (concat (company--format-quick-access-key numbered selected)
-                            (gv-deref numbers-place)))))
+          (when company-show-quick-access
+            (let ((quick-access (gv-ref (if (eq company-show-quick-access 'left)
+                                            left right)))
+                  (qa-hint (company-tooltip--format-quick-access-hint
+                            row selected)))
+              (cl-decf width (string-width qa-hint))
+              (setf (gv-deref quick-access)
+                    (concat qa-hint (gv-deref quick-access))))
+            (cl-incf row))
           (push (concat
                  (company-fill-propertize str annotation
                                           width selected
@@ -3233,8 +3427,8 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
 (defun company--scrollbar (i bounds)
   (propertize " " 'face
               (if (and (>= i (car bounds)) (<= i (cdr bounds)))
-                  'company-scrollbar-fg
-                'company-scrollbar-bg)))
+                  'company-tooltip-scrollbar-thumb
+                'company-tooltip-scrollbar-track)))
 
 (defun company--scrollpos-line (text width fancy-margin-width)
   (propertize (concat (company-space-string company-tooltip-margin)
@@ -3242,7 +3436,32 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
                       (company-space-string fancy-margin-width))
               'face 'company-tooltip))
 
+(defun company-tooltip--format-quick-access-hint (row selected)
+  "Format a quick-access hint for outputting on a tooltip's ROW.
+Value of SELECTED determines the added face."
+  (propertize (format "%2s" (funcall company-quick-access-hint-function row))
+              'face
+              (if selected
+                  'company-tooltip-quick-access-selection
+                'company-tooltip-quick-access)))
+
 ;; show
+
+(defvar-local company-pseudo-tooltip-overlay nil)
+
+(defun company--inside-tooltip-p (event-col-row row height)
+  (let* ((ovl company-pseudo-tooltip-overlay)
+         (column (overlay-get ovl 'company-column))
+         (width (overlay-get ovl 'company-width))
+         (evt-col (car event-col-row))
+         (evt-row (cdr event-col-row)))
+    (and (>= evt-col column)
+         (< evt-col (+ column width))
+         (if (> height 0)
+             (and (> evt-row row)
+                  (<= evt-row (+ row height) ))
+           (and (< evt-row row)
+                (>= evt-row (+ row height)))))))
 
 (defun company--pseudo-tooltip-height ()
   "Calculate the appropriate tooltip height.
@@ -3323,7 +3542,7 @@ Returns a negative number if the tooltip should be displayed above point."
   (when (overlayp company-pseudo-tooltip-overlay)
     (overlay-put company-pseudo-tooltip-overlay 'invisible nil)
     (overlay-put company-pseudo-tooltip-overlay 'line-prefix nil)
-    (overlay-put company-pseudo-tooltip-overlay 'after-string nil)
+    (overlay-put company-pseudo-tooltip-overlay 'before-string nil)
     (overlay-put company-pseudo-tooltip-overlay 'display nil)
     (overlay-put company-pseudo-tooltip-overlay 'face nil)))
 
@@ -3334,9 +3553,14 @@ Returns a negative number if the tooltip should be displayed above point."
       ;; Beat outline's folding overlays.
       ;; And Flymake (53). And Flycheck (110).
       (overlay-put ov 'priority 111)
+      ;; visual-line-mode
+      (when (and (memq (char-before (overlay-start ov)) '(?\s ?\t))
+                 ;; not eob
+                 (not (nth 2 (overlay-get ov 'company-replacement-args))))
+        (setq disp (concat "\n" disp)))
       ;; No (extra) prefix for the first line.
       (overlay-put ov 'line-prefix "")
-      (overlay-put ov 'after-string disp)
+      (overlay-put ov 'before-string disp)
       ;; `display' is better than `invisible':
       ;; https://debbugs.gnu.org/18285
       ;; https://debbugs.gnu.org/20847
@@ -3456,11 +3680,17 @@ Delay is determined by `company-tooltip-idle-delay'."
 (defun company-preview-show-at-point (pos completion)
   (company-preview-hide)
 
-  (setq completion (copy-sequence (company--pre-render completion)))
-  (add-face-text-property 0 (length completion) 'company-preview
-                          nil completion)
-  (add-face-text-property 0 (length company-common) 'company-preview-common
-                          nil completion)
+  (let* ((company-common (and company-common
+                              (string-prefix-p company-prefix company-common)
+                              company-common))
+         (common (company--common-or-matches completion)))
+    (setq completion (copy-sequence (company--pre-render completion)))
+    (add-face-text-property 0 (length completion) 'company-preview
+                            nil completion)
+
+    (cl-loop for (beg . end) in common
+             do (add-face-text-property beg end 'company-preview-common
+                                        nil completion))
 
     ;; Add search string
     (and (string-match (funcall company-search-regexp-function
@@ -3470,7 +3700,11 @@ Delay is determined by `company-tooltip-idle-delay'."
            (add-face-text-property mbeg mend 'company-preview-search
                                    nil completion)))
 
-    (setq completion (company-strip-prefix completion))
+    (setq completion (if (string-prefix-p company-prefix completion
+                                          (eq (company-call-backend 'ignore-case)
+                                              'keep-prefix))
+                         (company-strip-prefix completion)
+                       completion))
 
     (and (equal pos (point))
          (not (equal completion ""))
@@ -3493,7 +3727,7 @@ Delay is determined by `company-tooltip-idle-delay'."
       (let ((ov company-preview-overlay))
         (overlay-put ov (if ptf-workaround 'display 'after-string)
                      completion)
-        (overlay-put ov 'window (selected-window)))))
+        (overlay-put ov 'window (selected-window))))))
 
 (defun company-preview-hide ()
   (when company-preview-overlay
@@ -3595,27 +3829,32 @@ Delay is determined by `company-tooltip-idle-delay'."
   (let ((selection (or company-selection 0)))
     (let ((limit (window-body-width (minibuffer-window)))
           (len -1)
-          ;; Roll to selection.
           (candidates (nthcdr selection company-candidates))
-          (numbered (if company-show-numbers selection 99999))
+          (numbered (if company-show-quick-access selection 99999))
+          (qa-keys-len (length company-quick-access-keys))
           comp msg)
 
       (while candidates
-        (setq comp (company-reformat (company--clean-string (pop candidates)))
+        (setq comp (propertize
+                    (company-reformat (company--clean-string (pop candidates)))
+                    'face
+                    'company-echo)
               len (+ len 1 (length comp)))
-        (if (< numbered 10)
-            (progn
-              (cl-incf numbered)
-              (setq comp (propertize (format "%d: %s" (mod numbered 10) comp)
-                                     'face 'company-echo))
-              (cl-incf len 3)
-              ;; FIXME: Add support for the `match' backend action, and thus,
-              ;; non-prefix matches.
-              (add-text-properties 3 (+ 3 (string-width (or company-common "")))
-                                   '(face company-echo-common) comp))
-          (setq comp (propertize comp 'face 'company-echo))
-          (add-text-properties 0 (string-width (or company-common ""))
-                               '(face company-echo-common) comp))
+        (let ((beg 0)
+              (end (string-width (or company-common ""))))
+          (when (< numbered qa-keys-len)
+            (let ((qa-hint
+                   (format "%s: " (funcall
+                                   company-quick-access-hint-function
+                                   numbered))))
+              (setq beg (string-width qa-hint)
+                    end (+ beg end))
+              (cl-incf len beg)
+              (setq comp (propertize (concat qa-hint comp) 'face 'company-echo)))
+            (cl-incf numbered))
+          ;; FIXME: Add support for the `match' backend action, and thus,
+          ;; non-prefix matches.
+          (add-text-properties beg end '(face company-echo-common) comp))
         (if (>= len limit)
             (setq candidates nil)
           (push comp msg)))
@@ -3626,18 +3865,21 @@ Delay is determined by `company-tooltip-idle-delay'."
   (let ((selection (or company-selection 0)))
     (let ((limit (window-body-width (minibuffer-window)))
           (len (+ (length company-prefix) 2))
-          ;; Roll to selection.
           (candidates (nthcdr selection company-candidates))
-          (numbered (if company-show-numbers selection 99999))
-          msg comp)
+          (numbered (if company-show-quick-access selection 99999))
+          (qa-keys-len (length company-quick-access-keys))
+          comp msg)
 
       (while candidates
         (setq comp (company-strip-prefix (pop candidates))
               len (+ len 2 (length comp)))
-        (when (< numbered 10)
-          (cl-incf numbered)
-          (setq comp (format "%s (%d)" comp (mod numbered 10)))
-          (cl-incf len 4))
+        (when (< numbered qa-keys-len)
+          (let ((qa-hint (format " (%s)"
+                                 (funcall company-quick-access-hint-function
+                                          numbered))))
+            (setq comp (concat comp qa-hint))
+            (cl-incf len (string-width qa-hint)))
+          (cl-incf numbered))
         (if (>= len limit)
             (setq candidates nil)
           (push (propertize comp 'face 'company-echo) msg)))

@@ -1,6 +1,6 @@
 ;;; company-keywords.el --- A company backend for programming language keywords
 
-;; Copyright (C) 2009-2011, 2016  Free Software Foundation, Inc.
+;; Copyright (C) 2009-2011, 2013-2018, 2020-2021  Free Software Foundation, Inc.
 
 ;; Author: Nikolaj Schumacher
 
@@ -27,6 +27,15 @@
 
 (require 'company)
 (require 'cl-lib)
+(eval-when-compile (require 'make-mode))
+
+(defgroup company-keywords nil
+  "Completion backend for keywords."
+  :group 'company)
+
+(defcustom company-keywords-ignore-case nil
+  "Non-nil to ignore case in completion candidates."
+  :type 'boolean)
 
 (defun company-keywords-upper-lower (&rest lst)
   ;; Upcase order is different for _.
@@ -180,6 +189,10 @@
      "internal" "is" "lateinit" "nested" "null" "object" "open" "out" "override"
      "package" "private" "protected" "public" "return" "super" "this" "throw"
      "trait" "true" "try" "typealias" "val" "var" "when" "while")
+    (lua-mode
+     ;; https://www.lua.org/manual/5.3/manual.html
+     "and" "break" "do" "else" "elseif" "end" "false" "for" "function" "goto" "if"
+     "in" "local" "nil" "not" "or" "repeat" "return" "then" "true" "until" "while")
     (objc-mode
      "@catch" "@class" "@encode" "@end" "@finally" "@implementation"
      "@interface" "@private" "@protected" "@protocol" "@public"
@@ -293,6 +306,27 @@
     (enh-ruby-mode . ruby-mode))
   "Alist mapping major-modes to sorted keywords for `company-keywords'.")
 
+(with-eval-after-load 'make-mode
+  (mapc
+   (lambda (mode-stmnts)
+     (setf (alist-get (car mode-stmnts) company-keywords-alist)
+           (cl-remove-duplicates
+            (sort (append makefile-special-targets-list
+                          (cl-mapcan #'identity
+                                     (mapcar
+                                      #'split-string
+                                      (cl-remove-if-not
+                                       #'stringp
+                                       (symbol-value (cdr mode-stmnts))))))
+                  #'string<)
+            :test #'string=)))
+   '((makefile-automake-mode . makefile-automake-statements)
+     (makefile-gmake-mode    . makefile-gmake-statements)
+     (makefile-makepp-mode   . makefile-makepp-statements)
+     (makefile-bsdmake-mode  . makefile-bsdmake-statements)
+     (makefile-imake-mode    . makefile-statements)
+     (makefile-mode          . makefile-statements))))
+
 ;;;###autoload
 (defun company-keywords (command &optional arg &rest ignored)
   "`company-mode' backend for programming language keywords."
@@ -303,13 +337,14 @@
                  (not (company-in-string-or-comment))
                  (or (company-grab-symbol) 'stop)))
     (candidates
-     (let ((completion-ignore-case nil)
+     (let ((completion-ignore-case company-keywords-ignore-case)
            (symbols (cdr (assq major-mode company-keywords-alist))))
        (all-completions arg (if (consp symbols)
                                 symbols
                               (cdr (assq symbols company-keywords-alist))))))
     (kind 'keyword)
-    (sorted t)))
+    (sorted t)
+    (ignore-case company-keywords-ignore-case)))
 
 (provide 'company-keywords)
 ;;; company-keywords.el ends here

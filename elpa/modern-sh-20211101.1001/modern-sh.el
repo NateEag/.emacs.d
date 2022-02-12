@@ -4,8 +4,8 @@
 
 ;; Authors: Damon Kwok <damon-kwok@outlook.com>
 ;; Version: 0.0.1
-;; Package-Version: 20200904.1838
-;; Package-Commit: 05430398a5070245c4358e6a1b7e49a154da174e
+;; Package-Version: 20211101.1001
+;; Package-Commit: 8ebebe77304aa8170f7af809e7564c79d3bd45da
 ;; URL: https://github.com/damon-kwok/modern-sh
 ;; Keywords: languages programming
 ;; Package-Requires: ((emacs "25.1") (hydra "0.15.0") (eval-in-repl "0.9.7"))
@@ -63,22 +63,29 @@
   "Modern shell declaration keywords.")
 
 (defconst modern-sh-preprocessor-keywords
-  '("source" "eval"                      ;
-     "emacs" "em" "vi" "vim" "nano" "ed" ;
+  '("emacs" "em" "vi" "vim" "nano" "ed" ;
      "sh" "bash" "zsh" "csh" "ksh" "fish" "pwsh")
   "Modern shell preprocessor keywords.")
 
 (defconst modern-sh-careful-keywords
   '("return" "break" "continue"         ;
-     "export" "readonly" "alias" "unset" "shift")
+     "source" "eval" "export"           ;
+     "readonly" "alias" "unset" "shift")
   "Modern shell language careful keywords.")
 
 (defconst modern-sh-builtin-keywords
   '("chroot" "passwd" "chmod" "sleep" "read" ;
-     "su" "sudo" "exit" "rm"                 ;
+     "su" "sudo" "exit" "rm" "pushd" "popd"  ;
      "kill" "pkill" "skill" "killall"        ;
-     "pushd" "popd" "install" "groupinstall")
-  "Modern shell language keywords.")
+     "emerge" "ego" "cave" "freebsd-update"  ;
+     "pkg" "apk" "setenv" "pkg_add" "env"    ;
+     "apt" "pat-get" "yum" "dnf" "zypper"    ;
+     "install" "groupinstall" "resolve" "sync")
+  "Modern shell builtin keywords.")
+
+(defconst modern-sh-builtin-params-keywords
+  '("install" "groupinstall" "resolve" "sync")
+  "Modern shell params keywords.")
 
 (defconst modern-sh-constants '("true" "false" "test" "command")
   "Common constants.")
@@ -106,6 +113,10 @@
   (regexp-opt modern-sh-builtin-keywords 'words)
   "Regular expression for matching builtin type.")
 
+(defconst modern-sh-builtin-params-keywords-regexp
+  (regexp-opt modern-sh-builtin-params-keywords 'words)
+  "Regular expression for matching builtin params.")
+
 (defconst modern-sh-constant-regexp (regexp-opt modern-sh-constants 'words)
   "Regular expression for matching constants.")
 
@@ -123,6 +134,7 @@
 
      ;; env variable
      ("[$>&]+\\([A-Za-z0-9_#@-]+\\)" . 'font-lock-warning-face)
+     ("[@^]+\\([A-Za-z][A-Za-z0-9_]+\\)" 1 'font-lock-keyword-face)
      ("${\\([A-Za-z0-9_#@-]+\\)" 1 'font-lock-warning-face)
 
      ;; case options
@@ -152,13 +164,21 @@
      ("[:]*/\\([A-Za-z0-9_.-]*\\)" 1 'font-lock-negation-char-face)
      ("\\([A-Za-z0-9_.-]*\\)[:]*/" 1 'font-lock-negation-char-face)
 
+     ;; ipv4 & ipv6
+     ("\\([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\\)" 1 'font-lock-constant-face)
+     ("\\([A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+:[A-Za-z0-9]+\\)"
+       1 'font-lock-constant-face)
      ;; keyword
      (,modern-sh-keywords-regexp . font-lock-keyword-face)
 
      ;; variable define
+     ("\\(:-\\|:\\+\\)" 1 'font-lock-builtin-face)
+     ("\\(:-\\|:\\+\\)\\([A-Za-z_][A-Za-z0-9_]*\\)" 2
+       'font-lock-variable-name-face)
      ("\\([A-Za-z_][A-Za-z0-9_]*\\)[ \t]*[=[]" 1 'font-lock-variable-name-face)
 
      ;; builtin
+     (,modern-sh-builtin-params-keywords-regexp . font-lock-constant-face)
      (,modern-sh-builtin-keywords-regexp . font-lock-warning-face)
 
      ;; declaration
@@ -262,7 +282,7 @@ Optional argument PATH: project path."
           (string= parent curdir)
           (string= parent (file-name-as-directory (getenv "HOME")))
           (and (>= (length parent-basename) 10)
-                 (string= (substring parent-basename 0 10) "smb-share:"))
+            (string= (substring parent-basename 0 10) "smb-share:"))
           (modern-sh-project-root-p curdir)) ;
       curdir                                 ;
       (modern-sh-project-root parent))))
@@ -387,6 +407,7 @@ Optional argument BUILD If the tags file does not exist, execute the build."
 
 (defun modern-sh-format-buffer ()
   "Format current buffer."
+  (interactive)
   (indent-region (point-min)
     (point-max)))
 

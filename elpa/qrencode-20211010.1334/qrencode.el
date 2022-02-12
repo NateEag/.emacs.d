@@ -4,9 +4,9 @@
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Keywords: qrcode comm
-;; Package-Version: 20211002.1215
-;; Package-Commit: eb2d5bad076b17a8c431200be7357460a7d3c088
-;; Version: 1.1-beta1
+;; Package-Version: 20211010.1334
+;; Package-Commit: fe3a99ff8cbddcf5391458f356cecf2e8c3a2b84
+;; Version: 1.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; Package: qrencode
 ;; URL: https://github.com/ruediger/qrencode-el

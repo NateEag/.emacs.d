@@ -4,6 +4,9 @@
   snappy. Guess I can start moving it towards doing what I want and see when it
   starts bogging down.
 
+- Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
+  how to configure lsp-mode.
+
 - Fix aggressive-fill-paragraph mode's "only fill inside comments" behavior.
   See afp-mode-comment-bug.md for details.
 
@@ -72,6 +75,9 @@
 - Try Serenata as a new PHP intelligence engine. See how it compares to
   php-language-server. Seems to be more maintained, at least.
   https://serenata.gitlab.io/
+
+- Try phpactor as a new PHP intelligence engine. See how it compares to
+  php-language-server and Serenata.
 
 - Teach Emacs to automatically change its theme when OS X changes between light
   and dark modes. I have a function to choose theme correctly,

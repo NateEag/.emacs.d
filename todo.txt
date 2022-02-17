@@ -175,6 +175,9 @@
 
 - Try out highlight-indent-guides.el
 
+- Install visual-regexp-steroids and give it a try:
+  https://github.com/benma/visual-regexp-steroids.el/
+
 - Activate so-long-mode, as it's built-in now.
 
 - See whether the proposed changes to timestamp format will impact my time

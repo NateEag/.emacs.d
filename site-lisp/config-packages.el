@@ -771,7 +771,7 @@ With this alias I hope to not need to remember it.")
 
 (use-package todotxt-mode
   :mode "\\todo.txt\\'"
-  :hook (todotxt-mode-hook . (lambda () (aggressive-fill-paragraph-mode -1))))
+  :hook (todotxt-mode . (lambda () (aggressive-fill-paragraph-mode -1))))
 
 (use-package apache-mode
   ;; A rule specific to a system I use at $DAYJOB.

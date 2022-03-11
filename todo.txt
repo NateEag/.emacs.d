@@ -297,6 +297,9 @@
 
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
+- Update my "get git forge commit" keybinding to get URL to HEAD if point is
+  not over a hash; look for/suggest as feature request in underlying library?
+
 - Make a PR to auto-complete for supporting smart-dash-mode.
 
 - Add function to spawn an emacs instance with my installed packages but none

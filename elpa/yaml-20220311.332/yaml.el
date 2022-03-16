@@ -4,8 +4,8 @@
 
 ;; Author: Zachary Romero <zkry@posteo.org>
 ;; Version: 0.1.0
-;; Package-Version: 20210730.143
-;; Package-Commit: 84b88c9ed178af16da18b230c1f61c57cefedf28
+;; Package-Version: 20220311.332
+;; Package-Commit: 34c300b08579b72c7c92aefee1f4b500913f0c85
 ;; Homepage: https://github.com/zkry/yaml.el
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: tools
@@ -1030,11 +1030,17 @@ value.  It defaults to the symbol :false."
   (setq yaml--root nil)
   (setq yaml--anchor-mappings (make-hash-table :test 'equal))
   (setq yaml--resolve-aliases nil)
+  (setq yaml--parsing-null-object
+	(if (plist-member args :null-object)
+	    (plist-get args :null-object)
+	  :null))
+  (setq yaml--parsing-false-object
+	(if (plist-member args :false-object)
+	    (plist-get args :false-object)
+	  :false))
   (let ((object-type (plist-get args :object-type))
         (object-key-type (plist-get args :object-key-type))
-        (sequence-type (plist-get args :sequence-type))
-        (null-object (plist-get args :null-object))
-        (false-object (plist-get args :false-object)))
+        (sequence-type (plist-get args :sequence-type)))
     (cond
      ((or (not object-type)
           (equal object-type 'hash-table))
@@ -1062,8 +1068,6 @@ value.  It defaults to the symbol :false."
      ((equal 'list sequence-type)
       (setq yaml--parsing-sequence-type 'list))
      (t (error "Invalid sequence-type.  sequence-type must be list or array")))
-    (setq yaml--parsing-null-object (or null-object :null))
-    (setq yaml--parsing-false-object (or false-object :false))
     (let ((res (yaml--parse string
                  (yaml--top))))
 

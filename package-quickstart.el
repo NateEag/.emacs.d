@@ -93,10 +93,10 @@ Simple mode to edit YAML.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20210730.143/yaml-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20220311.332/yaml-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-20210730.143/yaml-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-20220311.332/yaml-autoloads.el") (car load-path))))
 
 
 

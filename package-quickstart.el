@@ -23666,10 +23666,10 @@ Major mode for editing ClojureC code.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20220211.1414/cider-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/cider-20220309.618/cider-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20220211.1414/cider-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/cider-20220309.618/cider-autoloads.el") (car load-path))))
 
 
 

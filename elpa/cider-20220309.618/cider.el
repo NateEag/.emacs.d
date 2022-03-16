@@ -11,8 +11,8 @@
 ;;         Steve Purcell <steve@sanityinc.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; URL: http://www.github.com/clojure-emacs/cider
-;; Version: 1.3.0-snapshot
-;; Package-Requires: ((emacs "26") (clojure-mode "5.12") (parseedn "1.0.6") (queue "0.2") (spinner "1.7") (seq "2.22") (sesman "0.3.2"))
+;; Version: 1.3.0
+;; Package-Requires: ((emacs "26") (clojure-mode "5.14") (parseedn "1.0.6") (queue "0.2") (spinner "1.7") (seq "2.22") (sesman "0.3.2"))
 ;; Keywords: languages, clojure, cider
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -92,10 +92,10 @@
 (require 'sesman)
 (require 'package)
 
-(defconst cider-version "1.3.0-snapshot"
+(defconst cider-version "1.3.0"
   "The current version of CIDER.")
 
-(defconst cider-codename "Nice"
+(defconst cider-codename "Ukraine"
   "Codename used to denote stable releases.")
 
 (defcustom cider-lein-command
@@ -394,9 +394,6 @@ your version of Boot or Leiningen is bundling an older one."
   :package-version '(cider . "1.2.0")
   :safe #'stringp)
 
-(cider-add-to-alist 'cider-jack-in-dependencies
-                    "nrepl/nrepl" cider-injected-nrepl-version)
-
 (defvar cider-jack-in-cljs-dependencies nil
   "List of dependencies where elements are lists of artifact name and version.
 Added to `cider-jack-in-dependencies' when doing `cider-jack-in-cljs'.")
@@ -418,7 +415,7 @@ the artifact.")
 (defconst cider-latest-clojure-version "1.10.1"
   "Latest supported version of Clojure.")
 
-(defconst cider-required-middleware-version "0.28.1"
+(defconst cider-required-middleware-version "0.28.3"
   "The CIDER nREPL version that's known to work properly with CIDER.")
 
 (defcustom cider-injected-middleware-version cider-required-middleware-version
@@ -428,7 +425,7 @@ Should be newer than the required version for optimal results."
   :package-version '(cider . "1.2.0")
   :safe #'stringp)
 
-(defcustom cider-enrich-classpath t
+(defcustom cider-enrich-classpath nil
   "Whether to use git.io/JiJVX for adding sources and javadocs to the classpath.
 
 This is done in a clean manner, without interfering with classloaders.
@@ -464,8 +461,6 @@ plugin should actually be injected.  (This is useful primarily for packages
 that extend CIDER, not for users.  For example, a refactoring package might
 want to inject some middleware only when within a project context.)")
 (put 'cider-jack-in-lein-plugins 'risky-local-variable t)
-(cider-add-to-alist 'cider-jack-in-lein-plugins
-                    "cider/cider-nrepl" cider-injected-middleware-version)
 
 (defvar cider-jack-in-lein-middlewares nil
   "List of Leiningen :middleware values to be injected at jack-in.
@@ -481,19 +476,17 @@ Added to `cider-jack-in-lein-plugins' (which see) when doing
 `cider-jack-in-cljs'.")
 (put 'cider-jack-in-cljs-lein-plugins 'risky-local-variable t)
 
-(defun cider-jack-in-normalized-lein-plugins (&optional project-type)
+(defun cider-jack-in-normalized-lein-plugins ()
   "Return a normalized list of Leiningen plugins to be injected.
 See `cider-jack-in-lein-plugins' for the format, except that the list
-returned by this function does not include keyword arguments.
-
-PROJECT-TYPE will be observed, for avoiding injecting plugins
-where it doesn't make sense."
-  (let* ((corpus (if (and cider-enrich-classpath
-                          (eq project-type 'lein))
+returned by this function does not include keyword arguments."
+  (let ((plugins (if cider-enrich-classpath
                      (append cider-jack-in-lein-plugins
-                             '(("mx.cider/enrich-classpath" "1.8.0")))
-                   cider-jack-in-lein-plugins)))
-    (thread-last corpus
+                             `(("cider/cider-nrepl" ,cider-injected-middleware-version)
+                               ("mx.cider/enrich-classpath" "1.9.0")))
+                   (append cider-jack-in-lein-plugins
+                           `(("cider/cider-nrepl" ,cider-injected-middleware-version))))))
+    (thread-last plugins
       (seq-filter
        (lambda (spec)
          (if-let* ((pred (plist-get (seq-drop spec 2) :predicate)))
@@ -544,6 +537,13 @@ LIST should have the form (ARTIFACT-NAME ARTIFACT-VERSION).  The returned
 string is quoted for passing as argument to an inferior shell."
   (concat "-d " (shell-quote-argument (format "%s:%s" (car list) (cadr list)))))
 
+(defun cider--jack-in-required-dependencies ()
+  "Returns the required CIDER deps.
+They are normally added to `cider-jack-in-dependencies',
+unless it's a Lein project."
+  `(("nrepl/nrepl" ,cider-injected-nrepl-version)
+    ("cider/cider-nrepl" ,cider-injected-middleware-version)))
+
 (defun cider-boot-dependencies (dependencies)
   "Return a list of boot artifact strings created from DEPENDENCIES."
   (concat (mapconcat #'cider--list-as-boot-artifact dependencies " ")
@@ -558,16 +558,16 @@ string is quoted for passing as argument to an inferior shell."
                      " ")
           " " params))
 
-(defun cider-boot-jack-in-dependencies (global-opts params dependencies plugins middlewares)
+(defun cider-boot-jack-in-dependencies (global-opts params dependencies middlewares)
   "Create boot jack-in dependencies.
 Does so by concatenating GLOBAL-OPTS, DEPENDENCIES,
-PLUGINS and MIDDLEWARES.  PARAMS and MIDDLEWARES are passed on to
-`cider-boot-middleware-task` before concatenating and DEPENDENCIES and PLUGINS
+and MIDDLEWARES.  PARAMS and MIDDLEWARES are passed on to
+`cider-boot-middleware-task` before concatenating and DEPENDENCIES
  are passed on to `cider-boot-dependencies`."
   (concat global-opts
           (unless (seq-empty-p global-opts) " ")
           "-i \"(require 'cider.tasks)\" " ;; Note the space at the end here
-          (cider-boot-dependencies (append dependencies plugins))
+          (cider-boot-dependencies (append (cider--jack-in-required-dependencies) dependencies))
           (cider-boot-middleware-task params middlewares)))
 
 (defun cider--lein-artifact-exclusions (exclusions)
@@ -608,19 +608,23 @@ removed, LEIN-PLUGINS, LEIN-MIDDLEWARES and finally PARAMS."
    " -- "
    params))
 
+(defun cider--dedupe-deps (deps)
+  "Removes the duplicates in DEPS."
+  (cl-delete-duplicates deps :test 'equal))
+
 (defun cider-clojure-cli-jack-in-dependencies (global-options _params dependencies)
   "Create Clojure tools.deps jack-in dependencies.
 Does so by concatenating DEPENDENCIES and GLOBAL-OPTIONS into a suitable
 `clojure` invocation.  The main is placed in an inline alias :cider/nrepl
 so that if your aliases contain any mains, the cider/nrepl one will be the
 one used."
-  (let* ((deps-string (string-join
-                       (seq-map (lambda (dep)
-                                  (format "%s {:mvn/version \"%s\"}" (car dep) (cadr dep)))
-                                ;; NOTE: injecting Lein plugins for deps.edn projects
-                                ;; seems a bit dubious, worth revisiting at some point.
-                                (append dependencies cider-jack-in-lein-plugins))
-                       " "))
+  (let* ((all-deps (thread-last dependencies
+                     (append (cider--jack-in-required-dependencies))
+                     ;; Duplicates are never OK since they would result in
+                     ;; `java.lang.IllegalArgumentException: Duplicate key [...]`:
+                     (cider--dedupe-deps)
+                     (seq-map (lambda (dep)
+                                (format "%s {:mvn/version \"%s\"}" (car dep) (cadr dep))))))
          (middleware (mapconcat
                       (apply-partially #'format "%s")
                       (cider-jack-in-normalized-nrepl-middlewares)
@@ -628,7 +632,7 @@ one used."
          (main-opts (format "\"-m\" \"nrepl.cmdline\" \"--middleware\" \"[%s]\"" middleware)))
     (format "%s-Sdeps '{:deps {%s} :aliases {:cider/nrepl {:main-opts [%s]}}}' -M%s:cider/nrepl"
             (if global-options (format "%s " global-options) "")
-            deps-string
+            (string-join all-deps " ")
             main-opts
             (if cider-clojure-cli-aliases
                 ;; remove exec-opts flags -A -M -T or -X from cider-clojure-cli-aliases
@@ -639,7 +643,7 @@ one used."
 (defun cider-shadow-cljs-jack-in-dependencies (global-opts params dependencies)
   "Create shadow-cljs jack-in deps.
 Does so by concatenating GLOBAL-OPTS, DEPENDENCIES finally PARAMS."
-  (let ((dependencies (append dependencies cider-jack-in-lein-plugins)))
+  (let ((dependencies (append (cider--jack-in-required-dependencies) dependencies)))
     (concat
      global-opts
      (unless (seq-empty-p global-opts) " ")
@@ -678,9 +682,9 @@ dependencies."
             global-opts
             params
             (cider-add-clojure-dependencies-maybe
-             cider-jack-in-dependencies)
+             (append `(("nrepl/nrepl" ,cider-injected-nrepl-version)) cider-jack-in-dependencies))
             cider-jack-in-dependencies-exclusions
-            (cider-jack-in-normalized-lein-plugins project-type)
+            (cider-jack-in-normalized-lein-plugins)
             (if cider-enrich-classpath
                 (append cider-jack-in-lein-middlewares
                         '("cider.enrich-classpath/middleware"))
@@ -690,7 +694,6 @@ dependencies."
             params
             (cider-add-clojure-dependencies-maybe
              cider-jack-in-dependencies)
-            (cider-jack-in-normalized-lein-plugins project-type)
             (cider-jack-in-normalized-nrepl-middlewares)))
     ('clojure-cli (cider-clojure-cli-jack-in-dependencies
                    global-opts

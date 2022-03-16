@@ -1,7 +1,7 @@
-(define-package "parse-it" "20210306.821" "Basic Parser in Emacs Lisp"
+(define-package "parse-it" "20220214.1531" "Basic Parser in Emacs Lisp"
   '((emacs "25.1")
     (s "1.12.0"))
-  :commit "f910af3b1d98b88a0f41794bbe7fd57411e9b909" :authors
+  :commit "fbb88260179dd92264325dee37d7898619407558" :authors
   '(("Shen, Jen-Chieh" . "jcs090218@gmail.com"))
   :maintainer
   '("Shen, Jen-Chieh" . "jcs090218@gmail.com")

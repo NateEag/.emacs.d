@@ -1,6 +1,6 @@
-;;; parse-it-typescript.el --- Core parser for TypeScript  -*- lexical-binding: t; -*-
+;;; parse-it-actionscript.el --- Core parser for ActionScript  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,27 +19,26 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for TypeScript.
+;; Core parser for ActionScript.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-typescript--token-type
+(defconst parse-it-actionscript--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("ARROW" . "[=][>]")
-    ("KEYWORD" . "\\<\\(abstract\\|any\\|async\\|as\\|await\\|boolean\\|bigint\\|break\\|case\\|catch\\|class\\|constructor\\|const\\|continue\\|declare\\|default\\|delete\\|do\\|else\\|enum\\|export\\|extends\\|extern\\|false\\|finaly\\|for\\|function\\|from\\|get\\|goto\\|if\\|implements\\|import\\|in\\|instanceof\\|interface\\|keyof\\|let\\|module\\|namespace\\|never\\|new\\|null\\|number\\|object\\|of\\|private\\|protected\\|public\\|readonly\\|return\\|set\\|static\\|string\\|super\\|switch\\|this\\|throw\\|true\\|try\\|typeof\\|type\\|var\\|void\\|while\\)"))
-  "TypeScript token type.")
+    ("KEYWORD" . "\\<\\(break\\|case\\|continue\\|default\\|do\\|while\\|else\\|for\\|in\\|each\\|if\\|label\\|return\\|super\\|switch\\|throw\\|try\\|catch\\|finally\\|while\\|with\\|dynamic\\|final\\|internal\\|native\\|override\\|private\\|protected\\|public\\|static\\|class\\|cont\\|extends\\|function\\|get\\|implements\\|interface\\|namespace\\|package\\|set\\|var\\|import\\|include\\|false\\|null\\|this\\|true\\)"))
+  "ActionScript token type.")
 
-(defun parse-it-typescript--make-token-type ()
+(defun parse-it-actionscript--make-token-type ()
   "Make up the token type."
-  (append parse-it-typescript--token-type
+  (append parse-it-actionscript--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
@@ -50,13 +49,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-typescript (path)
-  "Parse the PATH TypeScript."
-  (let* ((parse-it-lex--token-type (parse-it-typescript--make-token-type))
+(defun parse-it-actionscript (path)
+  "Parse the PATH ActionScript."
+  (let* ((parse-it-lex--token-type (parse-it-actionscript--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-typescript)
-;;; parse-it-typescript.el ends here
+(provide 'parse-it-actionscript)
+;;; parse-it-actionscript.el ends here

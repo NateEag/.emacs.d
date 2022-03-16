@@ -1,6 +1,6 @@
 ;;; parse-it.el --- Basic Parser in Emacs Lisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh
 ;; Created date 2019-10-10 11:50:37
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>

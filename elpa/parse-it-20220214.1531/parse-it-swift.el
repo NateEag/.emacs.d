@@ -1,6 +1,6 @@
-;;; parse-it-go.el --- Core parser for Go  -*- lexical-binding: t; -*-
+;;; parse-it-swift.el --- Core parser for Swift  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,26 +19,28 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Go.
+;; Core parser for Swift.
 ;;
 
 ;;; Code:
 
-(require 'parse-it-c)
+(require 'parse-it-objc)
 
-(defconst parse-it-go--token-type
+(defconst parse-it-swift--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(break\\|default\\|func\\|interface\\|select\\|case\\|defer\\|goto\\|map\\|struct\\|chan\\|else\\|go\\|package\\|switch\\|const\\|fallthrough\\|if\\|range\\|type\\|continue\\|for\\|import\\|return\\|var\\)"))
-  "Go token type.")
+    ("KEYWORD" . "\\B\\(@interface\\|@implementation\\|@protocol\\|@end\\|@private\\|@protected\\|@public\\|@try\\|@throw\\|@catch\\|@finally\\|@class\\|@selector\\|@protocol\\|@encode\\|@synchronized\\|#import\\)\\b")
+    ("KEYWORD" . "\\<\\(alloc\\|retain\\|release\\|autorelease\\)"))
+  "Swift token type.")
 
-(defun parse-it-go--make-token-type ()
+(defun parse-it-swift--make-token-type ()
   "Make up the token type."
-  (append parse-it-go--token-type
+  (append parse-it-objc--token-type
+          parse-it-c--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
           parse-it-c--macro-token-type
@@ -50,13 +52,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-go (path)
-  "Parse the PATH Go."
-  (let* ((parse-it-lex--token-type (parse-it-go--make-token-type))
+(defun parse-it-swift (path)
+  "Parse the PATH Swift."
+  (let* ((parse-it-lex--token-type (parse-it-swift--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-go)
-;;; parse-it-go.el ends here
+(provide 'parse-it-swift)
+;;; parse-it-swift.el ends here

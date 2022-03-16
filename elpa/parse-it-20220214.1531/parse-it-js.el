@@ -1,6 +1,6 @@
 ;;; parse-it-js.el --- Core parser for JavaScript  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 

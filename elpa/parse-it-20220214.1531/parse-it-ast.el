@@ -1,6 +1,6 @@
 ;;; parse-it-ast.el --- Core to build Abstract Syntax Tree (AST)  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -55,8 +55,8 @@ IN-SS is list of symbols that recognized as into level.
 BK-SS is list of symbols that recognized as back level."
   (let* ((ast-tree (parse-it-ast--form-root-ast))
          (parent-node ast-tree)
-         (parent-node-stack '())
-         (token-type nil) (token-val nil) (token-pos nil))
+         parent-node-stack
+         token-type token-val token-pos)
     (dolist (token token-list)
       (setq token-type (plist-get token :type))
       (setq token-val (plist-get token :value))
@@ -80,11 +80,12 @@ BK-SS is list of symbols that recognized as back level."
   "Build an AST by using TOKEN-LIST with indentation interpretation.
 IN-SS is list of symbols that recognized as into level.
 BK-SS is list of symbols that recognized as back level.
-PATH is for getting the source code to identify the indentation level of each line."
+PATH is for getting the source code to identify the indentation level of
+each line."
   (let* ((ast-tree (parse-it-ast--form-root-ast))
          (parent-node ast-tree)
-         (parent-node-stack '())
-         (token-type nil) (token-val nil) (token-pos nil) (token-ln nil)
+         parent-node-stack
+         token-type token-val token-pos token-ln
          ;; NOTE: Prepare for parsing indentation. (spaces & tabs)
          (src-code (if path (parse-it-util--get-string-from-file path)
                      (parse-it-util--get-string-from-buffer (current-buffer))))
@@ -92,8 +93,8 @@ PATH is for getting the source code to identify the indentation level of each li
          (cur-src-ln "")
          (cur-ln 0) (cur-indent-len 0)
          (cur-level -1)
-         (into-ind nil) (back-ind nil)
-         (last-node nil))
+         into-ind back-ind
+         last-node)
     (dolist (token token-list)
       (setq token-type (plist-get token :type))
       (setq token-val (plist-get token :value))

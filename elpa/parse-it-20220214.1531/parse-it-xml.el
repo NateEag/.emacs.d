@@ -1,6 +1,6 @@
-;;; parse-it-markdown.el --- Core parser for Markdown  -*- lexical-binding: t; -*-
+;;; parse-it-xml.el --- Core parser for XML  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,41 +19,41 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Markdown.
+;; Core parser for XML.
 ;;
 
 ;;; Code:
 
 (require 'parse-it)
 
-(defconst parse-it-markdown--token-type
+(defconst parse-it-xml--token-type
   '(("COMMENT_BEG" . "[<][!][-][-]")
     ("COMMENT_END" . "[-][-][>]")
     ("TAG_BEG" . "\\([<]\\)[^!][^-][^-]")
     ("TAG_BEG" . "\\([<]\\)[!][^-]")
-    ("TAG_END" . "[^-][^-]\\([>]\\)")
-    ("COLON" . "[:]")
-    ("SEMICOLON" . "[;]")
-    ("COMMA" . "[,]")
-    ("TRI_BACK_QT" . "[`][`][`]")
-    ("BACK_QT" . "[^`]\\([`]\\)[^`]")
-    ("DOT" . "[.]")
-    ("QT_S" . "[']")
-    ("QT_D" . "[\"]"))
-  "Markdown token type.")
+    ("TAG_END" . "[^-][^-]\\([>]\\)"))
+  "XML token type.")
 
-(defun parse-it-markdown--make-token-type ()
+(defconst parse-it-xml--into-level-symbols
+  '("TAG_BEG")
+  "All symbols that goes into one nested level.")
+
+(defconst parse-it-xml--back-level-symbols
+  '("TAG_END")
+  "All symbols that goes back up one nested level.")
+
+(defun parse-it-xml--make-token-type ()
   "Make up the token type."
-  (append parse-it-markdown--token-type
+  (append parse-it-xml--token-type
           parse-it-lex--token-type))
 
-(defun parse-it-markdown (path)
-  "Parse the PATH Markdown."
-  (let* ((parse-it-lex--token-type (parse-it-markdown--make-token-type))
+(defun parse-it-xml (path)
+  "Parse the PATH XML."
+  (let* ((parse-it-lex--token-type (parse-it-xml--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
-                        parse-it-c--into-level-symbols
-                        parse-it-c--back-level-symbols)))
+                        parse-it-xml--into-level-symbols
+                        parse-it-xml--back-level-symbols)))
 
-(provide 'parse-it-markdown)
-;;; parse-it-markdown.el ends here
+(provide 'parse-it-xml)
+;;; parse-it-xml.el ends here

@@ -4,8 +4,8 @@
 
 ;; Author: Ian Y.E. Pan
 ;; URL: https://github.com/ianpan870102/tron-legacy-emacs-theme
-;; Package-Version: 20210420.1201
-;; Package-Commit: e7d16ebe4a824e7d7766fb34ffe4ea3b002f3d23
+;; Package-Version: 20220312.1645
+;; Package-Commit: d775d9f348a942230ea57b6520e1eb56a5d67569
 ;; Version: 2.0.0
 
 ;; This program is free software: you can redistribute it and/or modify
@@ -506,12 +506,12 @@
    `(swiper-line-face                         ((t (:foreground ,fg3 :background ,bg-hl :extend t))))
 
    ;;;;; Git gutter & git gutter fringe
-   `(git-gutter:added                         ((t (:background ,vc-g :foreground ,vc-g :weight normal))))
-   `(git-gutter:deleted                       ((t (:background ,vc-r :foreground ,vc-r :weight normal))))
-   `(git-gutter:modified                      ((t (:background ,vc-b :foreground ,vc-b :weight normal))))
-   `(git-gutter-fr:added                      ((t (:background ,vc-g :foreground ,vc-g :weight normal))))
-   `(git-gutter-fr:deleted                    ((t (:background ,vc-r :foreground ,vc-r :weight normal))))
-   `(git-gutter-fr:modified                   ((t (:background ,vc-b :foreground ,vc-b :weight normal))))
+   `(git-gutter:added                         ((t (:foreground ,vc-g :weight normal))))
+   `(git-gutter:deleted                       ((t (:foreground ,vc-r :weight normal))))
+   `(git-gutter:modified                      ((t (:foreground ,vc-b :weight normal))))
+   `(git-gutter-fr:added                      ((t (:foreground ,vc-g :weight normal))))
+   `(git-gutter-fr:deleted                    ((t (:foreground ,vc-r :weight normal))))
+   `(git-gutter-fr:modified                   ((t (:foreground ,vc-b :weight normal))))
 
    ;;;;; diff-hl (git gutter)
    `(diff-hl-insert                           ((t (:background ,vc-g :foreground ,vc-g))))

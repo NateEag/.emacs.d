@@ -1137,10 +1137,10 @@ Display a world clock buffer for time zones in `tzc-favourite-time-zones-alist`.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/typescript-mode-20211130.1332/typescript-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/typescript-mode-20220223.1506/typescript-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/typescript-mode-20211130.1332/typescript-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/typescript-mode-20220223.1506/typescript-mode-autoloads.el") (car load-path))))
 
 
 (put 'typescript-indent-level 'safe-local-variable #'integerp)

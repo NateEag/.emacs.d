@@ -146,7 +146,7 @@ Before doing anything runs the hook `racket-stop-back-end-hook'." t nil)
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from racket-font-lock.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-font-lock" '("racket-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-font-lock" '("load-theme" "racket-")))
 
 ;;;***
 

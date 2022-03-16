@@ -81,7 +81,7 @@ to `racket-file-name-front-to-back'.")
 ;;;###autoload
 (defun racket--debug-on-break (response)
   (pcase response
-    (`((,src . ,pos) ,positions ,locals ,vals)
+    (`((,src . ,pos) ,breakable-positions ,locals ,vals)
      (let ((src (racket-file-name-back-to-front src)))
        (pcase (find-buffer-visiting src)
          (`nil (other-window 1) (find-file src))
@@ -91,7 +91,11 @@ to `racket-file-name-front-to-back'.")
          (`(,_id before)          (message "Break before expression"))
          (`(,_id after (,_ . ,s)) (message "Break after expression: (values %s"
                                            (substring s 1))))
-       (setq racket--debug-break-positions positions)
+       (setq racket--debug-break-positions
+             (mapcar (lambda (path+positions)
+                       (cons (racket-file-name-back-to-front (car path+positions))
+                             (sort (cdr path+positions) #'<)))
+                     breakable-positions))
        (setq racket--debug-break-locals locals)
        (setq racket--debug-break-info vals)
        (racket-debug-mode 1)))))
@@ -143,7 +147,10 @@ to `racket-file-name-front-to-back'.")
 (defun racket-debug-run-to-here (&optional prefix)
   "Resume until point (if possible). With \\[universal-argument], substitute values."
   (interactive)
-  (racket--debug-resume (cons (racket--buffer-file-name) (point)) prefix))
+  (racket--debug-resume (cons (racket-file-name-front-to-back
+                               (racket--buffer-file-name))
+                              (point))
+                        prefix))
 
 (defun racket-debug-next-breakable ()
   "Move point to next breakable position."
@@ -160,9 +167,7 @@ to `racket-file-name-front-to-back'.")
     (`(,_src . ,ps)
      (let ((ps   (if forwardp ps (reverse ps)))
            (pred (apply-partially (if forwardp #'< #'>) (point))))
-       (goto-char (pcase (cl-find-if pred ps)
-                    (`nil (car ps))
-                    (v    v)))))
+       (goto-char (or (cl-find-if pred ps) (car ps)))))
     (_ (user-error "No breakable positions in this buffer"))))
 
 (defun racket-debug-disable ()

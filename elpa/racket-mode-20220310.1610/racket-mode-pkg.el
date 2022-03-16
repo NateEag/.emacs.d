@@ -1,6 +1,6 @@
-(define-package "racket-mode" "20220210.1543" "Racket editing, REPL, and more"
+(define-package "racket-mode" "20220310.1610" "Racket editing, REPL, and more"
   '((emacs "25.1"))
-  :commit "e172ef5dbca77dee7b919e067ac661d0e6b0af8c" :authors
+  :commit "e321d8ecfb1bc94c3772ef4d20df0ddf9c9c9d76" :authors
   '(("Greg Hendershott"))
   :maintainer
   '("Greg Hendershott")

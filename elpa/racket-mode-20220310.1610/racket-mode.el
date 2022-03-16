@@ -128,6 +128,9 @@
     ["Start Faster" racket-mode-start-faster]
     ["Customize..." customize-mode]))
 
+(declare-function racket-call-racket-repl-buffer-name-function "racket-repl-buffer-name" ())
+(autoload        'racket-call-racket-repl-buffer-name-function "racket-repl-buffer-name")
+
 ;;;###autoload
 (define-derived-mode racket-mode prog-mode
   "Racket"
@@ -277,8 +280,11 @@ the Racket \"Search Manuals\" page."
 ;;; Commands that predate `racket-xp-mode'
 
 (defun racket-doc ()
-  "Instead please use `racket-documentation-search', `racket-xp-documentation' or `racket-repl-documentation'.
-See: <https://github.com/greghendershott/racket-mode/issues/439>"
+  "This command is obsolete.
+
+Instead please use `racket-documentation-search',
+`racket-xp-documentation' or `racket-repl-documentation'. See:
+<https://github.com/greghendershott/racket-mode/issues/439>"
   (interactive)
   (describe-function 'racket-doc))
 

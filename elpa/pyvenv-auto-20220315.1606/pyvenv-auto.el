@@ -2,10 +2,10 @@
 
 ;; Copyright (C) 2022 Nakamura, Ryotaro <nakamura.ryotaro.kzs@gmail.com>
 ;; Version: 1.0.0
-;; Package-Version: 20220307.243
-;; Package-Commit: 7b5274071758946e4e37b9c7a9fe98e815f5e835
+;; Package-Version: 20220315.1606
+;; Package-Commit: 59ece8554bf249f30984c81c103a5704d2fb27bf
 ;; Package-Requires: ((emacs "26.3") (pyvenv "1.21"))
-;; URL: https://github.com/nryotaro/narumi
+;; URL: https://github.com/nryotaro/pyvenv-auto
 ;; This file is not part of GNU Emacs.
 
 ;; This program is free software; you can redistribute it and/or

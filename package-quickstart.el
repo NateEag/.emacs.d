@@ -8303,10 +8303,10 @@ Restart Python inferior processes." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220307.243/pyvenv-auto-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220315.1606/pyvenv-auto-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220307.243/pyvenv-auto-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220315.1606/pyvenv-auto-autoloads.el") (car load-path))))
 
 
 

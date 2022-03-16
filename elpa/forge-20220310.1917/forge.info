@@ -26,7 +26,7 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.3.0-git.
+This manual is for Forge version 0.3.2-git.
 
      Copyright (C) 2018-2022 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -410,24 +410,76 @@ File: forge.info,  Node: Repository Detection,  Next: Caveats,  Prev: Initial Pu
 
 Ghub does *not* associate a given local repository with a repository on
 a forge.  The Forge package itself takes care of this.  In doing so it
-ignores the Git variable ‘ghub.host’ and other ‘FORGE.host’ variables
-used by Ghub.  (But ‘github.user’ and other variables used to specify
-the user are honored).  Forge associates the local repository with a
-forge repository by first determining which remote is associated with
-the upstream repository and then looking that up in ‘forge-alist’.
+ignores the Git variable ‘ghub.host’ and other ‘*.host’ variables used
+by Ghub.  (But ‘github.user’ and other variables used to specify the
+user are honored).
 
-   If only one remote exists, then Forge uses that unconditionally.  If
-several remotes exist, then a remote may be selected based on its name.
+   Forge associates the local repository with a forge repository by
+first determining which remote is associated with the upstream
+repository and then looking that up in ‘forge-alist’.
 
-   The convention is to name the upstream remote ‘origin’.  If you
-follow this convention, then you have to do nothing else and the remote
-by that name is automatically used, provided it exists and regardless of
-whether other remotes exist.  If it does not exist, then no other
-remotes are tried.
+   If only one remote exists, then Forge uses that unconditionally.  To
+reduce the number of support requests, this is even the case if the Git
+variable ‘forge.remote’ names another, non-existent, remote.
 
-   If you do not follow the naming convention, then you have to inform
-Forge about that by setting the Git variable ‘forge.remote’ to the name
-that you instead use for upstream remotes.
+   If several remotes exist, then a remote may be selected based on its
+name.  Almost always we want to fetch the data associated with the
+upstream repository, so that is what the logic described here tries to
+achieve.  The convention is to name the upstream remote "origin", and if
+that convention were universally followed, then things would be trivial.
+However many people name the upstream remote "upstream", which also
+makes sense.
+
+     Note, however, that even though a surprising number of people do
+     just that, it does not make any sense to use the name "origin" to
+     refer to a fork; not even to your own fork.  A fork is a *copy* of
+     the original, "copy" is an antonym for "original", and the word
+     "origin" is not only closely related to but even contained in the
+     word "original".  Naming a fork the "origin" is at best extremely
+     confusing.
+
+     copy
+          a thing made to be similar or identical to another.
+
+     original
+          the earliest form of something, from which copies may be made.
+
+     origin
+          the point or place where something begins, arises, or is
+          derived.
+
+   If several remotes exist, then the following remote names are tried
+in order and the first remote thus named that exists in the repository
+is used.
+
+  1. The value of the Git variable ‘forge.remote’, if set.  If the
+     variable has a value but no remote by the specified name exists,
+     then a warning is shown, but otherwise this conflict is ignored.
+     This behavior is arguably odd, but due to historic and pragmatic
+     reasons it is the least painful path forward.
+
+  2. The remote named ‘upstream’, if it exists.
+
+  3. The remote named ‘origin’, if it exists.
+
+   The remote named "upstream" is preferred over the remote named
+"origin" because the existence of the former strongly suggests that the
+latter is either not used in this repository (in which case the order
+does not matter) or else it is abused as the name of a fork (in which
+case "upstream" must be preferred).
+
+ -- Variable: forge.remote
+     The value of this variable specifies the remote from which Forge
+     fetches data.  It is usually best to leave this unspecified and to
+     rely on the behavior described above.
+
+     If the remote has to be specified explicitly, then this should be
+     done locally, for a single repository.
+
+     Only ever set this globally, if you consistently use a certain name
+     to refer to the upstream repository and it isn’t one of "upstream"
+     or "origin", and you *never* use that name to refer to a repository
+     that does *not* refer to the upstream repository.
 
 ‘N r’ (‘forge-forge.remote’)
      This command changes the value of the ‘forge.remote’ Git variable
@@ -1229,7 +1281,7 @@ Appendix B Keystroke Index
 * N M [if enabled]:                      Editing Topics and Posts.
                                                               (line  69)
 * N r:                                   Repository Detection.
-                                                              (line  28)
+                                                              (line  80)
 * N t c:                                 Miscellaneous.       (line  28)
 * N t t:                                 Miscellaneous.       (line  24)
 * N v i:                                 Visiting Topics.     (line  35)
@@ -1285,7 +1337,7 @@ Appendix C Function and Command Index
 * forge-edit-topic-title:                Editing Topics and Posts.
                                                               (line  32)
 * forge-forge.remote:                    Repository Detection.
-                                                              (line  28)
+                                                              (line  80)
 * forge-fork:                            Miscellaneous.       (line   7)
 * forge-insert-assigned-issues:          Listing Topics and Notifications.
                                                               (line  50)
@@ -1364,6 +1416,8 @@ Appendix D Variable Index
                                                               (line 131)
 * forge-topic-list-limit:                Listing Topics and Notifications.
                                                               (line  20)
+* forge.remote:                          Repository Detection.
+                                                              (line  66)
 
 
 
@@ -1402,23 +1456,23 @@ Node: Getting Started8886
 Node: Token Creation9857
 Node: Initial Pull11114
 Node: Repository Detection12509
-Node: Caveats14429
-Node: Usage15355
-Node: Pulling16837
-Node: Branching19520
-Node: Working with Topics25909
-Node: Visiting Topics26282
-Node: Listing Topics and Notifications28319
-Node: Creating Topics33644
-Node: Editing Topics and Posts34133
-Node: Miscellaneous38149
-Node: Other Options40771
-Node: FAQ41851
-Node: Is it possible to create a single pull-request without pulling everything?42176
-Node: error in process filter HTTP Error 502 "Bad gateway"42642
-Node: Keystroke Index45012
-Node: Function and Command Index50209
-Node: Variable Index57674
+Node: Caveats16648
+Node: Usage17574
+Node: Pulling19056
+Node: Branching21739
+Node: Working with Topics28128
+Node: Visiting Topics28501
+Node: Listing Topics and Notifications30538
+Node: Creating Topics35863
+Node: Editing Topics and Posts36352
+Node: Miscellaneous40368
+Node: Other Options42990
+Node: FAQ44070
+Node: Is it possible to create a single pull-request without pulling everything?44395
+Node: error in process filter HTTP Error 502 "Bad gateway"44861
+Node: Keystroke Index47231
+Node: Function and Command Index52428
+Node: Variable Index59893
 
 End Tag Table
 

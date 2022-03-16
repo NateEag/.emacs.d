@@ -312,9 +312,10 @@ implement such a function themselves.  See #447.")
              (setq topic-section-type 'pullreq)))
       (magit-insert-section ((eval list-section-type) nil t)
         (magit-insert-heading
-          (format "%s (%s)"
-                  (propertize heading 'font-lock-face 'magit-section-heading)
-                  (length topics)))
+          (concat (magit--propertize-face (concat heading " ")
+                                          'magit-section-heading)
+                  (magit--propertize-face (format "(%s)" (length topics))
+                                          'magit-section-child-count)))
         (magit-make-margin-overlay nil t)
         (magit-insert-section-body
           (dolist (topic topics)
@@ -774,13 +775,7 @@ Return a value between 0 and 1."
   (save-match-data
     (save-excursion
       (goto-char (point-min))
-      ;; Unlike for issues, Github ignores the yaml front-matter for
-      ;; pull-requests.  We just assume that nobody tries to use it
-      ;; anyway.  If that turned out to be wrong, we would have to
-      ;; deal with it by complicating matters around here.
-      (let ((alist (or (and (forge--childp (forge-get-repository t)
-                                           'forge-github-repository)
-                            (save-excursion (forge--topic-parse-yaml)))
+      (let ((alist (or (save-excursion (forge--topic-parse-yaml))
                        (save-excursion (forge--topic-parse-plain)))))
         (setf (alist-get 'file alist) file)
         (setf (alist-get 'text alist) (magit--buffer-string nil nil ?\n))
@@ -804,14 +799,29 @@ Return a value between 0 and 1."
         (setq end (match-beginning 0))
         (setq alist (yaml-parse-string
                      (buffer-substring-no-properties beg end)
-                     :object-type 'alist))
+                     :object-type 'alist
+                     :sequence-type 'list
+                     ;; FIXME Does not work because of
+                     ;; https://github.com/zkry/yaml.el/pull/28.
+                     :false-object nil))
         (let-alist alist
-          (setf (alist-get 'prompt alist)
-                (format "[%s] %s" .name .about))
+          (when (and .name .about)
+            (setf (alist-get 'prompt alist)
+                  (format "[%s] %s" .name .about)))
           (when (and .labels (atom .labels))
             (setf (alist-get 'labels alist) (list .labels)))
           (when (and .assignees (atom .assignees))
-            (setf (alist-get 'assignees alist) (list .assignees))))))
+            (setf (alist-get 'assignees alist) (list .assignees))))
+        (forward-line)
+        (when (and (not (alist-get 'title alist))
+                   (looking-at "^\n?#*"))
+          (goto-char (match-end 0))
+          (setf (alist-get 'title alist)
+                (string-trim
+                 (magit--buffer-string (point) (line-end-position) t)))
+          (forward-line))
+        (setf (alist-get 'body alist)
+              (string-trim (magit--buffer-string (point) nil ?\n)))))
     alist))
 
 (defun forge--topic-parse-plain ()

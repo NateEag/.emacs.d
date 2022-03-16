@@ -62,6 +62,10 @@ See `undo-tree-mode' for more information on Undo-Tree mode.
 
 ;;;***
 
+;;;### (autoloads nil nil ("undo-tree-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

@@ -2,16 +2,16 @@
 
 ;; Author: Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/Fanael/edit-indirect
-;; Package-Version: 20211201.1541
-;; Package-Commit: 7fffd87ac3b027d10a26e8492629da01a4cd7633
-;; Version: 0.1.6
+;; Package-Version: 20220216.1812
+;; Package-Commit: e3d86416bcf8ddca951d7d112e57ad30c5f9a081
+;; Version: 0.1.8
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
 ;; SPDX-License-Identifier: BSD-2-clause
 ;;
-;; Copyright (c) 2014-2020, Fanael Linithien
+;; Copyright (c) 2014-2022, Fanael Linithien
 ;; All rights reserved.
 ;;
 ;; Redistribution and use in source and binary forms, with or without
@@ -165,7 +165,7 @@ In any case, return the edit-indirect buffer."
 
 (defvar edit-indirect-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-x C-s") #'edit-indirect-save)
+    (define-key map [remap save-buffer] #'edit-indirect-save)
     (define-key map (kbd "C-c '") #'edit-indirect-commit)
     (define-key map (kbd "C-c C-c") #'edit-indirect-commit)
     (define-key map (kbd "C-c C-k") #'edit-indirect-abort)
@@ -281,6 +281,7 @@ VARIABLE shall be a symbol."
 
 BEG..END is the parent buffer region to insert.
 OVERLAY is the overlay, see `edit-indirect--overlay'."
+  (add-hook 'after-change-major-mode-hook #'edit-indirect--rebind-save-hooks)
   (let ((buffer (generate-new-buffer (format "*edit-indirect %s*" (buffer-name))))
         (parent-buffer (current-buffer)))
     (overlay-put overlay 'edit-indirect-buffer buffer)
@@ -351,7 +352,8 @@ No error is signaled if `inhibit-read-only' or
           (edit-indirect--run-hook-with-positions
            'edit-indirect-after-commit-functions beg-marker (point))
           (set-marker beg-marker nil)
-          (set-marker end-marker nil))))))
+          (set-marker end-marker nil))))
+    (set-buffer-modified-p nil)))
 
 (defun edit-indirect--run-hook-with-positions (hook beg end)
   "Run HOOK with the specified positions BEG and END.
@@ -383,6 +385,19 @@ called with updated positions."
   (if edit-indirect--should-quit-window
       (quit-window t)
     (kill-buffer)))
+
+(defun edit-indirect--rebind-save-hooks ()
+  "Bind our `save-buffer' hooks in the current buffer.
+Does nothing if the current buffer is not an edit-indirect buffer."
+  (when (edit-indirect-buffer-indirect-p)
+    (setq buffer-offer-save t)
+    (add-hook 'write-contents-functions #'edit-indirect--commit-on-save nil t)))
+
+(defun edit-indirect--commit-on-save ()
+  "Commit the indirect edit.
+Should only be called from `write-contents-functions'."
+  (edit-indirect--commit)
+  t)
 
 (defun edit-indirect--abort-on-kill-buffer ()
   "Abort indirect edit.

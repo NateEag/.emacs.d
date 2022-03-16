@@ -7342,10 +7342,10 @@ See `sesman-browser-mode' for more details." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20211201.1541/edit-indirect-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edit-indirect-20211201.1541/edit-indirect-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el") (car load-path))))
 
 
 

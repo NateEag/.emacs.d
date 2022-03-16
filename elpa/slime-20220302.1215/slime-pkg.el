@@ -1,7 +1,7 @@
-(define-package "slime" "20220210.1512" "Superior Lisp Interaction Mode for Emacs"
+(define-package "slime" "20220302.1215" "Superior Lisp Interaction Mode for Emacs"
   '((cl-lib "0.5")
     (macrostep "0.9"))
-  :commit "3b9713f207a4f607427d08adf9d092d28dcd0074" :keywords
+  :commit "6ef28864d4a6b4d9390dbd0cac64f2a56582682d" :keywords
   '("languages" "lisp" "slime")
   :url "https://github.com/slime/slime")
 ;; Local Variables:

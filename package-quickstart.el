@@ -6658,7 +6658,7 @@ behaviors.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/slime-20220210.1512/slime-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215/slime-autoloads.el"))
 
 
 
@@ -6666,7 +6666,7 @@ behaviors.
 
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/slime-20220210.1512/slime-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215/slime-autoloads.el") (car load-path))))
 
 (autoload 'slime "slime"
   "Start a Lisp subprocess and connect to its Swank server." t)
@@ -25567,7 +25567,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220208.1821" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20211214.1449" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220210.1543" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220210.1512" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220208.1821" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20211214.1449" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20220130.2007" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220210.1543" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
          Info-directory-list)))
 
 ;; Local Variables:

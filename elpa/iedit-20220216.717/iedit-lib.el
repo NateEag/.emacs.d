@@ -94,7 +94,6 @@ mode, set it as nil."
   "If no-nil, iedit-mode automatically starts buffering the changes.
  This could be a workaround for lag problem under certain modes."
   :type 'boolean
-  :local t
   :group 'iedit)
 
 (defcustom iedit-overlay-priority 200

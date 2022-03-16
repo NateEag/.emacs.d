@@ -175,6 +175,133 @@ comparisons/benchmarks with libraries that offer similar functionality." t nil)
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/xref-1.4.1/xref-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/xref-1.4.1/xref-autoloads.el") (car load-path))))
+
+
+
+(autoload 'xref-find-backend "xref" nil nil nil)
+
+(define-obsolete-function-alias 'xref-pop-marker-stack #'xref-go-back "29.1")
+
+(autoload 'xref-go-back "xref" "\
+Go back to the previous position in xref history.
+To undo, use \\[xref-go-forward]." t nil)
+
+(autoload 'xref-go-forward "xref" "\
+Got to the point where a previous \\[xref-go-back] was invoked." t nil)
+
+(autoload 'xref-marker-stack-empty-p "xref" "\
+Whether the xref back-history is empty." nil nil)
+
+(autoload 'xref-forward-history-empty-p "xref" "\
+Whether the xref forward-history is empty." nil nil)
+
+(autoload 'xref-show-xrefs "xref" "\
+Display some Xref values produced by FETCHER using DISPLAY-ACTION.
+The meanings of both arguments are the same as documented in
+`xref-show-xrefs-function'.
+
+\(fn FETCHER DISPLAY-ACTION)" nil nil)
+
+(autoload 'xref-find-definitions "xref" "\
+Find the definition of the identifier at point.
+With prefix argument or when there's no identifier at point,
+prompt for it.
+
+If sufficient information is available to determine a unique
+definition for IDENTIFIER, display it in the selected window.
+Otherwise, display the list of the possible definitions in a
+buffer where the user can select from the list.
+
+Use \\[xref-go-back] to return back to where you invoked this command.
+
+\(fn IDENTIFIER)" t nil)
+
+(autoload 'xref-find-definitions-other-window "xref" "\
+Like `xref-find-definitions' but switch to the other window.
+
+\(fn IDENTIFIER)" t nil)
+
+(autoload 'xref-find-definitions-other-frame "xref" "\
+Like `xref-find-definitions' but switch to the other frame.
+
+\(fn IDENTIFIER)" t nil)
+
+(autoload 'xref-find-references "xref" "\
+Find references to the identifier at point.
+This command might prompt for the identifier as needed, perhaps
+offering the symbol at point as the default.
+With prefix argument, or if `xref-prompt-for-identifier' is t,
+always prompt for the identifier.  If `xref-prompt-for-identifier'
+is nil, prompt only if there's no usable symbol at point.
+
+\(fn IDENTIFIER)" t nil)
+
+(autoload 'xref-find-definitions-at-mouse "xref" "\
+Find the definition of identifier at or around mouse click.
+This command is intended to be bound to a mouse event.
+
+\(fn EVENT)" t nil)
+
+(autoload 'xref-find-references-at-mouse "xref" "\
+Find references to the identifier at or around mouse click.
+This command is intended to be bound to a mouse event.
+
+\(fn EVENT)" t nil)
+
+(autoload 'xref-find-apropos "xref" "\
+Find all meaningful symbols that match PATTERN.
+The argument has the same meaning as in `apropos'.
+See `tags-apropos-additional-actions' for how to augment the
+output of this command when the backend is etags.
+
+\(fn PATTERN)" t nil)
+ (define-key esc-map "." #'xref-find-definitions)
+ (define-key esc-map "," #'xref-go-back)
+ (define-key esc-map [?\C-,] #'xref-go-forward)
+ (define-key esc-map "?" #'xref-find-references)
+ (define-key esc-map [?\C-.] #'xref-find-apropos)
+ (define-key ctl-x-4-map "." #'xref-find-definitions-other-window)
+ (define-key ctl-x-5-map "." #'xref-find-definitions-other-frame)
+
+(autoload 'xref-references-in-directory "xref" "\
+Find all references to SYMBOL in directory DIR.
+Return a list of xref values.
+
+This function uses the Semantic Symbol Reference API, see
+`semantic-symref-tool-alist' for details on which tools are used,
+and when.
+
+\(fn SYMBOL DIR)" nil nil)
+
+(autoload 'xref-matches-in-directory "xref" "\
+Find all matches for REGEXP in directory DIR.
+Return a list of xref values.
+Only files matching some of FILES and none of IGNORES are searched.
+FILES is a string with glob patterns separated by spaces.
+IGNORES is a list of glob patterns for files to ignore.
+
+\(fn REGEXP FILES DIR IGNORES)" nil nil)
+
+(autoload 'xref-matches-in-files "xref" "\
+Find all matches for REGEXP in FILES.
+Return a list of xref values.
+FILES must be a list of absolute file names.
+
+See `xref-search-program' and `xref-search-program-alist' for how
+to control which program to use when looking for matches.
+
+\(fn REGEXP FILES)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "xref" '("xref-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/visual-fill-column-20211118.33/visual-fill-column-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -8681,6 +8808,231 @@ See `project-shells-mode' for more information on Project-Shells mode.
 \(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "project-shells" '("project-shells-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/project-0.8.1/project-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/project-0.8.1/project-autoloads.el") (car load-path))))
+
+
+
+(autoload 'project-current "project" "\
+Return the project instance in DIRECTORY, defaulting to `default-directory'.
+
+When no project is found in that directory, the result depends on
+the value of MAYBE-PROMPT: if it is nil or omitted, return nil,
+else ask the user for a directory in which to look for the
+project, and if no project is found there, return a \"transient\"
+project instance.
+
+The \"transient\" project instance is a special kind of value
+which denotes a project rooted in that directory and includes all
+the files under the directory except for those that should be
+ignored (per `project-ignores').
+
+See the doc string of `project-find-functions' for the general form
+of the project instance object.
+
+\(fn &optional MAYBE-PROMPT DIRECTORY)" nil nil)
+
+(defvar project-prefix-map (let ((map (make-sparse-keymap))) (define-key map "!" 'project-shell-command) (define-key map "&" 'project-async-shell-command) (define-key map "f" 'project-find-file) (define-key map "F" 'project-or-external-find-file) (define-key map "b" 'project-switch-to-buffer) (define-key map "s" 'project-shell) (define-key map "d" 'project-find-dir) (define-key map "D" 'project-dired) (define-key map "v" 'project-vc-dir) (define-key map "c" 'project-compile) (define-key map "e" 'project-eshell) (define-key map "k" 'project-kill-buffers) (define-key map "p" 'project-switch-project) (define-key map "g" 'project-find-regexp) (define-key map "G" 'project-or-external-find-regexp) (define-key map "r" 'project-query-replace-regexp) (define-key map "x" 'project-execute-extended-command) map) "\
+Keymap for project commands.")
+ (define-key ctl-x-map "p" project-prefix-map)
+
+(autoload 'project-other-window-command "project" "\
+Run project command, displaying resultant buffer in another window.
+
+The following commands are available:
+
+\\{project-prefix-map}
+\\{project-other-window-map}" t nil)
+ (define-key ctl-x-4-map "p" #'project-other-window-command)
+
+(autoload 'project-other-frame-command "project" "\
+Run project command, displaying resultant buffer in another frame.
+
+The following commands are available:
+
+\\{project-prefix-map}
+\\{project-other-frame-map}" t nil)
+ (define-key ctl-x-5-map "p" #'project-other-frame-command)
+
+(autoload 'project-other-tab-command "project" "\
+Run project command, displaying resultant buffer in a new tab.
+
+The following commands are available:
+
+\\{project-prefix-map}" t nil)
+
+(when (bound-and-true-p tab-prefix-map) (define-key tab-prefix-map "p" #'project-other-tab-command))
+
+(autoload 'project-find-regexp "project" "\
+Find all matches for REGEXP in the current project's roots.
+With \\[universal-argument] prefix, you can specify the directory
+to search in, and the file name pattern to search for.  The
+pattern may use abbreviations defined in `grep-files-aliases',
+e.g. entering `ch' is equivalent to `*.[ch]'.  As whitespace
+triggers completion when entering a pattern, including it
+requires quoting, e.g. `\\[quoted-insert]<space>'.
+
+\(fn REGEXP)" t nil)
+
+(autoload 'project-or-external-find-regexp "project" "\
+Find all matches for REGEXP in the project roots or external roots.
+With \\[universal-argument] prefix, you can specify the file name
+pattern to search for.
+
+\(fn REGEXP)" t nil)
+
+(autoload 'project-find-file "project" "\
+Visit a file (with completion) in the current project.
+
+The filename at point (determined by `thing-at-point'), if any,
+is available as part of \"future history\"." t nil)
+
+(autoload 'project-or-external-find-file "project" "\
+Visit a file (with completion) in the current project or external roots.
+
+The filename at point (determined by `thing-at-point'), if any,
+is available as part of \"future history\"." t nil)
+
+(autoload 'project-find-dir "project" "\
+Start Dired in a directory inside the current project." t nil)
+
+(autoload 'project-dired "project" "\
+Start Dired in the current project's root." t nil)
+
+(autoload 'project-vc-dir "project" "\
+Run VC-Dir in the current project's root." t nil)
+
+(autoload 'project-shell "project" "\
+Start an inferior shell in the current project's root directory.
+If a buffer already exists for running a shell in the project's root,
+switch to it.  Otherwise, create a new shell buffer.
+With \\[universal-argument] prefix arg, create a new inferior shell buffer even
+if one already exists." t nil)
+
+(autoload 'project-eshell "project" "\
+Start Eshell in the current project's root directory.
+If a buffer already exists for running Eshell in the project's root,
+switch to it.  Otherwise, create a new Eshell buffer.
+With \\[universal-argument] prefix arg, create a new Eshell buffer even
+if one already exists." t nil)
+
+(autoload 'project-async-shell-command "project" "\
+Run `async-shell-command' in the current project's root directory." t nil)
+
+(function-put 'project-async-shell-command 'interactive-only 'async-shell-command)
+
+(autoload 'project-shell-command "project" "\
+Run `shell-command' in the current project's root directory." t nil)
+
+(function-put 'project-shell-command 'interactive-only 'shell-command)
+
+(autoload 'project-search "project" "\
+Search for REGEXP in all the files of the project.
+Stops when a match is found.
+To continue searching for the next match, use the
+command \\[fileloop-continue].
+
+\(fn REGEXP)" t nil)
+
+(autoload 'project-query-replace-regexp "project" "\
+Query-replace REGEXP in all the files of the project.
+Stops when a match is found and prompts for whether to replace it.
+If you exit the `query-replace', you can later continue the
+`query-replace' loop using the command \\[fileloop-continue].
+
+\(fn FROM TO)" t nil)
+
+(autoload 'project-compile "project" "\
+Run `compile' in the project root." t nil)
+
+(function-put 'project-compile 'interactive-only 'compile)
+
+(autoload 'project-switch-to-buffer "project" "\
+Display buffer BUFFER-OR-NAME in the selected window.
+When called interactively, prompts for a buffer belonging to the
+current project.  Two buffers belong to the same project if their
+project instances, as reported by `project-current' in each
+buffer, are identical.
+
+\(fn BUFFER-OR-NAME)" t nil)
+
+(autoload 'project-display-buffer "project" "\
+Display BUFFER-OR-NAME in some window, without selecting it.
+When called interactively, prompts for a buffer belonging to the
+current project.  Two buffers belong to the same project if their
+project instances, as reported by `project-current' in each
+buffer, are identical.
+
+This function uses `display-buffer' as a subroutine, which see
+for how it is determined where the buffer will be displayed.
+
+\(fn BUFFER-OR-NAME)" t nil)
+
+(autoload 'project-display-buffer-other-frame "project" "\
+Display BUFFER-OR-NAME preferably in another frame.
+When called interactively, prompts for a buffer belonging to the
+current project.  Two buffers belong to the same project if their
+project instances, as reported by `project-current' in each
+buffer, are identical.
+
+This function uses `display-buffer-other-frame' as a subroutine,
+which see for how it is determined where the buffer will be
+displayed.
+
+\(fn BUFFER-OR-NAME)" t nil)
+
+(autoload 'project-kill-buffers "project" "\
+Kill the buffers belonging to the current project.
+Two buffers belong to the same project if their project
+instances, as reported by `project-current' in each buffer, are
+identical.  Only the buffers that match a condition in
+`project-kill-buffer-conditions' will be killed.  If NO-CONFIRM
+is non-nil, the command will not ask the user for confirmation.
+NO-CONFIRM is always nil when the command is invoked
+interactively.
+
+\(fn &optional NO-CONFIRM)" t nil)
+
+(autoload 'project-remember-project "project" "\
+Add project PR to the front of the project list.
+Save the result in `project-list-file' if the list of projects
+has changed, and NO-WRITE is nil.
+
+\(fn PR &optional NO-WRITE)" nil nil)
+
+(autoload 'project-forget-project "project" "\
+Remove directory PROJECT-ROOT from the project list.
+PROJECT-ROOT is the root directory of a known project listed in
+the project list.
+
+\(fn PROJECT-ROOT)" t nil)
+
+(autoload 'project-known-project-roots "project" "\
+Return the list of root directories of all known projects." nil nil)
+
+(autoload 'project-execute-extended-command "project" "\
+Execute an extended command in project root." t nil)
+
+(function-put 'project-execute-extended-command 'interactive-only 'command-execute)
+
+(autoload 'project-switch-project "project" "\
+\"Switch\" to another project by running an Emacs command.
+The available commands are presented as a dispatch menu
+made from `project-switch-commands'.
+
+When called in a program, it will use the project corresponding
+to directory DIR.
+
+\(fn DIR)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "project" '("project-")))
+
+
 
 
 )
@@ -18872,10 +19224,10 @@ Recalculate all blame information in the current buffer
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107/geiser-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/geiser-20220315.2208/geiser-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107/geiser-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/geiser-20220315.2208/geiser-autoloads.el") (car load-path))))
 
 
 
@@ -25418,14 +25770,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells project prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107" "/Users/neagleson/.emacs.d/elpa/ghub-20220310.1436" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220312.1521" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220315.309" "/Users/neagleson/.emacs.d/elpa/magit-section-20220311.1044" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220310.1610" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20220314.1605" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220315.2208" "/Users/neagleson/.emacs.d/elpa/ghub-20220310.1436" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220312.1521" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220315.309" "/Users/neagleson/.emacs.d/elpa/magit-section-20220311.1044" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220310.1610" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20220314.1605" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
          Info-directory-list)))
 
 ;; Local Variables:

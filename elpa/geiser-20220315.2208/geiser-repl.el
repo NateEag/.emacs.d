@@ -29,6 +29,7 @@
 (require 'compile)
 (require 'scheme)
 (require 'font-lock)
+(require 'project)
 
 
 ;;; Customization:
@@ -55,9 +56,8 @@ used to discover a buffer's project."
 (declare project-current "project.el")
 
 (defun geiser-repl-project-root ()
-  "Use project.el, when available, to determine a buffer's project root."
-  (when (featurep 'project)
-    (when-let (p (project-current)) (project-root p))))
+  "Use project.el, to determine a buffer's project root."
+  (when-let (p (project-current)) (project-root p)))
 
 (geiser-custom--defcustom geiser-repl-current-project-function
     #'geiser-repl-project-root
@@ -65,8 +65,8 @@ used to discover a buffer's project."
 The function is called from both source and REPL buffers, and
 should return a value which uniquely identifies the project."
   :type '(choice (function-item :tag "Ignore projects" ignore)
-                 (function-item :tag "Use Project.el" geiser-repl-project-root)
-                 (function-item :tag "Use Projectile" projectile-project-root)
+                 (function-item :tag "Use project.el" geiser-repl-project-root)
+                 (function-item :tag "Use projectile" projectile-project-root)
                  (function :tag "Other function")))
 
 (geiser-custom--defcustom geiser-repl-use-other-window t
@@ -333,7 +333,7 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defun geiser-repl-buffer-name (impl)
   "Return default name of the REPL buffer for implementation IMPL."
-  (format "* %s *" (geiser-repl--repl-name impl)))
+  (format "*Geiser %s*" (geiser-repl--repl-name impl)))
 
 (defun geiser-repl--switch-to-buffer (buffer)
   (unless (eq buffer (current-buffer))
@@ -517,6 +517,10 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defvar geiser-repl--last-scm-buffer)
 
+(defun geiser-repl--set-default-directory ()
+  (when-let (root (funcall geiser-repl-current-project-function))
+    (setq-local default-directory root)))
+
 (defun geiser-repl--set-up-load-path ()
   (when geiser-repl-add-project-paths
     (when-let (root (funcall geiser-repl-current-project-function))
@@ -545,6 +549,7 @@ will be set up using `geiser-connect-local' when a REPL is started.")
          (prompt (geiser-con--combined-prompt prompt-rx deb-prompt-rx)))
     (unless prompt-rx
       (error "Sorry, I don't know how to start a REPL for %s" impl))
+    (geiser-repl--set-default-directory)
     (geiser-repl--save-remote-data address)
     (geiser-repl--start-scheme impl address prompt)
     (geiser-repl--quit-setup)

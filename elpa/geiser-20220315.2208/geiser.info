@@ -747,7 +747,10 @@ interpreter's load path (that'd be 'geiser-guile-load-path' for Guile).
    There is also a generic mechanism to specify how to add directories
 to the initial load path when 'geiser-repl-current-project-function' is
 set: you can then customize 'geiser-repl-add-project-paths' to a list of
-subdirectories of the project's root to add to the load path.
+subdirectories of the project's root to add to the load path.  When this
+option is set, the working directory of the REPL's buffer (i.e., the
+value of the elisp variable 'default-directory') will be set to the
+directory returned by 'geiser-repl-current-project-function').
 
    These variables controlling your scheme's initialisation process are
 good candidates for an entry in a project's '.dir-locals.el' file, so
@@ -1634,7 +1637,7 @@ Index
 * ,enter vs. enter!:                     Switching context.   (line   6)
 * ac-geiser:                             Friends.             (line   9)
 * ask on kill, don't:                    Customization and tips.
-                                                              (line 130)
+                                                              (line 133)
 * autocomplete:                          Friends.             (line   9)
 * autodoc customized:                    Documentation helpers.
                                                               (line  64)
@@ -1643,7 +1646,7 @@ Index
 * autodoc for variables:                 Documentation helpers.
                                                               (line  58)
 * autodoc, disabling:                    Customization and tips.
-                                                              (line 112)
+                                                              (line 115)
 * autodoc, in scheme buffers:            Documentation helpers.
                                                               (line   9)
 * autodoc, in the REPL:                  Autodoc and friends. (line  11)
@@ -1665,6 +1668,8 @@ Index
 * current module:                        Modus operandi.      (line  15)
 * current module, change:                Switching context.   (line  21)
 * current module, in REPL:               Switching context.   (line   6)
+* default directory:                     Customization and tips.
+                                                              (line  69)
 * derailment:                            Top.                 (line  79)
 * dir-locals:                            The source and the REPL.
                                                               (line  87)
@@ -1705,7 +1710,7 @@ Index
                                                               (line  58)
 * help on identifier:                    Autodoc and friends. (line  29)
 * host, default:                         Customization and tips.
-                                                              (line 121)
+                                                              (line 124)
 * image cache:                           Seeing is believing. (line  16)
 * image display:                         To eval or not to eval.
                                                               (line  56)
@@ -1739,12 +1744,12 @@ Index
 * partial completion:                    Geiser writes for you.
                                                               (line  18)
 * peace and quiet:                       Customization and tips.
-                                                              (line 112)
+                                                              (line 115)
 * philosophy:                            Top.                 (line  79)
 * philosophy <1>:                        To eval or not to eval.
                                                               (line   6)
 * port, default:                         Customization and tips.
-                                                              (line 121)
+                                                              (line 124)
 * project.el:                            The source and the REPL.
                                                               (line  87)
 * projectile:                            The source and the REPL.
@@ -1780,7 +1785,7 @@ Index
 * start REPL, automatically:             The source and the REPL.
                                                               (line  80)
 * startup timeout:                       Customization and tips.
-                                                              (line  82)
+                                                              (line  85)
 * supported versions:                    Must needs.          (line   6)
 * swanking:                              Showing off.         (line   6)
 * switching schemes:                     The source and the REPL.
@@ -1794,7 +1799,7 @@ Index
 * thanks:                                No hacker is an island.
                                                               (line   6)
 * timeout:                               Customization and tips.
-                                                              (line  82)
+                                                              (line  85)
 * to err is schemey:                     To err perchance to debug.
                                                               (line   6)
 * useless wretch:                        Activating Geiser.   (line  43)
@@ -1831,25 +1836,25 @@ Node: Customization and tips29194
 Ref: choosing-impl29923
 Ref: active-implementations30158
 Ref: impl-binary30540
-Node: Between the parens34740
-Node: Activating Geiser35802
-Node: The source and the REPL38412
-Ref: repl-association39456
-Ref: repl-per-project42704
-Ref: switching-repl-buff44117
-Node: Documentation helpers45802
-Ref: doc-browser50070
-Node: To eval or not to eval52797
-Ref: To eval or not to eval-Footnote-157541
-Node: To err perchance to debug57794
-Node: Jumping around59299
-Node: Geiser writes for you60576
-Node: Cheat sheet63080
-Node: Scheme buffers63464
-Node: REPL67908
-Node: Documentation browser70501
-Node: No hacker is an island71569
-Node: Index75021
+Node: Between the parens34951
+Node: Activating Geiser36013
+Node: The source and the REPL38623
+Ref: repl-association39667
+Ref: repl-per-project42915
+Ref: switching-repl-buff44328
+Node: Documentation helpers46013
+Ref: doc-browser50281
+Node: To eval or not to eval53008
+Ref: To eval or not to eval-Footnote-157752
+Node: To err perchance to debug58005
+Node: Jumping around59510
+Node: Geiser writes for you60787
+Node: Cheat sheet63291
+Node: Scheme buffers63675
+Node: REPL68119
+Node: Documentation browser70712
+Node: No hacker is an island71780
+Node: Index75232
 
 End Tag Table
 

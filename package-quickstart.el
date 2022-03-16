@@ -19383,28 +19383,26 @@ add, defaulting to the current buffer's directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20210305.312/add-node-modules-path-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20220315.340/add-node-modules-path-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20210305.312/add-node-modules-path-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/add-node-modules-path-20220315.340/add-node-modules-path-autoloads.el") (car load-path))))
 
 
+
+(defvar add-node-modules-path-command "npm bin" "\
+Command to find the bin path.")
+
+(custom-autoload 'add-node-modules-path-command "add-node-modules-path" t)
 
 (defvar add-node-modules-path-debug nil "\
 Enable verbose output when non nil.")
 
 (custom-autoload 'add-node-modules-path-debug "add-node-modules-path" t)
 
-(defvar add-node-modules-max-depth 20 "\
-Max depth to look for node_modules.")
-
-(custom-autoload 'add-node-modules-max-depth "add-node-modules-path" t)
-
 (autoload 'add-node-modules-path "add-node-modules-path" "\
-Search the current buffer's parent directories for `node_modules/.bin`.
-Traverse the directory structure up, until reaching the user's home directory,
- or hitting add-node-modules-max-depth.
-Any path found is added to the `exec-path'." t nil)
+Run `npm bin` command and add the path to the `exec-path`.
+If `npm` command fails, it does nothing." t nil)
 
 
 )

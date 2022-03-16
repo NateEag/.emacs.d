@@ -24552,10 +24552,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buffer-env-20210520.1616/buffer-env-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buffer-env-20220314.832/buffer-env-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buffer-env-20210520.1616/buffer-env-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buffer-env-20220314.832/buffer-env-autoloads.el") (car load-path))))
 
 
 
@@ -24576,7 +24576,7 @@ When called interactively, ask for a FILE.
 \(fn &optional FILE)" t nil)
 
 (autoload 'buffer-env-reset "buffer-env" "\
-Reset this buffer's process environment to the global values." t nil)
+Reset the process environment of this buffer to the default values." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "buffer-env" '("buffer-env-")))
 

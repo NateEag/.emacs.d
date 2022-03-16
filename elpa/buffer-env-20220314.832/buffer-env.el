@@ -1,14 +1,14 @@
 ;;; buffer-env.el --- Buffer-local process environments -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021 Augusto Stoffel
+;; Copyright (C) 2022  Free Software Foundation, Inc.
 
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
 ;; URL: https://github.com/astoff/buffer-env
-;; Package-Version: 20210520.1616
-;; Package-Commit: 32c1cfdf06dfa7bdbd79aba8066064212672e755
+;; Package-Version: 20220314.832
+;; Package-Commit: 5d0a3d67c9ae196bd44c9d41edc60cb59550eb21
 ;; Keywords: processes, tools
 ;; Package-Requires: ((emacs "27.1"))
-;; Version: 0.1
+;; Version: 0.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,21 +25,20 @@
 
 ;;; Commentary:
 
-;; This package adjusts the `process-environment' and `exec-path'
-;; variables buffer locally according to the output of a shell script.
-;; The idea is that the same scripts used elsewhere to set up a
-;; project environment can influence external processes started from
-;; buffers editing the project files.  This is important for the
-;; correct operation of tools such as linters, language servers and
-;; the `compile' command, for instance.
+;; The purpose of this package is to adjust the `process-environment'
+;; and `exec-path' variables buffer locally according to the output of
+;; a shell script.  This allows the correct operation of tools such as
+;; linters, compilers and language servers when working on projects
+;; with special requirements which are not installed globally on the
+;; system.
 
-;; The default settings of the package are compatible with the popular
-;; direnv program.  However, this package is entirely independent of
-;; direnv and it's not possible to use direnv-specific features in the
-;; .envrc scripts.  On the plus side, it's possible to configure the
-;; package to support other environment setup methods, such as .env
-;; files or Python virtualenvs.  The package Readme includes some
-;; examples.
+;; The default settings of this package are compatible with the
+;; popular direnv program.  However, the package is entirely
+;; independent of direnv and it's not possible to use direnv-specific
+;; features in the .envrc scripts.  On the plus side, it's possible to
+;; configure the package to support other environment setup methods,
+;; such as .env files or Python virtualenvs.  The README file includes
+;; some examples.
 
 ;; The usual way to activate this package is by including the
 ;; following in your init file:
@@ -47,14 +46,9 @@
 ;;     (add-hook 'hack-local-variables-hook 'buffer-env-update)
 ;;
 ;; This way, any buffer potentially affected by directory-local
-;; variables can also be affected by buffer-env.  It is nonetheless
+;; variables will also be affected by buffer-env.  It is nonetheless
 ;; possible to call `buffer-env-update' interactively or add it only
 ;; to specific major-mode hooks.
-
-;; Note that it is quite common for process-executing Emacs libraries
-;; not to heed to the fact that `process-environment' and `exec-path'
-;; may have a buffer-local value.  This unfortunate state of affairs
-;; can be remedied by the `inheritenv' package, which see.
 
 ;;; Code:
 
@@ -87,12 +81,36 @@ content."
 (defcustom buffer-env-ignored-variables
   '("_=" "PS1=" "SHLVL=" "DISPLAY=" "PWD=")
   "List of environment variables to ignore."
-  :type '(string))
+  :type '(repeat string))
 
 (defcustom buffer-env-extra-variables
   '("TERM=dumb")
   "List of additional environment variables."
-  :type '(string))
+  :type '(repeat string))
+
+(defcustom buffer-env-verbose nil
+  "Whether to display a message every time `buffer-env-update' runs successfully."
+  :type 'boolean)
+
+(defcustom buffer-env-mode-line " Env"
+  "Mode line indicator for buffers affected by buffer-env."
+  :type '(choice string (const :tag "No indicator" nil)))
+
+(defvar-local buffer-env-active nil
+  "Non-nil if a buffer-local process environment has been set.
+In this case, this is the name of the script used to generate it.")
+
+(setf (alist-get 'buffer-env-active minor-mode-alist)
+      '((:propertize
+         buffer-env-mode-line
+         help-echo "\
+Process environment is buffer local\n\
+mouse-1: Inspect process environment\n\
+mouse-2: Reset to default process environment"
+         mouse-face mode-line-highlight
+         local-map (keymap (mode-line keymap
+                                      (mouse-1 . buffer-env-inspect)
+                                      (mouse-2 . buffer-env-reset))))))
 
 (defun buffer-env--authorize (file)
   "Check if FILE is safe to execute, or ask for permission.
@@ -135,14 +153,14 @@ When called interactively, ask for a FILE."
                                        file file t))))
   (when-let* ((file (if file
                         (expand-file-name file)
-                     (buffer-env--locate-script)))
+                      (buffer-env--locate-script)))
+              (command buffer-env-command)
               ((buffer-env--authorize file))
               (vars (with-temp-buffer
                       (let* ((default-directory (file-name-directory file))
                              (status (call-process shell-file-name nil t nil
                                                    shell-command-switch
-                                                   buffer-env-command
-                                                   file)))
+                                                   command file)))
                         (if (eq 0 status)
                             (split-string (buffer-substring (point-min) (point-max))
                                           "\0" t)
@@ -158,17 +176,61 @@ When called interactively, ask for a FILE."
     (when-let* ((path (getenv "PATH")))
       (setq-local exec-path (nconc (split-string path path-separator)
                                    (list exec-directory))))
-    (unless (string-prefix-p " " (buffer-name (current-buffer)))
+    (when buffer-env-verbose
       (message "[buffer-env] Environment of `%s' set from `%s'"
-               (current-buffer)
-               file))))
+               (current-buffer) file))
+    (setq buffer-env-active file)))
 
 ;;;###autoload
 (defun buffer-env-reset ()
-  "Reset this buffer's process environment to the global values."
+  "Reset the process environment of this buffer to the default values."
   (interactive)
+  (kill-local-variable 'buffer-env-active)
   (kill-local-variable 'process-environment)
-  (kill-local-variable 'exec-path))
+  (kill-local-variable 'exec-path)
+  (force-mode-line-update))
+
+(defun buffer-env--sorted (vars)
+  "Sort and remove duplicates in the list of environment VARS."
+  (let ((testfn (lambda (x y)
+                  (string= (progn (string-match "[^=]*" x)
+                                  (match-string 0 x))
+                           (progn (string-match "[^=]*" y)
+                                  (match-string 0 y))))))
+    (sort (seq-uniq vars testfn) 'string<)))
+
+(defun buffer-env-inspect ()
+  "Compare buffer-local and global process environments."
+  (interactive)
+  (if (not (local-variable-p 'process-environment))
+      (message "Buffer has the default process environment")
+    (let ((name (buffer-name (current-buffer)))
+          (script buffer-env-active)
+          (local (buffer-env--sorted process-environment))
+          (global (buffer-env--sorted (default-toplevel-value 'process-environment)))
+          (buffer (get-buffer-create "*buffer-env*"))
+          (inhibit-read-only t))
+      (with-current-buffer buffer
+        (special-mode)
+        (erase-buffer)
+        (insert "The process environment of buffer ‘" name
+                "’ was generated by the script ‘" (or script "??") "’.")
+        (fill-paragraph)
+        (insert "\n\nOnly in the local process environment:\n\n")
+        (add-face-text-property (line-beginning-position -2) (point) 'bold)
+        (if-let ((vars (seq-difference local global)))
+            (dolist (var vars) (insert var ?\n))
+          (insert "(None)"))
+        (insert "\nOnly in the global process environment:\n\n")
+        (add-face-text-property (line-beginning-position -2) (point) 'bold)
+        (if-let ((vars (seq-difference global local)))
+            (dolist (var vars) (insert var ?\n))
+          (insert "(None)"))
+        (insert "\nComplete process environment of the buffer:\n\n")
+        (add-face-text-property (line-beginning-position -2) (point) 'bold)
+        (dolist (var local) (insert var ?\n))
+        (goto-char (point-min)))
+      (display-buffer buffer))))
 
 (provide 'buffer-env)
 ;;; buffer-env.el ends here

@@ -26,7 +26,7 @@ When called interactively, ask for a FILE.
 \(fn &optional FILE)" t nil)
 
 (autoload 'buffer-env-reset "buffer-env" "\
-Reset this buffer's process environment to the global values." t nil)
+Reset the process environment of this buffer to the default values." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "buffer-env" '("buffer-env-")))
 

@@ -10,6 +10,10 @@
 - Fix aggressive-fill-paragraph mode's "only fill inside comments" behavior.
   See afp-mode-comment-bug.md for details.
 
+- Add opt-in support for aggressive-filling multiline strings in languages with
+  support for it (bash, JS, Python are the obvious ones, though PHP's heredoc
+  strings would also qualify).
+
 - Figure out why Emacs occasionally blanks a window while I'm working in it. I
   have no idea what causes it and it happens perhaps once every day or four. I
   suppose I could start a low-speed binary search through my packages, on the
@@ -68,6 +72,10 @@
   At least in yaml-mode when I'm hacking Ansible, the cursor gets painfully
   unresponsive while it's running, but as soon as I turn it off it's reasonable
   again.
+
+- Try skerrick-mode next time I'm working in NodeJS server code. It's an alpha
+  version of a package that aims to make NodeJS dev more like writing Emacs
+  Lisp. Installed but not configured.
 
 - Try frontmacs-javascript as a possible new JS mode. Installed but not
   configured.
@@ -666,6 +674,9 @@
   string beginning with '/'. Some hints:
   http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
+- Try corfu as a replacement for auto-complete. I hear some claims it's better
+  than company mode.
+
 - Figure out if the compdef package would buy me anything useful. I think it's
   for eliminating auto-complete source boilerplate from
   company-mode/completion-at-point configurations, but I might be
@@ -738,6 +749,11 @@
 - If I ever get minimap.el usable on OS X, when active it should appear between
   my two panes. That way it's always close to whichever buffer it applies to.
   Note: the sublimity package looks like it may be more maintained.
+
+- Try out demap for minimap usage? Installed it and gave it a quick test, but
+  it doesn't seem to handle window or frame management especially well in my
+  setup (I'd prefer it to expand the frame by the number of columns it needs
+  automatically).
 
 - Tweak md-readme.el so that author/created/requires lines are headers *without*
   colons, whose bodies are the text following the colon-delimited field names.
@@ -970,8 +986,9 @@
   so that's a big strike against it.
   https://github.com/microsoft/pylance-release
 
-- Try out with-venv in my Python config. Theoretically it should be what I need
-  to run things with the correct venv from within Emacs.
+- Try out with-venv and/or pyvenv-auto in my Python config. I think one of them
+  should be what I need to run things with the correct venv from within Emacs.
+  I installed pyvenv-auto but haven't tried it at all.
   https://github.com/10sr/with-venv-el
 
 - Think about whether I should pull ropemode back into python-mode; I never
@@ -984,7 +1001,7 @@
   sh-mode. By itself that's easy, but you probably *do* want to spell-check
   options you're defining yourself, and that's kind of a parser-ish problem. A
   crazy alternative might be a script that builds a dictionary of all known
-  command-line options on the system and using that dictionary for sh-derived
+  command-line options on $PATH and using that dictionary for sh-derived
   modes?
 
 - Replace my hand-hacked flyspell word correction popup with this package:

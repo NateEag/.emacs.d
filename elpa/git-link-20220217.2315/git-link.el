@@ -2,9 +2,9 @@
 
 ;; Copyright (C) 2013-2020 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.5
-;; Package-Version: 20220206.1802
-;; Package-Commit: a715c116341162ff1a49fff684a45dec8ac0b0af
+;; Version: 0.8.6
+;; Package-Version: 20220217.2315
+;; Package-Commit: f5691f8c66eb0f6050d9ab3834ab32661244b378
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, aws, azure, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -37,6 +37,9 @@
 
 ;;; Change Log:
 
+;; 2022-02-17 - v0.8.6
+;; * Fix URL escaping of pathnames on Emacs < 27 (Issue #93 thanks David Ongaro)
+;;
 ;; 2022-02-06 - v0.8.5
 ;; * URL escape pathnames (thanks David Ongaro)
 ;; * Mark misspelled Savannah functions as obsolete (thanks Hendursaga)
@@ -761,7 +764,7 @@ Defaults to \"origin\"."
                 (funcall handler
                          (car remote-info)
                          (cadr remote-info)
-                         (url-hexify-string filename (cons ?/ url-unreserved-chars))
+                         (url-hexify-string filename (url--allowed-chars (cons ?/ url-unreserved-chars)))
                          (if (or (git-link--using-git-timemachine)
                                  (git-link--using-magit-blob-mode)
                                  vc-revison

@@ -18708,10 +18708,10 @@ A major mode for editing .gitignore files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20220206.1802/git-link-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-link-20220217.2315/git-link-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20220206.1802/git-link-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-link-20220217.2315/git-link-autoloads.el") (car load-path))))
 
 
 

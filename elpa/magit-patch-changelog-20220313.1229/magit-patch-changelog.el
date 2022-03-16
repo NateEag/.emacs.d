@@ -4,11 +4,11 @@
 
 ;; Authors: dickmao <github id: dickmao>
 ;; Version: 0.1.0
-;; Package-Version: 20220209.1857
-;; Package-Commit: e792755514cb5a98b94fcd1c5eacd487f7e04d7b
+;; Package-Version: 20220313.1229
+;; Package-Commit: 96936d2bd92c8bbf87f65bc293f3246014bc2764
 ;; Keywords: git tools vc
 ;; URL: https://github.com/dickmao/magit-patch-changelog
-;; Package-Requires: ((emacs "25.1") (magit "2.91.0"))
+;; Package-Requires: ((emacs "25.1") (magit "3.3.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -455,30 +455,32 @@ font-lock-face will be one of magit-process-ok, magit-process-ng, or nil."
   (with-current-buffer (magit-get-mode-buffer 'magit-status-mode)
     (with-current-buffer (magit-process-buffer t)
       (goto-char (point-max))
-      (let (side-effect)
-        (magit-section--backward-find
-         (lambda ()
-           (let ((section (magit-current-section)))
-             (and (eq (oref section type) 'process)
-                  (let* ((what (buffer-substring
-                                (oref section start)
-                                (or (oref section content)
-                                    (oref section end))))
-                         (commit (cl-second
-                                  (split-string
-                                   what
-                                   (format "\\s-*%s\\s-*" magit-ellipsis)))))
-                    (let (deactivate-mark)
-                      (when (string-match-p "^commit" commit)
-                        (setq side-effect
-                              `(:content ,(buffer-substring-no-properties
-                                           (or (oref section content)
-                                               (oref section end))
+      (cl-flet ((commit-found ()
+                  (let ((section (magit-current-section)))
+                    (when (eq (oref section type) 'process)
+                      (let* ((what (buffer-substring
+                                    (oref section start)
+                                    (or (oref section content)
+                                        (oref section end))))
+                             (commit (cl-second
+                                      (split-string
+                                       what
+                                       (format "\\s-*%s\\s-*" magit-ellipsis))))
+                             deactivate-mark)
+                        (when (string-match-p "^commit" commit)
+                          `(:content ,(buffer-substring-no-properties
+                                       (or (oref section content)
                                            (oref section end))
-                                         :face    ,(get-text-property
-                                                    (oref section start)
-                                                    'font-lock-face))))))))))
-        side-effect))))
+                                       (oref section end))
+                                     :face ,(get-text-property
+                                             (oref section start)
+                                             'font-lock-face))))))))
+        (cl-loop while (ignore-errors
+                         (prog1 t
+                           (let (magit-section-movement-hook)
+                             (magit-section-backward))))
+                 for commit = (commit-found)
+                 when commit return commit)))))
 
 ;;;###autoload
 (defun magit-patch-changelog-create (args files)
@@ -586,7 +588,8 @@ Limit patch to FILES, if non-nil."
           (magit-run-git "merge" "--squash" feature-branch)
           (cl-assert (memq 'magit-commit-diff server-switch-hook))
           (magit-commit-create)
-
+          ;; transient#191
+          (remove-hook 'pre-command-hook #'transient--pre-command)
           (cl-loop repeat 50
                    until (magit-commit-message-buffer)
                    do (accept-process-output nil 0.1)

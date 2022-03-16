@@ -302,6 +302,13 @@ evaluate python in the context of the debugee, ...." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "dap-unity" "dap-unity.el" (0 0 0 0))
+;;; Generated autoloads from dap-unity.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-unity" '("dap-unity-")))
+
+;;;***
+
 ;;;### (autoloads nil "dap-utils" "dap-utils.el" (0 0 0 0))
 ;;; Generated autoloads from dap-utils.el
 

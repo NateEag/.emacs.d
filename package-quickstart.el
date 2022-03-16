@@ -15936,10 +15936,10 @@ This function is partially copied from
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20211117.1555/dap-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20220226.1848/dap-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20211117.1555/dap-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20220226.1848/dap-mode-autoloads.el") (car load-path))))
 
 
 
@@ -16166,6 +16166,10 @@ This could be used to evaluate JavaScript in a browser, to
 evaluate python in the context of the debugee, ...." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui" '("dap-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-unity" '("dap-unity-")))
 
 
 

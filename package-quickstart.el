@@ -2769,10 +2769,10 @@ non-nil.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20211128.2236/tree-sitter-indent-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20211128.2236/tree-sitter-indent-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el") (car load-path))))
 
 
 

@@ -4,8 +4,8 @@
 
 ;; Author: Felipe Lema <felipelema@mortemale.org>
 ;; Keywords: convenience, internal
-;; Package-Version: 20211128.2236
-;; Package-Commit: 5f80e89b7da2074ea7f083b769448eb7026865dc
+;; Package-Version: 20220305.1919
+;; Package-Commit: 785b8cb8ab17bffec958e421260746e16b438727
 ;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (seq "2.20"))
 ;; URL: https://codeberg.org/FelipeLema/tree-sitter-indent.el
 ;; Version: 0.3
@@ -104,7 +104,7 @@
                      ())
     (outdent . ;; these nodes always outdent (1 shift in opposite direction)
              ("}")))
-  "Scopes for indenting in Julia."
+  "Scopes for indenting in Rust."
   :type 'sexp)
 
 (defvar-local tree-sitter-indent-current-scopes nil

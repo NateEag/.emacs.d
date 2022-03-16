@@ -1,4 +1,4 @@
-(define-package "frontside-javascript" "20220201.2048" "JS  development that just work™️"
+(define-package "frontside-javascript" "20220315.1057" "JS  development that just work™️"
   '((emacs "25.1")
     (add-node-modules-path "1.2.0")
     (company "0.9.2")
@@ -9,7 +9,7 @@
     (tide "4.0.2")
     (web-mode "17")
     (lsp-mode "20220124"))
-  :commit "774b4b3a1f24c46c91f189a2c67d5fcf0785e2be" :authors
+  :commit "18816534a977fbd28848389b58c22b6538cfdeec" :authors
   '(("Frontside Engineering" . "engineering@frontside.com"))
   :maintainer
   '("Frontside Engineering" . "engineering@frontside.com")

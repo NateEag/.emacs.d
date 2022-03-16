@@ -20693,10 +20693,10 @@ Start a evil-tutor session.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20220204.417/evil-textobj-tree-sitter-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20220306.711/evil-textobj-tree-sitter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20220204.417/evil-textobj-tree-sitter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-textobj-tree-sitter-20220306.711/evil-textobj-tree-sitter-autoloads.el") (car load-path))))
 
 
 

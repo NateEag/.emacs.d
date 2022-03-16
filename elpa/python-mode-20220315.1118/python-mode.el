@@ -2713,6 +2713,12 @@ This variable is set in ‘py-execute-region’ and used in ‘py--jump-to-excep
 
 (defvar py-pseudo-keyword-face 'py-pseudo-keyword-face)
 
+(defface py-variable-name-face
+  '((t (:inherit font-lock-variable-name-face)))
+  "Face method decorators."
+  :tag "py-variable-name-face"
+  :group 'python-mode)
+
 (defvar py-variable-name-face 'py-variable-name-face)
 
 (defvar py-number-face 'py-number-face)
@@ -3353,11 +3359,7 @@ See also `py-object-reference-face'"
   :tag "py-object-reference-face"
   :group 'python-mode)
 
-(defface py-variable-name-face
-  '((t (:inherit font-lock-variable-name-face)))
-  "Face method decorators."
-  :tag "py-variable-name-face"
-  :group 'python-mode)
+
 
 (defface py-number-face
  '((t (:inherit nil)))
@@ -4853,15 +4855,15 @@ Optional ENFORCE-REGEXP: search for regexp only."
       (or (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	  (py-backward-comment))))
 
-(defun py-kill-buffer-unconditional (buffer)
-  "Kill buffer unconditional, kill buffer-process if existing. "
-  (interactive
-   (list (current-buffer)))
-  (ignore-errors (with-current-buffer buffer
-    (let (kill-buffer-query-functions)
-      (set-buffer-modified-p nil)
-      (ignore-errors (kill-process (get-buffer-process buffer)))
-      (kill-buffer buffer)))))
+;; (defun py-kill-buffer-unconditional (buffer)
+;;   "Kill buffer unconditional, kill buffer-process if existing. "
+;;   (interactive
+;;    (list (current-buffer)))
+;;   (ignore-errors (with-current-buffer buffer
+;;     (let (kill-buffer-query-functions)
+;;       (set-buffer-modified-p nil)
+;;       (ignore-errors (kill-process (get-buffer-process buffer)))
+;;       (kill-buffer buffer)))))
 
 (defun py--down-end-form ()
   "Return position."
@@ -6077,7 +6079,11 @@ process buffer for a list of commands.)"
 	 (fast (unless (eq major-mode 'org-mode)
 		 (or fast py-fast-process-p)))
 	 (dedicated (or (eq 4 (prefix-numeric-value argprompt)) dedicated py-dedicated-process-p))
-	 (shell (or shell (py-choose-shell)))
+	 (shell (if shell
+		    (if (executable-find shell)
+			shell
+		      (error (concat "py-shell: Can't see an executable for ‘"shell "’ on your system. Maybe needs a link?")))
+		    (py-choose-shell)))
 	 (args (or args (py--provide-command-args shell fast)))
 	 (buffer-name
 	  (or buffer
@@ -8640,21 +8646,19 @@ Travel this INDENT forward"
   "Go to the end of a section of equal indentation.
 
 If already at the end, go down to next indent in buffer
-Returns final position when called from inside section, nil otherwise"
+Returns final position when moved, nil otherwise"
   (interactive)
   (let (done
-	(last (point))
-	(orig (point))
-	(indent (current-indentation)))
-    (while (and (not (eobp)) (not done) (progn (forward-line 1) (back-to-indentation) (or (py-empty-line-p) (and (<= indent (current-indentation))(< last (point))(setq last (point)))(setq done t))))
-      (and (< indent (current-indentation))(setq done t)))
-    (if (and last (< orig last))
-	(progn (goto-char last)
-	       (end-of-line)
-	       (skip-chars-backward " \t\r\n\f"))
-      (skip-chars-forward " \t\r\n\f")
-      (end-of-line)
-      (skip-chars-backward " \t\r\n\f"))
+	(orig (line-beginning-position))
+	(indent (current-indentation))
+	(last (progn (back-to-indentation) (point))))
+    (while (and (not (eobp)) (not done)
+		(progn (forward-line 1) (back-to-indentation) (or (py-empty-line-p) (and (<= indent (current-indentation))(< last (point))))))
+      (unless (py-empty-line-p) (skip-chars-forward " \t\r\n\f")(setq last (point)))
+      (and (not (py-empty-line-p))(< (current-indentation) indent)(setq done t)))
+    (goto-char last)
+    (end-of-line)
+    (skip-chars-backward " \t\r\n\f")
     (and (< orig (point))(point))))
 
 (defun py-forward-indent-bol ()
@@ -8664,13 +8668,24 @@ If already at the end, go down to next indent in buffer
 Returns final position when called from inside section, nil otherwise"
   (interactive)
   (unless (eobp)
-    (let (erg indent)
-      (when (py-forward-statement)
-      	(save-excursion
-      	  (setq indent (and (py-backward-statement)(current-indentation))))
-	(setq erg (py--travel-this-indent-forward indent))
-	(unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
-      erg)))
+    (when (py-forward-indent)
+      (unless (eobp) (progn (forward-line 1) (beginning-of-line) (point))))))
+
+;; (defun py-forward-indent-bol ()
+;;   "Go to beginning of line following of a section of equal indentation.
+
+;; If already at the end, go down to next indent in buffer
+;; Returns final position when called from inside section, nil otherwise"
+;;   (interactive)
+;;   (unless (eobp)
+;;     (let (erg indent)
+;;       ;; (when (py-forward-statement)
+;;       (when (py-forward-indent)
+;; 	;; (save-excursion
+;;       	;; (setq indent (and (py-backward-statement)(current-indentation))))
+;; 	;; (setq erg (py--travel-this-indent-forward indent))
+;; 	(unless (eobp) (forward-line 1) (beginning-of-line) (setq erg (point))))
+;;       erg)))
 
 (defun py-backward-expression (&optional orig done repeat)
   "Go to the beginning of a python expression.
@@ -15939,6 +15954,22 @@ Returns imports"
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" imports))
     imports))
 
+(defun py-kill-buffer-unconditional (&optional buffer)
+  "Kill buffer unconditional, kill buffer-process if existing."
+  (interactive
+   (list (current-buffer)))
+  (let ((buffer (or (and (bufferp buffer) buffer)
+		    (get-buffer (current-buffer))))
+	proc kill-buffer-query-functions)
+    (if (buffer-live-p buffer)
+        (progn
+          (setq proc (get-buffer-process buffer))
+          (and proc (kill-process proc))
+          (set-buffer buffer)
+          (set-buffer-modified-p 'nil)
+          (kill-buffer (current-buffer)))
+      (message "Can't see a buffer %s" buffer))))
+
 ;; python-components-copy-forms
 
 
@@ -16424,7 +16455,8 @@ Don't store data in kill ring."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "comment")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-expression ()
   "Mark expression at point.
@@ -16432,7 +16464,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "expression")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-line ()
   "Mark line at point.
@@ -16440,7 +16473,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "line")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-paragraph ()
   "Mark paragraph at point.
@@ -16448,7 +16482,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "paragraph")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-partial-expression ()
   "Mark partial-expression at point.
@@ -16456,7 +16491,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "partial-expression")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-section ()
   "Mark section at point.
@@ -16464,7 +16500,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "section")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-top-level ()
   "Mark top-level at point.
@@ -16472,7 +16509,8 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of marked area, a cons."
   (interactive)
   (py--mark-base "top-level")
-  (exchange-point-and-mark))
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 
 (defun py-mark-assignment ()
   "Mark assignment, take beginning of line positions. 
@@ -16480,24 +16518,24 @@ Return beginning and end positions of marked area, a cons."
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "assignment")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-block ()
   "Mark block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-block-or-clause ()
   "Mark block-or-clause, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "block-or-clause")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-class (&optional arg)
   "Mark class, take beginning of line positions. 
 
@@ -16506,16 +16544,16 @@ Return beginning and end positions of region, a cons."
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators)))
     (py--mark-base-bol "class" py-mark-decorators))
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-clause ()
   "Mark clause, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "clause")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-def (&optional arg)
   "Mark def, take beginning of line positions. 
 
@@ -16524,8 +16562,8 @@ Return beginning and end positions of region, a cons."
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators)))
     (py--mark-base-bol "def" py-mark-decorators))
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-def-or-class (&optional arg)
   "Mark def-or-class, take beginning of line positions. 
 
@@ -16534,80 +16572,80 @@ Return beginning and end positions of region, a cons."
   (interactive "P")
   (let ((py-mark-decorators (or arg py-mark-decorators)))
     (py--mark-base-bol "def-or-class" py-mark-decorators))
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-elif-block ()
   "Mark elif-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "elif-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-else-block ()
   "Mark else-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "else-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-except-block ()
   "Mark except-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "except-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-for-block ()
   "Mark for-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "for-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-if-block ()
   "Mark if-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "if-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-indent ()
   "Mark indent, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "indent")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-minor-block ()
   "Mark minor-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "minor-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-statement ()
   "Mark statement, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "statement")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 (defun py-mark-try-block ()
   "Mark try-block, take beginning of line positions. 
 
 Return beginning and end positions of region, a cons."
   (interactive)
   (py--mark-base-bol "try-block")
-  (exchange-point-and-mark))
-
+  (exchange-point-and-mark)
+  (cons (region-beginning) (region-end)))
 ;; python-components-close-forms
 
 
@@ -18528,12 +18566,12 @@ With optional \\[universal-argument] get a new dedicated shell."
   (interactive "p")
   (py-shell argprompt args nil "ipython" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
-(defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
-  "Start an IPython2.7 interpreter.
+;; (defun ipython2.7 (&optional argprompt args buffer fast exception-buffer split)
+;;   "Start an IPython2.7 interpreter.
 
-With optional \\[universal-argument] get a new dedicated shell."
-  (interactive "p")
-  (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
+;; With optional \\[universal-argument] get a new dedicated shell."
+;;   (interactive "p")
+;;   (py-shell argprompt args nil "ipython2.7" buffer fast exception-buffer split (unless argprompt (eq 1 (prefix-numeric-value argprompt)))))
 
 (defun ipython3 (&optional argprompt args buffer fast exception-buffer split)
   "Start an IPython3 interpreter.
@@ -25715,42 +25753,42 @@ string or comment."
 (defun py-electric-backspace (&optional arg)
   "Delete preceding character or level of indentation.
 
+With optinal ARG, kill that many chars before point.
+
 Delete region when both variable `delete-active-region' and (use-region-p)
 are non-nil.
 
-Unless at indentation:
-  With `py-electric-kill-backward-p' delete whitespace before point.
-  With `py-electric-kill-backward-p' at end of a list, empty that list.
+Unless at indentation delete whitespace before point.
+With `py-electric-kill-backward-p' at end of a list, empty that list.
 
 Returns column reached."
   (interactive "p*")
   (or arg (setq arg 1))
-  (let (erg)
-    (cond
-     ((and (use-region-p)
-           ;; Emacs23 doesn't know that var
-           (boundp 'delete-active-region)
-           delete-active-region)
-      (backward-delete-char-untabify arg))
-     ;; (delete-region (region-beginning) (region-end)))
-     ((looking-back "^[ \t]+" (line-beginning-position))
-      (let* ((remains (% (current-column) py-indent-offset)))
-        (if (< 0 remains)
-            (delete-char (- remains))
-          (indent-line-to (- (current-indentation) py-indent-offset)))))
-     ;;
-     ((and py-electric-kill-backward-p
-           (member (char-before) (list ?\) ?\] ?\})))
-      (py-empty-out-list-backward))
-     ;;
-     ((and py-electric-kill-backward-p
-           (< 0 (setq erg (abs (skip-chars-backward " \t\r\n\f")))))
-      (delete-region (point) (+ erg (point))))
-     ;;
-     (t
-      (delete-char (- 1))))
-    (setq erg (current-column))
-    erg))
+  (cond
+   ((< 1 (prefix-numeric-value arg))
+    (delete-char (- arg)))
+   ((and (use-region-p)
+         ;; Emacs23 doesn't know that var
+         (boundp 'delete-active-region)
+         delete-active-region)
+    (backward-delete-char-untabify arg))
+   ;; (delete-region (region-beginning) (region-end)))
+   ((looking-back "^[ \t]+" (line-beginning-position))
+    (let* ((remains (% (current-column) py-indent-offset)))
+      (if (< 0 remains)
+          (delete-char (- remains))
+        (indent-line-to (- (current-indentation) py-indent-offset)))))
+   ;;
+   ((and py-electric-kill-backward-p
+         (member (char-before) (list ?\) ?\] ?\})))
+    (py-empty-out-list-backward))
+   ;;
+   ((progn (push-mark) (< 0 (abs (skip-chars-backward " \t" (line-beginning-position)))))
+    (delete-region (point) (mark)))
+   ;;
+   (t
+    (delete-char (- arg))))
+  (current-column))
 
 ;; TODO: PRouleau: the key binding in python-mode-map for command only works
 ;;       when Emacs runs in Graphics mode, not in terminal mode. It'd be nice

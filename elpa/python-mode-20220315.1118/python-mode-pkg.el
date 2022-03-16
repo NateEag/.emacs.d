@@ -1,4 +1,4 @@
-(define-package "python-mode" "20211229.1002" "Python major mode" 'nil :commit "dcb376044d020dfe30f8e4273e61863b7d9615ce" :authors
+(define-package "python-mode" "20220315.1118" "Python major mode" 'nil :commit "29c6815c585c200eda2541b678e499d06c3e14d2" :authors
   '(("2015-2021 https://gitlab.com/groups/python-mode-devs")
     ("2003-2014 https://launchpad.net/python-mode")
     ("1995-2002 Barry A. Warsaw")

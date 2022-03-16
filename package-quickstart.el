@@ -21690,10 +21690,10 @@ Argument SYM-NAME is the thing to find.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-depmap-20200714.1630/elisp-depmap-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-depmap-20220223.1131/elisp-depmap-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-depmap-20200714.1630/elisp-depmap-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-depmap-20220223.1131/elisp-depmap-autoloads.el") (car load-path))))
 
 
 
@@ -21721,10 +21721,6 @@ Make a very basic dot file representation of all the top level definitions in a 
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elisp-depmap-parse" '("elisp-depmap-parse-")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elisp-depmap-secondhelp" '("elisp-depmap-secondhelp-")))
 
 
 

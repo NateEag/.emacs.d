@@ -3,10 +3,10 @@
 ;; Copyright (C) 2020 Mehmet Tekman <mtekman89@gmail.com>
 
 ;; Author: Mehmet Tekman
-;; URL: https://github.com/mtekman/elisp-depmap.el
+;; URL: https://gitlab.com/mtekman/elisp-depmap.el
 ;; Keywords: outlines
 ;; Package-Requires: ((emacs "26.1") (dash "2.17.0"))
-;; Version: 0.1
+;; Version: 0.2
 
 ;;; License:
 
@@ -26,6 +26,7 @@
 
 ;;; Code:
 (require 'elisp-depmap-parse)
+(require 'dash)
 (require 'subr-x)
 (require 'seq)
 
@@ -67,7 +68,7 @@
   :group 'elisp-depmap)
 
 (defcustom elisp-depmap-graph-subclustergroups
-  '(:variables (setq defvar defcustom) :functions (defun defsubst defmacro))
+  '(:variables (setq setq-local defvar defvar-local defcustom) :functions (defun defsubst defmacro))
   "Define subcluster groups and the which symbols should be assigned to them.
 By default we only have variables and functions, though any number of groups can be defined.  It is not necessary to use all symbols from the `elisp-depmap-parse-function-shapes' variable."
   :type 'plist

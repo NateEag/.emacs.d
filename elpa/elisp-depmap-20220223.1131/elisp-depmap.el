@@ -3,10 +3,10 @@
 ;; Copright (C) 2020 Mehmet Tekman <mtekman89@gmail.com>
 
 ;; Author: Mehmet Tekman
-;; URL: https://github.com/mtekman/elisp-depmap.el
+;; URL: https://gitlab.com/mtekman/elisp-depmap.el
 ;; Keywords: outlines
 ;; Package-Requires: ((emacs "26.1") (dash "2.17.0"))
-;; Version: 0.1
+;; Version: 0.2
 
 ;;; License:
 
@@ -30,6 +30,7 @@
 (require 'elisp-depmap-graph)
 (require 'elisp-depmap-exec)
 
+(require 'dash)
 (require 'org-table)
 (require 'subr-x)
 

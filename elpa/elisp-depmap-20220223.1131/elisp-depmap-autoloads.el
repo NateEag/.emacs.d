@@ -48,15 +48,8 @@ Make a very basic dot file representation of all the top level definitions in a 
 
 ;;;***
 
-;;;### (autoloads nil "elisp-depmap-secondhelp" "elisp-depmap-secondhelp.el"
+;;;### (autoloads nil nil ("elisp-depmap-pkg.el" "elisp-depmap-secondhelp.el")
 ;;;;;;  (0 0 0 0))
-;;; Generated autoloads from elisp-depmap-secondhelp.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elisp-depmap-secondhelp" '("elisp-depmap-secondhelp-")))
-
-;;;***
-
-;;;### (autoloads nil nil ("elisp-depmap-pkg.el") (0 0 0 0))
 
 ;;;***
 

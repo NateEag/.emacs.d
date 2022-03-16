@@ -3,10 +3,10 @@
 ;; Copright (C) 2020 Mehmet Tekman <mtekman89@gmail.com>
 
 ;; Author: Mehmet Tekman
-;; URL: https://github.com/mtekman/elisp-depmap.el
+;; URL: https://gitlab.com/mtekman/elisp-depmap.el
 ;; Keywords: outlines
 ;; Package-Requires: ((emacs "26.1") (dash "2.17.0"))
-;; Version: 0.1
+;; Version: 0.2
 
 ;;; License:
 
@@ -29,9 +29,12 @@
 ;;; Code:
 (require 'elisp-depmap-secondhelp)
 (require 'paren)
+(require 'dash)
 
 (defcustom elisp-depmap-parse-function-shapes
-  '((setq . underline) (defvar . underline) (defcustom . plain) (defun . tab) (defsubst . component) (defmacro . trapezium) (defgeneric . trapezium) (defmethod . trapezium))
+  '((setq . underline) (setq-local . underline)
+	(defvar . underline) (defvar-local . underline)
+	(defcustom . plain) (defun . tab) (defsubst . component) (defmacro . trapezium) (defgeneric . trapezium) (defmethod . trapezium))
   "Define variables to look, and the graphviz shapes they should take.
 More info at the https://graphviz.org/doc/info/attrs.html website."
   :type 'list
@@ -46,9 +49,7 @@ More info at the https://graphviz.org/doc/info/attrs.html website."
   "Find all source files from DIRECTORY, otherwise defer to `default-directory'."
   (let ((dir (or directory default-directory)))
     (--map (replace-regexp-in-string (format "^%s" dir) "" it)  ;; replace main directory
-           (--filter (and (string-suffix-p ".el" it)            ;; don't want elc
-                          (not (string-match-p "\\#" it)))      ;; don't want temp
-                     (directory-files-recursively dir ".*\\.el")))))
+           (directory-files-recursively dir "[^#].*\\.el$"))))
 
 ;; ;; -- Not sure if this needs to be used. It could be useful for checking
 ;; ;;    import loops.
@@ -83,45 +84,49 @@ More info at the https://graphviz.org/doc/info/attrs.html website."
 ;;                      hashdefs)
 ;;           (error "Unable to find provides for file %s" file))))))
 
-(defun elisp-depmap-parse--alltopdefs-file (file hashdefs)
-  "Get all top definitions in FILE and put into HASHDEFS.
-Don't use `grep' or `projectile-ripgrep', because those sonuvabitch finish hooks are not reliable."
-  (with-current-buffer (find-file-noselect file)
-    (save-excursion
-      (goto-char 0)
-      (let ((reg-type (elisp-depmap-secondhelp--generateregexfromalist elisp-depmap-parse-function-shapes)))
-        ;;(reg-vnam "\\(-*\\w+\\)+"))
-        (while (search-forward-regexp reg-type nil t)
-          ;; Get type
-          (let* ((type-end (point))
-                 (type-beg (1+ (move-beginning-of-line 1)))
-                 (type-nam (buffer-substring-no-properties type-beg type-end)))
-            (goto-char type-end)
-            (forward-whitespace 1)
-            ;; Get variable name
-            (let* ((vnam-beg (point))
-                   (vnam-end (progn (forward-whitespace 1) (forward-whitespace -1) (point)))
-                   (vnam-nam (buffer-substring-no-properties vnam-beg vnam-end)))
-              ;; Get bounds or line number
-              (let ((lnum-beg (line-number-at-pos))
-                    (lnum-end nil))
-                (when (string= type-nam "defun")
-                  (move-beginning-of-line 1)
-                  (let* ((bounk (funcall show-paren-data-function))
-                         (keybl (nth 3 bounk)))
-                    (goto-char keybl)
-                    (setq lnum-end (line-number-at-pos))))
-                (puthash vnam-nam
-                         `(:type ,type-nam
-                                 :line-beg ,lnum-beg
-                                 :line-end ,lnum-end
-                                 :file ,file
-                                 ;; when mentions is nil, somehow all entries in
-                                 ;; the hash table point to the same mentions.
-                                 :mentions (,vnam-nam))
-                         hashdefs)))))
-        hashdefs))))
+(defun elisp-depmap-parse--topdef (file hashdefs)
+  "Parse one toplevel form from point of current buffer.
+Store it as belonging to FILE in HASHDEFS.  FILE shall already be
+loaded in the current buffer and point be in the correct place.
+Only forms of the types listed in
+`elisp-depmap-parse-function-shapes' are stored in HASHDEFS."
+  (condition-case eof-err
+      (let* ((read-with-symbol-positions t)
+             (form (read (current-buffer)))
+             (end-pos (point)))
+        (if (assq (car form) elisp-depmap-parse-function-shapes)
+          (let ((type-nam (symbol-name (car form)))
+                (vnam-nam (symbol-name (cadr form)))
+                (lnum-beg (save-excursion (backward-sexp) (line-number-at-pos)))
+                (lnum-end (line-number-at-pos end-pos))
+                props)
+            (setq props (list :type type-nam
+                              :name vnam-nam
+                              :line-beg lnum-beg
+                              :line-end nil
+                              :sexp nil
+                              :file file
+                              :uses (mapcar (lambda (sym-pos)
+                                              (symbol-name (car sym-pos)))
+                                            read-symbol-positions-list)
+                              :mentions (list vnam-nam)))
+            (when (memq (car form) '(defun cl-defun))
+              (setq props (plist-put props :sexp form))
+              (setq props (plist-put props :line-end lnum-end)))
+            (puthash vnam-nam props hashdefs))
+          :ignored ; read a form but ignored it.  Still return non-nil
+          ))
+    (end-of-file (ignore))))
 
+(defun elisp-depmap-parse--alltopdefs-file (file hashdefs)
+  "Get all top definitions in FILE and put into HASHDEFS."
+  (with-current-buffer (find-file-noselect file)
+    (save-restriction
+      (widen)
+      (save-excursion
+        (goto-char 1)
+        (while (elisp-depmap-parse--topdef file hashdefs))
+        hashdefs))))
 
 (defun elisp-depmap-parse--alltopdefs-filelist (filelist)
   "Get all top definitions from FILELIST and return a hashtable, with variable names as keys as well as type and bounds as values."
@@ -133,26 +138,6 @@ Don't use `grep' or `projectile-ripgrep', because those sonuvabitch finish hooks
       (elisp-depmap-parse--alltopdefs-file pfile hashtable))))
 
 
-
-(defun elisp-depmap-parse--allsecondarydefs-file (file hashtable)
-  "Get all secondary definitions in FILE for each of the top level definitions in HASHTABLE."
-  (let ((funcs-by-line-asc (elisp-depmap-secondhelp--makesortedlinelist
-                            hashtable)))
-    ;; -- Check each top def in the buffer
-    (with-current-buffer (find-file-noselect file)
-      (maphash   ;; iterate hashtable
-       (lambda (vname annotations)
-         (elisp-depmap-secondhelp--updatementionslist vname
-                                                      file
-                                                      annotations
-                                                      funcs-by-line-asc))
-       hashtable))))
-
-
-(defun elisp-depmap-parse--allsecondarydefs-filelist (filelist hashtable)
-  "Get all secondary definitions for all files in FILELIST for the top level definitions in HASHTABLE."
-  (dolist (pfile filelist hashtable)
-    (elisp-depmap-parse--allsecondarydefs-file pfile hashtable)))
 
 
 (defun elisp-depmap-parse--shuffle (lst seed)
@@ -174,8 +159,15 @@ Randomise `proj-files' using SEED (default 0)."
   (let* ((proj-files (elisp-depmap-parse--shuffle
                       (elisp-depmap-parse--getsourcefiles)
                       (or seed 0)))
-         (hash-table (elisp-depmap-parse--alltopdefs-filelist proj-files)))
-    (elisp-depmap-parse--allsecondarydefs-filelist proj-files hash-table)
+         (hash-table (elisp-depmap-parse--alltopdefs-filelist proj-files))
+         (tracked (hash-table-keys hash-table)))
+    (maphash (lambda (name props)
+               (dolist (used (cl-intersection (plist-get props :uses) tracked))
+                 (let* ((otherprops (gethash used hash-table))
+                        (mentions (plist-get otherprops :mentions)))
+                   (cl-pushnew name mentions)
+                   (puthash used (plist-put otherprops :mentions mentions) hash-table))))
+             hash-table)
     hash-table))
 
 (provide 'elisp-depmap-parse)

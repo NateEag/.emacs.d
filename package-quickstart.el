@@ -23539,10 +23539,10 @@ Delete a local comment." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220202.1341/clojure-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220307.1903/clojure-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220202.1341/clojure-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/clojure-mode-20220307.1903/clojure-mode-autoloads.el") (car load-path))))
 
 
 

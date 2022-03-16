@@ -1,7 +1,7 @@
 ;;; clojure-mode.el --- Major mode for Clojure code -*- lexical-binding: t; -*-
 
 ;; Copyright © 2007-2013 Jeffrey Chu, Lennart Staflin, Phil Hagelberg
-;; Copyright © 2013-2021 Bozhidar Batsov, Artur Malabarba, Magnar Sveen
+;; Copyright © 2013-2022 Bozhidar Batsov, Artur Malabarba, Magnar Sveen
 ;;
 ;; Authors: Jeffrey Chu <jochu0@gmail.com>
 ;;       Lennart Staflin <lenst@lysator.liu.se>
@@ -11,10 +11,10 @@
 ;;       Magnar Sveen <magnars@gmail.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20220202.1341
-;; Package-Commit: 913e2450a77a6ddda051f55ac651c99337147db1
+;; Package-Version: 20220307.1903
+;; Package-Commit: c339353f9e649b3af084f1bb6ce759e614a2f243
 ;; Keywords: languages clojure clojurescript lisp
-;; Version: 5.13.0
+;; Version: 5.14.0
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -1254,6 +1254,9 @@ Place point as in `clojure--position-for-alignment'."
 
 (defun clojure--search-whitespace-after-next-sexp (&optional bound _noerror)
   "Move point after all whitespace after the next sexp.
+Additionally, move past a comment if one exists (this is only
+possible when the end of the sexp coincides with the end of a
+line).
 
 Set the match data group 1 to be this region of whitespace and
 return point.
@@ -1262,7 +1265,8 @@ BOUND is bounds the whitespace search."
   (unwind-protect
       (ignore-errors
         (clojure-forward-logical-sexp 1)
-        (search-forward-regexp "\\([,\s\t]*\\)" bound)
+        ;; Move past any whitespace or comment.
+        (search-forward-regexp "\\([,\s\t]*\\)\\(;+.*\\)?" bound)
         (pcase (syntax-after (point))
           ;; End-of-line, try again on next line.
           (`(12) (clojure--search-whitespace-after-next-sexp bound))

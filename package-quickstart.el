@@ -22128,10 +22128,10 @@ See `dynamic-spaces-mode' for more information on Dynamic-Spaces mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20220111.1234/dtrt-indent-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20220226.1354/dtrt-indent-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20220111.1234/dtrt-indent-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dtrt-indent-20220226.1354/dtrt-indent-autoloads.el") (car load-path))))
 
 
 

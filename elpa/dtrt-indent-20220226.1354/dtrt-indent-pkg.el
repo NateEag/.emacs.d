@@ -1,4 +1,4 @@
-(define-package "dtrt-indent" "20220111.1234" "Adapt to foreign indentation offsets" 'nil :commit "926fc4260c3f71f5aac2e0becb9ee435a4124d5d" :authors
+(define-package "dtrt-indent" "20220226.1354" "Adapt to foreign indentation offsets" 'nil :commit "66fc30af02901db023e464a24d2b5fb3ff472794" :authors
   '(("Julian Scheid" . "julians37@googlemail.com"))
   :maintainer
   '("Reuben Thomas" . "rrt@sc3d.org")

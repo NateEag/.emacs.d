@@ -4,9 +4,9 @@
 
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
-;; Version: 0.3.26
-;; Package-Version: 20220202.1359
-;; Package-Commit: a2cea75f7b66a02e28334291fc6fb371cd5741b1
+;; Version: 0.3.27
+;; Package-Version: 20220226.1344
+;; Package-Commit: a33a04479fc1d4fa0ee618833965ce9914b9c1f4
 ;; Package-Requires: ((emacs "25.1") (dash "2.18") (edit-indirect "0.1.5"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
@@ -1459,12 +1459,12 @@ Block info example:
 (defun separedit-help-variable-edit-info ()
   "Return help varible edit info at point.
 
-Each element is in the form of (SYMBOL VALUE-BOUND STRINGP TYPE LOCAL-BUFFER)."
+Each element is in the form of (SYMBOL VALUE-BOUND STRINGP SCOPE LOCAL-BUFFER)."
   (unless (eq major-mode 'help-mode)
     (user-error "Not in help buffer"))
   (let* ((symbol (separedit-described-symbol))
          (bound (separedit-described-value-bound))
-         (type-buffer
+         (scope-buffer
           (save-excursion
             (goto-char (point-min))
             (let ((buffer?
@@ -1483,8 +1483,8 @@ Each element is in the form of (SYMBOL VALUE-BOUND STRINGP TYPE LOCAL-BUFFER)."
                           (looking-back "^Local in buffer \\([^;]+\\); global value is[\s]?" 1))
                       'global))
                     buffer?)))))
-    (when (and symbol bound (car type-buffer))
-      `(,symbol ,@bound ,@type-buffer))))
+    (when (and symbol bound (car scope-buffer))
+      `(,symbol ,@bound ,@scope-buffer))))
 
 (defun separedit-helpful-variable-edit-info ()
   "Return helpful variable edit info (symbol value-bound type local-buffer) at point."
@@ -1538,13 +1538,15 @@ It will override by the key that `separedit' binding in source buffer.")
     (edit-indirect--barf-if-not-indirect)
     (if separedit--help-variable-edit-info
         (let* ((sym (nth 0 separedit--help-variable-edit-info))
-               (typ (nth 2 separedit--help-variable-edit-info))
-               (buf (nth 3 separedit--help-variable-edit-info))
-               (val (car (read-from-string (buffer-string)))))
+               (scp (nth 3 separedit--help-variable-edit-info))
+               (buf (nth 4 separedit--help-variable-edit-info))
+               (val (if (eq 'stringp (nth 2 separedit--help-variable-edit-info))
+                        (substring-no-properties (buffer-string)) 
+                      (list 'quote (car (read-from-string (buffer-string)))))))
           (cond
-           ((and (eq typ 'local) buf) (with-current-buffer buf (eval `(setq-local ,sym ',val))))
-           ((and (eq typ 'global) (not buf)) (eval `(setq-default ,sym ',val)))
-           (t (message "Unknown variable type: %s" typ)))
+           ((and (eq scp 'local) buf) (with-current-buffer buf (eval `(setq-local ,sym ,val))))
+           ((and (eq scp 'global) (not buf)) (eval `(setq-default ,sym ,val)))
+           (t (message "Unknown variable scope: %s" scp)))
           ;; Make sure `edit-indirect--overlay' not be destroyed.
           (when (overlay-buffer edit-indirect--overlay)
             (edit-indirect--commit)))
@@ -1926,10 +1928,10 @@ If you just want to check `major-mode', use `derived-mode-p'."
 (defun separedit-dwim-described-variable ()
   "Edit value of variable at poin in help/helpful buffer."
   (interactive)
-  (-if-let* ((info (pcase major-mode
-                     (`help-mode (separedit-help-variable-edit-info))
-                     (`helpful-mode (separedit-helpful-variable-edit-info))))
-             (region (nth 1 info))
+  (-if-let (info (pcase major-mode
+                   (`help-mode (separedit-help-variable-edit-info))
+                   (`helpful-mode (separedit-helpful-variable-edit-info))))
+      (let* ((region (nth 1 info))
              (strp (and (nth 2 info) t))
              (edit-indirect-after-creation-hook #'separedit--buffer-creation-setup)
              (point-info (separedit--point-info (car region) (cdr region)))
@@ -1946,7 +1948,7 @@ If you just want to check `major-mode', use `derived-mode-p'."
                  (separedit--restore-point ,@point-info)
                  (setq-local separedit--inhibit-read-only t)
                  (setq-local separedit--help-variable-edit-info ',info))))
-      (edit-indirect-region (car region) (cdr region) 'display-buffer)
+        (edit-indirect-region (car region) (cdr region) 'display-buffer))
     (user-error "Not at variable value")))
 
 ;;;###autoload

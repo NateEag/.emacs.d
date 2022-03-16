@@ -2009,7 +2009,7 @@ See also `evil-shift-left'."
       (move-to-column (max 0 (+ col-for-insert first-shift))))
      (evil-start-of-line (evil-first-non-blank))
      ((evil--stick-to-eol-p) (move-end-of-line 1))
-     (t (move-to-column (or goal-column evil-operator-start-col))))
+     (t (move-to-column (or goal-column evil-operator-start-col col-for-insert))))
     (setq temporary-goal-column 0)))
 
 (defun evil-delete-indentation ()
@@ -2314,7 +2314,8 @@ The return value is the yanked text."
 (defun evil-end-and-return-macro ()
   "Like `kmacro-end-macro' but also return the macro.
 Remove \\<evil-insert-state-map>\\[evil-execute-in-normal-state] from the end."
-  (kmacro-end-macro nil)
+  ;; `end-kbd-macro' rather than `kmacro-end-macro' to allow clearing registers
+  (end-kbd-macro nil #'kmacro-loop-setup-function)
   (let ((end-keys-seq (append evil-execute-normal-keys nil))
         (last-kbd-macro-seq (append last-kbd-macro nil)))
     (unless last-kbd-macro-seq
@@ -3064,7 +3065,7 @@ not interfere with another."
           (let* ((actions (cdar list))
                  (fn      (plist-get actions action)))
             (when fn
-              (with-demoted-errors (funcall fn))))
+              (with-demoted-errors "Error: %S" (funcall fn))))
         (evil-fold-action (cdr list) action)))))
 
 (defun evil--mode-p (modes)
@@ -3194,15 +3195,19 @@ If no FILE is specified, reload the current buffer from disk."
     (when (or (not (zerop (forward-line (or count 1))))
               (not (bolp)))
       (insert "\n"))
-    (if (/= (aref file 0) ?!)
-        (let ((result (insert-file-contents file)))
-          (save-excursion
-            (forward-char (cadr result))
-            (unless (bolp) (insert "\n"))))
-      (shell-command (substring file 1) t)
-      (save-excursion
-        (goto-char (mark))
-        (unless (bolp) (insert "\n"))))))
+    (cond
+     ((/= (aref file 0) ?!)
+      (when (member file '("#" "%"))
+        (setq file (evil-ex-replace-special-filenames file)))
+      (let ((result (insert-file-contents file)))
+        (save-excursion
+          (forward-char (cadr result))
+          (unless (bolp) (insert "\n")))))
+     (t
+      (shell-command (evil-ex-replace-special-filenames (substring file 1)) t)
+      (goto-char (mark))
+      (unless (bolp) (insert "\n"))
+      (forward-line -1)))))
 
 (evil-define-command evil-show-files ()
   "Shows the file-list.

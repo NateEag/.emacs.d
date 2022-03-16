@@ -2816,10 +2816,10 @@ if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20220314.1605/transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20220314.1605/transient-autoloads.el") (car load-path))))
 
 
 
@@ -2877,7 +2877,7 @@ See info node `(transient)Modifying Existing Transients'.
 
 (function-put 'transient-remove-suffix 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("transient-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("magit--fit-window-to-buffer" "transient-")))
 
 
 
@@ -11162,10 +11162,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20220311.1044/magit-section-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20220311.1044/magit-section-autoloads.el") (car load-path))))
 
 
 
@@ -12546,10 +12546,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20220222.1036/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20220222.1036/git-commit-autoloads.el") (car load-path))))
 
 
 (put 'git-commit-major-mode 'safe-local-variable
@@ -12563,11 +12563,13 @@ Add a new release to the change log." t nil)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-commit" '("git-commit-" "global-git-commit-mode")))
 
 
+
+
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231/magit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20220315.309/magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231/magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20220315.309/magit-autoloads.el") (car load-path))))
 
 
 
@@ -12590,7 +12592,7 @@ running 'man git-rebase' at the command line) for details.
 
 (add-to-list 'auto-mode-alist (cons git-rebase-filename-regexp 'git-rebase-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-rebase" '("git-rebase-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-rebase" '("git-rebase-" "magit-imenu--rebase-")))
 
 
 
@@ -12758,6 +12760,28 @@ See `auto-revert-mode' for more information on Auto-Revert mode.
 \(fn &optional ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-autorevert" '("auto-revert-buffer" "magit-")))
+
+
+
+(autoload 'magit-emacs-Q-command "magit-base" "\
+Show a shell command that runs an uncustomized Emacs with only Magit loaded.
+See info node `(magit)Debugging Tools' for more information." t nil)
+
+(autoload 'Info-follow-nearest-node--magit-gitman "magit-base" "\
+
+
+\(fn FN &optional FORK)" nil nil)
+
+(advice-add 'Info-follow-nearest-node :around 'Info-follow-nearest-node--magit-gitman)
+
+(advice-add 'org-man-export :around 'org-man-export--magit-gitman)
+
+(autoload 'org-man-export--magit-gitman "magit-base" "\
+
+
+\(fn FN LINK DESCRIPTION FORMAT)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-base" '("magit-")))
 
 
  (autoload 'magit-bisect "magit-bisect" nil t)
@@ -13345,9 +13369,7 @@ stash that were staged.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-ediff" '("magit-ediff-")))
 
 
-
-(autoload 'magit-run-git-gui "magit-extras" "\
-Run `git gui' for the current git repository." t nil)
+ (autoload 'magit-git-mergetool "magit-extras" nil t)
 
 (autoload 'magit-run-git-gui-blame "magit-extras" "\
 Run `git gui blame' on the given FILENAME and COMMIT.
@@ -13357,6 +13379,9 @@ choose.  When the current buffer is visiting FILENAME instruct
 blame to center around the line point is on.
 
 \(fn COMMIT FILENAME &optional LINENUM)" t nil)
+
+(autoload 'magit-run-git-gui "magit-extras" "\
+Run `git gui' for the current git repository." t nil)
 
 (autoload 'magit-run-gitk "magit-extras" "\
 Run `gitk' in the current repository." t nil)
@@ -13768,91 +13793,6 @@ Call \"git update-index --no-assume-unchanged -- FILE\".
 \(fn FILE)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-gitignore" '("magit-")))
-
-
-
-(autoload 'magit-imenu--log-prev-index-position-function "magit-imenu" "\
-Move point to previous line in current buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--log-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(autoload 'magit-imenu--diff-prev-index-position-function "magit-imenu" "\
-Move point to previous file line in current buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--diff-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(autoload 'magit-imenu--status-create-index-function "magit-imenu" "\
-Return an alist of all imenu entries in current buffer.
-This function is used as a value for
-`imenu-create-index-function'." nil nil)
-
-(autoload 'magit-imenu--refs-create-index-function "magit-imenu" "\
-Return an alist of all imenu entries in current buffer.
-This function is used as a value for
-`imenu-create-index-function'." nil nil)
-
-(autoload 'magit-imenu--cherry-create-index-function "magit-imenu" "\
-Return an alist of all imenu entries in current buffer.
-This function is used as a value for
-`imenu-create-index-function'." nil nil)
-
-(autoload 'magit-imenu--submodule-prev-index-position-function "magit-imenu" "\
-Move point to previous line in magit-submodule-list buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--submodule-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(autoload 'magit-imenu--repolist-prev-index-position-function "magit-imenu" "\
-Move point to previous line in magit-repolist buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--repolist-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(autoload 'magit-imenu--process-prev-index-position-function "magit-imenu" "\
-Move point to previous process in magit-process buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--process-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(autoload 'magit-imenu--rebase-prev-index-position-function "magit-imenu" "\
-Move point to previous commit in git-rebase buffer.
-This function is used as a value for
-`imenu-prev-index-position-function'." nil nil)
-
-(autoload 'magit-imenu--rebase-extract-index-name-function "magit-imenu" "\
-Return imenu name for line at point.
-This function is used as a value for
-`imenu-extract-index-name-function'.  Point should be at the
-beginning of the line." nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-imenu" '("magit-imenu--index-function")))
 
 
  (autoload 'magit-log "magit-log" nil t)
@@ -14888,28 +14828,6 @@ like \"/path/to/foo-bar\".
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-transient" '("magit-")))
-
-
-
-(autoload 'magit-emacs-Q-command "magit-utils" "\
-Show a shell command that runs an uncustomized Emacs with only Magit loaded.
-See info node `(magit)Debugging Tools' for more information." t nil)
-
-(autoload 'Info-follow-nearest-node--magit-gitman "magit-utils" "\
-
-
-\(fn FN &optional FORK)" nil nil)
-
-(advice-add 'Info-follow-nearest-node :around 'Info-follow-nearest-node--magit-gitman)
-
-(advice-add 'org-man-export :around 'org-man-export--magit-gitman)
-
-(autoload 'org-man-export--magit-gitman "magit-utils" "\
-
-
-\(fn FN LINK DESCRIPTION FORMAT)" nil nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-utils" '("magit-")))
 
 
 
@@ -25565,7 +25483,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220208.1821" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20211214.1449" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220211.2231" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220310.1610" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/editorconfig-20210830.1025" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220210.1021" "/Users/neagleson/.emacs.d/elpa/company-20220110.2248" "/Users/neagleson/.emacs.d/elpa/geiser-20220203.2107" "/Users/neagleson/.emacs.d/elpa/ghub-20220130.1941" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220208.1821" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20211214.1449" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220315.309" "/Users/neagleson/.emacs.d/elpa/magit-section-20220311.1044" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220310.1610" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220309.2216" "/Users/neagleson/.emacs.d/elpa/ivy-20211231.1730" "/Users/neagleson/.emacs.d/elpa/transient-20220314.1605" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149" "/Users/neagleson/.emacs.d/elpa/with-editor-20220211.2034" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
          Info-directory-list)))
 
 ;; Local Variables:

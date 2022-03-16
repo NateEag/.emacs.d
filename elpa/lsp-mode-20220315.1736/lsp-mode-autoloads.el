@@ -28,6 +28,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "lsp-ansible" "lsp-ansible.el" (0 0 0 0))
+;;; Generated autoloads from lsp-ansible.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ansible" '("lsp-ansible-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-bash" "lsp-bash.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-bash.el
 
@@ -195,6 +202,13 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-emmet" "lsp-emmet.el" (0 0 0 0))
+;;; Generated autoloads from lsp-emmet.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-emmet" '("lsp-emmet-ls-command")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-erlang" "lsp-erlang.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-erlang.el
 
@@ -325,6 +339,13 @@ When called with prefix ARG the default selection will be symbol at point.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-idris" "lsp-idris.el" (0 0 0 0))
+;;; Generated autoloads from lsp-idris.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-idris" '("lsp-idris2-lsp-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-iedit" "lsp-iedit.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-iedit.el
 
@@ -413,6 +434,13 @@ Click lsp lens using `avy' package." t nil)
 ;;; Generated autoloads from lsp-lua.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lua" '("lsp-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-magik" "lsp-magik.el" (0 0 0 0))
+;;; Generated autoloads from lsp-magik.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-magik" '("lsp-magik-")))
 
 ;;;***
 
@@ -534,6 +562,13 @@ mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-nim" "lsp-nim.el" (0 0 0 0))
+;;; Generated autoloads from lsp-nim.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-nim" '("lsp-nim-nimsuggest-mapping")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-nix" "lsp-nix.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-nix.el
 
@@ -552,6 +587,14 @@ mode otherwise.
 ;;; Generated autoloads from lsp-perl.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perl" '("lsp-perl-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-perlnavigator" "lsp-perlnavigator.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from lsp-perlnavigator.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perlnavigator" '("lsp-perlnavigator-")))
 
 ;;;***
 
@@ -730,6 +773,20 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-ttcn3" "lsp-ttcn3.el" (0 0 0 0))
+;;; Generated autoloads from lsp-ttcn3.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ttcn3" '("lsp-ttcn3-lsp-server-command")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-typeprof" "lsp-typeprof.el" (0 0 0 0))
+;;; Generated autoloads from lsp-typeprof.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-typeprof" '("lsp-typeprof-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-v" "lsp-v.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-v.el
 
@@ -772,6 +829,13 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-volar" "lsp-volar.el" (0 0 0 0))
+;;; Generated autoloads from lsp-volar.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-volar" '("lsp-volar-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-xml" "lsp-xml.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-xml.el
 
@@ -794,7 +858,7 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-cmake.el" "lsp-d.el" "lsp-dhall.el"
-;;;;;;  "lsp-mode-pkg.el" "lsp-nim.el" "lsp.el") (0 0 0 0))
+;;;;;;  "lsp-mode-pkg.el" "lsp.el") (0 0 0 0))
 
 ;;;***
 

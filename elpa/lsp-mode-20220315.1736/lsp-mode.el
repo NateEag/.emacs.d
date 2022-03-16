@@ -173,14 +173,16 @@ As defined by the Language Server Protocol 3.16."
   :package-version '(lsp-mode . "6.1"))
 
 (defcustom lsp-client-packages
-  '(ccls lsp-actionscript lsp-ada lsp-angular lsp-bash lsp-beancount lsp-clangd lsp-clojure lsp-cmake
-         lsp-crystal lsp-csharp lsp-css lsp-d lsp-dart lsp-dhall lsp-docker lsp-dockerfile lsp-elm
-         lsp-elixir lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript lsp-go lsp-graphql
-         lsp-hack lsp-grammarly lsp-groovy lsp-haskell lsp-haxe lsp-java lsp-javascript lsp-json
-         lsp-kotlin lsp-latex lsp-ltex lsp-lua lsp-markdown lsp-nginx lsp-nim lsp-nix lsp-metals lsp-mssql lsp-ocaml lsp-pascal lsp-perl lsp-php lsp-pwsh
-         lsp-pyls lsp-pylsp lsp-pyright lsp-python-ms lsp-purescript lsp-r lsp-remark lsp-rf lsp-rust lsp-solargraph lsp-sorbet lsp-sourcekit lsp-sonarlint
-         lsp-tailwindcss lsp-tex lsp-terraform lsp-toml lsp-v lsp-vala lsp-verilog lsp-vetur lsp-vhdl lsp-vimscript lsp-xml
-         lsp-yaml lsp-sqls lsp-svelte lsp-steep lsp-zig)
+  '(ccls lsp-actionscript lsp-ada lsp-angular lsp-ansible lsp-bash lsp-beancount lsp-clangd lsp-clojure
+         lsp-cmake lsp-crystal lsp-csharp lsp-css lsp-d lsp-dart lsp-dhall lsp-docker lsp-dockerfile
+         lsp-elm lsp-elixir lsp-emmet lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript lsp-go
+         lsp-graphql lsp-hack lsp-grammarly lsp-groovy lsp-haskell lsp-haxe lsp-idris lsp-java lsp-javascript
+         lsp-json lsp-kotlin lsp-latex lsp-ltex lsp-lua lsp-markdown lsp-nginx lsp-nim lsp-nix lsp-magik
+         lsp-metals lsp-mssql lsp-ocaml lsp-pascal lsp-perl lsp-perlnavigator lsp-php lsp-pwsh lsp-pyls lsp-pylsp
+         lsp-pyright lsp-python-ms lsp-purescript lsp-r lsp-remark lsp-rf lsp-rust lsp-solargraph
+         lsp-sorbet lsp-sourcekit lsp-sonarlint lsp-tailwindcss lsp-tex lsp-terraform lsp-toml
+         lsp-ttcn3 lsp-typeprof lsp-v lsp-vala lsp-verilog lsp-vetur lsp-volar lsp-vhdl lsp-vimscript
+         lsp-xml lsp-yaml lsp-sqls lsp-svelte lsp-steep lsp-zig)
   "List of the clients to be automatically required."
   :group 'lsp-mode
   :type '(repeat symbol))
@@ -715,6 +717,7 @@ Changes take effect only when a new session is started."
                                         (".*\\.php$" . "php")
                                         (".*\\.svelte$" . "svelte")
                                         (".*\\.ebuild$" . "shellscript")
+                                        (".*\\.ttcn3$" . "ttcn3")
                                         (ada-mode . "ada")
                                         (nxml-mode . "xml")
                                         (sql-mode . "sql")
@@ -811,7 +814,10 @@ Changes take effect only when a new session is started."
                                         (beancount-mode . "beancount")
                                         (conf-toml-mode . "toml")
                                         (org-mode . "org")
-                                        (nginx-mode . "nginx"))
+                                        (nginx-mode . "nginx")
+                                        (magik-mode . "magik")
+                                        (idris-mode . "idris")
+                                        (idris2-mode . "idris2"))
   "Language id configuration.")
 
 (defvar lsp--last-active-workspaces nil
@@ -1647,8 +1653,12 @@ On other systems, returns path without change."
   "Convert URI to a file path."
   (let* ((url (url-generic-parse-url (url-unhex-string uri)))
          (type (url-type url))
-         (file (decode-coding-string (url-filename url)
-                                     (or locale-coding-system 'utf-8)))
+         (target (url-target url))
+         (file
+          (concat (decode-coding-string (url-filename url)
+                                        (or locale-coding-system 'utf-8))
+                  (when target
+                    (concat "#" target))))
          (file-name (if (and type (not (string= type "file")))
                         (if-let ((handler (lsp--get-uri-handler type)))
                             (funcall handler uri)
@@ -1847,11 +1857,11 @@ regex in IGNORED-FILES."
     lsp-actionscript lsp-ada lsp-angular lsp-bash lsp-beancount lsp-clangd
     lsp-clojure lsp-cmake lsp-crystal lsp-csharp lsp-css lsp-d lsp-dhall
     lsp-dockerfile lsp-elixir lsp-elm lsp-erlang lsp-eslint lsp-fortran lsp-fsharp lsp-gdscript
-    lsp-go lsp-graphql lsp-groovy lsp-hack lsp-haxe lsp-html lsp-javascript lsp-json lsp-kotlin lsp-lua
-    lsp-markdown lsp-nginx lsp-nim lsp-nix lsp-ocaml lsp-perl lsp-php lsp-prolog lsp-purescript lsp-pwsh
+    lsp-go lsp-graphql lsp-groovy lsp-hack lsp-haxe lsp-html lsp-idris lsp-javascript lsp-json lsp-kotlin lsp-lua
+    lsp-markdown lsp-nginx lsp-nim lsp-nix lsp-ocaml lsp-perl lsp-perlnavigator lsp-php lsp-prolog lsp-purescript lsp-pwsh
     lsp-pyls lsp-pylsp lsp-racket lsp-r lsp-rf lsp-rust lsp-solargraph lsp-sorbet lsp-sqls
-    lsp-steep lsp-svelte lsp-terraform lsp-tex lsp-toml lsp-v lsp-vala lsp-verilog lsp-vetur lsp-vhdl
-    lsp-vimscript lsp-xml lsp-yaml lsp-zig)
+    lsp-steep lsp-svelte lsp-terraform lsp-tex lsp-toml lsp-ttcn3 lsp-typeprof lsp-v lsp-vala lsp-verilog
+    lsp-vetur lsp-volar lsp-vhdl lsp-vimscript lsp-xml lsp-yaml lsp-zig)
   "List of downstream deps.")
 
 (defmacro lsp-consistency-check (package)
@@ -1913,6 +1923,27 @@ regex in IGNORED-FILES."
   (declare (debug (form body))
            (indent 1))
   `(when-let ((lsp--cur-workspace ,workspace)) ,@body))
+
+(lsp-defun lsp--window-show-quick-pick (_workspace (&ShowQuickPickParams :place-holder :can-pick-many :items))
+  (if-let* ((selectfunc (if can-pick-many #'completing-read-multiple #'completing-read))
+            (itemLabels (seq-map (-lambda ((item &as &QuickPickItem :label)) (format "%s" label))
+                                 items))
+            (result (funcall-interactively
+                     selectfunc
+                     (format "%s%s " place-holder (if can-pick-many " (* for all)" "")) itemLabels))
+            (choices (if (listp result)
+                         (if (equal result '("*"))
+                             itemLabels
+                           result)
+                       (list result))))
+      (vconcat (seq-filter #'identity (seq-map (-lambda ((item &as &QuickPickItem :label :user-data))
+                                                 (if (member label choices)
+                                                     (lsp-make-quick-pick-item :label label :picked t :user-data user-data)
+                                                   nil))
+                                               items)))))
+
+(lsp-defun lsp--window-show-input-box (_workspace (&ShowInputBoxParams :prompt :value?))
+  (read-string (format "%s: " prompt) (or value? "")))
 
 (lsp-defun lsp--window-show-message (_workspace (&ShowMessageRequestParams :message :type))
   "Send the server's messages to log.
@@ -5175,10 +5206,12 @@ RENDER-ALL - nil if only the signature should be rendered."
       (if render-all
           contents
         ;; Only render contents that have an available renderer.
-        (seq-filter
-         (-andfn #'lsp-marked-string?
-                 (-compose #'lsp-get-renderer #'lsp:marked-string-language))
-         contents)))
+        (seq-take
+         (seq-filter
+          (-andfn #'lsp-marked-string?
+                  (-compose #'lsp-get-renderer #'lsp:marked-string-language))
+          contents)
+         1)))
      (if (bound-and-true-p page-break-lines-mode)
          "\n\n"
        "\n")))))
@@ -6174,6 +6207,8 @@ textDocument/didOpen for the new file."
 (defconst lsp--default-notification-handlers
   (ht ("window/showMessage" #'lsp--window-show-message)
       ("window/logMessage" #'lsp--window-log-message)
+      ("window/showInputBox" #'lsp--window-show-input-box)
+      ("window/showQuickPick" #'lsp--window-show-quick-pick)
       ("textDocument/publishDiagnostics" #'lsp--on-diagnostics)
       ("textDocument/diagnosticsEnd" #'ignore)
       ("textDocument/diagnosticsBegin" #'ignore)

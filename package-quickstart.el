@@ -15129,10 +15129,10 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220201.852/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220315.1736/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220201.852/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220315.1736/lsp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -15145,6 +15145,10 @@ When called interactively, switch to the process buffer.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-angular" '("lsp-client")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ansible" '("lsp-ansible-")))
 
 
 
@@ -15273,6 +15277,10 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-emmet" '("lsp-emmet-ls-command")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-erlang" '("lsp-erlang-server-")))
 
 
@@ -15360,6 +15368,10 @@ When called with prefix ARG the default selection will be symbol at point.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-idris" '("lsp-idris2-lsp-")))
+
+
+
 (autoload 'lsp-iedit-highlights "lsp-iedit" "\
 Start an `iedit' operation on the documentHighlights at point.
 This can be used as a primitive `lsp-rename' replacement if the
@@ -15429,6 +15441,10 @@ Click lsp lens using `avy' package." t nil)
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-lua" '("lsp-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-magik" '("lsp-magik-")))
 
 
 
@@ -15538,6 +15554,10 @@ mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-nim" '("lsp-nim-nimsuggest-mapping")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-nix" '("lsp-nix-server-path")))
 
 
@@ -15547,6 +15567,10 @@ mode otherwise.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perl" '("lsp-perl-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perlnavigator" '("lsp-perlnavigator-")))
 
 
 
@@ -15659,6 +15683,14 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ttcn3" '("lsp-ttcn3-lsp-server-command")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-typeprof" '("lsp-typeprof-")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-v" '("lsp-v-vls-executable")))
 
 
@@ -15680,6 +15712,10 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vimscript" '("lsp-clients-vim-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-volar" '("lsp-volar-")))
 
 
 

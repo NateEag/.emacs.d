@@ -11175,10 +11175,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20220121.1723/nix-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/nix-mode-20220228.1520/nix-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20220121.1723/nix-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/nix-mode-20220228.1520/nix-mode-autoloads.el") (car load-path))))
 
 
 

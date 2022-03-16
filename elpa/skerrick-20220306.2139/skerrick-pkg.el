@@ -1,0 +1,2 @@
+;;; Generated package description from skerrick.el  -*- no-byte-compile: t -*-
+(define-package "skerrick" "20220306.2139" "REPL-driven development for NodeJS" '((emacs "27.1") (request "0.3.2")) :commit "fc88e82aa4b0a71b1fbe0217df4020538ebd8cd5" :authors '(("Rafael Nicdao <https://github.com/anonimitoraf>")) :maintainer '("Rafael Nicdao" . "nicdaoraf@gmail.com") :keywords '("languages" "javascript" "js" "repl" "repl-driven") :url "https://github.com/anonimitoraf/skerrick")

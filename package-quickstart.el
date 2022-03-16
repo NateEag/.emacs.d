@@ -6915,6 +6915,40 @@ Minor mode for interactively reloading CSS stylesheets.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el") (car load-path))))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "request" '("request-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/skerrick-20220306.2139/skerrick-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/skerrick-20220306.2139/skerrick-autoloads.el") (car load-path))))
+
+
+
+(autoload 'skerrick-eval-region "skerrick" "\
+Evaluate the selected JS code." t nil)
+
+(autoload 'skerrick-install-or-upgrade-server-binary "skerrick" "\
+Install or upgrade skerrick from NPM." t nil)
+
+(autoload 'skerrick-start-server "skerrick" "\
+Start skerrick server." t nil)
+
+(autoload 'skerrick-stop-server "skerrick" "\
+Stop skerrick server." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skerrick" '("skerrick-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -7566,17 +7600,6 @@ Reveal buffer/path depends on cursor condition." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "request" '("request-")))
-
-
-)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/regex-tool-20170104.1918/regex-tool-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/regex-tool-20170104.1918/regex-tool-autoloads.el") (car load-path))))
 
@@ -8200,6 +8223,114 @@ Encode region between BEG and END into a QR code and show in a buffer.
 Encode any URL found at point." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "qrencode" '("qrencode")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pyvenv-20211014.707/pyvenv-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pyvenv-20211014.707/pyvenv-autoloads.el") (car load-path))))
+
+
+
+(autoload 'pyvenv-activate "pyvenv" "\
+Activate the virtual environment in DIRECTORY.
+
+\(fn DIRECTORY)" t nil)
+
+(autoload 'pyvenv-deactivate "pyvenv" "\
+Deactivate any current virtual environment." t nil)
+
+(autoload 'pyvenv-workon "pyvenv" "\
+Activate a virtual environment from $WORKON_HOME.
+
+If the virtual environment NAME is already active, this function
+does not try to reactivate the environment.
+
+\(fn NAME)" t nil)
+
+(defvar pyvenv-mode nil "\
+Non-nil if Pyvenv mode is enabled.
+See the `pyvenv-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `pyvenv-mode'.")
+
+(custom-autoload 'pyvenv-mode "pyvenv" nil)
+
+(autoload 'pyvenv-mode "pyvenv" "\
+Global minor mode for pyvenv.
+
+If called interactively, enable Pyvenv mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
+
+Will show the current virtualenv in the mode line, and respect a
+`pyvenv-workon' setting in files.
+
+\(fn &optional ARG)" t nil)
+
+(defvar pyvenv-tracking-mode nil "\
+Non-nil if Pyvenv-Tracking mode is enabled.
+See the `pyvenv-tracking-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `pyvenv-tracking-mode'.")
+
+(custom-autoload 'pyvenv-tracking-mode "pyvenv" nil)
+
+(autoload 'pyvenv-tracking-mode "pyvenv" "\
+Global minor mode to track the current virtualenv.
+
+If called interactively, enable Pyvenv-Tracking mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+When this mode is active, pyvenv will activate a buffer-specific
+virtualenv whenever the user switches to a buffer with a
+buffer-local `pyvenv-workon' or `pyvenv-activate' variable.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'pyvenv-restart-python "pyvenv" "\
+Restart Python inferior processes." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pyvenv" '("pyvenv-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220307.243/pyvenv-auto-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/pyvenv-auto-20220307.243/pyvenv-auto-autoloads.el") (car load-path))))
+
+
+
+(defvar pyvenv-auto-mode nil "\
+Non-nil if Pyvenv-Auto mode is enabled.
+See the `pyvenv-auto-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `pyvenv-auto-mode'.")
+
+(custom-autoload 'pyvenv-auto-mode "pyvenv-auto" nil)
+
+(autoload 'pyvenv-auto-mode "pyvenv-auto" "\
+Turn on pyvenv-auto-mode.
+
+If called interactively, enable Pyvenv-Auto mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pyvenv-auto" '("pyvenv-auto-")))
 
 
 )
@@ -10417,6 +10548,59 @@ Return non-nil if the current buffer appears to be intended as a package." nil n
 
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "osx-plist" '("osx-plist-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/osm-0.4/osm-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/osm-0.4/osm-autoloads.el") (car load-path))))
+
+
+
+(autoload 'osm-home "osm" "\
+Go to home coordinates." t nil)
+
+(autoload 'osm-goto "osm" "\
+Go to LAT/LON/ZOOM.
+
+\(fn LAT LON ZOOM)" t nil)
+
+(autoload 'osm-bookmark-jump "osm" "\
+Jump to osm bookmark BM.
+
+\(fn BM)" t nil)
+
+(autoload 'osm-bookmark-delete "osm" "\
+Delete osm bookmark BM.
+
+\(fn BM)" t nil)
+
+(autoload 'osm-bookmark-rename "osm" "\
+Rename osm bookmark OLD-NAME.
+
+\(fn OLD-NAME)" t nil)
+
+(autoload 'osm-search "osm" "\
+Search for location and display the map." t nil)
+
+(autoload 'osm-gpx-show "osm" "\
+Show the tracks of gpx FILE in an `osm-mode' buffer.
+
+\(fn FILE)" t nil)
+
+(autoload 'osm-server "osm" "\
+Select tile SERVER.
+
+\(fn SERVER)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "osm" '("osm-")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "osm-ol" '("osm-ol-")))
+
+
 
 
 )
@@ -21942,6 +22126,155 @@ This is useful for reading patches from mailing lists.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/demap-20220315.10/demap-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/demap-20220315.10/demap-autoloads.el") (car load-path))))
+
+
+
+(autoload 'demap-open "demap" "\
+Open minimap in a side window.
+makes a minimap buffer and shows it. if
+MINIMAP-OR-NAME is non-nil or a minimap with the
+name in `demap-minimap-default-name' exists, show
+that minimap instead. if the minimap is already
+being shown, nothing happens.
+
+FRAME specifies what frame to look for windows
+that already show the minimap. it should be a live
+frame or one of the fallowing:
+    nil      for the selected frame,
+    t        for any live frame,
+    'visible for any visible frame,
+    0        for any visible.
+
+\(fn &optional MINIMAP-OR-NAME FRAME)" t nil)
+
+(autoload 'demap-close "demap" "\
+Close side window showing a minimap.
+close a side window showing MINIMAP-OR-NAME. has no
+effect on normal windows showing MINIMAP-OR-NAME.
+
+a side window is a window made by
+`display-buffer-in-side-window' (the default method
+used by `demap-open').
+
+FRAME specifies what frame to look for side windows
+showing a minimap. it should be a live frame or one
+of the fallowing:
+    nil      for the selected frame,
+    t        for any live frame,
+    'visible for any visible frame,
+    0        for any visible.
+
+could kill MINIMAP-OR-NAME if
+`demap-minimap-close-kill-minimap-p' is non-nil.
+
+if a window is removed returns t, otherwise nil.
+
+\(fn &optional MINIMAP-OR-NAME FRAME)" t nil)
+
+(autoload 'demap-toggle "demap" "\
+Toggle side window showing a minimap.
+opens MINIMAP-OR-NAME in a side window. if its
+already showing, removes it instead.
+
+FRAME specifies what frame to look for side windows
+showing a minimap. it should be a live frame or one
+of the fallowing:
+    nil      for the selected frame,
+    t        for any live frame,
+    'visible for any visible frame,
+    0        for any visible.
+
+see `demap-open' and `demap-close'
+for more information.
+
+\(fn &optional MINIMAP-OR-NAME FRAME)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "demap" '("demap-minimap-")))
+
+
+
+(autoload 'demap-minimap-construct "demap-minimap" "\
+Construct a minimap.
+NAME    is the name of the buffer.
+        defaults to `demap-minimap-default-name'.
+SHOWING is the buffer that the minimap is showing.
+        defaults to a blank buffer.
+
+\(fn &optional NAME SHOWING)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "demap-minimap" '("demap-")))
+
+
+
+(autoload 'demap-define-minimap-miner-mode "demap-modes" "\
+Define miner mode for demap minimap buffers.
+expanded version of `define-minor-mode'.
+modes defined with this macro will only work in a
+demap minimap buffer.
+
+this macro also adds a few options:
+:protect
+        variable or list of variables to copy when
+        minimap reconstructs its buffer. the mode
+        variable is implicitly protected. notice,
+        these variables are made unprotected when
+        the mode is disabled, regardless of whether
+        other modes are protecting them or not.
+:init-func
+        form evaluated to set the mode variable to
+        true. can also be used to initialize any
+        hooks used by this mode. if this form dose
+        not set the mode variable to a non-nil
+        value, then the mode is still considered
+        disabled. this will not be called while the
+        mode is active.
+:kill-func
+        form evaluated to set the mode variable to
+        nil. can also be used to uninitialized any
+        hooks used by this mode. this form is also
+        evaluated if the mode is active when the
+        buffer is killed. if this dose not set the
+        mode variable to nil then the mode is
+        considered still activated. this will not
+        be called while the mode is not active.
+:set-func
+        a function that sets the value of the mode
+        variable. this option overrides :init-func
+        and :kill-func. it should be a function
+        that accepts one argument (STATE). STATE is
+        the state that the mode variable should be
+        set to. if the mode variable dose not
+        change then nether dose the modes state.
+
+the rest of the arguments are passed to
+`define-minor-mode'.
+
+\(fn MODE DOC &optional INIT-VALUE LIGHTER KEYMAP &rest BODY)" nil t)
+
+(function-put 'demap-define-minimap-miner-mode 'doc-string-elt '2)
+
+(function-put 'demap-define-minimap-miner-mode 'lisp-indent-function '1)
+
+(demap-define-minimap-miner-mode demap-track-window-mode "Minimap miner mode to make minimap show the active window.\nmakes the minimap this is active in show the buffer\nin the currently active window. will not show the\nwindow if `demap-track-window-mode-update-p-func'\nreturns nil.\n\nthis mode can only be used in a demap minimap buffer." :package-version '(demap . "1.0.0") :group 'demap :init-func (progn (setf demap-track-window-mode t) (->> (demap-buffer-minimap) (apply-partially #'demap-track-window-mode-update-as) (add-hook 'window-state-change-hook))) :kill-func (progn (->> (demap-buffer-minimap) (apply-partially #'demap-track-window-mode-update-as) (remove-hook 'window-state-change-hook)) (kill-local-variable 'demap-track-window-mode)))
+
+(demap-define-minimap-miner-mode demap-current-line-mode "Minimap miner mode to highlight the current line.\nthis will use `demap-current-line-face' to\nhighlight the line, or\n`demap-current-line-inactive-face' when the window\nthe current minimap is showing is not active.\n\nthis mode can only be used in a demap minimap buffer." :package-version '(demap . "1.0.0") :group 'demap :init-func (progn (setq demap-current-line-mode (make-overlay 0 0)) (-as-> #'demap--current-line-mode-wake-if func (add-hook 'demap-minimap-window-set-hook func nil t)) (-as-> #'demap--current-line-mode-sleep func (add-hook 'demap-minimap-window-sleep-hook func nil t))) :kill-func (progn (demap--current-line-mode-sleep) (delete-overlay demap-current-line-mode) (kill-local-variable 'demap-current-line-mode) (-as-> #'demap--current-line-mode-wake-if func (remove-hook 'demap-minimap-window-set-hook func t)) (-as-> #'demap--current-line-mode-sleep func (remove-hook 'demap-minimap-window-sleep-hook func t))))
+
+(demap-define-minimap-miner-mode demap-visible-region-mode "minimap miner mode to show the visible region in minimaps window.\nthis highlights the area in the minimap visible\nfrom the window it is showing. when the window\nshown is active, the face\n`demap-visible-region-face' is used, otherwise\n`demap-visible-region-inactive-face' is used.\n\nthis mode can only be used in a demap minimap buffer." :package-version '(demap . "1.0.0") :group 'demap :init-func (progn (setq demap-visible-region-mode (make-overlay 0 0)) (-as-> #'demap--visible-region-mode-wake-if func (add-hook 'demap-minimap-window-set-hook func nil t)) (-as-> #'demap--visible-region-mode-rest func (add-hook 'demap-minimap-window-sleep-hook func nil t))) :kill-func (progn (demap--visible-region-mode-sleep) (delete-overlay demap-visible-region-mode) (kill-local-variable 'demap-visible-region-mode) (-as-> #'demap--visible-region-mode-wake-if func (remove-hook 'demap-minimap-window-set-hook func t)) (-as-> #'demap--visible-region-mode-rest func (remove-hook 'demap-minimap-window-sleep-hook func t))))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "demap-modes" '("demap-track-window-mode-update-p-func")))
+
+
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "demap-tools" '("demap--tools-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-functional-20210210.1449/dash-functional-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -25190,7 +25523,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder request regex-tool rainbow-mode racket-mode queue qrencode pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode queue qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

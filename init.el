@@ -280,6 +280,31 @@ buffer's file does not exist."
   ;; yasnippet is a powerful library for inserting snippets.
   (yas-minor-mode t)
 
+  ;; I want to have a personal spelling wordlist for technical jargon so that I
+  ;; can include it only in contexts where it's reasonable to use it. Then,
+  ;; presto - I get warned when I use jargon in non-technical writing.
+  ;;
+  ;; The below *almost* works, but I would need to kill the ispell process
+  ;; whenever I'm changing buffers (or at least changing to a buffer that needs
+  ;; a different set of dictionaries).
+  ;;
+  ;; Looks like ispell-kill-ispell should do that job fine, so long as starting
+  ;; a new ispell process isn't a heavy drag on buffer swaps... :/
+  ;;
+  ;; There is no obvious on-buffer-change hook.
+  ;; https://stackoverflow.com/a/47551055 has some notes on what could work for
+  ;; detecting that.
+  ;;
+  ;; Paired with the buffer-local-value function, it should be possible to
+  ;; restart the ispell process only when you want to change the arguments it's
+  ;; using (i.e., when ispell-extra-args is different in the buffer you just
+  ;; swapped to).
+
+  ;; (setq-local ispell-extra-args (list "--lset-extra-dicts" (concat
+  ;;                                                           (getenv "HOME")
+  ;;                                                           "/"
+  ;;                                                        ".aspell.software-jargon.pws")))
+
   ;; Everyone loves autocompletion.
   (auto-complete-mode t)
   (setq ac-sources (list ac-source-yasnippet

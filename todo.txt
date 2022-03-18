@@ -7,8 +7,16 @@
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
 
-- Fix aggressive-fill-paragraph mode's "only fill inside comments" behavior.
-  See afp-mode-comment-bug.md for details.
+- Split my personal aspell wordlist out into a few different wordlists, so I
+  can distinguish between things like 'technical abbreviations', 'personal
+  terminology', etc. I thought this meant a lot of low-level fiddling, but I
+  was wrong - aspell has --add-extra-dicts and --lset-extra-dicts options that
+  can be used to add several dicts. Thus, implementing this is, theoretically,
+  a Simple Matter of Code. See commented code in prog-mode-hook for notes on
+  what a POC might require.
+
+- Fix aggressive-fill-paragraph mode's "only fill
+  inside comments" behavior. See afp-mode-comment-bug.md for details.
 
 - Add opt-in support for aggressive-filling multiline strings in languages with
   support for it (bash, JS, Python are the obvious ones, though PHP's heredoc
@@ -93,16 +101,6 @@
   event. I could poll, but that's needless waste. I could also turn off OS X's
   automatic theme picker and manually specify which mode I want via Hammerspoon
   binding or similar.
-
-- Split my personal aspell wordlist out into a few different wordlists, so I
-  can distinguish between things like 'technical abbreviations', 'personal
-  terminology', etc. I thought this meant a lot of low-level fiddling, but I
-  was wrong - aspell has an --add-extra-dicts option that can be used multiple
-  times to add several dicts. Thus, if I can define rules for when I want any
-  given extra dictionary active, I just need to translate that into Emacs Lisp.
-  Note that ispell-extra-args is supposedly where I need to set this option,
-  but it does not seem to have any effect there, so I need to understand
-  flyspell better.
 
 - Figure out how to sustainably and permanently fix string-edit-at-point in
   json-mode. When editing JSON, you really don't want string concatenation, as

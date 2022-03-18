@@ -37,8 +37,9 @@ epdfinfo
 # to this repo.
 autosaves/
 
-# emacsqlite compile a binary on-demand. Checking that in seems
+# emacsqlite compiles a binary on-demand. Checking that in seems
 # unwise, because not all computers are the same architecture.
-elpa/emacsql-sqlite-20190727.1710/sqlite/emacsql-sqlite
+elpa/**/emacsql-sqlite
 
 forge-database.sqlite
+

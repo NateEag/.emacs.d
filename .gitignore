@@ -21,7 +21,8 @@ tramp
 
 guess-style
 
-# Projectile is useful, but the cache does not need to be saved.
+# Projectile is useful, but the details of what projects are on a given machine
+# need not be saved.
 projectile.cache
 
 # Because I don't like storing binaries in git repos, ignore this.
@@ -41,5 +42,7 @@ autosaves/
 # unwise, because not all computers are the same architecture.
 elpa/**/emacsql-sqlite
 
+# Forge is a great tool for working with git hosting systems. The data
+# it stores locally is precisely a local cache and I do not want to commit it.
 forge-database.sqlite
 

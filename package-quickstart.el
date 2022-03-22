@@ -569,6 +569,77 @@ Minor mode to provide key-bindings for web-mode-edit-element functions
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/vterm-20211226.817/vterm-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vterm-20211226.817/vterm-autoloads.el") (car load-path))))
+
+
+
+(autoload 'vterm-module-compile "vterm" "\
+Compile vterm-module." t nil)
+
+(autoload 'vterm--bookmark-handler "vterm" "\
+Handler to restore a vterm bookmark BMK.
+
+If a vterm buffer of the same name does not exist, the function will create a
+new vterm buffer of the name. It also checks the current directory and sets
+it to the bookmarked directory if needed.
+
+\(fn BMK)" nil nil)
+
+(autoload 'vterm-next-error-function "vterm" "\
+Advance to the next error message and visit the file where the error was.
+This is the value of `next-error-function' in Compilation
+buffers.  Prefix arg N says how many error messages to move
+forwards (or backwards, if negative).
+
+Optional argument RESET clears all the errors.
+
+\(fn N &optional RESET)" t nil)
+
+(autoload 'vterm "vterm" "\
+Create an interactive Vterm buffer.
+Start a new Vterm session, or switch to an already active
+session.  Return the buffer selected (or created).
+
+With a nonnumeric prefix arg, create a new session.
+
+With a string prefix arg, create a new session with arg as buffer name.
+
+With a numeric prefix arg (as in `C-u 42 M-x vterm RET'), switch
+to the session with that number, or create it if it doesn't
+already exist.
+
+The buffer name used for Vterm sessions is determined by the
+value of `vterm-buffer-name'.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'vterm-other-window "vterm" "\
+Create an interactive Vterm buffer in another window.
+Start a new Vterm session, or switch to an already active
+session.  Return the buffer selected (or created).
+
+With a nonnumeric prefix arg, create a new session.
+
+With a string prefix arg, create a new session with arg as buffer name.
+
+With a numeric prefix arg (as in `C-u 42 M-x vterm RET'), switch
+to the session with that number, or create it if it doesn't
+already exist.
+
+The buffer name used for Vterm sessions is determined by the
+value of `vterm-buffer-name'.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vterm" '("vterm-")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210826.1149/dash-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -25878,7 +25949,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells project prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells project prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

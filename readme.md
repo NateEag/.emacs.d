@@ -36,10 +36,10 @@ files.
 Thus, a programmer should manipulate text fluidly and effortlessly, the
 way a pianist plays arpeggios or a painter wields a brush.
 
-Changing editors for each language complicates technique. Eclipse for
-Java, PyCharm for Python, Sublime for JavaScript\... The user interface,
-keyboard shortcuts, and mental model for editing a program are different
-in each of these, and over a lifetime adds cognitive burden.
+Changing editors for each language complicates technique. Eclipse for Java,
+PyCharm for Python, Sublime for JavaScript... The user interface, keyboard
+shortcuts, and mental model for editing a program are different in each of
+these, and over a lifetime adds cognitive burden.
 
 Instead of changing editors for each language, a programmer's editor
 should adapt itself to each language, so that the technique of

@@ -38,6 +38,33 @@ epdfinfo
 # to this repo.
 autosaves/
 
+# I do not care about saving my game scores.
+games/
+
+# Similarly, I don't use dired (except by accident), so image-dired is of no
+# interest to me.
+image-dired/
+
+# This is a binary blob that gets auto-downloaded. Doesn't belong in version
+# control, IMO.
+#
+# ...especially given how rarely I touch Java these years.
+eclipse.jdt.ls/
+
+# Project analysis files are specific to the given machine this repo is checked
+# out on.
+.dap-breakpoints
+.lsp-session-v1
+projectile-bookmarks.eld
+
+# Cache files aren't part of this project.
+.cache/
+url/
+var/
+
+# I don't see a reason to keep this generated file under version control.
+network-security.data
+
 # emacsqlite compiles a binary on-demand. Checking that in seems
 # unwise, because not all computers are the same architecture.
 elpa/**/emacsql-sqlite
@@ -45,7 +72,9 @@ elpa/**/emacsql-sqlite
 # Do not commit build files for vterm package.
 elpa/**/vterm-*/build/
 
+# Do not commit signature files for packages.
+elpa/*.signed
+
 # Forge is a great tool for working with git hosting systems. The data
 # it stores locally is precisely a local cache and I do not want to commit it.
 forge-database.sqlite
-

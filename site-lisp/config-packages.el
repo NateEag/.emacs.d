@@ -470,7 +470,14 @@ The shell command lives in my dotfiles repo."
               (self-insert-command 1)))
 
   :mode (("\\.envrc\\'" . sh-mode)
-         ("\\.env" . sh-mode))
+         ("\\.env" . sh-mode)
+         ;; Bash completions are often named for the command that they modify without
+         ;; any filename extension, sometimes with no hint that they're a bash
+         ;; file other than living inside a completions/ directory.
+         ;;
+         ;; Hence this rule, so that when I edit such files they work
+         ;; appropriately.
+         ("/completions/" . sh-mode))
   :bind (:map sh-mode-map ("=" . 'ne-sh-mode-maybe-insert-equals))
   :hook ((sh-mode . (lambda () (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script")))

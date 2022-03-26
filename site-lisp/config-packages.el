@@ -777,7 +777,12 @@ With this alias I hope to not need to remember it.")
               ("M-\d" . backward-kill-word)))
 
 (use-package todotxt-mode
-  :mode "\\todo.txt\\'"
+  :mode (("\\todo.txt\\'" . todotxt-mode))
+  ;; I have a lot of old todo.txt files that do not follow the standard format.
+  ;;
+  ;; I wish I had just followed the standard format, but since I didn't, here
+  ;; is an easy way to just use text-mode for them.
+  :magic (("^- " . text-mode))
   :hook (todotxt-mode . (lambda () (aggressive-fill-paragraph-mode -1))))
 
 (use-package apache-mode

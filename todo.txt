@@ -7,6 +7,8 @@
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
 
+- Try libvterm for in-Emacs terminals. I've heard rave reviews.
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I

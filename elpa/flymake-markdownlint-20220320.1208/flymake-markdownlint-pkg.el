@@ -1,0 +1,2 @@
+;;; Generated package description from flymake-markdownlint.el  -*- no-byte-compile: t -*-
+(define-package "flymake-markdownlint" "20220320.1208" "Markdown linter with markdownlint" '((emacs "27.1")) :commit "59e3520668d9394c573e07b7980a2d48d9f6086c" :authors '(("Martin Kjær Jørgensen" . "mkj@gotu.dk")) :maintainer '("Martin Kjær Jørgensen" . "mkj@gotu.dk") :url "https://github.com/shaohme/flymake-markdownlint")

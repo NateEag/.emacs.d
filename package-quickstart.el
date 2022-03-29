@@ -3599,6 +3599,60 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/textsize-20220323.1330/textsize-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/textsize-20220323.1330/textsize-autoloads.el") (car load-path))))
+
+
+
+(autoload 'textsize-modify-manual-adjust "textsize" "\
+Adjust FRAME's font-point adjustment by OFFSET persistently.
+
+Add a custom fixed offset to the textsize point size calculation.
+
+If OFFSET is nil, reset adjustment to zero.
+
+\(fn FRAME OFFSET)" nil nil)
+
+(autoload 'textsize-increment "textsize" "\
+Increment the current frame's automatic text size." t nil)
+
+(autoload 'textsize-decrement "textsize" "\
+Decrement the current frame's automatic text size." t nil)
+
+(autoload 'textsize-reset "textsize" "\
+Reset the adjustment on the current frame's automatic text size." t nil)
+
+(autoload 'textsize-fix-frame "textsize" "\
+Set the default text size appropriately for FRAME display.
+
+\(fn &optional FRAME)" t nil)
+
+(defvar textsize-mode nil "\
+Non-nil if Textsize mode is enabled.
+See the `textsize-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `textsize-mode'.")
+
+(custom-autoload 'textsize-mode "textsize" nil)
+
+(autoload 'textsize-mode "textsize" "\
+Adjusts the default text size for the size and pixel pitch of the display.
+
+If called interactively, enable Textsize mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "textsize" '("textsize-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tern-20181108.722/tern-autoloads.el"))
 (add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tern-20181108.722/tern-autoloads.el") (car load-path))))
 
@@ -17701,6 +17755,120 @@ HTMLize dired-marked files.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elisp-refs-20220220.2305/elisp-refs-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elisp-refs-20220220.2305/elisp-refs-autoloads.el") (car load-path))))
+
+
+
+(autoload 'elisp-refs-function "elisp-refs" "\
+Display all the references to function SYMBOL, in all loaded
+elisp files.
+
+If called with a prefix, prompt for a directory to limit the search.
+
+This searches for functions, not macros. For that, see
+`elisp-refs-macro'.
+
+\(fn SYMBOL &optional PATH-PREFIX)" t nil)
+
+(autoload 'elisp-refs-macro "elisp-refs" "\
+Display all the references to macro SYMBOL, in all loaded
+elisp files.
+
+If called with a prefix, prompt for a directory to limit the search.
+
+This searches for macros, not functions. For that, see
+`elisp-refs-function'.
+
+\(fn SYMBOL &optional PATH-PREFIX)" t nil)
+
+(autoload 'elisp-refs-special "elisp-refs" "\
+Display all the references to special form SYMBOL, in all loaded
+elisp files.
+
+If called with a prefix, prompt for a directory to limit the search.
+
+\(fn SYMBOL &optional PATH-PREFIX)" t nil)
+
+(autoload 'elisp-refs-variable "elisp-refs" "\
+Display all the references to variable SYMBOL, in all loaded
+elisp files.
+
+If called with a prefix, prompt for a directory to limit the search.
+
+\(fn SYMBOL &optional PATH-PREFIX)" t nil)
+
+(autoload 'elisp-refs-symbol "elisp-refs" "\
+Display all the references to SYMBOL in all loaded elisp files.
+
+If called with a prefix, prompt for a directory to limit the
+search.
+
+\(fn SYMBOL &optional PATH-PREFIX)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elisp-refs" '("elisp-refs-")))
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/helpful-20220220.2308/helpful-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/helpful-20220220.2308/helpful-autoloads.el") (car load-path))))
+
+
+
+(autoload 'helpful-function "helpful" "\
+Show help for function named SYMBOL.
+
+See also `helpful-macro', `helpful-command' and `helpful-callable'.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-command "helpful" "\
+Show help for interactive function named SYMBOL.
+
+See also `helpful-function'.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-key "helpful" "\
+Show help for interactive command bound to KEY-SEQUENCE.
+
+\(fn KEY-SEQUENCE)" t nil)
+
+(autoload 'helpful-macro "helpful" "\
+Show help for macro named SYMBOL.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-callable "helpful" "\
+Show help for function, macro or special form named SYMBOL.
+
+See also `helpful-macro', `helpful-function' and `helpful-command'.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-symbol "helpful" "\
+Show help for SYMBOL, a variable, function or macro.
+
+See also `helpful-callable' and `helpful-variable'.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-variable "helpful" "\
+Show help for variable named SYMBOL.
+
+\(fn SYMBOL)" t nil)
+
+(autoload 'helpful-at-point "helpful" "\
+Show help for the symbol at point." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helpful" '("helpful-")))
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220312.1521/haskell-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -21476,6 +21644,58 @@ ARGS is a list of extra command line arguments to pass to Emacs.
 
 
 )
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eslint-disable-rule-20220328.354/eslint-disable-rule-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/eslint-disable-rule-20220328.354/eslint-disable-rule-autoloads.el") (car load-path))))
+
+
+
+(autoload 'eslint-disable-rule-disable-next-line "eslint-disable-rule" "\
+Add eslint-disable-next-line comment above current line to disable RULE-NAME.
+
+If DESCRIPTION is non-nil, insert a description explaining why RULE-NAME
+was disabled.
+
+Interactively, ask for RULE-NAME by executing hooks in
+`eslint-disable-rule-find-rules-hook'.  Also ask for DESCRIPTION depending
+on `eslint-disable-rule-require-description'.
+
+\(fn RULE-NAME &optional DESCRIPTION)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule" '("eslint-disable-rule-")))
+
+
+
+(autoload 'eslint-disable-rule-all "eslint-disable-rule-all" "\
+Return a list of all eslint rules." nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-all" '("eslint-disable-rule-all-executable")))
+
+
+
+(autoload 'eslint-disable-rule-flycheck "eslint-disable-rule-flycheck" "\
+Return a list of eslint rule names from flycheck-eslint errors.
+
+Return nil if `flycheck' or `flycheck-eslint' are not active so it is safe,
+but useless, to use even when not using flycheck." nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-flycheck" '("eslint-disable-rule-flycheck--eslint-active-p")))
+
+
+
+(autoload 'eslint-disable-rule-flymake "eslint-disable-rule-flymake" "\
+Return a list of eslint rule names from flymake-eslint errors.
+
+Return nil if `flymake' or `flymake-eslint' are not active so it is safe,
+but useless, to use even when not using flymake." nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-flymake" '("eslint-disable-rule-flymake--")))
+
+
+
+
+)
 (let ((load-file-name "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149/eping-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -21943,6 +22163,28 @@ Show the bookmarked entry saved in the `RECORD'.
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "xml-query" '("xml-query")))
 
 
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220328.907/elfeed-summary-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220328.907/elfeed-summary-autoloads.el") (car load-path))))
+
+
+
+(autoload 'elfeed-summary "elfeed-summary" "\
+Display a feed summary for elfeed.
+
+The feed summary is a tree of three basic items: groups, feeds and
+searches.  Groups also may contain other items.  The structure of the
+tree is determined by the `elfeed-summary-settings' variable.
+
+Take a look at `elfeed-summary-mode' for the list of available
+keybindings, and at the `elfeed-summary' group for the available
+options." t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elfeed-summary" '("elfeed-summary-")))
 
 
 )
@@ -22607,6 +22849,30 @@ this mode can only be used in a demap minimap buffer." :package-version '(demap 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "demap-tools" '("demap--tools-")))
 
 
+
+
+)
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/deadgrep-20220209.719/deadgrep-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/deadgrep-20220209.719/deadgrep-autoloads.el") (car load-path))))
+
+
+
+(autoload 'deadgrep "deadgrep" "\
+Start a ripgrep search for SEARCH-TERM in DIRECTORY.
+
+If not provided, DIR defaults to the directory as determined by
+`deadgrep-project-root-function'.
+
+See also `deadgrep-project-root-overrides'.
+
+If called with a prefix argument, create the results buffer but
+don't actually start the search.
+
+\(fn SEARCH-TERM &optional DIRECTORY)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "deadgrep" '("deadgrep-")))
 
 
 )
@@ -25949,7 +26215,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells project prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs seq tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide textsize tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells project prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj map parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize elisp-refs helpful haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eslint-disable-rule eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed elfeed-summary eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap deadgrep dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

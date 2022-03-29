@@ -55,6 +55,10 @@
   save? It claims that backup-on-save is slow by default, but I can't claim
   I've ever noticed that...
 
+- Get smart-dash-mode compatible with evil-mode's replace mode (R from normal
+  mode). Right now when I type a dash in replace mode it inserts it rather than
+  replacing the next character.
+
 - Bind C-k to previous result in ivy buffer switching. Make sure I'm taking the
   right approach to general ivy-based keybinds, as it works in projectile file
   search, but not in buffer switching.
@@ -86,6 +90,11 @@
 - Try skerrick-mode next time I'm working in NodeJS server code. It's an alpha
   version of a package that aims to make NodeJS dev more like writing Emacs
   Lisp. Installed but not configured.
+
+- Remember that I have / add a keybinding for eslint-disable-rule? I'm not sure
+  how often I'll really use it, but it's a nice idea. Wouldn't mind having some
+  generalized "perma-ignore next error" behavior like this that ties into
+  flycheck or flymake, really...
 
 - Try frontmacs-javascript as a possible new JS mode. Installed but not
   configured.
@@ -393,8 +402,8 @@
   bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
   spec, along with basic docs, and adding ';' at the end of property values.
 
-- Try elfeed as my RSS reader? I don't use RSS for much but in principle it
-  could save me a little suffering.
+- If I ever accumulate enough feeds for it to matter, try adding elfeed-summary
+  into my RSS feed workflow.
 
 - Emacs 26: Move package config into early-init.el, per recently-landed patch
   in Emacs trunk.
@@ -664,6 +673,9 @@
 - Make projectile refresh cache on idle, and always use cache? I can touch
   .projectile if I want to force a refresh. Then again, this is only noticeable
   on my work machine... Enable if file listing takes more than N milliseconds?
+
+- Replace my projectile-ag search keybinding with deadgrep? I've installed
+  deadgrep and it feels sort of different but it is interesting.
 
 - Fix ':' choking projectile grep searches on Windows.
 
@@ -1003,6 +1015,9 @@
   crazy alternative might be a script that builds a dictionary of all known
   command-line options on $PATH and using that dictionary for sh-derived
   modes?
+
+- Try replacing my hand-hacked my-get-default-font-size function with the
+  textsize package? I've installed it but not used it for anything yet
 
 - Replace my hand-hacked flyspell word correction popup with this package:
   https://github.com/d12frosted/flyspell-correct

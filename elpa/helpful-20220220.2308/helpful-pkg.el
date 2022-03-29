@@ -1,0 +1,2 @@
+;;; Generated package description from helpful.el  -*- no-byte-compile: t -*-
+(define-package "helpful" "20220220.2308" "A better *help* buffer" '((emacs "25") (dash "2.18.0") (s "1.11.0") (f "0.20.0") (elisp-refs "1.2")) :commit "67cdd1030b3022d3dc4da2297f55349da57cde01" :authors '(("Wilfred Hughes" . "me@wilfred.me.uk")) :maintainer '("Wilfred Hughes" . "me@wilfred.me.uk") :keywords '("help" "lisp") :url "https://github.com/Wilfred/helpful")

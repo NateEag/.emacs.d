@@ -38,6 +38,16 @@
 (use-package config-windows
   :commands set-windows-env)
 
+;; Helpful is a massive improvement over the baseline Emacs help functions
+;; (which are themselves a massive improvement over what most programs offer).
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-c C-d" . helpful-at-point)
+         ("C-h F" . helpful-function)
+         ("C-h C" . helpful-command)))
+
 (use-package cygwin-mount
   :commands cygwin-mount-activate)
 
@@ -217,6 +227,12 @@ The shell command lives in my dotfiles repo."
    uniquify-separator ":"
    uniquify-after-kill-buffer-p t
    uniquify-ignore-buffers-re "^\\*"))
+
+;; Generally I prefer lazy-loading, but I think I need to do this so that the
+;; helpful package will have counsel available any time I call it.
+;;
+;; TODO Figure out if there's a way to lazy-load optional packages.
+(use-package counsel :demand t)
 
 (use-package projectile
   :diminish projectile-mode

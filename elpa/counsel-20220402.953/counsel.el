@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20211230.1909
-;; Package-Commit: c97ea72285f2428ed61b519269274d27f2b695f9
+;; Package-Version: 20220402.953
+;; Package-Commit: 764e0d35ba63adb893743f27a979144477d9bfb9
 ;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.4") (swiper "0.13.4"))
 ;; Keywords: convenience, matching, tools
@@ -349,10 +349,10 @@ Update the minibuffer with the amount of lines collected every
       (delete-process process))))
 
 ;;* Completion at point
-(define-obsolete-function-alias 'counsel-el 'complete-symbol "<2020-05-20 Wed>")
-(define-obsolete-function-alias 'counsel-cl 'complete-symbol "<2020-05-20 Wed>")
-(define-obsolete-function-alias 'counsel-jedi 'complete-symbol "<2020-05-20 Wed>")
-(define-obsolete-function-alias 'counsel-clj 'complete-symbol "<2020-05-20 Wed>")
+(define-obsolete-function-alias 'counsel-el #'complete-symbol "<2020-05-20 Wed>")
+(define-obsolete-function-alias 'counsel-cl #'complete-symbol "<2020-05-20 Wed>")
+(define-obsolete-function-alias 'counsel-jedi #'complete-symbol "<2020-05-20 Wed>")
+(define-obsolete-function-alias 'counsel-clj #'complete-symbol "<2020-05-20 Wed>")
 
 ;;** `counsel-company'
 (defvar company-candidates)
@@ -971,7 +971,7 @@ when available, in that order of precedence."
 ;;** `counsel-command-history'
 (defun counsel-command-history-action-eval (cmd)
   "Eval the command CMD."
-  (eval (read cmd)))
+  (eval (read cmd) t))
 
 (defun counsel-command-history-action-edit-and-eval (cmd)
   "Edit and eval the command CMD."
@@ -1098,7 +1098,7 @@ Usable with `ivy-resume', `ivy-next-line-and-call' and
 `ivy-previous-line-and-call'."
   (interactive)
   (ivy-read "Load custom theme: "
-            (mapcar 'symbol-name
+            (mapcar #'symbol-name
                     (custom-available-themes))
             :action #'counsel-load-theme-action
             :caller 'counsel-load-theme))
@@ -1369,10 +1369,10 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 ;;** `counsel-git-grep'
 (defvar counsel-git-grep-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-l") 'ivy-call-and-recenter)
-    (define-key map (kbd "M-q") 'counsel-git-grep-query-replace)
-    (define-key map (kbd "C-c C-m") 'counsel-git-grep-switch-cmd)
-    (define-key map (kbd "C-x C-d") 'counsel-cd)
+    (define-key map (kbd "C-l") #'ivy-call-and-recenter)
+    (define-key map (kbd "M-q") #'counsel-git-grep-query-replace)
+    (define-key map (kbd "C-c C-m") #'counsel-git-grep-switch-cmd)
+    (define-key map (kbd "C-x C-d") #'counsel-cd)
     map))
 
 (defvar counsel-git-grep-cmd-default "git --no-pager grep -n --no-color -I -e \"%s\""
@@ -1611,7 +1611,7 @@ When CMD is non-nil, prompt for a specific \"git grep\" command."
         (delete-dups counsel-git-grep-cmd-history))
   (unless (ivy-state-dynamic-collection ivy-last)
     (setq ivy--all-candidates
-          (all-completions "" 'counsel-git-grep-function))))
+          (all-completions "" #'counsel-git-grep-function))))
 
 (defun counsel--normalize-grep-match (str)
   ;; Prepend ./ if necessary:
@@ -1833,11 +1833,11 @@ currently checked out."
 ;;** `counsel-find-file'
 (defvar counsel-find-file-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-DEL") 'counsel-up-directory)
-    (define-key map (kbd "C-<backspace>") 'counsel-up-directory)
+    (define-key map (kbd "C-DEL") #'counsel-up-directory)
+    (define-key map (kbd "C-<backspace>") #'counsel-up-directory)
     (define-key map (kbd "`") #'counsel-file-jump-from-find)
-    (define-key map (kbd "C-`") (ivy-make-magic-action 'counsel-find-file "b"))
-    (define-key map [remap undo] 'counsel-find-file-undo)
+    (define-key map (kbd "C-`") (ivy-make-magic-action #'counsel-find-file "b"))
+    (define-key map [remap undo] #'counsel-find-file-undo)
     map))
 
 (defun counsel-file-jump-from-find ()
@@ -2058,6 +2058,7 @@ The preselect behavior can be customized via user options
   "Forward to `find-file'.
 When INITIAL-INPUT is non-nil, use it in the minibuffer during completion."
   (interactive)
+  (defvar tramp-archive-enabled)
   (let ((tramp-archive-enabled nil)
         (default-directory (or initial-directory default-directory)))
     (counsel--find-file-1 "Find file: " initial-input
@@ -2954,10 +2955,10 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search."
 ;;** `counsel-ag'
 (defvar counsel-ag-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-l") 'ivy-call-and-recenter)
-    (define-key map (kbd "M-q") 'counsel-git-grep-query-replace)
-    (define-key map (kbd "C-'") 'swiper-avy)
-    (define-key map (kbd "C-x C-d") 'counsel-cd)
+    (define-key map (kbd "C-l") #'ivy-call-and-recenter)
+    (define-key map (kbd "M-q") #'counsel-git-grep-query-replace)
+    (define-key map (kbd "C-'") #'swiper-avy)
+    (define-key map (kbd "C-x C-d") #'counsel-cd)
     map))
 
 (defcustom counsel-ag-base-command (list "ag" "--vimgrep" "%s")
@@ -3289,9 +3290,9 @@ Example input with inclusion and exclusion file patterns:
 ;;** `counsel-grep'
 (defvar counsel-grep-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-l") 'ivy-call-and-recenter)
-    (define-key map (kbd "M-q") 'swiper-query-replace)
-    (define-key map (kbd "C-'") 'swiper-avy)
+    (define-key map (kbd "C-l") #'ivy-call-and-recenter)
+    (define-key map (kbd "M-q") #'swiper-query-replace)
+    (define-key map (kbd "C-'") #'swiper-avy)
     map))
 
 (defcustom counsel-grep-base-command "grep -E -n -e %s %s"
@@ -4048,13 +4049,13 @@ This variable has no effect unless
                        (nth 5 components))))
        (list
         (mapconcat
-         'identity
-         (cl-remove-if 'null
+         #'identity
+         (cl-remove-if #'null
                        (list
                         level
                         todo
                         (and priority (format "[#%c]" priority))
-                        (mapconcat 'identity
+                        (mapconcat #'identity
                                    (append path (list text))
                                    counsel-outline-path-separator)
                         tags))
@@ -4735,7 +4736,7 @@ PREFIX is used to create the key."
 
 (defvar counsel-imenu-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-l") 'ivy-call-and-recenter)
+    (define-key map (kbd "C-l") #'ivy-call-and-recenter)
     map))
 
 (defun counsel-imenu-categorize-functions (items)
@@ -4896,9 +4897,9 @@ An extra action allows to switch to the process buffer."
   (counsel--browse-history eshell-history-ring
                            :caller #'counsel-esh-history))
 
-(defadvice eshell-previous-matching-input (before
-                                           counsel-set-eshell-history-index
-                                           activate)
+(advice-add 'eshell-previous-matching-input
+            :before #'counsel--set-eshell-history-index)
+(defun counsel--set-eshell-history-index (&rest _)
   "Reassign `eshell-history-index'."
   (when (and (memq last-command '(ivy-alt-done ivy-done))
              (equal (ivy-state-caller ivy-last) 'counsel-esh-history))
@@ -4915,9 +4916,9 @@ An extra action allows to switch to the process buffer."
   (counsel--browse-history comint-input-ring
                            :caller #'counsel-shell-history))
 
-(defadvice comint-previous-matching-input (before
-                                           counsel-set-comint-history-index
-                                           activate)
+(advice-add 'comint-previous-matching-input
+            :before #'counsel--set-comint-history-index)
+(defun counsel--set-comint-history-index (&rest _)
   "Reassign `comint-input-ring-index'."
   (when (and (memq last-command '(ivy-alt-done ivy-done))
              (equal (ivy-state-caller ivy-last) 'counsel-shell-history))
@@ -4949,8 +4950,8 @@ An extra action allows to switch to the process buffer."
   (let* ((base (substring
                 (prin1-to-string hydra-curr-body-fn)
                 0 -4))
-         (heads (eval (intern (concat base "heads"))))
-         (keymap (eval (intern (concat base "keymap"))))
+         (heads (symbol-value (intern (concat base "heads"))))
+         (keymap (symbol-value (intern (concat base "keymap"))))
          (head-names
           (mapcar (lambda (x)
                     (cons
@@ -5602,6 +5603,12 @@ You can insert or kill the name of the selected font."
       (ivy-state-collection ivy-last)))
     (ivy--kill-current-candidate)))
 
+(defvar kmacro-ring)
+(defvar kmacro-initial-counter-value)
+(defvar kmacro-counter)
+(defvar kmacro-counter-value-start)
+(defvar kmacro-counter-format-start)
+
 ;;;###autoload
 (defun counsel-kmacro ()
   "Interactively choose and run a keyboard macro.
@@ -5715,6 +5722,10 @@ This will apply to the next macro a user defines."
   (let* ((actual-kmacro (cdr x))
          (format (nth 2 actual-kmacro)))
     (kmacro-set-format format)))
+
+(declare-function kmacro-cycle-ring-previous "kmacro" (&optional arg))
+(declare-function kmacro-set-format "kmacro" (format))
+(declare-function kmacro-set-counter "kmacro" (arg))
 
 (defun counsel-kmacro-action-cycle-ring-to-macro (x)
   "Cycle `kmacro-ring' until `last-kbd-macro' is the selected macro.
@@ -6183,7 +6194,7 @@ Any desktop entries that fail to parse are recorded in
 (defun counsel-linux-apps-list ()
   "Return list of all Linux desktop applications."
   (let* ((new-desktop-alist (counsel-linux-apps-list-desktop-files))
-         (new-files (mapcar 'cdr new-desktop-alist)))
+         (new-files (mapcar #'cdr new-desktop-alist)))
     (unless (and
              (eq counsel-linux-app-format-function
                  counsel--linux-apps-cache-format-function)
@@ -6902,7 +6913,7 @@ We update it in the callback with `ivy-update-candidates'."
             :caller 'counsel-search))
 
 (define-obsolete-function-alias 'counsel-google
-    'counsel-search "<2019-10-17 Thu>")
+    #'counsel-search "<2019-10-17 Thu>")
 
 ;;** `counsel-compilation-errors'
 (defun counsel--compilation-errors-buffer (buf)
@@ -7043,7 +7054,7 @@ Local bindings (`counsel-mode-map'):
         (when counsel-mode-override-describe-bindings
           (advice-add #'describe-bindings :override #'counsel-descbinds))
         (define-key minibuffer-local-map (kbd "C-r")
-          'counsel-minibuffer-history))
+          #'counsel-minibuffer-history))
     (advice-remove #'describe-bindings #'counsel-descbinds)))
 
 (provide 'counsel)

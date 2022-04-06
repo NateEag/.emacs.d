@@ -23052,10 +23052,10 @@ Major mode for editing crontab file.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20211230.1909/counsel-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/counsel-20220402.953/counsel-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20211230.1909/counsel-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/counsel-20220402.953/counsel-autoloads.el") (car load-path))))
 
 
 

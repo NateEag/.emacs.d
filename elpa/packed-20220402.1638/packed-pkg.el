@@ -1,0 +1,2 @@
+;;; Generated package description from packed.el  -*- no-byte-compile: t -*-
+(define-package "packed" "20220402.1638" "package manager agnostic Emacs Lisp package utilities" '((emacs "24.3")) :commit "1e2d1a96a2105fec7c1e95d3484790da45fbdf36" :authors '(("Jonas Bernoulli" . "jonas@bernoul.li")) :maintainer '("Jonas Bernoulli" . "jonas@bernoul.li") :keywords '("compile" "convenience" "lisp" "package" "library") :url "https://github.com/emacscollective/packed")

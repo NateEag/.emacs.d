@@ -1,12 +1,12 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2021  Jonas Bernoulli
+;; Copyright (C) 2012-2022  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/packed
 ;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20211021.1753
-;; Package-Commit: 51f22a68e23b87626d162c58a0afbc21ad22f210
+;; Package-Version: 20220402.1638
+;; Package-Commit: 1e2d1a96a2105fec7c1e95d3484790da45fbdf36
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
@@ -104,7 +104,7 @@ but not source files and always expects the \".elc\" suffix."
         (setq file nil)))
     (or file standard)))
 
-(defalias 'packed-elc-file 'byte-compile-dest-file)
+(defalias 'packed-elc-file #'byte-compile-dest-file)
 
 (defun packed-locate-library (library &optional nosuffix path interactive-call)
   "Show the precise file name of Emacs library LIBRARY.
@@ -127,7 +127,7 @@ string.  When run interactively, the argument INTERACTIVE-CALL is t,
 and the file name is displayed in the echo area."
   (interactive (list (completing-read "Locate library: "
                                       (apply-partially
-                                       'locate-file-completion-table
+                                       #'locate-file-completion-table
                                        load-path (get-load-suffixes)))
                      nil nil t))
   (let ((file (locate-file (substitute-in-file-name library)

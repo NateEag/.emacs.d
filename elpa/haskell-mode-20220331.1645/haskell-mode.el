@@ -531,7 +531,7 @@ be set to the preferred literate style."
       (when (nth 4 ppss)
         ;; go to the end of a comment, there is nothing to see inside
         ;; a comment so we might as well just skip over it
-        ;; immediatelly
+        ;; immediately
         (setq ppss (parse-partial-sexp (point) (point-max) nil nil ppss
                                        'syntax-table)))
       (when (nth 8 ppss)
@@ -799,8 +799,8 @@ Minor modes that work well with `haskell-mode':
     (error "haskell-mode requires at least Emacs 25.1"))
 
   ;; paragraph-{start,separate} should treat comments as paragraphs as well.
-  (setq-local paragraph-start (concat " *{-\\| *-- |\\|" page-delimiter))
-  (setq-local paragraph-separate (concat " *$\\| *\\({-\\|-}\\) *$\\|" page-delimiter))
+  (setq-local paragraph-start (concat " *{-\\([^#]\\|$\\)\\| *-- |\\|" page-delimiter))
+  (setq-local paragraph-separate (concat " *$\\| *\\({-\\([^#]\\|$\\)\\|\\([^#]\\|^\\)-}\\) *$\\|" page-delimiter))
   (setq-local fill-paragraph-function 'haskell-fill-paragraph)
   ;; (setq-local adaptive-fill-function 'haskell-adaptive-fill)
   (setq-local comment-start "--")

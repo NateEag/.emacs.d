@@ -1,6 +1,6 @@
-(define-package "haskell-mode" "20220312.1521" "A Haskell editing mode"
+(define-package "haskell-mode" "20220331.1645" "A Haskell editing mode"
   '((emacs "25.1"))
-  :commit "5750f74d892ecc8f34ad8c73e75f78bfb3a86303" :authors
+  :commit "4ec2aa32b1772e629a6a2b47b84048e1990d6728" :authors
   '(("1992      Simon Marlow")
     ("1997-1998 Graeme E Moss" . "gem@cs.york.ac.uk")
     ("Tommy Thorn" . "thorn@irisa.fr")

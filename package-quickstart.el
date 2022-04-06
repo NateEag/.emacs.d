@@ -2908,10 +2908,10 @@ The buffer on focus when the command is called is set as the target buffer." t n
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220212.641/tree-sitter-langs-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220328.1344/tree-sitter-langs-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220212.641/tree-sitter-langs-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220328.1344/tree-sitter-langs-autoloads.el") (car load-path))))
 
 
 

@@ -6695,10 +6695,10 @@ Setup a new text sample to practice touch or speed typing." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20211114.807/solarized-theme-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20211114.807/solarized-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el") (car load-path))))
 
 
 

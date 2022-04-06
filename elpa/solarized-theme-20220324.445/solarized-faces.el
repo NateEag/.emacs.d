@@ -808,9 +808,14 @@
      `(helm-buffer-size ((,class (:foreground ,base01))))
      `(helm-candidate-number ((,class (:background ,base02 :foreground ,base1
                                                    :bold t))))
+     `(helm-ff-dotted-directory ((,class (:foreground ,base03 :background ,base01))))
      `(helm-ff-directory ((,class (:background ,base03  :foreground ,blue))))
      `(helm-ff-executable ((,class (:foreground ,green))))
+     `(helm-ff-socket ((,class (:foreground ,magenta))))
+     `(helm-ff-pipe ((,class (:foreground ,yellow))))
+     `(helm-ff-suid ((,class (:foreground ,base03 :background ,red))))
      `(helm-ff-file ((,class (:background ,base03 :foreground ,base0))))
+     `(helm-ff-backup-file ((,class (:foreground ,base01))))
      `(helm-ff-invalid-symlink ((,class (:background ,base03 :foreground ,orange
                                                      :slant italic))))
      `(helm-ff-prefix ((,class (:background ,yellow :foreground ,base03))))
@@ -1767,6 +1772,10 @@
 ;;;;;; misc
      `(sr-clex-hotchar-face ((,class (:background ,red  :foreground ,base03
                                                   :weight bold))))
+;;;;; tab-bar
+     `(tab-bar ((t (:background ,base03 :foreground ,base0))))
+     `(tab-bar-tab ((t (:background ,base03 :foreground ,base1))))
+     `(tab-bar-tab-inactive ((t (:background ,base02 :foreground ,base01))))
 ;;;;; tabbar
      `(tabbar-default ((,class (:foreground ,base03 :background ,base03))))
      `(tabbar-highlight ((,class (:underline t))))

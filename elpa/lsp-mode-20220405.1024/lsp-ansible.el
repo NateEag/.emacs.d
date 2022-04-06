@@ -156,7 +156,7 @@ Python virtual environment."
    ("ansible.executionEnvironment.enabled" lsp-ansible-execution-environment-enabled t)
    ("ansible.executionEnvironment.image" lsp-ansible-execution-environment-image)
    ("ansible.executionEnvironment.pullPolicy" lsp-ansible-execution-environment-pull-policy)
-   ("ansible.python.interpreterPath")
+   ("ansible.python.interpreterPath" lsp-ansible-python-interpreter-path)
    ("ansible.python.activationScript" lsp-ansible-python-activation-script)))
 
 (defun lsp-ansible-check-ansible-minor-mode (&rest _)
@@ -164,7 +164,7 @@ Python virtual environment."
 This prevents the Ansible server from being turned on in all yaml files."
   (and (eq major-mode 'yaml-mode)
        ;; emacs-ansible provides ansible, not ansible-mode
-       (bound-and-true-p ansible)))
+       (with-no-warnings (bound-and-true-p ansible))))
 
 (lsp-register-client
  (make-lsp-client
@@ -174,7 +174,7 @@ This prevents the Ansible server from being turned on in all yaml files."
                              (cl-first lsp-ansible-language-server-command))
                             (lsp-package-path 'ansible-language-server))
                        ,@(cl-rest lsp-ansible-language-server-command))))
-  :priority -1
+  :priority 1
   :activation-fn #'lsp-ansible-check-ansible-minor-mode
   :server-id 'ansible-ls
   :download-server-fn (lambda (_client callback error-callback _update?)

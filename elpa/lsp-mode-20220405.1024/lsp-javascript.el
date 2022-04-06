@@ -1,9 +1,9 @@
-;;; lsp-vetur.el --- vls configuration                 -*- lexical-binding: t; -*-
+;;; lsp-javascript.el --- description -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Ivan Yonchovski
+;; Copyright (C) 2020 emacs-lsp maintainers
 
-;; Author: Ivan Yonchovski <yyoncho@gmail.com>
-;; Keywords:
+;; Author: emacs-lsp maintainers
+;; Keywords: lsp,
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,238 +20,128 @@
 
 ;;; Commentary:
 
-;; VLS configuration
+;; LSP Clients for the JavaScript and TypeScript Programming Languages.
 
 ;;; Code:
 
 (require 'lsp-mode)
-(require 'lsp-html)
 
-(defgroup lsp-vetur nil
-  "LSP support for Vue, using the Vue Language Server."
+(lsp-dependency 'javascript-typescript-langserver
+                '(:system "javascript-typescript-stdio")
+                '(:npm :package "javascript-typescript-langserver"
+                       :path "javascript-typescript-stdio"))
+
+(defgroup lsp-typescript-javascript nil
+  "Support for TypeScript/JavaScript, using Sourcegraph's JavaScript/TypeScript language server."
   :group 'lsp-mode
-  :link '(url-link "https://github.com/vuejs/vetur/tree/master/server")
-  :package-version '(lsp-mode . "6.1"))
+  :link '(url-link "https://github.com/sourcegraph/javascript-typescript-langserver"))
 
-(defcustom lsp-vetur-ignore-project-warning nil
-  "Ignore projects without jsconfig.json or tsconfig.json warnings."
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "8.0.1"))
+;; Original name can be confused with initializationOptions. Preferences is just one option of initializationOptions.
+(define-obsolete-variable-alias
+  'lsp-clients-typescript-init-opts
+  'lsp-clients-typescript-preferences
+  "lsp-mode 8.0.1")
 
-(defcustom lsp-vetur-use-workspace-dependencies nil
-  "Use dependencies from workspace. Currently only for
-TypeScript."
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+(defcustom lsp-clients-typescript-javascript-server-args '()
+  "Extra arguments for the typescript-language-server language server."
+  :group 'lsp-typescript-javascript
+  :risky t
+  :type '(repeat string))
 
-(defcustom lsp-vetur-completion-auto-import t
-  "Include completion for module export and auto import them"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename &optional _)
+  "Check if the javascript-typescript language server should be enabled based on FILENAME."
+  (or (string-match-p "\\.mjs\\|\\.[jt]sx?\\'" filename)
+      (and (derived-mode-p 'js-mode 'typescript-mode)
+           (not (derived-mode-p 'json-mode)))))
 
-(defcustom lsp-vetur-completion-scaffold-snippet-sources
-  '((workspace . "(W)")
-    (user . "(U)")
-    (vetur . "(V)"))
-  "Where Vetur source Scaffold Snippets from and how to indicate them.
-- workspace: <WORKSPACE>/.vscode/vetur/snippets.
-- user: <USER-DATA-DIR>/User/snippets/vetur.
-- vetur: Bundled in Vetur.
-The source value can be a string \"(User)\" or an emoji \"✌\".
-Set a source to \"\" to disable it.
-"
-  :type 'alist
-  :group 'lsp-vetur
-  :link '(url-link "https://vuejs.github.io/vetur/guide/snippet.html")
-  :package-version '(lsp-mode. "8.0.1"))
+;; Unmaintained sourcegraph server
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          (cons (lsp-package-path 'javascript-typescript-langserver)
+                                                                lsp-clients-typescript-javascript-server-args)))
+                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :priority -3
+                  :completion-in-comments? t
+                  :server-id 'jsts-ls
+                  :download-server-fn (lambda (_client callback error-callback _update?)
+                                        (lsp-package-ensure
+                                         'javascript-typescript-langserver
+                                         callback
+                                         error-callback))
+                  :initialized-fn (lambda (_workspace)
+                                    (warn (concat "The javascript-typescript-langserver (jsts-ls) is unmaintained; "
+                                                  "it is recommended to use ts-ls or deno-ls instead.")))))
 
-(defcustom lsp-vetur-completion-tag-casing "kebab"
-  "Casing conversion for tag completion"
-  :type '(choice
-          (const "initial")
-          (const "kebab"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+(defgroup lsp-typescript nil
+  "LSP support for TypeScript, using Theia/Typefox's TypeScript Language Server."
+  :group 'lsp-mode
+  :link '(url-link "https://github.com/theia-ide/typescript-language-server"))
 
-(defcustom lsp-vetur-grammar-custom-blocks '((docs . "md") (i18n . "json"))
-  "Mapping from custom block tag name to language name. Used for
- generating grammar to support syntax highlighting for custom
- blocks."
-  :type 'alist
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+(defcustom lsp-clients-typescript-tls-path "typescript-language-server"
+  "Path to the typescript-language-server binary."
+  :group 'lsp-typescript
+  :risky t
+  :type 'string)
 
-(defcustom lsp-vetur-validation-template t
-  "Validate vue-html in <template> using eslint-plugin-vue"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+(defcustom lsp-clients-typescript-server-args '("--stdio")
+  "Extra arguments for the typescript-language-server language server."
+  :group 'lsp-typescript
+  :risky t
+  :type '(repeat string))
 
-(defcustom lsp-vetur-language-features-code-actions t
-  "Enable/disable code actions."
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "8.0.0"))
+(defcustom lsp-clients-typescript-disable-automatic-typing-acquisition nil
+  "Disables tsserver from automatically fetching missing type
+definitions (@types packages) for external modules."
+  :group 'lsp-typescript
+  :type 'boolean)
 
-(defcustom lsp-vetur-validation-style t
-  "Validate css/scss/less/postcss in <style>"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-validation-script t
-  "Validate js/ts in <script>"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-enable t
-  "Enable/disable the Vetur document formatter."
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-options-tab-size 2
-  "Number of spaces per indentation level. Inherited by all formatters."
-  :type 'number
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-options-use-tabs nil
-  "Use tabs for indentation. Inherited by all formatters."
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-html "prettyhtml"
-  "Default formatter for <template> region"
-  :type '(choice
-          (const "none")
-          (const "prettyhtml")
-          (const "js-beautify-html")
-          (const "prettier"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-css "prettier"
-  "Default formatter for <style> region"
-  :type '(choice
-          (const "none")
-          (const "prettier"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-postcss "prettier"
-  "Default formatter for <style lang='postcss'> region"
-  :type '(choice
-          (const "none")
-          (const "prettier"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-scss "prettier"
-  "Default formatter for <style lang='scss'> region"
-  :type '(choice
-          (const "none")
-          (const "prettier"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-less "prettier"
-  "Default formatter for <style lang='less'> region"
-  :type '(choice
-          (const "none")
-          (const "prettier"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-stylus "stylus-supremacy"
-  "Default formatter for <style lang='stylus'> region"
-  :type '(choice
-          (const "none")
-          (const "stylus-supremacy"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-js "prettier"
-  "Default formatter for <script> region"
-  :type '(choice
-          (const "none")
-          (const "prettier")
-          (const "prettier-eslint")
-          (const "vscode-typescript"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-ts "prettier"
-  "Default formatter for <script> region"
-  :type '(choice
-          (const "none")
-          (const "prettier")
-          (const "vscode-typescript"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-default-formatter-options
-  '((js-beautify-html (wrap_attributes . "force-expand-multiline"))
-    (prettyhtml (printWidth . 100)
-                (singleQuote . :json-false)
-                (wrapAttributes . :json-false)
-                (sortAttributes . :json-false)))
-  "Options for all default formatters"
-  :type 'alist
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-style-initial-indent nil
-  "Whether to have initial indent for <style> region"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-format-script-initial-indent nil
-  "Whether to have initial indent for <script> region"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
-(defcustom lsp-vetur-trace-server "off"
-  "Traces the communication between VS Code and Vue Language Server."
+(defcustom lsp-clients-typescript-log-verbosity "info"
+  "The verbosity level of the information printed in the log by tsserver."
+  :group 'lsp-typescript
   :type '(choice
           (const "off")
-          (const "messages")
-          (const "verbose"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
+          (const "terse")
+          (const "normal")
+          (const "requesttime")
+          (const "verbose")))
 
-(defcustom lsp-vetur-dev-vls-path ""
-  "The vls path for development"
-  :type 'string
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.3"))
+(defcustom lsp-clients-typescript-max-ts-server-memory nil
+  "The maximum size of the V8's old memory section in megabytes (for
+example 4096 means 4GB). The default value is dynamically configured
+by Node so can differ per system. Increase for very big projects that
+exceed allowed memory usage."
+  :group 'lsp-typescript
+  :type 'integer)
 
-(defcustom lsp-vetur-dev-vls-port -1
-  "The vls port for development"
-  :type 'integer
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.3"))
+(defcustom lsp-clients-typescript-npm-location nil
+  "Specifies the path to the NPM executable used for Automatic Type
+Acquisition."
+  :group 'lsp-typescript
+  :type 'string)
 
-(defcustom lsp-vetur-dev-log-level "INFO"
-  "The vls log level for development"
-  :type '(choice
-          (const "INFO")
-          (const "DEBUG"))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.3"))
+(defcustom lsp-clients-typescript-plugins (vector)
+  "The list of plugins to load.
+It should be a vector of plist with keys `:location' and `:name'
+where `:name' is the name of the package and `:location' is the
+directory containing the package. Example:
+\(vector
+   \(list :name \"@vsintellicode/typescript-intellicode-plugin\"
+         :location \"<path>.vscode/extensions/visualstudioexptteam.
+                            vscodeintellicode-1.1.9/\"))"
+  :group 'lsp-typescript
+  :type  '(restricted-sexp :tag "Vector"
+                           :match-alternatives
+                           (lambda (xs)
+                             (and (vectorp xs) (seq-every-p
+                                                (-lambda ((&plist :name :location))
+                                                  (and name location))
+                                                xs)))))
 
-(defcustom lsp-vetur-experimental-template-interpolation-service nil
-  "Whether to have template interpolation service"
-  :type 'boolean
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.3"))
+(defcustom lsp-clients-typescript-preferences nil
+  "Preferences passed to the Typescript (tsserver) process.
+See https://github.com/typescript-language-server/typescript-language-server#initializationoptions for the list of preferences available in the latest version of TypeScript."
+  :group 'lsp-typescript
+  :type 'plist)
 
 (defcustom lsp-typescript-tsdk nil
   "Specifies the folder path containing the tsserver and
@@ -716,32 +606,8 @@ Code's JavaScript and TypeScript support."
   :type 'boolean
   :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-vetur-emmet "never"
-  "Controls the Emmet suggestions that show up in the suggestion/completion list."
-  :type  '(choice
-           (const "never")
-           (const "inMarkupAndStylesheetFilesOnly")
-           (const "always" ))
-  :group 'lsp-vetur
-  :package-version '(lsp-mode . "6.1"))
-
 (lsp-register-custom-settings
  '(("javascript.autoClosingTags" lsp-javascript-auto-closing-tags t)
-   ("javascript.format.enable" lsp-javascript-format-enable t)
-   ("javascript.format.insertSpaceAfterCommaDelimiter" lsp-javascript-format-insert-space-after-comma-delimiter t)
-   ("javascript.format.insertSpaceAfterConstructor" lsp-javascript-format-insert-space-after-constructor t)
-   ("javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions" lsp-javascript-format-insert-space-after-function-keyword-for-anonymous-functions t)
-   ("javascript.format.insertSpaceAfterKeywordsInControlFlowStatements" lsp-javascript-format-insert-space-after-keywords-in-control-flow-statements t)
-   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-jsx-expression-braces t)
-   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-braces t)
-   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-brackets t)
-   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-parenthesis t)
-   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-template-string-braces t)
-   ("javascript.format.insertSpaceAfterSemicolonInForStatements" lsp-javascript-format-insert-space-after-semicolon-in-for-statements t)
-   ("javascript.format.insertSpaceBeforeAndAfterBinaryOperators" lsp-javascript-format-insert-space-before-and-after-binary-operators t)
-   ("javascript.format.insertSpaceBeforeFunctionParenthesis" lsp-javascript-format-insert-space-before-function-parenthesis t)
-   ("javascript.format.placeOpenBraceOnNewLineForControlBlocks" lsp-javascript-format-place-open-brace-on-new-line-for-control-blocks t)
-   ("javascript.format.placeOpenBraceOnNewLineForFunctions" lsp-javascript-format-place-open-brace-on-new-line-for-functions t)
    ("javascript.implicitProjectConfig.checkJs" lsp-javascript-implicit-project-config-check-js t)
    ("javascript.implicitProjectConfig.experimentalDecorators" lsp-javascript-implicit-project-config-experimental-decorators t)
    ("javascript.preferences.importModuleSpecifier" lsp-javascript-preferences-import-module-specifier)
@@ -757,25 +623,24 @@ Code's JavaScript and TypeScript support."
    ("javascript.suggestionActions.enabled" lsp-javascript-suggestion-actions-enabled t)
    ("javascript.updateImportsOnFileMove.enabled" lsp-javascript-update-imports-on-file-move-enabled)
    ("javascript.validate.enable" lsp-javascript-validate-enable t)
+   ("javascript.format.enable" lsp-javascript-format-enable t)
+   ("javascript.format.insertSpaceAfterCommaDelimiter" lsp-javascript-format-insert-space-after-comma-delimiter t)
+   ("javascript.format.insertSpaceAfterConstructor" lsp-javascript-format-insert-space-after-constructor t)
+   ("javascript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions" lsp-javascript-format-insert-space-after-function-keyword-for-anonymous-functions t)
+   ("javascript.format.insertSpaceAfterKeywordsInControlFlowStatements" lsp-javascript-format-insert-space-after-keywords-in-control-flow-statements t)
+   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-jsx-expression-braces t)
+   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-braces t)
+   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-brackets t)
+   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis" lsp-javascript-format-insert-space-after-opening-and-before-closing-nonempty-parenthesis t)
+   ("javascript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces" lsp-javascript-format-insert-space-after-opening-and-before-closing-template-string-braces t)
+   ("javascript.format.insertSpaceAfterSemicolonInForStatements" lsp-javascript-format-insert-space-after-semicolon-in-for-statements t)
+   ("javascript.format.insertSpaceBeforeAndAfterBinaryOperators" lsp-javascript-format-insert-space-before-and-after-binary-operators t)
+   ("javascript.format.insertSpaceBeforeFunctionParenthesis" lsp-javascript-format-insert-space-before-function-parenthesis t)
+   ("javascript.format.placeOpenBraceOnNewLineForControlBlocks" lsp-javascript-format-place-open-brace-on-new-line-for-control-blocks t)
+   ("javascript.format.placeOpenBraceOnNewLineForFunctions" lsp-javascript-format-place-open-brace-on-new-line-for-functions t)
    ("typescript.autoClosingTags" lsp-typescript-auto-closing-tags t)
    ("typescript.check.npmIsInstalled" lsp-typescript-check-npm-is-installed t)
    ("typescript.disableAutomaticTypeAcquisition" lsp-typescript-disable-automatic-type-acquisition t)
-   ("typescript.format.enable" lsp-typescript-format-enable t)
-   ("typescript.format.insertSpaceAfterCommaDelimiter" lsp-typescript-format-insert-space-after-comma-delimiter t)
-   ("typescript.format.insertSpaceAfterConstructor" lsp-typescript-format-insert-space-after-constructor t)
-   ("typescript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions" lsp-typescript-format-insert-space-after-function-keyword-for-anonymous-functions t)
-   ("typescript.format.insertSpaceAfterKeywordsInControlFlowStatements" lsp-typescript-format-insert-space-after-keywords-in-control-flow-statements t)
-   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-jsx-expression-braces t)
-   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-braces t)
-   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-brackets t)
-   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-parenthesis t)
-   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-template-string-braces t)
-   ("typescript.format.insertSpaceAfterSemicolonInForStatements" lsp-typescript-format-insert-space-after-semicolon-in-for-statements t)
-   ("typescript.format.insertSpaceAfterTypeAssertion" lsp-typescript-format-insert-space-after-type-assertion t)
-   ("typescript.format.insertSpaceBeforeAndAfterBinaryOperators" lsp-typescript-format-insert-space-before-and-after-binary-operators t)
-   ("typescript.format.insertSpaceBeforeFunctionParenthesis" lsp-typescript-format-insert-space-before-function-parenthesis t)
-   ("typescript.format.placeOpenBraceOnNewLineForControlBlocks" lsp-typescript-format-place-open-brace-on-new-line-for-control-blocks t)
-   ("typescript.format.placeOpenBraceOnNewLineForFunctions" lsp-typescript-format-place-open-brace-on-new-line-for-functions t)
    ("typescript.implementationsCodeLens.enabled" lsp-typescript-implementations-code-lens-enabled t)
    ("typescript.locale" lsp-typescript-locale)
    ("typescript.npm" lsp-typescript-npm)
@@ -798,89 +663,284 @@ Code's JavaScript and TypeScript support."
    ("typescript.tsserver.trace" lsp-typescript-tsserver-trace)
    ("typescript.updateImportsOnFileMove.enabled" lsp-typescript-update-imports-on-file-move-enabled)
    ("typescript.validate.enable" lsp-typescript-validate-enable t)
-   ("vetur.trace.server" lsp-vetur-trace-server)
-   ("vetur.ignoreProjectWarning" lsp-vetur-ignore-project-warning t)
-   ("vetur.format.scriptInitialIndent" lsp-vetur-format-script-initial-indent t)
-   ("vetur.format.styleInitialIndent" lsp-vetur-format-style-initial-indent t)
-   ("vetur.format.defaultFormatterOptions" lsp-vetur-format-default-formatter-options)
-   ("vetur.format.defaultFormatter.ts" lsp-vetur-format-default-formatter-ts)
-   ("vetur.format.defaultFormatter.js" lsp-vetur-format-default-formatter-js)
-   ("vetur.format.defaultFormatter.stylus" lsp-vetur-format-default-formatter-stylus)
-   ("vetur.format.defaultFormatter.less" lsp-vetur-format-default-formatter-less)
-   ("vetur.format.defaultFormatter.scss" lsp-vetur-format-default-formatter-scss)
-   ("vetur.format.defaultFormatter.postcss" lsp-vetur-format-default-formatter-postcss)
-   ("vetur.format.defaultFormatter.css" lsp-vetur-format-default-formatter-css)
-   ("vetur.format.defaultFormatter.html" lsp-vetur-format-default-formatter-html)
-   ("vetur.format.options.useTabs" lsp-vetur-format-options-use-tabs t)
-   ("vetur.format.options.tabSize" lsp-vetur-format-options-tab-size)
-   ("vetur.format.enable" lsp-vetur-format-enable t)
-   ("vetur.validation.script" lsp-vetur-validation-script t)
-   ("vetur.validation.style" lsp-vetur-validation-style t)
-   ("vetur.validation.template" lsp-vetur-validation-template t)
-   ("vetur.languageFeatures.codeActions" lsp-vetur-language-features-code-actions t)
-   ("vetur.grammar.customBlocks" lsp-vetur-grammar-custom-blocks)
-   ("vetur.completion.tagCasing" lsp-vetur-completion-tag-casing)
-   ("vetur.completion.scaffoldSnippetSources" lsp-vetur-completion-scaffold-snippet-sources)
-   ("vetur.completion.autoImport" lsp-vetur-completion-auto-import t)
-   ("vetur.useWorkspaceDependencies" lsp-vetur-use-workspace-dependencies t)
-   ("vetur.dev.vlsPath" lsp-vetur-dev-vls-path)
-   ("vetur.dev.vlsPort" lsp-vetur-dev-vls-port)
-   ("vetur.dev.logLevel" lsp-vetur-dev-log-level)
-   ("vetur.experimental.templateInterpolationService" lsp-vetur-experimental-template-interpolation-service t)
-   ("emmet.showExpandedAbbreviation" lsp-vetur-emmet)))
+   ("typescript.format.enable" lsp-typescript-format-enable t)
+   ("typescript.format.insertSpaceAfterCommaDelimiter" lsp-typescript-format-insert-space-after-comma-delimiter t)
+   ("typescript.format.insertSpaceAfterConstructor" lsp-typescript-format-insert-space-after-constructor t)
+   ("typescript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions" lsp-typescript-format-insert-space-after-function-keyword-for-anonymous-functions t)
+   ("typescript.format.insertSpaceAfterKeywordsInControlFlowStatements" lsp-typescript-format-insert-space-after-keywords-in-control-flow-statements t)
+   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-jsx-expression-braces t)
+   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-braces t)
+   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-brackets t)
+   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis" lsp-typescript-format-insert-space-after-opening-and-before-closing-nonempty-parenthesis t)
+   ("typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces" lsp-typescript-format-insert-space-after-opening-and-before-closing-template-string-braces t)
+   ("typescript.format.insertSpaceAfterSemicolonInForStatements" lsp-typescript-format-insert-space-after-semicolon-in-for-statements t)
+   ("typescript.format.insertSpaceAfterTypeAssertion" lsp-typescript-format-insert-space-after-type-assertion t)
+   ("typescript.format.insertSpaceBeforeAndAfterBinaryOperators" lsp-typescript-format-insert-space-before-and-after-binary-operators t)
+   ("typescript.format.insertSpaceBeforeFunctionParenthesis" lsp-typescript-format-insert-space-before-function-parenthesis t)
+   ("typescript.format.placeOpenBraceOnNewLineForControlBlocks" lsp-typescript-format-place-open-brace-on-new-line-for-control-blocks t)
+   ("typescript.format.placeOpenBraceOnNewLineForFunctions" lsp-typescript-format-place-open-brace-on-new-line-for-functions t)))
 
-(define-obsolete-variable-alias
-  'lsp-vetur-server
-  'lsp-vetur-server-command
-  "lsp-mode 6.1")
+(lsp-dependency 'typescript-language-server
+                '(:system lsp-clients-typescript-tls-path)
+                '(:npm :package "typescript-language-server"
+                       :path "typescript-language-server"))
 
-(defcustom lsp-vetur-global-snippets-dir (expand-file-name (locate-user-emacs-file ".snippets/vetur"))
-  "Path to snippets dir."
-  :type 'file
-  :risky t
-  :package-version '(lsp-mode . "6.2"))
+(lsp-dependency 'typescript
+                '(:system "tsserver")
+                '(:npm :package "typescript"
+                       :path "tsserver"))
 
-(defcustom lsp-vetur-server-command '("vls")
-  "Command to start vetur."
-  :type '(repeat string)
-  :risky t
-  :package-version '(lsp-mode . "6.1"))
+(defun lsp-javascript--rename (_workspace args)
+  (let ((path (lsp--uri-to-path (lsp-get (lsp-get args :textDocument) :uri))))
+    (if (f-exists? path)
+        (with-current-buffer (find-file path)
+          (goto-char (lsp--position-to-point
+                      (lsp-get args :position))))
+      (error "There is no file %s" path)))
+  (call-interactively #'lsp-rename)
+  nil)
 
-(lsp-dependency 'vetur-language-server
-                '(:system "vls")
-                '(:npm :package "vls" :path "vls"))
+(defun lsp-javascript-rename-file ()
+  "Rename current file and all it's references in other files."
+  (interactive)
+  (let* ((name (buffer-name))
+         (old (buffer-file-name))
+         (basename (file-name-nondirectory old)))
+    (unless (and old (file-exists-p old))
+      (error "Buffer '%s' is not visiting a file." name))
+    (let ((new (read-file-name "New name: " (file-name-directory old) basename nil basename)))
+      (when (get-file-buffer new)
+        (error "A buffer named '%s' already exists." new))
+      (when (file-exists-p new)
+        (error "A file named '%s' already exists." new))
+      (lsp--send-execute-command
+       "_typescript.applyRenameFile"
+       (vector (list :sourceUri (lsp--buffer-uri)
+                     :targetUri (lsp--path-to-uri new))))
+      (mkdir (file-name-directory new) t)
+      (rename-file old new)
+      (rename-buffer new)
+      (set-visited-file-name new)
+      (set-buffer-modified-p nil)
+      (lsp-disconnect)
+      (setq-local lsp-buffer-uri nil)
+      (lsp)
+      (lsp--info "Renamed '%s' to '%s'." name (file-name-nondirectory new)))))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (lambda ()
-                                     `(,(or (executable-find (cl-first lsp-vetur-server-command))
-                                            (lsp-package-path 'vetur-language-server))
-                                       ,@(cl-rest lsp-vetur-server-command))))
-                  :activation-fn (lambda (filename _mode)
-                                   (string= (file-name-extension filename) "vue"))
-                  :priority -1
-                  :multi-root t
-                  :ignore-messages '("readFile .*? requested by Vue but content not available")
-                  :server-id 'vls
-                  :initialization-options (lambda () (ht-merge (lsp-configuration-section "vetur")
-                                                               (lsp-configuration-section "html")
-                                                               (lsp-configuration-section "javascript")
-                                                               (lsp-configuration-section "typescript")
-                                                               (lsp-configuration-section "emmet")
-                                                               (ht ("globalSnippetDir" lsp-vetur-global-snippets-dir))))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          `(,(lsp-package-path 'typescript-language-server)
+                                                            "--tsserver-path"
+                                                            ,(lsp-package-path 'typescript)
+                                                            ,@lsp-clients-typescript-server-args)))
+                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :priority -2
+                  :completion-in-comments? t
+                  :initialization-options (lambda ()
+                                            (list :disableAutomaticTypingAcquisition lsp-clients-typescript-disable-automatic-typing-acquisition
+                                                  :logVerbosity lsp-clients-typescript-log-verbosity
+                                                  :maxTsServerMemory lsp-clients-typescript-max-ts-server-memory
+                                                  :npmLocation lsp-clients-typescript-npm-location
+                                                  :plugins lsp-clients-typescript-plugins
+                                                  :preferences lsp-clients-typescript-preferences))
                   :initialized-fn (lambda (workspace)
                                     (with-lsp-workspace workspace
                                       (lsp--set-configuration
-                                       (ht-merge (lsp-configuration-section "vetur")
-                                                 (lsp-configuration-section "html")
-                                                 (lsp-configuration-section "javascript")
-                                                 (lsp-configuration-section "emmet")
+                                       (ht-merge (lsp-configuration-section "javascript")
                                                  (lsp-configuration-section "typescript")))))
+                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
+                  :server-id 'ts-ls
+                  :request-handlers (ht ("_typescript.rename" #'lsp-javascript--rename))
                   :download-server-fn (lambda (_client callback error-callback _update?)
-                                        (lsp-package-ensure 'vetur-language-server
-                                                            callback error-callback))))
+                                        (lsp-package-ensure
+                                         'typescript
+                                         (-partial #'lsp-package-ensure
+                                                   'typescript-language-server
+                                                   callback
+                                                   error-callback)
+                                         error-callback))))
 
-(lsp-consistency-check lsp-vetur)
 
-(provide 'lsp-vetur)
-;;; lsp-vetur.el ends here
+(defgroup lsp-flow nil
+  "LSP support for the Flow Javascript type checker."
+  :group 'lsp-mode
+  :link '(url-link "https://flow.org"))
+
+(defcustom lsp-clients-flow-server "flow"
+  "The Flow executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with variable `exec-path'."
+  :group 'lsp-flow
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-flow-server-args '("lsp")
+  "Extra arguments for starting the Flow language server."
+  :group 'lsp-flow
+  :risky t
+  :type '(repeat string))
+
+(defun lsp-clients-flow-tag-file-present-p (file-name)
+  "Check if the '// @flow' or `/* @flow */' tag is present in
+the contents of FILE-NAME."
+  (if-let ((buffer (find-buffer-visiting file-name)))
+      (with-current-buffer buffer
+        (lsp-clients-flow-tag-string-present-p))
+    (with-temp-buffer
+      (insert-file-contents file-name)
+      (lsp-clients-flow-tag-string-present-p))))
+
+(defun lsp-clients-flow-tag-string-present-p ()
+  "Helper for `lsp-clients-flow-tag-file-present-p' that works
+with the file contents."
+  (save-excursion
+    (goto-char (point-min))
+    (let (stop found)
+      (while (not stop)
+        (unless (re-search-forward "[^\n[:space:]]" nil t)
+          (setq stop t))
+        (if (= (point) (point-min)) (setq stop t) (backward-char))
+        (cond ((or (looking-at "//+[ ]*@flow")
+                   (looking-at "/\\**[ ]*@flow")
+                   (looking-at "[ ]*\\*[ ]*@flow"))
+               (setq found t) (setq stop t))
+              ((or (looking-at "//") (looking-at "*"))
+               (forward-line))
+              ((looking-at "/\\*")
+               (save-excursion
+                 (unless (re-search-forward "*/" nil t) (setq stop t)))
+               (forward-line))
+              (t (setq stop t))))
+      found)))
+
+(defun lsp-clients-flow-project-p (file-name)
+  "Check if FILE-NAME is part of a Flow project, that is, if
+there is a .flowconfig file in the folder hierarchy."
+  (locate-dominating-file file-name ".flowconfig"))
+
+(defun lsp-clients-flow-activate-p (file-name _mode)
+  "Check if the Flow language server should be enabled for a
+particular FILE-NAME and MODE."
+  (and (derived-mode-p 'js-mode 'web-mode 'js2-mode 'flow-js2-mode 'rjsx-mode)
+       (not (derived-mode-p 'json-mode))
+       (or (lsp-clients-flow-project-p file-name)
+           (lsp-clients-flow-tag-file-present-p file-name))))
+
+(lsp-register-client
+ (make-lsp-client :new-connection
+                  (lsp-stdio-connection (lambda ()
+                                          (cons lsp-clients-flow-server
+                                                lsp-clients-flow-server-args)))
+                  :priority -1
+                  :activation-fn 'lsp-clients-flow-activate-p
+                  :server-id 'flow-ls))
+
+(defgroup lsp-deno nil
+  "LSP support for the Deno language server."
+  :group 'lsp-mode
+  :link '(url-link "https://deno.land/"))
+
+(defcustom lsp-clients-deno-server "deno"
+  "The Deno executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with variable `exec-path'."
+  :group 'lsp-deno
+  :risky t
+  :type 'file
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-server-args '("lsp")
+  "Extra arguments for starting the Deno language server."
+  :group 'lsp-deno
+  :risky t
+  :type '(repeat string)
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-enable-lint t
+  "Controls if linting information will be provided by the Deno Language Server."
+  :group 'lsp-deno
+  :risky t
+  :type 'boolean
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-enable-code-lens-references t
+  "Enables or disables the display of code lens information."
+  :group 'lsp-deno
+  :risky t
+  :type 'boolean
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-enable-code-lens-references-all-functions t
+  "Enables or disables the display of code lens information for all functions.
+Setting this variable to `non-nil' implicitly enables
+`lsp-clients-deno-enable-code-lens-references'."
+  :group 'lsp-deno
+  :risky t
+  :type 'boolean
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-enable-code-lens-implementations t
+  "Enables or disables the display of code lens information for implementations."
+  :group 'lsp-deno
+  :risky t
+  :type 'boolean
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-config nil
+  "The file path to a tsconfig.json file.
+The path can be either be relative to the workspace, or an
+absolute path.
+
+Examples: `./tsconfig.json',
+`/path/to/tsconfig.json', `C:\\path\\to\\tsconfig.json'"
+  :group 'lsp-deno
+  :risky t
+  :type 'file
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-import-map nil
+  "The file path to an import map.
+Import maps provide a way to relocate modules based on their
+specifiers.  The path can either be relative to the workspace, or
+an absolute path.
+
+Examples: `./import-map.json',
+`/path/to/import-map.json', `C:\\path\\to\\import-map.json'."
+  :group 'lsp-deno
+  :risky t
+  :type 'file
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defcustom lsp-clients-deno-enable-unstable nil
+  "Controls if code will be type checked with Deno's unstable APIs."
+  :group 'lsp-deno
+  :risky t
+  :type 'boolean
+  :package-version '(lsp-mode . "8.0.0"))
+
+(defun lsp-clients-deno--make-init-options ()
+  "Initialization options for the Deno language server."
+  `(:enable t
+    :config ,lsp-clients-deno-config
+    :importMap ,lsp-clients-deno-import-map
+    :lint ,(lsp-json-bool lsp-clients-deno-enable-lint)
+    :unstable ,(lsp-json-bool lsp-clients-deno-enable-unstable)
+    :codeLens (:implementations ,(lsp-json-bool lsp-clients-deno-enable-code-lens-implementations)
+               :references ,(lsp-json-bool (or lsp-clients-deno-enable-code-lens-references
+                                               lsp-clients-deno-enable-code-lens-references-all-functions))
+               :referencesAllFunctions ,(lsp-json-bool lsp-clients-deno-enable-code-lens-references-all-functions))))
+
+(lsp-register-client
+ (make-lsp-client :new-connection
+                  (lsp-stdio-connection (lambda ()
+                                          (cons lsp-clients-deno-server
+                                                lsp-clients-deno-server-args)))
+                  :initialization-options #'lsp-clients-deno--make-init-options
+                  :priority -5
+                  :activation-fn #'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :server-id 'deno-ls))
+
+(lsp-consistency-check lsp-javascript)
+
+(provide 'lsp-javascript)
+;;; lsp-javascript.el ends here

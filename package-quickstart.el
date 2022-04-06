@@ -15646,10 +15646,10 @@ When called interactively, switch to the process buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220315.1736/lsp-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220405.1024/lsp-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220315.1736/lsp-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lsp-mode-20220405.1024/lsp-mode-autoloads.el") (car load-path))))
 
 
 
@@ -16083,6 +16083,10 @@ mode otherwise.
 
 
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-openscad" '("lsp-openscad-server")))
+
+
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-perl" '("lsp-perl-")))
 
 
@@ -16220,7 +16224,7 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vetur" '("lsp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vetur" '("lsp-vetur-")))
 
 
 

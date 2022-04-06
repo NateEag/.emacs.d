@@ -583,6 +583,13 @@ mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-openscad" "lsp-openscad.el" (0 0 0 0))
+;;; Generated autoloads from lsp-openscad.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-openscad" '("lsp-openscad-server")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-perl" "lsp-perl.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-perl.el
 
@@ -811,7 +818,7 @@ and toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;### (autoloads nil "lsp-vetur" "lsp-vetur.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-vetur.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vetur" '("lsp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vetur" '("lsp-vetur-")))
 
 ;;;***
 

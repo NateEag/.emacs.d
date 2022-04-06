@@ -22721,26 +22721,25 @@ what diminished modes would be on the mode-line if they were still minor." t nil
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/diffview-20150929.511/diffview-autoloads.el"))
-(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/diffview-20150929.511/diffview-autoloads.el") (car load-path))))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/diffview-20220322.2334/diffview-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/diffview-20220322.2334/diffview-autoloads.el") (car load-path))))
+
 
 
 (autoload 'diffview-current "diffview" "\
-Show current diff buffer in a side-by-side view.
-
-\(fn)" t nil)
+Show current diff buffer in a side-by-side view." t nil)
 
 (autoload 'diffview-region "diffview" "\
-Show current diff region in a side-by-side view.
-
-\(fn)" t nil)
+Show current diff region in a side-by-side view." t nil)
 
 (autoload 'diffview-message "diffview" "\
 Show `message-mode' buffer in a side-by-side view.
 
-This is useful for reading patches from mailing lists.
+This is useful for reading patches from mailing lists." t nil)
 
-\(fn)" t nil)
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "diffview" '("diffview-")))
 
 
 )

@@ -1,11 +1,12 @@
-;;; diffview.el --- View diffs in side-by-side format
+;;; diffview.el --- View diffs in side-by-side format -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2015, Mitchel Humpherys
 
 ;; Author: Mitchel Humpherys <mitch.special@gmail.com>
 ;; Maintainer: Mitchel Humpherys <mitch.special@gmail.com>
 ;; Keywords: convenience, diff
-;; Package-Version: 20150929.511
+;; Package-Version: 20220322.2334
+;; Package-Commit: af2251a01f532efa819d236802cb3d942befe5a1
 ;; Version: 1.0
 ;; URL: https://github.com/mgalgs/diffview-mode
 
@@ -41,6 +42,12 @@
 ;; o `diffview-message' : View the current email message (which presumably
 ;;    contains a patch) side-by-side
 ;;
+;;; Keybindings
+;;
+;; o `}' : Next file
+;; o `{' : Previous file
+;; o `l' : Align windows
+;; o `q' : Quit
 ;;
 ;;; Screenshots:
 ;;
@@ -116,13 +123,13 @@
 	   ((> current-lines-in-plus current-lines-in-minus)
 	    ;; need to fill minus
 	    (setq tmp-line (pop minus-lines))
-	    (dotimes (i (- current-lines-in-plus current-lines-in-minus))
+	    (dotimes (_ (- current-lines-in-plus current-lines-in-minus))
 	      (push "" minus-lines))
 	    (push tmp-line minus-lines))
 	   ((< current-lines-in-plus current-lines-in-minus)
 	    ;; need to fill plus
 	    (setq tmp-line (pop plus-lines))
-	    (dotimes (i (- current-lines-in-minus current-lines-in-plus))
+	    (dotimes (_ (- current-lines-in-minus current-lines-in-plus))
 	      (push "" plus-lines))
 	    (push tmp-line plus-lines)))
 
@@ -174,14 +181,31 @@ This is useful for reading patches from mailing lists."
       (setq end (1+ (point)))
       (diffview--view-string (buffer-substring beg end)))))
 
+(defvar diffview--mode-map
+  (let ((km (make-sparse-keymap)))
+    (define-key km (kbd "l") 'diffview--align-windows)
+    (define-key km (kbd "}") 'diffview--next-file)
+    (define-key km (kbd "{") 'diffview--prev-file)
+    (define-key km (kbd "q") 'diffview--quit)
+    km)
+  "Special keymap for `diffview--mode-map'.")
 
+(easy-menu-define
+  diffview--menu diffview--mode-map "diffview menu"
+  '("Diffview"
+    ["Align windows" diffview--align-windows]
+    ["Next file" diffview--next-file]
+    ["Prev file" diffview--prev-file]
+    ["Quit" diffview--quit]))
 
 ;;; You probably don't want to invoke `diffview-mode' directly.  Just use
 ;;; one of the autoload functions above.
 
 (define-derived-mode diffview-mode special-mode "Diffview"
   "Mode for viewing diffs side-by-side"
-  (setq font-lock-defaults '(diff-font-lock-keywords t nil nil nil (font-lock-multiline . nil))))
+  (make-local-variable 'font-lock-defaults)
+  (setq font-lock-defaults '(diff-font-lock-keywords t nil nil nil (font-lock-multiline . nil)))
+  (use-local-map diffview--mode-map))
 
 (defun diffview--quit ()
   "Quit diffview and clean up diffview buffers."
@@ -194,7 +218,62 @@ This is useful for reading patches from mailing lists."
     (if minusbuf (kill-buffer minusbuf)))
   (set-window-configuration diffview--saved-wincfg))
 
-(define-key diffview-mode-map (kbd "q") 'diffview--quit)
+(defun diffview--next-file (&optional arg)
+  "Move to next diff file start. Move to previous diff file start
+with prefix ARG."
+  (interactive "P")
+  (let* ((updown (if arg -1 1))
+         (next-file-line-num (save-excursion
+                               (save-restriction
+                                 (widen)
+                                 (let ((old-start-re "^--- ")
+                                       (new-start-re "^\\+\\+\\+ "))
+                                   (beginning-of-line)
+                                   (when (looking-at (if (= updown 1) old-start-re new-start-re))
+                                     (forward-line updown))
+                                   (when (looking-at (if (= updown 1) new-start-re old-start-re))
+                                     (forward-line updown))
+                                   (while (and (not (if (= updown 1) (eobp) (bobp)))
+                                               (not (looking-at new-start-re)))
+                                     (forward-line updown))
+                                   (line-number-at-pos))))))
+    (let ((n-lines (- next-file-line-num (line-number-at-pos))))
+      (when
+          (and (not (= n-lines 0))
+               (cond
+                ((string= (buffer-name (current-buffer))
+                          diffview--minus-bufname)
+                 (forward-line n-lines)
+                 (switch-to-buffer-other-window diffview--plus-bufname))
+                ((string= (buffer-name (current-buffer))
+                          diffview--plus-bufname)
+                 (forward-line n-lines)
+                 (switch-to-buffer-other-window diffview--minus-bufname)))
+               (forward-line n-lines)
+               (other-window 1))))))
+
+(defun diffview--prev-file ()
+  "Move to prev diff file start"
+  (interactive)
+  (diffview--next-file t))
+
+(defun diffview--align-windows ()
+  (interactive)
+  (let ((align-to-line (line-number-at-pos))
+        (align-from-top (- (line-number-at-pos (point))
+                           (line-number-at-pos (window-start)))))
+    (when
+        (cond
+         ((string= (buffer-name (current-buffer))
+                   diffview--minus-bufname)
+          (switch-to-buffer-other-window diffview--plus-bufname))
+         ((string= (buffer-name (current-buffer))
+                   diffview--plus-bufname)
+          (switch-to-buffer-other-window diffview--minus-bufname)))
+      (goto-char (point-min))
+      (forward-line (1- align-to-line))
+      (recenter align-from-top)
+      (other-window 1))))
 
 (provide 'diffview)
 ;;; diffview.el ends here

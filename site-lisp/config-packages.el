@@ -583,7 +583,7 @@ The shell command lives in my dotfiles repo."
                                  (setq jedi:complete-on-dot t))))
 
 (use-package yaml-mode
-  :mode "\\.yaml\\'"
+  :mode "\\.ya?ml\\'"
   :defer t
   :config
   (add-hook 'yaml-mode-hook

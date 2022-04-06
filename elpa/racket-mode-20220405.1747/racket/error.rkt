@@ -26,7 +26,9 @@
              (display-commented (complete-paths
                                  (undo-path->relative-string/library str)))
              (display-srclocs v)
-             (unless (exn:fail:user? v)
+             (unless (or (exn:fail:syntax? v)
+                         (and (exn:fail:read? v) (not (exn:fail:read:eof? v)))
+                         (exn:fail:user? v))
                (display-context v))
              (maybe-suggest-packages v))]
           [else
@@ -36,22 +38,25 @@
 
 (define (display-srclocs exn)
   (when (exn:srclocs? exn)
-    (define srclocs
-      (match ((exn:srclocs-accessor exn) exn)
-        ;; Some exceptions like exn:fail:read? include the first
-        ;; srcloc in exn-message -- don't show it again.
-        [(cons _ xs)
-         #:when (or (exn:fail:read? exn)
-                    (exn:fail:contract:variable? exn))
-         xs]
-        ;; Some exceptions like exn:fail:syntax? with Typed Racket
-        ;; include _all_ in exn-message -- don't show _any_.
-        [_
-         #:when (exn:fail:syntax? exn)
-         '()]
-        [xs xs]))
-    (for ([s (in-list srclocs)])
-      (display-commented (source-location->string s)))))
+    ;; Display srclocs that aren't already present in exn-message.
+    ;;
+    ;; Often the first srcloc is already in exn-message.
+    ;;
+    ;; Sometimes (e.g. Typed Racket) ALL the srclocs are in
+    ;; exn-message.
+    ;;
+    ;; On Racket BC, if a path is very long, it might be truncated and
+    ;; start with "..." in exn-message. As a result, we will display
+    ;; the full path from the srcloc here, which is helpful; see #604.
+    (define strs
+      (for*/list ([srcloc (in-list ((exn:srclocs-accessor exn) exn))]
+                  [str (in-value (source-location->string srcloc))]
+                  #:when (not (regexp-match? (regexp-quote str)
+                                             (exn-message exn))))
+        (string-append "  " str)))
+    (unless (null? strs)
+      (display-commented "  Source locations:")
+      (for-each display-commented strs))))
 
 (module+ test
   (let ([o (open-output-string)])

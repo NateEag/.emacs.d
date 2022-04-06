@@ -493,6 +493,19 @@ Otherwise if `racket--repl-live-p', send the command."
     (user-error "Only works from a `racket-mode' buffer"))
   (unless (racket--what-to-run-p what)
     (signal 'wrong-type-argument `(racket--what-to-run-p ,what)))
+  (when-let (changes (racket--back-end-watch-read/reset))
+    (when (y-or-n-p (format "Changed: %S -- restart Racket Mode back end %S? "
+                            changes
+                            (racket-back-end-name)))
+      (message "")
+      ;; Starting a new REPL process here seems to be reliable only if
+      ;; we stop the back end and wait for the old REPL process to
+      ;; die.
+      (racket-stop-back-end)
+      (with-temp-message "Waiting for old REPL to terminate..."
+        (while (racket--repl-live-p)
+          (accept-process-output)))
+      (racket-start-back-end)))
   (run-hook-with-args 'racket--repl-before-run-hook) ;ours
   (run-hook-with-args 'racket-before-run-hook)       ;users'
   (pcase-let*
@@ -675,7 +688,7 @@ most recent `racket-mode' buffer, if any."
 
 ;;; send to REPL
 
-(defun racket--send-region-to-repl (start end)
+(defun racket--send-region-to-repl (start end &optional echo-p)
   "Internal function to send the region to the Racket REPL.
 
 Before sending the region, calls `racket-repl' and
@@ -696,6 +709,10 @@ Afterwards displays the buffer in some window."
         (save-excursion
           (goto-char (process-mark proc))
           (insert ?\n)
+          (when echo-p
+            (insert (with-current-buffer source-buffer
+                      (buffer-substring start end)))
+            (insert "\n;; =>\n"))
           (set-marker (process-mark proc) (point))))
       (with-current-buffer source-buffer
         (comint-send-region proc start end)
@@ -720,14 +737,19 @@ Afterwards displays the buffer in some window."
           (racket--debug-send-definition (point) end)
         (racket--send-region-to-repl (point) end)))))
 
-(defun racket-send-last-sexp ()
-  "Send the previous sexp to the Racket REPL.
+(defun racket-send-last-sexp (&optional prefix)
+  "Send the sexp before point to the Racket REPL.
 
-When the previous sexp is a sexp comment the sexp itself is sent,
-without the #; prefix."
-  (interactive)
+When the sexp is a sexp comment the sexp itself is sent, without
+the #; prefix.
+
+With a \\[universal-argument] command prefix, the sexp is copied
+into the REPL, followed by a \";; ->\n\" line, to distinguish it
+from the zero or more values to which it evaluates."
+  (interactive "P")
   (racket--send-region-to-repl (racket--repl-last-sexp-start)
-                               (point)))
+                               (point)
+                               prefix))
 
 (defun racket-eval-last-sexp ()
   "Eval the previous sexp asynchronously and `racket-show' the result."
@@ -1074,8 +1096,12 @@ The command varies based on how many \\[universal-argument] command prefixes you
   (list
    ;; Any apparent file:line[:.]col optionally prefaced by #<syntax:
    (list (rx (optional "#<syntax:")
-             (group-n 1 (+? (not (syntax whitespace))))
-             ?\:
+             (group-n 1
+                      (+? (not (any ". \n\t"))) ;{ no leading "..."
+                      (+? (not (any ". \n\t"))) ;{ (see #604) or
+                      (+? (not (any ". \n\t"))) ;{ whitespace
+                      (+? (not (any " \n\t")))) ;no whitespace
+              ?\:
              (group-n 2 (+ digit))
              (any ?\: ?\.)
              (group-n 3 (+ digit)))
@@ -1103,7 +1129,7 @@ The command varies based on how many \\[universal-argument] command prefixes you
   "Our value for the variable `compilation-error-regexp-alist'.")
 
 (defun racket--adjust-group-1 ()
-  (list (racket-file-name-back-to-front (match-string 1))))
+  (racket-file-name-back-to-front (match-string 1)))
 
 ;;; racket-repl-mode definition per se
 

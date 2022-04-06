@@ -23,7 +23,7 @@
 (provide start-repl-session-server
          repl-tcp-port-number
          run
-         break-repl-thread
+         repl-break
          repl-zero-column
          maybe-module-path->file)
 
@@ -51,14 +51,8 @@
 (define (profile/coverage-level? v) (memq? v profile/coverage-levels))
 (define (debug-level? v)            (eq? v 'debug))
 
-;; The message structs
-
-(define-struct/contract repl-manager-thread-message ())
-
-(define-struct/contract (load-gui repl-manager-thread-message)
-  ([in-repl? boolean?]))
-
-(define-struct/contract (run-config repl-manager-thread-message)
+;; Attributes that may vary for each run.
+(define-struct/contract run-config
   ([maybe-mod       (or/c #f module-path?)]
    [extra-submods   (listof (listof symbol?))]
    [memory-limit    exact-nonnegative-integer?] ;0 = no limit
@@ -83,13 +77,12 @@
               ready-thunk))
 
 ;; Command. Called from a command-server thread
-(define/contract (break-repl-thread sid kind)
-  (-> any/c (or/c 'break 'hang-up 'terminate) any)
-  (match (get-session sid)
-    [(struct* session ([thread t]))
-     (log-racket-mode-debug "break-repl-thread: ~v ~v" sid kind)
-     (break-thread t (case kind [(hang-up terminate) kind] [else #f]))]
-    [_ (log-racket-mode-error "break-repl-thread: ~v not in `sessions`" sid)]))
+(struct break (kind))
+(define/contract (repl-break kind)
+  (-> (or/c 'break 'hang-up 'terminate) any)
+  (unless (current-repl-msg-chan)
+    (error 'repl-break "No REPL session to break"))
+  (channel-put (current-repl-msg-chan) (break kind)))
 
 ;; Command. Called from a command-server thread
 (struct zero-column (chan))
@@ -282,12 +275,22 @@
                                         (struct-copy run-config cfg [maybe-mod #f]))
                            (sync never-evt))])
           (with-stack-checkpoint
-            (maybe-configure-runtime maybe-mod) ;FIRST: see #281
+            ;; First require the module so that if it has any errors
+            ;; we stop here.
             (namespace-require maybe-mod)
+            ;; Require desired extra submodules (e.g. main, test).
             (for ([submod (in-list extra-submods-to-run)])
               (define submod-spec `(submod ,file ,@submod))
               (when (module-declared? submod-spec)
                 (dynamic-require submod-spec #f)))
+            ;; configure-runtime important for e.g. Typed Racket REPL.
+            ;; Do before we set current-namespace; see #281. On the
+            ;; other hand, we don't want to do before
+            ;; namespace-require, or we might get duplicate Typed
+            ;; Racket error messages printed, as a result of it
+            ;; directly calling error-display-handler for each type
+            ;; check fail before raising a single exn:fail:syntax.
+            (maybe-configure-runtime maybe-mod)
             ;; User's program may have changed current-directory;
             ;; use parameterize to set for module->namespace but
             ;; restore user's value for REPL.
@@ -325,33 +328,21 @@
         (define thd ((txt/gui (λ _ t/v) eventspace-handler-thread) (current-eventspace)))
         thd)))
 
-  (define (clean-up-and-run some-cfg)
-    (case context-level
-      [(profile)  (clear-profile-info!)]
-      [(coverage) (clear-test-coverage-info!)])
-    (custodian-shutdown-all repl-cust)
-    (fresh-line)
-    (do-run some-cfg))
-
   ;; While the repl thread is in read-eval-print-loop, here on the
-  ;; repl session thread we wait for messages via repl-msg-chan. Also
-  ;; catch breaks, in which case we (a) break the REPL thread so
-  ;; display-exn runs there, and (b) continue from our break.
+  ;; repl session thread we wait for messages via repl-msg-chan.
   (let get-message ()
-    (define message
-      (call-with-exception-handler
-       (match-lambda
-         [(and (or (? exn:break:terminate?) (? exn:break:hang-up?)) e) e]
-         [(exn:break _msg _marks continue) (break-thread repl-thread) (continue)]
-         [e e])
-       (λ () (sync (current-repl-msg-chan)))))
-    (match message
-      [(? run-config? c) (clean-up-and-run c)]
+    (match (sync (current-repl-msg-chan))
+      [(? run-config? c) (case context-level
+                           [(profile)  (clear-profile-info!)]
+                           [(coverage) (clear-test-coverage-info!)])
+                         (custodian-shutdown-all repl-cust)
+                         (fresh-line)
+                         (do-run c)]
       [(zero-column ch)  (zero-column!)
-                         (channel-put ch 'done)
-                         (get-message)]
-      [v (log-racket-mode-warning "ignoring unknown repl-msg-chan message: ~v" v)
-         (get-message)])))
+                         (channel-put ch 'done)]
+      [(break kind)      (break-thread repl-thread (if (eq? kind 'break) #f kind))]
+      [v (log-racket-mode-warning "ignoring unknown repl-msg-chan message: ~v" v)])
+    (get-message)))
 
 (define ((make-prompt-read m))
   (begin0 (get-interaction (maybe-module-path->prompt-string m))

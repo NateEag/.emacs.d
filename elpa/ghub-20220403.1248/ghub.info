@@ -14,7 +14,7 @@ This is ghub.info, produced by makeinfo version 6.7 from ghub.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
-* Ghub: (ghub).         Minuscule client library for the Github API.
+* Ghub: (ghub).         Client library for the Github API.
 END-INFO-DIR-ENTRY
 
 
@@ -26,7 +26,7 @@ Ghub User and Developer Manual
 Ghub is an Emacs library that is used by various packages to access the
 APIs of various instances of various Git forge implementations.
 
-This manual is for Ghub version 3.5.5-git.
+This manual is for Ghub version 3.5.6-git.
 
      Copyright (C) 2017-2022 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -270,7 +270,7 @@ then you should do this:
 not be the same as on "github.com"!
 
    Doing this only tells Ghub who you are on this host, additionally you
-have to tell Ghub which repository are connected to that forge/host,
+have to tell Ghub which repositories are connected to that forge/host,
 like so:
 
      cd /path/to/repo
@@ -1136,31 +1136,31 @@ Appendix B Variable Index
 
 
 Tag Table:
-Node: Top764
-Node: Introduction2292
-Node: Getting Started2697
-Node: Basic Concepts Arguments and Variables4379
-Node: Setting the Username8233
-Ref: Setting your Githubcom Username8717
-Ref: Setting your Gitlabcom Username9073
-Ref: Setting your Github Enterprise Username9539
-Ref: Setting your Username for Other Hosts and/or Forges10270
-Node: Creating and Storing a Token11076
-Node: Creating a Token11340
-Node: Storing a Token12360
-Node: Github Configuration Variables14205
-Node: API15916
-Node: Their APIs16154
-Node: Making REST Requests16879
-Node: Making GraphQL Requests26292
-Node: Github Convenience Wrappers32921
-Node: Non-Github Convenience Wrappers36625
-Node: Notes42129
-Node: Using Ghub in Personal Scripts42336
-Node: Using Ghub in Your Own Package43227
-Node: Forge Limitations and Notes44162
-Node: Function Index45135
-Node: Variable Index50784
+Node: Top754
+Node: Introduction2282
+Node: Getting Started2687
+Node: Basic Concepts Arguments and Variables4369
+Node: Setting the Username8223
+Ref: Setting your Githubcom Username8707
+Ref: Setting your Gitlabcom Username9063
+Ref: Setting your Github Enterprise Username9529
+Ref: Setting your Username for Other Hosts and/or Forges10262
+Node: Creating and Storing a Token11068
+Node: Creating a Token11332
+Node: Storing a Token12352
+Node: Github Configuration Variables14197
+Node: API15908
+Node: Their APIs16146
+Node: Making REST Requests16871
+Node: Making GraphQL Requests26284
+Node: Github Convenience Wrappers32913
+Node: Non-Github Convenience Wrappers36617
+Node: Notes42121
+Node: Using Ghub in Personal Scripts42328
+Node: Using Ghub in Your Own Package43219
+Node: Forge Limitations and Notes44154
+Node: Function Index45127
+Node: Variable Index50776
 
 End Tag Table
 

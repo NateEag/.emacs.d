@@ -1,4 +1,4 @@
-(define-package "cider" "20220309.618" "Clojure Interactive Development Environment that Rocks"
+(define-package "cider" "20220405.1216" "Clojure Interactive Development Environment that Rocks"
   '((emacs "26")
     (clojure-mode "5.14")
     (parseedn "1.0.6")
@@ -6,7 +6,7 @@
     (spinner "1.7")
     (seq "2.22")
     (sesman "0.3.2"))
-  :commit "1e27eba570d265bc27317dc2a8f8c98d8b5414e0" :authors
+  :commit "db972bbdfbe777272529ec848c9f1991ae94dbda" :authors
   '(("Tim King" . "kingtim@gmail.com")
     ("Phil Hagelberg" . "technomancy@gmail.com")
     ("Bozhidar Batsov" . "bozhidar@batsov.dev")

@@ -21,6 +21,9 @@
  (magit-fetch nil)
  (magit-gitignore nil)
  (magit-log
+  ("-n256"
+   ("--" "bin/grant-logger-access-to-all-servers")
+   "--graph" "--decorate")
   ("-n256" "--graph" "--decorate")
   ("--graph" "--decorate"))
  (magit-merge nil
@@ -42,4 +45,5 @@
               ("--include-untracked"))
  (magit-submodule nil)
  (magit-svn nil)
- (magit-tag nil))
+ (magit-tag nil)
+ (magit:-- "bin/grant-logger-access-to-all-servers" ""))

@@ -1,7 +1,6 @@
-(define-package "demap" "20220316.2" "Detachable minimap package"
-  '((emacs "24.4")
-    (dash "2.18.0"))
-  :commit "237a33714c094577510b2e040635ee7732fe36fe" :authors
+(define-package "demap" "20220322.2309" "Detachable minimap package"
+  '((emacs "25.1"))
+  :commit "c42ec4752544f80ca7c172ff65e705a56089bc96" :authors
   '(("Sawyer Gardner <https://gitlab.com/sawyerjgardner>"))
   :maintainer
   '("Sawyer Gardner <https://gitlab.com/sawyerjgardner>")

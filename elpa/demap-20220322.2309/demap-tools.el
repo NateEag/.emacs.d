@@ -4,11 +4,11 @@
 ;;
 ;; Author: Sawyer Gardner <https://gitlab.com/sawyerjgardner>
 ;; Created: January 04, 2022
-;; Modified: March 9, 2022
-;; Version: 1.2.0
+;; Modified: March 22, 2022
+;; Version: 1.4.0
 ;; Keywords: lisp extensions internal local tools
 ;; Homepage: https://gitlab.com/sawyerjgardner/demap.el
-;; Package-Requires: ((emacs "24.4") (dash "2.18.0"))
+;; Package-Requires: ((emacs "25.1"))
 ;;
 ;; This file is not part of GNU Emacs.
 ;;
@@ -35,12 +35,11 @@
 ;;
 ;;; Code:
 
-(eval-when-compile
+(eval-and-compile
+  (require 'subr-x)
   (when (>= emacs-major-version 28)
     ;;window.el doesn't provide 'window before version 28
     (require 'window) ))
-
-(require 'dash)
 
 ;;define
 
@@ -62,10 +61,21 @@ if this file is auto-loaded, also load demap.el"
 
 ;;buffer
 
-(defun demap--tools-window-replace-buffer(buffer-or-name new-buffer-or-name)
-  "Replace the buffer in all windows holding BUFFER-OR-NAME with NEW-BUFFER-OR-NAME."
+(defun demap--tools-window-replace-buffer(buffer-or-name
+                                          new-buffer-or-name
+                                          &optional dedicated)
+  "Replace BUFFER-OR-NAME in all window showing it with NEW-BUFFER-OR-NAME.
+if the optional third argument DEDICATED is
+non-nil, then this function will force the change
+and proserve the windows dedicated property."
   (dolist (window (get-buffer-window-list buffer-or-name t t))
-    (set-window-buffer window new-buffer-or-name t) ))
+    (let ((d (window-dedicated-p window)))
+      (if (and d dedicated)
+          (progn
+            (set-window-dedicated-p window nil)
+            (set-window-buffer window new-buffer-or-name t)
+            (set-window-dedicated-p window d) )
+        (set-window-buffer window new-buffer-or-name t) ))))
 
 (defun demap--tools-buffer-steal-name(buffer-or-name)
   "Rename BUFFER-OR-NAME and return its old name.
@@ -85,8 +95,8 @@ see `buffer-base-buffer'."
 (defun demap--tools-side-window-p(window)
   "Whether WINDOW is a side window."
   (or (window-parameter window 'window-side)
-      (-some-> (window-parent window)
-        (window-parameter 'window-side) )))
+      (when-let (x (window-parent window))
+        (window-parameter x 'window-side) )))
 
 ;;variables
 
@@ -193,7 +203,11 @@ see `dolist'.
 ;;hooks
 
 (defalias 'demap--tools-add-hook    #'add-hook)
-(defalias 'demap--tools-remove-hook #'remove-hook)
+
+(defun demap--tools-remove-hook(hook function &optional local)
+  "Wrapper for `remove-hook'.
+passes HOOK FUNCTION and LOCAL to `remove-hook'."
+  (remove-hook hook function local))
 
 (defun demap--tools-add-hooks(hooks funcs &optional depth local)
   "Add to the value of HOOKS the functions FUNCS.
@@ -227,8 +241,9 @@ from HOOK. the returned function excepts no arguments.
 DEPTH and LOCAL are passed to `add-hook'."
   (demap--tools-add-hook hook func depth local)
   (if local
-      (->> (current-buffer)
-           (apply-partially #'demap--tools-remove-hook-local hook func) )
+      (thread-first
+        #'demap--tools-remove-hook-local
+        (apply-partially hook func (current-buffer)) )
     (apply-partially #'demap--tools-remove-hook hook func) ))
 
 (defun demap--tools-smart-add-hooks(hooks funcs &optional depth local)
@@ -243,8 +258,9 @@ from HOOKS. the returned function excepts no arguments.
 DEPTH and LOCAL are passed to `add-hook'."
   (demap--tools-add-hooks hooks funcs depth local)
   (if local
-      (->> (current-buffer)
-           (apply-partially #'demap--tools-remove-hooks-local hooks funcs) )
+      (thread-first
+        #'demap--tools-remove-hooks-local
+        (apply-partially hooks funcs (current-buffer)) )
     (apply-partially #'demap--tools-remove-hooks hooks funcs) ))
 
 
@@ -364,7 +380,21 @@ ARGS       arguments, see `define-miner-mode'."
        (defvar-local ,var ,init-value
          ,(or doc (demap--tools-define-mode-var-get-doc var)) ))))
 
+;;scroll
 
+(defun demap--tools-scroll-to-region(window start end)
+  ""
+  (when (>= (window-start window) start)
+    (set-window-point window start) )
+  (when (<= (window-end window t) end)
+    (set-window-point window end) ))
+
+(defun demap--tools-scroll-buffer-to-region(buffer-or-name
+                                            start end
+                                            &optional minibuf frame )
+  ""
+  (dolist (window (get-buffer-window-list buffer-or-name minibuf frame))
+    (demap--tools-scroll-to-region window start end) ))
 
 
 (provide 'demap-tools)

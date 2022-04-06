@@ -11525,10 +11525,10 @@ matched.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20210615.1512/notmuch-addr-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20220402.1624/notmuch-addr-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20210615.1512/notmuch-addr-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-addr-20220402.1624/notmuch-addr-autoloads.el") (car load-path))))
 
 
 

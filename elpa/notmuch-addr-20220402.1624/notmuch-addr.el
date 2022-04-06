@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://git.sr.ht/~tarsius/notmuch-addr
 ;; Keywords: mail
-;; Package-Version: 20210615.1512
-;; Package-Commit: c447ddb94b3c2a473ec1762fc083794acd6057f0
+;; Package-Version: 20220402.1624
+;; Package-Commit: 4fc0621106bf5d3ef66152456a22403bccdf0a4d
 
 ;; Package-Requires: ((emacs "27.1") (notmuch "0.32"))
 
@@ -69,7 +69,7 @@ Also sustituted `notmuch-addr-read-recipient'
 for `notmuch-address-from-minibuffer'."
   (setq notmuch-address-command 'as-is)
   (advice-add 'notmuch-address-from-minibuffer :override
-              'notmuch-address-from-minibuffer--use-notmuch-addr)
+              #'notmuch-address-from-minibuffer--use-notmuch-addr)
   (cl-pushnew 'notmuch message-expand-name-databases)
   (cl-pushnew (cons notmuch-addr-completion-headers-regexp
                     'notmuch-addr-expand-name)

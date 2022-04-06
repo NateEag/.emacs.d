@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/closql
 ;; Keywords: extensions
-;; Package-Version: 20220216.1906
-;; Package-Commit: 1ba85ce9f7094aeddce25044689278eda6739531
+;; Package-Version: 20220402.1037
+;; Package-Commit: 522cc52a4df6b55099888e89a18f48f7c9275c3d
 ;; Package-Requires: ((emacs "25.1") (emacsql-sqlite "3.0.0"))
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -178,8 +178,8 @@
               (setq list2 (mapcar #'list list2)))
             ;; `list2' may not be sorted at all and `list1' has to
             ;; be sorted because Elisp and SQLite sort differently.
-            (setq list1 (cl-sort list1 'string< :key #'car))
-            (setq list2 (cl-sort list2 'string< :key #'car))
+            (setq list1 (cl-sort list1 #'string< :key #'car))
+            (setq list2 (cl-sort list2 #'string< :key #'car))
             (while (progn (setq elt1 (car list1))
                           (setq elt2 (car list2))
                           (or elt1 elt2))
@@ -486,7 +486,7 @@
 
 (defun closql-where-class-in (classes)
   (vconcat
-   (mapcar 'closql--abbrev-class
+   (mapcar #'closql--abbrev-class
            (cl-mapcan (lambda (sym)
                         (let ((str (symbol-name sym)))
                           (cond ((string-match-p "--eieio-childp\\'" str)
@@ -508,15 +508,14 @@
 (cl-defmethod closql--list-subabbrevs ((class (subclass closql-object))
                                        &optional wildcards)
   (cl-labels
-      ((types
-        (class)
-        (let ((children (eieio--class-children (cl--find-class class)))
-              ;; An abstract base-class may violate its own naming rules.
-              (abbrev (ignore-errors (closql--abbrev-class class))))
-          (nconc (and (not (class-abstract-p class)) (list abbrev))
-                 (and wildcards children
-                      (list (if abbrev (intern (format "%s*" abbrev)) '*)))
-                 (cl-mapcan #'types children)))))
+      ((types (class)
+         (let ((children (eieio--class-children (cl--find-class class)))
+               ;; An abstract base-class may violate its own naming rules.
+               (abbrev (ignore-errors (closql--abbrev-class class))))
+           (nconc (and (not (class-abstract-p class)) (list abbrev))
+                  (and wildcards children
+                       (list (if abbrev (intern (format "%s*" abbrev)) '*)))
+                  (cl-mapcan #'types children)))))
     (sort (types class) #'string<)))
 
 (cl-defmethod closql--set-object-class ((db closql-database) obj class)

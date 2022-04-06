@@ -24870,10 +24870,10 @@ for more details on the DSL accepted by Cask.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buttercup-20220227.2337/buttercup-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buttercup-20220329.2043/buttercup-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buttercup-20220227.2337/buttercup-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buttercup-20220329.2043/buttercup-autoloads.el") (car load-path))))
 
 
 

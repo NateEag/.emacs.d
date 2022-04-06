@@ -487,9 +487,13 @@ The shell command lives in my dotfiles repo."
 
   :mode (("\\.envrc\\'" . sh-mode)
          ("\\.env" . sh-mode)
-         ;; Bash completions are often named for the command that they modify without
-         ;; any filename extension, sometimes with no hint that they're a bash
-         ;; file other than living inside a completions/ directory.
+         ;; I sometimes write bashrc.local files that define a specific
+         ;; interactive configuration for a given machine or project. If
+         ;; there's a better name for these files I'd love to know.
+         ("bashrc\\.local" . sh-mode)
+         ;; Bash completions are often named for the command that they modify
+         ;; without any filename extension, sometimes with no hint that they're
+         ;; a bash file other than living inside a completions/ directory.
          ;;
          ;; Hence this rule, so that when I edit such files they work
          ;; appropriately.

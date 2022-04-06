@@ -1,6 +1,6 @@
-(define-package "multiple-cursors" "20211112.2223" "Multiple cursors for Emacs."
+(define-package "multiple-cursors" "20220328.1724" "Multiple cursors for Emacs."
   '((cl-lib "0.5"))
-  :commit "8a60fc7ef0ae6e5ca089a7c95264cd0ae83e7274" :authors
+  :commit "aae47aebc0ae829211fa1e923232715d8e327b36" :authors
   '(("Magnar Sveen" . "magnars@gmail.com"))
   :maintainer
   '("Magnar Sveen" . "magnars@gmail.com")

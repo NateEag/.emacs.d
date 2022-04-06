@@ -12167,10 +12167,10 @@ Use the `names--inside-make-autoload' variable to indicate to
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20211112.2223/multiple-cursors-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20220328.1724/multiple-cursors-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20211112.2223/multiple-cursors-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/multiple-cursors-20220328.1724/multiple-cursors-autoloads.el") (car load-path))))
 
 
 
@@ -12255,35 +12255,54 @@ With zero ARG, skip the last one and mark next.
 \(fn ARG)" t nil)
 
 (autoload 'mc/mark-previous-like-this "mc-mark-more" "\
-Find and mark the previous part of the buffer matching the currently active region
-If no region is active add a cursor on the previous line
+Find and mark the previous part of the buffer matching the
+currently active region.
+
+If no region is active ,add a cursor on the previous line.
+
 With negative ARG, delete the last one instead.
+
 With zero ARG, skip the last one and mark next.
 
 \(fn ARG)" t nil)
 
 (autoload 'mc/mark-previous-like-this-word "mc-mark-more" "\
-Find and mark the previous part of the buffer matching the currently active region
-If no region is active, mark the word at the point and find the previous match
+Find and mark the previous part of the buffer matching the
+currently active region.
+
+If no region is active, mark the word at the point and find the
+previous match.
+
 With negative ARG, delete the last one instead.
+
 With zero ARG, skip the last one and mark previous.
 
 \(fn ARG)" t nil)
 
 (autoload 'mc/mark-previous-word-like-this "mc-mark-more" "\
-Find and mark the previous part of the buffer matching the currently active region
-The matching region must be a whole word to be a match
-If no region is active add a cursor on the previous line
+Find and mark the previous part of the buffer matching the
+currently active region.
+
+The matching region must be a whole word to be a match.
+
+If no region is active, add a cursor on the previous line.
+
 With negative ARG, delete the last one instead.
+
 With zero ARG, skip the last one and mark next.
 
 \(fn ARG)" t nil)
 
 (autoload 'mc/mark-previous-symbol-like-this "mc-mark-more" "\
-Find and mark the previous part of the buffer matching the currently active region
-The matching region must be a whole symbol to be a match
-If no region is active add a cursor on the previous line
+Find and mark the previous part of the buffer matching
+the currently active region.
+
+The matching region must be a whole symbol to be a match.
+
+If no region is active add a cursor on the previous line.
+
 With negative ARG, delete the last one instead.
+
 With zero ARG, skip the last one and mark next.
 
 \(fn ARG)" t nil)
@@ -12305,10 +12324,12 @@ Deselect next part of the buffer matching the currently active region." t nil)
 Deselect prev part of the buffer matching the currently active region." t nil)
 
 (autoload 'mc/skip-to-next-like-this "mc-mark-more" "\
-Skip the current one and select the next part of the buffer matching the currently active region." t nil)
+Skip the current one and select the next part of the buffer
+matching the currently active region." t nil)
 
 (autoload 'mc/skip-to-previous-like-this "mc-mark-more" "\
-Skip the current one and select the prev part of the buffer matching the currently active region." t nil)
+Skip the current one and select the prev part of the buffer
+matching the currently active region." t nil)
 
 (autoload 'mc/mark-all-like-this "mc-mark-more" "\
 Find and mark all the parts of the buffer matching the currently active region" t nil)
@@ -12328,7 +12349,7 @@ Find and mark all the parts in the region matching the given regexp.
 \(fn BEG END)" t nil)
 
 (autoload 'mc/mark-more-like-this-extended "mc-mark-more" "\
-Like mark-more-like-this, but then lets you adjust with arrows key.
+Like mark-more-like-this, but then lets you adjust with arrow keys.
 The adjustments work like this:
 
    <up>    Mark previous like this and set direction to 'up
@@ -12344,7 +12365,8 @@ If direction is 'down:
    <left>  Remove the cursor furthest down
    <right> Skip past the cursor furthest down
 
-The bindings for these commands can be changed. See `mc/mark-more-like-this-extended-keymap'." t nil)
+The bindings for these commands can be changed.
+See `mc/mark-more-like-this-extended-keymap'." t nil)
 
 (autoload 'mc/mark-all-like-this-dwim "mc-mark-more" "\
 Tries to guess what you want to mark all of.
@@ -12443,8 +12465,9 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 (autoload 'set-rectangular-region-anchor "rectangular-region-mode" "\
 Anchors the rectangular region at point.
 
-Think of this one as `set-mark' except you're marking a rectangular region. It is
-an exceedingly quick way of adding multiple cursors to multiple lines." t nil)
+Think of this one as `set-mark' except you're marking a
+rectangular region. It is an exceedingly quick way of adding
+multiple cursors to multiple lines." t nil)
 
 (autoload 'rectangular-region-mode "rectangular-region-mode" "\
 A mode for creating a rectangular region to edit

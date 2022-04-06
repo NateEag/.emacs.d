@@ -1,4 +1,4 @@
-(define-package "symex" "20220221.252" "An evil way to edit Lisp symbolic expressions as trees"
+(define-package "symex" "20220323.1808" "An evil way to edit Lisp symbolic expressions as trees"
   '((emacs "25.1")
     (lispy "0.26.0")
     (paredit "24")
@@ -8,7 +8,7 @@
     (hydra "0.15.0")
     (seq "2.22")
     (undo-tree "0.7.5"))
-  :commit "520682d49e4e0684d6ee45cfa8d3157e830778b8" :authors
+  :commit "8ab435c2866869977c92ad64c3706f626acfb4d3" :authors
   '(("Siddhartha Kasivajhula" . "sid@countvajhula.com"))
   :maintainer
   '("Siddhartha Kasivajhula" . "sid@countvajhula.com")

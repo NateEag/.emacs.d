@@ -4,8 +4,8 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20220313.1334
-;; Package-Commit: 3c07cca10713e8212442143b6999a96ca32b68ac
+;; Package-Version: 20220402.624
+;; Package-Commit: defce6e6bb504bdfab1e091550e2f709310327b9
 ;; Keywords: project, convenience
 ;; Version: 2.6.0-snapshot
 ;; Package-Requires: ((emacs "25.1"))
@@ -398,23 +398,23 @@ is set to 'alien'."
   :type '(repeat string))
 
 (defcustom projectile-globally-ignored-directories
-  '(".idea"
-    ".vscode"
-    ".ensime_cache"
-    ".eunit"
-    ".git"
-    ".hg"
-    ".fslckout"
-    "_FOSSIL_"
-    ".bzr"
-    "_darcs"
-    ".pijul"
-    ".tox"
-    ".svn"
-    ".stack-work"
-    ".ccls-cache"
-    ".cache"
-    ".clangd")
+  '("^\\.idea$"
+    "^\\.vscode$"
+    "^\\.ensime_cache$"
+    "^\\.eunit$"
+    "^\\.git$"
+    "^\\.hg$"
+    "^\\.fslckout$"
+    "^_FOSSIL_$"
+    "^\\.bzr$"
+    "^_darcs$"
+    "^\\.pijul$"
+    "^\\.tox$"
+    "^\\.svn$"
+    "^\\.stack-work$"
+    "^\\.ccls-cache$"
+    "^\\.cache$"
+    "^\\.clangd$")
   "A list of directories globally ignored by projectile.
 Regular expressions can be used.
 
@@ -2887,7 +2887,8 @@ files such as test/impl/other files as below:
 (defconst projectile--cmake-command-presets-minimum-version-alist
   '((:configure-command . (3 19))
     (:compile-command . (3 20))
-    (:test-command . (3 20))))
+    (:test-command . (3 20))
+    (:install-command . (3 20))))
 
 (defun projectile--cmake-command-presets-supported (command-type)
   "Check if CMake supports presets for COMMAND-TYPE."
@@ -2906,7 +2907,8 @@ files such as test/impl/other files as below:
 (defconst projectile--cmake-command-preset-array-id-alist
   '((:configure-command . "configurePresets")
     (:compile-command . "buildPresets")
-    (:test-command . "testPresets")))
+    (:test-command . "testPresets")
+    (:install-command . "buildPresets")))
 
 (defun projectile--cmake-command-preset-array-id (command-type)
   "Map from COMMAND-TYPE to id of command preset array in CMake preset."

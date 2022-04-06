@@ -5,10 +5,10 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/auto-compile
 ;; Keywords: compile, convenience, lisp
-;; Package-Commit: 3b4d94b020a2557e439233dbaa9d83fdea68f05a
+;; Package-Commit: 014bf8d513dbf519077e9174a5f7db20c85864e0
 
 ;; Package-Requires: ((emacs "25.1") (packed "3.0.3"))
-;; Package-Version: 20220111.1108
+;; Package-Version: 20220402.1035
 ;; Package-X-Original-Version: 1.7.1
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -172,8 +172,8 @@ variant `auto-compile-on-save-mode'.  Also see the related
   (unless (derived-mode-p 'emacs-lisp-mode)
     (user-error "This mode only makes sense with emacs-lisp-mode"))
   (if auto-compile-mode
-      (add-hook  'after-save-hook 'auto-compile-byte-compile nil t)
-    (remove-hook 'after-save-hook 'auto-compile-byte-compile t)))
+      (add-hook  'after-save-hook #'auto-compile-byte-compile nil t)
+    (remove-hook 'after-save-hook #'auto-compile-byte-compile t)))
 
 ;;;###autoload
 (define-globalized-minor-mode auto-compile-on-save-mode
@@ -488,7 +488,7 @@ multiple files is toggled as follows:
              (not (file-exists-p (packed-el-file f))))
         (auto-compile-delete-dest f))))))
 
-(defalias 'auto-compile-toggle 'toggle-auto-compile)
+(defalias 'auto-compile-toggle #'toggle-auto-compile)
 
 (defun auto-compile-toggle-mark-failed-modified ()
   "Toggle whether buffers which failed to compile are marked as modified."

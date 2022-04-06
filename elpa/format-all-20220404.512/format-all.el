@@ -2,10 +2,10 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20211119.1042
-;; Package-Commit: 6200b91d9151b3177a676d30edd948266292bcc1
+;; Package-Version: 20220404.512
+;; Package-Commit: 69e72fabb010cac2e0f3d3294b8bda2edc3aecc7
 ;; Version: 0.5.0
-;; Package-Requires: ((emacs "24.4") (inheritenv "0.1") (language-id "0.16"))
+;; Package-Requires: ((emacs "24.4") (inheritenv "0.1") (language-id "0.18"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 
@@ -33,7 +33,7 @@
 ;; - C/C++/Objective-C (clang-format, astyle)
 ;; - C# (clang-format, astyle)
 ;; - Cabal (cabal-fmt)
-;; - Clojure/ClojureScript (node-cljfmt)
+;; - Clojure/ClojureScript (zprint, node-cljfmt)
 ;; - CMake (cmake-format)
 ;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier)
@@ -69,7 +69,7 @@
 ;; - PHP (prettier plugin)
 ;; - Protocol Buffers (clang-format)
 ;; - PureScript (purty, purs-tidy)
-;; - Python (black, yapf)
+;; - Python (black, yapf, isort)
 ;; - R (styler)
 ;; - Racket (raco-fmt)
 ;; - Reason (bsrefmt)
@@ -85,7 +85,7 @@
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
 ;; - TOML (prettier plugin)
-;; - TypeScript/TSX (prettier)
+;; - TypeScript/TSX (prettier, ts-standard)
 ;; - V (v fmt)
 ;; - Verilog (iStyle)
 ;; - YAML (prettier)
@@ -127,7 +127,7 @@
     ("C#" clang-format)
     ("C++" clang-format)
     ("Cabal Config" cabal-fmt)
-    ("Clojure" cljfmt)
+    ("Clojure" zprint)
     ("CMake" cmake-format)
     ("Crystal" crystal)
     ("CSS" prettier)
@@ -150,6 +150,7 @@
     ("Java" clang-format)
     ("JavaScript" prettier)
     ("JSON" prettier)
+    ("JSON5" prettier)
     ("Jsonnet" jsonnetfmt)
     ("JSX" prettier)
     ("Kotlin" ktlint)
@@ -265,7 +266,8 @@ the rules for an entire source tree can be given in one file.")
 (defun format-all--proper-list-p (object)
   "Return t if OBJECT is a proper list, nil otherwise."
   ;; If we could depend on Emacs 27.1 this function would be built in.
-  (and (listp object) (not (null (cl-list-length object)))))
+  (condition-case _ (not (null (cl-list-length object)))
+    (wrong-type-argument nil)))
 
 (defun format-all--normalize-formatter (formatter)
   "Internal function to convert FORMATTER spec into normal form."
@@ -890,6 +892,13 @@ Consult the existing formatters for examples of BODY."
     "-indent"
     (when (equal language "XML") "-xml"))))
 
+(define-format-all-formatter isort
+  (:executable "isort")
+  (:install "pip install isort")
+  (:languages "Python")
+  (:features)
+  (:format (format-all--buffer-easy executable "-q" "-")))
+
 (define-format-all-formatter istyle-verilog
   (:executable "iStyle")
   (:install)
@@ -1001,8 +1010,9 @@ Consult the existing formatters for examples of BODY."
   (:executable "prettier")
   (:install "npm install --global prettier @prettier/plugin-lua @prettier/plugin-php prettier-plugin-solidity prettier-plugin-svelte prettier-plugin-toml")
   (:languages
-   "CSS" "GraphQL" "HTML" "JavaScript" "JSON" "JSX" "Less" "Lua" "Markdown"
-   "PHP" "SCSS" "Solidity" "Svelte" "TOML" "TSX" "TypeScript" "Vue" "YAML"
+   "CSS" "GraphQL" "HTML" "JavaScript" "JSON" "JSON5" "JSX" "Less" "Lua"
+   "Markdown" "PHP" "SCSS" "Solidity" "Svelte" "TOML" "TSX" "TypeScript"
+   "Vue" "YAML"
    "_Angular" "_Flow")
   (:features region)
   (:format
@@ -1214,6 +1224,23 @@ Consult the existing formatters for examples of BODY."
   (:features)
   (:format (format-all--buffer-easy executable "fmt" "-no-color" "-")))
 
+(define-format-all-formatter ts-standard
+  (:executable "ts-standard")
+  (:install "npm install --global ts-standard")
+  (:languages "TypeScript" "TSX")
+  (:features)
+  (:format
+   ;; `ts-standard --stdin` properly uses zero vs non-zero exit codes to
+   ;; indicate success vs error. However, it checks for quite a broad
+   ;; range of errors, all the way up to undeclared identifiers and
+   ;; such. To catch only syntax errors, we need to look specifically
+   ;; for the text "Parsing error:".
+   (format-all--buffer-hard
+    '(0 1) ".*?:.*?:[0-9]+:[0-9]+: Parsing error:" '("tsconfig.json")
+    executable "--fix" "--stdin"
+    (when (buffer-file-name)
+      (list "--stdin-filename" (buffer-file-name))))))
+
 (define-format-all-formatter v-fmt
   (:executable "v")
   (:install)
@@ -1225,6 +1252,13 @@ Consult the existing formatters for examples of BODY."
   (:executable "yapf")
   (:install "pip install yapf")
   (:languages "Python")
+  (:features)
+  (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter zprint
+  (:executable "zprint")
+  (:install)
+  (:languages "Clojure")
   (:features)
   (:format (format-all--buffer-easy executable)))
 

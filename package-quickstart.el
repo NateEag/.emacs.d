@@ -22229,10 +22229,10 @@ Show the bookmarked entry saved in the `RECORD'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220328.907/elfeed-summary-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220331.1634/elfeed-summary-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220328.907/elfeed-summary-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elfeed-summary-20220331.1634/elfeed-summary-autoloads.el") (car load-path))))
 
 
 

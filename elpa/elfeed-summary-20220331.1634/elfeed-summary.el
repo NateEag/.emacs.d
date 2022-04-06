@@ -5,8 +5,8 @@
 ;; Author: Korytov Pavel <thexcloud@gmail.com>
 ;; Maintainer: Korytov Pavel <thexcloud@gmail.com>
 ;; Version: 0.1.0
-;; Package-Version: 20220328.907
-;; Package-Commit: 7b58bb1beb49f84c39ece322fbd22f22d7da2a5e
+;; Package-Version: 20220331.1634
+;; Package-Commit: 517cea6cb6fbf95ef3cb062591364bb7bda8c251
 ;; Package-Requires: ((emacs "27.1") (magit-section "3.3.0") (elfeed "3.4.1"))
 ;; Homepage: https://github.com/SqrtMinusOne/elfeed-summary.el
 
@@ -286,6 +286,18 @@ from the summary buffer."
   "List of default group faces, one face per level."
   :group 'elfeed-summary
   :type '(repeat face))
+
+(defcustom elfeed-summary-other-window nil
+  "Whether to open the elfeed-search buffer in other window."
+  :group 'elfeed-summary
+  :type 'boolean)
+
+(defcustom elfeed-summary-width 55
+  "Width of the summary buffer when opening the search buffer.
+
+Useful only if `elfeed-summary-other-window' is set to t."
+  :group 'elfeed-summary
+  :type 'integer)
 
 (defconst elfeed-summary-buffer "*elfeed-summary*"
   "Elfeed summary buffer name.")
@@ -630,9 +642,7 @@ The return value is a list of alists of the following elements:
     (set-keymap-parent map magit-section-mode-map)
     (define-key map (kbd "RET") #'elfeed-summary--action)
     (define-key map (kbd "M-RET") #'elfeed-summary--action-show-read)
-    (define-key map (kbd "q") (lambda ()
-                                (interactive)
-                                (quit-window t)))
+    (define-key map (kbd "q") #'elfeed-summary-quit-window)
     (define-key map (kbd "r") #'elfeed-summary--refresh)
     (define-key map (kbd "R") #'elfeed-summary-update)
     (define-key map (kbd "u") #'elfeed-summary-toggle-only-unread)
@@ -646,16 +656,15 @@ The return value is a list of alists of the following elements:
         (kbd "RET") #'elfeed-summary--action
         "M-RET" #'elfeed-summary--action-show-read
         "U" #'elfeed-summary--action-mark-read
-        "q" (lambda ()
-              (interactive)
-              (quit-window t))))
+        "q" #'elfeed-summary-quit-window))
     map)
   "A keymap for `elfeed-summary-mode-map'.")
 
 (define-derived-mode elfeed-summary-mode magit-section "Elfeed Summary"
   "A major mode to display the elfeed summary data."
   :group 'org-journal-tags
-  (setq-local buffer-read-only t))
+  (setq-local buffer-read-only t)
+  (setq-local truncate-lines t))
 
 (defclass elfeed-summary-group-section (magit-section)
   ((group :initform nil)))
@@ -712,12 +721,28 @@ FEEDS is a list of instances of `elfeed-feed'."
                             (elfeed-entry-tags entry))))))
     (elfeed-summary--refresh)))
 
+(defun elfeed-summary--open-elfeed ()
+  "Open elfeed.
+
+If `elfeed-summary-other-window' is t, open elfeed in other window."
+  (if elfeed-summary-other-window
+      (let ((window (selected-window)))
+        (switch-to-buffer-other-window (elfeed-search-buffer))
+        (when elfeed-summary-width
+          (with-selected-window window
+            (enlarge-window (- elfeed-summary-width
+                               (window-width))
+                            t))))
+    (switch-to-buffer (elfeed-search-buffer)))
+  (unless (eq major-mode 'elfeed-search-mode)
+    (elfeed-search-mode)))
+
 (defun elfeed-summary--goto-feed (feed show-read)
   "Open the FEED in a elfeed search buffer.
 
 FEED is an instance `elfeed-feed'.  If SHOW-READ is t, also show read
 items."
-  (elfeed)
+  (elfeed-summary--open-elfeed)
   (elfeed-search-set-filter
    (concat
     elfeed-summary-default-filter
@@ -762,7 +787,7 @@ SECTION is an instance of `elfeed-summary-group-section'."
     (cond
      (elfeed-summary--search-mark-read
       (elfeed-summary--mark-read feeds))
-     (t (elfeed)
+     (t (elfeed-summary--open-elfeed)
         (elfeed-search-set-filter
          (concat
           elfeed-summary-default-filter
@@ -831,7 +856,7 @@ descent."
                  (alist-get 'faces data)))))
     (widget-create 'push-button
                    :notify (lambda (widget &rest _)
-                             (elfeed)
+                             (elfeed-summary--open-elfeed)
                              (elfeed-search-set-filter
                               (widget-get widget :filter)))
                    :filter (alist-get :filter search-data)
@@ -1099,6 +1124,12 @@ search buffer."
       (with-current-buffer buffer
         (elfeed-summary--refresh))
     (elfeed-db-save)))
+
+(defun elfeed-summary-quit-window ()
+  "Save the database, then `quit-window'."
+  (interactive)
+  (elfeed-db-save)
+  (quit-window t))
 
 (defun elfeed-summary--setup ()
   "Setup elfeed summary."

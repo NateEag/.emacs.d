@@ -108,14 +108,14 @@
 
 (defvar forge-post-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c")                      'forge-post-submit)
-    (define-key map [remap evil-save-and-close]          'forge-post-submit)
-    (define-key map [remap evil-save-modified-and-close] 'forge-post-submit)
-    (define-key map (kbd "C-c C-k")                      'forge-post-cancel)
-    (define-key map [remap kill-buffer]                  'forge-post-cancel)
-    (define-key map [remap ido-kill-buffer]              'forge-post-cancel)
-    (define-key map [remap iswitchb-kill-buffer]         'forge-post-cancel)
-    (define-key map [remap evil-quit]                    'forge-post-cancel)
+    (define-key map (kbd "C-c C-c")                      #'forge-post-submit)
+    (define-key map [remap evil-save-and-close]          #'forge-post-submit)
+    (define-key map [remap evil-save-modified-and-close] #'forge-post-submit)
+    (define-key map (kbd "C-c C-k")                      #'forge-post-cancel)
+    (define-key map [remap kill-buffer]                  #'forge-post-cancel)
+    (define-key map [remap ido-kill-buffer]              #'forge-post-cancel)
+    (define-key map [remap iswitchb-kill-buffer]         #'forge-post-cancel)
+    (define-key map [remap evil-quit]                    #'forge-post-cancel)
     map))
 
 (define-derived-mode forge-post-mode gfm-mode "Forge-Post" "")
@@ -163,7 +163,11 @@
              (.name
               ;; A Github issue with yaml frontmatter.
               (save-excursion (insert .text))
-              (re-search-forward "^title: "))
+              (unless (re-search-forward "^title: " nil t)
+                (when (re-search-forward "^---" nil t 2)
+                  (beginning-of-line)
+                  (insert "title: \n")
+                  (backward-char))))
              (t
               (insert "# ")
               (let ((single
@@ -237,7 +241,7 @@
 
 (defvar forge-note-section-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] 'forge-edit-topic-note)
+    (define-key map [remap magit-edit-thing] #'forge-edit-topic-note)
     map))
 
 (defun forge--save-note (_repo topic)

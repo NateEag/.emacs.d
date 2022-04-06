@@ -91,7 +91,8 @@ Takes the pull-request as only argument and must return a directory."
     ("b P" "pull-requests" forge-browse-pullreqs)
     ("b t" "topic"         forge-browse-topic)
     ("b i" "issue"         forge-browse-issue)
-    ("b p" "pull-request"  forge-browse-pullreq)]]
+    ("b p" "pull-request"  forge-browse-pullreq)
+    ("b r" "remote"        forge-browse-remote)]]
   [["Configure"
     ("a  " "add repository to database" forge-add-repository)
     ("r  " "forge.remote"  forge-forge.remote)
@@ -219,7 +220,7 @@ Prefer a topic over a branch and that over a commit."
       (forge-browse topic)
     (if-let ((branch (magit-branch-at-point)))
         (forge-browse-branch branch)
-      (call-interactively 'forge-browse-commit))))
+      (call-interactively #'forge-browse-commit))))
 
 ;;;###autoload
 (defun forge-browse-commit (rev)
@@ -378,7 +379,7 @@ read an ISSUE to visit instead."
       (setq forge--buffer-base-branch target)
       (setq forge--buffer-head-branch source)
       (setq forge--buffer-post-object repo)
-      (setq forge--submit-post-function 'forge--submit-create-pullreq))
+      (setq forge--submit-post-function #'forge--submit-create-pullreq))
     (forge--display-post-buffer buf)))
 
 (defun forge-create-pullreq-from-issue (issue source target)
@@ -429,7 +430,7 @@ read an ISSUE to visit instead."
     (when buf
       (with-current-buffer buf
         (setq forge--buffer-post-object repo)
-        (setq forge--submit-post-function 'forge--submit-create-issue))
+        (setq forge--submit-post-function #'forge--submit-create-issue))
       (forge--display-post-buffer buf))))
 
 (defun forge-create-post (&optional quote)
@@ -456,7 +457,7 @@ point is currently on."
                                                      (oref section end))))))))
     (with-current-buffer buf
       (setq forge--buffer-post-object topic)
-      (setq forge--submit-post-function 'forge--submit-create-post)
+      (setq forge--submit-post-function #'forge--submit-create-post)
       (when quote
         (goto-char (point-max))
         (unless (bobp)
@@ -482,7 +483,7 @@ point is currently on."
                   (forge--format post "Edit comment on #%i of %p"))))))
     (with-current-buffer buf
       (setq forge--buffer-post-object post)
-      (setq forge--submit-post-function 'forge--submit-edit-post)
+      (setq forge--submit-post-function #'forge--submit-edit-post)
       (erase-buffer)
       (when (cl-typep post 'forge-topic)
         (insert "# " (oref post title) "\n\n"))
@@ -608,7 +609,7 @@ TOPIC and modify that instead."
                (forge--format topic "New note on #%i of %p"))))
     (with-current-buffer buf
       (setq forge--buffer-post-object topic)
-      (setq forge--submit-post-function 'forge--save-note)
+      (setq forge--submit-post-function #'forge--save-note)
       (erase-buffer)
       (when-let ((note (oref topic note)))
         (save-excursion (insert note ?\n))))
@@ -875,7 +876,7 @@ is added anyway.  Currently this only supports Github and Gitlab."
   "Change the local value of the `forge.remote' Git variable."
   :class 'magit--git-variable:choices
   :variable "forge.remote"
-  :choices 'magit-list-remotes
+  :choices #'magit-list-remotes
   :default "origin")
 
 ;;;###autoload

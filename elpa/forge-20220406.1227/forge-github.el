@@ -248,7 +248,7 @@
 
 (cl-defmethod forge--update-revnotes ((repo forge-github-repository) data)
   (emacsql-with-transaction (forge-db)
-    (mapc (apply-partially 'forge--update-revnote repo) data)))
+    (mapc (apply-partially #'forge--update-revnote repo) data)))
 
 (cl-defmethod forge--update-revnote ((repo forge-github-repository) data)
   (emacsql-with-transaction (forge-db)
@@ -346,33 +346,33 @@
          (result nil))
       (cl-labels
           ((cb (&optional data _headers _status _req)
-               (when data
-                 (setq result (nconc result (cdr data))))
-               (if groups
-                   (progn (cl-incf page)
-                          (forge--msg nil t nil
-                                      "Pulling notifications (page %s/%s)"
-                                      page pages)
-                          (ghub--graphql-vacuum
-                           (cons 'query (-keep #'caddr (pop groups)))
-                           nil #'cb nil :auth 'forge :host apihost))
-                 (forge--msg nil t t   "Pulling notifications")
-                 (forge--msg nil t nil "Storing notifications")
-                 (emacsql-with-transaction (forge-db)
-                   (forge-sql [:delete-from notification
-                               :where (= forge $s1)] forge)
-                   (pcase-dolist (`(,key ,repo ,query ,obj) notifs)
-                     (closql-insert (forge-db) obj)
-                     (forge--zap-repository-cache (forge-get-repository obj))
-                     (when query
-                       (oset (funcall (if (eq (oref obj type) 'issue)
-                                          #'forge--update-issue
-                                        #'forge--update-pullreq)
-                                      repo (cdr (cadr (assq key result))) nil)
-                             unread-p (oref obj unread-p)))))
-                 (forge--msg nil t t "Storing notifications")
-                 (when callback
-                   (funcall callback)))))
+             (when data
+               (setq result (nconc result (cdr data))))
+             (if groups
+                 (progn (cl-incf page)
+                        (forge--msg nil t nil
+                                    "Pulling notifications (page %s/%s)"
+                                    page pages)
+                        (ghub--graphql-vacuum
+                         (cons 'query (-keep #'caddr (pop groups)))
+                         nil #'cb nil :auth 'forge :host apihost))
+               (forge--msg nil t t   "Pulling notifications")
+               (forge--msg nil t nil "Storing notifications")
+               (emacsql-with-transaction (forge-db)
+                 (forge-sql [:delete-from notification
+                             :where (= forge $s1)] forge)
+                 (pcase-dolist (`(,key ,repo ,query ,obj) notifs)
+                   (closql-insert (forge-db) obj)
+                   (forge--zap-repository-cache (forge-get-repository obj))
+                   (when query
+                     (oset (funcall (if (eq (oref obj type) 'issue)
+                                        #'forge--update-issue
+                                      #'forge--update-pullreq)
+                                    repo (cdr (cadr (assq key result))) nil)
+                           unread-p (oref obj unread-p)))))
+               (forge--msg nil t t "Storing notifications")
+               (when callback
+                 (funcall callback)))))
         (cb)))))
 
 (defun forge--ghub-massage-notification (data forge githost)
@@ -432,13 +432,13 @@
   ((class (subclass forge-github-repository)) host user)
   (forge--fetch-user-repos
    class (forge--as-apihost host) user
-   (apply-partially 'forge--batch-add-callback (forge--as-githost host) user)))
+   (apply-partially #'forge--batch-add-callback (forge--as-githost host) user)))
 
 (cl-defmethod forge--add-organization-repos
   ((class (subclass forge-github-repository)) host org)
   (forge--fetch-organization-repos
    class (forge--as-apihost host) org
-   (apply-partially 'forge--batch-add-callback (forge--as-githost host) org)))
+   (apply-partially #'forge--batch-add-callback (forge--as-githost host) org)))
 
 (cl-defmethod forge--fetch-user-repos
   ((_ (subclass forge-github-repository)) host user callback)

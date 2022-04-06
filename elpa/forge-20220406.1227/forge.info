@@ -1147,6 +1147,10 @@ File: forge.info,  Node: FAQ,  Next: Keystroke Index,  Prev: Other Options,  Up:
 Appendix A FAQ
 **************
 
+This section lists some frequently asked questions.  Please also see
+<https://github.com/magit/forge/wiki/FAQ> for an extended list of common
+issues.
+
 * Menu:
 
 * Is it possible to create a single pull-request without pulling everything?::
@@ -1468,11 +1472,11 @@ Node: Editing Topics and Posts36352
 Node: Miscellaneous40368
 Node: Other Options42990
 Node: FAQ44070
-Node: Is it possible to create a single pull-request without pulling everything?44395
-Node: error in process filter HTTP Error 502 "Bad gateway"44861
-Node: Keystroke Index47231
-Node: Function and Command Index52428
-Node: Variable Index59893
+Node: Is it possible to create a single pull-request without pulling everything?44546
+Node: error in process filter HTTP Error 502 "Bad gateway"45012
+Node: Keystroke Index47382
+Node: Function and Command Index52579
+Node: Variable Index60044
 
 End Tag Table
 

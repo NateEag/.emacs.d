@@ -15,7 +15,7 @@ If you want to disable this, then you must set this to nil before
 `magit' is loaded.  If you do it before `forge' but after `magit'
 is loaded, then `magit-mode-map' ends up being modified anyway.")
 
-(with-eval-after-load 'magit-mode (when forge-add-default-bindings (define-key magit-mode-map "'" 'forge-dispatch) (define-key magit-mode-map "N" 'forge-dispatch)))
+(with-eval-after-load 'magit-mode (when forge-add-default-bindings (define-key magit-mode-map "'" #'forge-dispatch) (define-key magit-mode-map "N" #'forge-dispatch)))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "forge" '("forge-")))
 

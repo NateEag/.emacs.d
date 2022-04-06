@@ -25533,10 +25533,10 @@ Backup FILE, or file visited by current buffer.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20220104.1222/async-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/async-20220318.1342/async-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20220104.1222/async-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/async-20220318.1342/async-autoloads.el") (car load-path))))
 
 
 

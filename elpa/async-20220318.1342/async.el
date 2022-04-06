@@ -3,6 +3,8 @@
 ;; Copyright (C) 2012-2019 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
+;; Maintainer: Thierry Volpiatto <thievol@posteo.net>
+
 ;; Created: 18 Jun 2012
 ;; Version: 1.9.5
 ;; Package-Requires: ((emacs "24.4"))
@@ -49,6 +51,9 @@
 (defvar async-callback-value-set nil)
 (defvar async-current-process nil)
 (defvar async--procvar nil)
+
+;; For emacs<29 (only exists in emacs-29+).
+(defvar print-symbols-bare)
 
 (defun async--purecopy (object)
   "Remove text properties in OBJECT.
@@ -204,7 +209,9 @@ It is intended to be used as follows:
   (let (print-level
         print-length
         (print-escape-nonascii t)
-        (print-circle t))
+        (print-circle t)
+        ;; Fix bug#153 in emacs-29 with symbol's positions.
+        (print-symbols-bare t))
     (prin1 sexp (current-buffer))
     ;; Just in case the string we're sending might contain EOF
     (encode-coding-region (point-min) (point-max) 'utf-8-auto)

@@ -11052,10 +11052,10 @@ Return non-nil if the current buffer appears to be intended as a package." nil n
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/osm-0.4/osm-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/osm-20220403.904/osm-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/osm-0.4/osm-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/osm-20220403.904/osm-autoloads.el") (car load-path))))
 
 
 
@@ -11066,6 +11066,11 @@ Go to home coordinates." t nil)
 Go to LAT/LON/ZOOM.
 
 \(fn LAT LON ZOOM)" t nil)
+
+(autoload 'osm "osm" "\
+Go to LINK.
+
+\(fn &rest LINK)" nil t)
 
 (autoload 'osm-bookmark-jump "osm" "\
 Jump to osm bookmark BM.
@@ -11083,7 +11088,10 @@ Rename osm bookmark OLD-NAME.
 \(fn OLD-NAME)" t nil)
 
 (autoload 'osm-search "osm" "\
-Search for location and display the map." t nil)
+Search for SEARCH and display the map.
+If the prefix argument LUCKY is non-nil take the first result and jump there.
+
+\(fn SEARCH &optional LUCKY)" t nil)
 
 (autoload 'osm-gpx-show "osm" "\
 Show the tracks of gpx FILE in an `osm-mode' buffer.

@@ -17,6 +17,11 @@ Go to LAT/LON/ZOOM.
 
 \(fn LAT LON ZOOM)" t nil)
 
+(autoload 'osm "osm" "\
+Go to LINK.
+
+\(fn &rest LINK)" nil t)
+
 (autoload 'osm-bookmark-jump "osm" "\
 Jump to osm bookmark BM.
 
@@ -33,7 +38,10 @@ Rename osm bookmark OLD-NAME.
 \(fn OLD-NAME)" t nil)
 
 (autoload 'osm-search "osm" "\
-Search for location and display the map." t nil)
+Search for SEARCH and display the map.
+If the prefix argument LUCKY is non-nil take the first result and jump there.
+
+\(fn SEARCH &optional LUCKY)" t nil)
 
 (autoload 'osm-gpx-show "osm" "\
 Show the tracks of gpx FILE in an `osm-mode' buffer.

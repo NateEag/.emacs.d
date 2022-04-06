@@ -16457,10 +16457,10 @@ This function is partially copied from
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20220226.1848/dap-mode-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dap-mode-20220325.1144/dap-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20220226.1848/dap-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dap-mode-20220325.1144/dap-mode-autoloads.el") (car load-path))))
 
 
 

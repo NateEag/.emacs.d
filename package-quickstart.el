@@ -25063,19 +25063,18 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buffer-env-20220314.832/buffer-env-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/buffer-env-20220325.1659/buffer-env-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buffer-env-20220314.832/buffer-env-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/buffer-env-20220325.1659/buffer-env-autoloads.el") (car load-path))))
 
 
 
 (autoload 'buffer-env-update "buffer-env" "\
 Update the process environment buffer locally.
-This function executes FILE in a shell, collects the exported
-variables (see `buffer-env-command' for details), and then sets
-the buffer-local values of the variables `exec-path' and
-`process-environment' accordingly.
+FILE is executed in the way prescribed by `buffer-env-commands'
+and the buffer-local values of `process-environment' and
+`exec-path' are set accordingly.
 
 If FILE omitted, a file with base name `buffer-env-script-name'
 is looked up in the current directory and its parents; nothing

@@ -1,2 +1,0 @@
-;;; Generated package description from buffer-env.el  -*- no-byte-compile: t -*-
-(define-package "buffer-env" "20220314.832" "Buffer-local process environments" '((emacs "27.1")) :commit "5d0a3d67c9ae196bd44c9d41edc60cb59550eb21" :authors '(("Augusto Stoffel" . "arstoffel@gmail.com")) :maintainer '("Augusto Stoffel" . "arstoffel@gmail.com") :keywords '("processes" "tools") :url "https://github.com/astoff/buffer-env")

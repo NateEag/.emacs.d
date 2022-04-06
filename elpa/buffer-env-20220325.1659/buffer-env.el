@@ -4,11 +4,11 @@
 
 ;; Author: Augusto Stoffel <arstoffel@gmail.com>
 ;; URL: https://github.com/astoff/buffer-env
-;; Package-Version: 20220314.832
-;; Package-Commit: 5d0a3d67c9ae196bd44c9d41edc60cb59550eb21
+;; Package-Version: 20220325.1659
+;; Package-Commit: ba1c9d24d3f1ba58445cbf1f762ba6859b66f6bf
 ;; Keywords: processes, tools
 ;; Package-Requires: ((emacs "27.1"))
-;; Version: 0.2
+;; Version: 0.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -45,7 +45,7 @@
 ;;
 ;;     (add-hook 'hack-local-variables-hook 'buffer-env-update)
 ;;
-;; This way, any buffer potentially affected by directory-local
+;; In this way, any buffer potentially affected by directory-local
 ;; variables will also be affected by buffer-env.  It is nonetheless
 ;; possible to call `buffer-env-update' interactively or add it only
 ;; to specific major-mode hooks.
@@ -60,22 +60,36 @@
   :group 'processes)
 
 (defcustom buffer-env-script-name ".envrc"
-  "Base name of the script to produce environment variables."
+  "File name of the script to produce environment variables."
   :type 'string)
 
 (defcustom buffer-env-command ">&2 . \"$0\" && env -0"
   "Command to produce environment variables.
-This string is executed as a command in a shell, in the directory
-of the environment script, with its absolute file name as
-argument.  The command should print a null-separated list of
-environment variables, and nothing else, to the standard
-output."
+This variable is obsolete.  Use `buffer-env-commands' instead."
   :type 'string)
+(make-obsolete-variable 'buffer-env-command 'buffer-env-commands "0.3" 'set)
+
+(defcustom buffer-env-commands
+  '((".env" . "set -a && >&2 . \"$0\" && env -0")
+    ("guix.scm" . ">&2 guix shell -D -f \"$0\" -- env -0")
+    ("*" . ">&2 . \"$0\" && env -0"))
+  "Alist of commands used to produce environment variables.
+For each entry, the car is glob pattern and the cdr is a shell
+command.  The command specifies how to execute a script and
+collect the environment variables it defines.
+
+Specifically, the command corresponding to the script file name
+is executed in a shell, in the directory of the script, with its
+absolute file name as argument.  The command should print a
+null-separated list of environment variables, and nothing else,
+to standard output."
+  :type '(alist :key-type (string :tag "Glob pattern")
+                :value-type (string :tag "Shell command")))
 
 (defcustom buffer-env-safe-files nil
   "List of scripts marked as safe to execute.
-Entries are conses consisting of the file name and a hash of its
-content."
+Entries are cons cells consisting of the file name and a hash of
+its content."
   :type 'alist)
 
 (defcustom buffer-env-ignored-variables
@@ -105,11 +119,11 @@ In this case, this is the name of the script used to generate it.")
          buffer-env-mode-line
          help-echo "\
 Process environment is buffer local\n\
-mouse-1: Inspect process environment\n\
+mouse-1: Describe process environment\n\
 mouse-2: Reset to default process environment"
          mouse-face mode-line-highlight
          local-map (keymap (mode-line keymap
-                                      (mouse-1 . buffer-env-inspect)
+                                      (mouse-1 . buffer-env-describe)
                                       (mouse-2 . buffer-env-reset))))))
 
 (defun buffer-env--authorize (file)
@@ -137,10 +151,9 @@ Files marked as safe to execute are permanently stored in
 ;;;###autoload
 (defun buffer-env-update (&optional file)
   "Update the process environment buffer locally.
-This function executes FILE in a shell, collects the exported
-variables (see `buffer-env-command' for details), and then sets
-the buffer-local values of the variables `exec-path' and
-`process-environment' accordingly.
+FILE is executed in the way prescribed by `buffer-env-commands'
+and the buffer-local values of `process-environment' and
+`exec-path' are set accordingly.
 
 If FILE omitted, a file with base name `buffer-env-script-name'
 is looked up in the current directory and its parents; nothing
@@ -148,32 +161,42 @@ happens if no such file is found.  This makes this function
 suitable for use in a normal hook.
 
 When called interactively, ask for a FILE."
-  (interactive (list (let ((file (buffer-env--locate-script)))
-                       (read-file-name "Environment script: "
-                                       file file t))))
-  (when-let* ((file (if file
-                        (expand-file-name file)
-                      (buffer-env--locate-script)))
-              (command buffer-env-command)
-              ((buffer-env--authorize file))
-              (vars (with-temp-buffer
-                      (let* ((default-directory (file-name-directory file))
-                             (status (call-process shell-file-name nil t nil
-                                                   shell-command-switch
-                                                   command file)))
-                        (if (eq 0 status)
-                            (split-string (buffer-substring (point-min) (point-max))
-                                          "\0" t)
-                          (prog1 nil
-                            (message "[buffer-env] Error in `%s', exit status %s"
-                                     file status)))))))
+  (interactive
+   (list (let ((file (buffer-env--locate-script)))
+           (read-file-name (format-prompt "Environment script"
+                                          (when file (file-relative-name file)))
+                           nil file t))))
+  (when-let ((file (if file
+                       (expand-file-name file)
+                     (buffer-env--locate-script)))
+             ((buffer-env--authorize file))
+             (command (or buffer-env-command
+                          (seq-some (pcase-lambda (`(,patt . ,command))
+                                      (when (string-match-p (wildcard-to-regexp patt)
+                                                            (file-name-nondirectory file))
+                                        command))
+                                    buffer-env-commands)))
+             (vars (with-temp-buffer
+                     (let* ((default-directory (file-name-directory file))
+                            (message-log-max nil)
+                            (msg (format-message "[buffer-env] Running `%s'..." file)) ;; use progress meter?
+                            (status (with-temp-message msg
+                                      (call-process shell-file-name nil t nil
+                                                    shell-command-switch
+                                                    command file))))
+                       (if (= status 0)
+                           (split-string (buffer-substring (point-min) (point-max))
+                                         "\0" t)
+                         (prog1 nil
+                           (message "[buffer-env] Error in `%s', exit status %s"
+                                    file status)))))))
     (setq-local process-environment
                 (nconc (seq-remove (lambda (var)
-                                     (seq-contains-p buffer-env-ignored-variables var
-                                                     'string-prefix-p))
+                                     (seq-contains-p buffer-env-ignored-variables
+                                                     var 'string-prefix-p))
                                    vars)
                        buffer-env-extra-variables))
-    (when-let* ((path (getenv "PATH")))
+    (when-let ((path (getenv "PATH")))
       (setq-local exec-path (nconc (split-string path path-separator)
                                    (list exec-directory))))
     (when buffer-env-verbose
@@ -199,38 +222,32 @@ When called interactively, ask for a FILE."
                                   (match-string 0 y))))))
     (sort (seq-uniq vars testfn) 'string<)))
 
-(defun buffer-env-inspect ()
+(defun buffer-env-describe (&optional buffer)
   "Compare buffer-local and global process environments."
   (interactive)
-  (if (not (local-variable-p 'process-environment))
-      (message "Buffer has the default process environment")
-    (let ((name (buffer-name (current-buffer)))
-          (script buffer-env-active)
+  (setq buffer (or buffer (current-buffer)))
+  (with-current-buffer buffer
+    (let ((script (or buffer-env-active "??"))
           (local (buffer-env--sorted process-environment))
-          (global (buffer-env--sorted (default-toplevel-value 'process-environment)))
-          (buffer (get-buffer-create "*buffer-env*"))
-          (inhibit-read-only t))
-      (with-current-buffer buffer
-        (special-mode)
-        (erase-buffer)
-        (insert "The process environment of buffer ‘" name
-                "’ was generated by the script ‘" (or script "??") "’.")
-        (fill-paragraph)
-        (insert "\n\nOnly in the local process environment:\n\n")
-        (add-face-text-property (line-beginning-position -2) (point) 'bold)
-        (if-let ((vars (seq-difference local global)))
-            (dolist (var vars) (insert var ?\n))
-          (insert "(None)"))
-        (insert "\nOnly in the global process environment:\n\n")
-        (add-face-text-property (line-beginning-position -2) (point) 'bold)
-        (if-let ((vars (seq-difference global local)))
-            (dolist (var vars) (insert var ?\n))
-          (insert "(None)"))
-        (insert "\nComplete process environment of the buffer:\n\n")
-        (add-face-text-property (line-beginning-position -2) (point) 'bold)
-        (dolist (var local) (insert var ?\n))
-        (goto-char (point-min)))
-      (display-buffer buffer))))
+          (global (buffer-env--sorted (default-toplevel-value 'process-environment))))
+      (help-setup-xref (list #'buffer-env-describe buffer)
+		       (called-interactively-p 'interactive))
+      (with-help-window (help-buffer)
+        (with-current-buffer standard-output
+          (insert "The process environment of buffer ‘" (buffer-name buffer)
+                  "’ was generated by the script ‘" script "’.")
+          (fill-paragraph)
+          (insert "\n\nOnly in the local process environment:\n")
+          (if-let ((vars (seq-difference local global)))
+              (dolist (var vars) (insert "    " var ?\n))
+            (insert "    (None)\n"))
+          (insert "\nOnly in the global process environment:\n")
+          (if-let ((vars (seq-difference global local)))
+              (dolist (var vars) (insert "    " var ?\n))
+            (insert "    (None)\n"))
+          (insert "\nComplete process environment of the buffer:\n")
+          (dolist (var local) (insert "    " var ?\n))
+          (goto-char (point-min)))))))
 
 (provide 'buffer-env)
 ;;; buffer-env.el ends here

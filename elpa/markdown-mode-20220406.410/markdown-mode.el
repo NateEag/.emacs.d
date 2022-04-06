@@ -7,9 +7,9 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.6-dev
-;; Package-Version: 20220212.728
-;; Package-Commit: 521658eb32e456681592443e04ae507c3a59ed07
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Version: 20220406.410
+;; Package-Commit: d2a3d5b8625a7c6be21f19f9146745cd5c791a6a
+;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
 

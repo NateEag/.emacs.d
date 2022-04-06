@@ -2,10 +2,10 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20210916.831
-;; Package-Commit: 906fac7d91994d02120cfb5f547c1d06cea1ad69
-;; Version: 0.16.1
-;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
+;; Package-Version: 20220328.1712
+;; Package-Commit: 698a6011e76bde459a6228c7549e73a1816c91be
+;; Version: 0.18
+;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
 
@@ -29,6 +29,8 @@
 
 ;;; Code:
 
+(require 'cl-lib)
+
 (defvar language-id--file-name-extension nil
   "Internal variable for file name extension during lookup.")
 
@@ -42,13 +44,24 @@
     ;; In this case, the only way to correctly identify Cuda is by
     ;; looking at the extension.
     ("Cuda"
-     (c++-mode (language-id--file-name-extension ".cu"))
-     (c++-mode (language-id--file-name-extension ".cuh")))
+     (c++-mode
+      (language-id--file-name-extension ".cu"))
+     (c++-mode
+      (language-id--file-name-extension ".cuh")))
 
     ;; json-mode is derived from javascript-mode.
+    ("JSON5"
+     (json-mode
+      (language-id--file-name-extension ".json5"))
+     (web-mode
+      (web-mode-content-type "json")
+      (web-mode-engine "none")
+      (language-id--file-name-extension ".json5")))
     ("JSON"
      json-mode
-     (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
+     (web-mode
+      (web-mode-content-type "json")
+      (web-mode-engine "none")))
 
     ;; php-mode is derived from c-mode.
     ("PHP" php-mode)
@@ -56,10 +69,15 @@
     ;; scss-mode is derived from css-mode.
     ("SCSS" scss-mode)
 
+    ;; solidity-mode is derived from c-mode.
+    ("Solidity" solidity-mode)
+
     ;; svelte-mode is derived from html-mode.
     ("Svelte"
      svelte-mode
-     (web-mode (web-mode-content-type "html") (web-mode-engine "svelte")))
+     (web-mode
+      (web-mode-content-type "html")
+      (web-mode-engine "svelte")))
 
     ;; terraform-mode is derived from hcl-mode.
     ("Terraform" terraform-mode)
@@ -96,7 +114,9 @@
     ("Vue"
      vue-mode
      vue-html-mode
-     (web-mode (web-mode-content-type "html") (web-mode-engine "vue")))
+     (web-mode
+      (web-mode-content-type "html")
+      (web-mode-engine "vue")))
 
     ;;; The rest of the definitions are in alphabetical order.
 
@@ -115,12 +135,18 @@
     ("Crystal" crystal-mode)
     ("CSS"
      css-mode
-     (web-mode (web-mode-content-type "css") (web-mode-engine "none")))
+     (web-mode
+      (web-mode-content-type "css")
+      (web-mode-engine "none")))
     ("Cuda" cuda-mode)
     ("D" d-mode)
     ("Dart" dart-mode)
     ("Dhall" dhall-mode)
     ("Dockerfile" dockerfile-mode)
+    ("EJS"
+     (web-mode
+      (web-mode-content-type "html")
+      (web-mode-engine "ejs")))
     ("Elixir" elixir-mode)
     ("Elm" elm-mode)
     ("Emacs Lisp" emacs-lisp-mode)
@@ -134,21 +160,38 @@
     ("Haskell" haskell-mode)
     ("HCL" hcl-mode)
     ("HTML"
-     html-helper-mode mhtml-mode html-mode nxhtml-mode
-     (web-mode (web-mode-content-type "html") (web-mode-engine "none")))
+     html-helper-mode
+     mhtml-mode
+     html-mode
+     nxhtml-mode
+     (web-mode
+      (web-mode-content-type "html")
+      (web-mode-engine "none")))
     ("Java" java-mode)
     ("JavaScript"
-     (js-mode (flow-minor-mode nil))
-     (js2-mode (flow-minor-mode nil))
-     (js3-mode (flow-minor-mode nil))
-     (web-mode (web-mode-content-type "javascript") (web-mode-engine "none")))
+     (js-mode
+      (flow-minor-mode nil))
+     (js2-mode
+      (flow-minor-mode nil))
+     (js3-mode
+      (flow-minor-mode nil))
+     (web-mode
+      (web-mode-content-type "javascript")
+      (web-mode-engine "none")))
     ("JSON"
      json-mode
-     (web-mode (web-mode-content-type "json") (web-mode-engine "none")))
+     (web-mode
+      (web-mode-content-type "json")
+      (web-mode-engine "none")))
     ("Jsonnet" jsonnet-mode)
     ("JSX"
-     js2-jsx-mode jsx-mode rjsx-mode react-mode
-     (web-mode (web-mode-content-type "jsx") (web-mode-engine "none")))
+     js2-jsx-mode
+     jsx-mode
+     rjsx-mode
+     react-mode
+     (web-mode
+      (web-mode-content-type "jsx")
+      (web-mode-engine "none")))
     ("Kotlin" kotlin-mode)
     ("LaTeX" latex-mode)
     ("Less" less-css-mode)
@@ -162,29 +205,34 @@
     ("Protocol Buffer" protobuf-mode)
     ("PureScript" purescript-mode)
     ("Python" python-mode)
-    ("R" ess-r-mode (ess-mode (ess-dialect "R")))
+    ("R"
+     ess-r-mode
+     (ess-mode
+      (ess-dialect "R")))
     ("Racket" racket-mode)
     ("Ruby" enh-ruby-mode ruby-mode)
     ("Rust" rust-mode rustic-mode)
     ("Scala" scala-mode)
     ("Scheme" scheme-mode)
     ("Shell" sh-mode)
-    ("Solidity" solidity-mode)
     ("SQL" sql-mode)
     ("Swift" swift-mode swift3-mode)
     ("TOML" toml-mode conf-toml-mode)
     ("V" v-mode)
     ("Verilog" verilog-mode)
     ("XML"
-     nxml-mode xml-mode
-     (web-mode (web-mode-content-type "xml") (web-mode-engine "none")))
+     nxml-mode
+     xml-mode
+     (web-mode
+      (web-mode-content-type "xml")
+      (web-mode-engine "none")))
     ("YAML" yaml-mode))
   "Internal table of programming language definitions.")
 
 (defun language-id--mode-match-p (mode)
   "Interal helper to match current buffer against MODE."
   (let ((mode (if (listp mode) mode (list mode))))
-    (cl-destructuring-bind (wanted-major-mode . variables) mode
+    (cl-destructuring-bind (wanted-major-mode &rest variables) mode
       (and (derived-mode-p wanted-major-mode)
            (cl-every
             (lambda (variable)
@@ -215,7 +263,7 @@ returns nil."
   (let ((language-id--file-name-extension
          (downcase (file-name-extension (or (buffer-file-name) "") t))))
     (cl-some (lambda (definition)
-               (cl-destructuring-bind (language-id . modes) definition
+               (cl-destructuring-bind (language-id &rest modes) definition
                  (when (cl-some #'language-id--mode-match-p modes)
                    language-id)))
              language-id--definitions)))

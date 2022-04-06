@@ -17066,10 +17066,10 @@ A mode for editing ledger data files.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20210916.831/language-id-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/language-id-20220328.1712/language-id-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20210916.831/language-id-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/language-id-20220328.1712/language-id-autoloads.el") (car load-path))))
 
 
 

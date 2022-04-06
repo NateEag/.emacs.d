@@ -29,7 +29,7 @@
 (require 'evil)
 (require 'tree-sitter)
 
-(defgroup evil-textobj-tree-sitter nil "Text objects based on tree-sitter for Evil"
+(defgroup evil-textobj-tree-sitter nil "Text objects based on tree-sitter for Evil."
   :group 'evil)
 
 (defconst evil-textobj-tree-sitter--dir (file-name-directory (locate-library "evil-textobj-tree-sitter.el"))
@@ -43,11 +43,11 @@
   :type '(alist :key-type symbol
                 :value-type string))
 (pcase-dolist (`(,major-mode . ,lang-symbol)
-               (reverse '((sh-mode . "bash")
-                          (shell-script-mode . "bash")
+               (reverse '((c++-mode . "cpp")
                           (c-mode . "c")
                           (csharp-mode . "csharp")
-                          (c++-mode . "cpp")
+                          (elixir-mode . "elixir")
+                          (elm-mode . "elm")
                           (go-mode . "go")
                           (html-mode . "html")
                           (java-mode . "java")
@@ -57,21 +57,26 @@
                           (js3-mode . "javascript")
                           (julia-mode . "julia")
                           (php-mode . "php")
+                          (prisma-mode . "prisma")
                           (python-mode . "python")
                           (rjsx-mode . "javascript")
                           (ruby-mode . "ruby")
                           (rust-mode . "rust")
                           (rustic-mode . "rust")
-                          (typescript-mode . "typescript"))))
+                          (sh-mode . "bash")
+                          (shell-script-mode . "bash")
+                          (typescript-mode . "typescript")
+                          (verilog-mode . "verilog")
+                          (zig-mode . "zig"))))
   (setf (map-elt evil-textobj-tree-sitter-major-mode-language-alist
                  major-mode) lang-symbol))
 
 (defun evil-textobj-tree-sitter--nodes-before (nodes)
   "NODES which contain the current after them."
-  (srot (cl-remove-if-not (lambda (x)
+  (sort (cl-remove-if-not (lambda (x)
                             (< (byte-to-position (car (last x))) (point)))
                           nodes)
-        (lambda (x y) (< (car (last x) (car (last y)))))))
+        (lambda (x y) (< (car (last x)) (car (last y))))))
 
 (defun evil-textobj-tree-sitter--nodes-within (nodes)
   "NODES which contain the current point inside them ordered inside out."

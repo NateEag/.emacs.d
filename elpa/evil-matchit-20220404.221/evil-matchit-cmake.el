@@ -1,8 +1,8 @@
-;;; evil-matchit-octave.el --- octave plugin of evil-matchit
+;;; evil-matchit-cmake.el --- cmake plugin of evil-matchit
 
-;; Copyright (C) 2020 Chen Bin <chenbin DOT sh AT gmail DOT com>
+;; Copyright (C) 2014-2020 Chen Bin
 
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;; Author: Chen Bin
 
 ;; This file is not part of GNU Emacs.
 
@@ -32,26 +32,28 @@
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-octave-extract-keyword-howtos
-  '(("^[ \t]*\\([a-zA-Z]+\\)[ \t]*" 1)))
+(defvar evilmi-cmake-extract-keyword-howtos
+  '(("^[ \t]*\\([a-zA-Z]+ *\\) *(.*$" 1)))
 
-;; Octave (http://www.octave.org) syntax
-(defvar evilmi-octave-match-tags
-  '((("if" "for" "while" "switch" "function") ("elseif" "else" "case" "otherwise") ("end"))))
-
-;;;###autoload
-(defun evilmi-octave-get-tag ()
-  "Get current tag info."
-  (evilmi-sdk-get-tag evilmi-octave-match-tags
-                      evilmi-octave-extract-keyword-howtos))
+;; CMake (http://www.cmake.org) syntax
+(defvar evilmi-cmake-match-tags
+  '((("if") ("elseif" "else") ("endif") "MONOGAMY")
+    (("foreach") () ("endforeach") "MONOGAMY")
+    (("macro") () ("endmacro") "MONOGAMY")
+    (("while") () ("endwhile") "MONOGAMY")
+    (("function") () ("endfunction") "MONOGAMY")))
 
 ;;;###autoload
-(defun evilmi-octave-jump (info num)
-  "Use INFO returned by `evilmi-octave-get-tag' and NUM to jump to matched tag."
+(defun evilmi-cmake-get-tag ()
+  (evilmi-sdk-get-tag evilmi-cmake-match-tags
+                      evilmi-cmake-extract-keyword-howtos))
+
+;;;###autoload
+(defun evilmi-cmake-jump (info num)
   (evilmi-sdk-jump info
                    num
-                   evilmi-octave-match-tags
-                   evilmi-octave-extract-keyword-howtos))
+                   evilmi-cmake-match-tags
+                   evilmi-cmake-extract-keyword-howtos))
 
-(provide 'evil-matchit-octave)
-;;; evil-matchit-octave.el ends here
+(provide 'evil-matchit-cmake)
+;;; evil-matchit-cmake.el ends here

@@ -1,8 +1,8 @@
-;;; evil-matchit-sh.el --- sh (bash/zsh) plugin of evil-matchit
+;;; evil-matchit-octave.el --- octave plugin of evil-matchit
 
-;; Copyright (C) 2014-2020 Chen Bin <chenbin DOT sh AT gmail DOT com>
+;; Copyright (C) 2020 Chen Bin
 
-;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
+;; Author: Chen Bin
 
 ;; This file is not part of GNU Emacs.
 
@@ -28,27 +28,30 @@
 ;;; Code:
 
 ;; OPTIONAL, you don't need SDK to write a plugin for evil-matchit
-;; but SDK don make you write less code, isn't it?
+;; but SDK do make you write less code, isn't it?
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-sh-match-tags
-  '((("if") ("elif" "else") ("fi") "MONOGAMY")
-    ("case" (";;") ("esac") "MONOGAMY")
-    (("for" "do" "while" "until") () ("done"))))
+(defvar evilmi-octave-extract-keyword-howtos
+  '(("^[ \t]*\\([a-zA-Z]+\\)[ \t]*" 1)))
 
-(defvar evilmi-sh-extract-keyword-howtos
-  '(("^[ \t]*\\([a-z]+\\)\\( .*\\| *\\)$" 1)
-    ("^.*\\(;;\\) *$" 1)
-    ("^\\(\} *\\)" 1)))
+;; Octave (http://www.octave.org) syntax
+(defvar evilmi-octave-match-tags
+  '((("if" "for" "while" "switch" "function") ("elseif" "else" "case" "otherwise") ("end"))))
 
 ;;;###autoload
-(defun evilmi-sh-get-tag ()
-  (evilmi-sdk-get-tag evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos))
+(defun evilmi-octave-get-tag ()
+  "Get current tag info."
+  (evilmi-sdk-get-tag evilmi-octave-match-tags
+                      evilmi-octave-extract-keyword-howtos))
 
 ;;;###autoload
-(defun evilmi-sh-jump (info num)
-  (evilmi-sdk-jump info num evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos))
+(defun evilmi-octave-jump (info num)
+  "Use INFO returned by `evilmi-octave-get-tag' and NUM to jump to matched tag."
+  (evilmi-sdk-jump info
+                   num
+                   evilmi-octave-match-tags
+                   evilmi-octave-extract-keyword-howtos))
 
-(provide 'evil-matchit-sh)
-;;; evil-matchit-sh.el ends here
+(provide 'evil-matchit-octave)
+;;; evil-matchit-octave.el ends here

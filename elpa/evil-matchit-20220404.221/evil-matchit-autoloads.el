@@ -173,6 +173,27 @@ Use INFO from current tag to jump NUM times.
 
 ;;;***
 
+;;;### (autoloads nil "evil-matchit-indent" "evil-matchit-indent.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from evil-matchit-indent.el
+
+(autoload 'evilmi-indent-get-tag "evil-matchit-indent" "\
+Return '(start-position tag-type keyword)." nil nil)
+
+(autoload 'evilmi-indent-jump "evil-matchit-indent" "\
+Use INFO from `evilmi-indent-get-tag' to jump to matched tag.
+
+\(fn INFO)" nil nil)
+
+(autoload 'evilmi-indent-extract-keyword "evil-matchit-indent" "\
+Extract keyword from LINE.
+
+\(fn LINE)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-indent" '("evilmi-")))
+
+;;;***
+
 ;;;### (autoloads nil "evil-matchit-javascript" "evil-matchit-javascript.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-javascript.el
@@ -290,11 +311,12 @@ Use INFO to jump NUM times.
 Return '(start-position tag-type keyword)." nil nil)
 
 (autoload 'evilmi-python-jump "evil-matchit-python" "\
-Use INFO returned by `evilmi-python-get-tag' and NUM to jump to matched tag.
+Use INFO from `evilmi-python-get-tag' to jump to matched tag.
+NUM is ignored.
 
 \(fn INFO NUM)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-python" '("evilmi--python-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-python" '("evilmi-python-")))
 
 ;;;***
 
@@ -467,6 +489,20 @@ Use INFO returned by `evilmi-verlog-get-tag' and NUM to jump to matched tag.
 \(fn INFO NUM)" nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-verilog" '("evilmi-verilog-")))
+
+;;;***
+
+;;;### (autoloads nil "evil-matchit-yaml" "evil-matchit-yaml.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from evil-matchit-yaml.el
+
+(autoload 'evilmi-yaml-get-tag "evil-matchit-yaml" "\
+Return '(start-position tag-type keyword)." nil nil)
+
+(autoload 'evilmi-yaml-jump "evil-matchit-yaml" "\
+Use INFO returned by `evilmi-yaml-get-tag' and NUM to jump to matched tag.
+
+\(fn INFO NUM)" nil nil)
 
 ;;;***
 

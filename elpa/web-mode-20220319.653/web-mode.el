@@ -3,8 +3,8 @@
 ;; Copyright 2011-2022 François-Xavier Bois
 
 ;; Version: 17.2.0
-;; Package-Version: 20220227.1557
-;; Package-Commit: f70277774a725e177774cc81ecbd228792cd6656
+;; Package-Version: 20220319.653
+;; Package-Commit: efa853e5cfff8e0bcacbda9d1c6696b33da91b03
 ;; Author: François-Xavier Bois
 ;; Maintainer: François-Xavier Bois <fxbois@gmail.com>
 ;; Package-Requires: ((emacs "23.1"))
@@ -1602,7 +1602,7 @@ shouldn't be moved back.)")
       "select_time" "select_year" "debug"
       "check_box" "fields_for" "file_field" "form_for" "hidden_field"
       "label" "password_field" "radio_button" "text_area" "text_field"
-      "check_box_tag" "field_set_tag" "file_field_tag" "form_tag"
+      "check_box_tag" "field_set_tag" "file_field_tag" "form_with" "form_tag"
       "hidden_field_tag" "image_submit_tag" "label_tag" "password_field_tag"
       "radio_button_tag" "select_tag" "submit_tag" "text_area_tag"
       "text_field_tag"

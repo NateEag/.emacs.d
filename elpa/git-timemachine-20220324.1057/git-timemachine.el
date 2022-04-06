@@ -4,8 +4,8 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 4.12
-;; Package-Version: 20210528.908
-;; Package-Commit: 3381797bcbf906b18dff654a2361032d2d01b4a3
+;; Package-Version: 20220324.1057
+;; Package-Commit: ca09684e94767cc0b2339b77b778b4de4f9d104f
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -348,7 +348,7 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
 	(magit-show-commit rev)
       (message "You need to install magit to show commit"))))
 
-(define-transient-command git-timemachine-help ()
+(transient-define-prefix git-timemachine-help ()
   "Show online help."
   ["Navigate"
    [("p" "show previous revision" git-timemachine-show-previous-revision)

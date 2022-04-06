@@ -4,9 +4,9 @@
 
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/05/28
-;; Version: 0.1.2
-;; Package-Version: 20200821.1052
-;; Package-Commit: ca6a6237681c641d5137d58e52f884dec0da6349
+;; Version: 0.1.4
+;; Package-Version: 20220314.1353
+;; Package-Commit: 32eaec0fc7d20b8acbd4d459bfb8f8b72d75bb66
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/twlz0ne/elpl
 ;; Keywords: lisp, tool
@@ -30,12 +30,6 @@
 ;; without contaminating current Emacs.
 ;;
 ;; See README.md for more information.
-
-;;; Change Log:
-
-;;  0.1.2  2020/08/21  Add support for completion-at-point.
-;;  0.1.1  2019/12/29  Add support for edit-indirect.
-;;  0.1.0  2019/05/28  Initial version.
 
 ;;; Code:
 
@@ -95,8 +89,16 @@
     (define-key map (kbd "C-j") 'electric-newline-and-maybe-indent)
     (define-key map (kbd "RET") 'elpl-return)
     (define-key map (kbd "TAB") 'completion-at-point)
+    (define-key map (kbd "`")   'elpl-electric-backquote)
     map)
   "Keymap for ELPL mode.")
+
+(defvar elpl-mode-syntax-table
+  (let ((st (make-syntax-table comint-mode-syntax-table)))
+    (modify-syntax-entry ?\; "<   " st)
+    (modify-syntax-entry ?\n ">   " st)
+    st)
+  "Syntax table for elpl mode.")
 
 (defvar elpl-prompt-regexp "^\\(?:\\[[^@]+@[^@]+\\]\\)"
   "Prompt for `elpl'.")
@@ -243,6 +245,19 @@ Return the output."
       (apply 'make-comint-in-buffer "elpl" buffer
              elpl-program nil (elpl-cli-arguments))
       (elpl-mode))))
+
+(defun elpl-electric-backquote (arg)
+  "Insert a backquote."
+  (interactive "*P")
+  (let* ((ps (syntax-ppss))
+         (in-string-p (nth 3 ps))
+         (in-comment-p (nth 4 ps)))
+    (when (bound-and-true-p smartparens-mode)
+      (setq-local sp-pair-list (delq (assoc "`" sp-pair-list) sp-pair-list)))
+    (insert "`")
+    (when (or in-string-p in-comment-p)
+      (save-excursion
+        (insert "'")))))
 
 (define-derived-mode elpl-mode comint-mode "ELPL"
   "Major mode for interactively evaluating Emacs Lisp expressions.

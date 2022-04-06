@@ -22008,10 +22008,10 @@ Implement a function or a method using the symbol name and call arguments under 
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elpl-20200821.1052/elpl-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/elpl-20220314.1353/elpl-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elpl-20200821.1052/elpl-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/elpl-20220314.1353/elpl-autoloads.el") (car load-path))))
 
 
 

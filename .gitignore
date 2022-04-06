@@ -72,6 +72,9 @@ elpa/**/emacsql-sqlite
 # Do not commit build files for vterm package.
 elpa/**/vterm-*/build/
 
+# Do not commit generated .so files (which are built by things like vterm)
+*.so
+
 # Do not commit signature files for packages.
 elpa/*.signed
 

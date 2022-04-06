@@ -418,10 +418,10 @@ See `writeroom-mode' for more information on Writeroom mode.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654/with-editor-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/with-editor-20220402.1641/with-editor-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654/with-editor-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/with-editor-20220402.1641/with-editor-autoloads.el") (car load-path))))
 
 
 
@@ -640,10 +640,10 @@ value of `vterm-buffer-name'.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330/dash-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/dash-20220404.2004/dash-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330/dash-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/dash-20220404.2004/dash-autoloads.el") (car load-path))))
 
 
 
@@ -3023,10 +3023,10 @@ if ARG is `toggle'; disable the mode otherwise.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20220406.1156/transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/transient-20220406.1156/transient-autoloads.el") (car load-path))))
 
 
 
@@ -3084,7 +3084,7 @@ See info node `(transient)Modifying Existing Transients'.
 
 (function-put 'transient-remove-suffix 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("transient-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("magit--fit-window-to-buffer" "transient-")))
 
 
 
@@ -11656,10 +11656,10 @@ Return the path of the sandbox that is closest to the current working directory.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154/magit-section-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036/magit-section-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154/magit-section-autoloads.el") (car load-path))))
 
 
 
@@ -13063,10 +13063,10 @@ Add a new release to the change log." t nil)
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/git-commit-20220331.2308/git-commit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20210525.844/git-commit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/git-commit-20220331.2308/git-commit-autoloads.el") (car load-path))))
 
 
 (put 'git-commit-major-mode 'safe-local-variable
@@ -13080,11 +13080,13 @@ Add a new release to the change log." t nil)
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-commit" '("git-commit-" "global-git-commit-mode")))
 
 
+
+
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20220315.309/magit-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308/magit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20220315.309/magit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308/magit-autoloads.el") (car load-path))))
 
 
 
@@ -13105,7 +13107,7 @@ running 'man git-rebase' at the command line) for details.
 
 (defconst git-rebase-filename-regexp "/git-rebase-todo\\'")
 
-(add-to-list 'auto-mode-alist (cons git-rebase-filename-regexp 'git-rebase-mode))
+(add-to-list 'auto-mode-alist (cons git-rebase-filename-regexp #'git-rebase-mode))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-rebase" '("git-rebase-" "magit-imenu--rebase-")))
 
@@ -13157,13 +13159,10 @@ Also see info node `(magit)Commands for Buffers Visiting Files'.")
 
 (custom-autoload 'magit-define-global-key-bindings "magit" t)
 
-(defun magit-maybe-define-global-key-bindings nil (when magit-define-global-key-bindings (let ((map (current-global-map))) (dolist (elt '(("C-x g" . magit-status) ("C-x M-g" . magit-dispatch) ("C-c M-g" . magit-file-dispatch))) (let ((key (kbd (car elt))) (def (cdr elt))) (unless (or (lookup-key map key) (where-is-internal def (make-sparse-keymap) t)) (define-key map key def)))))))
+(defun magit-maybe-define-global-key-bindings (&optional force) (when magit-define-global-key-bindings (let ((map (current-global-map))) (dolist (elt '(("C-x g" . magit-status) ("C-x M-g" . magit-dispatch) ("C-c M-g" . magit-file-dispatch))) (let ((key (kbd (car elt))) (def (cdr elt))) (when (or force (not (or (lookup-key map key) (where-is-internal def (make-sparse-keymap) t)))) (define-key map key def)))))))
 
-(if after-init-time (magit-maybe-define-global-key-bindings) (add-hook 'after-init-hook 'magit-maybe-define-global-key-bindings t))
+(if after-init-time (magit-maybe-define-global-key-bindings) (add-hook 'after-init-hook #'magit-maybe-define-global-key-bindings t))
  (autoload 'magit-dispatch "magit" nil t)
-
-(autoload 'magit-info "magit" "\
-Show Magit's Info manual." t nil)
  (autoload 'magit-run "magit" nil t)
 
 (autoload 'magit-git-command "magit" "\
@@ -13287,9 +13286,9 @@ See info node `(magit)Debugging Tools' for more information." t nil)
 
 \(fn FN &optional FORK)" nil nil)
 
-(advice-add 'Info-follow-nearest-node :around 'Info-follow-nearest-node--magit-gitman)
+(advice-add 'Info-follow-nearest-node :around #'Info-follow-nearest-node--magit-gitman)
 
-(advice-add 'org-man-export :around 'org-man-export--magit-gitman)
+(advice-add 'org-man-export :around #'org-man-export--magit-gitman)
 
 (autoload 'org-man-export--magit-gitman "magit-base" "\
 
@@ -14499,6 +14498,9 @@ Abort the current merge operation.
 
 
 
+(autoload 'magit-info "magit-mode" "\
+Visit the Magit manual." t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-mode" '("disable-magit-save-buffers" "magit-")))
 
 
@@ -15158,7 +15160,7 @@ prefix arguments:
 
 \(fn &optional DIRECTORY CACHE)" t nil)
 
-(defalias 'magit 'magit-status "\
+(defalias 'magit #'magit-status "\
 An alias for `magit-status' for better discoverability.
 
 Instead of invoking this alias for `magit-status' using
@@ -26251,7 +26253,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220310.1917" "/Users/neagleson/.emacs.d/elpa/company-20220310.2313" "/Users/neagleson/.emacs.d/elpa/geiser-20220315.2208" "/Users/neagleson/.emacs.d/elpa/ghub-20220310.1436" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220312.1521" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220315.309" "/Users/neagleson/.emacs.d/elpa/magit-section-20210615.1036" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20210524.1654" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220310.1917" "/Users/neagleson/.emacs.d/elpa/company-20220310.2313" "/Users/neagleson/.emacs.d/elpa/geiser-20220315.2208" "/Users/neagleson/.emacs.d/elpa/ghub-20220310.1436" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220312.1521" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259" "/Users/neagleson/.emacs.d/elpa/transient-20220406.1156" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20220404.2004" "/Users/neagleson/.emacs.d/elpa/with-editor-20220402.1641" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
          Info-directory-list)))
 
 ;; Local Variables:

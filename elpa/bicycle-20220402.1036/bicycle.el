@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20220101.1042
-;; Package-Commit: c69b010c7b4899b6c016f926ad3a6e11ebfec0bc
+;; Package-Version: 20220402.1036
+;; Package-Commit: 624de5d111adb277ff3fb0d044bf685e24642de5
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -52,8 +52,8 @@
 ;;
 ;;   (use-package prog-mode
 ;;     :config
-;;     (add-hook 'prog-mode-hook 'outline-minor-mode)
-;;     (add-hook 'prog-mode-hook 'hs-minor-mode))
+;;     (add-hook 'prog-mode-hook #'outline-minor-mode)
+;;     (add-hook 'prog-mode-hook #'hs-minor-mode))
 
 ;;; Code:
 

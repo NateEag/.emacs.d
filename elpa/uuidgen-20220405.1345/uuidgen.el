@@ -1,12 +1,12 @@
 ;;; uuidgen.el --- Provides various UUID generating functions
 
-;; Copyright (C) 2010, 2011, 2014, 2020 Kan-Ru Chen
+;; Copyright (C) 2010, 2011, 2014, 2020, 2022 Kan-Ru Chen
 
 ;; Author: Kan-Ru Chen <kanru@kanru.info>
 ;; Created: 08 Nov 2010
 ;; Version: 1.2
-;; Package-Version: 20200816.1308
-;; Package-Commit: b50e6fef2de4199a8f207b46588c2cb3890ddd85
+;; Package-Version: 20220405.1345
+;; Package-Commit: 7b728c1d92e196c3acf87a004949335cfc18eab3
 ;; Keywords: extensions, lisp, tools
 
 ;; This file is NOT part of GNU Emacs.

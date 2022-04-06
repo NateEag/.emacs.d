@@ -1,0 +1,2 @@
+;;; Generated package description from notmuch-transient.el  -*- no-byte-compile: t -*-
+(define-package "notmuch-transient" "20220402.1625" "Command dispatchers for Notmuch" '((emacs "27.1") (notmuch "0.31.4")) :commit "d8994bd33d50cc70e0c0bb04588ab384f5104185" :authors '(("Jonas Bernoulli" . "jonas@bernoul.li")) :maintainer '("Jonas Bernoulli" . "jonas@bernoul.li") :keywords '("mail") :url "https://git.sr.ht/~tarsius/notmuch-transient")

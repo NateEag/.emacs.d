@@ -11505,10 +11505,10 @@ matched.
 
 
 )
-(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20210703.2133/notmuch-transient-autoloads.el"))
+(let ((load-file-name "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20220402.1625/notmuch-transient-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20210703.2133/notmuch-transient-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/notmuch-transient-20220402.1625/notmuch-transient-autoloads.el") (car load-path))))
 
 
  (autoload 'notmuch-hello-mode-transient "notmuch-transient" nil t)

@@ -5,8 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://git.sr.ht/~tarsius/notmuch-transient
 ;; Keywords: mail
-;; Package-Version: 20210703.2133
-;; Package-Commit: d43ac12e397e1f014deef6c76aaf9b187b17ba5b
+;; Package-Version: 20220402.1625
+;; Package-Commit: d8994bd33d50cc70e0c0bb04588ab384f5104185
 
 ;; Package-Requires: ((emacs "27.1") (notmuch "0.31.4"))
 
@@ -67,7 +67,7 @@
 ;;;###autoload (autoload 'notmuch-tree-mode-transient "notmuch-transient" nil t)
 (transient-define-prefix notmuch-tree-mode-transient ()
   "Command dispatcher for \"notmuch tree\" buffers."
-  :suffix-description 'transient-command-summary-or-name
+  :suffix-description #'transient-command-summary-or-name
   [["Do"
     ("m" "new mail"        notmuch-tree-new-mail)
     ("r" "reply sender"    notmuch-tree-reply-sender)
@@ -260,7 +260,7 @@ a transitional period you have to additionally add an entry
 to `notmuch-transient--tagging-inverse-name'.
 
 This is a replacement for `notmuch-tag-jump'."
-  :init-value 'notmuch-tag-transient--init
+  :init-value #'notmuch-tag-transient--init
   [:description notmuch-tag-transient--description
    :setup-children notmuch-tag-transient--setup
    :pad-keys t]
@@ -368,23 +368,23 @@ This is a replacement for `notmuch-tag-jump'."
 
 (when notmuch-transient-add-bindings
 
-  (define-key notmuch-hello-mode-map  notmuch-transient-prefix 'notmuch-hello-mode-transient)
-  (define-key notmuch-tree-mode-map   notmuch-transient-prefix 'notmuch-tree-mode-transient)
-  (define-key notmuch-search-mode-map notmuch-transient-prefix 'notmuch-search-mode-transient)
-  (define-key notmuch-show-mode-map   notmuch-transient-prefix 'notmuch-show-mode-transient)
+  (define-key notmuch-hello-mode-map  notmuch-transient-prefix #'notmuch-hello-mode-transient)
+  (define-key notmuch-tree-mode-map   notmuch-transient-prefix #'notmuch-tree-mode-transient)
+  (define-key notmuch-search-mode-map notmuch-transient-prefix #'notmuch-search-mode-transient)
+  (define-key notmuch-show-mode-map   notmuch-transient-prefix #'notmuch-show-mode-transient)
 
-  (define-key notmuch-search-mode-map "c" 'notmuch-search-stash-transient)
-  (define-key notmuch-show-mode-map   "c" 'notmuch-show-stash-transient)
-  (define-key notmuch-tree-mode-map   "c" 'notmuch-show-stash-transient)
+  (define-key notmuch-search-mode-map "c" #'notmuch-search-stash-transient)
+  (define-key notmuch-show-mode-map   "c" #'notmuch-show-stash-transient)
+  (define-key notmuch-tree-mode-map   "c" #'notmuch-show-stash-transient)
 
-  (define-key notmuch-show-mode-map   "." 'notmuch-show-part-transient)
+  (define-key notmuch-show-mode-map   "." #'notmuch-show-part-transient)
 
-  (define-key notmuch-common-keymap   "j" 'notmuch-search-transient)
-  (define-key notmuch-tree-mode-map   "j" 'notmuch-search-transient)
+  (define-key notmuch-common-keymap   "j" #'notmuch-search-transient)
+  (define-key notmuch-tree-mode-map   "j" #'notmuch-search-transient)
 
-  (define-key notmuch-search-mode-map "k" 'notmuch-tag-transient)
-  (define-key notmuch-tree-mode-map   "k" 'notmuch-tag-transient)
-  (define-key notmuch-show-mode-map   "k" 'notmuch-tag-transient))
+  (define-key notmuch-search-mode-map "k" #'notmuch-tag-transient)
+  (define-key notmuch-tree-mode-map   "k" #'notmuch-tag-transient)
+  (define-key notmuch-show-mode-map   "k" #'notmuch-tag-transient))
 
 ;;; _
 (provide 'notmuch-transient)

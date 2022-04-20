@@ -1,3 +1,8 @@
+- Get Emacs built with native compilation to see if it's noticeably faster
+
+- Set package-native-compile to t so elpa packages get native-compiled when I
+  install them, if native-comp turns out to be quick
+
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
   new-init.el has none of my custom setup for it yet and magit runs nice and
@@ -7,7 +12,9 @@
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
 
-- Try libvterm for in-Emacs terminals. I've heard rave reviews.
+- Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
+  that I've discovered cool-retro-term I don't know that I'll ever be able to
+  give up its awesome look-and-feel.
 
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
@@ -20,9 +27,22 @@
 - Fix aggressive-fill-paragraph mode's "only fill
   inside comments" behavior. See afp-mode-comment-bug.md for details.
 
+- Set mode-line-compact to t
+
+- Replace my yes-or-no-p alias with use-short-answers
+
+- Replace emojify-mode with Emacs 28.1's built-in emoji support? Supposed to
+  work automatically if you have "Noto Color Emoji" installed
+
 - Add opt-in support for aggressive-filling multiline strings in languages with
   support for it (bash, JS, Python are the obvious ones, though PHP's heredoc
   strings would also qualify).
+
+- See if I should set file-preserve-symlinks-on-save
+
+- Consider turning on help-enable-symbol-autoload. Upside: autoloaded functions
+  will always have docs. Downside: might get side effects from loading files
+  just to know what something is.
 
 - Figure out why Emacs occasionally blanks a window while I'm working in it. I
   have no idea what causes it and it happens perhaps once every day or four. I
@@ -32,19 +52,18 @@
   does what I want until it triggers this behavior, sort of a binary search
   *towards* a broken state.
 
-- Use text-mode if the first character in a todo.txt file is '-', as
-  that indicates one of my ad-hoc todo.txt files, not one that follows the
-  standard rules.
-
 - Give code-review package a test run. I could see advantages to being able to
   review in Emacs; it'd be awesome to be able to do things like jump straight
   to the file in question to get a closer look at what's going on.
+
+- Try "emacs -f message-mailto %u" to make Emacs a mailto handler? or
+  "emacsclient -e '(message-mailto "%u")'" . How does that work on OS X?
 
 - Snag and adapt
    https://takeonrules.com/2020/11/11/synchronizing-osx-terminal-and-emacs-dark-light-appearance/
   for my own config.
 
-- Remember I have a way to enter accented characters now (accent-menu).
+- Consider whether it's worth moving from projectile to the built-in project?
 
 - Add wgrep-ag to my setup so global find-and-replace can be massively easier.
 

@@ -798,12 +798,17 @@ With this alias I hope to not need to remember it.")
 
 (use-package todotxt-mode
   :mode (("\\todo.txt\\'" . todotxt-mode))
-  ;; I have a lot of old todo.txt files that do not follow the standard format.
-  ;;
-  ;; I wish I had just followed the standard format, but since I didn't, here
-  ;; is an easy way to just use text-mode for them.
-  :magic (("^- " . text-mode))
-  :hook (todotxt-mode . (lambda () (aggressive-fill-paragraph-mode -1))))
+  :hook ((todotxt-mode . (lambda () (aggressive-fill-paragraph-mode -1)))
+         ;; I have a lot of old todo.txt files that do not follow the standard
+         ;; format, but instead just start each line with "- ".
+         ;;
+         ;; I wish I had just followed the standard format, but since I didn't,
+         ;; here is an easy way to just use text-mode for them.
+         (todotxt-mode . (lambda ()
+                           (save-excursion
+                             (goto-char (point-min))
+                             (if (re-search-forward "^- " 3 t)
+                                 (text-mode)))))))
 
 (use-package apache-mode
   ;; A rule specific to a system I use at $DAYJOB.

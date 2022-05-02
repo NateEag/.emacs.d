@@ -459,6 +459,10 @@
   probably 'Are lines other than the last one and the one before / after point
   less than three-quarters of fill-column?'
 
+- Get a working version of rst-mode installed. Right now when I open a .rst
+  file it just breaks. Probably due to running an ancient version of it
+  directly from site-lisp/rst-mode.el.
+
 - Use prettier.el to format JS files on save (if I ever start using Prettier
   everywhere, which I probably should)
 

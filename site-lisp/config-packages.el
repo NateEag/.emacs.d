@@ -97,6 +97,15 @@
 (use-package rfc-mode
   :commands rfc-mode-browse)
 
+;; How can I trigger evil-local-mode in elfeed-search-mode? It doesn't seem to
+;; have a hook...
+
+(use-package elfeed
+  :after (evil-collection)
+  :hook ((elfeed-search-mode . evil-local-mode)
+         (elfeed-show-mode . evil-local-mode))
+  :config (evil-collection-elfeed-setup))
+
 (use-package notmuch
   ;; I don't exactly love emoji, but people use them in emails, so I guess I'd
   ;; rather see what they're communicating than not.

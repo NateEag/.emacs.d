@@ -1,24 +1,20 @@
-;;; with-editor.el --- Use the Emacsclient as $EDITOR -*- lexical-binding: t -*-
+;;; with-editor.el --- Use the Emacsclient as $EDITOR  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2014-2022  The Magit Project Contributors
-;;
-;; You should have received a copy of the AUTHORS.md file.  If not,
-;; see https://github.com/magit/with-editor/blob/master/AUTHORS.md.
+;; Copyright (C) 2014-2022 The Magit Project Contributors
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
-;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
-;; Keywords: tools
 ;; Homepage: https://github.com/magit/with-editor
+;; Keywords: processes terminals
 
-;; Package-Requires: ((emacs "24.4"))
 ;; Package-Version: 3.2.0-git
+;; Package-Requires: ((emacs "25.1") (compat "28.1.1.0"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -26,9 +22,7 @@
 ;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Magit.  If not, see http://www.gnu.org/licenses.
-
-;; This file is not part of GNU Emacs.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -84,27 +78,21 @@
 ;;; Code:
 
 (require 'cl-lib)
-(eval-when-compile
-  (require 'pcase) ; `pcase-dolist' is not autoloaded on Emacs 24.
-  (require 'subr-x))
+(require 'compat)
 (require 'server)
 (require 'shell)
+(eval-when-compile (require 'subr-x))
 
-(eval-when-compile
-  (progn (require 'dired nil t)
-         (require 'eshell nil t)
-         (require 'term nil t)
-         (condition-case err
-             (require 'vterm nil t)
-           (error (message "Error(vterm): %S" err)))
-         (require 'warnings nil t)))
-(declare-function dired-get-filename 'dired)
-(declare-function term-emulate-terminal 'term)
-(declare-function vterm-send-return 'vterm)
-(declare-function vterm-send-string 'vterm)
+(declare-function dired-get-filename "dired"
+                  (&optional localp no-error-if-not-filep))
+(declare-function term-emulate-terminal "term" (proc str))
+(declare-function vterm-send-return "vterm" ())
+(declare-function vterm-send-string "vterm" (string &optional paste-p))
 (defvar eshell-preoutput-filter-functions)
 (defvar git-commit-post-finish-hook)
 (defvar vterm--process)
+(defvar warning-minimum-level)
+(defvar warning-minimum-log-level)
 
 ;;; Options
 
@@ -166,7 +154,7 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))))
         (let ((dir (expand-file-name "bin" invocation-directory)))
           (when (file-directory-p dir)
             (push dir path)))
-        (when (string-match-p "Cellar" invocation-directory)
+        (when (string-search "Cellar" invocation-directory)
           (let ((dir (expand-file-name "../../../bin" invocation-directory)))
             (when (file-directory-p dir)
               (push dir path))))))
@@ -292,7 +280,7 @@ When t, then use the emacsclient.  This has the disadvantage that
 `with-editor-mode' won't be enabled because we don't know whether
 this package was involved at all in the call to the emacsclient,
 and when it is not, then we really should.  The problem is that
-the emacsclient doesn't pass a long any environment variables to
+the emacsclient doesn't pass along any environment variables to
 the server.  This will hopefully be fixed in Emacs eventually.
 
 When nil, then use the sleeping editor.  Because in this case we
@@ -378,10 +366,14 @@ And some tools that do not handle $EDITOR properly also break."
     (cond (cancel
            (save-buffer)
            (if clients
-               (dolist (client clients)
-                 (ignore-errors
-                   (server-send-string client "-error Canceled by user"))
-                 (delete-process client))
+               (let ((buf (current-buffer)))
+                 (dolist (client clients)
+                   (message "client %S" client)
+                   (ignore-errors
+                     (server-send-string client "-error Canceled by user"))
+                   (delete-process client))
+                 (when (buffer-live-p buf)
+                   (kill-buffer buf)))
              ;; Fallback for when emacs was used as $EDITOR
              ;; instead of emacsclient or the sleeping editor.
              ;; See https://github.com/magit/magit/issues/2258.
@@ -651,7 +643,7 @@ may not insert the text into the PROCESS's buffer.  Then it calls
     (setq string (concat incomplete string)))
   (save-match-data
     (cond
-     ((and process (not (string-match-p "\n\\'" string)))
+     ((and process (not (string-suffix-p "\n" string)))
       (let ((length (length string)))
         (when (> length with-editor--max-incomplete-length)
           (setq string
@@ -672,6 +664,8 @@ may not insert the text into the PROCESS's buffer.  Then it calls
         (with-current-buffer (find-file-noselect file)
           (with-editor-mode 1)
           (setq with-editor--pid pid)
+          (setq with-editor-previous-winconf
+                (current-window-configuration))
           (run-hooks 'with-editor-filter-visit-hook)
           (funcall (or (with-editor-server-window) #'switch-to-buffer)
                    (current-buffer))
@@ -734,10 +728,10 @@ This works in `shell-mode', `term-mode', `eshell-mode' and
           (with-editor--setup)
           (while (accept-process-output vterm--process 0.1))
           (when-let ((v (getenv envvar)))
-            (vterm-send-string (format "export %s=%S" envvar v))
+            (vterm-send-string (format " export %s=%S" envvar v))
             (vterm-send-return))
           (when-let ((v (getenv "EMACS_SERVER_FILE")))
-            (vterm-send-string (format "export EMACS_SERVER_FILE=%S" v))
+            (vterm-send-string (format " export EMACS_SERVER_FILE=%S" v))
             (vterm-send-return))
           (vterm-send-string "clear")
           (vterm-send-return))
@@ -855,10 +849,10 @@ else like the former."
   ;; that mode, even though it only runs the shell to run a single
   ;; command.  The `with-editor-export-editor' hook function is only
   ;; intended to be used in buffers in which an interactive shell is
-  ;; running, so it has to be remove here.
+  ;; running, so it has to be removed here.
   (let ((shell-mode-hook (remove 'with-editor-export-editor shell-mode-hook)))
     (cond ((or (not (or with-editor--envvar shell-command-with-editor-mode))
-               (not (string-match-p "&\\'" command)))
+               (not (string-suffix-p "&" command)))
            (funcall fn command output-buffer error-buffer))
           ((and with-editor-shell-command-use-emacsclient
                 with-editor-emacsclient-executable
@@ -889,6 +883,7 @@ else like the former."
   "Debug configuration issues.
 See info node `(with-editor)Debugging' for instructions."
   (interactive)
+  (require 'warnings)
   (with-current-buffer (get-buffer-create "*with-editor-debug*")
     (pop-to-buffer (current-buffer))
     (erase-buffer)

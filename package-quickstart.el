@@ -1568,8 +1568,8 @@ atars/neagleson/.emacs.d/elpa/typescript-mode-20220705.2151/typescript-mode-auto
 ;; End:
 ;;; ts-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20220312.1645/tron-legacy-theme-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20220312.1645/tron-legacy-theme-autoloads.el"))
-;;; tron-legacy-theme-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20220610.1746/tron-legacy-theme-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tron-legacy-theme-20220610.1746/tron-legacy-theme-autoloads.el"))
+;;; tron-legacy-theme-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -1583,7 +1583,7 @@ atars/neagleson/.emacs.d/elpa/typescript-mode-20220705.2151/typescript-mode-auto
 
 (when (and (boundp 'custom-theme-load-path) load-file-name) (add-to-list 'custom-theme-load-path (file-name-as-directory (file-name-directory load-file-name))))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tron-legacy-theme" '("tron-legacy-theme-")))
+(register-definition-prefixes "tron-legacy-theme" '("tron-legacy-theme-"))
 
 ;;;***
 

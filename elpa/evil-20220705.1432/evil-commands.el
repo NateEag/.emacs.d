@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -191,7 +191,10 @@ If COUNT is given, move COUNT - 1 lines downward first."
   (when evil-track-eol
     (setq temporary-goal-column most-positive-fixnum
           this-command 'next-line))
-  (unless (evil-visual-state-p)
+  (if (evil-visual-state-p)
+      (when evil-v$-excludes-newline
+        (let ((evil-move-beyond-eol nil))
+          (evil-adjust-cursor)))
     (evil-adjust-cursor)
     (when (eolp)
       ;; prevent "c$" and "d$" from deleting blank lines
@@ -1273,19 +1276,19 @@ or line COUNT to the top of the window."
 
 (evil-define-text-object evil-a-word (count &optional beg end type)
   "Select a word."
-  (evil-select-an-object 'evil-word beg end type count))
+  (evil-select-a-restricted-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-inner-word (count &optional beg end type)
   "Select inner word."
-  (evil-select-inner-object 'evil-word beg end type count))
+  (evil-select-inner-restricted-object 'evil-word beg end type count))
 
 (evil-define-text-object evil-a-WORD (count &optional beg end type)
   "Select a WORD."
-  (evil-select-an-object 'evil-WORD beg end type count))
+  (evil-select-a-restricted-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-inner-WORD (count &optional beg end type)
   "Select inner WORD."
-  (evil-select-inner-object 'evil-WORD beg end type count))
+  (evil-select-inner-restricted-object 'evil-WORD beg end type count))
 
 (evil-define-text-object evil-a-symbol (count &optional beg end type)
   "Select a symbol."
@@ -1653,6 +1656,7 @@ given."
 (evil-define-operator evil-ex-yank (beg end type register count yank-handler)
   "The Ex yank command.
 \[BEG,END]yank [REGISTER] [COUNT]"
+  :restore-point t
   (interactive "<R><xc/><y>")
   (evil-ex-delete-or-yank nil beg end type register count yank-handler))
 
@@ -1694,18 +1698,22 @@ of the block."
   (interactive "<R><x><y>")
   (let ((delete-func (or delete-func #'evil-delete))
         (nlines (1+ (evil-count-lines beg end)))
-        (opoint (save-excursion
-                  (goto-char beg)
-                  (line-beginning-position))))
+        opoint leftmost-point)
+    (save-excursion
+      (goto-char beg)
+      (setq opoint (line-beginning-position))
+      (setq leftmost-point
+            (let ((inhibit-field-text-motion t)) (line-beginning-position))))
     (unless (eq evil-want-fine-undo t)
       (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
       (setq this-command 'evil-change-whole-line) ; for evil-maybe-remove-spaces
-      (if (= opoint (point))
-          (evil-open-above 1)
-        (evil-open-below 1)))
+      (cond
+       ((/= opoint leftmost-point) (evil-insert 1)) ; deletion didn't delete line
+       ((= opoint (point)) (evil-open-above 1))
+       (t (evil-open-below 1))))
      ((eq type 'block)
       (evil-insert 1 nlines))
      (t
@@ -1748,24 +1756,28 @@ of the block."
   "Move lines in BEG END below line given by ADDRESS."
   :motion evil-line-or-visual-line
   (interactive "<r><addr>")
-  (goto-char (point-min))
-  (forward-line address)
-  (let* ((m (set-marker (make-marker) (point)))
-         (txt (buffer-substring-no-properties beg end))
-         (len (length txt)))
-    (delete-region beg end)
-    (goto-char m)
-    (set-marker m nil)
-    ;; ensure text consists of complete lines
-    (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
-      (setq txt (concat txt "\n")))
-    (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
-    (when (evil-visual-state-p)
-      (move-marker evil-visual-mark (point)))
-    (insert txt)
-    (forward-line -1)
-    (when (evil-visual-state-p)
-      (move-marker evil-visual-point (point)))))
+  (unless (= (1+ address) (line-number-at-pos beg))
+    (goto-char (point-min))
+    (forward-line address)
+    (let* ((m (set-marker (make-marker) (point)))
+           (txt (buffer-substring-no-properties beg end))
+           (len (length txt))
+           (last-line-blank (progn (goto-char (point-max)) (bolp))))
+      (delete-region beg end)
+      (unless last-line-blank ; as vim, preserve lack of blank last line
+        (progn (goto-char (point-max)) (when (bolp) (delete-char -1))))
+      (goto-char m)
+      (set-marker m nil)
+      ;; ensure text consists of complete lines
+      (when (or (zerop len) (/= (aref txt (1- len)) ?\n))
+        (setq txt (concat txt "\n")))
+      (when (and (eobp) (not (bolp))) (newline)) ; incomplete last line
+      (when (evil-visual-state-p)
+        (move-marker evil-visual-mark (point)))
+      (insert txt)
+      (forward-line -1)
+      (when (evil-visual-state-p)
+        (move-marker evil-visual-point (point))))))
 
 (defun evil--check-undo-system ()
   (when (and (eq evil-undo-system 'undo-tree)
@@ -1914,28 +1926,33 @@ but doesn't insert or remove any spaces."
   "Indent text."
   :move-point nil
   :type line
-  (if (and (= beg (line-beginning-position))
-           (= end (line-beginning-position 2)))
-      ;; since some Emacs modes can only indent one line at a time,
-      ;; implement "==" as a call to `indent-according-to-mode'
-      (indent-according-to-mode)
-    (goto-char beg)
-    (indent-region beg end))
-  ;; We also need to tabify or untabify the leading white characters
-  (when evil-indent-convert-tabs
-    (let* ((beg-line (line-number-at-pos beg))
-           (end-line (line-number-at-pos end))
-           (ln beg-line)
-           (convert-white (if indent-tabs-mode 'tabify 'untabify)))
-      (save-excursion
-        (while (<= ln end-line)
-          (goto-char (point-min))
-          (forward-line (- ln 1))
-          (back-to-indentation)
-          ;; Whether tab or space should be used is determined by indent-tabs-mode
-          (funcall convert-white (line-beginning-position) (point))
-          (setq ln (1+ ln)))))
-    (back-to-indentation)))
+  (save-restriction
+    (narrow-to-region beg end)
+    (if (and (= beg (line-beginning-position))
+             (= end (line-beginning-position 2)))
+        ;; since some Emacs modes can only indent one line at a time,
+        ;; implement "==" as a call to `indent-according-to-mode'
+        (indent-according-to-mode)
+      (goto-char beg)
+      (indent-region beg end))
+    ;; Update `beg' and `end'
+    (setq beg (point-min)
+          end (point-max))
+    ;; We also need to tabify or untabify the leading white characters
+    (when evil-indent-convert-tabs
+      (let* ((beg-line (line-number-at-pos beg))
+             (end-line (line-number-at-pos end))
+             (ln beg-line)
+             (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+        (save-excursion
+          (while (<= ln end-line)
+            (goto-char (point-min))
+            (forward-line (- ln 1))
+            (back-to-indentation)
+            ;; Whether tab or space should be used is determined by indent-tabs-mode
+            (funcall convert-white (line-beginning-position) (point))
+            (setq ln (1+ ln)))))
+      (back-to-indentation))))
 
 (evil-define-operator evil-indent-line (beg end)
   "Indent the line."
@@ -2208,6 +2225,13 @@ The return value is the yanked text."
           (setq evil-last-paste nil))
         (and (> (length text) 0) text)))))
 
+(defun evil-insert-for-yank-at-col (startcol _endcol string count)
+  "Insert STRING at STARTCOL."
+  (move-to-column startcol)
+  (dotimes (_ (or count 1))
+    (insert-for-yank string))
+  (evil-set-marker ?\] (1- (point))))
+
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
@@ -2222,10 +2246,13 @@ The return value is the yanked text."
                  (current-kill 0)))
          (yank-handler (car-safe (get-text-property
                                   0 'yank-handler text)))
-         paste-eob)
+         (dir (evil-visual-direction))
+         beg end paste-eob)
     (evil-with-undo
       (let ((kill-ring-yank-pointer (when kill-ring (list (current-kill 0)))))
         (when (evil-visual-state-p)
+          (setq beg evil-visual-beginning
+                end evil-visual-end)
           (evil-visual-rotate 'upper-left)
           ;; if we replace the last buffer line that does not end in a
           ;; newline, we use `evil-paste-after' because `evil-delete'
@@ -2233,12 +2260,9 @@ The return value is the yanked text."
           (when (and (= evil-visual-end (point-max))
                      (/= (char-before (point-max)) ?\n))
             (setq paste-eob t))
-          (evil-delete evil-visual-beginning
-                       evil-visual-end
-                       (evil-visual-type)
-                       (unless evil-kill-on-visual-paste ?_))
+          (evil-delete beg end (evil-visual-type) (unless evil-kill-on-visual-paste ?_))
           (when (and (eq yank-handler #'evil-yank-line-handler)
-                     (not (eq (evil-visual-type) 'line))
+                     (not (memq (evil-visual-type) '(line block)))
                      (not (= evil-visual-end (point-max))))
             (insert "\n"))
           (evil-normal-state)
@@ -2247,16 +2271,21 @@ The return value is the yanked text."
         ;; side-effecting (e.g. for the `=' register)...
         (cl-letf (((symbol-function 'evil-get-register)
                    (lambda (&rest _) text)))
-          (if paste-eob
-              (evil-paste-after count register)
-            (evil-paste-before count register))))
+          (cond
+           ((eq 'block (evil-visual-type))
+            (when (eq yank-handler #'evil-yank-line-handler)
+              (setq text (concat "\n" text)))
+            (evil-set-marker ?\[ beg)
+            (evil-apply-on-block #'evil-insert-for-yank-at-col beg end t text count))
+           (paste-eob (evil-paste-after count register))
+           (t (evil-paste-before count register)))))
       (when evil-kill-on-visual-paste
         (current-kill -1))
       ;; Ensure that gv can restore visually pasted area...
       (setq evil-visual-previous-mark evil-visual-mark
-            evil-visual-mark (evil-get-marker ?\[ t)
+            evil-visual-mark (evil-get-marker (if (<= 0 dir) ?\[ ?\]) t)
             evil-visual-previous-point evil-visual-point
-            evil-visual-point (evil-get-marker ?\] t))
+            evil-visual-point (evil-get-marker (if (<= 0 dir) ?\] ?\[) t))
       ;; mark the last paste as visual-paste
       (setq evil-last-paste
             (list (nth 0 evil-last-paste)
@@ -2583,7 +2612,10 @@ the lines."
         (evil-visual-rotate 'lower-right)
         (backward-char)
         (evil-append count)))
-    (unless (eolp) (forward-char))
+    (unless (= (current-column)
+               (save-excursion (end-of-line) (current-column)))
+      ;; Subtly different from `(eolp)' - see issue #1617
+      (forward-char))
     (evil-insert count vcount skip-empty-lines)
     (add-hook 'post-command-hook #'evil-maybe-remove-spaces)))
 
@@ -3301,7 +3333,7 @@ for the last window in each frame."
             wins))))
 
 (evil-define-command evil-quit (&optional force)
-  "Closes the current window, current frame, Emacs.
+  "Closes the current window, current frame, current tab, Emacs.
 If the current frame belongs to some client the client connection
 is closed."
   :repeat nil
@@ -3319,9 +3351,12 @@ is closed."
        (condition-case nil
            (delete-frame)
          (error
-          (if force
-              (kill-emacs)
-            (save-buffers-kill-emacs))))))))
+          (condition-case nil
+              (tab-bar-close-tab)
+            (error
+             (if force
+                 (kill-emacs)
+               (save-buffers-kill-emacs))))))))))
 
 (evil-define-command evil-quit-all (&optional bang)
   "Exits Emacs, asking for saving."
@@ -3809,12 +3844,11 @@ reveal.el. OPEN-SPOTS is a local version of `reveal-open-spots'."
                         (string-match-p "\n" (buffer-substring-no-properties
                                               match-beg match-end)))
                   (setq zero-length-match (= match-beg match-end))
-                  (when (and (string= "^" evil-ex-substitute-regex)
-                             (= (point) end-marker))
+                  (when (and (= match-end end-marker) (not match-contains-newline) (bolp))
                     ;; The range (beg end) includes the final newline which means
-                    ;; end-marker is on one line down. With the regex "^" the
-                    ;; beginning of this last line will be matched which we don't
-                    ;; want, so we abort here.
+                    ;; end-marker is on one line down.
+                    ;; With the exception of explicitly substituting newlines,
+                    ;; we abort when the match ends here and it's an empty line
                     (throw 'exit-search t))
                   (setq evil-ex-substitute-last-point match-beg)
                   (if confirm
@@ -3987,6 +4021,8 @@ This is the same as :%s//~/&"
           (deactivate-mark deactivate-mark)
           match markers)
       (when (and pattern command)
+        (when evil-ex-search-vim-style-regexp
+          (setq pattern (evil-transform-vim-style-regexp pattern)))
         (setq isearch-string pattern)
         (isearch-update-ring pattern t)
         (goto-char beg)
@@ -4218,8 +4254,9 @@ when `evil-split-window-below' is non-nil. If COUNT and
 of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-split-window-below 'above 'below))
+  (select-window
+   (split-window (selected-window) (when count (- count))
+                 (if evil-split-window-below 'below 'above)))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -4233,8 +4270,9 @@ right when `evil-vsplit-window-right' is non-nil. If COUNT and
 of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count
-                (if evil-vsplit-window-right 'left 'right))
+  (select-window
+   (split-window (selected-window) (when count (- count))
+                 (if evil-vsplit-window-right 'right 'left)))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -4350,34 +4388,34 @@ top-left."
 and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-window (split-window (selected-window) count
+  (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-split-window-below 'below 'above))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (if file
-        (evil-edit file)
-      (let ((buffer (generate-new-buffer "*new*")))
-        (set-window-buffer new-window buffer)
-        (select-window new-window)
-        (with-current-buffer buffer
-          (funcall (default-value 'major-mode)))))))
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer new-window buffer)
+      (select-window new-window)
+      (with-current-buffer buffer
+        (funcall (default-value 'major-mode))))
+    (when file
+      (evil-edit file))))
 
 (evil-define-command evil-window-vnew (count file)
   "Splits the current window vertically
 and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (let ((new-window (split-window (selected-window) count
+  (let ((new-window (split-window (selected-window) (when count (- count))
                                   (if evil-vsplit-window-right 'right 'left))))
     (when (and (not count) evil-auto-balance-windows)
       (balance-windows (window-parent)))
-    (if file
-        (evil-edit file)
-      (let ((buffer (generate-new-buffer "*new*")))
-        (set-window-buffer new-window buffer)
-        (select-window new-window)
-        (with-current-buffer buffer
-          (funcall (default-value 'major-mode)))))))
+    (let ((buffer (generate-new-buffer "*new*")))
+      (set-window-buffer new-window buffer)
+      (select-window new-window)
+      (with-current-buffer buffer
+        (funcall (default-value 'major-mode))))
+    (when file
+      (evil-edit file))))
 
 (evil-define-command evil-buffer-new (count file)
   "Creates a new buffer replacing the current window, optionally

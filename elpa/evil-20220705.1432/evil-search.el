@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -434,7 +434,9 @@ expression and is not transformed."
         (ignore-case (eq (evil-ex-regex-case regexp case) 'insensitive)))
     ;; possibly transform regular expression from vim-style to
     ;; Emacs-style.
-    (if evil-ex-search-vim-style-regexp
+    (if (and evil-ex-search-vim-style-regexp
+             (not (or (string-match-p "\\`\\\\_?<" regexp)
+                      (string-match-p "\\\\_?>\\'" regexp))))
         (setq re (evil-transform-vim-style-regexp re))
       ;; Even for Emacs regular expressions we translate certain
       ;; whitespace sequences
@@ -893,7 +895,8 @@ message to be shown. This function does nothing if
 (defun evil-ex-search-start-session ()
   "Initialize Ex for interactive search."
   (remove-hook 'minibuffer-setup-hook #'evil-ex-search-start-session)
-  (add-hook 'after-change-functions #'evil-ex-search-update-pattern nil t)
+  (when evil-ex-search-incremental
+    (add-hook 'after-change-functions #'evil-ex-search-update-pattern nil t))
   (add-hook 'minibuffer-exit-hook #'evil-ex-search-stop-session)
   (add-hook 'mouse-leave-buffer-hook #'evil-ex-search-exit)
   (evil-ex-search-activate-highlight nil))
@@ -1138,7 +1141,9 @@ current search result."
                   evil-ex-search-match-end (match-end 0))
             (evil-ex-search-goto-offset offset)
             (evil-push-search-history search-string (eq direction 'forward))
-            (unless evil-ex-search-persistent-highlight
+            (when (and (not evil-ex-search-incremental) evil-ex-search-highlight-all)
+              (evil-ex-search-activate-highlight pattern))
+            (when (and evil-ex-search-incremental (not evil-ex-search-persistent-highlight))
               (evil-ex-delete-hl 'evil-ex-search)))
            (t
             (goto-char evil-ex-search-start-point)

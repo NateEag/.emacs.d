@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -241,7 +241,9 @@ current line.  This applies to \\[evil-backward-char], \
   "Whether the cursor is moved backwards when exiting insert state.
 If non-nil, the cursor moves \"backwards\" when exiting insert state,
 so that it ends up on the character to the left.  Otherwise it remains
-in place, on the character to the right."
+in place, on the character to the right.
+
+See also `evil-move-beyond-eol'."
   :type 'boolean
   :group 'evil)
 
@@ -896,11 +898,13 @@ expression matching the buffer's name and STATE is one of `normal',
     inferior-scheme-mode
     inferior-sml-mode
     internal-ange-ftp-mode
+    haskell-interactive-mode
     prolog-inferior-mode
     reb-mode
     shell-mode
     slime-repl-mode
     term-mode
+    utop-mode
     wdired-mode)
   "Modes that should come up in Insert state."
   :type  '(repeat symbol)
@@ -1079,7 +1083,10 @@ These commands work better without this newline."
   :initialize 'evil-custom-initialize-pending-reset)
 
 (defcustom evil-want-visual-char-semi-exclusive nil
-  "Visual character selection to beginning/end of line is exclusive.
+  "DEPRECATED.  Will be removed in a future version.
+Prefer to set `evil-v$-excludes-newline' to non-nil.
+
+Visual character selection to beginning/end of line is exclusive.
 If non nil then an inclusive visual character selection which
 ends at the beginning or end of a line is turned into an
 exclusive selection. Thus if the selected (inclusive) range ends
@@ -1087,6 +1094,19 @@ at the beginning of a line it is changed to not include the first
 character of that line, and if the selected range ends at the end
 of a line it is changed to not include the newline character of
 that line."
+  :type 'boolean
+  :group 'evil)
+(make-obsolete-variable
+ evil-want-visual-char-semi-exclusive
+ "Semi-exclusivity prevents selecting text + 1st char of next line,
+without having to introduce new niche functionality.
+Prefer to set `evil-v$-excludes-newline' to non-nil."
+ "1.15.0")
+
+(defcustom evil-v$-excludes-newline nil
+  "If non-nil, `evil-end-of-line' does not move as far as to include
+the `\n' char at eol. This makes `v$' consistent with `$' used as a
+motion (e.g. `v$y' is consistent with `y$' in normal state)."
   :type 'boolean
   :group 'evil)
 
@@ -1246,6 +1266,12 @@ used."
 
 (defcustom evil-ex-search-interactive t
   "If t search is interactive."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-ex-search-incremental t
+  "If t, use incremental search. Note that this only affects the
+search command if `evil-search-module' is set to 'evil-search."
   :type 'boolean
   :group 'evil)
 
@@ -1864,6 +1890,9 @@ See `evil-ex-init-shell-argument-completion'.")
 (defvar evil-ex-tree nil
   "The syntax tree.")
 
+(defvar evil-ex-reverse-range nil
+  "Whether the current ex range was entered reversed.")
+
 (defvar evil-ex-command nil
   "The current Ex command.")
 
@@ -1990,7 +2019,7 @@ Otherwise the previous command is assumed as substitute.")
                       (buffer-substring (point-min)
                                         (line-end-position))))
           ;; no repo, use plain version
-          "1.14.0"))))
+          "1.15.0"))))
   "The current version of Evil")
 
 (defcustom evil-want-integration t

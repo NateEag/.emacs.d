@@ -2,7 +2,7 @@
 ;; Author: Emanuel Evans <emanuel.evans at gmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -175,8 +175,7 @@ Parameters passed in through IGNORED are ignored."
 (defun evil-command-window-insert-commands (hist)
   "Insert the commands in HIST."
   (let ((inhibit-modification-hooks t))
-    (mapc #'(lambda (cmd) (insert cmd) (newline)) hist)
-    (reverse-region (point-min) (point-max)))
+    (mapc #'(lambda (cmd) (insert cmd) (newline)) (reverse hist)))
   (let ((prefix (propertize evil-command-window-cmd-key
                             'font-lock-face 'minibuffer-prompt)))
     (set-text-properties (point-min) (point-max) (list 'line-prefix prefix)))

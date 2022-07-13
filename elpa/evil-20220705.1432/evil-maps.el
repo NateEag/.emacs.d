@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -406,7 +406,7 @@
     ,@(when evil-want-C-u-delete
         '(("\C-u" . evil-delete-back-to-indentation)))
     ,@(when evil-want-C-h-delete
-        '(("\C-h" . evil-delete-back-to-indentation)))
+        '(("\C-h" . evil-delete-backward-char-and-join)))
     ([mouse-2] . mouse-yank-primary))
   "Evil's bindings for insert & replace states.
 Used in `evil-insert-state-map' and `evil-replace-state-map',
@@ -554,6 +554,8 @@ included in `evil-insert-state-bindings' by default."
 
 (when (featurep 'tab-bar)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
+  (evil-ex-define-cmd "tabc[lose]" 'tab-bar-close-tab)
+  (evil-ex-define-cmd "tabo[nly]" 'tab-bar-close-other-tabs)
   (evil-ex-define-cmd "tabn[ext]" 'tab-bar-switch-to-next-tab)
   (evil-ex-define-cmd "tabp[revious]" 'tab-bar-switch-to-prev-tab))
 

@@ -3,7 +3,7 @@
 ;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -238,6 +238,12 @@ Otherwise behaves like `delete-backward-char'."
   (insert result)
   (exit-minibuffer))
 
+(defun evil-ex-elisp-completion-at-point ()
+  "Complete an `evil-ex' Elisp expression."
+  (when (and (fboundp 'elisp-completion-at-point)
+             (string-prefix-p "(" (minibuffer-contents-no-properties)))
+    (elisp-completion-at-point)))
+
 (defun evil-ex-setup ()
   "Initialize Ex minibuffer.
 This function registers several hooks that are used for the
@@ -251,7 +257,8 @@ interactive actions during ex state."
   (with-no-warnings
     (make-variable-buffer-local 'completion-at-point-functions))
   (setq completion-at-point-functions
-        '(evil-ex-command-completion-at-point
+        '(evil-ex-elisp-completion-at-point
+          evil-ex-command-completion-at-point
           evil-ex-argument-completion-at-point)))
 (put 'evil-ex-setup 'permanent-local-hook t)
 
@@ -703,6 +710,10 @@ This function interprets special file names like # and %."
          (evil-ex-range
           (or range (and count (evil-ex-range count count))))
          (evil-ex-command (evil-ex-completed-binding command))
+         (restore-point (when (evil-get-command-property evil-ex-command :restore-point)
+                          (if (evil-visual-state-p)
+                              (min (point) (or (mark) most-positive-fixnum))
+                            (point))))
          (evil-ex-bang (and bang t))
          (evil-ex-argument (copy-sequence argument))
          (evil-this-type (evil-type evil-ex-range))
@@ -712,10 +723,15 @@ This function interprets special file names like # and %."
       (set-text-properties
        0 (length evil-ex-argument) nil evil-ex-argument))
     (let ((buf (current-buffer)))
+      (when evil-ex-reverse-range
+        (setq evil-ex-reverse-range nil)
+        (unless (y-or-n-p "Backward range given, OK to swap? ")
+          (user-error "")))
       (unwind-protect
           (cond
            ((not evil-ex-range)
             (setq this-command evil-ex-command)
+            (evil-exit-visual-state)
             (run-hooks 'pre-command-hook)
             (call-interactively evil-ex-command)
             (run-hooks 'post-command-hook))
@@ -734,7 +750,8 @@ This function interprets special file names like # and %."
               (goto-char beg)
               (activate-mark)
               (call-interactively evil-ex-command)
-              (run-hooks 'post-command-hook))))
+              (run-hooks 'post-command-hook)
+              (when restore-point (goto-char restore-point)))))
         (when (buffer-live-p buf)
           (with-current-buffer buf
             (deactivate-mark)))))))
@@ -762,6 +779,11 @@ This function interprets special file names like # and %."
 
 (defun evil-ex-range (beg-line &optional end-line)
   "Returns the first and last position of the current range."
+  (when (and end-line (< end-line beg-line))
+    (setq evil-ex-reverse-range t)
+    (let ((beg-line* beg-line))
+      (setq beg-line end-line
+            end-line beg-line*)))
   (evil-range
    (evil-line-position beg-line)
    (evil-line-position (or end-line beg-line) -1)

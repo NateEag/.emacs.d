@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -480,6 +480,8 @@ Optional keyword arguments are:
 - `:keep-visual' - if non-nil, the selection is not disabled when the
   operator is executed in visual state.  By default, visual state is
   exited automatically.
+- `:restore-point' - if non-nil, point is restored when the
+  operator is executed from ex.
 
 \(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)

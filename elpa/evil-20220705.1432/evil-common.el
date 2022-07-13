@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.14.0
+;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -993,8 +993,12 @@ so it is more compatible with evil's notions of eol & tracking."
            (debug t))
   (let ((normalize-temporary-goal-column
          `(if (consp temporary-goal-column)
-              (setq temporary-goal-column (+ (car temporary-goal-column)
-                                             (cdr temporary-goal-column))))))
+              ;; Ensure a negative value is never set for `temporary-goal-column'
+              ;; as it may have a negative component when both `whitespace-mode'
+              ;; and `display-line-numbers-mode' are enabled.
+              ;; See #1297
+              (setq temporary-goal-column (max 0 (+ (car temporary-goal-column)
+                                                    (cdr temporary-goal-column)))))))
     `(progn
        (unless evil-start-of-line (setq this-command 'next-line))
        ,normalize-temporary-goal-column
@@ -1704,8 +1708,8 @@ backwards."
 (defun forward-evil-word (&optional count)
   "Move forward COUNT words.
 Moves point COUNT words forward or (- COUNT) words backward if
-COUNT is negative. Point is placed after the end of the word (if
-forward) or at the first character of the word (if backward). A
+COUNT is negative.  Point is placed after the end of the word (if
+forward) or at the first character of the word (if backward).  A
 word is a sequence of word characters matching
 \[[:word:]] (recognized by `forward-word'), a sequence of
 non-whitespace non-word characters '[^[:word:]\\n\\r\\t\\f ]', or
@@ -2005,6 +2009,10 @@ otherwise, it stays behind."
     (let ((marker (evil-get-marker char t)) alist)
       (unless (markerp marker)
         (cond
+         ((eq marker 'evil-visual-beginning)
+          (setq marker evil-visual-mark))
+         ((eq marker 'evil-visual-goto-end)
+          (setq marker evil-visual-point))
          ((and marker (symbolp marker) (boundp marker))
           (set marker (or (symbol-value marker) (make-marker)))
           (setq marker (symbol-value marker)))
@@ -2230,6 +2238,9 @@ The following special registers are supported.
     (cond
      ((not content)
       (set-register register text))
+     ((not (stringp content))
+      ;; if the register does not contain a string treat it as a vector
+      (set-register register (vconcat content text)))
      ((or (text-property-not-all 0 (length content)
                                  'yank-handler nil
                                  content)
@@ -2458,8 +2469,8 @@ Then restore Transient Mark mode to its previous setting."
   "Call FUNC for each line of a block selection.
 The selection is specified by the region BEG and END.  FUNC must
 take at least two arguments, the beginning and end of each
-line. If PASS-COLUMNS is non-nil, these values are the columns,
-otherwise tey are buffer positions. Extra arguments to FUNC may
+line.  If PASS-COLUMNS is non-nil, these values are the columns,
+otherwise they are buffer positions.  Extra arguments to FUNC may
 be passed via ARGS."
   (let ((eol-col (and (memq last-command '(next-line previous-line))
                       (numberp temporary-goal-column)
@@ -3107,7 +3118,7 @@ This can be overridden with TYPE."
 If COUNT is positive, return objects following point; if COUNT is
 negative, return objects preceding point.  If one is unspecified,
 the other is used with a negative argument.  THING is a symbol
-understood by thing-at-point.  BEG, END and TYPE specify the
+understood by `thing-at-point'.  BEG, END and TYPE specify the
 current selection.  If LINE is non-nil, the text object should be
 linewise, otherwise it is character wise."
   (let* ((count (or count 1))
@@ -3131,6 +3142,20 @@ linewise, otherwise it is character wise."
                 (if (< count 0) end (point))
                 (if line 'line type)
                 :expanded t)))
+
+(defun evil-select-inner-restricted-object (thing beg end type &optional count line)
+  "Return an inner text object range of COUNT objects.
+Selection is restricted to the current line.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  If one is unspecified,
+the other is used with a negative argument.  THING is a symbol
+understood by `thing-at-point'.  BEG, END and TYPE specify the
+current selection.  If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (save-restriction
+    (narrow-to-region (save-excursion (beginning-of-line) (point))
+                      (save-excursion (end-of-line) (point)))
+    (evil-select-inner-object thing beg end type count line)))
 
 (defun evil-select-an-object (thing beg end type count &optional line)
   "Return an outer text object range of COUNT objects.
@@ -3207,6 +3232,20 @@ linewise, otherwise it is character wise."
                 (if (< dir 0) other (point))
                 (if line 'line type)
                 :expanded t)))
+
+(defun evil-select-a-restricted-object (thing beg end type &optional count line)
+  "Return an outer text object range of COUNT objects.
+Selection is restricted to the current line.
+If COUNT is positive, return objects following point; if COUNT is
+negative, return objects preceding point.  If one is unspecified,
+the other is used with a negative argument.  THING is a symbol
+understood by thing-at-point.  BEG, END and TYPE specify the
+current selection.  If LINE is non-nil, the text object should be
+linewise, otherwise it is character wise."
+  (save-restriction
+    (narrow-to-region (save-excursion (beginning-of-line) (point))
+                      (save-excursion (end-of-line) (point)))
+    (evil-select-an-object thing beg end type count line)))
 
 (defun evil--get-block-range (op cl selection-type)
   "Return the exclusive range of a visual selection.

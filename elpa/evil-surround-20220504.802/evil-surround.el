@@ -11,8 +11,8 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20210615.2119
-;; Package-Commit: 3bd73794ee5a760118042584ef74e2b6fb2a1e06
+;; Package-Version: 20220504.802
+;; Package-Commit: c9e1449bf3f740b5e9b99e7820df4eca7fc7cf02
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -66,6 +66,7 @@
     (?> . ("<" . ">"))
     (?t . evil-surround-read-tag)
     (?< . evil-surround-read-tag)
+    (?\C-f . evil-surround-prefix-function)
     (?f . evil-surround-function))
   "Association list of surround items.
 Each item is of the form (TRIGGER . (LEFT . RIGHT)), all strings.
@@ -132,6 +133,13 @@ Each item is of the form (OPERATOR . OPERATION)."
   "Read a functionname from the minibuffer and wrap selection in function call"
   (let ((fname (evil-surround-read-from-minibuffer "" "")))
     (cons (format "%s(" (or fname ""))
+          ")")))
+
+(defun evil-surround-prefix-function ()
+  "Read a function name from the minibuffer and wrap selection in a
+function call in prefixed form."
+  (let ((fname (evil-surround-read-from-minibuffer "prefix function: " "")))
+    (cons (format "(%s " (or fname ""))
           ")")))
 
 (defconst evil-surround-tag-name-re "\\([0-9a-zA-Z\.-]+\\)"
@@ -408,7 +416,7 @@ Becomes this:
                    (setq beg-pos (point))
                    (insert open)
                    (when force-new-line (newline-and-indent))
-                   (evil-end-of-visual-line)
+                   (goto-char (overlay-end overlay))
                    (if force-new-line
                        (when (eobp)
                          (newline-and-indent))

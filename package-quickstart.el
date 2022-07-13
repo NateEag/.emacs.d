@@ -6372,10 +6372,10 @@ for an advanced modal structural editing experience.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20220504.802/evil-surround-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20220504.802/evil-surround-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-surround-20220504.802/evil-surround-autoloads.el") (car load-path))))
 
 
 
@@ -6398,10 +6398,19 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'.
 (autoload 'evil-surround-mode "evil-surround" "\
 Buffer-local minor mode to emulate surround.vim.
 
-If called interactively, enable Evil-Surround mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Evil-Surround mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `evil-surround-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -6426,16 +6435,20 @@ or call the function `global-evil-surround-mode'.")
 (autoload 'global-evil-surround-mode "evil-surround" "\
 Toggle Evil-Surround mode in all buffers.
 With prefix ARG, enable Global Evil-Surround mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+otherwise, disable it.
 
-Evil-Surround mode is enabled in all buffers where
-`turn-on-evil-surround-mode' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Evil-Surround mode is enabled in all buffers where `turn-on-evil-surround-mode'
+would do it.
+
 See `evil-surround-mode' for more information on Evil-Surround mode.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-surround" '("evil-surround-")))
+(register-definition-prefixes "evil-surround" '("evil-surround-"))
 
 
 )

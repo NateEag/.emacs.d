@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/todotxt-mode-20200228.952/todotxt-mode.el  -*- no-byte-compile: t -*-
-(define-package "todotxt-mode" "20200228.952" "Major mode for editing todo.txt files" 'nil :commit "8b616ce1cf3e18a60757450a0acf22996abb9b79" :keywords '("wp" "files") :authors '(("Adolfo Villafiorita" . "adolfo.villafiorita@me.com")) :maintainer '("Adolfo Villafiorita" . "adolfo.villafiorita@me.com"))

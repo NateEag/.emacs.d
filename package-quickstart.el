@@ -6452,20 +6452,29 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoloads.el") (car load-path))))
 
 
 
 (autoload 'symex-mode "symex" "\
 An evil way to edit Lisp symbolic expressions as trees.
 
-If called interactively, enable Symex mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the `symex
+mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `symex-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -6481,91 +6490,90 @@ The main entry point for editing symbolic expressions using symex mode.
 Enter the symex evil state and show a hydra menu for accessing various
 features." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("symex-")))
+(register-definition-prefixes "symex" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-computations" '("symex-")))
+atars/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoload
+
+
+(register-definition-prefixes "symex-custom" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-custom" '("symex-")))
+(register-definition-prefixes "symex-data" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-data" '("symex-")))
+(register-definition-prefixes "symex-dsl" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-dsl" '("symex-")))
+(register-definition-prefixes "symex-evaluator" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evaluator" '("symex-")))
+(register-definition-prefixes "symex-evil" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil" '("symex-")))
+(register-definition-prefixes "symex-evil-support" '("symex--define-evil-key"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil-support" '("symex--define-evil-key")))
+(register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-")))
+(register-definition-prefixes "symex-interface-arc" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-arc" '("symex-")))
+(register-definition-prefixes "symex-interface-clojure" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-clojure" '("symex-")))
+(register-definition-prefixes "symex-interface-common-lisp" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-common-lisp" '("symex-")))
+(register-definition-prefixes "symex-interface-elisp" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-elisp" '("symex-")))
+(register-definition-prefixes "symex-interface-racket" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-racket" '("symex-")))
+(register-definition-prefixes "symex-interface-scheme" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-scheme" '("symex-")))
+(register-definition-prefixes "symex-interop" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-")))
+(register-definition-prefixes "symex-misc" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-misc" '("symex-")))
+(register-definition-prefixes "symex-primitives" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-primitives" '("symex-")))
+(register-definition-prefixes "symex-transformations" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-transformations" '("symex-")))
+(register-definition-prefixes "symex-traversals" '("symex-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-traversals" '("symex-")))
+(register-definition-prefixes "symex-ui" '("symex--toggle-highlight"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-ui" '("symex--toggle-highlight")))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-utils" '("symex--")))
+(register-definition-prefixes "symex-utils" '("symex--"))
 
 
 

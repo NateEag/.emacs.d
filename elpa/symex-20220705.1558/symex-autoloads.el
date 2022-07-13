@@ -1,4 +1,4 @@
-;;; symex-autoloads.el --- automatically extracted autoloads
+;;; symex-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,10 +12,19 @@
 (autoload 'symex-mode "symex" "\
 An evil way to edit Lisp symbolic expressions as trees.
 
-If called interactively, enable Symex mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the `symex
+mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `symex-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -31,7 +40,7 @@ The main entry point for editing symbolic expressions using symex mode.
 Enter the symex evil state and show a hydra menu for accessing various
 features." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("symex-")))
+(register-definition-prefixes "symex" '("symex-"))
 
 ;;;***
 
@@ -39,28 +48,27 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-computations.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-computations" '("symex-")))
-
+atars/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoload
 ;;;***
 
 ;;;### (autoloads nil "symex-custom" "symex-custom.el" (0 0 0 0))
 ;;; Generated autoloads from symex-custom.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-custom" '("symex-")))
+(register-definition-prefixes "symex-custom" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-data" "symex-data.el" (0 0 0 0))
 ;;; Generated autoloads from symex-data.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-data" '("symex-")))
+(register-definition-prefixes "symex-data" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-dsl" "symex-dsl.el" (0 0 0 0))
 ;;; Generated autoloads from symex-dsl.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-dsl" '("symex-")))
+(register-definition-prefixes "symex-dsl" '("symex-"))
 
 ;;;***
 
@@ -68,14 +76,14 @@ features." t nil)
 ;;;;;;  0 0))
 ;;; Generated autoloads from symex-evaluator.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evaluator" '("symex-")))
+(register-definition-prefixes "symex-evaluator" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-evil" "symex-evil.el" (0 0 0 0))
 ;;; Generated autoloads from symex-evil.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil" '("symex-")))
+(register-definition-prefixes "symex-evil" '("symex-"))
 
 ;;;***
 
@@ -83,14 +91,14 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-evil-support.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil-support" '("symex--define-evil-key")))
+(register-definition-prefixes "symex-evil-support" '("symex--define-evil-key"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-hydra" "symex-hydra.el" (0 0 0 0))
 ;;; Generated autoloads from symex-hydra.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-")))
+(register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-"))
 
 ;;;***
 
@@ -98,7 +106,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-arc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-arc" '("symex-")))
+(register-definition-prefixes "symex-interface-arc" '("symex-"))
 
 ;;;***
 
@@ -106,7 +114,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-clojure.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-clojure" '("symex-")))
+(register-definition-prefixes "symex-interface-clojure" '("symex-"))
 
 ;;;***
 
@@ -114,7 +122,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-common-lisp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-common-lisp" '("symex-")))
+(register-definition-prefixes "symex-interface-common-lisp" '("symex-"))
 
 ;;;***
 
@@ -122,7 +130,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-elisp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-elisp" '("symex-")))
+(register-definition-prefixes "symex-interface-elisp" '("symex-"))
 
 ;;;***
 
@@ -130,7 +138,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-racket.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-racket" '("symex-")))
+(register-definition-prefixes "symex-interface-racket" '("symex-"))
 
 ;;;***
 
@@ -138,21 +146,21 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-interface-scheme.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-scheme" '("symex-")))
+(register-definition-prefixes "symex-interface-scheme" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-interop" "symex-interop.el" (0 0 0 0))
 ;;; Generated autoloads from symex-interop.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-")))
+(register-definition-prefixes "symex-interop" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-misc" "symex-misc.el" (0 0 0 0))
 ;;; Generated autoloads from symex-misc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-misc" '("symex-")))
+(register-definition-prefixes "symex-misc" '("symex-"))
 
 ;;;***
 
@@ -160,7 +168,7 @@ features." t nil)
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from symex-primitives.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-primitives" '("symex-")))
+(register-definition-prefixes "symex-primitives" '("symex-"))
 
 ;;;***
 
@@ -168,7 +176,7 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-transformations.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-transformations" '("symex-")))
+(register-definition-prefixes "symex-transformations" '("symex-"))
 
 ;;;***
 
@@ -176,21 +184,21 @@ features." t nil)
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from symex-traversals.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-traversals" '("symex-")))
+(register-definition-prefixes "symex-traversals" '("symex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-ui" "symex-ui.el" (0 0 0 0))
 ;;; Generated autoloads from symex-ui.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-ui" '("symex--toggle-highlight")))
+(register-definition-prefixes "symex-ui" '("symex--toggle-highlight"))
 
 ;;;***
 
 ;;;### (autoloads nil "symex-utils" "symex-utils.el" (0 0 0 0))
 ;;; Generated autoloads from symex-utils.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-utils" '("symex--")))
+(register-definition-prefixes "symex-utils" '("symex--"))
 
 ;;;***
 

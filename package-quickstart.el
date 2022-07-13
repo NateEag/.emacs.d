@@ -970,10 +970,10 @@ Returns a list of contact objects." t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20211224.1354/vc-msg-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20211224.1354/vc-msg-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20220526.1435/vc-msg-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vc-msg-20220526.1435/vc-msg-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20211224.1354/vc-msg-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vc-msg-20220526.1435/vc-msg-autoloads.el") (car load-path))))
 
 
 
@@ -982,11 +982,11 @@ Show commit message of current line.
 If Git is used and some text inside the line is selected,
 the correct commit which submits the selected text is displayed." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg" '("vc-msg-")))
+(register-definition-prefixes "vc-msg" '("vc-msg-"))
 
 
 
-(autoload 'vc-msg-git-blame-arguments "vc-msg-git" "\
+aautoload 'vc-msg-git-blame-arguments "vc-msg-git" "\
 Git blame at LINE-NUM.
 Note git option `-C' track text copied elsewhere,
 `-M' tracked moved content inside file.
@@ -1006,7 +1006,7 @@ Format the message for popup from INFO.
 
 \(fn INFO)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg-git" '("vc-msg-git-")))
+(register-definition-prefixes "vc-msg-git" '("vc-msg-git-"))
 
 
 
@@ -1015,14 +1015,14 @@ Use FILE, LINE-NUM and VERSION to produce hg command.
 Parse the command execution output and return a plist:
 '(:id str :author str :date str :message str).
 
-\(fn FILE LINE-NUM VERSION)" nil nil)
+\(fn FILE LINE-NUM &optional VERSION)" nil nil)
 
 (autoload 'vc-msg-hg-format "vc-msg-hg" "\
 Format popup message from INFO.
 
 \(fn INFO)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg-hg" '("vc-msg-hg-")))
+(register-definition-prefixes "vc-msg-hg" '("vc-msg-hg-"))
 
 
 
@@ -1031,18 +1031,18 @@ Use FILE, LINE-NUM and VERSION to produce p4 command.
 Parse the command execution output and return a plist:
 '(:id str :author str :date str :message str).
 
-\(fn FILE LINE-NUM VERSION)" nil nil)
+\(fn FILE LINE-NUM &optional VERSION)" nil nil)
 
 (autoload 'vc-msg-p4-format "vc-msg-p4" "\
 Format the INFO into a string.
 
 \(fn INFO)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg-p4" '("vc-msg-p4-")))
+(register-definition-prefixes "vc-msg-p4" '("vc-msg-p4-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg-sdk" '("vc-msg-sdk-")))
+(register-definition-prefixes "vc-msg-sdk" '("vc-msg-sdk-"))
 
 
 
@@ -1051,14 +1051,14 @@ Use FILE, LINE-NUM and VERSION to produce svn command.
 Parse the command execution output and return a plist:
 '(:id str :author str :date str :message str).
 
-\(fn FILE LINE-NUM VERSION)" nil nil)
+\(fn FILE LINE-NUM &optional VERSION)" nil nil)
 
 (autoload 'vc-msg-svn-format "vc-msg-svn" "\
 Format the message to display from INFO.
 
 \(fn INFO)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vc-msg-svn" '("vc-msg-svn-")))
+(register-definition-prefixes "vc-msg-svn" '("vc-msg-svn-"))
 
 
 

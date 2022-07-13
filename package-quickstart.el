@@ -3754,88 +3754,6 @@ if ARG is `toggle'; disable the mode otherwise.
 ;; End:
 ;;; tree-mode-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222/transient-autoloads.el"))
-;;; transient-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
-
-
-;;;### (autoloads nil "transient" "transient.el" (0 0 0 0))
-;;; Generated autoloads from transient.el
-
-(autoload 'transient-insert-suffix "transient" "\
-Insert a SUFFIX into PREFIX before LOC.
-PREFIX is a prefix command, a symbol.
-SUFFIX is a suffix command or a group specification (of
-  the same forms as expected by `transient-define-prefix').
-LOC is a command, a key vector, a key description (a string
-  as returned by `key-description'), or a coordination list
-  (whose last element may also be a command or key).
-See info node `(transient)Modifying Existing Transients'.
-
-\(fn PREFIX LOC SUFFIX)" nil nil)
-
-(function-put 'transient-insert-suffix 'lisp-indent-function 'defun)
-
-(autoload 'transient-append-suffix "transient" "\
-Insert a SUFFIX into PREFIX after LOC.
-PREFIX is a prefix command, a symbol.
-SUFFIX is a suffix command or a group specification (of
-  the same forms as expected by `transient-define-prefix').
-LOC is a command, a key vector, a key description (a string
-  as returned by `key-description'), or a coordination list
-  (whose last element may also be a command or key).
-See info node `(transient)Modifying Existing Transients'.
-
-\(fn PREFIX LOC SUFFIX)" nil nil)
-
-(function-put 'transient-append-suffix 'lisp-indent-function 'defun)
-
-(autoload 'transient-replace-suffix "transient" "\
-Replace the suffix at LOC in PREFIX with SUFFIX.
-PREFIX is a prefix command, a symbol.
-SUFFIX is a suffix command or a group specification (of
-  the same forms as expected by `transient-define-prefix').
-LOC is a command, a key vector, a key description (a string
-  as returned by `key-description'), or a coordination list
-  (whose last element may also be a command or key).
-See info node `(transient)Modifying Existing Transients'.
-
-\(fn PREFIX LOC SUFFIX)" nil nil)
-
-(function-put 'transient-replace-suffix 'lisp-indent-function 'defun)
-
-(autoload 'transient-remove-suffix "transient" "\
-Remove the suffix or group at LOC in PREFIX.
-PREFIX is a prefix command, a symbol.
-LOC is a command, a key vector, a key description (a string
-  as returned by `key-description'), or a coordination list
-  (whose last element may also be a command or key).
-See info node `(transient)Modifying Existing Transients'.
-
-\(fn PREFIX LOC)" nil nil)
-
-(function-put 'transient-remove-suffix 'lisp-indent-function 'defun)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("transient-")))
-
-;;;***
-
-;;;### (autoloads nil nil ("transient-pkg.el") (0 0 0 0))
-
-;;;***
-
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; transient-autoloads.el ends here
-)
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/toggle-quotes-20140710.926/toggle-quotes-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/toggle-quotes-20140710.926/toggle-quotes-autoloads.el"))
 ;;; toggle-quotes-autoloads.el --- automatically extracted autoloads
 ;;
@@ -27097,14 +27015,14 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter compat with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-ispell tree-sitter-indent tree-mode transient toggle-quotes todotxt epl pkg-info flycheck tide textsize tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist jsonian json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize elisp-refs helpful haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eslint-disable-rule eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed elfeed-summary eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap deadgrep dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks activity-watch-mode ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter compat with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-ispell tree-sitter-indent tree-mode toggle-quotes todotxt epl pkg-info flycheck tide textsize tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist jsonian json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize elisp-refs helpful haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eslint-disable-rule eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed elfeed-summary eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap deadgrep dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks activity-watch-mode ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220712.817" "/Users/neagleson/.emacs.d/elpa/evil-20220705.1432" "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20220608.1931" "/Users/neagleson/.emacs.d/elpa/with-editor-20220608.1017" "/Users/neagleson/.emacs.d/elpa/compat-28.1.1.3" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220712.817" "/Users/neagleson/.emacs.d/elpa/evil-20220705.1432" "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20220608.1931" "/Users/neagleson/.emacs.d/elpa/with-editor-20220608.1017" "/Users/neagleson/.emacs.d/elpa/compat-28.1.1.3" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046")
          Info-directory-list)))
 
 ;; Local Variables:

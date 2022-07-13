@@ -1,10 +1,11 @@
 ;;; paredit.el --- minor mode for editing parentheses  -*- Mode: Emacs-Lisp -*-
 
-;; Copyright (C) 2005--2019 Taylor R. Campbell
+;; Copyright (C) 2005--2022 Taylor R. Campbell
 
 ;; Author: Taylor R. Campbell <campbell+paredit@mumble.net>
 ;; Version: 25beta
-;; Package-Version: 20191121.2328
+;; Package-Version: 20220709.849
+;; Package-Commit: d0b1a2f42fb47efc8392763d6487fd027e3a2955
 ;; Created: 2005-07-31
 ;; Keywords: lisp
 
@@ -1006,7 +1007,9 @@ If the point is in a string or a comment, fill the paragraph instead,
   (interactive "P")
   (if (or (paredit-in-string-p)
           (paredit-in-comment-p))
-      (lisp-fill-paragraph argument)
+      (if (memq fill-paragraph-function '(t nil))
+          (lisp-fill-paragraph argument)
+        (funcall fill-paragraph-function argument))
     (paredit-preserving-column
       (save-excursion
         (end-of-defun)

@@ -42,7 +42,8 @@
   treemacs-create-dir
   treemacs-copy-file
   treemacs-move-file
-  treemacs-delete-file)
+  treemacs-delete-file
+  treemacs-bulk-file-actions)
 
 (treemacs-import-functions-from "treemacs-hydras"
   treemacs--common-helpful-hydra/body
@@ -50,6 +51,12 @@
 
 (treemacs-import-functions-from "treemacs-peek-mode"
   treemacs-peek-mode)
+
+(treemacs-import-functions-from "treemacs-header-line"
+  treemacs-indicate-top-scroll-mode)
+
+(treemacs-import-functions-from "treemacs-git-commit-diff-mode"
+  treemacs-git-commit-diff-mode)
 
 (cl-defun treemacs--find-keybind (func &optional (pad 8))
   "Find the keybind for FUNC in treemacs.
@@ -124,8 +131,10 @@ find the key a command is bound to it will show a blank instead."
              (key-open-close     (treemacs--find-keybind #'treemacs-visit-node-close-treemacs))
              (key-close-above    (treemacs--find-keybind #'treemacs-collapse-parent-node))
              (key-follow-mode    (treemacs--find-keybind #'treemacs-follow-mode))
+             (key-header-mode    (treemacs--find-keybind #'treemacs-indicate-top-scroll-mode))
              (key-fringe-mode    (treemacs--find-keybind #'treemacs-fringe-indicator-mode))
              (key-fwatch-mode    (treemacs--find-keybind #'treemacs-filewatch-mode))
+             (key-commit-diff    (treemacs--find-keybind #'treemacs-git-commit-diff-mode))
              (key-git-mode       (treemacs--find-keybind #'treemacs-git-mode))
              (key-show-dotfiles  (treemacs--find-keybind #'treemacs-toggle-show-dotfiles))
              (key-indent-guide   (treemacs--find-keybind #'treemacs-indent-guide-mode))
@@ -150,8 +159,8 @@ find the key a command is bound to it will show a blank instead."
 %s down next window ^^^^│ %s open ace            ^^^^│ %s resizability          ^^^^│
 %s up next window   ^^^^│ %s open ace horizontal ^^^^│ %s fringe indicator      ^^^^│
 %s root up          ^^^^│ %s open ace vertical   ^^^^│ %s indent guide          ^^^^│
-%s root down        ^^^^│ %s open mru window     ^^^^│                              │
-                        │ %s open externally     ^^^^│                              │
+%s root down        ^^^^│ %s open mru window     ^^^^│ %s top scroll indicator  ^^^^│
+                        │ %s open externally     ^^^^│ %s git commit difference ^^^^│
                         │ %s open close treemacs ^^^^│                              │
                         │ %s close parent        ^^^^│                              │
 "
@@ -166,8 +175,8 @@ find the key a command is bound to it will show a blank instead."
                (car key-down-next-w)    (car key-open-ace)    (car key-toggle-width)
                (car key-up-next-w)      (car key-open-ace-h)  (car key-fringe-mode)
                (car key-root-up)        (car key-open-ace-v)  (car key-indent-guide)
-               (car key-root-down)      (car key-open-mru)
-                                        (car key-open-ext)
+               (car key-root-down)      (car key-open-mru)    (car key-header-mode)
+                                        (car key-open-ext)    (car key-commit-diff)
                                         (car key-open-close)
                                         (car key-close-above))))
           (eval
@@ -196,9 +205,11 @@ find the key a command is bound to it will show a blank instead."
               (,(cdr key-open-close)     #'treemacs-visit-node-close-treemacs)
               (,(cdr key-close-above)    #'treemacs-collapse-parent-node)
               (,(cdr key-follow-mode)    #'treemacs-follow-mode)
+              (,(cdr key-header-mode)    #'treemacs-indicate-top-scroll-mode)
               (,(cdr key-show-dotfiles)  #'treemacs-toggle-show-dotfiles)
               (,(cdr key-show-gitignore) #'treemacs-hide-gitignored-files-mode)
               (,(cdr key-toggle-width)   #'treemacs-toggle-fixed-width)
+              (,(cdr key-commit-diff)    #'treemacs-git-commit-diff-mode)
               (,(cdr key-fringe-mode)    #'treemacs-fringe-indicator-mode)
               (,(cdr key-indent-guide)   #'treemacs-indent-guide-mode)
               (,(cdr key-git-mode)       #'treemacs-git-mode)
@@ -260,21 +271,22 @@ find the key a command is bound to it will show a blank instead."
              (key-line-up        (treemacs--find-keybind #'treemacs-previous-line-other-window 10))
              (key-page-down      (treemacs--find-keybind #'treemacs-next-page-other-window 10))
              (key-page-up        (treemacs--find-keybind #'treemacs-previous-page-other-window 10))
+             (key-bulk-actions   (treemacs--find-keybind #'treemacs-bulk-file-actions))
              (hydra-str
               (format
                "
 %s
 %s (%s)
 
-%s     ^^^^^^^^^^^^^│ %s                  ^^^^^^^^│ %s      ^^^^^^^^^^^│ %s
-――――――――――――――――――――┼―――――――――――――――――――――――――――――┼――――――――――――――――――――┼――――――――――――――――――――――
- %s create file ^^^^│ %s Edit Workspaces  ^^^^^^^^│ %s peek      ^^^^^^│ %s refresh
- %s create dir  ^^^^│ %s Create Workspace ^^^^^^^^│ %s line down ^^^^^^│ %s (re)set width
- %s rename      ^^^^│ %s Remove Workspace ^^^^^^^^│ %s line up   ^^^^^^│ %s copy path absolute
- %s delete      ^^^^│ %s Rename Workspace ^^^^^^^^│ %s page down ^^^^^^│ %s copy path relative
- %s copy        ^^^^│ %s Switch Workspace ^^^^^^^^│ %s page up   ^^^^^^│ %s copy root path
- %s move        ^^^^│ %s Next Workspace   ^^^^^^^^│                    │ %s re-sort
-                    │ %s Set Fallback     ^^^^^^^^│                    │ %s bookmark
+%s      ^^^^^^^^^^^^^│ %s                  ^^^^^^^^│ %s      ^^^^^^^^^^^│ %s
+―――――――――――――――――――――┼―――――――――――――――――――――――――――――┼――――――――――――――――――――┼――――――――――――――――――――――
+ %s create file  ^^^^│ %s Edit Workspaces  ^^^^^^^^│ %s peek      ^^^^^^│ %s refresh
+ %s create dir   ^^^^│ %s Create Workspace ^^^^^^^^│ %s line down ^^^^^^│ %s (re)set width
+ %s rename       ^^^^│ %s Remove Workspace ^^^^^^^^│ %s line up   ^^^^^^│ %s copy path absolute
+ %s delete       ^^^^│ %s Rename Workspace ^^^^^^^^│ %s page down ^^^^^^│ %s copy path relative
+ %s copy         ^^^^│ %s Switch Workspace ^^^^^^^^│ %s page up   ^^^^^^│ %s copy root path
+ %s move         ^^^^│ %s Next Workspace   ^^^^^^^^│                    │ %s re-sort
+ %s bulk actions ^^^^│ %s Set Fallback     ^^^^^^^^│                    │ %s bookmark
 
 "
                title
@@ -286,7 +298,7 @@ find the key a command is bound to it will show a blank instead."
                (car key-delete)       (car key-rename-ws)   (car key-page-down) (car key-copy-path-rel)
                (car key-copy-file)    (car key-switch-ws)   (car key-page-up)   (car key-copy-root)
                (car key-move-file)    (car key-next-ws)                         (car key-resort)
-                                      (car key-fallback-ws)                     (car key-bookmark))))
+               (car key-bulk-actions) (car key-fallback-ws)                     (car key-bookmark))))
           (eval
            `(defhydra treemacs--advanced-helpful-hydra (:exit nil :hint nil :columns 3)
               ,hydra-str
@@ -316,6 +328,7 @@ find the key a command is bound to it will show a blank instead."
               (,(cdr key-line-up)        #'treemacs-previous-line-other-window)
               (,(cdr key-page-down)      #'treemacs-next-page-other-window)
               (,(cdr key-page-up)        #'treemacs-previous-previous-other-window)
+              (,(cdr key-bulk-actions)   #'treemacs-bulk-file-actions)
               ("<escape>" nil "Exit"))))
         (treemacs--advanced-helpful-hydra/body))
     (treemacs-log-failure "The helpful hydra cannot be summoned without an existing treemacs buffer.")))

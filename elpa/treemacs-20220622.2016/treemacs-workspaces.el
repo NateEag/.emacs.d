@@ -64,6 +64,9 @@
 (treemacs-import-functions-from "treemacs-async"
   treemacs--prefetch-gitignore-cache)
 
+(treemacs-import-functions-from "project"
+  project-root)
+
 (cl-defstruct (treemacs-project
                (:conc-name treemacs-project->)
                (:constructor treemacs-project->create!))
@@ -109,7 +112,7 @@ To be called whenever a project or workspace changes."
 (defun treemacs--current-builtin-project-function ()
   "Find the current project.el project."
   (declare (side-effect-free t))
-  (-some-> (project-current) (cdr) (file-truename) (treemacs-canonical-path)))
+  (-some-> (project-current) (project-root) (file-truename) (treemacs-canonical-path)))
 
 (defun treemacs--current-directory-project-function ()
   "Find the current working directory."
@@ -824,7 +827,7 @@ Selection is based on the list of names of all workspaces and still happens
 when there is only one workspace."
   (treemacs--maybe-load-workspaces)
   (let (name)
-    (while (or (null name) (string-empty-p name))
+    (while (or (null name) (string= "" name))
       (setf name (completing-read
                   "Workspace: "
                   (->> treemacs--workspaces

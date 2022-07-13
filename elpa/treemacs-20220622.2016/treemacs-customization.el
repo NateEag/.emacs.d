@@ -113,7 +113,7 @@
 (defcustom treemacs-indentation 2
   "The number of spaces or pixels each level is indented in the file tree.
 If the value is integer, indentation is created by repeating
-`treemacs-indentation-string'.  If the value is a list of form '(INTEGER px),
+`treemacs-indentation-string'.  If the value is a list of form \\='(INTEGER px),
 indentation will be a space INTEGER pixels wide."
   :type '(choice (integer :tag "Spaces" :value 2)
                  (list :tag "Pixels"
@@ -142,8 +142,8 @@ There are 2 options:
    minibuffer input is used.
  - `from-minibuffer': will read input from the minibuffer, same as baseline
    Emacs."
-  :type '(choice (const :tag "With Child Frame Popup" 'from-child-frame)
-                 (const :tag "From the Minibuffer (Emacs Default)" 'from-minibuffer))
+  :type '(choice (const :tag "With Child Frame Popup" from-child-frame)
+                 (const :tag "From the Minibuffer (Emacs Default)" from-minibuffer))
   :group 'treemacs)
 
 (defcustom treemacs-move-forward-on-expand nil
@@ -160,8 +160,8 @@ There are 2 options:
    permissions of the file at point
 
 Requires eldoc mode to be enabled."
-  :type '(choice (const :tag "Simple" 'simple)
-                 (const :tag "Detailed" 'detailed))
+  :type '(choice (const :tag "Simple" simple)
+                 (const :tag "Detailed" detailed))
   :group 'treemacs)
 
 (defcustom treemacs-indent-guide-style 'line
@@ -171,7 +171,8 @@ The choices are
    level
  - `block' to use a thick '██' block interspersed at every second indentation
    level"
-  :type '(choice (const :tag "Line" 'line) (const :tag "Block" 'block))
+  :type '(choice (const :tag "Line" line)
+                 (const :tag "Block" block))
   :group 'treemacs)
 
 (defcustom treemacs-indentation-string " "
@@ -256,7 +257,7 @@ single argument.
 
 To keep the alist clean changes should not be made directly, but with
 `treemacs-define-RET-action', for example like this:
-\(treemacs-define-RET-action 'file-node-closed #'treemacs-visit-node-ace\)"
+\(treemacs-define-RET-action \\='file-node-closed #'treemacs-visit-node-ace)"
   :type '(alist :key-type symbol :value-type treemacs-ret-action)
   :group 'treemacs)
 
@@ -278,8 +279,16 @@ of how this config works and how to modify it."
   :group 'treemacs)
 
 (defcustom treemacs-dotfiles-regex (rx bol "." (1+ any))
-  "Files matching this regular expression count as dotfiles."
+  "Files matching this regular expression count as dotfiles.
+This controls the matching behaviour of `treemacs-toggle-show-dotfiles'."
   :type 'regexp
+  :group 'treemacs)
+
+(defcustom treemacs-hide-dot-git-directory t
+  "Indicates whether the .git directory should be hidden.
+When this is non-nil the .git dir will be hidden regardless of current setting
+of `treemacs-toggle-show-dotfiles'."
+  :type 'list
   :group 'treemacs)
 
 (defcustom treemacs-sorting 'alphabetic-asc
@@ -307,7 +316,7 @@ Deciding on the order in which its nodes are inserted is a part of this path.
 As such certain trade-offs need to be accounted far.
 
 In plaintext: some sort settings are much slower than others.  Alphabetic
-sorting \(the default) is fastest and causes no additional overhead (even when
+sorting (the default) is fastest and causes no additional overhead (even when
 compared against foregoing sorting altogether).
 
 Modification time sorting takes the middle, being ca.  4x slower than
@@ -342,9 +351,9 @@ absolute path and returns t if the file should be ignored and nil otherwise.  A
 file which returns t for *any* function in this list counts as ignored.
 
 By default this list contains `treemacs--std-ignore-file-predicate' which
-filters out '.', '..', Emacs' lock files as well temp files created by flycheck.
-This means that this variable should *not* be set directly, but instead modified
-with functions like `add-to-list'.
+filters out \".\", \"..\", Emacs' lock files as well temp files created by
+flycheck.  This means that this variable should *not* be set directly, but
+instead modified with functions like `add-to-list'.
 
 Additionally `treemacs--mac-ignore-file-predicate' is also included on
 Mac-derived operating systems (when `system-type' is `darwin')."
@@ -363,7 +372,7 @@ The functions in this list are therefore expected to have a different signature:
 They must take two arguments - a file's absolute path and a hash table that maps
 files to their git status.  The files' paths are the table's keys, its values
 are characters (and not strings) indicating the file's git condition.  The chars
-map map as follows: (the pattern is derived from 'git status --porcelain')
+map map as follows: (the pattern is derived from \\='git status --porcelain\\=')
 
  * M - file is modified
  * U - file is in conflict
@@ -464,8 +473,8 @@ Specifically applies to calling `treemacs-next-project' and
 
 Possible values are:
  * nil: never recenter
- * 'always: always recenter
- * 'on-distance: recenter based on `treemacs-recenter-distance'"
+ * \\='always: always recenter
+ * \\='on-distance: recenter based on `treemacs-recenter-distance'"
   :type '(choice (const :tag "Always" always)
                  (const :tag "Based on Distance" on-distance)
                  (const :tag "Never" nil))
@@ -476,9 +485,9 @@ Possible values are:
 
 Possible values are:
  * nil: never recenter
- * 'always: always recenter
- * 'on-distance: recenter based on `treemacs-recenter-distance'
- * 'on-visibility: recenter only when the newly rendered lines don't fit the
+ * \\='always: always recenter
+ * \\='on-distance: recenter based on `treemacs-recenter-distance'
+ * \\='on-visibility: recenter only when the newly rendered lines don't fit the
    current screen"
   :type '(choice (const :tag "Always" always)
                  (const :tag "Based on Distance" on-distance)
@@ -572,7 +581,8 @@ Can be set to nil to use the default value."
 
 (defcustom treemacs-persist-file
   (expand-file-name ".cache/treemacs-persist" user-emacs-directory)
-  "Path to the file treemacs uses to persist its state."
+  "Path to the file treemacs uses to persist its state.
+Can be set to nil to disable workspace persistence."
   :group 'treemacs
   :type 'string)
 
@@ -676,8 +686,8 @@ flooded with their tags."
   "Decides when to recenter view after following a file.
 Possible values are:
  * nil: never recenter
- * 'always: always recenter
- * 'on-distance: recenter based on `treemacs-recenter-distance'"
+ * \\='always: always recenter
+ * \\='on-distance: recenter based on `treemacs-recenter-distance'"
   :type '(choice (const :tag "Always" always)
                  (const :tag "Based on Distance" on-distance)
                  (const :tag "Never" nil))
@@ -687,8 +697,8 @@ Possible values are:
   "Decides when to recenter view after following a tag.
 Possible values are:
  * nil: never recenter
- * 'always: always recenter
- * 'on-distance: recenter based on `treemacs-recenter-distance'"
+ * \\='always: always recenter
+ * \\='on-distance: recenter based on `treemacs-recenter-distance'"
   :type '(choice (const :tag "Always" always)
                  (const :tag "Based on Distance" on-distance)
                  (const :tag "Never" nil))
@@ -713,9 +723,9 @@ This is only relevant when using the deferred variant of git-mode."
 
 (defcustom treemacs-max-git-entries 5000
   "Maximum number of git status entries treemacs will process.
-Information for entries that number will be silently ignored.  The 'entries'
-refer to the lines output by `git status --porcelain --ignored'.  The limit does
-not apply to the simple `treemacs-git-mode.'"
+Information for entries that number will be silently ignored.  The \"entries\"
+refer to the lines output by `git status --porcelain --ignored=matching'.  The
+limit does not apply to the simple `treemacs-git-mode.'"
   :type 'number
   :group 'treemacs-git)
 
@@ -733,13 +743,14 @@ the python3 binary."
 
 (defcustom treemacs-git-command-pipe ""
   "Text to be appended to treemacs' git command.
-With `treemacs-git-mode' the command `git status --porcelain --ignored .' is
-run to fetch a directory's git information.  The content of this variable will
-be appended to this git command.  This might be useful in cases when the output
-produced by git is so large that it leads to palpable delays, while setting
-`treemacs-max-git-entries' leads to loss of information.  In such a scenario an
-additional filter statement (for example `| grep -v \"/vendor_dir/\"') can be
-used to reduce the size of the output to a manageable volume for treemacs."
+With `treemacs-git-mode' the command
+`git status --porcelain --ignored=matching .' is run to fetch a directory's git
+information.  The content of this variable will be appended to this git command.
+This might be useful in cases when the output produced by git is so large that
+it leads to palpable delays, while setting `treemacs-max-git-entries' leads to
+loss of information.  In such a scenario an additional filter statement (for
+example `| grep -v \"/vendor_dir/\"') can be used to reduce the size of the
+output to a manageable volume for treemacs."
   :type 'string
   :group 'treemacs-git)
 
@@ -817,6 +828,13 @@ negative values are possible."
   :type 'integer
   :group 'treemacs-window)
 
+(defcustom treemacs-header-scroll-indicators '(nil . "^^^^^^")
+  "The strings used for `treemacs-indicate-top-scroll-mode'.
+The value must be a cons, where the car is the string used when treemacs is
+scrolled all the way to the top, and the cdr is used when it isn't."
+  :type '(cons string string)
+  :group 'treemacs-window)
+
 (defcustom treemacs-select-when-already-in-treemacs 'move-back
   "How `treemacs-select-window' behaves when treemacs is already selected.
 
@@ -834,11 +852,23 @@ Possible values are:
   "Position of treemacs buffer.
 
 Valid values are
- * left,
- * right."
+ * `left',
+ * `right'"
   :type '(choice (const left)
                  (const right))
   :group 'treemacs)
+
+(defcustom treemacs-post-buffer-init-hook nil
+  "Hook run after a treemacs buffer is first initialised.
+Only applies to treemacs filetree buffers, not extensions."
+  :type 'hook
+  :group 'treemacs-hooks)
+
+(defcustom treemacs-post-project-refresh-functions nil
+  "Hook that runs after a project was updated with `treemacs-refresh'.
+Will be called with the new project as the sole argument."
+  :type 'hook
+  :group 'treemacs-hooks)
 
 (defcustom treemacs-create-project-functions nil
   "Hooks to run whenever a project is created.
@@ -976,7 +1006,7 @@ During the refresh the project is effectively collapsed and then expanded again.
 This hook runs *before* that happens.  It runs with treemacs as the
 `current-buffer' and receives as its arguments all the information that treemacs
 collects for its refresh process:
- * The project being refreshed (might be 'all)
+ * The project being refreshed (might be \\='all)
  * The current screen-line number (can be nil).
  * The current button.  Might be nil if point is on the header line.
  * The current button's state.  See also `treemacs-valid-button-states'.  Is nil
@@ -995,7 +1025,7 @@ This hook runs *after* that has happened.  It runs with treemacs as the
 collects for its refresh process.  Note that these values were collected at the
 start of the refresh, and may now be longer valid (for example the current
 button's position will be wrong, even if it wasn't deleted outright):
- * The project being refreshed (might be 'all)
+ * The project being refreshed (might be \\='all)
  * The current screen-line number (can be nil).
  * The current button.  Might be nil if point was on the header line.
  * The current button's state.  See also `treemacs-valid-button-states'.  Is nil

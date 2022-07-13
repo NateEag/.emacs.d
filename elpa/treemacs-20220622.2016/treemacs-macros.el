@@ -88,7 +88,7 @@ Delegates VAR-VAL and the given FORMS to `-if-let-'."
     `(-if-let ,var-val (progn ,@then) ,else)))
 
 (defmacro treemacs-with-current-button (error-msg &rest body)
-  "Execute an action with the current button bound to 'current-btn'.
+  "Execute an action with the current button bound to \\='current-btn'.
 Log ERROR-MSG if no button is selected, otherwise run BODY."
   (declare (debug (form body)))
   `(-if-let (current-btn (treemacs-current-button))
@@ -113,10 +113,9 @@ Log ERROR-MSG if no button is selected, otherwise run BODY."
           on-dir-node-closed
           on-tag-node-open
           on-tag-node-closed
-          on-tag-node-leaf
-          on-nil)
-  "Building block macro to execute a form based on the current node state.
-Will bind to current button to 'btn' for the execution of the action forms.
+          on-tag-node-leaf on-nil)
+"Building block macro to execute a form based on the current node state.
+Will bind to current button to \\='btn' for the execution of the action forms.
 When NO-ERROR is non-nil no error will be thrown if no match for the button
 state is achieved.
 Otherwise either one of ON-ROOT-NODE-OPEN, ON-ROOT-NODE-CLOSED,
@@ -358,7 +357,7 @@ Includes *all* treemacs-mode-derived buffers, including extensions."
 
 (defmacro treemacs-only-during-init (&rest body)
   "Run BODY only when treemacs has not yet been loaded.
-Specifically only run it when (featurep 'treemacs) returns nil."
+Specifically only run it when (featurep \\='treemacs) returns nil."
   (declare (debug t))
   `(unless (featurep 'treemacs)
      ,@body))
@@ -404,7 +403,7 @@ When PREDICATE returns non-nil RET will be returned."
 
 (cl-defmacro treemacs-first-child-node-where (btn &rest predicate)
   "Among the *direct* children of BTN find the first child matching PREDICATE.
-For the PREDICATE call the button being checked is bound as 'child-btn'."
+For the PREDICATE call the button being checked is bound as \\='child-btn'."
   (declare (indent 1) (debug (sexp body)))
   `(cl-block __search__
      (let* ((child-btn (next-button (treemacs-button-end ,btn) t))
@@ -435,10 +434,11 @@ This pattern is oftentimes used in treemacs, see also `treemacs-return-if',
 LEFT is a file path, OP is the operator and RIGHT is either a path, project, or
 workspace.  OP can be one of the following:
 
- * `:same-as' will check for string equality
+ * `:same-as' will check for string equality.
  * `:in' will check will check whether LEFT is a child or the same as RIGHT.
- * `:parent-of' will check whether LEFT is a parent of, and not equal to, RIGHT
- * `:in-project' will check whether LEFT is part of the project RIGHT
+ * `:directly-in' will check will check whether LEFT is *direct* child of RIGHT.
+ * `:parent-of' will check whether LEFT is a parent of, and not equal to, RIGHT.
+ * `:in-project' will check whether LEFT is part of the project RIGHT.
  * `:in-workspace' will check whether LEFT is part of the workspace RIGHT and
    return the appropriate project when it is.  If RIGHT is not given it will
    default to calling `treemacs-current-workspace'.
@@ -449,10 +449,10 @@ also `treemacs-canonical-path').
 Even if LEFT or RIGHT should be a form and not a variable it is guaranteed that
 they will be evaluated only once."
   (declare (debug (&rest form)))
-  (treemacs-static-assert (memq op '(:same-as :in :parent-of :in-project :in-workspace))
+  (treemacs-static-assert (memq op '(:same-as :in :directly-in :parent-of :in-project :in-workspace))
     "Invalid treemacs-is-path operator: `%s'" op)
   (treemacs-static-assert (or (eq op :in-workspace) right)
-    ":in-workspace operator requires right-side argument.")
+    "Right-side argument is required")
   (macroexp-let2* nil
       ((left left)
        (right right))
@@ -462,6 +462,11 @@ they will be evaluated only once."
       (:in
        `(or (string= ,left ,right)
             (s-starts-with? (treemacs--add-trailing-slash ,right) ,left)))
+      (:directly-in
+       `(let ((l (length ,right)))
+          (and (> (length ,left) l)
+               (string= (treemacs--filename ,left) (substring ,left (1+ l)))
+               (string-prefix-p ,right ,left))))
       (:parent-of
        `(and (s-starts-with? (treemacs--add-trailing-slash ,left) ,right)
              (not (string= ,left ,right))))
@@ -537,7 +542,7 @@ Based on a timer GUARD variable run function with the given DELAY and BODY."
 
 (defmacro treemacs-without-recenter (&rest body)
   "Run BODY without the usual recentering for expanded nodes.
-Specifically `treemacs--no-recenter' will be set to 't' so that
+Specifically `treemacs--no-recenter' will be set to \\='t' so that
 `treemacs--maybe-recenter' will have no effect during non-interactive updates
 triggered by e.g. filewatch-mode."
   (declare (debug t))

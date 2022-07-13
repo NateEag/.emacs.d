@@ -33,6 +33,7 @@
 (require 'treemacs-workspaces)
 (require 'treemacs-visuals)
 (require 'treemacs-logging)
+(require 'treemacs-annotations)
 
 (eval-when-compile
   (require 'cl-lib)
@@ -91,6 +92,19 @@ is a marker pointing to POS."
   (declare (side-effect-free t))
   (inline-letevals (pos)
     (inline-quote (copy-marker ,pos t))))
+
+(define-inline treemacs--button-in-line (pos)
+  "Return the button in the line at POS in the current buffer, or nil.
+If the button at POS is a text property button, the return value
+is a marker pointing to POS."
+  (inline-letevals (pos)
+    (inline-quote
+     (save-excursion
+       (goto-char ,pos)
+       (copy-marker
+        (next-single-property-change
+         (line-beginning-position) 'button nil (line-end-position))
+        t)))))
 
 (define-inline treemacs--current-screen-line ()
   "Get the current screen line in the selected window."
@@ -357,9 +371,11 @@ Maps ITEMS at given index INTERVAL using MAPPER function."
                    (_ (error "Interval %s is not handled yet" interval)))))
     `(let ((,l ,items))
        (while ,l
-         (setq ,l (,tail-op ,l))
-         (let ((it (pop ,l)))
-           ,@mapper)))))
+          (setq ,l (,tail-op ,l))
+          (let ((it (car ,l)))
+            (setf (car ,l) ,@mapper)
+            (pop ,l)))
+       ,items)))
 
 (define-inline treemacs--create-branch (root depth git-future collapse-process &optional parent)
   "Create a new treemacs branch under ROOT.
@@ -412,10 +428,14 @@ set to PARENT."
             (setf git-info (treemacs--get-or-parse-git-result ,git-future))
             (ht-set! treemacs--git-cache ,root git-info))
            ('deferred
-             (setq git-info (or (ht-get treemacs--git-cache ,root) (ht)))
-             (run-with-timer 0.5 nil #'treemacs--apply-deferred-git-state ,parent ,git-future (current-buffer)))
+             (setf git-info (or (ht-get treemacs--git-cache ,root) treemacs--empty-table)))
            (_
-            (setq git-info (ht))))
+            (setf git-info treemacs--empty-table)))
+
+         (run-with-timer
+          0.5 nil
+          #'treemacs--apply-annotations-deferred
+          ,parent ,root (current-buffer) ,git-future)
 
          (if treemacs-pre-file-insert-predicates
              (progn
@@ -456,22 +476,43 @@ set to PARENT."
            (treemacs-dom-node->insert-into-dom! it))
 
          (treemacs--inplace-map-when-unrolled dir-strings 2
-           (put-text-property
-            0
-            (length it)
-            'face
-            (treemacs--get-node-face (concat ,root "/" it) git-info 'treemacs-directory-face)
-            it))
+           (-if-let (ann (treemacs-get-annotation (concat ,root "/" it)))
+               (progn
+                 (put-text-property
+                  0
+                  (length it)
+                  'face
+                  (treemacs-annotation->face-value ann)
+                  it)
+                 (concat it (treemacs-annotation->suffix-value ann)))
+             (put-text-property
+              0
+              (length it)
+              'face
+              'treemacs-directory-face
+              it)
+             it))
          (insert (apply #'concat dir-strings))
 
          (end-of-line)
-         (treemacs--inplace-map-when-unrolled file-strings 3
-           (put-text-property
-            0
-            (length it)
-            'face
-            (treemacs--get-node-face (concat ,root "/" it) git-info 'treemacs-git-unmodified-face)
-            it))
+         (setf file-strings
+               (treemacs--inplace-map-when-unrolled file-strings 3
+                 (-if-let (ann (treemacs-get-annotation (concat ,root "/" it)))
+                     (progn
+                       (put-text-property
+                        0
+                        (length it)
+                        'face
+                        (treemacs-annotation->face-value ann)
+                        it)
+                       (concat it (treemacs-annotation->suffix-value ann)))
+                   (put-text-property
+                    0
+                    (length it)
+                    'face
+                    'treemacs-git-unmodified-face
+                    it)
+                   it)))
          (insert (apply #'concat file-strings))
 
          (save-excursion
@@ -487,7 +528,7 @@ Run POST-CLOSE-ACTION after everything else is done."
       ,@(when new-icon
           `((treemacs--button-symbol-switch ,new-icon)))
       (treemacs-button-put ,button :state ,new-state)
-      (-let [next (next-button (point-at-eol))]
+      (-let [next (next-button (button-end ,button))]
         (if (or (null next)
                 (/= (1+ (treemacs-button-get ,button :depth))
                     (treemacs-button-get (copy-marker next t) :depth)))
@@ -497,7 +538,7 @@ Run POST-CLOSE-ACTION after everything else is done."
           ;; current button, making the treemacs--projects-end marker track
           ;; properly when collapsing the last project or a last directory of the
           ;; last project.
-          (let* ((pos-start (treemacs-button-end ,button))
+          (let* ((pos-start (point-at-eol))
                  (next (treemacs--next-non-child-button ,button))
                  (pos-end (if next
                               (-> next (treemacs-button-start) (previous-button) (treemacs-button-end))
@@ -630,6 +671,8 @@ PROJECT: Project Struct"
                  'category 'default-button
                  'face (treemacs--root-face project)
                  :project project
+                 :default-face 'treemacs-root-face
+                 :key path
                  :symlink (when (treemacs-project->is-readable? project)
                             (file-symlink-p path))
                  :state 'root-node-closed

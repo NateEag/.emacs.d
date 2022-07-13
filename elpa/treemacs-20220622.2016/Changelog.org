@@ -2,7 +2,12 @@
 #+STARTUP: content
 
 * Changelog
-** current master
+** Current master
+*** Added ~treemacs-bulk-file-actions~
+*** Added support for moving files via mouse drag
+*** Added ~treemacs-hide-dot-git-directory~
+*** Added ~treemacs-git-commit-diff-mode~
+** v2.10
 - Added ~treemacs-width-increment~ and the ability to resize the treemacs window incrementally
 - Added ~treemacs-indent-guide-mode~
 - Added option to close treemacs when visiting nodes with a double prefix arg
@@ -15,6 +20,7 @@
 - Added ~detailed~ option for ~treemacs-eldoc-display~
 - Added ~treemacs-select-directory~
 - Added option to select workspace when starting/selecting treemacs
+- Added ~treemacs-indicate-top-scroll-mode~
 - Promoted peeking into a proper minor mode
 ** v2.9
 - Published ~treemacs-all-the-icons~

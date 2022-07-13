@@ -5,7 +5,7 @@
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Package-Requires: ((emacs "26.1") (cl-lib "0.5") (dash "2.11.0") (s "1.12.0") (ace-window "0.9.0") (pfuture "1.7") (hydra "0.13.2") (ht "2.2") (cfrs "1.3.2"))
 ;; Homepage: https://github.com/Alexander-Miller/treemacs
-;; Version: 2.9.5
+;; Version: 2.10
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -48,10 +48,11 @@
 (require 'treemacs-fringe-indicator)
 (require 'treemacs-header-line)
 (require 'treemacs-extensions)
+(require 'treemacs-annotations)
 
 (defconst treemacs-version
   (eval-when-compile
-    (format "v2.9.5 (installed %s) @ Emacs %s"
+    (format "v2.10 (installed %s) @ Emacs %s"
             (format-time-string "%Y.%m.%d" (current-time))
             emacs-version)))
 
@@ -237,8 +238,9 @@ Like `treemacs-add-and-display-current-project' this will add the current
 project to treemacs based on either projectile, the built-in project.el, or the
 current working directory.
 
-However the 'exclusive' part means that it will make the current project the
-only project, all other projects *will be removed* from the current workspace."
+However the \\='exclusive\\=' part means that it will make the current project
+the only project, all other projects *will be removed* from the current
+workspace."
   (interactive)
   (treemacs-block
    (treemacs-unless-let (root (treemacs--find-current-user-project))

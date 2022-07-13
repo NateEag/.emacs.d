@@ -4,8 +4,8 @@
 
 ;; Author: Felipe Lema <felipelema@mortemale.org>
 ;; Keywords: convenience, internal
-;; Package-Version: 20220305.1919
-;; Package-Commit: 785b8cb8ab17bffec958e421260746e16b438727
+;; Package-Version: 20220411.1439
+;; Package-Commit: 4ef246db3e4ff99f672fe5e4b416c890f885c09e
 ;; Package-Requires: ((emacs "26.1") (tree-sitter "0.12.1") (seq "2.20"))
 ;; URL: https://codeberg.org/FelipeLema/tree-sitter-indent.el
 ;; Version: 0.3
@@ -522,6 +522,8 @@ See `tree-sitter-indent-line'.  ORIGINAL-COLUMN is forwarded to
              (tsc-node-type indenting-node)
              tree-sitter-tree-before)))
 
+(defvar-local tree-sitter-indent-use-mode nil)
+
 ;;;###autoload
 (define-minor-mode tree-sitter-indent-mode
   "Use Tree-sitter as backend for indenting buffer."
@@ -534,14 +536,14 @@ See `tree-sitter-indent-line'.  ORIGINAL-COLUMN is forwarded to
     (setq-local indent-line-function
                 #'tree-sitter-indent-line)
     (setq-local tree-sitter-indent-offset
-                (thread-last major-mode
+                (thread-last (or tree-sitter-indent-use-mode major-mode)
                   (symbol-name)
                   (replace-regexp-in-string (rx "-mode") "")
                   (format "%s-indent-offset")
                   (intern)
                   (symbol-value)))
     (setq-local tree-sitter-indent-current-scopes
-                (thread-last major-mode
+                (thread-last (or tree-sitter-indent-use-mode major-mode)
                   (symbol-name)
                   (replace-regexp-in-string (rx "-mode") "")
                   (format "tree-sitter-indent-%s-scopes")

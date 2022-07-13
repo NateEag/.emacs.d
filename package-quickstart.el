@@ -3657,8 +3657,8 @@ Run ispell at current point if there is a text node." t nil)
 ;; End:
 ;;; tree-sitter-ispell-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el"))
-;;; tree-sitter-indent-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220411.1439/tree-sitter-indent-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220411.1439/tree-sitter-indent-autoloads.el"))
+;;; tree-sitter-indent-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -3676,14 +3676,24 @@ Use Tree-sitter as backend to indent current line." nil nil)
 (autoload 'tree-sitter-indent-mode "tree-sitter-indent" "\
 Use Tree-sitter as backend for indenting buffer.
 
-If called interactively, enable Tree-Sitter-Indent mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Tree-Sitter-Indent mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `tree-sitter-indent-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-indent" '("tree-sitter-indent-")))
+(register-definition-prefixes "tree-sitter-indent" '("tree-sitter-indent-"))
 
 ;;;***
 

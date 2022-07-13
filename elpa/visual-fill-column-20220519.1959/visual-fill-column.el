@@ -1,16 +1,16 @@
 ;;; visual-fill-column.el --- fill-column for visual-line-mode  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2020 Joost Kremers
+;; Copyright (C) 2015-2022 Joost Kremers
 ;; Copyright (C) 2016 Martin Rudalics
 ;; All rights reserved.
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; URL: https://codeberg.org/joostkremers/visual-fill-column
-;; Package-Version: 20211118.33
-;; Package-Commit: cf3e2bc632b68d54145c79beede85d3458a337de
+;; Package-Version: 20220519.1959
+;; Package-Commit: 453d698d7fc243a547665f8ba43c55eee574e0db
 ;; Created: 2015
-;; Version: 2.4
+;; Version: 2.5
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -177,11 +177,13 @@ that actually visit a file."
     (setq-default split-window-preferred-function #'visual-fill-column-split-window-sensibly))
 
   (cond
-   ((version<= emacs-version "27.1")
+   ((< emacs-major-version 27)
+    (add-hook 'window-size-change-functions #'visual-fill-column--adjust-frame))
+   ((= emacs-major-version 27)
     (add-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'append 'local)
     (setq visual-fill-column--use-split-window-parameter t))
 
-   ((version< "27.1" emacs-version)
+   ((< 27 emacs-major-version)
     (add-hook 'window-state-change-functions #'visual-fill-column--adjust-window 'append 'local)
     (setq visual-fill-column--use-min-margins t)))
 
@@ -193,10 +195,12 @@ that actually visit a file."
 
   (let ((window (get-buffer-window (current-buffer))))
     (cond
-     ((version<= emacs-version "27.1")
+     ((< emacs-major-version 27)
+      (remove-hook 'window-size-change-functions #'visual-fill-column--adjust-frame))
+     ((= emacs-major-version 27)
       (remove-hook 'window-size-change-functions #'visual-fill-column--adjust-window 'local))
 
-     ((version< "27.1" emacs-version)
+     ((< 27 emacs-major-version)
       (remove-hook 'window-state-change-functions #'visual-fill-column--adjust-window 'local)
       (set-window-margins window 0 0)
       (set-window-parameter window 'min-margins nil)))
@@ -265,6 +269,14 @@ selected window has `visual-fill-column-mode' enabled."
       (if visual-fill-column--use-min-margins  ; This is non-nil if the window parameter `min-margins' is used (Emacs 27.2).
           (set-window-parameter window 'min-margins '(0 . 0)))
       (visual-fill-column--set-margins window))))
+
+(defun visual-fill-column--adjust-frame (frame)
+  "Adjust the windows on FRAME.
+This function is added to `window-size-change-functions' in older
+Emacsen (before 27.1), in which the functions in this hook are
+passed the frame as argument."
+  (dolist (window (window-list frame))
+    (visual-fill-column--adjust-window window)))
 
 (defun visual-fill-column-adjust (&optional _inc)
   "Adjust the window margins and fringes.

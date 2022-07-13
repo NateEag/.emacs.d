@@ -107,6 +107,7 @@ ID, ACTION, CONTEXT."
 (eval-after-load 'elixir-mode              '(require 'smartparens-elixir))
 (eval-after-load 'enh-ruby-mode            '(require 'smartparens-ruby))
 (eval-after-load 'ess                      '(require 'smartparens-ess))
+(eval-after-load 'go-mode                  '(require 'smartparens-go))
 (eval-after-load 'haskell-interactive-mode '(require 'smartparens-haskell))
 (eval-after-load 'haskell-mode             '(require 'smartparens-haskell))
 (--each sp--html-modes
@@ -123,6 +124,7 @@ ID, ACTION, CONTEXT."
 (eval-after-load 'rust-mode                '(require 'smartparens-rust))
 (eval-after-load 'rustic                   '(require 'smartparens-rust))
 (eval-after-load 'scala-mode               '(require 'smartparens-scala))
+(eval-after-load 'swift-mode               '(require 'smartparens-swift))
 (eval-after-load 'tex-mode                 '(require 'smartparens-latex))
 (eval-after-load 'text-mode                '(require 'smartparens-text))
 (eval-after-load 'tuareg                   '(require 'smartparens-ml))

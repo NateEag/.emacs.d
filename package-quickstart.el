@@ -8596,15 +8596,18 @@ In any case, return the edit-indirect buffer.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220501.1539/separedit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220501.1539/separedit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20220501.1539/separedit-autoloads.el") (car load-path))))
 
 
 
 (autoload 'separedit-dwim-described-variable "separedit" "\
 Edit value of variable at poin in help/helpful buffer." t nil)
+
+(autoload 'separedit-dwim-vterm "separedit" "\
+Edit content after vterm prompt." t nil)
 
 (autoload 'separedit-dwim-default "separedit" "\
 Edit comment or docstring or code BLOCK in them.
@@ -8621,7 +8624,7 @@ but users can also manually select it by pressing `C-u \\[separedit]'.
 
 (defalias 'separedit 'separedit-dwim)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "separedit" '("separedit-")))
+(register-definition-prefixes "separedit" '("separedit-"))
 
 
 )

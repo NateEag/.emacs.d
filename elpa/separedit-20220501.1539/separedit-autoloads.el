@@ -1,4 +1,4 @@
-;;; separedit-autoloads.el --- automatically extracted autoloads
+;;; separedit-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -11,6 +11,9 @@
 
 (autoload 'separedit-dwim-described-variable "separedit" "\
 Edit value of variable at poin in help/helpful buffer." t nil)
+
+(autoload 'separedit-dwim-vterm "separedit" "\
+Edit content after vterm prompt." t nil)
 
 (autoload 'separedit-dwim-default "separedit" "\
 Edit comment or docstring or code BLOCK in them.
@@ -27,7 +30,7 @@ but users can also manually select it by pressing `C-u \\[separedit]'.
 
 (defalias 'separedit 'separedit-dwim)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "separedit" '("separedit-")))
+(register-definition-prefixes "separedit" '("separedit-"))
 
 ;;;***
 

@@ -7898,37 +7898,55 @@ Start the web server with given `directory' as `httpd-root'.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220710.57/js2-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220710.57/js2-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20220710.57/js2-mode-autoloads.el") (car load-path))))
 
 
 
-(autoload 'js2-imenu-extras-setup "js2-imenu-extras" nil nil nil)
-
+atars/neagleson/.emacs.d/elpa/js2-mode-20220710.57/js2-mode-autolo
 (autoload 'js2-imenu-extras-mode "js2-imenu-extras" "\
 Toggle Imenu support for frameworks and structural patterns.
 
-If called interactively, enable Js2-Imenu-Extras mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Js2-Imenu-Extras mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `js2-imenu-extras-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-imenu-extras" '("js2-imenu-")))
+(register-definition-prefixes "js2-imenu-extras" '("js2-imenu-"))
 
 
 
 (autoload 'js2-highlight-unused-variables-mode "js2-mode" "\
 Toggle highlight of unused variables.
 
-If called interactively, enable Js2-Highlight-Unused-Variables
-mode if ARG is positive, and disable it if ARG is zero or
-negative.  If called from Lisp, also enable the mode if ARG is
-omitted or nil, and toggle it if ARG is `toggle'; disable the
-mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Js2-Highlight-Unused-Variables mode' mode.  If the prefix
+argument is positive, enable the mode, and if it is zero or
+negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `js2-highlight-unused-variables-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -7938,10 +7956,19 @@ This allows you to use a different major mode for JavaScript editing,
 such as `js-mode', while retaining the asynchronous error/warning
 highlighting features of `js2-mode'.
 
-If called interactively, enable Js2 minor mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the `Js2
+minor mode' mode.  If the prefix argument is positive, enable the
+mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `js2-minor-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -7965,11 +7992,11 @@ variables (`sgml-basic-offset' et al) locally, like so:
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-mode" '("js2-")))
+(register-definition-prefixes "js2-mode" '("js2-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-old-indent" '("js2-")))
+(register-definition-prefixes "js2-old-indent" '("js2-"))
 
 
 

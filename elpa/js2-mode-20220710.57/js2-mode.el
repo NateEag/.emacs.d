@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009, 2011-2021  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2022  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20211229
+;; Version: 20220710
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 
@@ -6481,12 +6481,16 @@ its relevant fields and puts it into `js2-ti-tokens'."
                                   'syntax-table (string-to-syntax "\"/")))
       (while continue
         (cond
+         ((js2-match-char ?d)
+          (push ?d flags))
          ((js2-match-char ?g)
           (push ?g flags))
          ((js2-match-char ?i)
           (push ?i flags))
          ((js2-match-char ?m)
           (push ?m flags))
+         ((js2-match-char ?s)
+          (push ?s flags))
          ((and (js2-match-char ?u)
                (>= js2-language-version 200))
           (push ?u flags))
@@ -10373,11 +10377,11 @@ Returns the list in reverse order.  Consumes the right-paren token."
         pn pos target args beg end init)
     (if (/= tt js2-NEW)
         (setq pn (js2-parse-primary-expr))
+      (setq pos (js2-current-token-beg)
+            beg pos)
       ;; parse a 'new' expression
       (js2-get-token)
-      (setq pos (js2-current-token-beg)
-            beg pos
-            target (js2-parse-member-expr)
+      (setq target (js2-parse-member-expr)
             end (js2-node-end target)
             pn (make-js2-new-node :pos pos
                                   :target target
@@ -11756,7 +11760,7 @@ highlighting features of `js2-mode'."
 (defun js2-minor-mode-exit ()
   "Turn off `js2-minor-mode'."
   (setq next-error-function nil)
-  (remove-hook 'after-change-functions #'js2-mode-edit t)
+  (remove-hook 'after-change-functions #'js2-minor-mode-edit t)
   (remove-hook 'change-major-mode-hook #'js2-minor-mode-exit t)
   (when js2-mode-node-overlay
     (delete-overlay js2-mode-node-overlay)

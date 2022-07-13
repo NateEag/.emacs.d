@@ -4,13 +4,12 @@
 ;; Created date 2019-04-28 22:34:40
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Show end of line symbol in buffer.
-;; Keyword: end eol line
-;; Version: 0.0.5
-;; Package-Version: 20210715.1227
-;; Package-Commit: c952c072e210c605b08aa5d2a917bfa3f92dfe8b
-;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/show-eol
+;; Package-Version: 20220704.659
+;; Package-Commit: 1a332666192f377dca933b0da71e6528b288fc09
+;; Version: 0.0.5
+;; Package-Requires: ((emacs "24.4"))
+;; Keywords: convenience end eol line
 
 ;; This file is NOT part of GNU Emacs.
 

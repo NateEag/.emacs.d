@@ -7595,10 +7595,10 @@ Setup a new text sample to practice touch or speed typing." t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220619.1203/solarized-theme-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220619.1203/solarized-theme-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220619.1203/solarized-theme-autoloads.el") (car load-path))))
 
 
 
@@ -7624,67 +7624,67 @@ The Returned color-palette has the same format as `solarized-color-palette'
 
 (when (and (boundp 'custom-theme-load-path) load-file-name) (add-to-list 'custom-theme-load-path (file-name-as-directory (file-name-directory load-file-name))))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized" '("solarized-")))
+(register-definition-prefixes "solarized" '("solarized-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-dark-high-contrast-theme" '("solarized-dark-high-contrast")))
+(register-definition-prefixes "solarized-dark-high-contrast-theme" '("solarized-dark-high-contrast"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-dark-theme" '("solarized-dark")))
+(register-definition-prefixes "solarized-dark-theme" '("solarized-dark"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-faces" '("solarized-definition")))
+(register-definition-prefixes "solarized-faces" '("solarized-definition"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-gruvbox-dark-theme" '("solarized-gruvbox-dark")))
+(register-definition-prefixes "solarized-gruvbox-dark-theme" '("solarized-gruvbox-dark"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-gruvbox-light-theme" '("solarized-gruvbox-light")))
+(register-definition-prefixes "solarized-gruvbox-light-theme" '("solarized-gruvbox-light"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-light-high-contrast-theme" '("solarized-light-high-contrast")))
+(register-definition-prefixes "solarized-light-high-contrast-theme" '("solarized-light-high-contrast"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-light-theme" '("solarized-light")))
+(register-definition-prefixes "solarized-light-theme" '("solarized-light"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-palettes" '("solarized-")))
+(register-definition-prefixes "solarized-palettes" '("solarized-"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-black-theme" '("solarized-selenized-black")))
+(register-definition-prefixes "solarized-selenized-black-theme" '("solarized-selenized-black"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-dark-theme" '("solarized-selenized-dark")))
+(register-definition-prefixes "solarized-selenized-dark-theme" '("solarized-selenized-dark"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-light-theme" '("solarized-selenized-light")))
+(register-definition-prefixes "solarized-selenized-light-theme" '("solarized-selenized-light"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-white-theme" '("solarized-selenized-white")))
+(register-definition-prefixes "solarized-selenized-white-theme" '("solarized-selenized-white"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-theme-utils" '("solarized-import-faces")))
+(register-definition-prefixes "solarized-theme-utils" '("solarized-import-faces"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-wombat-dark-theme" '("solarized-wombat-dark")))
+(register-definition-prefixes "solarized-wombat-dark-theme" '("solarized-wombat-dark"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-zenburn-theme" '("solarized-zenburn")))
+(register-definition-prefixes "solarized-zenburn-theme" '("solarized-zenburn"))
 
 
 

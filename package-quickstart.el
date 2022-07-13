@@ -8125,14 +8125,14 @@ Minor mode for interactively reloading CSS stylesheets.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/request-20220614.1604/request-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/request-20220614.1604/request-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20220614.1604/request-autoloads.el") (car load-path))))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "request" '("request-")))
+(register-definition-prefixes "request" '("request-"))
 
 
 )

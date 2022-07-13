@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20211107.1907
-;; Package-Commit: 3336eaa97de923f74b90dda3e35985e122d40805
+;; Package-Version: 20220614.1604
+;; Package-Commit: 38ed1d2e64138eb16a9d8ed2987cff2e01b4a93b
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.3
 
@@ -457,7 +457,7 @@ like this.::
     (request
      \"https://...\"
      :parser (lambda ()
-               (let ((json-object-type 'plist))
+               (let ((json-object-type \\='plist))
                  (json-read)))
      ...)
 
@@ -586,11 +586,13 @@ and requests.request_ (Python).
   "Parse BUFFER according to PARSER.
 Delegate to callbacks SUCCESS, ERROR, and COMPLETE the STATUS-CODE of
 RESPONSE via ENCODING."
+  (when (buffer-live-p buffer)
+    ;; questionable whether BUFFER should override RESPONSE.
+    (setf (request-response--buffer response) buffer))
   (request-log 'debug "request--callback: UNPARSED\n%s"
-               (when (buffer-live-p buffer)
-                 (with-current-buffer buffer (buffer-string))))
-  ;; Reset RESPONSE buffer to argument BUFFER.
-  (setf (request-response--buffer response) buffer)
+               (when (buffer-live-p (request-response--buffer response))
+                 (with-current-buffer (request-response--buffer response)
+                   (buffer-string))))
   (cl-symbol-macrolet ((timer (request-response--timer response)))
     (when timer
       (cancel-timer timer)
@@ -612,7 +614,7 @@ RESPONSE via ENCODING."
         (request--parse-data response encoding parser)
       (error (unless error-thrown (setq error-thrown err))
              (unless symbol-status (setq symbol-status 'parse-error))))
-    (kill-buffer buffer)
+    (kill-buffer (request-response--buffer response))
 
     ;; Ensuring `symbol-status' and `error-thrown' are consistent
     ;; is why we should get rid of `symbol-status'
@@ -1114,8 +1116,11 @@ START-URL is the URL requested."
 (defun request--curl-callback (url proc event)
   "Ensure `request--callback' gets called after curl to URL finishes.
 See info entries on sentinels regarding PROC and EVENT."
-  (let* ((buffer (process-buffer proc))
-         (response (process-get proc :request-response))
+  (let* ((response (process-get proc :request-response))
+         ;; questionable whether (process-buffer proc)
+         ;; should override RESPONSE's -buffer member.
+         (buffer (or (process-buffer proc)
+                     (request-response--buffer response)))
          (settings (request-response-settings response)))
     (request-log 'debug "request--curl-callback: event %s" event)
     (request-log 'trace "request--curl-callback: raw-bytes=\n%s"
@@ -1172,22 +1177,24 @@ See info entries on sentinels regarding PROC and EVENT."
     (prog1 (apply #'request--curl url
                   :semaphore (lambda (&rest _) (setq finished t))
                   settings)
-      (cl-loop with interval = 0.05
+      (cl-loop with buf = (request-response--buffer response)
+               with interval = 0.05
                with timeout = 5
                with maxiter = (truncate (/ timeout interval))
                with iter = 0
                until (or (>= iter maxiter) finished)
                do (accept-process-output nil interval)
-               for buf = (request-response--buffer response)
-               for proc = (and (bufferp buf) (get-buffer-process buf))
+               for proc = (get-buffer-process buf)
                if (or (not proc) (not (process-live-p proc)))
+               ;; only run the clock if lollygagging
+               ;; (before or after process lifetime)
                do (cl-incf iter)
                end
                finally (when (>= iter maxiter)
                          (let ((m "request--curl-sync: semaphore never called"))
-                           (princ (format "%s %s %s\n"
+                           (princ (format "%s %S %s\n"
                                           m
-                                          (buffer-name buf)
+                                          buf
                                           (buffer-live-p buf))
                                   #'external-debugging-output)
                            (request-log 'error m)))))))

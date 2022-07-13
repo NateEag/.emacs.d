@@ -4,8 +4,8 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: languages
-;; Package-Version: 20210803.222
-;; Package-Commit: 8496b0df2209cf6792c5197b924dd55807f0cffd
+;; Package-Version: 20220602.1535
+;; Package-Commit: 279a51defa3e0d97dc40b8a26e078699d4e22e90
 ;; URL: https://github.com/purcell/emacs-shfmt
 ;; Package-Requires: ((emacs "24") (reformatter "0.3"))
 ;; Version: 0
@@ -72,7 +72,8 @@
 ;;;###autoload (autoload 'shfmt-on-save-mode "shfmt" nil t)
 (reformatter-define shfmt
   :program shfmt-command
-  :args shfmt-arguments
+  ;; Pass the filename to `shfmt` as it may influence the Editorconfig pattern "shfmt" picks up
+  :args (append (list "-filename" (or (buffer-file-name) input-file)) shfmt-arguments)
   :lighter " ShFmt"
   :group 'shfmt)
 

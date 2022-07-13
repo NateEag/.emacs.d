@@ -1,4 +1,4 @@
-;;; shfmt-autoloads.el --- automatically extracted autoloads
+;;; shfmt-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,7 +12,7 @@
  (autoload 'shfmt-region "shfmt" nil t)
  (autoload 'shfmt-on-save-mode "shfmt" nil t)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shfmt" '("shfmt-")))
+(register-definition-prefixes "shfmt" '("shfmt-"))
 
 ;;;***
 

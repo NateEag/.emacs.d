@@ -8417,17 +8417,17 @@ EXIT-CODE-SUCCESS-P
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20220602.1535/shfmt-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20220602.1535/shfmt-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shfmt-20220602.1535/shfmt-autoloads.el") (car load-path))))
 
 
  (autoload 'shfmt-buffer "shfmt" nil t)
  (autoload 'shfmt-region "shfmt" nil t)
  (autoload 'shfmt-on-save-mode "shfmt" nil t)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shfmt" '("shfmt-")))
+(register-definition-prefixes "shfmt" '("shfmt-"))
 
 
 )

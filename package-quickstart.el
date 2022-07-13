@@ -93,14 +93,14 @@ Simple mode to edit YAML.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20220311.332/yaml-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20220311.332/yaml-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20220713.358/yaml-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/yaml-20220713.358/yaml-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-20220311.332/yaml-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/yaml-20220713.358/yaml-autoloads.el") (car load-path))))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml" '("yaml-")))
+(register-definition-prefixes "yaml" '("yaml-"))
 
 
 )
@@ -2959,6 +2959,20 @@ non-nil.
 
 
 )
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-ispell-20220704.340/tree-sitter-ispell-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-ispell-20220704.340/tree-sitter-ispell-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tree-sitter-ispell-20220704.340/tree-sitter-ispell-autoloads.el") (car load-path))))
+
+
+
+(autoload 'tree-sitter-ispell-run-at-point "tree-sitter-ispell" "\
+Run ispell at current point if there is a text node." t nil)
+
+(register-definition-prefixes "tree-sitter-ispell" '("tree-sitter-ispell-"))
+
+
+)
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-indent-20220305.1919/tree-sitter-indent-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -3081,17 +3095,6 @@ See info node `(transient)Modifying Existing Transients'.
 Toggle between single quotes and double quotes.
 
 \(fn)" t nil)
-
-
-)
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/todotxt-mode-20200228.952/todotxt-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/todotxt-mode-20200228.952/todotxt-mode-autoloads.el"))
-
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/todotxt-mode-20200228.952/todotxt-mode-autoloads.el") (car load-path))))
-
-
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "todotxt-mode" '("todotxt-")))
 
 
 )
@@ -16962,6 +16965,55 @@ If COMMAND is nil, the key-chord is removed.
 
 
 )
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/jsonian-20220708.1813/jsonian-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/jsonian-20220708.1813/jsonian-autoloads.el"))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/jsonian-20220708.1813/jsonian-autoloads.el") (car load-path))))
+
+
+
+(autoload 'jsonian-enclosing-item "jsonian" "\
+Move point to the item enclosing the current point.
+If ARG is not nil, move to the ARGth enclosing item.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'jsonian-find "jsonian" "\
+Navigate to a item in a JSON document.
+If PATH is supplied, navigate to it.
+
+\(fn &optional PATH)" t nil)
+
+(autoload 'jsonian-mode "jsonian" "\
+Major mode for editing JSON files.
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\.json\\'" . jsonian-mode))
+
+(autoload 'jsonian-indent-line "jsonian" "\
+Indent a single line.
+The indent is determined by examining the previous line.  The
+number of spaces is determined by `jsonian-indentation' if it is
+set, otherwise it is inferred from the document." t nil)
+
+(autoload 'jsonian-c-mode "jsonian" "\
+A major mode for editing JSON documents with comments.
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("\\.jsonc\\'" . jsonian-c-mode))
+
+(autoload 'jsonian-enable-flycheck "jsonian" "\
+Enable `jsonian-mode' for all checkers where `json-mode' is enabled." t nil)
+
+(autoload 'jsonian-no-so-long-mode "jsonian" "\
+Prevent `so-long-mode' from supplanting `jsonian-mode'." t nil)
+
+(register-definition-prefixes "jsonian" '("jsonian-"))
+
+
+)
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/json-snatcher-20200916.1717/json-snatcher-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/json-snatcher-20200916.1717/json-snatcher-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
@@ -26080,7 +26132,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
 )
 (setq package-activated-list
       (append
-       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-indent tree-mode transient toggle-quotes todotxt-mode todotxt epl pkg-info flycheck tide textsize tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize elisp-refs helpful haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eslint-disable-rule eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed elfeed-summary eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap deadgrep dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks activity-watch-mode ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
+       '(zoutline yasnippet yaml-mode yaml xterm-color xref visual-fill-column writeroom-mode with-shell-interpreter with-editor websocket web-mode web-mode-edit-element web-completion-data vterm dash s virtualenvwrapper vcard popup vc-msg uuidgen bind-key use-package unicode-troll-stopper queue undo-tree tzc typescript-mode tsc ts tron-legacy-theme treepy avy ace-window pfuture lv hydra ht posframe cfrs treemacs tree-sitter tree-sitter-langs tree-sitter-ispell tree-sitter-indent tree-mode transient toggle-quotes todotxt epl pkg-info flycheck tide textsize tern auto-complete tern-auto-complete term-manager projectile term-projectile tea-time tagedit tablist synosaurus iedit ivy swiper lispy paredit goto-chg evil smartparens evil-cleverparens evil-surround symex sublimity list-utils string-utils string-inflection string-edit f standard-dirs spinner speed-type solarized-theme smex smart-tabs-mode macrostep slime simple-httpd js2-mode skewer-mode skewer-reload-stylesheets request skerrick sidecar-locals sicp shut-up show-eol reformatter shfmt shell-pop sexp-diff sesman edit-indirect separedit scss-mode quick-peek scrollable-quick-peek scratch-comment sane-term rjsx-mode rfc-mode reveal-in-osx-finder reveal-in-folder regex-tool rainbow-mode racket-mode qrencode pyvenv pyvenv-auto pythonic python-mode deferred python-environment pyimpsort pyenv-mode puppet-mode php-runtime psysh project-shells prog-fill pretty-hydra iter2 nvm prettier pos-tip popwin polymode ansible ansible-doc jinja2-mode poly-ansible pip-requirements php-mode phpstan pdf-tools pcre2el parseclj parseedn parse-it pair-tree packed package-lint osx-plist osm origami csharp-mode omnisharp notmuch notmuch-transient notmuch-addr nodejs-repl nixpkgs-fmt nixos-options nix-update nix-sandbox magit-section nix-mode nix-env-install nix-buffer nginx-mode network-watch neotree names multiple-cursors multi-term moody monkeytype eval-in-repl modern-sh mocha-snippets minimap message-attachment-reminder md-readme markdown-mode markdown-changelog friendly-shell-command magrant git-commit magit magit-svn magit-popup magit-patch-changelog magit-delta lua-mode lsp-mode lsp-ui lsp-treemacs lsp-origami lsp-latex bui dap-mode lsp-java lsp-ivy lorem-ipsum load-env-vars coffee-mode literate-coffee-mode less-css-mode ledger-mode language-id know-your-http-well khalel key-chord key-assist jsonian json-snatcher json-reformat json-mode jscs js2-refactor js-doc js-auto-format-mode jq-mode concurrent ctable epc jedi-core jedi iss-mode insert-char-preview inline-docs inheritenv inform7 htmlize elisp-refs helpful haskell-mode groovy-mode graphql goto-line-preview go-mode gnuplot-mode gnuplot ghub a github-review git git-walktree git-timemachine git-modes git-link git-gutter+ fringe-helper git-gutter-fringe+ git-gutter git-blamed geiser add-node-modules-path company frontside-javascript free-keys format-all emacsql emacsql-sqlite closql forge focus-autosave-mode flymake-phpstan flymake-markdownlint flycheck-phpstan flycheck-package flycheck-objc-clang flycheck-css-colorguard flow-minor-mode flow-js2-mode fill-column-indicator faceup expand-region exec-path-from-shell exato evil-tutor evil-textobj-tree-sitter evil-matchit evil-ledger evil-leader evil-indent-textobject evil-exchange evil-commentary annalist evil-collection evil-args esup eslint-disable-rule eping envrc emojify emmet-mode elpygen elpl elisp-slime-nav elisp-depmap elisp-def elfeed elfeed-summary eldoc-overlay el2markdown editorconfig edebug-inline-result edbi dynamic-spaces dtrt-indent dotenv-mode direnv diminish diffview demap deadgrep dash-functional cycle-quotes csv-mode csv crontab-mode cquery counsel counsel-projectile counsel-ag-popup corfu corfu-doc compact-docstrings code-review clojure-mode cider centered-cursor-mode cask-mode buttercup bug-hunter bufler buffer-env browse-url-dwim browse-kill-ring bnf-mode bicycle beacon bats-mode backup-walker auto-rename-tag auto-minor-mode auto-compile atomic-chrome async-backup async apples-mode apache-mode anzu aio aggressive-indent aggressive-fill-paragraph ag add-hooks activity-watch-mode ace-jump-mode accent ac-slime ac-html-csswatcher ac-html ac-emmet ac-capf)
        package-activated-list))
 (progn
   (require 'info)

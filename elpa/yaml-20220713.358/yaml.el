@@ -3,9 +3,9 @@
 ;; Copyright © 2021 Zachary Romero <zkry@posteo.org>
 
 ;; Author: Zachary Romero <zkry@posteo.org>
-;; Version: 0.1.0
-;; Package-Version: 20220311.332
-;; Package-Commit: 34c300b08579b72c7c92aefee1f4b500913f0c85
+;; Version: 0.5.1
+;; Package-Version: 20220713.358
+;; Package-Commit: 0ac7f365bb6b4507259b31679bb37ac291e1f1c7
 ;; Homepage: https://github.com/zkry/yaml.el
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: tools
@@ -47,6 +47,8 @@
 (require 'seq)
 (require 'cl-lib)
 
+(defconst yaml-parser-version "0.5.1")
+
 (defvar yaml--parse-debug nil
   "Turn on debugging messages when parsing YAML when non-nil.
 
@@ -80,6 +82,8 @@ This flag is intended for development purposes.")
 (defvar yaml--parsing-sequence-type nil)
 (defvar yaml--parsing-null-object nil)
 (defvar yaml--parsing-false-object nil)
+(defvar yaml--parsing-store-position nil)
+(defvar yaml--string-values nil)
 
 (cl-defstruct (yaml--state (:constructor yaml--state-create)
                            (:copier nil))
@@ -258,27 +262,31 @@ This flag is intended for development purposes.")
 
 (defun yaml--process-literal-text (text)
   "Remove the header line for a folded match and return TEXT body formatted."
-  (let* ((header-line (substring text 0 (string-match "\n" text)))
-         (text-body (substring text (1+ (string-match "\n" text))))
-         (parsed-header (yaml--parse-block-header header-line))
-         (chomp (car parsed-header))
-         (starting-spaces-ct
-          (or (cadr parsed-header)
-              (let ((_ (string-match "^\n*\\( *\\)" text-body)))
-                (length (match-string 1 text-body)))))
-         (lines (split-string text-body "\n"))
-         (striped-lines
-          (seq-map (lambda (l)
-                     (replace-regexp-in-string
-                      (format "\\` \\{0,%d\\}" starting-spaces-ct) "" l))
-                   lines))
-         (text-body (string-join striped-lines "\n")))
-    (yaml--chomp-text text-body chomp)))
+  (let ((n (get-text-property 0 'yaml-n text)))
+    (remove-text-properties 0 (length text) '(yaml-n nil) text)
+    (let* ((header-line (substring text 0 (string-match "\n" text)))
+           (text-body (substring text (1+ (string-match "\n" text))))
+           (parsed-header (yaml--parse-block-header header-line))
+           (chomp (car parsed-header))
+           (starting-spaces-ct
+            (or (and (cadr parsed-header) (+ (or n 0) (cadr parsed-header)))
+                (let ((_ (string-match "^\n*\\( *\\)" text-body)))
+                  (length (match-string 1 text-body)))))
+           (lines (split-string text-body "\n"))
+           (striped-lines
+            (seq-map (lambda (l)
+                       (replace-regexp-in-string
+                        (format "\\` \\{0,%d\\}" starting-spaces-ct) "" l))
+                     lines))
+           (text-body (string-join striped-lines "\n")))
+      (yaml--chomp-text text-body chomp))))
 
 ;; TODO: Process tags and use them in this function.
 (defun yaml--resolve-scalar-tag (scalar)
   "Convert a SCALAR string to it's corresponding object."
   (cond
+   (yaml--string-values
+    scalar)
    ;; tag:yaml.org,2002:null
    ((or (equal "null" scalar)
         (equal "Null" scalar)
@@ -400,15 +408,15 @@ This flag is intended for development purposes.")
  Note that VALUE may be a complex object here.  STYLE is
  currently unused."
   (let ((top-state (car yaml--state-stack))
-        (value (cond
-                ((stringp value) (yaml--resolve-scalar-tag value))
-                ((listp value) (yaml--format-list value))
-                ((hash-table-p value) (yaml--format-object value))
-                ((vectorp value) value)
-                ((not value) nil))))
+        (value* (cond
+                 ((stringp value) (yaml--resolve-scalar-tag value))
+                 ((listp value) (yaml--format-list value))
+                 ((hash-table-p value) (yaml--format-object value))
+                 ((vectorp value) value)
+                 ((not value) nil))))
     (cond
      ((not top-state)
-      (setq yaml--root value))
+      (setq yaml--root value*))
      ((equal top-state :anchor)
       (let* ((anchor (pop yaml--object-stack))
              (name (nth 1 anchor)))
@@ -417,11 +425,11 @@ This flag is intended for development purposes.")
         (yaml--scalar-event nil value)))
      ((equal top-state :sequence)
       (let ((l (car yaml--object-stack)))
-        (setcar yaml--object-stack (append l (list value)))))
+        (setcar yaml--object-stack (append l (list value*)))))
      ((equal top-state :mapping)
       (progn
         (push :mapping-value yaml--state-stack)
-        (push value yaml--cache)))
+        (push value* yaml--cache)))
      ((equal top-state :mapping-value)
       (progn
         (let ((key (pop yaml--cache))
@@ -432,18 +440,18 @@ This flag is intended for development purposes.")
               (setq key (intern key)))
              ((eql 'keyword yaml--parsing-object-key-type)
               (setq key (intern (format ":%s" key))))))
-          (puthash key value table))
+          (puthash key value* table))
         (pop yaml--state-stack)))
      ((equal top-state :trail-comments)
       (pop yaml--state-stack)
       (let ((comment-text (pop yaml--object-stack)))
-        (unless (stringp value)
+        (unless (stringp value*)
           (error "Trail-comments can't be nested under non-string"))
         (yaml--scalar-event
          style
          (replace-regexp-in-string (concat (regexp-quote comment-text) "\n*\\'")
                                    ""
-                                   value ))))
+                                   value*))))
      ((equal top-state nil))))
   '(:scalar))
 
@@ -495,7 +503,10 @@ reverse order."
     ("ns-l-compact-sequence" . (lambda ()
                                  (yaml--sequence-start-event nil)))
     ("ns-flow-pair" . (lambda ()
-                        (yaml--mapping-start-event t))))
+                        (yaml--mapping-start-event t)))
+    ("ns-l-block-map-implicit-entry" . (lambda ()))
+    ("ns-l-compact-mapping" . (lambda ()))
+    ("c-l-block-seq-entry" . (lambda ())))
   "List of functions for matched rules that run on the entering of a rule.")
 
 (defconst yaml--grammar-events-out
@@ -753,9 +764,19 @@ repeat for each character in a text.")
            (cond
             ((or (assoc ,name yaml--grammar-events-in)
                  (assoc ,name yaml--grammar-events-out))
-             (list ,name
-                   (substring yaml--parsing-input beg yaml--parsing-position)
-                   ,res-symbol))
+             (let ((str (substring yaml--parsing-input beg yaml--parsing-position)))
+               (when yaml--parsing-store-position
+                 (setq str (propertize str 'yaml-position
+                                       (cons (1+ beg)
+                                             (1+ yaml--parsing-position)))))
+               (when (member ,name '("c-l+folded" "c-l+literal"))
+                 (setq str (propertize str 'yaml-n (max 0 n))))
+               (list ,name
+                     (if yaml--parsing-store-position
+                         (propertize str 'yaml-position (cons (1+ beg)
+                                                              (1+ yaml--parsing-position)))
+                       str)
+                     ,res-symbol)))
             ((equal res-type 'list) (list ,name ,res-symbol))
             ((equal res-type 'literal)
              (substring yaml--parsing-input beg yaml--parsing-position))
@@ -1009,21 +1030,8 @@ then check EXPR at the current position."
            (not ,ok-symbol)
          ,ok-symbol))))
 
-(defun yaml-parse-string (string &rest args)
-  "Parse the YAML value in STRING.  Keyword ARGS are as follows:
-
-OBJECT-TYPE specifies the Lisp object to use for representing
-key-value YAML mappings.  Possible values for OBJECT-TYPE are
-the symbols hash-table, alist, and plist.
-
-SEQUENCE-TYPE specifies the Lisp object to use for representing YAML
-sequences.   Possible values for SEQUENCE-TYPE are the symbols list, and array.
-
-NULL-OBJECT contains the object used to represent the null value.
-It defaults to the symbol :null.
-
-FALSE-OBJECT contains the object used to represent the false
-value.  It defaults to the symbol :false."
+(defun yaml--initialize-parsing-state (args)
+  "Initialize state required for parsing according to plist ARGS."
   (setq yaml--cache nil)
   (setq yaml--object-stack nil)
   (setq yaml--state-stack nil)
@@ -1031,16 +1039,17 @@ value.  It defaults to the symbol :false."
   (setq yaml--anchor-mappings (make-hash-table :test 'equal))
   (setq yaml--resolve-aliases nil)
   (setq yaml--parsing-null-object
-	(if (plist-member args :null-object)
-	    (plist-get args :null-object)
-	  :null))
+	    (if (plist-member args :null-object)
+	        (plist-get args :null-object)
+	      :null))
   (setq yaml--parsing-false-object
-	(if (plist-member args :false-object)
-	    (plist-get args :false-object)
-	  :false))
+	    (if (plist-member args :false-object)
+	        (plist-get args :false-object)
+	      :false))
   (let ((object-type (plist-get args :object-type))
         (object-key-type (plist-get args :object-key-type))
-        (sequence-type (plist-get args :sequence-type)))
+        (sequence-type (plist-get args :sequence-type))
+        (string-values (plist-get args :string-values)))
     (cond
      ((or (not object-type)
           (equal object-type 'hash-table))
@@ -1068,29 +1077,71 @@ value.  It defaults to the symbol :false."
      ((equal 'list sequence-type)
       (setq yaml--parsing-sequence-type 'list))
      (t (error "Invalid sequence-type.  sequence-type must be list or array")))
-    (let ((res (yaml--parse string
-                 (yaml--top))))
+    (if string-values
+        (setq yaml--string-values t)
+      (setq yaml--string-values nil))))
 
-      (when (< yaml--parsing-position (length yaml--parsing-input))
-        (error
-         "Unable to parse YAML.  Parser finished before end of input %s/%s"
-         yaml--parsing-position
-         (length yaml--parsing-input)))
-      (when yaml--parse-debug (message "Parsed data: %s" (pp-to-string res)))
-      (yaml--walk-events res)
-      (if (zerop (hash-table-count yaml--anchor-mappings))
-          yaml--root
-        ;; Run event processing twice to resolve aliases.
-        (setq yaml--root nil)
-        (setq yaml--resolve-aliases t)
+(defun yaml-parse-string (string &rest args)
+  "Parse the YAML value in STRING.  Keyword ARGS are as follows:
+
+OBJECT-TYPE specifies the Lisp object to use for representing
+key-value YAML mappings.  Possible values for OBJECT-TYPE are
+the symbols hash-table, alist, and plist.
+
+SEQUENCE-TYPE specifies the Lisp object to use for representing YAML
+sequences.   Possible values for SEQUENCE-TYPE are the symbols list, and array.
+
+NULL-OBJECT contains the object used to represent the null value.
+It defaults to the symbol :null.
+
+FALSE-OBJECT contains the object used to represent the false
+value.  It defaults to the symbol :false."
+  (yaml--initialize-parsing-state args)
+  (let ((res (yaml--parse string
+               (yaml--top))))
+    (when (< yaml--parsing-position (length yaml--parsing-input))
+      (error
+       "Unable to parse YAML.  Parser finished before end of input %s/%s"
+       yaml--parsing-position
+       (length yaml--parsing-input)))
+    (when yaml--parse-debug (message "Parsed data: %s" (pp-to-string res)))
+    (yaml--walk-events res)
+    (if (hash-table-empty-p yaml--anchor-mappings)
+        yaml--root
+      ;; Run event processing twice to resolve aliases.
+      (let ((yaml--root nil)
+            (yaml--resolve-aliases t))
         (yaml--walk-events res)
         yaml--root))))
+
+(defun yaml-parse-tree (string)
+  "Parse the YAML value in STRING and return its parse tree."
+  (yaml--initialize-parsing-state nil)
+  (let* ((yaml--parsing-store-position t)
+         (res (yaml--parse string
+                (yaml--top))))
+    (when (< yaml--parsing-position (length yaml--parsing-input))
+      (error
+       "Unable to parse YAML.  Parser finished before end of input %s/%s"
+       yaml--parsing-position
+       (length yaml--parsing-input)))
+    res))
+
+(defun yaml-parse-string-with-pos (string)
+  "Parse the YAML value in STRING, storing positions as text properties.
+
+NOTE: This is an experimental feature and may experience API
+changes in the future."
+  (let ((yaml--parsing-store-position t))
+    (yaml-parse-string string
+                       :object-type 'alist
+                       :object-key-type 'string
+                       :string-values t)))
 
 (defun yaml--parse-from-grammar (state &rest args)
   "Parse YAML grammar for given STATE and ARGS.
 
 Rules for this function are defined by the yaml-spec JSON file."
-
   (pcase state
     ('c-flow-sequence
      (let ((n (nth 0 args))
@@ -1881,7 +1932,7 @@ Rules for this function are defined by the yaml-spec JSON file."
          (yaml--all
           (yaml--chr ?\>)
           (yaml--parse-from-grammar 'c-b-block-header
-                                    (yaml--state-curr-m)
+                                    n
                                     (yaml--state-curr-t))
           (yaml--parse-from-grammar 'l-folded-content
                                     (max (+ n (yaml--state-curr-m)) 1)
@@ -2789,8 +2840,10 @@ auto-detecting the indentation"
                    (cdr l))
            (insert "]"))
           (t
-           (let ((first t)
-                 (indent-string (make-string (* 2 indent) ?\s)))
+           (when (zerop indent)
+             (setq indent 2))
+           (let* ((first t)
+                  (indent-string (make-string (- indent 2) ?\s)))
              (seq-do
               (lambda (object)
                 (if (not first)
@@ -2800,10 +2853,10 @@ auto-detecting the indentation"
                         (insert (make-string (- indent curr-indent) ?\s)  "- "))
                     (insert "\n" indent-string "- "))
                   (setq first nil))
-                (yaml--encode-object object (+ indent 2)
-                                     (or
-                                      (hash-table-p object)
-                                      (yaml--alist-to-hash-table object))))
+                (if (or (hash-table-p object)
+                        (yaml--alist-to-hash-table object))
+                    (yaml--encode-object object indent t)
+                  (yaml--encode-object object (+ indent 2) nil)))
               l))))))
 
 (defun yaml--encode-auto-detect-indent ()

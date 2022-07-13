@@ -623,10 +623,10 @@ Minor mode to provide key-bindings for web-mode-edit-element functions
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vterm-20211226.817/vterm-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vterm-20211226.817/vterm-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vterm-20220613.1614/vterm-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vterm-20220613.1614/vterm-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vterm-20211226.817/vterm-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vterm-20220613.1614/vterm-autoloads.el") (car load-path))))
 
 
 
@@ -688,7 +688,7 @@ value of `vterm-buffer-name'.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vterm" '("vterm-")))
+(register-definition-prefixes "vterm" '("vterm-"))
 
 
 

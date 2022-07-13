@@ -4568,10 +4568,10 @@ Setup auto-complete for tern-mode.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220710.959/projectile-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220710.959/projectile-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20220710.959/projectile-autoloads.el") (car load-path))))
 
 
 
@@ -4843,13 +4843,26 @@ Use files with EXTENSION based on TEST-SUFFIX.
 Display info for current project." t nil)
 
 (autoload 'projectile-find-implementation-or-test-other-window "projectile" "\
-Open matching implementation or test file in other window." t nil)
+Open matching implementation or test file in other window.
+
+See the documentation of `projectile--find-matching-file' and
+`projectile--find-matching-test' for how implementation and test files
+are determined." t nil)
 
 (autoload 'projectile-find-implementation-or-test-other-frame "projectile" "\
-Open matching implementation or test file in other frame." t nil)
+Open matching implementation or test file in other frame.
+
+See the documentation of `projectile--find-matching-file' and
+`projectile--find-matching-test' for how implementation and test files
+are determined." t nil)
 
 (autoload 'projectile-toggle-between-implementation-and-test "projectile" "\
-Toggle between an implementation file and its test file." t nil)
+Toggle between an implementation file and its test file.
+
+
+See the documentation of `projectile--find-matching-file' and
+`projectile--find-matching-test' for how implementation and test files
+are determined." t nil)
 
 (autoload 'projectile-grep "projectile" "\
 Perform rgrep in the project.
@@ -5165,7 +5178,7 @@ Otherwise behave as if called interactively.
 
 (define-obsolete-function-alias 'projectile-global-mode 'projectile-mode "1.0")
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "projectile" '("??" "compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "projectile-")))
+(register-definition-prefixes "projectile" '("??" "compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "projectile-"))
 
 
 )

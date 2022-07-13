@@ -374,20 +374,29 @@ value of `split-window-preferred-function' to allow
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301/writeroom-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301/writeroom-mode-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046/writeroom-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046/writeroom-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301/writeroom-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046/writeroom-mode-autoloads.el") (car load-path))))
 
 
 
 (autoload 'writeroom-mode "writeroom-mode" "\
 Minor mode for distraction-free writing.
 
-If called interactively, enable Writeroom mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Writeroom mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `writeroom-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -405,17 +414,21 @@ or call the function `global-writeroom-mode'.")
 
 (autoload 'global-writeroom-mode "writeroom-mode" "\
 Toggle Writeroom mode in all buffers.
-With prefix ARG, enable Global Writeroom mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Global Writeroom mode if ARG is positive; otherwise,
+disable it.
 
-Writeroom mode is enabled in all buffers where
-`turn-on-writeroom-mode' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Writeroom mode is enabled in all buffers where `turn-on-writeroom-mode' would
+do it.
+
 See `writeroom-mode' for more information on Writeroom mode.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "writeroom-mode" '("alpha" "bottom-divider-width" "define-writeroom-global-effect" "fullscreen" "internal-border-width" "menu-bar-lines" "sticky" "tool-bar-lines" "turn-on-writeroom-mode" "vertical-scroll-bars" "writeroom-")))
+(register-definition-prefixes "writeroom-mode" '("alpha" "bottom-divider-width" "define-writeroom-global-effect" "fullscreen" "internal-border-width" "menu-bar-lines" "sticky" "tool-bar-lines" "turn-on-writeroom-mode" "vertical-scroll-bars" "writeroom-"))
 
 
 
@@ -26153,7 +26166,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259" "/Users/neagleson/.emacs.d/elpa/transient-20220406.1156" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20220404.2004" "/Users/neagleson/.emacs.d/elpa/with-editor-20220402.1641" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20210927.1301")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259" "/Users/neagleson/.emacs.d/elpa/transient-20220406.1156" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20220404.2004" "/Users/neagleson/.emacs.d/elpa/with-editor-20220402.1641" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046")
          Info-directory-list)))
 
 ;; Local Variables:

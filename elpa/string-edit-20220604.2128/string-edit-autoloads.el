@@ -1,4 +1,4 @@
-;;; string-edit-autoloads.el --- automatically extracted autoloads
+;;; string-edit-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -13,7 +13,7 @@
 Pop up a buffer to edit the string at point.
 This saves you from needing to manually escape characters." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "string-edit" '("se/" "string-edit-")))
+(register-definition-prefixes "string-edit" '("se/" "string-edit-"))
 
 ;;;***
 

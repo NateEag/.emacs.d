@@ -7405,10 +7405,10 @@ foo-bar format" t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20220604.2128/string-edit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20220604.2128/string-edit-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-edit-20220604.2128/string-edit-autoloads.el") (car load-path))))
 
 
 
@@ -7416,7 +7416,7 @@ foo-bar format" t nil)
 Pop up a buffer to edit the string at point.
 This saves you from needing to manually escape characters." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "string-edit" '("se/" "string-edit-")))
+(register-definition-prefixes "string-edit" '("se/" "string-edit-"))
 
 
 )

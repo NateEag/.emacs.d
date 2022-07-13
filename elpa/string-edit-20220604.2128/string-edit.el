@@ -4,8 +4,8 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 0.1.0
-;; Package-Version: 20210405.1836
-;; Package-Commit: 0e225df6f8740467231c787a50025e4552b3eddb
+;; Package-Version: 20220604.2128
+;; Package-Commit: d7c4b9db6c4987b5c022a9858e6302a4c53aff5f
 ;; Package-Requires: ((dash "1.2.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -140,7 +140,9 @@ This saves you from needing to manually escape characters."
 
 (define-minor-mode string-edit-mode
   "Minor mode for useful keybindings while editing string."
-  nil " StringEdit" string-edit-mode-map
+  :init-value nil
+  :lighter " StringEdit"
+  :keymap string-edit-mode-map
   (if string-edit-mode
       (add-hook 'post-command-hook 'se/post-command nil t)
     (remove-hook 'post-command-hook 'se/post-command t)))

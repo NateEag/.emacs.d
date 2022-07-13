@@ -5,9 +5,9 @@
 
 ;; Author: Campbell Barton <ideasman42@gmail.com>
 
-;; URL: https://gitlab.com/ideasman42/emacs-sidecar-locals
-;; Package-Version: 20220211.548
-;; Package-Commit: b69943575bfa7f13ee99c8b8871d3216ad24c85f
+;; URL: https://codeberg.org/ideasman42/emacs-sidecar-locals
+;; Package-Version: 20220710.1040
+;; Package-Commit: 3aa9c890ebc38800ab26f5f877da32a79ce87d18
 ;; Keywords: convenience
 ;; Version: 0.1
 ;; Package-Requires: ((emacs "27.1"))
@@ -109,7 +109,7 @@ check this buffer.")
 (defun sidecar-locals--path-explode (dir)
   "Explodes directory DIR.
 
-For example: '/a/b/c' explodes to ('/' 'a/' 'b/' 'c/')"
+For example: \"/a/b/c\" explodes to (\"/\" \"a/\" \"b/\" \"c/\")"
   (let ((paths (list)))
     (while dir
       (let ((parent (sidecar-locals--parent-dir-or-nil-with-slash dir)))
@@ -341,29 +341,30 @@ When NO-TEST is non-nil checking for existing paths is disabled."
 
 (defun sidecar-locals--buffer-insert-filepath (filepath map)
   "Insert FILEPATH as a clickable link using key-map MAP in a buffer."
-  (let ((p1 (point)))
-    (insert filepath)
-    (add-text-properties
-      p1 (point)
-      `
-      (mouse-face
-        highlight
-        help-echo
+  (let ((found (file-exists-p filepath)))
+    (insert
+      (propertize
+        filepath
+        'face
+        (cond
+          (found
+            'success)
+          (t
+            'default))
+        'mouse-face
+        'highlight
+        'help-echo
         "click to visit this file in other window"
-        keymap
-        ,map
-        loc
-        ,filepath))
+        'keymap
+        map
+        'loc
+        filepath))
+
+    (when found
+      (insert (propertize " [found]" 'face 'success)))
+
     (insert "\n")))
 
-(defun sidecar-locals--buffer-find-file-on-click (event)
-  "Called when a file-path is clicked (access the click from EVENT)."
-  (interactive "e")
-  (let*
-    (
-      (pos (posn-point (event-end event)))
-      (loc (get-text-property pos 'loc)))
-    (find-file loc)))
 
 (defun sidecar-locals--buffer-report-impl ()
   "Implementation of `sidecar-locals-report'."
@@ -371,16 +372,29 @@ When NO-TEST is non-nil checking for existing paths is disabled."
     (
       (buf (get-buffer-create "*sidecar-locals-report*"))
       (filepath (buffer-file-name))
-      (map (make-sparse-keymap)))
+      (map (make-sparse-keymap))
+
+      ;; Called when a file-path is clicked (access the click from EVENT).
+      (buffer-find-file-on-click-fn
+        (lambda (event)
+          (interactive "e")
+          (let*
+            (
+              (pos (posn-point (event-end event)))
+              (loc (get-text-property pos 'loc)))
+            (find-file loc)))))
     (unless filepath
       (error "Your buffer is not associated with a file, no sidecar-locals apply"))
-    (define-key map [mouse-2] 'sidecar-locals--buffer-find-file-on-click)
-    (define-key map [mouse-1] 'sidecar-locals--buffer-find-file-on-click)
+    (define-key map [mouse-2] buffer-find-file-on-click-fn)
+    (define-key map [mouse-1] buffer-find-file-on-click-fn)
 
     (with-current-buffer buf
       (setq buffer-read-only nil)
       (erase-buffer)
-      (insert "Sidecar locals applicable to\n " filepath "\n (click to edit, q to quit)\n\n"))
+      (insert (propertize "Sidecar locals applicable to:" 'face 'font-lock-doc-face) "\n")
+      (insert filepath "\n\n")
+      (insert (propertize "Click to edit, q to quit:\n" 'face 'font-lock-doc-face)))
+
     (sidecar-locals--apply
       (file-name-directory filepath) major-mode
       (lambda (filepath)

@@ -1976,8 +1976,8 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 ;; End:
 ;;; ace-window-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20211229.1513/pfuture-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20211229.1513/pfuture-autoloads.el"))
-;;; pfuture-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20220425.1242/pfuture-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/pfuture-20220425.1242/pfuture-autoloads.el"))
+;;; pfuture-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -2002,7 +2002,7 @@ this is right: (pfuture-new \"git\" \"status\")
 
 \(fn &rest CMD)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pfuture" '("pfuture-")))
+(register-definition-prefixes "pfuture" '("pfuture-"))
 
 ;;;***
 

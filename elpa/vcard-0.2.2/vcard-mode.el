@@ -1,12 +1,9 @@
-;;; vcard.el --- Package for handling vCard files  -*- lexical-binding: t; -*-
+;;; vcard-mode.el --- Package for handling vCard files  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020  Free Software Foundation, Inc.
+;; Copyright (C) 2020-2022  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
 ;; Maintainer: Eric Abrahamsen <eric@ericabrahamsen.net>
-
-;; Version: 0.2.1
-;; Package-Requires: ((emacs "27.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -60,5 +57,5 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.[Vv][Cc][Ff]\\'" . vcard-mode))
 
-(provide 'vcard)
-;;; vcard.el ends here
+(provide 'vcard-mode)
+;;; vcard-mode.el ends here

@@ -1,6 +1,6 @@
 ;;; vcard-parse.el --- Library for parsing vCards      -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Free Software Foundation, Inc.
+;; Copyright (C) 2019-2022  Free Software Foundation, Inc.
 
 ;; Author: Eric Abrahamsen <eric@ericabrahamsen.net>
 ;; Maintainer: Eric Abrahamsen <eric@ericabrahamsen.net>
@@ -98,8 +98,8 @@
 (defvar vcard-parse-select-fields nil
   "A list of field types to select.
 If this variable is non-nil, only the fields listed will be
-parsed, all others will be discarded.  Note that the 'version and
-'fn properties are always returned.
+parsed, all others will be discarded.  Note that the `version' and
+`fn' properties are always returned.
 
 Most useful when let-bound around one of the parsing functions.")
 
@@ -355,7 +355,7 @@ Each type is a symbol representing a downcased property name."
 (cl-defmethod vcard-contact-property-type ((contact list)
 					   (type symbol))
   "Return all properties of TYPE from CONTACT.
-TYPE is a symbol, e.g. 'email."
+TYPE is a symbol, e.g. `email'."
   (let (props)
     (dolist (p (vcard-contact-properties contact) props)
       (when (eql type (car p))

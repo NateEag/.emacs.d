@@ -857,21 +857,90 @@ Configure eshell for use with virtualenvwrapper.el.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.2.1/vcard-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.2.1/vcard-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.2.2/vcard-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/vcard-0.2.2/vcard-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vcard-0.2.1/vcard-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/vcard-0.2.2/vcard-autoloads.el") (car load-path))))
 
 
 
-(autoload 'vcard-mode "vcard" "\
+(defvar vcard-pretty-print-function #'vcard-format-sample-box "\
+*Formatting function used by `vcard-pretty-print'.")
+
+(custom-autoload 'vcard-pretty-print-function "vcard" t)
+
+(defvar vcard-standard-filters (list #'vcard-filter-html #'vcard-filter-adr-newlines #'vcard-filter-tel-normalize #'vcard-filter-textprop-cr) "\
+*Standard list of filters to apply to parsed vcard data.
+These filters are applied sequentially to vcard attributes when
+the function `vcard-standard-filter' is supplied as the second argument to
+`vcard-parse'.")
+
+(custom-autoload 'vcard-standard-filters "vcard" t)
+
+(autoload 'vcard-pretty-print "vcard" "\
+Format VCARD into a string suitable for display to user.
+VCARD can be an unparsed string containing raw VCF vcard data
+or a parsed vcard alist as returned by `vcard-parse-string'.
+
+The result is a string with formatted vcard information suitable for
+insertion into a mime presentation buffer.
+
+The function specified by the variable `vcard-pretty-print-function'
+actually performs the formatting.  That function will always receive a
+parsed vcard alist.
+
+\(fn VCARD)" nil nil)
+
+(autoload 'vcard-parse-string "vcard" "\
+Parse RAW vcard data as a string, and return an alist representing data.
+
+If the optional function FILTER is specified, apply that filter to each
+attribute.  If no filter is specified, `vcard-standard-filter' is used.
+
+Filters should accept two arguments: the property list and the value list.
+Modifying in place the property or value list will affect the resulting
+attribute in the vcard alist.
+
+Vcard data is normally in the form
+
+    begin:                        vcard
+    prop1a:                       value1a
+    prop2a;prop2b;prop2c=param2c: value2a
+    prop3a;prop3b:                value3a;value3b;value3c
+    end:                          vcard
+
+\(Whitespace around the `:' separating properties and values is optional.)
+If supplied to this function an alist of the form
+
+    (((\"prop1a\") \"value1a\")
+     ((\"prop2a\" \"prop2b\" (\"prop2c\" . \"param2c\")) \"value2a\")
+     ((\"prop3a\" \"prop3b\") \"value3a\" \"value3b\" \"value3c\"))
+
+would be returned.
+
+\(fn RAW &optional FILTER)" nil nil)
+
+(autoload 'vcard-parse-region "vcard" "\
+Parse the raw vcard data in region, and return an alist representing data.
+This function is just like `vcard-parse-string' except that it operates on
+a region of the current buffer rather than taking a string as an argument.
+
+Note: this function modifies the buffer!
+
+\(fn BEG END &optional FILTER)" nil nil)
+
+(register-definition-prefixes "vcard" '("vcard-"))
+
+
+
+(autoload 'vcard-mode "vcard-mode" "\
 Major mode for viewing vCard files.
 
 \(fn)" t nil)
 
 (add-to-list 'auto-mode-alist '("\\.[Vv][Cc][Ff]\\'" . vcard-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vcard" '("vcard-font-lock-keywords")))
+(register-definition-prefixes "vcard-mode" '("vcard-font-lock-keywords"))
 
 
 
@@ -884,7 +953,7 @@ Parse FILE containing vCard data into an alist.
 Parse current buffer, containing vCard data.
 Returns a list of contact objects." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "vcard-parse" '("vcard-")))
+(register-definition-prefixes "vcard-parse" '("vcard-"))
 
 
 

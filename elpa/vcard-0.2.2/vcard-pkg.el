@@ -1,0 +1,2 @@
+;; Generated package description from vcard.el  -*- no-byte-compile: t -*-
+(define-package "vcard" "0.2.2" "Package for handling vCard files" '((emacs "27.1")) :commit "28b88fd8ed53ca12d9499175217af81f5ea161fc" :url "https://elpa.gnu.org/packages/vcard.html" :authors '(("Noah Friedman" . "friedman@splode.com")) :maintainer '("Noah Friedman <friedman@splode.com>, Eric Abrahamsen" . "eric@ericabrahamsen.net") :keywords '("vcard" "mail" "news"))

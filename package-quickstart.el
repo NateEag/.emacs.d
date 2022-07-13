@@ -1440,10 +1440,10 @@ See `undo-tree-mode' for more information on Undo-Tree mode.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tzc-20220126.604/tzc-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tzc-20220126.604/tzc-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tzc-20220513.434/tzc-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tzc-20220513.434/tzc-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tzc-20220126.604/tzc-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tzc-20220513.434/tzc-autoloads.el") (car load-path))))
 
 
 
@@ -1463,7 +1463,7 @@ Get the `tzc-world-clock` for the next hour." t nil)
 (autoload 'tzc-world-clock "tzc" "\
 Display a world clock buffer for time zones in `tzc-favourite-time-zones-alist`." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tzc" '("tzc-")))
+(register-definition-prefixes "tzc" '("tzc-"))
 
 
 )

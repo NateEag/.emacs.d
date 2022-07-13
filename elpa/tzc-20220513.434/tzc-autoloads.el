@@ -1,4 +1,4 @@
-;;; tzc-autoloads.el --- automatically extracted autoloads
+;;; tzc-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -25,7 +25,7 @@ Get the `tzc-world-clock` for the next hour." t nil)
 (autoload 'tzc-world-clock "tzc" "\
 Display a world clock buffer for time zones in `tzc-favourite-time-zones-alist`." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tzc" '("tzc-")))
+(register-definition-prefixes "tzc" '("tzc-"))
 
 ;;;***
 

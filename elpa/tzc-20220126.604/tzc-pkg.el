@@ -1,2 +1,0 @@
-;;; Generated package description from tzc.el  -*- no-byte-compile: t -*-
-(define-package "tzc" "20220126.604" "Converts time between different time zones" '((emacs "27.1")) :commit "3af821d2125a67786f93d50d532a71f681f381cc" :authors '(("Md Arif Shaikh" . "arifshaikh.astro@gmail.com")) :maintainer '("Md Arif Shaikh" . "arifshaikh.astro@gmail.com") :keywords '("convenience") :url "https://github.com/md-arif-shaikh/tzc")

@@ -8309,10 +8309,10 @@ See `show-eol-mode' for more information on Show-Eol mode.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20220627.825/reformatter-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20220627.825/reformatter-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reformatter-20220627.825/reformatter-autoloads.el") (car load-path))))
 
 
 
@@ -8413,7 +8413,7 @@ EXIT-CODE-SUCCESS-P
 
 (function-put 'reformatter-define 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "reformatter" '("reformatter-")))
+(register-definition-prefixes "reformatter" '("reformatter-"))
 
 
 )

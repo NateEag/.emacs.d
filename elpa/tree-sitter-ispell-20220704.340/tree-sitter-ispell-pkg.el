@@ -1,0 +1,2 @@
+;;; Generated package description from tree-sitter-ispell.el  -*- no-byte-compile: t -*-
+(define-package "tree-sitter-ispell" "20220704.340" "Run ispell on tree-sitter text nodes" '((emacs "25.1") (tree-sitter "0.15.0")) :commit "2efe943dd62096a819b7c2d6b61c93a4f18aeb22" :authors '(("Erick Navarro" . "erick@navarro.io")) :maintainer '("Erick Navarro" . "erick@navarro.io") :url "https://github.com/erickgnavar/tree-sitter-ispell.el")

@@ -7420,14 +7420,15 @@ This saves you from needing to manually escape characters." t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/f-20220608.943/f-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/f-20220608.943/f-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/f-20220608.943/f-autoloads.el") (car load-path))))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "f" '("f-")))
+atars/neagleson/.emacs.d/elpa/f-20220608.94
+
 
 
 )

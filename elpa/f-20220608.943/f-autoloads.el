@@ -1,4 +1,4 @@
-;;; f-autoloads.el --- automatically extracted autoloads
+;;; f-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,10 @@
 ;;;### (autoloads nil "f" "f.el" (0 0 0 0))
 ;;; Generated autoloads from f.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "f" '("f-")))
+atars/neagleson/.emacs.d/elpa/f-20220608.94
+;;;***
+
+;;;### (autoloads nil nil ("f-pkg.el" "f-shortdoc.el") (0 0 0 0))
 
 ;;;***
 

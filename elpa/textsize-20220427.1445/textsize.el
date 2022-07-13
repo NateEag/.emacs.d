@@ -4,8 +4,8 @@
 ;;
 ;; Author: James Ferguson <james@faff.org>
 ;; Version: 3.0
-;; Package-Version: 20220323.1330
-;; Package-Commit: 6d20632d2b3467144babe01e55275b699219f171
+;; Package-Version: 20220427.1445
+;; Package-Commit: df91392c3c928d7841631f5809716b9cf0f7309e
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience
 ;; URL: https://github.com/WJCFerguson/textsize
@@ -70,7 +70,7 @@ The default of ((0 . -3) (350 . 0) (500 . 3)) will shrink the
 text for anything smaller than 350mm, and enlarge it for >500mm"
   :type '(list (cons integer integer)))
 
-(defcustom textsize-pixel-pitch-thresholds '((0 . 3) (0.12 . 0) (0.18 . -3))
+(defcustom textsize-pixel-pitch-thresholds '((0 . 3) (0.12 . 0) (0.18 . -3) (0.25 . -6))
   "List of (px-pitch-threshold . font-point-offset).
 
 As with `textsize-monitor-size-thresholds', an offset will be

@@ -1,2 +1,0 @@
-;;; Generated package description from textsize.el  -*- no-byte-compile: t -*-
-(define-package "textsize" "20220323.1330" "Configure frame text size automatically" '((emacs "26.1")) :commit "6d20632d2b3467144babe01e55275b699219f171" :authors '(("James Ferguson" . "james@faff.org")) :maintainer '("James Ferguson" . "james@faff.org") :keywords '("convenience") :url "https://github.com/WJCFerguson/textsize")

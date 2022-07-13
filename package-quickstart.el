@@ -571,10 +571,10 @@ else like the former.
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20220319.653/web-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20220319.653/web-mode-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20220615.602/web-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/web-mode-20220615.602/web-mode-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20220319.653/web-mode-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/web-mode-20220615.602/web-mode-autoloads.el") (car load-path))))
 
 
 
@@ -583,7 +583,7 @@ Major mode for editing web templates.
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "web-mode" '("web-mode-")))
+(register-definition-prefixes "web-mode" '("web-mode-"))
 
 
 )

@@ -1,4 +1,4 @@
-;;; edit-indirect-autoloads.el --- automatically extracted autoloads
+;;; edit-indirect-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -27,6 +27,8 @@ properties, which happens surprisingly often when the font-lock
 mode is used.
 
 Edit-indirect buffers use the `edit-indirect-mode-map' keymap.
+Regions with active edit-indirect buffers use the
+`edit-indirect-overlay-map' keymap.
 
 If there's already an edit-indirect buffer for BEG..END, use that.
 If there's already an edit-indirect buffer active overlapping any
@@ -40,7 +42,7 @@ In any case, return the edit-indirect buffer.
 
 \(fn BEG END &optional DISPLAY-BUFFER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "edit-indirect" '("edit-indirect-")))
+(register-definition-prefixes "edit-indirect" '("edit-indirect-"))
 
 ;;;***
 

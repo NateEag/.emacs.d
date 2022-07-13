@@ -8552,10 +8552,10 @@ See `sesman-browser-mode' for more details." t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220511.1124/edit-indirect-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220511.1124/edit-indirect-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220511.1124/edit-indirect-autoloads.el") (car load-path))))
 
 
 
@@ -8577,6 +8577,8 @@ properties, which happens surprisingly often when the font-lock
 mode is used.
 
 Edit-indirect buffers use the `edit-indirect-mode-map' keymap.
+Regions with active edit-indirect buffers use the
+`edit-indirect-overlay-map' keymap.
 
 If there's already an edit-indirect buffer for BEG..END, use that.
 If there's already an edit-indirect buffer active overlapping any
@@ -8590,7 +8592,7 @@ In any case, return the edit-indirect buffer.
 
 \(fn BEG END &optional DISPLAY-BUFFER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "edit-indirect" '("edit-indirect-")))
+(register-definition-prefixes "edit-indirect" '("edit-indirect-"))
 
 
 )

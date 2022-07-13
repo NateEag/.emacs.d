@@ -3558,8 +3558,8 @@ The buffer on focus when the command is called is set as the target buffer." t n
 ;; End:
 ;;; tree-sitter-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220328.1344/tree-sitter-langs-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220328.1344/tree-sitter-langs-autoloads.el"))
-;;; tree-sitter-langs-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220508.636/tree-sitter-langs-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tree-sitter-langs-20220508.636/tree-sitter-langs-autoloads.el"))
+;;; tree-sitter-langs-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -3592,7 +3592,7 @@ Use syntax highlighting patterns provided by `tree-sitter-langs'.
 
 (advice-add 'tree-sitter-hl--setup :before #'tree-sitter-langs--set-hl-default-patterns)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-langs" '("tree-sitter-langs-")))
+(register-definition-prefixes "tree-sitter-langs" '("tree-sitter-langs-"))
 
 ;;;***
 
@@ -3600,7 +3600,7 @@ Use syntax highlighting patterns provided by `tree-sitter-langs'.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from tree-sitter-langs-build.el
 
-(autoload 'tree-sitter-langs-install-grammars "tree-sitter-langs-build" "\
+aautoload 'tree-sitter-langs-install-grammars "tree-sitter-langs-build" "\
 Download and install the specified VERSION of the language grammar bundle.
 If VERSION or OS is not specified, use the default of
 `tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
@@ -3613,7 +3613,7 @@ non-nil.
 
 \(fn &optional SKIP-IF-INSTALLED VERSION OS KEEP-BUNDLE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tree-sitter-langs-build" '("tree-sitter-langs-")))
+(register-definition-prefixes "tree-sitter-langs-build" '("tree-sitter-langs-"))
 
 ;;;***
 

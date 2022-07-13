@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20210919.1221
-;; Package-Commit: c97ea72285f2428ed61b519269274d27f2b695f9
+;; Package-Version: 20220430.2247
+;; Package-Commit: 2051de5882706246da298ce5f60482cd7f469fe7
 ;; Version: 0.13.4
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.4"))
 ;; Keywords: matching
@@ -818,7 +818,7 @@ When non-nil, INITIAL-INPUT is the initial search pattern."
                    (if initial-input
                        (cl-position-if
                         (lambda (x)
-                          (= (1+ preselect) (swiper--line-number x)))
+                          (<= (1+ preselect) (swiper--line-number x)))
                         (progn
                           (setq ivy--old-re nil)
                           (ivy--filter initial-input candidates)))

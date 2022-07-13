@@ -5721,10 +5721,10 @@ Switch to another buffer in another window." t nil)
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20220430.2247/swiper-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20220430.2247/swiper-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20220430.2247/swiper-autoloads.el") (car load-path))))
 
 
 
@@ -5764,7 +5764,7 @@ Like `swiper-isearch' but the first result is before the point.
 
 \(fn &optional INITIAL-INPUT)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "swiper" '("swiper-")))
+(register-definition-prefixes "swiper" '("swiper-"))
 
 
 )

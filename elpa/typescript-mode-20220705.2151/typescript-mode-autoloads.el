@@ -1,4 +1,4 @@
-;;; typescript-mode-autoloads.el --- automatically extracted autoloads
+;;; typescript-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -24,7 +24,7 @@ Key bindings:
 
 (add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "typescript-mode" '("typescript-")))
+(register-definition-prefixes "typescript-mode" '("typescript-"))
 
 ;;;***
 
@@ -32,7 +32,7 @@ Key bindings:
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from typescript-mode-test-utilities.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "typescript-mode-test-utilities" '("font-lock-test" "get-face-at" "test-with-")))
+atars/neagleson/.emacs.d/elpa/typescript-mode-20220705.2151/typescript-mode-autoloads.elace-at" "test-with-"))
 
 ;;;***
 

@@ -5575,14 +5575,14 @@ Commands:
 
 
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el"))
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130/ivy-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130/ivy-autoloads.el"))
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el") (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130/ivy-autoloads.el") (car load-path))))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "colir" '("colir-")))
+(register-definition-prefixes "colir" '("colir-"))
 
 
 
@@ -5679,7 +5679,7 @@ INHERIT-INPUT-METHOD is currently ignored.
 \(fn PROMPT COLLECTION &optional PREDICATE REQUIRE-MATCH INITIAL-INPUT HISTORY DEF INHERIT-INPUT-METHOD)" nil nil)
 
 (defvar ivy-mode nil "\
-Non-nil if Ivy mode is enabled.
+Non-nil if ivy mode is enabled.
 See the `ivy-mode' command
 for a description of this minor mode.
 Setting this variable directly does not take effect;
@@ -5711,11 +5711,11 @@ Switch to one of the window views stored by `ivy-push-view'." t nil)
 (autoload 'ivy-switch-buffer-other-window "ivy" "\
 Switch to another buffer in another window." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ivy" '("ivy-" "with-ivy-window")))
+(register-definition-prefixes "ivy" '("ivy-" "with-ivy-window"))
 
 
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ivy-overlay" '("ivy-")))
+(register-definition-prefixes "ivy-overlay" '("ivy-"))
 
 
 
@@ -26978,7 +26978,7 @@ Add `ac-source-capf' to `ac-sources' and enable `auto-complete' mode
   (info-initialize)
   (setq Info-directory-list
         (append
-         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20220608.1017" "/Users/neagleson/.emacs.d/elpa/compat-28.1.1.3" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046")
+         '("/Users/neagleson/.emacs.d/elpa/bnf-mode-20200323.1348" "/Users/neagleson/.emacs.d/elpa/bufler-20210907.1145" "/Users/neagleson/.emacs.d/elpa/corfu-0.20" "/Users/neagleson/.emacs.d/elpa/editorconfig-20220301.332" "/Users/neagleson/.emacs.d/elpa/eping-20201027.2149" "/Users/neagleson/.emacs.d/elpa/annalist-20190929.207" "/Users/neagleson/.emacs.d/elpa/forge-20220406.1227" "/Users/neagleson/.emacs.d/elpa/company-20220328.155" "/Users/neagleson/.emacs.d/elpa/geiser-20220327.2323" "/Users/neagleson/.emacs.d/elpa/ghub-20220403.1248" "/Users/neagleson/.emacs.d/elpa/haskell-mode-20220331.1645" "/Users/neagleson/.emacs.d/elpa/ledger-mode-20220307.854" "/Users/neagleson/.emacs.d/elpa/magit-popup-20200719.1015" "/Users/neagleson/.emacs.d/elpa/magit-20220331.2308" "/Users/neagleson/.emacs.d/elpa/magit-section-20220329.1154" "/Users/neagleson/.emacs.d/elpa/prettier-20211018.955" "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747" "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137" "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215" "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955" "/Users/neagleson/.emacs.d/elpa/ivy-20220529.1130" "/Users/neagleson/.emacs.d/elpa/transient-20210616.2222" "/Users/neagleson/.emacs.d/elpa/use-package-20210207.1926" "/Users/neagleson/.emacs.d/elpa/dash-20210609.1330" "/Users/neagleson/.emacs.d/elpa/with-editor-20220608.1017" "/Users/neagleson/.emacs.d/elpa/compat-28.1.1.3" "/Users/neagleson/.emacs.d/elpa/writeroom-mode-20220426.2046")
          Info-directory-list)))
 
 ;; Local Variables:

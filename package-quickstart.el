@@ -2163,8 +2163,8 @@ result of `defhydra'.
 ;; End:
 ;;; ht-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20220124.859/posframe-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20220124.859/posframe-autoloads.el"))
-;;; posframe-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20220528.27/posframe-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/posframe-20220528.27/posframe-autoloads.el"))
+;;; posframe-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -2278,15 +2278,15 @@ the help of function `posframe-poshandler-argbuilder'.  like:
  (3) POSHANDLER-EXTRA-INFO
 
 POSHANDLER-EXTRA-INFO is a plist, which will prepend to the
-argument of poshandler function: 'info', it will *OVERRIDE* the
-exist key in 'info'.
+argument of poshandler function: `info', it will *OVERRIDE* the
+exist key in `info'.
 
  (4) BUFFER-OR-NAME
 
 This posframe's buffer is BUFFER-OR-NAME, which can be a buffer
 or a name of a (possibly nonexistent) buffer.
 
-buffer name can prefix with space, for example ' *mybuffer*', so
+buffer name can prefix with space, for example \" *mybuffer*\", so
 the buffer name will hide for ibuffer and `list-buffers'.
 
  (5) NO-PROPERTIES
@@ -2409,7 +2409,7 @@ Hide all posframe frames." t nil)
 (autoload 'posframe-delete-all "posframe" "\
 Delete all posframe frames and buffers." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe" '("posframe-")))
+(register-definition-prefixes "posframe" '("posframe-"))
 
 ;;;***
 
@@ -2420,7 +2420,7 @@ Delete all posframe frames and buffers." t nil)
 (autoload 'posframe-benchmark "posframe-benchmark" "\
 Benchmark tool for posframe." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "posframe-benchmark" '("posframe-benchmark-alist")))
+(register-definition-prefixes "posframe-benchmark" '("posframe-benchmark-alist"))
 
 ;;;***
 

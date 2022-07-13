@@ -4327,7 +4327,17 @@ show the indicator."
    #b00110110
    #b01101100
    #b11011000]
-  "Bitmaps used to indicate errors in the fringes.")
+  "Bitmaps used to indicate errors in the left fringes.")
+
+(defconst flycheck-fringe-bitmap-double-left-arrow
+  [#b00011011
+   #b00110110
+   #b01101100
+   #b11011000
+   #b01101100
+   #b00110110
+   #b00011011]
+  "Bitmaps used to indicate errors in the right fringes.")
 
 (defconst flycheck-fringe-bitmap-double-arrow-hi-res
   [#b1111001111000000
@@ -4342,7 +4352,22 @@ show the indicator."
    #b0011110011110000
    #b0111100111100000
    #b1111001111000000]
-  "High-resolution bitmap used to indicate errors in the fringes.")
+  "High-resolution bitmap used to indicate errors in the left fringes.")
+
+(defconst flycheck-fringe-bitmap-double-left-arrow-hi-res
+  [#b0000001111001111
+   #b0000011110011110
+   #b0000111100111100
+   #b0001111001111000
+   #b0011110011110000
+   #b0111100111100000
+   #b0111100111100000
+   #b0011110011110000
+   #b0001111001111000
+   #b0000111100111100
+   #b0000011110011110
+   #b0000001111001111]
+  "High-resolution bitmap used to indicate errors in the right fringes.")
 
 (defconst flycheck-fringe-bitmap-continuation
   [#b1000000010000000
@@ -4358,6 +4383,13 @@ show the indicator."
   (define-fringe-bitmap
     'flycheck-fringe-bitmap-double-arrow-hi-res
     flycheck-fringe-bitmap-double-arrow-hi-res
+    nil 16)
+  (define-fringe-bitmap
+    'flycheck-fringe-bitmap-double-left-arrow
+    flycheck-fringe-bitmap-double-left-arrow)
+  (define-fringe-bitmap
+    'flycheck-fringe-bitmap-double-left-arrow-hi-res
+    flycheck-fringe-bitmap-double-left-arrow-hi-res
     nil 16)
   (define-fringe-bitmap
     'flycheck-fringe-bitmap-continuation
@@ -7282,7 +7314,7 @@ Split the output into error tokens, using all regular expressions
 from the error PATTERNS.  An error token is simply a string
 containing a single error from OUTPUT.  Such a token can then be
 parsed into a structured error by applying the PATTERNS again,
-see `flycheck-parse-errors-with-patterns'.
+see `flycheck-parse-error-with-patterns'.
 
 Return a list of error tokens."
   (let ((regexp (flycheck-get-regexp patterns))
@@ -9617,17 +9649,20 @@ See URL `https://github.com/ndmitchell/hlint'."
             source-inplace)
   :error-patterns
   ((info line-start
-         (file-name) ":" line ":" column (optional "-" end-column)
+         (file-name) ":" (or (seq line ":" column (optional "-" end-column))
+                             (seq "(" line "," column ")-(" end-line "," end-column ")"))
          ": Suggestion: "
          (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
          line-end)
    (warning line-start
-            (file-name) ":" line ":" column (optional "-" end-column)
+            (file-name) ":" (or (seq line ":" column (optional "-" end-column))
+                                (seq "(" line "," column ")-(" end-line "," end-column ")"))
             ": Warning: "
             (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
             line-end)
    (error line-start
-          (file-name) ":" line ":" column (optional "-" end-column)
+          (file-name) ":" (or (seq line ":" column (optional "-" end-column))
+                              (seq "(" line "," column ")-(" end-line "," end-column ")"))
           ": Error: "
           (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
           line-end))
@@ -12296,14 +12331,18 @@ Relative paths are relative to the file being checked."
   "A Verilog syntax checker using the Verilator Verilog HDL simulator.
 
 See URL `https://www.veripool.org/wiki/verilator'."
-  :command ("verilator" "--lint-only" "-Wall"
+  :command ("verilator" "--lint-only" "-Wall" "--quiet-exit"
             (option-list "-I" flycheck-verilator-include-path concat)
             source)
   :error-patterns
-  ((warning line-start "%Warning-" (zero-or-more not-newline) ": "
-            (file-name) ":" line ": " (message) line-end)
-   (error line-start "%Error: " (file-name) ":"
-          line ": " (message) line-end))
+  ((warning line-start "%Warning"
+            (? "-" (id (+ (any "0-9A-Z_")))) ": "
+            (? (file-name) ":" line ":" (? column ":") " ")
+            (message) line-end)
+   (error line-start "%Error"
+          (? "-" (id (+ (any "0-9A-Z_")))) ": "
+          (? (file-name) ":" line ":" (? column ":") " ")
+          (message) line-end))
   :modes verilog-mode)
 
 (flycheck-def-option-var flycheck-ghdl-language-standard nil vhdl-ghdl

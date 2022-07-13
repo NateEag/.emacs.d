@@ -1,4 +1,4 @@
-;;; flycheck-autoloads.el --- automatically extracted autoloads
+;;; flycheck-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -70,12 +70,16 @@ or call the function `global-flycheck-mode'.")
 
 (autoload 'global-flycheck-mode "flycheck" "\
 Toggle Flycheck mode in all buffers.
-With prefix ARG, enable Global Flycheck mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Global Flycheck mode if ARG is positive; otherwise,
+disable it.
 
-Flycheck mode is enabled in all buffers where
-`flycheck-mode-on-safe' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Flycheck mode is enabled in all buffers where `flycheck-mode-on-safe' would do
+it.
+
 See `flycheck-mode' for more information on Flycheck mode.
 
 \(fn &optional ARG)" t nil)
@@ -274,7 +278,7 @@ SYMBOL with `flycheck-def-executable-var'.
 
 (function-put 'flycheck-define-checker 'doc-string-elt '2)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck" '("flycheck-" "help-flycheck-checker-d" "list-flycheck-errors")))
+(register-definition-prefixes "flycheck" '("flycheck-" "help-flycheck-checker-d" "list-flycheck-errors"))
 
 ;;;***
 
@@ -282,14 +286,14 @@ SYMBOL with `flycheck-def-executable-var'.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from flycheck-buttercup.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-buttercup" '("flycheck-buttercup-format-error-list")))
+atars/neagleson/.emacs.d/elpa/flycheck-20220612.1800/flycheck-autoloads.elormat-error-list"))
 
 ;;;***
 
 ;;;### (autoloads nil "flycheck-ert" "flycheck-ert.el" (0 0 0 0))
 ;;; Generated autoloads from flycheck-ert.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-ert" '("flycheck-er")))
+(register-definition-prefixes "flycheck-ert" '("flycheck-er"))
 
 ;;;***
 

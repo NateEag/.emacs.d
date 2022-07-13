@@ -4021,8 +4021,8 @@ version.
 ;; End:
 ;;; pkg-info-autoloads.el ends here
 )
-(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20220328.1518/flycheck-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20220328.1518/flycheck-autoloads.el"))
-;;; flycheck-autoloads.el --- automatically extracted autoloads
+(let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20220612.1800/flycheck-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/flycheck-20220612.1800/flycheck-autoloads.el"))
+;;; flycheck-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -4094,12 +4094,16 @@ or call the function `global-flycheck-mode'.")
 
 (autoload 'global-flycheck-mode "flycheck" "\
 Toggle Flycheck mode in all buffers.
-With prefix ARG, enable Global Flycheck mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Global Flycheck mode if ARG is positive; otherwise,
+disable it.
 
-Flycheck mode is enabled in all buffers where
-`flycheck-mode-on-safe' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Flycheck mode is enabled in all buffers where `flycheck-mode-on-safe' would do
+it.
+
 See `flycheck-mode' for more information on Flycheck mode.
 
 \(fn &optional ARG)" t nil)
@@ -4298,7 +4302,7 @@ SYMBOL with `flycheck-def-executable-var'.
 
 (function-put 'flycheck-define-checker 'doc-string-elt '2)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck" '("flycheck-" "help-flycheck-checker-d" "list-flycheck-errors")))
+(register-definition-prefixes "flycheck" '("flycheck-" "help-flycheck-checker-d" "list-flycheck-errors"))
 
 ;;;***
 
@@ -4306,40 +4310,22 @@ SYMBOL with `flycheck-def-executable-var'.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from flycheck-buttercup.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-buttercup" '("flycheck-buttercup-format-error-list")))
+atars/neagleson/.emacs.d/elpa/flycheck-20220612.1800/flycheck-autoloads.elormat-error-list"))
 
-;;;***
 
-;;;### (autoloads nil "flycheck-ert" "flycheck-ert.el" (0 0 0 0))
-;;; Generated autoloads from flycheck-ert.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-ert" '("flycheck-er")))
+(register-definition-prefixes "flycheck-ert" '("flycheck-er"))
 
-;;;***
 
-;;;### (autoloads nil nil ("flycheck-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; flycheck-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tide-20220314.930/tide-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tide-20220314.930/tide-autoloads.el"))
-;;; tide-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tide-20220314.930/tide-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "tide" "tide.el" (0 0 0 0))
-;;; Generated autoloads from tide.el
 
 (autoload 'company-tide "tide" "\
 
@@ -4389,38 +4375,20 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tide" '("tide-" "xref-tide-xref-backend")))
 
-;;;***
 
-;;;### (autoloads nil "tide-lv" "tide-lv.el" (0 0 0 0))
-;;; Generated autoloads from tide-lv.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tide-lv" '("tide-lv-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("tide-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; tide-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/textsize-20220323.1330/textsize-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/textsize-20220323.1330/textsize-autoloads.el"))
-;;; textsize-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/textsize-20220323.1330/textsize-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "textsize" "textsize.el" (0 0 0 0))
-;;; Generated autoloads from textsize.el
 
 (autoload 'textsize-modify-manual-adjust "textsize" "\
 Adjust FRAME's font-point adjustment by OFFSET persistently.
@@ -4467,24 +4435,11 @@ ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "textsize" '("textsize-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; textsize-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tern-20181108.722/tern-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tern-20181108.722/tern-autoloads.el"))
-;;; tern-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tern-20181108.722/tern-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "tern" "tern.el" (23540 10620 0 0))
-;;; Generated autoloads from tern.el
 
 (autoload 'tern-use-server "tern" "\
 
@@ -4496,26 +4451,14 @@ Minor mode binding to the Tern JavaScript analyzer
 
 \(fn &optional ARG)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; tern-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/auto-complete-20220105.439/auto-complete-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/auto-complete-20220105.439/auto-complete-autoloads.el"))
-;;; auto-complete-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/auto-complete-20220105.439/auto-complete-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "auto-complete" "auto-complete.el" (0 0 0 0))
-;;; Generated autoloads from auto-complete.el
 
 (autoload 'auto-complete "auto-complete" "\
 Start auto-completion at current point.
@@ -4558,102 +4501,51 @@ See `auto-complete-mode' for more information on Auto-Complete mode.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-complete" '("ac-" "auto-complete-mode")))
 
-;;;***
 
-;;;### (autoloads nil "auto-complete-config" "auto-complete-config.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from auto-complete-config.el
 
 (autoload 'ac-config-default "auto-complete-config" "\
 No documentation." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-complete-config" '("ac-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("auto-complete-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; auto-complete-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tern-auto-complete-20170521.1935/tern-auto-complete-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tern-auto-complete-20170521.1935/tern-auto-complete-autoloads.el"))
-;;; tern-auto-complete-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tern-auto-complete-20170521.1935/tern-auto-complete-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "tern-auto-complete" "tern-auto-complete.el"
-;;;;;;  (23400 19387 0 0))
-;;; Generated autoloads from tern-auto-complete.el
 
 (autoload 'tern-ac-setup "tern-auto-complete" "\
 Setup auto-complete for tern-mode.
 
 \(fn)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; tern-auto-complete-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/term-manager-20190610.2032/term-manager-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/term-manager-20190610.2032/term-manager-autoloads.el"))
-;;; term-manager-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/term-manager-20190610.2032/term-manager-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "term-manager" "term-manager.el" (0 0 0 0))
-;;; Generated autoloads from term-manager.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "term-manager" '("term-manager")))
 
-;;;***
 
-;;;### (autoloads nil "term-manager-indexed-mapping" "term-manager-indexed-mapping.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from term-manager-indexed-mapping.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "term-manager-indexed-mapping" '("term-manager-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("term-manager-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; term-manager-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el"))
-;;; projectile-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/projectile-20220402.624/projectile-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "projectile" "projectile.el" (0 0 0 0))
-;;; Generated autoloads from projectile.el
 
 (autoload 'projectile-version "projectile" "\
 Get the Projectile version as string.
@@ -5247,25 +5139,11 @@ Otherwise behave as if called interactively.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "projectile" '("??" "compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "projectile-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; projectile-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/term-projectile-20190307.400/term-projectile-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/term-projectile-20190307.400/term-projectile-autoloads.el"))
-;;; term-projectile-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/term-projectile-20190307.400/term-projectile-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "term-projectile" "term-projectile.el" (23690
-;;;;;;  18096 891087 71000))
-;;; Generated autoloads from term-projectile.el
 
 (autoload 'term-projectile-switch-to "term-projectile" "\
 Switch to an existing term-projectile buffer using `completing-read'.
@@ -5322,40 +5200,17 @@ Make a new `ansi-term' buffer in `term-projectile-global-directory'.
 
 \(fn)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; term-projectile-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tea-time-20120331.820/tea-time-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tea-time-20120331.820/tea-time-autoloads.el"))
-;;; tea-time-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tea-time-20120331.820/tea-time-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil nil ("tea-time.el") (23400 19381 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; tea-time-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tagedit-20161121.855/tagedit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tagedit-20161121.855/tagedit-autoloads.el"))
-;;; tagedit-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tagedit-20161121.855/tagedit-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "tagedit" "tagedit.el" (23400 19380 0 0))
-;;; Generated autoloads from tagedit.el
 
 (autoload 'tagedit-add-paredit-like-keybindings "tagedit" "\
 
@@ -5462,26 +5317,14 @@ Goto start of content within current tag.
 
 \(fn)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; tagedit-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/tablist-20200427.2205/tablist-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/tablist-20200427.2205/tablist-autoloads.el"))
-;;; tablist-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/tablist-20200427.2205/tablist-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "tablist" "tablist.el" (0 0 0 0))
-;;; Generated autoloads from tablist.el
 
 (autoload 'tablist-minor-mode "tablist" "\
 Toggle Tablist minor mode on or off.
@@ -5502,39 +5345,20 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tablist" '("tablist-")))
 
-;;;***
 
-;;;### (autoloads nil "tablist-filter" "tablist-filter.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from tablist-filter.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "tablist-filter" '("tablist-filter-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("tablist-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; tablist-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/synosaurus-20191125.552/synosaurus-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/synosaurus-20191125.552/synosaurus-autoloads.el"))
-;;; synosaurus-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/synosaurus-20191125.552/synosaurus-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "synosaurus" "synosaurus.el" (0 0 0 0))
-;;; Generated autoloads from synosaurus.el
 
 (autoload 'synosaurus-lookup "synosaurus" "\
 Lookup `WORD' in the thesaurus.
@@ -5584,11 +5408,7 @@ The thesaurus backend can be configured with
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "synosaurus" '("synosaurus-")))
 
-;;;***
 
-;;;### (autoloads nil "synosaurus-openthesaurus" "synosaurus-openthesaurus.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from synosaurus-openthesaurus.el
 
 (autoload 'synosaurus-backend-openthesaurus "synosaurus-openthesaurus" "\
 
@@ -5597,11 +5417,7 @@ The thesaurus backend can be configured with
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "synosaurus-openthesaurus" '("synosaurus-openthesaurus--")))
 
-;;;***
 
-;;;### (autoloads nil "synosaurus-wordnet" "synosaurus-wordnet.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from synosaurus-wordnet.el
 
 (autoload 'synosaurus-backend-wordnet "synosaurus-wordnet" "\
 
@@ -5610,31 +5426,16 @@ The thesaurus backend can be configured with
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "synosaurus-wordnet" '("synosaurus-wordnet--")))
 
-;;;***
 
-;;;### (autoloads nil nil ("synosaurus-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; synosaurus-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20220216.717/iedit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/iedit-20220216.717/iedit-autoloads.el"))
-;;; iedit-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/iedit-20220216.717/iedit-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "iedit" "iedit.el" (0 0 0 0))
-;;; Generated autoloads from iedit.el
 
 (autoload 'iedit-mode "iedit" "\
 Toggle Iedit mode.
@@ -5709,17 +5510,11 @@ Apply last modification in Iedit mode to the current buffer or an active region.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iedit" '("iedit-")))
 
-;;;***
 
-;;;### (autoloads nil "iedit-lib" "iedit-lib.el" (0 0 0 0))
-;;; Generated autoloads from iedit-lib.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iedit-lib" '("iedit-")))
 
-;;;***
 
-;;;### (autoloads nil "iedit-rect" "iedit-rect.el" (0 0 0 0))
-;;; Generated autoloads from iedit-rect.el
 
 (autoload 'iedit-rectangle-mode "iedit-rect" "\
 Toggle Iedit-rect mode.
@@ -5735,38 +5530,20 @@ Commands:
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iedit-rect" '("iedit-rect")))
 
-;;;***
 
-;;;### (autoloads nil nil ("iedit-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; iedit-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el"))
-;;; ivy-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/ivy-20220402.1259/ivy-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "colir" "colir.el" (0 0 0 0))
-;;; Generated autoloads from colir.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "colir" '("colir-")))
 
-;;;***
 
-;;;### (autoloads nil "ivy" "ivy.el" (0 0 0 0))
-;;; Generated autoloads from ivy.el
 
 (autoload 'ivy-resume "ivy" "\
 Resume the last completion session, or SESSION if non-nil.
@@ -5895,39 +5672,20 @@ Switch to another buffer in another window." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ivy" '("ivy-" "with-ivy-window")))
 
-;;;***
 
-;;;### (autoloads nil "ivy-overlay" "ivy-overlay.el" (0 0 0 0))
-;;; Generated autoloads from ivy-overlay.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ivy-overlay" '("ivy-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("elpa.el" "ivy-faces.el" "ivy-pkg.el")
-;;;;;;  (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; ivy-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el"))
-;;; swiper-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/swiper-20210919.1221/swiper-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "swiper" "swiper.el" (0 0 0 0))
-;;; Generated autoloads from swiper.el
 
 (autoload 'swiper-avy "swiper" "\
 Jump to one of the current swiper candidates with `avy'." t nil)
@@ -5967,83 +5725,46 @@ Like `swiper-isearch' but the first result is before the point.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "swiper" '("swiper-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; swiper-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/lispy-20220209.1138/lispy-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/lispy-20220209.1138/lispy-autoloads.el"))
-;;; lispy-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/lispy-20220209.1138/lispy-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "elpa" "elpa.el" (0 0 0 0))
-;;; Generated autoloads from elpa.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elpa" '("straight-reload-all")))
 
-;;;***
 
-;;;### (autoloads nil "le-clojure" "le-clojure.el" (0 0 0 0))
-;;; Generated autoloads from le-clojure.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-clojure" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "le-hy" "le-hy.el" (0 0 0 0))
-;;; Generated autoloads from le-hy.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-hy" '("lispy--")))
 
-;;;***
 
-;;;### (autoloads nil "le-julia" "le-julia.el" (0 0 0 0))
-;;; Generated autoloads from le-julia.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-julia" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "le-lisp" "le-lisp.el" (0 0 0 0))
-;;; Generated autoloads from le-lisp.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-lisp" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "le-python" "le-python.el" (0 0 0 0))
-;;; Generated autoloads from le-python.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-python" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "le-racket" "le-racket.el" (0 0 0 0))
-;;; Generated autoloads from le-racket.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-racket" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "le-scheme" "le-scheme.el" (0 0 0 0))
-;;; Generated autoloads from le-scheme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-scheme" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "lispy" "lispy.el" (0 0 0 0))
-;;; Generated autoloads from lispy.el
 
 (autoload 'lispy-mode "lispy" "\
 Minor mode for navigating and editing LISP dialects.
@@ -6076,17 +5797,11 @@ backward through lists, which is useful to move into special.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "eval-error" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
 
-;;;***
 
-;;;### (autoloads nil "lispy-inline" "lispy-inline.el" (0 0 0 0))
-;;; Generated autoloads from lispy-inline.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-inline" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "lispy-occur" "lispy-occur.el" (0 0 0 0))
-;;; Generated autoloads from lispy-occur.el
 
 (autoload 'lispy-occur "lispy-occur" "\
 Select a line within current top level sexp.
@@ -6094,38 +5809,20 @@ See `lispy-occur-backend' for the selection back end." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-occur" '("lispy-")))
 
-;;;***
 
-;;;### (autoloads nil "lispy-tags" "lispy-tags.el" (0 0 0 0))
-;;; Generated autoloads from lispy-tags.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-tags" '("lispy-" "no-semantic-support")))
 
-;;;***
 
-;;;### (autoloads nil nil ("lispy-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; lispy-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/paredit-20191121.2328/paredit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/paredit-20191121.2328/paredit-autoloads.el"))
-;;; paredit-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/paredit-20191121.2328/paredit-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "paredit" "paredit.el" (0 0 0 0))
-;;; Generated autoloads from paredit.el
 
 (autoload 'paredit-mode "paredit" "\
 Minor mode for pseudo-structurally editing Lisp code.
@@ -6148,27 +5845,14 @@ Turn on pseudo-structural editing of Lisp code." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "paredit" '("?\\" "disable-paredit-mode" "paredit-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; paredit-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20220107.1733/goto-chg-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/goto-chg-20220107.1733/goto-chg-autoloads.el"))
-;;; goto-chg-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/goto-chg-20220107.1733/goto-chg-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "goto-chg" "goto-chg.el" (0 0 0 0))
-;;; Generated autoloads from goto-chg.el
 
 (autoload 'goto-last-change "goto-chg" "\
 Go to the point where the last edit was made in the current buffer.
@@ -6205,157 +5889,84 @@ See `goto-last-change' for use of prefix argument.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "goto-chg" '("glc-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; goto-chg-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955/evil-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955/evil-autoloads.el"))
-;;; evil-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-20220403.1955/evil-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "evil-command-window" "evil-command-window.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from evil-command-window.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-command-window" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-commands" "evil-commands.el" (0 0 0 0))
-;;; Generated autoloads from evil-commands.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-commands" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-common" "evil-common.el" (0 0 0 0))
-;;; Generated autoloads from evil-common.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-common" '("bounds-of-evil-" "evil-" "forward-evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-core" "evil-core.el" (0 0 0 0))
-;;; Generated autoloads from evil-core.el
  (autoload 'evil-mode "evil" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-core" '("evil-" "turn-o")))
 
-;;;***
 
-;;;### (autoloads nil "evil-digraphs" "evil-digraphs.el" (0 0 0 0))
-;;; Generated autoloads from evil-digraphs.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-digraphs" '("evil-digraph")))
 
-;;;***
 
-;;;### (autoloads nil "evil-ex" "evil-ex.el" (0 0 0 0))
-;;; Generated autoloads from evil-ex.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-ex" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-integration" "evil-integration.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from evil-integration.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-integration" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-jumps" "evil-jumps.el" (0 0 0 0))
-;;; Generated autoloads from evil-jumps.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-jumps" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-macros" "evil-macros.el" (0 0 0 0))
-;;; Generated autoloads from evil-macros.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-macros" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-maps" "evil-maps.el" (0 0 0 0))
-;;; Generated autoloads from evil-maps.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-maps" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-repeat" "evil-repeat.el" (0 0 0 0))
-;;; Generated autoloads from evil-repeat.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-repeat" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-search" "evil-search.el" (0 0 0 0))
-;;; Generated autoloads from evil-search.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-search" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-states" "evil-states.el" (0 0 0 0))
-;;; Generated autoloads from evil-states.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-states" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-types" "evil-types.el" (0 0 0 0))
-;;; Generated autoloads from evil-types.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-types" '("evil-ex-get-optional-register-and-count")))
 
-;;;***
 
-;;;### (autoloads nil "evil-vars" "evil-vars.el" (0 0 0 0))
-;;; Generated autoloads from evil-vars.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-vars" '("evil-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("evil-development.el" "evil-keybindings.el"
-;;;;;;  "evil-pkg.el" "evil.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; evil-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20220204.1134/smartparens-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/smartparens-20220204.1134/smartparens-autoloads.el"))
-;;; smartparens-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smartparens-20220204.1134/smartparens-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "smartparens" "smartparens.el" (0 0 0 0))
-;;; Generated autoloads from smartparens.el
 
 (autoload 'sp-cheat-sheet "smartparens" "\
 Generate a cheat sheet of all the smartparens interactive functions.
@@ -6538,178 +6149,88 @@ Turn off `show-smartparens-mode'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens" '("smartparens-" "sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-clojure" "smartparens-clojure.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-clojure.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-clojure" '("sp-clojure-prefix")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-config" "smartparens-config.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-config.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-config" '("sp-lisp-invalid-hyperlink-p")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-crystal" "smartparens-crystal.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-crystal.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-crystal" '("sp-crystal-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-elixir" "smartparens-elixir.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-elixir.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-elixir" '("sp-elixir-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-ess" "smartparens-ess.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from smartparens-ess.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-ess" '("sp-ess-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-haskell" "smartparens-haskell.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-haskell.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-haskell" '("sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-html" "smartparens-html.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from smartparens-html.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-html" '("sp-html-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-latex" "smartparens-latex.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-latex.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-latex" '("sp-latex-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-lua" "smartparens-lua.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from smartparens-lua.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-lua" '("sp-lua-post-keyword-insert")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-markdown" "smartparens-markdown.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-markdown.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-markdown" '("sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-org" "smartparens-org.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from smartparens-org.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-org" '("sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-python" "smartparens-python.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-python.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-python" '("sp-python-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-rst" "smartparens-rst.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from smartparens-rst.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-rst" '("sp-rst-point-after-backtick")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-ruby" "smartparens-ruby.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from smartparens-ruby.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-ruby" '("sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-rust" "smartparens-rust.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from smartparens-rust.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-rust" '("sp-")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-scala" "smartparens-scala.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from smartparens-scala.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-scala" '("sp-scala-wrap-with-indented-newlines")))
 
-;;;***
 
-;;;### (autoloads nil "smartparens-text" "smartparens-text.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from smartparens-text.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens-text" '("sp-text-mode-")))
 
-;;;***
 
-;;;### (autoloads nil "sp-sublimetext-like" "sp-sublimetext-like.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from sp-sublimetext-like.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sp-sublimetext-like" '("sp-point-not-before-word")))
 
-;;;***
 
-;;;### (autoloads nil nil ("smartparens-c.el" "smartparens-javascript.el"
-;;;;;;  "smartparens-ml.el" "smartparens-pkg.el" "smartparens-racket.el")
-;;;;;;  (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; smartparens-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/evil-cleverparens-20170718.413/evil-cleverparens-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/evil-cleverparens-20170718.413/evil-cleverparens-autoloads.el"))
-;;; evil-cleverparens-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-cleverparens-20170718.413/evil-cleverparens-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "evil-cleverparens" "evil-cleverparens.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from evil-cleverparens.el
 
 (autoload 'evil-cp-set-movement-keys "evil-cleverparens" "\
 Sets the movement keys in
@@ -6741,11 +6262,7 @@ for an advanced modal structural editing experience.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-cleverparens" '("evil-c" "forward-evil-cp-")))
 
-;;;***
 
-;;;### (autoloads nil "evil-cleverparens-text-objects" "evil-cleverparens-text-objects.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from evil-cleverparens-text-objects.el
  (autoload 'evil-cp-a-form "evil-cleverparens-text-objects" nil t)
  (autoload 'evil-cp-inner-form "evil-cleverparens-text-objects" nil t)
  (autoload 'evil-cp-a-comment "evil-cleverparens-text-objects" nil t)
@@ -6753,39 +6270,20 @@ for an advanced modal structural editing experience.
  (autoload 'evil-cp-a-defun "evil-cleverparens-text-objects" nil t)
  (autoload 'evil-cp-inner-defun "evil-cleverparens-text-objects" nil t)
 
-;;;***
 
-;;;### (autoloads nil "evil-cleverparens-util" "evil-cleverparens-util.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from evil-cleverparens-util.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-cleverparens-util" '("evil-cp-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("evil-cleverparens-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; evil-cleverparens-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el"))
-;;; evil-surround-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/evil-surround-20210615.2119/evil-surround-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "evil-surround" "evil-surround.el" (0 0 0 0))
-;;; Generated autoloads from evil-surround.el
 
 (autoload 'evil-surround-delete "evil-surround" "\
 Delete the surrounding delimiters represented by CHAR.
@@ -6845,27 +6343,14 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-surround" '("evil-surround-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; evil-surround-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el"))
-;;; symex-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/symex-20220323.1808/symex-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "symex" "symex.el" (0 0 0 0))
-;;; Generated autoloads from symex.el
 
 (autoload 'symex-mode "symex" "\
 An evil way to edit Lisp symbolic expressions as trees.
@@ -6891,190 +6376,100 @@ features." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-computations" "symex-computations.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-computations.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-computations" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-custom" "symex-custom.el" (0 0 0 0))
-;;; Generated autoloads from symex-custom.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-custom" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-data" "symex-data.el" (0 0 0 0))
-;;; Generated autoloads from symex-data.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-data" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-dsl" "symex-dsl.el" (0 0 0 0))
-;;; Generated autoloads from symex-dsl.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-dsl" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-evaluator" "symex-evaluator.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from symex-evaluator.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evaluator" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-evil" "symex-evil.el" (0 0 0 0))
-;;; Generated autoloads from symex-evil.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-evil-support" "symex-evil-support.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-evil-support.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-evil-support" '("symex--define-evil-key")))
 
-;;;***
 
-;;;### (autoloads nil "symex-hydra" "symex-hydra.el" (0 0 0 0))
-;;; Generated autoloads from symex-hydra.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-hydra" '("hydra-symex" "symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-arc" "symex-interface-arc.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-arc.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-arc" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-clojure" "symex-interface-clojure.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-clojure.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-clojure" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-common-lisp" "symex-interface-common-lisp.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-common-lisp.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-common-lisp" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-elisp" "symex-interface-elisp.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-elisp.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-elisp" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-racket" "symex-interface-racket.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-racket.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-racket" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interface-scheme" "symex-interface-scheme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-interface-scheme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interface-scheme" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-interop" "symex-interop.el" (0 0 0 0))
-;;; Generated autoloads from symex-interop.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-interop" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-misc" "symex-misc.el" (0 0 0 0))
-;;; Generated autoloads from symex-misc.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-misc" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-primitives" "symex-primitives.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from symex-primitives.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-primitives" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-transformations" "symex-transformations.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from symex-transformations.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-transformations" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-traversals" "symex-traversals.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from symex-traversals.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-traversals" '("symex-")))
 
-;;;***
 
-;;;### (autoloads nil "symex-ui" "symex-ui.el" (0 0 0 0))
-;;; Generated autoloads from symex-ui.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-ui" '("symex--toggle-highlight")))
 
-;;;***
 
-;;;### (autoloads nil "symex-utils" "symex-utils.el" (0 0 0 0))
-;;; Generated autoloads from symex-utils.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex-utils" '("symex--")))
 
-;;;***
 
-;;;### (autoloads nil nil ("symex-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; symex-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sublimity-20200905.1730/sublimity-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sublimity-20200905.1730/sublimity-autoloads.el"))
-;;; sublimity-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sublimity-20200905.1730/sublimity-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "sublimity" "sublimity.el" (0 0 0 0))
-;;; Generated autoloads from sublimity.el
 
 (defvar sublimity-mode nil "\
 Non-nil if Sublimity mode is enabled.
@@ -7098,54 +6493,28 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sublimity" '("sublimity-")))
 
-;;;***
 
-;;;### (autoloads nil "sublimity-attractive" "sublimity-attractive.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from sublimity-attractive.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sublimity-attractive" '("split-window" "sublimity-attractive-")))
 
-;;;***
 
-;;;### (autoloads nil "sublimity-map" "sublimity-map.el" (0 0 0 0))
-;;; Generated autoloads from sublimity-map.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sublimity-map" '("sublimity-map-")))
 
-;;;***
 
-;;;### (autoloads nil "sublimity-scroll" "sublimity-scroll.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from sublimity-scroll.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sublimity-scroll" '("sublimity-scroll-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("sublimity-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; sublimity-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/list-utils-20210111.1522/list-utils-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/list-utils-20210111.1522/list-utils-autoloads.el"))
-;;; list-utils-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/list-utils-20210111.1522/list-utils-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "list-utils" "list-utils.el" (0 0 0 0))
-;;; Generated autoloads from list-utils.el
 
 (let ((loads (get 'list-utils 'custom-loads))) (if (member '"list-utils" loads) nil (put 'list-utils 'custom-loads (cons '"list-utils" loads))))
 
@@ -7622,25 +6991,11 @@ This functionality overlaps with the undocumented `cl-do-remf'.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "list-utils" '("list-utils-htt-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; list-utils-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/string-utils-20140508.2041/string-utils-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/string-utils-20140508.2041/string-utils-autoloads.el"))
-;;; string-utils-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-utils-20140508.2041/string-utils-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "string-utils" "string-utils.el" (23400 19374
-;;;;;;  0 0))
-;;; Generated autoloads from string-utils.el
 
 (autoload 'string-utils-stringify-anything "string-utils" "\
 Coerce any object OBJ into a string.
@@ -7889,27 +7244,14 @@ It defaults to the UCS character \"Horizontal Ellipsis\", or
 
 \(fn STR-VAL MAXLEN &optional ELLIPSIS)" nil nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; string-utils-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/string-inflection-20210918.419/string-inflection-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/string-inflection-20210918.419/string-inflection-autoloads.el"))
-;;; string-inflection-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-inflection-20210918.419/string-inflection-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "string-inflection" "string-inflection.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from string-inflection.el
 
 (autoload 'string-inflection-ruby-style-cycle "string-inflection" "\
 foo_bar => FOO_BAR => FooBar => foo_bar" t nil)
@@ -7946,27 +7288,14 @@ foo-bar format" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "string-inflection" '("string-inflection-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; string-inflection-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el"))
-;;; string-edit-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/string-edit-20210405.1836/string-edit-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "string-edit" "string-edit.el" (0 0 0 0))
-;;; Generated autoloads from string-edit.el
 
 (autoload 'string-edit-at-point "string-edit" "\
 Pop up a buffer to edit the string at point.
@@ -7974,51 +7303,25 @@ This saves you from needing to manually escape characters." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "string-edit" '("se/" "string-edit-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; string-edit-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el"))
-;;; f-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/f-20220405.1534/f-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "f" "f.el" (0 0 0 0))
-;;; Generated autoloads from f.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "f" '("f-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; f-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/standard-dirs-20200621.1603/standard-dirs-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/standard-dirs-20200621.1603/standard-dirs-autoloads.el"))
-;;; standard-dirs-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/standard-dirs-20200621.1603/standard-dirs-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "standard-dirs" "standard-dirs.el" (0 0 0 0))
-;;; Generated autoloads from standard-dirs.el
 
 (autoload 'standard-dirs-user "standard-dirs" "\
 Get the current user's home directory." nil nil)
@@ -8072,27 +7375,14 @@ Get the base directory for the current user's video files." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "standard-dirs" '("standard-dirs--")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; standard-dirs-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/spinner-1.7.4/spinner-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/spinner-1.7.4/spinner-autoloads.el"))
-;;; spinner-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/spinner-1.7.4/spinner-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "spinner" "spinner.el" (0 0 0 0))
-;;; Generated autoloads from spinner.el
 
 (autoload 'spinner-create "spinner" "\
 Create a spinner of the given TYPE.
@@ -8147,31 +7437,16 @@ this time, in which case it won't display at all.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "spinner" '("spinner-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("spinner-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; spinner-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/speed-type-20191204.1107/speed-type-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/speed-type-20191204.1107/speed-type-autoloads.el"))
-;;; speed-type-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/speed-type-20191204.1107/speed-type-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (0 0 0 0))
-;;; Generated autoloads from speed-type.el
 
 (autoload 'speed-type-top-x "speed-type" "\
 Speed type the N most common words.
@@ -8202,27 +7477,14 @@ Setup a new text sample to practice touch or speed typing." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "speed-type" '("speed-type-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; speed-type-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el"))
-;;; solarized-theme-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/solarized-theme-20220324.445/solarized-theme-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "solarized" "solarized.el" (0 0 0 0))
-;;; Generated autoloads from solarized.el
 
 (autoload 'solarized-color-blend "solarized" "\
 Blends COLOR1 onto COLOR2 with ALPHA.
@@ -8248,152 +7510,76 @@ The Returned color-palette has the same format as `solarized-color-palette'
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized" '("solarized-")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-dark-high-contrast-theme" "solarized-dark-high-contrast-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-dark-high-contrast-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-dark-high-contrast-theme" '("solarized-dark-high-contrast")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-dark-theme" "solarized-dark-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-dark-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-dark-theme" '("solarized-dark")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-faces" "solarized-faces.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from solarized-faces.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-faces" '("solarized-definition")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-gruvbox-dark-theme" "solarized-gruvbox-dark-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-gruvbox-dark-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-gruvbox-dark-theme" '("solarized-gruvbox-dark")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-gruvbox-light-theme" "solarized-gruvbox-light-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-gruvbox-light-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-gruvbox-light-theme" '("solarized-gruvbox-light")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-light-high-contrast-theme" "solarized-light-high-contrast-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-light-high-contrast-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-light-high-contrast-theme" '("solarized-light-high-contrast")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-light-theme" "solarized-light-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-light-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-light-theme" '("solarized-light")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-palettes" "solarized-palettes.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-palettes.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-palettes" '("solarized-")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-selenized-black-theme" "solarized-selenized-black-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-selenized-black-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-black-theme" '("solarized-selenized-black")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-selenized-dark-theme" "solarized-selenized-dark-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-selenized-dark-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-dark-theme" '("solarized-selenized-dark")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-selenized-light-theme" "solarized-selenized-light-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-selenized-light-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-light-theme" '("solarized-selenized-light")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-selenized-white-theme" "solarized-selenized-white-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-selenized-white-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-selenized-white-theme" '("solarized-selenized-white")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-theme-utils" "solarized-theme-utils.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-theme-utils.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-theme-utils" '("solarized-import-faces")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-wombat-dark-theme" "solarized-wombat-dark-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-wombat-dark-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-wombat-dark-theme" '("solarized-wombat-dark")))
 
-;;;***
 
-;;;### (autoloads nil "solarized-zenburn-theme" "solarized-zenburn-theme.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from solarized-zenburn-theme.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "solarized-zenburn-theme" '("solarized-zenburn")))
 
-;;;***
 
-;;;### (autoloads nil nil ("solarized-theme-pkg.el" "solarized-theme.el")
-;;;;;;  (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; solarized-theme-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/smex-20151212.2209/smex-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/smex-20151212.2209/smex-autoloads.el"))
-;;; smex-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smex-20151212.2209/smex-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "smex" "smex.el" (0 0 0 0))
-;;; Generated autoloads from smex.el
 
 (autoload 'smex "smex" nil t nil)
 
@@ -8404,28 +7590,14 @@ Like `smex', but limited to commands that are relevant to the active major mode.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smex" '("smex-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; smex-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/smart-tabs-mode-20200907.2025/smart-tabs-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/smart-tabs-mode-20200907.2025/smart-tabs-mode-autoloads.el"))
-;;; smart-tabs-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/smart-tabs-mode-20200907.2025/smart-tabs-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from smart-tabs-mode.el
 
 (autoload 'smart-tabs-when "smart-tabs-mode" "\
 
@@ -8485,24 +7657,11 @@ Add support for a language not already in the `smart-tabs-insinuate-alist'.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smart-tabs-mode" '("smart-tabs-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; smart-tabs-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el"))
-;;; macrostep-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/macrostep-20161120.2106/macrostep-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "macrostep" "macrostep.el" (23400 19362 0 0))
-;;; Generated autoloads from macrostep.el
 
 (autoload 'macrostep-mode "macrostep" "\
 Minor mode for inline expansion of macros in Emacs Lisp source buffers.
@@ -8531,11 +7690,7 @@ behaviors.
 
 \(fn &optional TOGGLE-SEPARATE-BUFFER)" t nil)
 
-;;;***
 
-;;;### (autoloads nil "macrostep-c" "macrostep-c.el" (23400 19362
-;;;;;;  0 0))
-;;; Generated autoloads from macrostep-c.el
 
 (autoload 'macrostep-c-mode-hook "macrostep-c" "\
 
@@ -8544,38 +7699,19 @@ behaviors.
 
 (add-hook 'c-mode-hook #'macrostep-c-mode-hook)
 
-;;;***
 
-;;;### (autoloads nil nil ("macrostep-pkg.el") (23400 19362 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; macrostep-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215/slime-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215/slime-autoloads.el"))
-;;; slime-autoloads.el --- autoload definitions for SLIME -*- no-byte-compile: t -*-
 
-;; Copyright (C) 2007  Helmut Eller
 
-;; This file is protected by the GNU GPLv2 (or later), as distributed
-;; with GNU Emacs.
 
-;;; Commentary:
 
-;; This code defines the necessary autoloads, so that we don't need to
-;; load everything from .emacs.
-;;
-;; JT@14/01/09: FIXME: This file should be auto-generated with autoload cookies.
 
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/slime-20220302.1215/slime-autoloads.el") (car load-path))))
 
 (autoload 'slime "slime"
   "Start a Lisp subprocess and connect to its Swank server." t)
@@ -8608,37 +7744,23 @@ behaviors.
 
 (provide 'slime-autoloads)
 
-;;; slime-autoloads.el ends here
 
-;;;### (autoloads nil "slime" "slime.el" (0 0 0 0))
-;;; Generated autoloads from slime.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime" '("??" "?c" "?d" "?e" "?i" "?l" "?n" "?p" "?q" "?t" "?v" "def-slime-selector-method" "define-sl" "defslimefun" "inferior-lisp-program" "make-slime-" "sldb-" "slime")))
 
-;;;***
 
-;;;### (autoloads nil nil ("slime-pkg.el") (0 0 0 0))
 
-;;;***
 
-;;;### (autoloads nil "slime-tests" "slime-tests.el" (0 0 0 0))
-;;; Generated autoloads from slime-tests.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime-tests" '("arglist" "async-eval-debugging" "break" "comp" "def-slime-test" "dis" "end-of-file" "find-definition" "flow-control" "indentation" "inspector" "inter" "locally-bound-debugger-hook" "loop-interrupt-" "macroexpand" "narrowing" "read" "report-condition-with-circular-list" "sbcl-world-lock" "sexp-at-point.1" "symbol-at-point." "traditional-recipe" "unwind-to-previous-sldb-level" "utf-8-source")))
 
-;;;***
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/simple-httpd-20191103.1446/simple-httpd-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/simple-httpd-20191103.1446/simple-httpd-autoloads.el"))
-;;; simple-httpd-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/simple-httpd-20191103.1446/simple-httpd-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "simple-httpd" "simple-httpd.el" (0 0 0 0))
-;;; Generated autoloads from simple-httpd.el
 
 (autoload 'httpd-start "simple-httpd" "\
 Start the web server process. If the server is already
@@ -8658,28 +7780,14 @@ Start the web server with given `directory' as `httpd-root'.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "simple-httpd" '("defservlet" "httpd" "with-httpd-buffer")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; simple-httpd-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el"))
-;;; js2-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/js2-mode-20220402.2211/js2-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "js2-imenu-extras" "js2-imenu-extras.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from js2-imenu-extras.el
 
 (autoload 'js2-imenu-extras-setup "js2-imenu-extras" nil nil nil)
 
@@ -8695,10 +7803,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-imenu-extras" '("js2-imenu-")))
 
-;;;***
 
-;;;### (autoloads nil "js2-mode" "js2-mode.el" (0 0 0 0))
-;;; Generated autoloads from js2-mode.el
 
 (autoload 'js2-highlight-unused-variables-mode "js2-mode" "\
 Toggle highlight of unused variables.
@@ -8746,46 +7851,24 @@ variables (`sgml-basic-offset' et al) locally, like so:
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-mode" '("js2-")))
 
-;;;***
 
-;;;### (autoloads nil "js2-old-indent" "js2-old-indent.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from js2-old-indent.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-old-indent" '("js2-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("js2-mode-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; js2-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/skewer-mode-20200304.1142/skewer-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/skewer-mode-20200304.1142/skewer-mode-autoloads.el"))
-;;; skewer-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/skewer-mode-20200304.1142/skewer-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "cache-table" "cache-table.el" (0 0 0 0))
-;;; Generated autoloads from cache-table.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cache-table" '("cache-table-")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-bower" "skewer-bower.el" (0 0 0 0))
-;;; Generated autoloads from skewer-bower.el
 
 (autoload 'skewer-bower-refresh "skewer-bower" "\
 Update the package listing and packages synchronously." t nil)
@@ -8797,10 +7880,7 @@ Dynamically load a library from bower into the current page.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skewer-bower" '("skewer")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-css" "skewer-css.el" (0 0 0 0))
-;;; Generated autoloads from skewer-css.el
 
 (autoload 'skewer-css-mode "skewer-css" "\
 Minor mode for interactively loading new CSS rules.
@@ -8814,10 +7894,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skewer-css" '("skewer-css")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-html" "skewer-html.el" (0 0 0 0))
-;;; Generated autoloads from skewer-html.el
 
 (autoload 'skewer-html-mode "skewer-html" "\
 Minor mode for interactively loading new HTML.
@@ -8831,10 +7908,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skewer-html" '("skewer-html-")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-mode" "skewer-mode.el" (0 0 0 0))
-;;; Generated autoloads from skewer-mode.el
 
 (autoload 'list-skewer-clients "skewer-mode" "\
 List the attached browsers in a buffer." t nil)
@@ -8864,10 +7938,7 @@ Connect an inferior PhantomJS process to Skewer, returning the process." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skewer-mode" '("httpd/skewer/" "phantomjs-program-name" "skewer")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-repl" "skewer-repl.el" (0 0 0 0))
-;;; Generated autoloads from skewer-repl.el
 
 (autoload 'skewer-repl--response-hook "skewer-repl" "\
 Catches all browser messages logging some to the REPL.
@@ -8881,37 +7952,18 @@ Start a JavaScript REPL to be evaluated in the visiting browser." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skewer-repl" '("company-skewer-repl" "skewer-")))
 
-;;;***
 
-;;;### (autoloads nil "skewer-setup" "skewer-setup.el" (0 0 0 0))
-;;; Generated autoloads from skewer-setup.el
 
 (autoload 'skewer-setup "skewer-setup" "\
 Fully integrate Skewer into js2-mode, css-mode, and html-mode buffers." nil nil)
 
-;;;***
 
-;;;### (autoloads nil nil ("skewer-mode-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; skewer-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/skewer-reload-stylesheets-20160725.1220/skewer-reload-stylesheets-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/skewer-reload-stylesheets-20160725.1220/skewer-reload-stylesheets-autoloads.el"))
-;;; skewer-reload-stylesheets-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/skewer-reload-stylesheets-20160725.1220/skewer-reload-stylesheets-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "skewer-reload-stylesheets" "skewer-reload-stylesheets.el"
-;;;;;;  (23400 19336 0 0))
-;;; Generated autoloads from skewer-reload-stylesheets.el
 
 (autoload 'skewer-reload-stylesheets-start-editing "skewer-reload-stylesheets" "\
 Configure current buffer for live-editing.
@@ -8926,55 +7978,27 @@ Minor mode for interactively reloading CSS stylesheets.
 
 \(fn &optional ARG)" t nil)
 
-;;;***
 
-;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el") (23400
-;;;;;;  19336 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; skewer-reload-stylesheets-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el"))
-;;; request-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/request-20211107.1907/request-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "request" "request.el" (0 0 0 0))
-;;; Generated autoloads from request.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "request" '("request-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; request-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/skerrick-20220306.2139/skerrick-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/skerrick-20220306.2139/skerrick-autoloads.el"))
-;;; skerrick-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/skerrick-20220306.2139/skerrick-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "skerrick" "skerrick.el" (0 0 0 0))
-;;; Generated autoloads from skerrick.el
 
 (autoload 'skerrick-eval-region "skerrick" "\
 Evaluate the selected JS code." t nil)
@@ -8990,28 +8014,14 @@ Stop skerrick server." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "skerrick" '("skerrick-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; skerrick-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el"))
-;;; sidecar-locals-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sidecar-locals-20220211.548/sidecar-locals-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "sidecar-locals" "sidecar-locals.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from sidecar-locals.el
 
 (autoload 'sidecar-locals-report "sidecar-locals" "\
 Report paths that are used to detect locals.
@@ -9040,44 +8050,21 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sidecar-locals" '("sidecar-locals-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; sidecar-locals-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137/sicp-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137/sicp-autoloads.el"))
-;;; sicp-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sicp-20200512.1137/sicp-autoloads.el") (car load-path))))
 
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; sicp-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/shut-up-20210403.1249/shut-up-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/shut-up-20210403.1249/shut-up-autoloads.el"))
-;;; shut-up-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shut-up-20210403.1249/shut-up-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "shut-up" "shut-up.el" (0 0 0 0))
-;;; Generated autoloads from shut-up.el
 
 (autoload 'shut-up "shut-up" "\
 Evaluate BODY with silenced output.
@@ -9110,27 +8097,14 @@ call this function in `noninteractive' sessions." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shut-up" '("inhibit-message" "shut-up-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; shut-up-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/show-eol-20210715.1227/show-eol-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/show-eol-20210715.1227/show-eol-autoloads.el"))
-;;; show-eol-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/show-eol-20210715.1227/show-eol-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "show-eol" "show-eol.el" (0 0 0 0))
-;;; Generated autoloads from show-eol.el
 
 (autoload 'show-eol-mode "show-eol" "\
 Minor mode 'show-eol-mode'.
@@ -9168,27 +8142,14 @@ See `show-eol-mode' for more information on Show-Eol mode.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "show-eol" '("show-eol-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; show-eol-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el"))
-;;; reformatter-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reformatter-20210831.1405/reformatter-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "reformatter" "reformatter.el" (0 0 0 0))
-;;; Generated autoloads from reformatter.el
 
 (autoload 'reformatter-define "reformatter" "\
 Define a reformatter command with NAME.
@@ -9289,54 +8250,28 @@ EXIT-CODE-SUCCESS-P
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "reformatter" '("reformatter-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; reformatter-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el"))
-;;; shfmt-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shfmt-20210803.222/shfmt-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "shfmt" "shfmt.el" (0 0 0 0))
-;;; Generated autoloads from shfmt.el
  (autoload 'shfmt-buffer "shfmt" nil t)
  (autoload 'shfmt-region "shfmt" nil t)
  (autoload 'shfmt-on-save-mode "shfmt" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shfmt" '("shfmt-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; shfmt-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/shell-pop-20200315.1139/shell-pop-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/shell-pop-20200315.1139/shell-pop-autoloads.el"))
-;;; shell-pop-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/shell-pop-20200315.1139/shell-pop-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "shell-pop" "shell-pop.el" (0 0 0 0))
-;;; Generated autoloads from shell-pop.el
 
 (defvar shell-pop-universal-key nil "\
 Key binding used to pop in and out of the shell.
@@ -9352,51 +8287,25 @@ The input format is the same as that of `kbd'.")
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "shell-pop" '("shell-pop-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; shell-pop-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sexp-diff-20200314.2018/sexp-diff-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sexp-diff-20200314.2018/sexp-diff-autoloads.el"))
-;;; sexp-diff-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sexp-diff-20200314.2018/sexp-diff-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "sexp-diff" "sexp-diff.el" (0 0 0 0))
-;;; Generated autoloads from sexp-diff.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sexp-diff" '("sexp-diff--")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; sexp-diff-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20210901.1134/sesman-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sesman-20210901.1134/sesman-autoloads.el"))
-;;; sesman-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sesman-20210901.1134/sesman-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "sesman" "sesman.el" (0 0 0 0))
-;;; Generated autoloads from sesman.el
 
 (autoload 'sesman-start "sesman" "\
 Start a Sesman session." t nil)
@@ -9466,11 +8375,7 @@ links.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman" '("sesman-")))
 
-;;;***
 
-;;;### (autoloads nil "sesman-browser" "sesman-browser.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from sesman-browser.el
 
 (autoload 'sesman-browser "sesman-browser" "\
 Display an interactive session browser.
@@ -9478,31 +8383,16 @@ See `sesman-browser-mode' for more details." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman-browser" '("sesman-")))
 
-;;;***
 
-;;;### (autoloads nil nil ("sesman-pkg.el") (0 0 0 0))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; sesman-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el"))
-;;; edit-indirect-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/edit-indirect-20220216.1812/edit-indirect-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "edit-indirect" "edit-indirect.el" (0 0 0 0))
-;;; Generated autoloads from edit-indirect.el
 
 (autoload 'edit-indirect-region "edit-indirect" "\
 Edit the region BEG..END in a separate buffer.
@@ -9537,27 +8427,14 @@ In any case, return the edit-indirect buffer.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "edit-indirect" '("edit-indirect-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; edit-indirect-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el"))
-;;; separedit-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/separedit-20220226.1344/separedit-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "separedit" "separedit.el" (0 0 0 0))
-;;; Generated autoloads from separedit.el
 
 (autoload 'separedit-dwim-described-variable "separedit" "\
 Edit value of variable at poin in help/helpful buffer." t nil)
@@ -9579,24 +8456,11 @@ but users can also manually select it by pressing `C-u \\[separedit]'.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "separedit" '("separedit-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; separedit-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/scss-mode-20180123.1708/scss-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/scss-mode-20180123.1708/scss-mode-autoloads.el"))
-;;; scss-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/scss-mode-20180123.1708/scss-mode-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "scss-mode" "scss-mode.el" (23400 19330 0 0))
-;;; Generated autoloads from scss-mode.el
 
 (autoload 'scss-mode "scss-mode" "\
 Major mode for editing SCSS files, http://sass-lang.com/
@@ -9607,26 +8471,14 @@ Special commands:
 
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; scss-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el"))
-;;; quick-peek-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/quick-peek-20200130.2059/quick-peek-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "quick-peek" "quick-peek.el" (0 0 0 0))
-;;; Generated autoloads from quick-peek.el
 
 (autoload 'quick-peek-overlay-at "quick-peek" "\
 Find overlay for line at POS.
@@ -9650,28 +8502,14 @@ Return the number of overlays hidden.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "quick-peek" '("quick-peek-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; quick-peek-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/scrollable-quick-peek-20201224.329/scrollable-quick-peek-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/scrollable-quick-peek-20201224.329/scrollable-quick-peek-autoloads.el"))
-;;; scrollable-quick-peek-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/scrollable-quick-peek-20201224.329/scrollable-quick-peek-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "scrollable-quick-peek" "scrollable-quick-peek.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from scrollable-quick-peek.el
 
 (autoload 'scrollable-quick-peek-scroll-up "scrollable-quick-peek" "\
 Scroll up in the currently displayed overlay." t nil)
@@ -9690,28 +8528,14 @@ sense for `scrollale-quick-peek'.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "scrollable-quick-peek" '("scrollable-quick-peek")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; scrollable-quick-peek-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/scratch-comment-20200812.1025/scratch-comment-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/scratch-comment-20200812.1025/scratch-comment-autoloads.el"))
-;;; scratch-comment-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/scratch-comment-20200812.1025/scratch-comment-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "scratch-comment" "scratch-comment.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from scratch-comment.el
 
 (autoload 'scratch-comment-eval-sexp "scratch-comment" "\
 Eval sexp before point and print result as comment.
@@ -9719,24 +8543,11 @@ see `eval-print-last-sexp'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "scratch-comment" '("scratch-comment-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; scratch-comment-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/sane-term-20181130.101/sane-term-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/sane-term-20181130.101/sane-term-autoloads.el"))
-;;; sane-term-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/sane-term-20181130.101/sane-term-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "sane-term" "sane-term.el" (23558 35268 0 0))
-;;; Generated autoloads from sane-term.el
 
 (autoload 'sane-term-create "sane-term" "\
 Create new term buffer.
@@ -9748,26 +8559,14 @@ Cycle through term buffers, creating if necessary.
 
 \(fn)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; sane-term-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/rjsx-mode-20200120.1446/rjsx-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/rjsx-mode-20200120.1446/rjsx-mode-autoloads.el"))
-;;; rjsx-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/rjsx-mode-20200120.1446/rjsx-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "rjsx-mode" "rjsx-mode.el" (0 0 0 0))
-;;; Generated autoloads from rjsx-mode.el
 
 (autoload 'rjsx-mode "rjsx-mode" "\
 Major mode for editing JSX files.
@@ -9802,27 +8601,14 @@ instead.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "rjsx-mode" '("rjsx-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; rjsx-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/rfc-mode-20210615.1721/rfc-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/rfc-mode-20210615.1721/rfc-mode-autoloads.el"))
-;;; rfc-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/rfc-mode-20210615.1721/rfc-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "rfc-mode" "rfc-mode.el" (0 0 0 0))
-;;; Generated autoloads from rfc-mode.el
 
 (autoload 'rfc-mode-read "rfc-mode" "\
 Read the RFC document NUMBER.
@@ -9842,28 +8628,14 @@ Major mode to browse and read RFC documents.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "rfc-mode" '("rfc-mode-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; rfc-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-osx-finder-20150802.1657/reveal-in-osx-finder-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-osx-finder-20150802.1657/reveal-in-osx-finder-autoloads.el"))
-;;; reveal-in-osx-finder-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-osx-finder-20150802.1657/reveal-in-osx-finder-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "reveal-in-osx-finder" "reveal-in-osx-finder.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from reveal-in-osx-finder.el
 
 (autoload 'reveal-in-osx-finder "reveal-in-osx-finder" "\
 Reveal the file associated with the current buffer in the OS X Finder.
@@ -9873,28 +8645,14 @@ In a dired buffer, it will open the current directory.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "reveal-in-osx-finder" '("reveal-in-osx-finder-as")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; reveal-in-osx-finder-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20220110.1821/reveal-in-folder-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20220110.1821/reveal-in-folder-autoloads.el"))
-;;; reveal-in-folder-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/reveal-in-folder-20220110.1821/reveal-in-folder-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "reveal-in-folder" "reveal-in-folder.el" (0
-;;;;;;  0 0 0))
-;;; Generated autoloads from reveal-in-folder.el
 
 (autoload 'reveal-in-folder-at-point "reveal-in-folder" "\
 Reveal the current file in folder at point." t nil)
@@ -9907,51 +8665,25 @@ Reveal buffer/path depends on cursor condition." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "reveal-in-folder" '("reveal-in-folder-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; reveal-in-folder-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/regex-tool-20170104.1918/regex-tool-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/regex-tool-20170104.1918/regex-tool-autoloads.el"))
-;;; regex-tool-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/regex-tool-20170104.1918/regex-tool-autoloads.el") (car load-path))))
 
-;;;### (autoloads nil "regex-tool" "regex-tool.el" (23400 19326 0
-;;;;;;  0))
-;;; Generated autoloads from regex-tool.el
 
 (autoload 'regex-tool "regex-tool" "\
 
 
 \(fn)" t nil)
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; End:
-;;; regex-tool-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/rainbow-mode-1.0.5/rainbow-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/rainbow-mode-1.0.5/rainbow-mode-autoloads.el"))
-;;; rainbow-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/rainbow-mode-1.0.5/rainbow-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "rainbow-mode" "rainbow-mode.el" (0 0 0 0))
-;;; Generated autoloads from rainbow-mode.el
 
 (autoload 'rainbow-mode "rainbow-mode" "\
 Colorize strings that represent colors.
@@ -9966,52 +8698,27 @@ ARG is `toggle'; disable the mode otherwise.
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "rainbow-mode" '("rainbow-")))
 
-;;;***
 
-;; Local Variables:
-;; version-control: never
-;; no-byte-compile: t
-;; no-update-autoloads: t
-;; coding: utf-8
-;; End:
-;;; rainbow-mode-autoloads.el ends here
 )
 (let ((load-true-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747/racket-mode-autoloads.el")(load-file-name "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747/racket-mode-autoloads.el"))
-;;; racket-mode-autoloads.el --- automatically extracted autoloads
-;;
-;;; Code:
 
 (add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
+                         (or (file-name-directory "/Users/neagleson/.emacs.d/elpa/racket-mode-20220405.1747/racket-mode-autoloads.el") (car load-path))))
 
 
-;;;### (autoloads nil "racket-back-end" "racket-back-end.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from racket-back-end.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-back-end" '("racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-browse-url" "racket-browse-url.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from racket-browse-url.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-browse-url" '("racket-browse-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-bug-report" "racket-bug-report.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from racket-bug-report.el
 
 (autoload 'racket-bug-report "racket-bug-report" "\
 Fill a buffer with data to make a Racket Mode bug report." t nil)
 
-;;;***
 
-;;;### (autoloads nil "racket-cmd" "racket-cmd.el" (0 0 0 0))
-;;; Generated autoloads from racket-cmd.el
 
 (defvar racket-start-back-end-hook nil "\
 Hook run after `racket-start-back-end' finishes successfully.")
@@ -10033,48 +8740,27 @@ Before doing anything runs the hook `racket-stop-back-end-hook'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-cmd" '("racket--")))
 
-;;;***
 
-;;;### (autoloads nil "racket-collection" "racket-collection.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from racket-collection.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-collection" '("racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-common" "racket-common.el" (0 0 0 0))
-;;; Generated autoloads from racket-common.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-common" '("racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-company-doc" "racket-company-doc.el"
-;;;;;;  (0 0 0 0))
-;;; Generated autoloads from racket-company-doc.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-company-doc" '("racket--")))
 
-;;;***
 
-;;;### (autoloads nil "racket-complete" "racket-complete.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from racket-complete.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-complete" '("racket--")))
 
-;;;***
 
-;;;### (autoloads nil "racket-custom" "racket-custom.el" (0 0 0 0))
-;;; Generated autoloads from racket-custom.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-custom" '("defface-racket" "racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-debug" "racket-debug.el" (0 0 0 0))
-;;; Generated autoloads from racket-debug.el
 
 (autoload 'racket--debug-send-definition "racket-debug" "\
 
@@ -10088,25 +8774,15 @@ Before doing anything runs the hook `racket-stop-back-end-hook'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-debug" '("racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-describe" "racket-describe.el" (0 0
-;;;;;;  0 0))
-;;; Generated autoloads from racket-describe.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-describe" '("racket-")))
 
-;;;***
 
-;;;### (autoloads nil "racket-doc" "racket-doc.el" (0 0 0 0))
-;;; Generated autoloads from racket-doc.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-doc" '("racket--")))
 
-;;;***
 
-;;;### (autoloads nil "racket-edit" "racket-edit.el" (0 0 0 0))
-;;; Generated autoloads from racket-edit.el
 
 (add-to-list 'hs-special-modes-alist '(racket-mode "(" ")" ";" nil nil))
 

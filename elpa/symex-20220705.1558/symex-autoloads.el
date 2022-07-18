@@ -48,7 +48,8 @@ features." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-computations.el
 
-atars/neagleson/.emacs.d/elpa/symex-20220705.1558/symex-autoload
+(register-definition-prefixes "symex-computations" '("symex-"))
+
 ;;;***
 
 ;;;### (autoloads nil "symex-custom" "symex-custom.el" (0 0 0 0))

@@ -95,7 +95,8 @@ An error message is displayed if the current buffer is not part of any project."
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from treemacs-annotations.el
 
-atars/neagleson/.emacs.d/elpa/treemacs-20220622.2016/treemacs-autoloa
+(register-definition-prefixes "treemacs-annotations" '("treemacs-"))
+
 ;;;***
 
 ;;;### (autoloads nil "treemacs-async" "treemacs-async.el" (0 0 0

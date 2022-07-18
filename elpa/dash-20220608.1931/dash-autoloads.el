@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "dash" "dash.el" (0 0 0 0))
 ;;; Generated autoloads from dash.el
 
-aautoload 'dash-fontify-mode "dash" "\
+(autoload 'dash-fontify-mode "dash" "\
 Toggle fontification of Dash special variables.
 
 This is a minor mode.  If called interactively, toggle the

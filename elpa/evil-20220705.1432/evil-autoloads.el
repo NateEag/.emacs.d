@@ -10,7 +10,8 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-command-window.el
 
-atars/neagleson/.emacs.d/elpa/evil-20220705.1432/evil-autoloads.
+(register-definition-prefixes "evil-command-window" '("evil-"))
+
 ;;;***
 
 ;;;### (autoloads nil "evil-commands" "evil-commands.el" (0 0 0 0))

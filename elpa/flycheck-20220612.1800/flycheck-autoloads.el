@@ -286,7 +286,7 @@ SYMBOL with `flycheck-def-executable-var'.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from flycheck-buttercup.el
 
-atars/neagleson/.emacs.d/elpa/flycheck-20220612.1800/flycheck-autoloads.elormat-error-list"))
+(register-definition-prefixes "flycheck-buttercup" '("flycheck-buttercup-format-error-list"))
 
 ;;;***
 

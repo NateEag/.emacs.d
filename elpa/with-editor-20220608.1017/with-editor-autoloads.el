@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "with-editor" "with-editor.el" (0 0 0 0))
 ;;; Generated autoloads from with-editor.el
 
-aautoload 'with-editor-export-editor "with-editor" "\
+(autoload 'with-editor-export-editor "with-editor" "\
 Teach subsequent commands to use current Emacs instance as editor.
 
 Set and export the environment variable ENVVAR, by default

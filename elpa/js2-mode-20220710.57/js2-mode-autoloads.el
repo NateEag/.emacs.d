@@ -10,7 +10,8 @@
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from js2-imenu-extras.el
 
-atars/neagleson/.emacs.d/elpa/js2-mode-20220710.57/js2-mode-autolo
+(autoload 'js2-imenu-extras-setup "js2-imenu-extras" nil nil nil)
+
 (autoload 'js2-imenu-extras-mode "js2-imenu-extras" "\
 Toggle Imenu support for frameworks and structural patterns.
 

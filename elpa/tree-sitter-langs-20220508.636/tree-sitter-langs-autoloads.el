@@ -2,9 +2,6 @@
 ;;
 ;;; Code:
 
-(add-to-list 'load-path (directory-file-name
-                         (or (file-name-directory #$) (car load-path))))
-
 
 ;;;### (autoloads nil "tree-sitter-langs" "tree-sitter-langs.el"
 ;;;;;;  (0 0 0 0))
@@ -39,7 +36,7 @@ Use syntax highlighting patterns provided by `tree-sitter-langs'.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from tree-sitter-langs-build.el
 
-aautoload 'tree-sitter-langs-install-grammars "tree-sitter-langs-build" "\
+(autoload 'tree-sitter-langs-install-grammars "tree-sitter-langs-build" "\
 Download and install the specified VERSION of the language grammar bundle.
 If VERSION or OS is not specified, use the default of
 `tree-sitter-langs--bundle-version' and `tree-sitter-langs--os'.
@@ -60,6 +57,7 @@ non-nil.
 
 ;;;***
 
+(provide 'tree-sitter-langs-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

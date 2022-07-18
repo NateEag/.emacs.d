@@ -32,7 +32,7 @@ Key bindings:
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from typescript-mode-test-utilities.el
 
-atars/neagleson/.emacs.d/elpa/typescript-mode-20220705.2151/typescript-mode-autoloads.elace-at" "test-with-"))
+(register-definition-prefixes "typescript-mode-test-utilities" '("font-lock-test" "get-face-at" "test-with-"))
 
 ;;;***
 

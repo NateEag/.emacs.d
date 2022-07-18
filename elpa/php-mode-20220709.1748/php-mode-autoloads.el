@@ -1,4 +1,4 @@
-;;; php-mode-autoloads.el --- automatically extracted autoloads
+;;; php-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -40,7 +40,7 @@ Find php.ini FILE by `php --ini'.
 
 \(fn &optional FILE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php" '("php-")))
+(register-definition-prefixes "php" '("php-"))
 
 ;;;***
 
@@ -53,14 +53,23 @@ Setup alignment configuration for PHP code." nil nil)
 (autoload 'php-align-mode "php-align" "\
 Alignment lines for PHP script.
 
-If called interactively, enable Php-Align mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Php-Align mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `php-align-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-align" '("php-align-")))
+(register-definition-prefixes "php-align" '("php-align-"))
 
 ;;;***
 
@@ -69,7 +78,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (let ((loads (get 'php-faces 'custom-loads))) (if (member '"php-face" loads) nil (put 'php-faces 'custom-loads (cons '"php-face" loads))))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-face" '("php-annotations-annotation-face")))
+(register-definition-prefixes "php-face" '("php-annotations-annotation-face"))
 
 ;;;***
 
@@ -88,7 +97,7 @@ With a prefix argument, prompt (with completion) for a word to search for.
 
 (define-obsolete-function-alias 'php-search-local-documentation #'php-local-manual-search "2.0.0")
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-local-manual" '("php-local-manual-")))
+(register-definition-prefixes "php-local-manual" '("php-local-manual-"))
 
 ;;;***
 
@@ -114,7 +123,7 @@ Major mode for editing PHP code.
 
 (add-to-list 'auto-mode-alist '("\\.\\(?:php[s345]?\\|phtml\\)\\'" . php-mode-maybe))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-mode" '("php-")))
+(register-definition-prefixes "php-mode" '("php-"))
 
 ;;;***
 
@@ -122,7 +131,7 @@ Major mode for editing PHP code.
 ;;;;;;  0))
 ;;; Generated autoloads from php-mode-debug.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-mode-debug" '("php-mode-debug")))
+(register-definition-prefixes "php-mode-debug" '("php-mode-debug"))
 
 ;;;***
 
@@ -235,7 +244,7 @@ This function is compatible with `project-find-functions'.
 
 \(fn DIR)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-project" '("php-project-")))
+(register-definition-prefixes "php-project" '("php-project-"))
 
 ;;;***
 

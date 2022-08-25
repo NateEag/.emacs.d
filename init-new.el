@@ -16,9 +16,9 @@
 ;; hopes that I'll be able to get to something that runs more quickly and with
 ;; fewer quirks (like the occasional screen blanking mentioned in todo.txt).
 ;;
-;; I should be able to test it with `emacs -q --load ~/.emacs.d/init-new.el'.
-;; I'll probably need to explicitly call (package-initialize) and (run-hooks
-;; after-init-hook) when running it that way, per
+;; I spawn test instances of it with `emacs -q --load ~/.emacs.d/init-new.el'.
+;; Note the explicit invocations of (package-initialize) and (run-hooks
+;; after-init-hook) to support running it that way, per
 ;; https://stackoverflow.com/a/17149070/1128957.
 
 ;;; Code:
@@ -35,8 +35,14 @@
 ;; Temporarily make the GC threshold large, to speed up startup.
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold (* 2 1000 1000))
+
 ;; Set up my load path and a few other core things.
 (load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
+
+;; Initialize packages as if this is a normal init file.
+;;
+;; FIXME Remove when I promote this file to being my primary init.el
+(package-initialize)
 
  ;; TODO Ignore site lisp files, as much as we can. Mac OS X Mojave included
  ;; some that made make-process take a minimum of five seconds, at least with
@@ -50,14 +56,7 @@
 ;; Enable useful functions that are disabled by default.
 (put 'narrow-to-region 'disabled nil)
 
-;; Set up exec-path to inherit values from the shell.
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
-
-;; Set up package-specific autoloads and settings.
-;;
-;; This is what makes my init take about a minute.
-;; (load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
+(use-package evil
   :commands evil-local-mode
   :config
 
@@ -281,3 +280,8 @@
 
 (provide 'init-new)
 ;;; init-new.el ends here
+
+;; Pretend this file is a normal init file.
+;;
+;; FIXME Delete this before promoting this file to be my default init.el.
+(run-hooks after-init-hook)

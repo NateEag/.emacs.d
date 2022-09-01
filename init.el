@@ -44,7 +44,8 @@
 
 ;; Set up exec-path to inherit values from the shell.
 (when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
+  (exec-path-from-shell-initialize)
+  (add-to-list 'default-frame-alist '(ns-appearance . dark)))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)

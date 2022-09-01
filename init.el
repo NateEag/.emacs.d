@@ -16,7 +16,7 @@
 
 ;; Temporarily make the GC threshold large, to speed up startup.
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
-(setq gc-cons-threshold 10000000)
+(setq gc-cons-threshold (* 2 1000 1000))
 
 ;; Get package fetching to work under Emacs 27.1:
 ;;

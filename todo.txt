@@ -12,6 +12,10 @@
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
 
+- Get lsp-mode not to interfere with the flycheck-checkers I've configured
+  manually. That might be due to lsp-mode setting flycheck-checker itself,
+  which apparently it does.
+
 - Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
   that I've discovered cool-retro-term I don't know that I'll ever be able to
   give up its awesome look-and-feel.
@@ -50,7 +54,9 @@
   assumption that it is in fact my configuration that's causing this. Another
   alternative would be to start building up a more-minimal configuration that
   does what I want until it triggers this behavior, sort of a binary search
-  *towards* a broken state.
+  *towards* a broken state. N.B.: I don't believe I've seen this since updating
+  to 28.1, so perhaps it was actually my config triggering some subtle bug in
+  redisplay?
 
 - Give code-review package a test run. I could see advantages to being able to
   review in Emacs; it'd be awesome to be able to do things like jump straight

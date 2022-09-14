@@ -109,6 +109,14 @@
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
+;; Make it easy to find the cursor after scrolling.
+;;
+;; FIXME I think beacon-mode has caused some graphical glitches in my config.
+;; Keep an eye on this.
+(use-package beacon
+  :init (beacon-mode 1)
+  :diminish beacon-mode)
+
 (use-package evil
   :commands evil-local-mode
   :after evil-smartparens
@@ -149,6 +157,12 @@
 
 (use-package ne-evil-textobjects
   :commands ne/install-textobjects)
+
+;; evil-collection complains if this variable is not bound before loading it.
+;;
+;; I'm honestly not sure what setting I actually want from it.
+(setq evil-want-keybinding nil)
+(use-package evil-collection)
 
 (use-package evil-smartparens
   :commands evil-sp-smartparens-config)
@@ -327,6 +341,152 @@
   (add-hook 'after-init-hook
             #'(lambda ()
                 (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
+
+;;;
+;;; Communications packages.
+;;;
+
+;; How can I trigger evil-local-mode in elfeed-search-mode? It doesn't seem to
+;; have a hook...
+
+(use-package elfeed
+  :after (evil-collection)
+  :hook ((elfeed-search-mode . evil-local-mode)
+         (elfeed-show-mode . evil-local-mode))
+  :config (evil-collection-elfeed-setup))
+
+(use-package notmuch
+  ;; I don't exactly love emoji, but people use them in emails, so I guess I'd
+  ;; rather see what they're communicating than not.
+  :hook ((notmuch-search-mode notmuch-show-mode message-mode) . emojify-mode)
+  :config
+  (progn
+    ;; TODO Stop marking deleted and spam messages as read.
+    ;;
+    ;; I'm marking them as read just to keep the gmail inbox semi-usable, and
+    ;; to make sure the next time I change my sync program and therefore have
+    ;; to re-index from scratch, it's not as *much* of a disaster, in that I'll
+    ;; at least have a clear record of what I've processed and what I haven't.
+    ;;
+    ;; ...granted, the right answer here is to figure out how to sync notmuch
+    ;; tags to IMAP folders. Someday.
+    (define-key notmuch-search-mode-map "d"
+      (lambda (&optional beg end)
+        "mark message as deleted"
+        (interactive)
+        (notmuch-search-tag (list "+deleted" "-unread") beg end)))
+
+    (define-key notmuch-search-mode-map "r"
+      (lambda (&optional beg end)
+        "mark message as an archived receipt"
+        (interactive)
+        (notmuch-search-tag (list "+receipts" "-unread" "-inbox") beg end)))
+
+    (define-key notmuch-search-mode-map "s"
+      (lambda (&optional beg end)
+        "mark message as spam"
+        (interactive)
+        (notmuch-search-tag (list "+spam" "-inbox" "-unread") beg end)))
+
+    ;; Be evil-ish, because I want that.
+    (define-key notmuch-show-mode-map "j" 'next-line)
+    (define-key notmuch-show-mode-map "k" 'previous-line)
+    (define-key notmuch-search-mode-map "j" 'next-line)
+    (define-key notmuch-search-mode-map "k" 'previous-line)
+
+    ;; Make it easier to open attachments in the corresponding tool.
+    (define-key notmuch-show-mode-map (kbd "o")
+      'notmuch-show-interactively-view-part)
+
+    (define-key notmuch-show-mode-map (kbd "D")
+      (lambda ()
+        "Delete current message and move to the next message or thread.
+
+TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-then-next?"
+        (interactive)
+        (notmuch-show-tag (list "+deleted" "-inbox" "-unread"))
+        (unless (notmuch-show-next-open-message)
+          (notmuch-show-next-thread t))))
+
+    (define-key notmuch-show-mode-map "w"
+      (lambda ()
+        "Mark message as watched and reply to the sender."
+        (interactive)
+        (notmuch-show-tag (list "+watched"))
+        (notmuch-show-reply-sender)))
+
+    (define-key notmuch-show-mode-map "W"
+      (lambda ()
+        "Mark message as watched and reply to all."
+        (interactive)
+        (notmuch-show-tag (list "+watched"))
+        (notmuch-show-reply)))
+
+    ;; I already have a keybinding for 'archive thread', so rebind Spacebar to
+    ;; just let me advance the thread and move to the next one when I'm done
+    ;; with it, rather than moving to the next one and archiving.
+    (define-key notmuch-show-mode-map (kbd "SPC")
+      (lambda ()
+        "Move to the next message or thread.
+
+I feel like this should be built-in somewhere to notmuch-mode, but I haven't
+found it."
+        (interactive)
+
+        (if (notmuch-show-advance)
+            (notmuch-show-next-thread t))))
+
+    ;; Download an attachment locally.
+    ;;
+    ;; A rebinding of the standard 'w' keybinding, since I use 'w' for
+    ;; something else."
+    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)
+
+    ;; This keeps my Shift-Tab keybinding for completing addresses from
+    ;; auto-selecting the wrong address, while still leaving a default
+    ;; selected. Judging from completing-read's docs, this is the way it ought
+    ;; to be done.
+    ;;
+    ;; TODO Submit this trivial patch upstream?
+    (defun notmuch-address-selection-function (prompt collection initial-input)
+      "Call (`completing-read'
+      PROMPT COLLECTION nil nil INITIAL-INPUT 'notmuch-address-history)"
+      (completing-read
+       prompt collection nil nil nil 'notmuch-address-history initial-input))
+    ))
+
+(use-package notmuch-mua
+  :config
+  (defun ne/notmuch-tag-sent-emails (&optional arg)
+    "Use shell command to tag sent emails as sent and read.
+
+The shell command lives in my dotfiles repo."
+
+    (start-process "tag-sent-emails" nil "tag-sent-emails"))
+
+  (advice-add 'notmuch-mua-send-and-exit :after #'ne/notmuch-tag-sent-emails)
+
+  (require 'notmuch-address)
+  (notmuch-address-setup)
+
+  ;; TODO Get address completion to work correctly. I can trigger it now, but
+  ;; it assumes I want the first result, which is not often true and thus
+  ;; forces me to type more than I want to.
+  (define-key message-mode-map
+    (kbd "<backtab>")
+    '(lambda () (interactive) (notmuch-address-expand-name))))
+
+(use-package message-attachment-reminder)
+
+
+;;;
+;;; Low-importance packages I like having available.
+;;;
+
+;; I don't know that I'll ever use this, but why not?
+(use-package rfc-mode
+  :commands rfc-mode-browse)
+
 
 ;; Restore the previous gc-cons-threshold, for day-to-day operations.
 (setq gc-cons-threshold ne/old-gc-cons-threshold)

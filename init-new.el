@@ -248,7 +248,7 @@
 
   (setq mode-name "elisp")
 
-  (turn-on-elisp-slime-nav-mode)
+  (elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)
   (ac-emacs-lisp-mode-setup)
   (setq-local ne-yas-auto-insert-snippet-name "package")

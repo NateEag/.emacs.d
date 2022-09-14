@@ -56,8 +56,62 @@
 ;; Enable useful functions that are disabled by default.
 (put 'narrow-to-region 'disabled nil)
 
+;; Help me keep track of what I spend my time doing.
+(use-package activity-watch-mode
+  :diminish
+  :init (global-activity-watch-mode))
+
+;; Helpful is a massive improvement over the baseline Emacs help functions
+;; (which are themselves a massive improvement over what most programs offer).
+(use-package helpful
+  :bind (("C-h f" . helpful-callable)
+         ("C-h v" . helpful-variable)
+         ("C-h k" . helpful-key)
+         ("C-c C-d" . helpful-at-point)
+         ("C-h F" . helpful-function)
+         ("C-h C" . helpful-command)))
+
+;; A hack to work around never properly declaring my-functions as a package or
+;; setting up autoloads for it.
+(use-package s
+  :commands s-replace s-trim)
+
+(use-package my-functions
+  :commands
+  hit-servlet comment-or-uncomment-region-or-line wrap-args
+  move-current-buffer insert-date insert-time unfill-paragraph
+  add-auto-mode ne/set-theme-to-match-system-theme)
+
+(use-package my-keybindings)
+
+(use-package solarized-theme
+  :config
+  (load-theme 'solarized-dark t)
+  ;; Configuration to make moody's modeline decor look right.
+  ;;
+  ;; FIXME I need this to run every time I change themes. I don't do it often
+  ;; but I do occasionally use solarized-light.
+  ;;
+  ;; If this gets annoying, try setting this up via add-advice:
+  ;;
+  ;; https://emacs.stackexchange.com/questions/29679/faces-not-set-immediately-after-load-theme
+  (let ((line (face-attribute 'mode-line :underline)))
+    (set-face-attribute 'mode-line nil :overline line)
+    (set-face-attribute 'mode-line nil :underline line)
+    (set-face-attribute 'mode-line-inactive nil :overline line)
+    (set-face-attribute 'mode-line-inactive nil :underline line)
+    (set-face-attribute 'mode-line nil :box nil)
+    (set-face-attribute 'mode-line-inactive nil :box nil)))
+
+(use-package moody
+  :config
+  (setq x-underline-at-descent-line t)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode))
+
 (use-package evil
   :commands evil-local-mode
+  :after evil-smartparens
   :config
 
   ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,

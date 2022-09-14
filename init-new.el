@@ -271,9 +271,8 @@
   ;; This still results in *scratch* having the extras, though, since the hook
   ;; runs first time it's set. For a workaround, this is a pretty seamless one.
   (add-hook 'after-init-hook
-            '(lambda ()
-               (message (concat "Adding "))
-               (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
+            #'(lambda ()
+                (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
 
 ;; Restore the previous gc-cons-threshold, for day-to-day operations.
 (setq gc-cons-threshold ne/old-gc-cons-threshold)

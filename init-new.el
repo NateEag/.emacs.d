@@ -36,8 +36,23 @@
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold (* 2 1000 1000))
 
-;; Set up my load path and a few other core things.
-(load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
+(defun add-subdirs-to-front-of-load-path (path)
+  "Add directories beneath PATH to the beginning of load-path."
+  (let ((default-directory path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+                (normal-top-level-add-subdirs-to-load-path))
+                 load-path))
+    (setq load-path (append (list path) load-path))))
+
+(add-subdirs-to-front-of-load-path (concat user-emacs-directory "site-lisp"))
+
+(require 'package)
+(setq package-user-dir (concat user-emacs-directory "elpa/"))
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.org/packages/"))
 
 ;; Initialize packages as if this is a normal init file.
 ;;
@@ -55,6 +70,90 @@
 
 ;; Enable useful functions that are disabled by default.
 (put 'narrow-to-region 'disabled nil)
+
+
+;;;
+;;; Configure miscellaneous bits of Emacs built-in behaviors.
+;;;
+
+
+;; When in doubt, choose the newer of a compiled vs. a source elisp file.
+(setq load-prefer-newer t)
+
+(defvar my-autosaves-dir (concat user-emacs-directory "autosaves/")
+  "Path to my autosaves directory.
+
+It's defined in here because I need it to precede usage in config-packages.el.")
+
+;;;
+;;; Install a bunch of manually-maintained autoloads. Yeah, this is dumb.
+;;;
+
+;; Set up manually-maintained autoloads.
+(defun nateeag-autoloads-init ()
+  "Define Nate Eagleson's manually-maintained autoloads.
+
+These are mostly for lazy-loading registration of mode hooks, but a few of them
+are for modes that didn't come with autoloading."
+
+  (autoload 'auto-complete-init "auto-complete-init.el")
+  (autoload 'web-mode-init "web-mode-init.el")
+  (autoload 'comment-auto-fill "comment-auto-fill.el")
+  (autoload 'emacs-lisp-init "emacs-lisp-init.el")
+  (autoload 'js-mode-init "js-mode-init.el")
+  (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
+  (autoload 'yasnippet-init "yasnippet-init.el")
+  (autoload 'php-mode-init "php-mode-init.el")
+  (autoload 'smartparens-init "smartparens-init.el")
+  (autoload 'emmet-mode-init "emmet-mode-init.el")
+  (autoload 'css-mode-init "css-mode-init.el")
+  (autoload 'smart-dash-mode "smart-dash.el" "Smart Dash mode")
+
+  ;; Autoloads for eclim preferences and eclimd.
+  ;; eclimd should have come with autoloads, in principle, but it didn't.
+  (autoload 'start-eclimd "eclimd.el" nil t)
+
+  (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
+  (autoload 'rst-mode "rst-mode.el")
+  (autoload 'markdown-mode "markdown-mode.el")
+  (autoload 'tern-mode "tern.el" nil t)
+
+  ;; Autoloads for guess-style.
+  (autoload 'guess-style-set-variable "guess-style" nil t)
+  (autoload 'guess-style-guess-variable "guess-style")
+  (autoload 'guess-style-guess-all "guess-style" nil t)
+
+  ;; Autoloads for svn-commit-msg-mode, which I just grabbed from some guy's
+  ;; .emacs.d.
+  (autoload 'svn-msg-mode "svn-msg" nil t)
+
+  ;; I use python-mode.el, with the TQS-coloration patch applied.
+  ;; I should probably try installing the latest version and seeing how it
+  ;; holds up.
+  (autoload 'python-mode "python-mode" "Python editing mode." t)
+
+  ;; tea-time's autoloads, despite being installed from MELPA, don't seem to
+  ;; work. Therefore...
+  (autoload 'tea-timer "tea-time.el")
+
+  ;; Manual autoloads for sdcv-mode, a dictionary lookup tool I use for access
+  ;; to Webster's 1913 dictionary. Also an alias because I keep forgetting the
+  ;; command I need to actually do this lookup.
+  (autoload 'sdcv-search "sdcv-mode.el" "Look up words in dictionary." t)
+  (defalias 'ne-dictionary-lookup 'sdcv-search)
+
+  ;; I can never remember synosaurus' name.
+  (defalias 'ne/synonym-lookup 'synosaurus-lookup)
+  (defalias 'ne/thesaurus-lookup 'synosaurus-lookup)
+
+  (autoload 'update-packages-update-installed-packages "update-packages" nil t))
+
+(nateeag-autoloads-init)
+
+
+;;;
+;;; Configure third-party packages I depend on.
+;;;
 
 ;; Help me keep track of what I spend my time doing.
 (use-package activity-watch-mode
@@ -81,8 +180,6 @@
   hit-servlet comment-or-uncomment-region-or-line wrap-args
   move-current-buffer insert-date insert-time unfill-paragraph
   add-auto-mode ne/set-theme-to-match-system-theme)
-
-(use-package my-keybindings)
 
 (use-package solarized-theme
   :config
@@ -117,6 +214,10 @@
   :init (beacon-mode 1)
   :diminish beacon-mode)
 
+;; evil-collection complains if this variable is not bound before loading it.
+;;
+;; I'm not sure what setting I actually want from it.
+(setq evil-want-keybinding nil)
 (use-package evil
   :commands evil-local-mode
   :after evil-smartparens
@@ -158,15 +259,15 @@
 (use-package ne-evil-textobjects
   :commands ne/install-textobjects)
 
-;; evil-collection complains if this variable is not bound before loading it.
-;;
-;; I'm honestly not sure what setting I actually want from it.
-(setq evil-want-keybinding nil)
 (use-package evil-collection)
 
 (use-package evil-smartparens
   :commands evil-sp-smartparens-config)
 
+(use-package my-keybindings
+  ;; Because I define bindings based on evil-mode, this should only happen after
+  ;; evil-mode loads.
+  :after evil)
 
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()
@@ -342,9 +443,8 @@
             #'(lambda ()
                 (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
 
-;;;
+
 ;;; Communications packages.
-;;;
 
 ;; How can I trigger evil-local-mode in elfeed-search-mode? It doesn't seem to
 ;; have a hook...

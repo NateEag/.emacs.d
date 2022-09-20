@@ -7,16 +7,9 @@
   snappy. Guess I can start moving it towards doing what I want and see when it
   starts bogging down.
 
-- Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
-  how to configure lsp-mode.
-
 - Get lsp-mode not to interfere with the flycheck-checkers I've configured
   manually. That might be due to lsp-mode setting flycheck-checker itself,
   which apparently it does.
-
-- Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
-  that I've discovered cool-retro-term I don't know that I'll ever be able to
-  give up its awesome look-and-feel.
 
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
@@ -28,6 +21,19 @@
 
 - Fix aggressive-fill-paragraph mode's "only fill
   inside comments" behavior. See afp-mode-comment-bug.md for details.
+
+- Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
+  how to configure lsp-mode.
+
+- Pick a todo.txt mode to use. I have two installed right now and they
+  conflict.
+
+- Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
+  that I've discovered cool-retro-term I don't know that I'll ever be able to
+  give up its awesome look-and-feel.
+
+- Teach magit to open buffers from magit-status in the other window in a frame,
+  if another one's available.
 
 - Set mode-line-compact to t
 
@@ -109,6 +115,9 @@
   At least in yaml-mode when I'm hacking Ansible, the cursor gets painfully
   unresponsive while it's running, but as soon as I turn it off it's reasonable
   again.
+
+- Set up jinja-mode to auto-apply to files with /templates/ in the path, cause
+  it's probably an Ansible template if that shows up
 
 - Try skerrick-mode next time I'm working in NodeJS server code. It's an alpha
   version of a package that aims to make NodeJS dev more like writing Emacs

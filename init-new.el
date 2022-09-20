@@ -401,12 +401,41 @@ are for modes that didn't come with autoloading."
 (use-package prog-mode
   :hook my-prog-mode-init)
 
+
+;;;
+;;; Version control tooling.
+;;;
+
+(use-package svn-msg
+  :mode ("svn-commit\(.[[:digit]]+\)*.tmp" . svn-msg-mode))
+
+(use-package git-gutter
+  :diminish
+  :config
+  (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
+  (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook))
+
+(use-package magit-delta
+  :diminish
+  :config
+  (setq magit-delta-default-dark-theme "Solarized (dark)"))
+
 (use-package magit
   :hook ((magit-mode . magit-svn-mode)
          (magit-status-mode . evil-local-mode)
          (magit-rebase-mode . evil-local-mode))
   :config
-  (evil-collection-magit-setup))
+  (evil-collection-magit-setup)
+  (magit-delta-mode)
+  ;; I never use magit's gitignore editing and because evil-collection doesn't
+  ;; have support for everything I want to do from evil-normal-state, I change
+  ;; to evil-insert-state sometimes.
+  ;;
+  ;; Specifically I can't jump to end-of-line/start-of-line in
+  ;; normal-state because magit binds '$', '^' and '0'. I also can't
+  ;; trigger magit-svn with its default binding of 'N', because evil
+  ;; rightfully binds 'N' to evil-search-previous.
+  (define-key magit-status-mode-map (kbd "i") 'evil-insert-state))
 
 ;; Put results from sexp evaluation in the *scratch* buffer inside a comment.
 ;; This makes the whole buffer syntactically-valid and is just cleaner.

@@ -401,6 +401,13 @@ are for modes that didn't come with autoloading."
 (use-package prog-mode
   :hook my-prog-mode-init)
 
+(use-package magit
+  :hook ((magit-mode . magit-svn-mode)
+         (magit-status-mode . evil-local-mode)
+         (magit-rebase-mode . evil-local-mode))
+  :config
+  (evil-collection-magit-setup))
+
 ;; Put results from sexp evaluation in the *scratch* buffer inside a comment.
 ;; This makes the whole buffer syntactically-valid and is just cleaner.
 (use-package scratch-comment

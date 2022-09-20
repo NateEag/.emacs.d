@@ -1,5 +1,3 @@
-- Get Emacs built with native compilation to see if it's noticeably faster
-
 - Set package-native-compile to t so elpa packages get native-compiled when I
   install them, if native-comp turns out to be quick
 

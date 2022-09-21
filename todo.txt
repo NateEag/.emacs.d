@@ -11,6 +11,11 @@
   manually. That might be due to lsp-mode setting flycheck-checker itself,
   which apparently it does.
 
+- Replace Tern.js with the Typescript language server - by all accounts it does
+  quite well with JS and of course it gives you TypeScript intelligence too. I
+  suppose I'd get free basic typechecking in all JS I write, now that I type
+  that...
+
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
   terminology', etc. I thought this meant a lot of low-level fiddling, but I
@@ -25,8 +30,18 @@
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
 
+- Get counsel-dash installed and get a baseline set of docs configured with it
+  and under version control. Being able to search project docs rapidly from my
+  editor for my core tools sounds lovely - use docs search to figure out the
+  main API I'm looking for, then use LSP autocomplete to explore its details.
+  https://github.com/dash-docs-el/counsel-dash
+
 - Pick a todo.txt mode to use. I have two installed right now and they
   conflict.
+
+- Install and configure gmch, so Emacs can garbage-collect while I'm not
+  actively doing things. Seems like a better state of affairs to me.
+  https://gitlab.com/koral/gcmh
 
 - Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
   that I've discovered cool-retro-term I don't know that I'll ever be able to

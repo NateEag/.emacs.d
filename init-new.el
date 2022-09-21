@@ -36,6 +36,11 @@
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold (* 2 1000 1000))
 
+;; On macOS, explicitly use a dark menubar. Added because my Nix-built Emacs
+;; 28.1 no longer got this right by default, and boy is the white menubar
+;; eye-burning.
+(add-to-list 'default-frame-alist '(ns-appearance . dark))
+
 (defun add-subdirs-to-front-of-load-path (path)
   "Add directories beneath PATH to the beginning of load-path."
   (let ((default-directory path))

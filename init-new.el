@@ -152,6 +152,126 @@ are for modes that didn't come with autoloading."
 
 
 ;;;
+;;; Autosave configuration
+;;;
+
+;; Autosave's defaults are not very nice. Here, we fix them.
+;; Create autosave dir if it doesn't exist.
+;;
+;; TODO Pull this out into a package proper. Maybe someone's already built it?
+;; This config is many years old now.
+;;
+;; TODO Put autosaves outside my .emacs.d. I don't back .emacs.d up, since I
+;; have it on GitHub, but I should really back up my backups...
+;;
+;; Figure out when to suppress autosaves if editing in a file that's sometimes
+;; updated by an external process while you're in it - this autosave setup can
+;; wind up racing with that, and sometimes it wins. Basically I need to add a
+;; second suppression function to the one I already have for when files
+;; disappear due to changing branches, but I'm not sure what the logic in this
+;; suppression function would be. Something involving auto-revert-mode?
+
+(defvar my-autosaves-dir (concat user-emacs-directory "autosaves/")
+  "Path to my autosaves directory.
+
+It's defined in here because I need it to precede usage in config-packages.el.")
+
+(make-directory my-autosaves-dir t)
+
+(setq
+   ; Don't clobber symlinks.
+   backup-by-copying t
+
+   ; Don't break multiple hardlinks.
+   backup-by-copying-when-linked t
+
+   ; Don't litter the filesystem with backups *or* autosaves.
+   backup-directory-alist
+    `(("." . ,my-autosaves-dir))
+
+   auto-save-file-name-transforms
+   `((".*" ,(concat my-autosaves-dir "\\1") t))
+
+   ;; Never auto-delete backups, so the backup-walker package is as useful as
+   ;; possible.
+   delete-old-versions -1
+
+   ; use versioned backups
+   version-control t)
+
+;; Back up files even when using version control.
+(setq vc-make-backup-files t)
+
+(defun force-buffer-backup ()
+  "Force buffer to back up on next save."
+
+  (setq buffer-backed-up nil))
+
+;; Back up buffers on every save.
+
+(add-hook 'before-save-hook 'force-buffer-backup)
+
+(defun maybe-reset-major-mode ()
+  "Reset the buffer's major-mode if a different mode seems like a better fit.
+
+Mostly useful as a before-save-hook, to guess mode when saving a
+new file for the first time."
+
+  (when (and
+         ;; The buffer's visited file does not exist.
+         (eq (file-exists-p (buffer-file-name)) nil)
+         (eq major-mode 'fundamental-mode))
+    (normal-mode)))
+
+(add-hook 'before-save-hook 'maybe-reset-major-mode)
+
+;; If a file looks scripty and it isn't executable at save time, make it so.
+(add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
+
+;; Save when Emacs loses focus, when I change buffers, when I change windows,
+;; and when it's been idle for a while.
+;;
+;; TODO Turn this into a standalone package? Not sure if anyone else would care
+;; to use it...
+
+(defun ne/should-autosave-buffer (buffer)
+  "Return `nil' if the passed buffer should not be autosaved.
+
+Primarily used to avoid autosaving buffers whose buffer-file-name
+is not an existing file, as such orphaned buffers tend to crop up
+when changing branches in git."
+
+  (when (buffer-file-name buffer)
+    (file-exists-p (buffer-file-name buffer))))
+
+(defun ne/save-when-file (&rest args)
+  "Save current buffer if it points to an existing file.
+
+Accepts unused `args' so it can be used as advice for arbitrary functions."
+
+  (when (ne/should-autosave-buffer (current-buffer))
+    (save-buffer)))
+
+(defun ne/advise-focus-autosave-should-save-p (old-function &rest arguments)
+  "Prevent `focus-autosave-should-save-p' from running when the passed
+buffer's file does not exist."
+
+  (when (ne/should-autosave-buffer (nth 0 arguments))
+                  (apply old-function arguments)))
+
+(advice-add 'other-window :before #'ne/save-when-file)
+(advice-add 'switch-to-buffer :before #'ne/save-when-file)
+(advice-add 'focus-autosave-should-save-p
+            :around
+            #'ne/advise-focus-autosave-should-save-p)
+
+(focus-autosave-mode t)
+(diminish 'focus-autosave-mode)
+;; Save this so I can turn off the save-on-idle feature if need be.
+(setq ne/save-on-idle-timer (run-with-idle-timer 5 t 'focus-autosave-save-all))
+
+
+;;;
 ;;; Configure third-party packages I depend on.
 ;;;
 

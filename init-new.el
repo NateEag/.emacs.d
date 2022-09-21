@@ -531,6 +531,9 @@ buffer's file does not exist."
 ;;; Version control tooling.
 ;;;
 
+;; Turn off default vc-mode, because I never use it.
+(setq vc-handled-backends nil)
+
 (use-package svn-msg
   :mode ("svn-commit\(.[[:digit]]+\)*.tmp" . svn-msg-mode))
 
@@ -561,6 +564,13 @@ buffer's file does not exist."
   ;; trigger magit-svn with its default binding of 'N', because evil
   ;; rightfully binds 'N' to evil-search-previous.
   (define-key magit-status-mode-map (kbd "i") 'evil-insert-state))
+
+(use-package forge
+  :after magit)
+
+(use-package git-commit
+  :init (global-git-commit-mode 1)
+  (add-hook 'git-commit-mode-hook 'evil-insert-state))
 
 ;; Put results from sexp evaluation in the *scratch* buffer inside a comment.
 ;; This makes the whole buffer syntactically-valid and is just cleaner.

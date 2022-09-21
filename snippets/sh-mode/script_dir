@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+#
+# When writing project-specific shell scripts, it's often handy to get
+# an absolute path to the script's containing dir (in a
+# well-structured project, usually the bin/ dir).
+#
+# Keep in mind that due to hardlinks, there is no such thing in a Unix
+# system as *the* absolute path to a file, as there may be more than
+# one. In most cases, that distinction is pedantry, but it can
+# occasionally matter.
+#
+# name: script_dir
+# key: script_dir
+# --
+${1:script_dir}="$(cd "$(dirname "\$0")"; pwd -P)"

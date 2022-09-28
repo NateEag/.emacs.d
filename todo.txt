@@ -36,6 +36,9 @@
   main API I'm looking for, then use LSP autocomplete to explore its details.
   https://github.com/dash-docs-el/counsel-dash
 
+- Install mode-minder, because it might occasionally be handy for getting the
+  overview of all my installed modes: https://github.com/jdtsmith/mode-minder
+
 - Pick a todo.txt mode to use. I have two installed right now and they
   conflict.
 

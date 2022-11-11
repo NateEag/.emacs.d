@@ -20,11 +20,6 @@ recentf
 # And Tramp's history/computed settings too.
 tramp
 
-# guess-style can leave a settings file floating around, and its contents vary
-# from machine to machine.
-
-guess-style
-
 # Projectile is useful, but the details of what projects are on a given machine
 # need not be saved.
 projectile.cache

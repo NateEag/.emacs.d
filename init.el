@@ -331,7 +331,7 @@ buffer's file does not exist."
 
   ;; For programming, it's convenient if your editor guesses indentation styles
   ;; automatically.
-  (guess-style-guess-all)
+  (dtrt-indent-mode)
 
   ;; Make camelCaseNames more readable. See custom.el for settings.
   (glasses-mode)

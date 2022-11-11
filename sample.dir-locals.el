@@ -7,11 +7,6 @@
 ;; setup. I think it has to do with the hack I'm using to load .dir-locals.el
 ;; over TRAMP/plink, but until I have it solved, I'm removing it.
 ((nil .  (
-          ;; If a project's indentation style should be guessed, try this.
-          ;; Long-term, it might make more sense to add guessing style to
-          ;; find-file-hook?
-          (eval . (guess-style-guess-all))
-
           ;; Set a variable for the directory holding this .dir-locals.el file.
           ;; Useful for setting project-specific path variables.
           (eval . (set (make-local-variable 'nateeag/dir-locals-dir)

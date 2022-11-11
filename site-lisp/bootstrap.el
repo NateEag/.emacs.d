@@ -85,11 +85,6 @@ are for modes that didn't come with autoloading."
   (autoload 'markdown-mode "markdown-mode.el")
   (autoload 'tern-mode "tern.el" nil t)
 
-  ;; Autoloads for guess-style.
-  (autoload 'guess-style-set-variable "guess-style" nil t)
-  (autoload 'guess-style-guess-variable "guess-style")
-  (autoload 'guess-style-guess-all "guess-style" nil t)
-
   ;; Autoloads for svn-commit-msg-mode, which I just grabbed from some guy's
   ;; .emacs.d.
   (autoload 'svn-msg-mode "svn-msg" nil t)

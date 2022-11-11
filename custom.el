@@ -47,18 +47,6 @@
  '(glasses-separate-parentheses-p nil nil nil "spaces before parens are ugly.")
  '(glasses-separator "" nil nil "Rather than putting in separators, just use a different face for camelHumps.")
  '(global-font-lock-mode t nil nil "Everyone likes syntax coloration.")
- '(guess-style-guesser-alist
-   '((indent-tabs-mode . guess-style-guess-tabs-mode)
-     (tab-width . guess-style-guess-tab-width)
-     (c-basic-offset . guess-style-guess-c-basic-offset)
-     (nxml-child-indent . guess-style-guess-indent)
-     (css-indent-offset . guess-style-guess-indent)
-     (python-indent . guess-style-guess-indent)
-     (js2-indent-level . guess-style-guess-indent)
-     (js-switch-indent-offset . guess-style-guess-indent)
-     (web-mode-markup-indent-offset . guess-style-guess-indent)
-     (web-mode-css-indent-offset . guess-style-guess-indent)
-     (web-mode-code-indent-offset . guess-style-guess-indent)))
  '(helm-for-files-preferred-list
    '(helm-source-buffers-list helm-source-recentf helm-source-bookmarks helm-source-file-cache helm-source-files-in-current-dir))
  '(indent-tabs-mode nil nil nil "I dislike using tabs for indentation. Spaces are a simpler way to indent.")
@@ -149,7 +137,6 @@
      (eval add-hook 'after-save-hook 'hit-servlet nil t)
      (php-auto-yasnippet-required-files
       (list "~/github/gitlist/vendor/autoload.php"))
-     (eval guess-style-guess-all)
      (eval highlight-regexp "^ *")))
  '(scroll-bar-mode nil)
  '(scroll-conservatively 20)

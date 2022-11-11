@@ -597,6 +597,7 @@ The shell command lives in my dotfiles repo."
   :commands jedi-force-set-up-hooks)
 
 (use-package python-mode
+  :mode "Tiltfile\\'"
   :init (jedi-force-set-up-hooks)
   :config
   (add-hook 'python-mode-hook '(lambda ()

@@ -109,6 +109,9 @@
          (elfeed-show-mode . evil-local-mode))
   :config (evil-collection-elfeed-setup))
 
+(use-package auth-source-pass
+  :config (auth-source-pass-enable))
+
 (use-package notmuch
   ;; I don't exactly love emoji, but people use them in emails, so I guess I'd
   ;; rather see what they're communicating than not.

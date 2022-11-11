@@ -77,6 +77,10 @@ elpa/**/vterm-*/build/
 # Do not commit signature files for packages.
 elpa/*.signed
 
+# package-quickstart.el is a generated file with hardcoded paths that vary
+# based on the home directory location
+package-quickstart.el
+
 # Forge is a great tool for working with git hosting systems. The data
 # it stores locally is precisely a local cache and I do not want to commit it.
 forge-database.sqlite

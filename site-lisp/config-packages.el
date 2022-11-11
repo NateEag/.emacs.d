@@ -439,6 +439,14 @@ The shell command lives in my dotfiles repo."
   (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
   (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook))
 
+;; Direnv lets you specify per-project shell environments. It's pretty magical.
+;; Why don't we automatically apply direnv variables in buffers it applies to?
+(use-package direnv
+  :init
+  ;; I don't need direnv to tell me what it's doing.
+  (setq direnv-always-show-summary nil)
+  (direnv-mode))
+
 (use-package magit-delta
   :diminish
   :config

@@ -156,6 +156,18 @@ For editing web templates, I use the awesome
 [web-mode](http://web-mode.org/) with several extensions, including
 [emmet-mode](https://github.com/smihica/emmet-mode).
 
+I use [mbsync](https://isync.sourceforge.io/) to retrieve received emails from
+servers (and follow [this handy guide for using it with corporate SSO 2FA Gmail
+accounts](http://frostyx.cz/posts/synchronize-your-2fa-gmail-with-mbsync) when
+needed). I use [notmuch](https://notmuch.readthedocs.io/) and [associated Emacs
+modes](https://notmuchmail.org/notmuch-emacs/) for organizing and reading my
+email. I use `notmuch-message-mode` for writing email and
+[auth-source-pass](https://www.gnu.org/software/emacs/manual/html_mono/auth.html#The-Unix-password-store)
+for giving emacs my credentials when sending email (for reasons unclear to me,
+I've had to use the `domain.tld:<port>.gpg` naming format to get
+`auth-source-pass-search` to find my creds - including `username@domain.tld`
+has caused it to not find my credentials).
+
 I use css-mode for CSS, which is somewhat lacking, but I use
 [skewer-reload-stylesheets](https://github.com/NateEag/skewer-reload-stylesheets)
 to live-edit, and that makes life better.

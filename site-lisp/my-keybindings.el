@@ -80,7 +80,7 @@
     ;; files live or whether I've opened it unless necessary.
     ("p f" . counsel-projectile-find-file)
     ("p o f" . ne/switch-window-then-find-project-file)
-    ("p s" . counsel-projectile-ag)
+    ("p s" . counsel-projectile-rg)
     ("p b" . counsel-projectile-switch-to-buffer)
     ("p p" . counsel-projectile-switch-project)
     ("p y" . ne/yank-buffer-project-relative-path)

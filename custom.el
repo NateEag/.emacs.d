@@ -69,6 +69,7 @@
  '(magit-push-always-verify nil)
  '(magit-revert-buffers t t)
  '(magit-use-overlays nil)
+ '(mail-user-agent 'notmuch-user-agent)
  '(mailcap-download-directory "~/Downloads")
  '(markdown-command "cmark")
  '(max-specpdl-size 5000 nil nil "I get the \"Variable binding depth exceeds max-specpdl-size\" error a lot when using lsp-mode on a large PHP codebase at $DAYJOB. I'm therefore bumping this up to see if it helps.")

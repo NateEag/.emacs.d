@@ -131,7 +131,7 @@
       (lambda (&optional beg end)
         "mark message as deleted"
         (interactive)
-        (notmuch-search-tag (list "+deleted" "-unread") beg end)))
+        (notmuch-search-tag (list "+deleted" "-unread" "-inbox") beg end)))
 
     (define-key notmuch-search-mode-map "r"
       (lambda (&optional beg end)

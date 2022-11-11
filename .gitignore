@@ -4,8 +4,12 @@
 # wind up in here.
 *~
 
-# Byte-compiled files really don't belong in version control.
+# Byte-compiled files don't belong in version control.
 *.elc
+
+# Native-compiled files *really* don't belong in version control.
+eln-cache/
+*.eln
 
 # My auto-complete history is different between machines for a reason.
 ac-comphist.dat

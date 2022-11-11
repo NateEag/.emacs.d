@@ -88,7 +88,6 @@
  '(message-kill-buffer-on-exit t nil nil "If I have sent a message, I have little reason to keep the buffer around.")
  '(mm-inline-large-images 'resize)
  '(mo-git-blame-git-blame-args "-M -C -w" nil nil "Follow movement in a file, look for movement between files in the same commit, and ignore whitespace changes.")
- '(moody-slant-function 'moody-slant-apple-rgb)
  '(multi-term-dedicated-window-height 24)
  '(notmuch-address-command 'internal)
  '(notmuch-archive-tags '("-inbox" "-unread"))

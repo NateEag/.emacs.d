@@ -717,6 +717,8 @@ The shell command lives in my dotfiles repo."
 
     (add-hook 'scheme-mode-hook 'mit-scheme-slime-mode-init)))
 
+(use-package kbd-mode)
+
 ;; auto-compile dies on files that eventually lead it to compile compressed
 ;; elisp files. The way I caused this was a use-package invocation that touches
 ;; on files in core Emacs (specifically cc-mode, seen below), and therefore is

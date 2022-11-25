@@ -21,6 +21,10 @@ in the gutter.")
 (defun my-get-default-font-size ()
   "Return a good size for my default font based on monitor's pixel density."
 
+  ;; FIXME display-pixel-width seems to be different on macOS than Linux.
+  ;;
+  ;; A font-size of 9 seems to work well in practice on my Framework's internal
+  ;; display, while 6 works well on my lower-res external 27" displays.
   (let ((my-display-pixel-width (display-pixel-width))
         (my-display-mm-width (display-mm-width)))
     (if (and my-display-pixel-width my-display-mm-width)

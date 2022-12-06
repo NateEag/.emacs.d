@@ -8,8 +8,28 @@
   starts bogging down.
 
 - Get lsp-mode not to interfere with the flycheck-checkers I've configured
-  manually. That might be due to lsp-mode setting flycheck-checker itself,
-  which apparently it does.
+  manually (e.g. in sh-mode I'm no longer getting shellcheck reports). That
+  might be due to lsp-mode setting flycheck-checker itself, which apparently it
+  does.
+
+- Remove my dumb hacks to try to start evil-mode in the desired state and
+  instead use the supported mechanisms to choose initial state
+  (evil-*-state-modes, evil-buffer-regexps). The code to rip out is added to
+  evil-local-mode-hook in config-packages.el. Note that
+  after-change-major-mode-hook might be where I could install hooks to make
+  intelligent guesses about initial-state, as long as they run after
+  evil-mode's own initial-state logic (or replace it for given buffers) - it
+  should be possible to do things like check buffer contents there, making it
+  possible to start with insert-state if the file's empty but normal-state if
+  it's not, or to use normal-state in a COMMIT_EDITMSG buffer if there are
+  non-commented non-empty lines (i.e. we're editing a pre-existing message) but
+  insert-state but if there are not (a brand-new commit message).
+
+- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
+  cases I'll just want to quit after seeing what I wanted to, and being in
+  normal-state makes that two keystrokes instead of one. Turns out this should
+  be easy to do - just add the appropriate mode to evil-insert-state-modes or
+  else match buffer name using evil-buffer-regexps.
 
 - Replace Tern.js with the Typescript language server - by all accounts it does
   quite well with JS and of course it gives you TypeScript intelligence too. I
@@ -69,16 +89,6 @@
 - Consider turning on help-enable-symbol-autoload. Upside: autoloaded functions
   will always have docs. Downside: might get side effects from loading files
   just to know what something is.
-
-- Figure out why Emacs occasionally blanks a window while I'm working in it. I
-  have no idea what causes it and it happens perhaps once every day or four. I
-  suppose I could start a low-speed binary search through my packages, on the
-  assumption that it is in fact my configuration that's causing this. Another
-  alternative would be to start building up a more-minimal configuration that
-  does what I want until it triggers this behavior, sort of a binary search
-  *towards* a broken state. N.B.: I don't believe I've seen this since updating
-  to 28.1, so perhaps it was actually my config triggering some subtle bug in
-  redisplay?
 
 - Give code-review package a test run. I could see advantages to being able to
   review in Emacs; it'd be awesome to be able to do things like jump straight
@@ -233,11 +243,6 @@
 
 - Remove manual call to (package-initialize)
 
-- auth-source-pass is built in as of 27.1, so I should really start using it
-  for securely retrieving SMTP credentials. It would clean things up slightly,
-  by letting me avoid configuring a .authinfo file by hand on each machine I
-  use.
-
 - Try out emacs-dashboard package
 
 - Try out highlight-indent-guides.el
@@ -265,17 +270,6 @@
 
 - Add font-lock-refontify to my Anki deck so I remember it exists (I rarely
   deal with font-lock code but sometimes I do wander into it)
-
-- Remove my dumb hacks to try to start evil-mode in the desired state and
-  instead use the supported mechanisms to choose initial state
-  (evil-*-state-modes, evil-buffer-regexps). The code to rip out is added to
-  evil-local-mode-hook in config-packages.el.
-
-- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
-  cases I'll just want to quit after seeing what I wanted to, and being in
-  normal-state makes that two keystrokes instead of one. Turns out this should
-  be easy to do - just add the appropriate mode to evil-insert-state-modes or
-  else match buffer name using evil-buffer-regexps.
 
 - Make "<leader> g n" support going to the last hunk in a file and "<leader> g
   p" support going to the first hunk in a file. Feels like an off-by-one error.
@@ -523,11 +517,6 @@
 
   Incident count: 1
 
-- Try dtrt-indent as an alternative to guess-style, since guess-style does fail
-  to guess what I want fairly often (particularly in package.json files). A
-  quick test shows that it gets package.json right.
-  https://github.com/jscheid/dtrt-indent
-
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.
 
@@ -542,10 +531,6 @@
   question of whether evil-mode is in insert-state or not, because I have the
   logic that tries (and fails) to pick the right state based on whether a
   buffer has contents or not.
-
-- Add mechanism for viewing keymaps in readable form via
-  substitute-command-keys. Sample usage:
-  (substitute-command-keys "\\{evil-inner-text-objects-map}")
 
 - Use gmailieer to sync notmuch tags to gmail: https://github.com/gauteh/gmailieer
 
@@ -962,21 +947,6 @@
   inside subshells, first word in if, etc). Course, really you'd need a bash
   parser to get that right, but a handful of simple cases could probably just be
   hardcoded.
-
-- Jump-to-definition for bash could be handy, for those cases where the scripts
-  have grown enough to have a few different include files. Often that means you
-  should just rewrite in another language, but I can imagine legitimate cases.
-  I suspect you could roll your own with this snippet for figuring out where a
-  function came from, and some parsing of PATH for commands:
-  http://superuser.com/a/229038 Alternatively, I could just install dumb-jump
-  and use it for bash, since I believe it supports it.
-  https://github.com/mads-hartmann/bash-language-server looks like the current
-  state of the art...
-
-- Adjust emacs env when editing files with a dominating direnv file (.envrc).
-  This might slow things down, because you might have to change the env every
-  time you changed buffers. Just a (crazy?) thought on how to make life a little
-  nicer.
 
 - bash snippets would be nice: https://github.com/bmaland/yasnippet-sh-mode
 

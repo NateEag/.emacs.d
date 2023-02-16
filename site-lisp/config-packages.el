@@ -879,6 +879,9 @@ With this alias I hope to not need to remember it.")
 (use-package text-mode
   :mode "\\.txt.gpg")
 
+(use-package rst-mode
+  :mode "\\.rst")
+
 (use-package sensitive-mode
   :minor ("\\.gpg$" . sensitive-mode))
 

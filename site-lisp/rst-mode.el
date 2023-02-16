@@ -458,7 +458,7 @@ After interpretation of ARGS the results are concatenated as for
 	      re)
 	     ((symbolp re)
 	      (cadr (assoc re rst-re-alist)))
-	     ((char-valid-p re)
+	     ((characterp re)
 	      (regexp-quote (char-to-string re)))
 	     ((listp re)
 	      (let ((nested
@@ -1187,7 +1187,7 @@ are nil."
        ((looking-at (rst-re 'ttl-beg))
 	;; Try to use the underline
 	(let ((r (rst-classify-adornment
-		  (buffer-substring-no-properties 
+		  (buffer-substring-no-properties
 		   (line-beginning-position 2) (line-end-position 2))
 		  (line-end-position 2))))
 	  (if r

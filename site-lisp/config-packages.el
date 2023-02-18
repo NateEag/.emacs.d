@@ -452,6 +452,8 @@ The shell command lives in my dotfiles repo."
   :config
   (setq magit-delta-default-dark-theme "Solarized (dark)"))
 
+(use-package magit-svn)
+
 (use-package magit
   :defer t
   :hook ((magit-mode . magit-svn-mode)

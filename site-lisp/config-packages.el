@@ -528,6 +528,16 @@ The shell command lives in my dotfiles repo."
                                            "shell-script")))
          (sh-mode . lsp)))
 
+(use-package dtrt-indent
+  :diminish)
+
+;; I don't actually use unimpaired, but evil-collection apparently forces it to
+;; load.
+;;
+;; TODO File a bug report that evil-collection not load unimpaired needlessly.
+(use-package evil-collection-unimpaired
+  :diminish)
+
 (use-package gnuplot-mode
   :interpreter "gnuplot")
 

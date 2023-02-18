@@ -107,7 +107,11 @@
  '(projectile-use-git-grep t)
  '(require-final-newline t)
  '(safe-local-variable-values
-   '((helm-ag--extra-options . "--ignore elpa/archives")
+   '((mangle-whitespace . t)
+     (checkdoc-minor-mode . t)
+     (elisp-lint-indent-specs
+      (git-gutter:awhen . 1))
+     (helm-ag--extra-options . "--ignore elpa/archives")
      (ne-yas-auto-insert-snippet-name . "how-i-code-post")
      (ne-yas-auto-insert-snippet-name . "package")
      (eval setq flycheck-eslint-rulesdir
@@ -168,5 +172,5 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(default ((((class color) (min-colors 89)) (:foreground "#839496" :background "#002b36"))))
+ '(default ((((class color) (min-colors 89)) (:foreground "#839496" :background "#002b36" :family "Anonymous Pro" :foundry "nil" :slant normal :weight normal :height 140 :width normal))))
  '(fringe ((t nil))))

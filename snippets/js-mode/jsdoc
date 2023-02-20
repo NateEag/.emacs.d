@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# A simple snippet for inserting a JSDoc comment. Mostly a workaround for
+# typescript-mode crapping out on manual typing of JSDoc comments.
+# name: jsdoc
+# key: jsdoc
+# --
+/**
+ * $0
+ */

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# A snippet for creating a JS arrow function.
+#
+# name: =>
+# key: =>
+# --
+(${1:value}) => {$0}

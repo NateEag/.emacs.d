@@ -483,7 +483,11 @@ The shell command lives in my dotfiles repo."
   (define-key magit-status-mode-map (kbd "i") 'evil-insert-state))
 
 (use-package forge
-  :after magit)
+  :after magit
+  :hook ((forge-post-mode . (lambda ()
+                                     (auto-fill-mode -1)
+                                     (aggressive-fill-paragraph-mode -1)
+                                     (visual-line-mode -1)))))
 
 (use-package git-commit
   :init (global-git-commit-mode 1)

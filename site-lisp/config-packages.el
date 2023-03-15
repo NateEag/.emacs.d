@@ -655,6 +655,7 @@ The shell command lives in my dotfiles repo."
 (use-package yaml-mode
   :mode "\\.ya?ml\\'"
   :defer t
+  :bind ("RET" . default-indent-new-line)
   :config
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init)

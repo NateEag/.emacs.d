@@ -334,6 +334,16 @@ buffer's file does not exist."
   (dtrt-indent-mode)
   (diminish 'dtrt-indent-mode)
 
+  ;; It's also convenient to auto-format code in any languages that support it.
+  ;;
+  ;; Note that to disable apheleia-mode for projects that aren't currently
+  ;; consistent with their formatting, you can dump the following in a
+  ;; .dir-locals.el file:
+  ;;
+  ;; ((nil . ((eval . (apheleia-mode 0)))))
+  (apheleia-mode)
+  (diminish 'apheleia-mode)
+
   ;; Make camelCaseNames more readable. See custom.el for settings.
   (glasses-mode)
 

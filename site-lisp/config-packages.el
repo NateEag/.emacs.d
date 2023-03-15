@@ -672,7 +672,10 @@ The shell command lives in my dotfiles repo."
   (add-hook 'groovy-mode-hook 'my-prog-mode-init))
 
 (use-package lua-mode
-  :mode "\\.lua\\'")
+  :mode "\\.lua\\'"
+  :config (setq lsp-clients-lua-language-server-bin
+                "~/.nix-profile/bin/lua-language-server")
+  :hook ((lua-mode . lsp)))
 
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)

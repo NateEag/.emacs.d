@@ -52,6 +52,16 @@
          ("C-h F" . helpful-function)
          ("C-h C" . helpful-command)))
 
+;; I like having reference docs installed and browseable locally.
+;;
+;; Enter the dashman.
+(use-package dash-docs
+  :config (cl-map 'list #'dash-docs-ensure-docset-installed '("JavaScript"
+                                                              "NodeJS"
+                                                              "TypeScript"
+                                                              "Bash"
+                                                              "MongoDB")))
+
 (use-package cygwin-mount
   :commands cygwin-mount-activate)
 

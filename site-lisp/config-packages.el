@@ -620,6 +620,22 @@ The shell command lives in my dotfiles repo."
                                (setq-local js2-concat-multiline-strings
                                            nil))))
 
+(use-package typescript
+  ;; FIXME Get comment-auto-fill to Just Work in typescript-mode.
+  ;;
+  ;; The below binding gives me reasonable behavior in /* */ comment blocks but
+  ;; doesn't continue //-style comments. I know I've had similar issues in
+  ;; other modes, but I always forget the whys and wherefores.
+  ;;
+  ;; ...this really points back to working out the kinks in
+  ;; aggressive-fill-mode and the bug(s?) in the underlying Emacs comment-fill
+  ;; functions once and for all. :/
+  :bind (:map typescript-mode-map
+              ("RET" . default-indent-new-line))
+  :hook ((typescript-mode . lsp)
+         (typescript-mode . (lambda () (setq-local comment-style
+                                                   'extra-line)))))
+
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)
 

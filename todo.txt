@@ -1,11 +1,10 @@
-- Set package-native-compile to t so elpa packages get native-compiled when I
-  install them, if native-comp turns out to be quick
-
 - Figure out why my magit setup is slow and get it fast. Doom Emacs has showed
   me there's no reason for it not to be greased lightning in my repos.
   new-init.el has none of my custom setup for it yet and magit runs nice and
   snappy. Guess I can start moving it towards doing what I want and see when it
-  starts bogging down.
+  starts bogging down. Looks like magit-delta may be contributing, which seems
+  to be stalled at "...probably it's the overlays?" for years now:
+  https://github.com/dandavison/magit-delta/issues/9
 
 - Get lsp-mode not to interfere with the flycheck-checkers I've configured
   manually (e.g. in sh-mode I'm no longer getting shellcheck reports). That
@@ -31,6 +30,19 @@
   be easy to do - just add the appropriate mode to evil-insert-state-modes or
   else match buffer name using evil-buffer-regexps.
 
+- Find some good tools for interacting with MongoDB. ob-mongo looks useful for
+  doing one-off analyses: https://github.com/krisajenkins/ob-mongo
+
+- Find k8s/Helm tooling for Emacs. Need a language server and/or yaml-lsp
+  plugin for Helm/k8s files. https://github.com/TxGVNN/emacs-k8s-mode, maybe
+  parts of https://github.com/techniumlabs/ecloud, possibly adapt
+  https://marketplace.visualstudio.com/items?itemName=ms-kubernetes-tools.vscode-kubernetes-tools
+  to use its backend tools within Emacs
+
+- Update Emacs conf to use xref-find-definitions-other-window for first jump to
+  def, then to stay in that window for successive jumps. That's usually what I
+  want.
+
 - Replace Tern.js with the Typescript language server - by all accounts it does
   quite well with JS and of course it gives you TypeScript intelligence too. I
   suppose I'd get free basic typechecking in all JS I write, now that I type
@@ -44,11 +56,37 @@
   a Simple Matter of Code. See commented code in prog-mode-hook for notes on
   what a POC might require.
 
+- Find reproduction for issue where beacon-mode flickers in the wrong position
+  (something to do with having the same buffer displayed in multiple windows,
+  IIRC)
+
+- Teach magit to open buffers from magit-status in the other window in a frame,
+  if another one's available.
+
+- Figure out how to signal git-gutter buffers to update after a magit
+  operation causes them to be out-of-date
+
 - Fix aggressive-fill-paragraph mode's "only fill
   inside comments" behavior. See afp-mode-comment-bug.md for details.
 
 - Try using recommendations at https://ianyepan.github.io/posts/emacs-ide/ for
   how to configure lsp-mode.
+
+- Add a project-search feature whereby after a regular search, you can expand
+  the search to also apply to all locally-fetched, unmerged, recently-modified
+  branches. Sometimes I see stuff in code review, think it's available, then
+  discover it hasn't merged yet, and it's annoying to have to grovel through
+  hunting it down.
+
+- Add a project-search feature whereby after a regular search, I can expand the
+  search to include history (be nice to stream the results in as they arrive
+  and keep the interaction working, so I can pause/stop the search by jumping
+  to a hit).
+
+- Add a project-search feature whereby after a regular search, I can expand the
+  search to include search results from the project's forge (GitHub, GitLab,
+  etc). It's often a useful way to dig up related issues, relevant PRs, and the
+  like - things that may not be in the local project history.
 
 - Get counsel-dash installed and get a baseline set of docs configured with it
   and under version control. Being able to search project docs rapidly from my
@@ -69,9 +107,6 @@
 - Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
   that I've discovered cool-retro-term I don't know that I'll ever be able to
   give up its awesome look-and-feel.
-
-- Teach magit to open buffers from magit-status in the other window in a frame,
-  if another one's available.
 
 - Set mode-line-compact to t
 
@@ -483,13 +518,6 @@
   less than three-quarters the width of fill-column"? A better heuristic is
   probably 'Are lines other than the last one and the one before / after point
   less than three-quarters of fill-column?'
-
-- Get a working version of rst-mode installed. Right now when I open a .rst
-  file it just breaks. Probably due to running an ancient version of it
-  directly from site-lisp/rst-mode.el.
-
-- Use prettier.el to format JS files on save (if I ever start using Prettier
-  everywhere, which I probably should)
 
 - Set up a 'Stale questions' saved search in notmuch that shows me all
   non-response emails I sent including a question mark in the body or subject

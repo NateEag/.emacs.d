@@ -649,6 +649,9 @@ The shell command lives in my dotfiles repo."
                                  (setq jedi:use-shortcuts t)
                                  (setq jedi:complete-on-dot t))))
 
+(use-package hcl-mode
+  :mode "\\.hcl.tpl")
+
 (use-package yaml-mode
   :mode "\\.ya?ml\\'"
   :defer t

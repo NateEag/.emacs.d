@@ -1031,7 +1031,8 @@ With this alias I hope to not need to remember it.")
   :mode (("\\.service\\'" . conf-mode)
          ;; fail2ban suggests you put your own configuration into jail.local.
          ;; This is thus a useful rule.
-         ("jail.local\\'" . conf-mode))
+         ("jail.local\\'" . conf-mode)
+         ("CODEOWNERS\\'" . conf-mode))
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
   ;; more-specific regex, it should probably open in conf-mode.
   ;;

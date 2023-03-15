@@ -800,6 +800,10 @@ The shell command lives in my dotfiles repo."
   :after lsp-mode
   :config (add-hook 'java-mode-hook 'lsp))
 
+(use-package go-mode
+  :hook ((go-mode . lsp)
+         (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))
+
 (use-package csharp-mode
   :config
   (add-hook 'csharp-mode-hook 'omnisharp-mode))

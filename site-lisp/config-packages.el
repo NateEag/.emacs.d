@@ -882,19 +882,25 @@ With this alias I hope to not need to remember it.")
   :bind (:map diff-mode-map
               ("M-\d" . backward-kill-word)))
 
+;; I have a lot of old todo.txt files that do not follow the standard
+;; format, but instead just start each line with "- ".
+;;
+;; I wish I had just followed the standard format, but since I didn't,
+;; here is an easy way to just use text-mode for them.
+(defun ne/reset-todo-file-type? ()
+  "If current buffer uses my old ad-hoc todo.txt format, set it to text-mode."
+  (interactive)
+  (save-excursion
+    (goto-char (point-min))
+    (if (re-search-forward "^- " 3 t)
+        (progn (text-mode)
+               (read-only-mode -1)))))
+
 (use-package todotxt-mode
   :mode (("\\todo.txt\\'" . todotxt-mode))
-  :hook ((todotxt-mode . (lambda () (aggressive-fill-paragraph-mode -1)))
-         ;; I have a lot of old todo.txt files that do not follow the standard
-         ;; format, but instead just start each line with "- ".
-         ;;
-         ;; I wish I had just followed the standard format, but since I didn't,
-         ;; here is an easy way to just use text-mode for them.
-         (todotxt-mode . (lambda ()
-                           (save-excursion
-                             (goto-char (point-min))
-                             (if (re-search-forward "^- " 3 t)
-                                 (text-mode)))))))
+  :hook ((todotxt-mode . (lambda ()
+                           (aggressive-fill-paragraph-mode -1)
+                           (ne/reset-todo-file-type?)))))
 
 (use-package apache-mode
   ;; A rule specific to a system I use at $DAYJOB.

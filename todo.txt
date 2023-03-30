@@ -29,12 +29,6 @@
   non-commented non-empty lines (i.e. we're editing a pre-existing message) but
   insert-state but if there are not (a brand-new commit message).
 
-- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
-  cases I'll just want to quit after seeing what I wanted to, and being in
-  normal-state makes that two keystrokes instead of one. Turns out this should
-  be easy to do - just add the appropriate mode to evil-insert-state-modes or
-  else match buffer name using evil-buffer-regexps.
-
 - Find some good tools for interacting with MongoDB. ob-mongo looks useful for
   doing one-off analyses: https://github.com/krisajenkins/ob-mongo
 

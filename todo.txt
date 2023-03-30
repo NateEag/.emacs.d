@@ -6,6 +6,11 @@
   to be stalled at "...probably it's the overlays?" for years now:
   https://github.com/dandavison/magit-delta/issues/9
 
+- Get js2-concat-multiline-strings to always be false in NodeJS projects. I
+  might conceivably want it in projects with stringent backwards compatibility
+  standards for browsers, but any Node version I'll be using will have template
+  literal support.
+
 - Get lsp-mode not to interfere with the flycheck-checkers I've configured
   manually (e.g. in sh-mode I'm no longer getting shellcheck reports). That
   might be due to lsp-mode setting flycheck-checker itself, which apparently it
@@ -47,6 +52,9 @@
   quite well with JS and of course it gives you TypeScript intelligence too. I
   suppose I'd get free basic typechecking in all JS I write, now that I type
   that...
+
+- Try Jinx + libenchant + aspell for spellchecking. I really don't often need
+  spellchecking anywhere except the current view, so it sounds worthwhile.
 
 - Split my personal aspell wordlist out into a few different wordlists, so I
   can distinguish between things like 'technical abbreviations', 'personal
@@ -103,6 +111,10 @@
 - Install and configure gmch, so Emacs can garbage-collect while I'm not
   actively doing things. Seems like a better state of affairs to me.
   https://gitlab.com/koral/gcmh
+
+- Move to [site-lisp](https://git.sr.ht/~pkal/site-lisp) package for
+  autoloading my site-lisp directory. I've been meaning to do something like it
+  for years now.
 
 - Try libvterm for in-Emacs terminals. I've heard rave reviews. ...though now
   that I've discovered cool-retro-term I don't know that I'll ever be able to

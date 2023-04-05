@@ -806,6 +806,11 @@ The shell command lives in my dotfiles repo."
   :after lsp-mode
   :config (add-hook 'java-mode-hook 'lsp))
 
+(use-package haskell-mode
+  :after lsp-mode lsp-haskell
+  :hook ((haskell-mode . lsp)
+         (haskell-literate-mode . lsp)))
+
 (use-package go-mode
   :hook ((go-mode . lsp)
          (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))

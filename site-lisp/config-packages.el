@@ -28,7 +28,7 @@
 (use-package my-functions
   :commands
   hit-servlet comment-or-uncomment-region-or-line wrap-args
-  move-current-buffer insert-date insert-time unfill-paragraph
+  move-current-buffer insert-date insert-date-iso-format insert-time unfill-paragraph
   add-auto-mode ne/set-theme-to-match-system-theme)
 
 (use-package daily-log

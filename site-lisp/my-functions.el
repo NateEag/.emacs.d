@@ -136,6 +136,15 @@ By default it handles C-like function parameters, hence the name."
                    ((equal prefix '(16)) "%B %d, %Y"))))
       (insert (format-time-string format))))
 
+(defun insert-date-iso-format (prefix)
+  "Insert current date and time in ISO 8601 format.
+With PREFIX argument, insert just the date."
+  (interactive "P")
+  (let ((format (cond
+                 ((not prefix) "%Y-%m-%d %H:%M:%S %Z")
+                 ((equal prefix) "%Y-%m-%d"))))
+    (insert (format-time-string format))))
+
 ;; Insert the current time.
 ;;;###autoload
 (defun insert-time (prefix)

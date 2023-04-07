@@ -1123,7 +1123,7 @@
 		    ("Omar Antolín Camarena" . "omar@matem.unam.mx"))
 		   (:commit . "127492fac048cecfdba145d496a902022a68d1d5"))])
  (ement .
-	[(0 8 1)
+	[(0 8 2)
 	 ((emacs
 	   (27 1))
 	  (map
@@ -1146,7 +1146,7 @@
 	  (:maintainer "Adam Porter" . "adam@alphapapa.net")
 	  (:authors
 	   ("Adam Porter" . "adam@alphapapa.net"))
-	  (:commit . "41a5a6b589b3016e2f9fbc9746a1bf482e69cfb5"))])
+	  (:commit . "fc48543b5396a8d24850e104f62a50cb1008b4c7"))])
  (emms .
        [(14)
 	((cl-lib
@@ -1801,7 +1801,7 @@
 		 ("Stefan Monnier" . "monnier@iro.umontreal.ca"))
 		(:maintainer "Stefan Monnier" . "monnier@iro.umontreal.ca"))])
  (jinx .
-       [(0 4)
+       [(0 5)
 	((emacs
 	  (27 1))
 	 (compat
@@ -1811,7 +1811,7 @@
 	 (:maintainer "Daniel Mendler" . "mail@daniel-mendler.de")
 	 (:authors
 	  ("Daniel Mendler" . "mail@daniel-mendler.de"))
-	 (:commit . "68b579d715c4be5a255852130b9009151fb0c41e"))])
+	 (:commit . "3d4a633a1c9a91f7776f52db9494fc21e4728f67"))])
  (jit-spell .
 	    [(0 3)
 	     ((emacs

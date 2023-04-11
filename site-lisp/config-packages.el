@@ -37,6 +37,12 @@
   daily-log-show-current-week-time
   daily-log-show-current-week-time-remaining)
 
+(use-package tzc
+  :init
+  ;; TODO Factor this out to a once-at-start check that populates a var?
+  (if (file-exists-p "/etc/NIXOS")
+      (setq tzc-main-dir "/etc/zoneinfo/")))
+
 (use-package my-keybindings)
 
 (use-package config-windows

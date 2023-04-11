@@ -103,11 +103,11 @@
     ("g l" . magit-log-buffer-file)
 
     ;; Dates and times are handy to be able to insert.
-    ("d" . insert-date)
-    ;; FIXME Bind this to something smarter, like "d i". I'd have to first fix
-    ;; binding the above to "d d", which didn't work when I tried it.
-    ("i" . insert-date-path-format)
-    ("t" . insert-time)
+    ("d d" . insert-date)
+    ;; FIXME Figure out why this one doesn't work for s-d s-p.
+    ("d p" . insert-date-path-format)
+    ("d i" . insert-date-iso-format)
+    ("d t" . insert-time)
 
     ("o" . other-window)
 
@@ -164,6 +164,7 @@ Used to define keyboard shortcuts.")
   (global-unset-key (kbd "s-a"))
   (global-unset-key (kbd "s-p"))
   (global-unset-key (kbd "s-g"))
+  (global-unset-key (kbd "s-d"))
 
   (dolist (elt nateeag/command-mnemonics)
     (let* ((mnemonic (car elt))

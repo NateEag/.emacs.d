@@ -911,6 +911,7 @@ With this alias I hope to not need to remember it.")
   :mode (("\\todo.txt\\'" . todotxt-mode))
   :hook ((todotxt-mode . (lambda ()
                            (aggressive-fill-paragraph-mode -1)
+                           (auto-fill-mode -1)
                            (ne/reset-todo-file-type?)))))
 
 (use-package apache-mode

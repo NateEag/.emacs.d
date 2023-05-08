@@ -67,7 +67,8 @@
                                                               "NodeJS"
                                                               "TypeScript"
                                                               "Bash"
-                                                              "MongoDB")))
+                                                              "MongoDB"
+                                                              "Go")))
 
 (use-package cygwin-mount
   :commands cygwin-mount-activate)

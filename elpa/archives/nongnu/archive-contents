@@ -86,7 +86,7 @@
 			    ("Michal Nazarewicz" . "mina86@mina86.com"))
 			   (:commit . "33b5f88b799a17947c266b04ad59462c5aeb4ed7"))])
  (autothemer .
-	     [(0 2 14)
+	     [(0 2 18)
 	      ((dash
 		(2 10 0))
 	       (emacs
@@ -94,7 +94,7 @@
 	      "Conveniently define themes" tar
 	      ((:url . "https://github.com/jasonm23/autothemer")
 	       (:maintainer "Jason Milkins" . "jasonm23@gmail.com")
-	       (:commit . "87a21019ed4f41a487a8af34467e0ebff19f365e"))])
+	       (:commit . "8f72afc6dba5ad7cc3a201a084fd20571f945d2e"))])
  (bash-completion .
 		  [(3 1 1)
 		   ((emacs
@@ -157,7 +157,7 @@
 	      ("Dave Pearson" . "davep@davep.org"))
 	     (:commit . "fe676396fa7e4372e01bf2c3d9a62e8d53615d46"))])
  (buttercup .
-	    [(1 30)
+	    [(1 31)
 	     ((emacs
 	       (24 3)))
 	     "Behavior-Driven Emacs Lisp Testing" tar
@@ -165,7 +165,7 @@
 	      (:maintainer "Ola Nilsson" . "ola.nilsson@gmail.com")
 	      (:authors
 	       ("Jorgen Schaefer" . "contact@jorgenschaefer.de"))
-	      (:commit . "c6693d3667a71e88f459002fecf61df74d9e18ac"))])
+	      (:commit . "30c703d215b075aaede936a2c424f65b5f7b6391"))])
  (camera .
 	 [(0 2)
 	  ((emacs
@@ -386,7 +386,7 @@
 		 ("Arne Jørgensen" . "arne@arnested.dk"))
 		(:commit . "ed90b0c4d808365e9ae9f16cc8a96eff17815621"))])
  (eat .
-      [(0 7)
+      [(0 8)
        ((emacs
 	 (28 1)))
        "Emulate A Terminal, in a region, in a buffer and in Eshell" tar
@@ -395,7 +395,7 @@
 	(:maintainer "Akib Azmain Turja" . "akib@disroot.org")
 	(:authors
 	 ("Akib Azmain Turja" . "akib@disroot.org"))
-	(:commit . "a20c01e012351cec8a94974835e7aa2c0d5afade"))])
+	(:commit . "092bdd9b9535f9d21bf7b2e15e8ecd1a33089735"))])
  (edit-indirect .
 		[(0 1 10)
 		 ((emacs
@@ -407,19 +407,18 @@
 		   ("Fanael Linithien" . "fanael4@gmail.com"))
 		  (:commit . "f80f63822ffae78de38dbe72cacaeb1aaa96c732"))])
  (editorconfig .
-	       [(0 9 1)
-		((cl-lib
-		  (0 5))
+	       [(0 10 0)
+		((emacs
+		  (26 1))
 		 (nadvice
-		  (0 3))
-		 (emacs
-		  (24)))
+		  (0 3)))
 		"EditorConfig Emacs Plugin" tar
 		((:url . "https://github.com/editorconfig/editorconfig-emacs#readme")
+		 (:keywords "convenience" "editorconfig")
 		 (:maintainer "EditorConfig Team" . "editorconfig@googlegroups.com")
 		 (:authors
 		  ("EditorConfig Team" . "editorconfig@googlegroups.com"))
-		 (:commit . "3352e487809dda4a0366314e30c9efa431b61f79"))])
+		 (:commit . "a8b31c925e5cdee4b26b10a43094787937fe441e"))])
  (elixir-mode .
 	      [(2 4 0)
 	       ((emacs
@@ -429,16 +428,16 @@
 		(:keywords "languages" "elixir")
 		(:commit . "1d94b525ddcc995b5a979de7b050c2309648ca6f"))])
  (elpher .
-	 [(3 4 3)
+	 [(3 5 0)
 	  ((emacs
 	    (27 1)))
 	  "A friendly gopher and gemini client" tar
 	  ((:url . "https://thelambdalab.xyz/elpher")
-	   (:keywords "comm" "gopher")
+	   (:keywords "comm" "gopher" "gemini")
 	   (:maintainer "Tim Vaughan" . "plugd@thelambdalab.xyz")
 	   (:authors
 	    ("Tim Vaughan" . "plugd@thelambdalab.xyz"))
-	   (:commit . "2f66d418cf4ed176b12c24eaadb5240b49da0448"))])
+	   (:commit . "81f2883614c303184116449ec3583ef5c136ec2f"))])
  (engine-mode .
 	      [(2 2 1)
 	       ((cl-lib
@@ -1303,7 +1302,7 @@
 	  ("Shi Tianshu"))
 	 (:commit . "57656a69d3c29ddb0d18697491f80674e1097eaf"))])
  (minibar .
-	  [(0 2)
+	  [(0 3)
 	   ((emacs
 	     (27 2)))
 	   "Modular status bar in minibuffer" tar
@@ -1312,7 +1311,7 @@
 	    (:maintainer "Akib Azmain Turja" . "akib@disroot.org")
 	    (:authors
 	     ("Akib Azmain Turja" . "akib@disroot.org"))
-	    (:commit . "2f059a8f8a49495e611065bc01c94803c322fa86"))])
+	    (:commit . "22831489d3bbc22aef315c0f003bf3756b8889fa"))])
  (moe-theme .
 	    [(1 0 2)
 	     nil "A colorful eye-candy theme. Moe, moe, kyun!" tar
@@ -1651,7 +1650,7 @@
 	       ("David Christiansen" . "david@davidchristiansen.dk"))
 	      (:keywords "convenience"))])
  (racket-mode .
-	      [(1 0 20230321 113335)
+	      [(1 0 20230506 103707)
 	       ((emacs
 		 (25 1)))
 	       "Racket editing, REPL, and more" tar
@@ -1825,7 +1824,7 @@
 		 ("Matus Goljer" . "matus.goljer@gmail.com"))
 		(:commit . "4873352b5d0a1c5142658122de1b6950b8fe7e4d"))])
  (solarized-theme .
-		  [(1 3 0)
+		  [(2 0 1)
 		   ((emacs
 		     (24 1)))
 		   "The Solarized color theme" tar
@@ -1833,7 +1832,8 @@
 		    (:keywords "convenience" "themes" "solarized")
 		    (:maintainer "Bozhidar Batsov" . "bozhidar@batsov.dev")
 		    (:authors
-		     ("Bozhidar Batsov" . "bozhidar@batsov.dev")))])
+		     ("Bozhidar Batsov" . "bozhidar@batsov.dev"))
+		    (:commit . "0f0b1129cf51c85904f9e015da4fcca5f5f7a4ce"))])
  (spacemacs-theme .
 		  [(0 2)
 		   ((emacs
@@ -1886,7 +1886,7 @@
 		     ("John Olsson" . "john@cryon.se"))
 		    (:commit . "2d5acd143a153e16372d59000e57d76291ab81dd"))])
  (subed .
-	[(1 2 1)
+	[(1 2 2)
 	 ((emacs
 	   (25 1)))
 	 "A major mode for editing subtitles" tar
@@ -1895,7 +1895,7 @@
 	  (:maintainer "Sacha Chua" . "sacha@sachachua.com")
 	  (:authors
 	   ("Random User"))
-	  (:commit . "0519eb16ad618880fbc9cfd272ebb13e2ceab619"))])
+	  (:commit . "260620850615f694d946415f12801c78237e2205"))])
  (sweeprolog .
 	     [(0 17 0)
 	      ((emacs
@@ -2086,13 +2086,13 @@
 		     ("Campbell Barton" . "ideasman42@gmail.com"))
 		    (:commit . "6a306462ee1fa3a7c6303561f9ddf510e448b731"))])
  (vc-fossil .
-	    [(20221120)
+	    [(20230504)
 	     nil "VC backend for the fossil sofware configuraiton management system" tar
 	     ((:maintainer "Alfred M. Szmidt" . "ams@gnu.org")
 	      (:authors
 	       ("Venkat Iyer" . "venkat@comit.com"))
 	      (:url . "https://elpa.nongnu.org/nongnu/vc-fossil.html")
-	      (:commit . "e059ca466cc8914757c6bdb26fa9cc6b0820a9c1"))])
+	      (:commit . "4a4a3e4df83ba2f1ea8bfd8aa7e9f9b2c1c32ca9"))])
  (vcomplete .
 	    [(2 0)
 	     ((emacs
@@ -2216,7 +2216,7 @@
 	      (:authors
 	       ("Le Wang")))])
  (xah-fly-keys .
-	       [(23 10 20230404113004)
+	       [(23 11 20230507152313)
 		((emacs
 		  (24 1)))
 		"ergonomic modal keybinding minor mode." tar
@@ -2225,7 +2225,7 @@
 		 (:maintainer "Xah Lee" . "xah@xahlee.org")
 		 (:authors
 		  ("Xah Lee ( http://xahlee.info/ )"))
-		 (:commit . "8f176955197762c9d7cdd4aaf8ed4d6530d2ba04"))])
+		 (:commit . "3f14bfcaadf9ee035802592bfca8eb19c703983e"))])
  (xkcd .
        [(1 1)
 	((json

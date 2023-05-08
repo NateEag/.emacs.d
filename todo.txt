@@ -125,6 +125,9 @@
   support for it (bash, JS, Python are the obvious ones, though PHP's heredoc
   strings would also qualify).
 
+- Check out the code-compass package. Supposed to provide automated inline
+  analysis of code complexity and dependency depth... sounds interesting.
+
 - See if I should set file-preserve-symlinks-on-save
 
 - Consider turning on help-enable-symbol-autoload. Upside: autoloaded functions

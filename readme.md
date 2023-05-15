@@ -4,9 +4,9 @@ Ever since [Dr. Bui](http://cs.hbg.psu.edu/~bui/) told our C++ programming
 class to use it for programming in the Sun lab, Emacs has been my editor.
 
 On that first encounter, I was put off by its user interface, which is
-obscurantist at best. I discovered that the default install is
-incredibly unwieldy, and I was not impressed with how little it believed
-in graphical environments.
+obscurantist at best. I discovered that the default install is incredibly
+unwieldy, and I was not impressed with how little it believed in graphical
+environments.
 
 Nonetheless, I learned the basic keybindings and used it for
 assignments, often via a terminal over SSH.

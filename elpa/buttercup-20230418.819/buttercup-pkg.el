@@ -1,7 +1,9 @@
-(define-package "buttercup" "20220329.2043" "Behavior-Driven Emacs Lisp Testing"
+(define-package "buttercup" "20230418.819" "Behavior-Driven Emacs Lisp Testing"
   '((emacs "24.3"))
-  :commit "f5cbf97e1086441b2d6fa3ea240758b932c7c5e1" :authors
+  :commit "30c703d215b075aaede936a2c424f65b5f7b6391" :authors
   '(("Jorgen Schaefer" . "contact@jorgenschaefer.de"))
+  :maintainers
+  '(("Ola Nilsson" . "ola.nilsson@gmail.com"))
   :maintainer
   '("Ola Nilsson" . "ola.nilsson@gmail.com")
   :url "https://github.com/jorgenschaefer/emacs-buttercup")

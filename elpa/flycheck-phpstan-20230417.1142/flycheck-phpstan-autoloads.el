@@ -1,4 +1,4 @@
-;;; flycheck-phpstan-autoloads.el --- automatically extracted autoloads
+;;; flycheck-phpstan-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,7 +10,7 @@
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from flycheck-phpstan.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-phpstan" '("flycheck-phpstan--enabled-and-set-variable")))
+(register-definition-prefixes "flycheck-phpstan" '("flycheck-phpstan-"))
 
 ;;;***
 

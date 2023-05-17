@@ -1,13 +1,13 @@
 ;;; counsel.el --- Various completion functions using Ivy -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2023 Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20220402.953
-;; Package-Commit: 764e0d35ba63adb893743f27a979144477d9bfb9
-;; Version: 0.13.4
-;; Package-Requires: ((emacs "24.5") (ivy "0.13.4") (swiper "0.13.4"))
+;; Package-Version: 20230410.1815
+;; Package-Commit: d28225e86f8dfb3825809ad287f759f95ee9e479
+;; Version: 0.14.0
+;; Package-Requires: ((emacs "24.5") (ivy "0.14.0") (swiper "0.14.0"))
 ;; Keywords: convenience, matching, tools
 
 ;; This file is part of GNU Emacs.
@@ -356,13 +356,12 @@ Update the minibuffer with the amount of lines collected every
 
 ;;** `counsel-company'
 (defvar company-candidates)
-(defvar company-common)
-(defvar company-prefix)
 (declare-function company-abort "ext:company")
 (declare-function company-complete "ext:company")
 (declare-function company-mode "ext:company")
 (declare-function company-call-backend "ext:company")
 (declare-function company--clean-string "ext:company")
+(declare-function company--continue "ext:company")
 
 ;;;###autoload
 (defun counsel-company ()
@@ -371,25 +370,15 @@ Update the minibuffer with the amount of lines collected every
   (company-mode 1)
   (unless company-candidates
     (company-complete))
-  (let ((len (cond ((let (l)
-                      (and company-common
-                           (string= company-common
-                                    (buffer-substring
-                                     (- (point) (setq l (length company-common)))
-                                     (point)))
-                           l)))
-                   (company-prefix
-                    (length company-prefix)))))
-    (when len
-      (setq ivy-completion-beg (- (point) len))
-      (setq ivy-completion-end (point))
-      (ivy-read "Candidate: " company-candidates
-                :action #'ivy-completion-in-region-action
-                :caller 'counsel-company))))
+  (when company-candidates
+    (company--continue)
+    (ivy-read "Candidate: " company-candidates
+              :action 'company-finish
+              :caller 'counsel-company)))
 
 (ivy-configure 'counsel-company
   :display-transformer-fn #'counsel--company-display-transformer
-  :unwind-fn #'company-abort)
+  :unwind-fn (lambda() (unless ivy-exit (company-abort))))
 
 (defun counsel--company-display-transformer (s)
   (concat s (let ((annot (company-call-backend 'annotation s)))
@@ -1307,6 +1296,9 @@ Like `locate-dominating-file', but DIR defaults to
      "\0"
      t)))
 
+(defvar counsel-git-history nil
+  "History for `counsel-git'.")
+
 ;;;###autoload
 (defun counsel-git (&optional initial-input)
   "Find file in the current Git repository.
@@ -1317,6 +1309,7 @@ INITIAL-INPUT can be given as the initial minibuffer input."
     (ivy-read "Find file: " (counsel-git-cands default-directory)
               :initial-input initial-input
               :action #'counsel-git-action
+              :history 'counsel-git-history
               :caller 'counsel-git)))
 
 (ivy-configure 'counsel-git
@@ -1390,8 +1383,10 @@ INITIAL-INPUT can be given as the initial minibuffer input."
 
 (defcustom counsel-grep-post-action-hook nil
   "Hook that runs after the point moves to the next candidate.
-Typical value: '(recenter)."
-  :type 'hook)
+A typical example of what to add to this hook is the function
+`recenter'."
+  :type 'hook
+  :options '(recenter))
 
 (defcustom counsel-git-grep-cmd-function #'counsel-git-grep-cmd-function-default
   "How a git-grep shell call is built from the input.
@@ -1795,7 +1790,8 @@ currently checked out."
                (and (string-match "\\`[[:blank:]]+" line)
                     (list (substring line (match-end 0)))))
              (let ((default-directory (counsel-locate-git-root)))
-               (split-string (shell-command-to-string "git branch -vv --all")
+               (split-string (shell-command-to-string
+                              "git branch -vv --all --no-color")
                              "\n" t))))
 
 ;;;###autoload
@@ -1962,12 +1958,12 @@ choose between `yes-or-no-p' and `y-or-n-p'; otherwise default to
 These files are un-ignored if `ivy-text' matches them.  The
 common way to show all files is to start `ivy-text' with a dot.
 
-Example value: \"\\(?:\\`[#.]\\)\\|\\(?:[#~]\\'\\)\".  This will hide
-temporary and lock files.
+Example value: \"\\\\=`[#.]\\|[#~]\\\\='\".
+This will hide temporary and lock files.
 \\<ivy-minibuffer-map>
-Choosing the dotfiles option, \"\\`\\.\", might be convenient,
+Choosing the dotfiles option, \"\\\\=`\\.\", might be convenient,
 since you can still access the dotfiles if your input starts with
-a dot. The generic way to toggle ignored files is \\[ivy-toggle-ignore],
+a dot.  The generic way to toggle ignored files is \\[ivy-toggle-ignore],
 but the leading dot is a lot faster."
   :type `(choice
           (const :tag "None" nil)
@@ -2236,40 +2232,38 @@ See variable `counsel-up-directory-level'."
 
 (defun counsel-emacs-url-p ()
   "Return a Debbugs issue URL at point."
-  (when (counsel-require-program "git" t)
-    (let ((url (counsel-at-git-issue-p)))
-      (when url
-        (let ((origin (shell-command-to-string
-                       "git remote get-url origin")))
-          (when (string-match "git.sv.gnu.org:/srv/git/emacs.git" origin)
-            (format "https://debbugs.gnu.org/cgi/bugreport.cgi?bug=%s"
-                    (substring url 1))))))))
+  (let ((url (and (counsel-require-program "git" t)
+                  (counsel-at-git-issue-p))))
+    (when url
+      (let ((origin (shell-command-to-string "git remote get-url origin")))
+        (when (string-match-p "git.sv.gnu.org:/srv/git/emacs.git" origin)
+          (format "https://bugs.gnu.org/%s" (substring url 1)))))))
 
 (defvar counsel-url-expansions-alist nil
   "Map of regular expressions to expansions.
 
-This variable should take the form of a list of (REGEXP . FORMAT)
-pairs.
+The value of this variable is a list of pairs (REGEXP . FORMAT).
 
-`counsel-url-expand' will expand the word at point according to
+`counsel-url-expand' expands the word at point according to
 FORMAT for the first matching REGEXP.  FORMAT can be either a
-string or a function.  If it is a string, it will be used as the
-format string for the `format' function, with the word at point
-as the next argument.  If it is a function, it will be called
-with the word at point as the sole argument.
+string or a function.  If it is a string, it is used as the
+format string for the function `format', with the word at point
+as the next argument.  If it is a function, it is called with the
+word at point as the sole argument.
 
 For example, a pair of the form:
-  '(\"\\`BSERV-[[:digit:]]+\\'\" . \"https://jira.atlassian.com/browse/%s\")
-will expand to URL `https://jira.atlassian.com/browse/BSERV-100'
-when the word at point is BSERV-100.
+  \\='(\"\\\\\\=`BSERV-[[:digit:]]+\\\\\\='\" .
+    \"https://jira.atlassian.com/browse/%s\")
+expands to the URL `https://jira.atlassian.com/browse/BSERV-100'
+when the word at point is \"BSERV-100\".
 
-If the format element is a function, more powerful
-transformations are possible.  As an example,
-  '(\"\\`issue\\([[:digit:]]+\\)\\'\" .
+If FORMAT is a function, more powerful transformations are
+possible.  As an example,
+  \\='(\"\\\\\\=`issue\\\\([[:digit:]]+\\\\)\\\\\\='\" .
     (lambda (word)
-      (concat \"https://debbugs.gnu.org/cgi/bugreport.cgi?bug=\"
-              (match-string 1 word))))
-trims the \"issue\" prefix from the word at point before creating the URL.")
+      (concat \"https://bugs.gnu.org/\" (match-string 1 word))))
+trims the \"issue\" prefix from the word at point before creating
+the URL.")
 
 (defun counsel-url-expand ()
   "Expand word at point using `counsel-url-expansions-alist'.
@@ -4361,13 +4355,21 @@ Additional actions:\\<ivy-minibuffer-map>
    ("h" counsel-package-action-homepage "open package homepage")))
 
 ;;** `counsel-tmm'
-(defvar tmm-km-list nil)
-(declare-function tmm-get-keymap "tmm")
-(declare-function tmm--completion-table "tmm")
-(declare-function tmm-get-keybind "tmm")
+(declare-function tmm-get-keymap "tmm" (elt &optional in-x-menu))
+(declare-function tmm--completion-table "tmm" (items))
+
+(defalias 'counsel--menu-keymap
+  ;; Added in Emacs 28.1.
+  (if (fboundp 'menu-bar-keymap)
+      #'menu-bar-keymap
+    (autoload 'tmm-get-keybind "tmm")
+    (declare-function tmm-get-keybind "tmm" (keyseq))
+    (lambda () (tmm-get-keybind [menu-bar])))
+  "Compatibility shim for `menu-bar-keymap'.")
 
 (defun counsel-tmm-prompt (menu)
   "Select and call an item from the MENU keymap."
+  (defvar tmm-km-list)
   (let (out
         choice
         chosen-string)
@@ -4385,16 +4387,15 @@ Additional actions:\\<ivy-minibuffer-map>
            (setq last-command-event chosen-string)
            (call-interactively choice)))))
 
-(defvar tmm-table-undef)
-
 ;;;###autoload
 (defun counsel-tmm ()
   "Text-mode emulation of looking and choosing from a menu bar."
   (interactive)
   (require 'tmm)
+  (defvar tmm-table-undef)
   (run-hooks 'menu-bar-update-hook)
   (setq tmm-table-undef nil)
-  (counsel-tmm-prompt (tmm-get-keybind [menu-bar])))
+  (counsel-tmm-prompt (counsel--menu-keymap)))
 
 ;;** `counsel-yank-pop'
 (defcustom counsel-yank-pop-truncate-radius 2
@@ -4500,24 +4501,27 @@ mark, as per \\[universal-argument] \\[yank]."
   "Like `yank-pop', but insert the kill corresponding to S.
 Signal a `buffer-read-only' error if called from a read-only
 buffer position."
-  (with-ivy-window
-    (barf-if-buffer-read-only)
-    (setq yank-window-start (window-start))
-    (unless (eq last-command 'yank)
-      ;; Avoid unexpected deletions with `yank-handler' properties.
-      (setq yank-undo-function nil))
-    (condition-case nil
-        (let (;; Deceive `yank-pop'.
-              (last-command 'yank)
-              ;; Avoid unexpected additions to `kill-ring'.
-              interprogram-paste-function)
-          (yank-pop (counsel--yank-pop-position s)))
-      (error
-       ;; Support strings not present in the kill ring.
-       (insert s)))
-    (when (funcall (if counsel-yank-pop-after-point #'> #'<)
-                   (point) (mark t))
-      (exchange-point-and-mark t))))
+  (when (and (eq major-mode 'vterm-mode)
+             (fboundp 'vterm-insert))
+    (let ((inhibit-read-only t))
+      (vterm-insert s)))
+  (barf-if-buffer-read-only)
+  (setq yank-window-start (window-start))
+  (unless (eq last-command 'yank)
+    ;; Avoid unexpected deletions with `yank-handler' properties.
+    (setq yank-undo-function nil))
+  (condition-case nil
+      (let (;; Deceive `yank-pop'.
+            (last-command 'yank)
+            ;; Avoid unexpected additions to `kill-ring'.
+            interprogram-paste-function)
+        (yank-pop (counsel--yank-pop-position s)))
+    (error
+     ;; Support strings not present in the kill ring.
+     (insert s)))
+  (when (funcall (if counsel-yank-pop-after-point #'> #'<)
+                 (point) (mark t))
+    (exchange-point-and-mark t)))
 
 (defun counsel-yank-pop-action-remove (s)
   "Remove all occurrences of S from the kill ring."
@@ -4706,9 +4710,13 @@ S will be of the form \"[register]: content\"."
                                      imenu-auto-rescan-maxout))
          (items (imenu--make-index-alist t))
          (items (delete (assoc "*Rescan*" items) items))
-         (items (if (eq major-mode 'emacs-lisp-mode)
-                    (counsel-imenu-categorize-functions items)
-                  items)))
+         (items (cond ((eq major-mode 'emacs-lisp-mode)
+                       (counsel-imenu-categorize-functions items))
+                      ((and (derived-mode-p 'python-mode)
+                            (fboundp 'python-imenu-create-flat-index))
+                       (python-imenu-create-flat-index))
+                      (t
+                       items))))
     (counsel-imenu-get-candidates-from items)))
 
 (defun counsel-imenu-get-candidates-from (alist &optional prefix)
@@ -4748,8 +4756,7 @@ PREFIX is used to create the key."
       items)))
 
 (defun counsel-imenu-action (x)
-  (with-ivy-window
-    (imenu (cdr x))))
+  (imenu (cdr x)))
 
 (defvar counsel-imenu-history nil
   "History for `counsel-imenu'.")
@@ -6546,10 +6553,10 @@ sub-directories that builds may be invoked in."
 (defun counsel-compile--probe-make-help (dir)
   "Return a list of Make targets based on help for DIR.
 
-It is quite common for a 'make help' invocation to return a human
-readable list of targets.  Often common targets are marked with a
-leading asterisk.  The exact search pattern is controlled by
-`counsel-compile-help-pattern'."
+It is quite common for a \"make help\" invocation to return a
+human readable list of targets.  Often common targets are marked
+with a leading asterisk.  The exact search pattern is controlled
+by `counsel-compile-help-pattern'."
   (let ((default-directory dir)
         primary-targets targets)
     ;; Only proceed if the help target exists.

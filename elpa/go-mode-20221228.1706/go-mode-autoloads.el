@@ -1,4 +1,4 @@
-;;; go-mode-autoloads.el --- automatically extracted autoloads
+;;; go-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -30,7 +30,6 @@ The following extra functions are defined:
 - `gofmt'
 - `godoc' and `godoc-at-point'
 - `go-import-add'
-- `go-remove-unused-imports'
 - `go-goto-arguments'
 - `go-goto-docstring'
 - `go-goto-function'
@@ -42,11 +41,9 @@ The following extra functions are defined:
 - `go-download-play'
 - `godef-describe' and `godef-jump'
 - `go-coverage'
-- `go-set-project'
-- `go-reset-gopath'
 
 If you want to automatically run `gofmt' before saving a file,
-add the following hook to your emacs configuration:
+add the following hook to your Emacs configuration:
 
 \(add-hook 'before-save-hook #'gofmt-before-save)
 
@@ -101,7 +98,14 @@ A major mode for editing go.mod files.
 
 (add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-dot-mod-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "go-mode" '("go-" "god" "gofmt")))
+(autoload 'go-dot-work-mode "go-mode" "\
+A major mode for editor go.work files.
+
+\(fn)" t nil)
+
+(add-to-list 'auto-mode-alist '("go\\.work\\'" . go-dot-work-mode))
+
+(register-definition-prefixes "go-mode" '("go-" "god" "gofmt"))
 
 ;;;***
 

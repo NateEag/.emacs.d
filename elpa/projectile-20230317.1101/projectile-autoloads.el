@@ -127,7 +127,7 @@ or the filename at point is a prefix of more than two files in a project.
 For example, if `projectile-find-file-dwim' is executed on a filepath like
 \"projectile/\", it lists the content of that directory.  If it is executed
 on a partial filename like \"projectile/a\", a list of files with character
-'a' in that directory is presented.
+\"a\" in that directory is presented.
 
 - If it finds nothing, display a list of all files in project for selecting.
 
@@ -156,7 +156,7 @@ or the filename at point is a prefix of more than two files in a project.
 For example, if `projectile-find-file-dwim-other-window' is executed on a
 filepath like \"projectile/\", it lists the content of that directory.  If
 it is executed on a partial filename like \"projectile/a\", a list of files
-with character 'a' in that directory is presented.
+with character \"a\" in that directory is presented.
 
 - If it finds nothing, display a list of all files in project for selecting.
 
@@ -185,7 +185,7 @@ or the filename at point is a prefix of more than two files in a project.
 For example, if `projectile-find-file-dwim-other-frame' is executed on a
 filepath like \"projectile/\", it lists the content of that directory.  If
 it is executed on a partial filename like \"projectile/a\", a list of files
-with character 'a' in that directory is presented.
+with character \"a\" in that directory is presented.
 
 - If it finds nothing, display a list of all files in project for selecting.
 
@@ -213,6 +213,21 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first.
 
 (autoload 'projectile-toggle-project-read-only "projectile" "\
 Toggle project read only." t nil)
+
+(autoload 'projectile-add-dir-local-variable "projectile" "\
+Run `add-dir-local-variable' with .dir-locals.el in root of project.
+
+Parameters MODE VARIABLE VALUE are passed directly to `add-dir-local-variable'.
+
+\(fn MODE VARIABLE VALUE)" nil nil)
+
+(autoload 'projectile-delete-dir-local-variable "projectile" "\
+Run `delete-dir-local-variable' with .dir-locals.el in root of project.
+
+Parameters MODE VARIABLE VALUE are passed directly to
+`delete-dir-local-variable'.
+
+\(fn MODE VARIABLE)" nil nil)
 
 (autoload 'projectile-find-dir "projectile" "\
 Jump to a project's directory using completion.
@@ -395,11 +410,20 @@ Use a prefix argument ARG to indicate creation of a new process instead.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'projectile-run-vterm-other-window "projectile" "\
+Invoke `vterm' in the project's root.
+
+Switch to the project specific term buffer if it already exists.
+
+Use a prefix argument ARG to indicate creation of a new process instead.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'projectile-replace "projectile" "\
 Replace literal string in project using non-regexp `tags-query-replace'.
 
-With a prefix argument ARG prompts you for a directory on which
-to run the replacement.
+With a prefix argument ARG prompts you for a directory and file name patterns
+on which to run the replacement.
 
 \(fn &optional ARG)" t nil)
 
@@ -459,7 +483,8 @@ Run project compilation command.
 
 Normally you'll be prompted for a compilation command, unless
 variable `compilation-read-command'.  You can force the prompt
-with a prefix ARG.
+with a prefix ARG.  Per project default command can be set through
+`projectile-project-compilation-cmd'.
 
 \(fn ARG)" t nil)
 
@@ -612,7 +637,7 @@ Otherwise behave as if called interactively.
 
 (define-obsolete-function-alias 'projectile-global-mode 'projectile-mode "1.0")
 
-(register-definition-prefixes "projectile" '("??" "compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "projectile-"))
+(register-definition-prefixes "projectile" '("??" "compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "project"))
 
 ;;;***
 

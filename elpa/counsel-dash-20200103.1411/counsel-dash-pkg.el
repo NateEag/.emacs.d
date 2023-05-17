@@ -1,2 +1,0 @@
-;;; Generated package description from counsel-dash.el  -*- no-byte-compile: t -*-
-(define-package "counsel-dash" "20200103.1411" "Browse dash docsets using Ivy" '((emacs "24.4") (dash-docs "1.4.0") (counsel "0.8.0") (cl-lib "0.5")) :commit "370d5f6f14b5294d0eb717f7b2a6a8e93df1ed24" :authors '(("Nathan Kot" . "nk@nathankot.com")) :maintainer '("Nathan Kot" . "nk@nathankot.com") :keywords '("dash" "ivy" "counsel") :url "https://github.com/nathankot/counsel-dash")

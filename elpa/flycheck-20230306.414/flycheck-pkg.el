@@ -1,11 +1,13 @@
-(define-package "flycheck" "20220612.1800" "On-the-fly syntax checking"
-  '((dash "2.12.1")
+(define-package "flycheck" "20230306.414" "On-the-fly syntax checking"
+  '((emacs "25.1")
+    (dash "2.12.1")
     (pkg-info "0.4")
     (let-alist "1.0.4")
-    (seq "1.11")
-    (emacs "24.3"))
-  :commit "c955fd6fb970eed5fdecf675369d3d61a41f6c68" :authors
+    (seq "1.11"))
+  :commit "5f2ef177cb21ae8b73714575802beef04abd0f5e" :authors
   '(("Sebastian Wiesner" . "swiesner@lunaryorn.com"))
+  :maintainers
+  '(("Clément Pit-Claudel" . "clement.pitclaudel@live.com"))
   :maintainer
   '("Clément Pit-Claudel" . "clement.pitclaudel@live.com")
   :keywords

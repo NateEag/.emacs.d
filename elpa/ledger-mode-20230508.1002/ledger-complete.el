@@ -156,7 +156,8 @@ Then one of the elements this function returns will be
 
 (defun ledger-accounts-list-in-buffer ()
   "Return a list of all known account names in the current buffer as strings.
-Considers both accounts listed in postings and those declared with \"account\" directives."
+Considers both accounts listed in postings and those declared
+with \"account\" directives."
   (let ((accounts (ledger-accounts-in-buffer)))
     (when ledger-accounts-exclude-function
       (setq accounts (cl-remove-if ledger-accounts-exclude-function accounts)))
@@ -300,7 +301,7 @@ Looks in `ledger-accounts-file' if set, otherwise the current buffer."
              (skip-chars-forward "([") ;; for virtual accounts
              (setq start (point)))
            (setq delete-suffix (save-excursion
-                                 (when (search-forward-regexp (rx (or eol (repeat 2 space))) (line-end-position) t)
+                                 (when (search-forward-regexp (rx (or eol (or ?\t (repeat 2 space)))) (line-end-position) t)
                                    (- (match-beginning 0) end)))
                  realign-after t
                  collection (if ledger-complete-in-steps

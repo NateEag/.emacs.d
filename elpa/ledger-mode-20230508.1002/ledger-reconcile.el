@@ -121,14 +121,18 @@ if string is longer, it is not truncated unless
 (defcustom ledger-reconcile-sort-key "(0)"
   "Key for sorting reconcile buffer.
 
-Possible values are '(date)', '(amount)', '(payee)' or '(0)' for
+Possible values are \"(date)\", \"(amount)\", \"(payee)\" or \"(0)\" for
 no sorting, i.e. using ledger file order."
   :type 'string
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-insert-effective-date nil
-  "If t, prompt for effective date when clearing transactions."
-  :type 'boolean
+  "If t, prompt for effective date when clearing transactions.
+
+If this is a function, it is called with no arguments with point
+at the posting to be cleared.  The return value is then used as
+described above."
+  :type '(choice boolean function)
   :group 'ledger-reconcile)
 
 (defcustom ledger-reconcile-finish-force-quit nil
@@ -215,6 +219,19 @@ And calculate the target-delta of the account being reconciled."
       (car where)
     (error "Function ledger-reconcile-get-buffer: Buffer not set")))
 
+(defun ledger-reconcile-insert-effective-date ()
+  "Prompt for an effective date and insert it at point, if enabled.
+
+If the value of variable `ledger-reconcile-insert-effective-date'
+is a function, it is called with the point where the effective
+date would be inserted.  If it returns non-nil, prompt for an
+effective date and insert it at point.  If it is not a function,
+do the same if its value is non-nil."
+  (when (if (functionp ledger-reconcile-insert-effective-date)
+            (save-excursion (funcall ledger-reconcile-insert-effective-date))
+          ledger-reconcile-insert-effective-date)
+    (ledger-insert-effective-date)))
+
 (defun ledger-reconcile-toggle ()
   "Toggle the current transaction, and mark the recon window."
   (interactive)
@@ -229,9 +246,8 @@ And calculate the target-delta of the account being reconciled."
         (setq status (ledger-toggle-current (if ledger-reconcile-toggle-to-pending
                                                 'pending
                                               'cleared)))
-        (when ledger-reconcile-insert-effective-date
-          ;; Ask for effective date & insert it
-          (ledger-insert-effective-date)))
+        ;; Ask for effective date & insert it, if enabled
+        (ledger-reconcile-insert-effective-date))
       ;; remove the existing face and add the new face
       (remove-text-properties (line-beginning-position)
                               (line-end-position)
@@ -448,7 +464,8 @@ POSTING is used in `ledger-clear-whole-transactions' is nil."
                                        (nth 2 posting)))))  ; amount
 
 (defun ledger-do-reconcile (&optional sort)
-  "SORT the uncleared transactions in the account and display them in the *Reconcile* buffer.
+  "SORT the uncleared transactions in the account.
+The sorted results are displayed in in the *Reconcile* buffer.
 Return a count of the uncleared transactions."
   (let* ((buf ledger-buf)
          (account ledger-acct)
@@ -480,7 +497,8 @@ Return a count of the uncleared transactions."
     (length xacts)))
 
 (defun ledger-reconcile-ensure-xacts-visible ()
-  "Ensure the last of the visible transactions in the ledger buffer is at the bottom of the main window.
+  "Ensure the last of the visible transactions in the ledger buffer is visible.
+This is achieved by placing that transaction at the bottom of the main window.
 The key to this is to ensure the window is selected when the buffer point is
 moved and recentered.  If they aren't strange things happen."
 
@@ -497,7 +515,7 @@ moved and recentered.  If they aren't strange things happen."
     (add-hook 'post-command-hook 'ledger-reconcile-track-xact nil t)))
 
 (defun ledger-reconcile-track-xact ()
-  "Force the ledger buffer to recenter on the transaction at point in the reconcile buffer."
+  "Recenter the ledger buffer on the transaction at point in the reconcile buffer."
   (if (and ledger-buffer-tracks-reconcile-buffer
            (member this-command (list 'next-line
                                       'previous-line
@@ -559,15 +577,16 @@ moved and recentered.  If they aren't strange things happen."
 
       (with-current-buffer rbuf
         (if (> (ledger-reconcile-refresh) 0)
-            (ledger-reconcile-change-target target))
-        (ledger-display-balance)))))
+            (ledger-reconcile-change-target target)
+          (ledger-display-balance))))))
 
 (defvar ledger-reconcile-mode-abbrev-table)
 
 (defun ledger-reconcile-change-target (&optional target)
   "Change the TARGET amount for the reconciliation process."
   (interactive)
-  (setq ledger-target (or target (ledger-read-commodity-string ledger-reconcile-target-prompt-string))))
+  (setq ledger-target (or target (ledger-read-commodity-string ledger-reconcile-target-prompt-string)))
+  (ledger-display-balance))
 
 (defmacro ledger-reconcile-change-sort-key-and-refresh (sort-by)
   "Set the sort-key to SORT-BY."

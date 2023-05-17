@@ -22,7 +22,11 @@
 ;; MA 02110-1301 USA.
 
 ;;; Commentary:
-;; Most of the general ledger-mode code is here.
+;; This Emacs library provides a major mode for editing files in the format used
+;; by the `ledger' command-line accounting system.
+
+;; It also provides automated support for some `ledger' workflows, such as
+;; reconciling transactions, or running certain reports.
 
 ;;; Code:
 
@@ -99,14 +103,15 @@ This uses `org-read-date', which see."
                         (org-read-date nil t nil prompt))))
 
 (defun ledger-get-minibuffer-prompt (prompt default)
-  "Return a string composing of PROMPT and DEFAULT appropriate for a minibuffer prompt."
+  "Return a minibuffer prompt string composing PROMPT and DEFAULT."
   (concat prompt
           (if default
               (concat " (" default "): ")
             ": ")))
 
 (defun ledger-completing-read-with-default (prompt default collection)
-  "Return a user supplied string after PROMPT, or DEFAULT while providing completions from COLLECTION."
+  "Return a user-supplied string after PROMPT.
+Use the given DEFAULT, while providing completions from COLLECTION."
   (completing-read (ledger-get-minibuffer-prompt prompt default)
                    collection nil nil nil 'ledger-minibuffer-history default))
 
@@ -155,7 +160,7 @@ And calculate the target-delta of the account being reconciled."
   (let ((context (car (ledger-context-at-point))))
     (save-excursion
       (save-restriction
-        (narrow-to-region (point-at-bol) (point-at-eol))
+        (narrow-to-region (line-beginning-position) (line-end-position))
         (beginning-of-line)
         (cond ((eq 'xact context)
                (re-search-forward ledger-iso-date-regexp)
@@ -188,7 +193,7 @@ With a prefix argument, remove the effective date."
     (let* ((context (car (ledger-context-at-point)))
            (date-string (or date (ledger-read-date "Effective date: "))))
       (save-restriction
-        (narrow-to-region (point-at-bol) (point-at-eol))
+        (narrow-to-region (line-beginning-position) (line-end-position))
         (cond
          ((eq 'xact context)
           (beginning-of-line)

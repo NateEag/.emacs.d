@@ -192,7 +192,7 @@
               (group (and num (? num)))
               (eval sep)
               (group (and num (? num)))))))
-  "Match a single date, in its 'written' form.")
+  "Match a single date, in its \"written\" form.")
 
 (ledger-define-regexp full-date
   (macroexpand
@@ -404,7 +404,7 @@
   (concat "^[[:blank:]]+"                 ; initial white space
           "\\(\\([*!]\\)?"                ; state and account 1, state 2
           "[[:blank:]]*\\(.*?\\)\\)?"     ; account 3
-          "\\(?:\t\\|[[:blank:]]\\{2,\\}" ; column separator
+          "\\(?:\\(?:\t\\|[[:blank:]]\\{2,\\}\\)" ; column separator
           "\\([^;\n]*?\\)"                ; amount 4
           "[[:blank:]]*\\(;.*\\)?\\)?$"   ; comment 5
           ))

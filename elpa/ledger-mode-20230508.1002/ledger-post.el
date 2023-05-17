@@ -37,12 +37,14 @@
 (defcustom ledger-post-account-alignment-column 4
   "The column Ledger-mode attempts to align accounts to."
   :type 'integer
-  :group 'ledger-post)
+  :group 'ledger-post
+  :safe 'integerp)
 
 (defcustom ledger-post-amount-alignment-column 52
   "The column Ledger-mode attempts to align amounts to."
   :type 'integer
-  :group 'ledger-post)
+  :group 'ledger-post
+  :safe 'integerp)
 
 (defcustom ledger-post-amount-alignment-at :end
   "Position at which the amount is aligned.
@@ -52,7 +54,8 @@ followed by unaligned commodity) or :decimal to align at the
 decimal separator."
   :type '(radio (const :tag "align at the end of amount" :end)
                 (const :tag "align at the decimal separator" :decimal))
-  :group 'ledger-post)
+  :group 'ledger-post
+  :safe (lambda (x) (memq x '(:end :decimal))))
 
 (defcustom ledger-post-auto-align t
   "When non-nil, realign post amounts when indenting or completing."
@@ -97,7 +100,8 @@ Looks only as far as END, if supplied, otherwise `point-max'."
     (ledger-post-align-postings (car bounds) (cadr bounds))))
 
 (defun ledger-post-align-postings (beg end)
-  "Align all accounts and amounts between BEG and END, or the current region, or, if no region, the current line."
+  "Align all accounts and amounts between BEG and END.
+The current region is used, or, if no region, the current line."
   (interactive "r")
   (save-match-data
     (save-excursion
@@ -157,7 +161,7 @@ regular text."
    (t (call-interactively 'ledger-post-align-xact))))
 
 (defun ledger-post-edit-amount ()
-  "Call 'calc-mode' and push the amount in the posting to the top of stack."
+  "Call `calc-mode' and push the amount in the posting to the top of stack."
   (interactive)
   (goto-char (line-beginning-position))
   (when (re-search-forward ledger-post-line-regexp (line-end-position) t)

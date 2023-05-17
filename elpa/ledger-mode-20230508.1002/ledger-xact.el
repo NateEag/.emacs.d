@@ -148,7 +148,8 @@ MOMENT is an encoded date"
   :group 'ledger)
 
 (defun ledger-copy-transaction-at-point (date)
-  "Ask for a new DATE and copy the transaction under point to that date.  Leave point on the first amount."
+  "Ask for a new DATE and copy the transaction under point to that date.
+Leave point on the first amount."
   (interactive  (list
                  (ledger-read-date "Copy to date: ")))
   (let* ((extents (ledger-navigate-find-xact-extents (point)))
@@ -156,7 +157,7 @@ MOMENT is an encoded date"
          (encoded-date (ledger-parse-iso-date date)))
     (ledger-xact-find-slot encoded-date)
     (insert transaction
-            (if ledger-copy-transaction-insert-blank-line-after
+            (if (and ledger-copy-transaction-insert-blank-line-after (not (eobp)))
                 "\n\n"
               "\n"))
     (beginning-of-line -1)
@@ -168,7 +169,7 @@ MOMENT is an encoded date"
         (goto-char (match-beginning 0)))))
 
 (defun ledger-delete-current-transaction (pos)
-  "Delete the transaction surrounging POS."
+  "Delete the transaction surrounding POS."
   (interactive "d")
   (let ((bounds (ledger-navigate-find-xact-extents pos)))
     (delete-region (car bounds) (cadr bounds)))

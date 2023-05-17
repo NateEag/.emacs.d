@@ -1,4 +1,4 @@
-;;; notmuch-addr-autoloads.el --- automatically extracted autoloads
+;;; notmuch-addr-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "notmuch-addr" "notmuch-addr.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-addr.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-addr" '("notmuch-addr")))
+(register-definition-prefixes "notmuch-addr" '("notmuch-addr"))
 
 ;;;***
 

@@ -1,14 +1,15 @@
-;;; notmuch-addr.el --- An alternative to notmuch-address.el  -*- lexical-binding: t -*-
+;;; notmuch-addr.el --- An alternative to notmuch-address.el  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://git.sr.ht/~tarsius/notmuch-addr
 ;; Keywords: mail
-;; Package-Version: 20220402.1624
-;; Package-Commit: 4fc0621106bf5d3ef66152456a22403bccdf0a4d
+;; Package-Version: 20230511.2057
+;; Package-Commit: 89ced49cf3fb4d62bd4fea8bf9bd53ec8e4c7176
 
-;; Package-Requires: ((emacs "27.1") (notmuch "0.32"))
+;; Package-Requires: ((emacs "27.1") (compat "29.1.4.1") (notmuch "0.37"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -52,6 +53,7 @@
 
 ;;; Code:
 
+(require 'compat)
 (require 'notmuch)
 
 ;; Copy of notmuch-address-completion-headers-regexp.

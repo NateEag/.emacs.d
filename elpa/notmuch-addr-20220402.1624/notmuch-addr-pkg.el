@@ -1,2 +1,0 @@
-;;; Generated package description from notmuch-addr.el  -*- no-byte-compile: t -*-
-(define-package "notmuch-addr" "20220402.1624" "An alternative to notmuch-address.el" '((emacs "27.1") (notmuch "0.32")) :commit "4fc0621106bf5d3ef66152456a22403bccdf0a4d" :authors '(("Jonas Bernoulli" . "jonas@bernoul.li")) :maintainer '("Jonas Bernoulli" . "jonas@bernoul.li") :keywords '("mail") :url "https://git.sr.ht/~tarsius/notmuch-addr")

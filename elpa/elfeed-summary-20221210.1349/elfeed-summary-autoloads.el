@@ -1,4 +1,4 @@
-;;; elfeed-summary-autoloads.el --- automatically extracted autoloads
+;;; elfeed-summary-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -21,7 +21,7 @@ Take a look at `elfeed-summary-mode' for the list of available
 keybindings, and at the `elfeed-summary' group for the available
 options." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elfeed-summary" '("elfeed-summary-")))
+(register-definition-prefixes "elfeed-summary" '("elfeed-summary-"))
 
 ;;;***
 

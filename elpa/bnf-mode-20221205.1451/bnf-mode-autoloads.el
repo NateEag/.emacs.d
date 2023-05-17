@@ -1,4 +1,4 @@
-;;; bnf-mode-autoloads.el --- automatically extracted autoloads
+;;; bnf-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -23,7 +23,7 @@ Turning on BNF Mode calls the value of `prog-mode-hook' and then of
 
 (add-to-list 'auto-mode-alist '("\\.bnf\\'" . bnf-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bnf-mode" '("bnf-")))
+(register-definition-prefixes "bnf-mode" '("bnf-"))
 
 ;;;***
 

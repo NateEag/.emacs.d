@@ -1,4 +1,4 @@
-;;; iter2-autoloads.el --- automatically extracted autoloads
+;;; iter2-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "iter2" "iter2.el" (0 0 0 0))
 ;;; Generated autoloads from iter2.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "iter2" '("iter2-")))
+(register-definition-prefixes "iter2" '("iter2-"))
 
 ;;;***
 

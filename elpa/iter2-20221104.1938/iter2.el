@@ -1,12 +1,12 @@
 ;;; iter2.el --- Reimplementation of Elisp generators  -*- lexical-binding: t -*-
 
-;;; Copyright (C) 2017-2021 Paul Pogonyshev
+;;; Copyright (C) 2017-2022 Paul Pogonyshev
 
 ;; Author:     Paul Pogonyshev <pogonyshev@gmail.com>
 ;; Maintainer: Paul Pogonyshev <pogonyshev@gmail.com>
-;; Version:    1.1
-;; Package-Version: 20211119.1718
-;; Package-Commit: 077684feec98ce6d5e283a13f056c083986628a2
+;; Version:    1.5snapshot
+;; Package-Version: 20221104.1938
+;; Package-Commit: 5ea6ba6effc4b71e7a4aed16b3f42408f9064c01
 ;; Keywords:   elisp, extensions
 ;; Homepage:   https://github.com/doublep/iter2
 ;; Package-Requires: ((emacs "25.1"))
@@ -41,6 +41,10 @@
 (require 'generator)
 (require 'macroexp)
 (require 'subr-x)
+
+(require 'bytecomp)
+;; See the usage below.
+(defvar byte-compile-bound-variables)
 
 
 (defgroup iter2 nil
@@ -164,6 +168,20 @@ See `iter2-defun' for details."
 
 (defun iter2--literal-or-variable-p (x)
   (or (atom x) (memq (car x) '(quote function))))
+
+;; During byte-compilation, function `special-variable-p' won't give intended results for
+;; variables declared in the file being compiled.  E.g. byte-compiler itself used (pre-29)
+;; to use `byte-compile-not-lexical-var-p' to decide how to compile let-bindings.  Of
+;; course, they had to remove the function, even if it wass not private according to Elisp
+;; naming conventions.  It seems we still can use variable `byte-compile-bound-variables'
+;; at least.
+(defun iter2--special-variable-p (var &optional warn)
+  (cond ((boundp 'byte-compile-bound-variables)
+         (or (special-variable-p var) (memq var byte-compile-bound-variables)))
+        (t
+         (when warn
+           (warn "Variable `byte-compile-bound-variables' is missing, special variable bindings in byte-compiled `iter2-defun' might misbehave"))
+         (special-variable-p var))))
 
 (defmacro iter2--convert-progn (forms)
   (declare (debug (form)))
@@ -416,7 +434,7 @@ See `iter2-defun' for details."
                             value value-form))
                      (_
                       (error "Erroneous binding %S" binding)))
-                   (let ((special (special-variable-p var))
+                   (let ((special (iter2--special-variable-p var))
                          (literal (iter2--literalp value)))
                      (cond (literal
                             (push binding converted-bindings)
@@ -872,6 +890,12 @@ See `iter2-defun' for details."
       (apply iter2-tracing-function (concat "%siter2: " format-string) (cons (make-string (* iter2--tracing-depth 4) ? ) arguments)))))
 
 
+(defun iter2-log-message (format-string &rest arguments)
+  "Like built-in `message', but only write to `*Messages*' buffer."
+  (let ((inhibit-message (or inhibit-message (not noninteractive))))
+    (apply #'message format-string arguments)))
+
+
 ;; Make sure that we are still compatible with `generator'.  I couldn't make it work like
 ;; I wanted with fewer `eval's.
 (eval-after-load 'iter2
@@ -880,16 +904,17 @@ See `iter2-defun' for details."
            (warn "Compatibility of `iter2' with `generator' package appears broken; please report this to maintainer (Emacs version: %s)" (emacs-version)))
         t))
 
-
-(defun iter2-log-message (format-string &rest arguments)
-  "Like built-in `message', but only write to `*Messages*' buffer."
-  (let ((inhibit-message (or inhibit-message (not noninteractive))))
-    (apply #'message format-string arguments)))
+;; Issue a warning if compatibility is broken yet again.
+(iter2--special-variable-p nil t)
 
 
-;; Work around missing Edebug specification for `iter-do' macro.
+;; Work around missing Edebug specification for `iter-do' macro on older Emacs versions.
 (when (and (fboundp 'iter-do) (null (get 'iter-do 'edebug-form-spec)))
   (put 'iter-do 'edebug-form-spec '((symbolp form) body)))
+
+;; Integrate into Imenu.
+(add-to-list 'lisp-imenu-generic-expression
+             (list nil (concat "^\\s-*(iter2-defun\\s-+\\(" lisp-mode-symbol-regexp "\\)") 1))
 
 
 (provide 'iter2)

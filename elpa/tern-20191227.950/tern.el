@@ -2,7 +2,8 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Package-Version: 20181108.722
+;; Package-Version: 20191227.950
+;; Package-Commit: 0d19800db70a6348c627a69f444b91d21ad89629
 ;; Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 

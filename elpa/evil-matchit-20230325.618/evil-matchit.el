@@ -4,9 +4,9 @@
 
 ;; Author: Chen Bin <chenbin.sh@gmail.com>
 ;; URL: http://github.com/redguardtoo/evil-matchit
-;; Version: 2.4.3
+;; Version: 3.0.0
 ;; Keywords: matchit vim evil
-;; Package-Requires: ((evil "1.14.0") (emacs "25.1"))
+;; Package-Requires: ((emacs "25.1"))
 ;;
 ;; This file is not part of GNU Emacs.
 
@@ -30,56 +30,81 @@
 ;;; Commentary:
 ;;
 ;; This program emulates matchit.vim by Benji Fisher.
-;; Add `(global-evil-matchit-mode 1)' into Emacs setup.
-;; Then press % or `evilmi-jump-items' to jump between then matched pair.
-;; Text object "%" is also provided.
 ;;
-;; The shortcut "%" is defined in `evilmi-shortcut'.  It's both the name of
-;; text object and shortcut of `evilmi-jump-items'.  Some people prefer set it
-;; to "m".  Here is sample setup:
+;; If EVIL is installed,
+;;   - Add `(global-evil-matchit-mode 1)' into Emacs setup.
+;;   Then press % or `evilmi-jump-items' to jump between then matched pair.
+;;   Text object "%" is also provided.
+;;
+;;   - The shortcut "%" is defined in `evilmi-shortcut'.  It's both the name of
+;;   text object and shortcut of `evilmi-jump-items'.  Some people prefer set it
+;;   to "m".  Here is sample setup:
 ;;
 ;;   (setq evilmi-shortcut "m")
 ;;   (global-evil-matchit-mode 1)
 ;;
-;; See https://github.com/redguardtoo/evil-matchit/ for help.
+;;
+;; If EVIL is NOT installed,
+;;  - Use `evilmi-jump-items-native' to replace `evilmi-jump-items'
+;;
+;;  - `evilmi-shortcut' and `global-evil-matchit-mode' are not used
+;;
+;; Tips:
+;;   It's reported some mode is not compatible with this package.
+;;   You can use `evilmi-jump-hook' to turn off the mode before
+;;   jumping to the matched tag.
+;;   Then turn on it after the jump using the same hook.
+;;
+;;   An example to toggle `global-tree-sitter-mode',
+;;
+;;   (add-hook 'evilmi-jump-hook
+;;             (lambda (before-jump-p)
+;;               (global-tree-sitter-mode (not before-jump-p))))
+;;
+;; See https://github.com/redguardtoo/evil-matchit/ for more information
 ;;
 ;; This program requires EVIL (https://github.com/emacs-evil/evil)
 ;;
+;; The other commands like `evilmi-select-items' and `evil-delete-items'
+;; always work with or without EVIL.
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'evil-macros))
+(defgroup evil-matchit nil
+  "Matchit.vim for Emacs."
+  :group 'evil
+  :prefix "evil-matchit")
+
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-plugins '(emacs-lisp-mode ((evilmi-simple-get-tag evilmi-simple-jump)))
-  "The Matrix to of algorithms.")
+(defcustom evilmi-jump-hook nil
+  "Hook run before&after jump to the matched tag.
+If the parameter of hook is t, the hook runs before jump.
+Or else, the hook runs after jump.
+Some modes can be toggle on/off in the hook"
+  :group 'evil-matchit
+  :type 'hook)
 
-(defvar evilmi-may-jump-by-percentage t
-  "Simulate `evil-jump-item'.
-For example, `50%' jumps to 50 percentage of buffer.
-If nil, `50%' jumps 50 times.")
+(defcustom evilmi-plugins
+  '(emacs-lisp-mode ((evilmi-simple-get-tag evilmi-simple-jump)))
+  "The Matrix of algorithms."
+  :group 'evil-matchit
+  :type '(repeat sexp))
 
-(defvar evilmi-shortcut "%"
-  "The keybinding of `evilmi-jump-items' and then text object shortcut.
-Some people prefer using \"m\" instead.")
-
-;; {{ make linter happy
-(defvar evil-visual-char)
-(defvar evil-visual-direction)
-(defvar evil-this-type-modified)
-;; }}
-
-(defun evilmi--operate-on-item (num &optional func)
-  "Jump NUM times and apply function FUNC."
+;;;###autoload
+(defun evilmi-jump-items-internal (num &optional func)
+  "Jump between items NUM times and apply function FUNC."
   (when evilmi-debug
-    (message "evilmi--operate-on-item called => %s (point)=%d" num (point)))
+    (message "evilmi-jump-items-internal called => %s (point)=%d" num (point)))
   (let* ((jump-rules (plist-get evilmi-plugins major-mode))
          rlt
          jumped
          ideal-dest)
 
     (unless num (setq num 1))
+
+
+    (run-hook-with-args 'evilmi-jump-hook t)
 
     (when (derived-mode-p 'prog-mode)
       (setq jump-rules
@@ -112,8 +137,16 @@ Some people prefer using \"m\" instead.")
       (evilmi-sdk-simple-jump)
       (setq ideal-dest (point)))
 
-    (if evilmi-debug (message "evilmi--operate-on-item called. Return: %s" ideal-dest))
+    (if evilmi-debug (message "evilmi-jump-items-internal called. Return: %s" ideal-dest))
+
+    (run-hook-with-args 'evilmi-jump-hook nil)
     ideal-dest))
+
+;;;###autoload
+(defun evilmi-jump-items-native (&optional num)
+  "Jump between items NUM times."
+  (interactive "P")
+  (evilmi-jump-items-internal num))
 
 (defun evilmi--push-mark (position)
   "Pus POSITION as marker."
@@ -168,7 +201,8 @@ Some people prefer using \"m\" instead.")
                               js2-jsx-mode
                               react-mode
                               typescript-mode
-                              typescript-tsx-mode)
+                              typescript-tsx-mode
+                              tsx-ts-mode)
                             '(simple javascript html))
 
   ;; Html
@@ -239,7 +273,7 @@ Some people prefer using \"m\" instead.")
   (evilmi-load-plugin-rules '(term-mode shell-mode) '(simple terminal))
 
   ;; Elixir
-  (evilmi-load-plugin-rules '(elixir-mode enh-elixir-mode) '(simple elixir)))
+  (evilmi-load-plugin-rules '(elixir-mode elixir-ts-mode enh-elixir-mode) '(simple elixir)))
 
 
 (defun evilmi--region-to-select-or-delete (num &optional is-inner)
@@ -247,7 +281,7 @@ Some people prefer using \"m\" instead.")
 If IS-INNER is t, the region is inner text object."
   (let* (ideal-dest b e)
     (save-excursion
-      (setq ideal-dest (evilmi--operate-on-item num #'evilmi--push-mark))
+      (setq ideal-dest (evilmi-jump-items-internal num #'evilmi--push-mark))
       (if ideal-dest (goto-char ideal-dest))
       (setq b (region-beginning))
       (setq e (region-end))
@@ -272,21 +306,6 @@ If IS-INNER is t, the region is inner text object."
     (if evilmi-debug (message "evilmi--region-to-select-or-delete called. Return: %s" (list b e)))
     (list b e)))
 
-(evil-define-text-object evilmi-inner-text-object (&optional num begin end type)
-  "Inner text object describing the region selected when you press % from evil-matchit"
-  :type line
-  (let* ((selected-region (evilmi--region-to-select-or-delete num t)))
-    (evil-range (car selected-region) (cadr selected-region) 'line)))
-
-(evil-define-text-object evilmi-outer-text-object (&optional num begin end type)
-  "Outer text object describing the region selected when you press % from evil-matchit"
-  :type line
-  (let ((selected-region (evilmi--region-to-select-or-delete num)))
-    (evil-range (car selected-region) (cadr selected-region) 'line)))
-
-(define-key evil-inner-text-objects-map evilmi-shortcut 'evilmi-inner-text-object)
-(define-key evil-outer-text-objects-map evilmi-shortcut 'evilmi-outer-text-object)
-
 ;;;###autoload
 (defun evilmi-select-items (&optional num)
   "Select NUM items/tags and the region between them."
@@ -305,78 +324,16 @@ If IS-INNER is t, the region is inner text object."
     (kill-region (car selected-region) (1+ (cadr selected-region)))))
 
 ;;;###autoload
-(defun evilmi-jump-to-percentage (num)
-  "Like Vim %, NUM is the percentage of location."
-  (interactive "P")
-  (let* (dst)
-    (when (and num (> num 0))
-      (setq dst (let ((size (- (point-max) (point-min))))
-                  (+ (point-min)
-                     (if (> size 80000)
-                         (* num (/ size 100))
-                       (/ (* num size) 100)))))
-      (cond
-       ((< dst (point-min))
-        (setq dst (point-min)))
-       ((> dst (point-max))
-        (setq dst (point-max))))
-      (goto-char dst)
-      (back-to-indentation))))
-
-;;;###autoload (autoload 'evilmi-jump-items "evil-matchit" nil t)
-(evil-define-command evilmi-jump-items (&optional num)
-  "Jump between items NUM times."
-  :repeat nil
-  :jump t
-  (interactive "P")
-  (cond
-   ((and evilmi-may-jump-by-percentage num)
-    (evilmi-jump-to-percentage num))
-   (t
-    (evilmi--operate-on-item num))))
-
-;;;###autoload
 (defun evilmi-version()
   "Print version."
   (interactive)
-  (message "2.4.3"))
-
-(defvar evil-matchit-mode-map (make-sparse-keymap)
-  "Keymap used by the minor mode.")
-
-;;;###autoload
-(define-minor-mode evil-matchit-mode
-  "Buffer-local minor mode to emulate matchit.vim."
-  :keymap (make-sparse-keymap)
-  ;; get correct value of `(point)` in visual-line mode
-  ;; @see https://bitbucket.org/lyro/evil/issues/540/get-the-char-under-cusor-in-visual-line
-  (evil-set-command-property 'evilmi-jump-items :keep-visual t)
-  (if (fboundp 'evilmi-customize-keybinding)
-      ;; use user's own key bindings
-      (evilmi-customize-keybinding)
-    ;; else use default key bindings
-    (evil-define-key 'normal evil-matchit-mode-map evilmi-shortcut 'evilmi-jump-items)
-    (evil-define-key 'visual evil-matchit-mode-map evilmi-shortcut 'evilmi-jump-items))
-
-  (evil-normalize-keymaps))
-
-;;;###autoload
-(defun turn-on-evil-matchit-mode ()
-  "Enable the minor mode in the current buffer."
-  (evil-matchit-mode 1))
-
-;;;###autoload
-(defun turn-off-evil-matchit-mode ()
-  "Disable the minor mode in the current buffer."
-  (evil-matchit-mode -1))
-
-;;;###autoload
-(define-globalized-minor-mode global-evil-matchit-mode
-  evil-matchit-mode turn-on-evil-matchit-mode
-  "Global minor mode to emulate matchit.vim.")
+  (message "3.0.0"))
 
 ;; initialize evilmi-plugins only once
 (evilmi-init-plugins)
+
+(with-eval-after-load 'evil
+  (require 'evil-matchit-evil-setup))
 
 (provide 'evil-matchit)
 ;;; evil-matchit.el ends here

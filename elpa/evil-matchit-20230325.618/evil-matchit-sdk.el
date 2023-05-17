@@ -23,10 +23,11 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Commentary:
+;;
 
 ;;; Code:
 
-(require 'evil nil t)
 (require 'subr-x)
 (require 'cl-lib)
 (require 'semantic/lex)
@@ -75,7 +76,8 @@ Return t if jump forward."
            (len (length str)))
       ;; count quote character
       (while (< i len)
-        (when (eq ch (seq-elt str i))
+        ;; `seq-elt' is from emacs27+
+        (when (eq ch (aref str i))
           (setq cnt (1+ cnt)))
         (setq i (1+ i)))
       (eq (% cnt 2) 0)))))
@@ -121,12 +123,12 @@ If font-face-under-cursor is NOT nil, the quoted string is being processed."
   (cond
    ;; @see https://github.com/redguardtoo/evil-matchit/issues/92
    ((eq major-mode 'tuareg-mode)
-    (evilmi-among-fonts-p pos '(font-lock-comment-face
-                                font-lock-comment-delimiter-face
-                                font-lock-doc-face)))
+    (evilmi-sdk-font-p pos '(font-lock-comment-face
+                             font-lock-comment-delimiter-face
+                             font-lock-doc-face)))
    (t
-    (evilmi-among-fonts-p pos '(font-lock-comment-face
-                                font-lock-comment-delimiter-face)))))
+    (evilmi-sdk-font-p pos '(font-lock-comment-face
+                             font-lock-comment-delimiter-face)))))
 
 (defun evilmi-sdk-defun-p ()
   "At the beginning of function definition."
@@ -137,7 +139,7 @@ If font-face-under-cursor is NOT nil, the quoted string is being processed."
       (goto-char b)
       (while (and (< (point) e)
                   (not (setq defun-p
-                             (evilmi-among-fonts-p (point)
+                             (evilmi-sdk-font-p (point)
                                                    '(font-lock-function-name-face)))))
         (forward-word)))
     defun-p))
@@ -145,7 +147,8 @@ If font-face-under-cursor is NOT nil, the quoted string is being processed."
 (defun evilmi-sdk-scan-sexps (is-forward character)
   "Get the position of matching tag with CHARACTER at point.
 If IS-FORWARD is t, jump forward; or else jump backward."
-  (if evilmi-debug (message "evilmi-sdk-scan-sexps called => (%s)" is-forward character))
+  (when evilmi-debug
+    (message "evilmi-sdk-scan-sexps called => %s %s" is-forward character))
   (let* ((start-pos (if is-forward (point) (+ 1 (point))))
          (arg (if is-forward 1 -1))
          (limit (if is-forward (point-max) (point-min)))
@@ -200,9 +203,15 @@ If IS-FORWARD is t, jump forward; or else jump backward."
       (message "evilmi-sdk-scan-sexps => rlt=%s lvl=%s is-forward=%s" rlt lvl is-forward))
     rlt))
 
+(defmacro evilmi-sdk-visual-state-p ()
+  "Test if it's evil visual state."
+  `(and (boundp 'evil-state) (eq evil-state 'visual)))
+
 (defun evilmi-sdk-adjust-jumpto (is-forward rlt)
   ;; normal-state hack!
-  (when (and (not (eq evil-state 'visual)) rlt is-forward)
+  (when (and (not (evilmi-sdk-visual-state-p))
+             rlt
+             is-forward)
     (setq rlt (1- rlt)))
   (if evilmi-debug (message "evilmi-sdk-adjust-jumpto => is-forward=%s rlt=%s" is-forward rlt))
   rlt)
@@ -220,17 +229,17 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 (defun evilmi-sdk-tweak-selected-region (font-face jump-forward)
   "Tweak selected region using FONT-FACE and JUMP-FORWARD."
   ;; visual-state hack!
-  (when (and jump-forward (eq evil-state 'visual) (not font-face))
-    ;; if font-face is non-nil, I control the jump flow from character level,
-    ;; so hack to workaround scan-sexps is NOT necessary
-    (evil-backward-char)))
+  (when (and jump-forward (evilmi-sdk-visual-state-p) (not font-face))
+    ;; If font-face is non-nil, control the jump flow from character level.
+    ;; So hack `scan-sexps` is NOT necessary.
+    (backward-char)))
 
 (defun evilmi-sdk-skip-whitespace ()
   "Skip whitespace characters at point."
   (let ((old (point)))
     (skip-syntax-forward " ")
-    ;; If we move from a non-comment to before a comment,
-    ;; `evilmi-sdk-jumpto-where' wont skip it:
+    ;; When moving from a non-comment to position before the comment,
+    ;; `evilmi-sdk-jumpto-where' will not skip it:
     ;;
     ;; <point> /* comment */ {}
     ;;
@@ -240,7 +249,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
       (goto-char old))))
 
 (defun evilmi-sdk-simple-jump ()
-  "Alternative for `evil-jump-item'."
+  "Alternative of built-in jump item command in evil'."
   (if evilmi-debug (message "evilmi-sdk-simple-jump called (point)=%d" (point)))
 
   (evilmi-sdk-skip-whitespace)
@@ -248,7 +257,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
   (let* ((tmp (evilmi-sdk-jump-forward-p))
          (jump-forward (car tmp))
          ;; if ff is not nil, it's jump between quotes
-         ;; so we should not use (scan-sexps)
+         ;; so we should not use `scan-sexps'
          (ff (nth 1 tmp))
          (ch (nth 2 tmp))
          (dst (evilmi-sdk-jumpto-where ff jump-forward ch)))
@@ -362,7 +371,7 @@ is-function-exit-point could be unknown status"
     (save-excursion
       (goto-char begin)
       (while (search-forward keyword end t)
-        (when (not (evilmi-among-fonts-p (point)
+        (when (not (evilmi-sdk-font-p (point)
                                          evilmi-ignored-fonts))
           (setq rlt keyword))))
     rlt))
@@ -518,7 +527,7 @@ after calling this function."
 
 
 ;;;###autoload
-(defun evilmi-among-fonts-p (pos fonts)
+(defun evilmi-sdk-font-p (pos fonts)
   "If current font at POS is among FONTS."
   (let* ((fontfaces (get-text-property pos 'face)))
     (when (not (listp fontfaces))
@@ -537,15 +546,150 @@ after calling this function."
       (setq start (match-end 0)))
     count))
 
+;;;###autoload
+(defun evilmi-sdk-semantic-flex (start end &optional depth length)
+  "Using the syntax table, do something roughly equivalent to flex.
+Semantically check between START and END.  Optional argument DEPTH
+indicates at what level to scan over entire lists.
+The return value is a token stream.  Each element is a list, such of
+the form (symbol start-expression .  end-expression) where SYMBOL
+denotes the token type.
+END does not mark the end of the text scanned, only the end of the
+beginning of text scanned.  Thus, if a string extends past END, the
+end of the return token will be larger than END.  To truly restrict
+scanning, use `narrow-to-region'.
+The last argument, LENGTH specifies that only LENGTH tokens are returned."
+  (if (not semantic-flex-keywords-obarray)
+      (setq semantic-flex-keywords-obarray [ nil ]))
+  (let ((ts nil)
+        (pos (point))
+        (ep nil)
+        (curdepth 0)
+        (cs (if comment-start-skip
+                (concat "\\(\\s<\\|" comment-start-skip "\\)")
+              (concat "\\(\\s<\\)")))
+        (number-expression "\\(\\<[0-9]+[.][0-9]+\\([eE][-+]?[0-9]+\\)?[fFdD]?\\>\\|\\<[0-9]+[.][eE][-+]?[0-9]+[fFdD]?\\>\\|\\<[0-9]+[.][fFdD]\\>\\|\\<[0-9]+[.]\\|[.][0-9]+\\([eE][-+]?[0-9]+\\)?[fFdD]?\\>\\|\\<[0-9]+[eE][-+]?[0-9]+[fFdD]?\\>\\|\\<0[xX][[:xdigit:]]+[lL]?\\>\\|\\<[0-9]+[lLfFdD]?\\>\\)")
+        ;; Use the default depth if it is not specified.
+        (depth (or depth 0)))
+
+    (goto-char start)
+    (while (and (< (point) end) (or (not length) (<= (length ts) length)))
+      (cond
+       ;; skip newlines
+       ((looking-at "\\s-*\\(\n\\|\\s>\\)"))
+
+       ;; skip whitespace
+       ((looking-at "\\s-+"))
+
+       ;; numbers
+       ((looking-at number-expression)
+        (setq ts (cons (cons 'number
+                             (cons (match-beginning 0)
+                                   (match-end 0)))
+                       ts)))
+       ;; symbols
+       ((looking-at "\\(\\sw\\|\\s_\\)+")
+        (setq ts (cons (cons
+                        ;; Get info on if this is a keyword or not
+                        (or (semantic-lex-keyword-p (match-string 0))
+                            'symbol)
+                        (cons (match-beginning 0) (match-end 0)))
+                       ts)))
+
+       ;; Character quoting characters (ie, \n as newline)
+       ((looking-at "\\s\\+")
+        (setq ts (cons (cons 'charquote
+                             (cons (match-beginning 0) (match-end 0)))
+                       ts)))
+
+       ;; Open parens, or semantic-lists.
+       ((looking-at "\\s(")
+        (if (or (not depth) (< curdepth depth))
+            (progn
+              (setq curdepth (1+ curdepth))
+              (setq ts (cons (cons 'open-paren
+                                   (cons (match-beginning 0) (match-end 0)))
+                             ts)))
+          (setq ts (cons
+                    (cons 'semantic-list
+                          (cons (match-beginning 0)
+                                (save-excursion
+                                  (condition-case nil
+                                      (forward-list 1)
+                                    ;; This case makes flex robust
+                                    ;; to broken lists.
+                                    (error
+                                     (goto-char end)))
+                                  (setq ep (point)))))
+                    ts))))
+       ;; Close parens
+       ((looking-at "\\s)")
+        (setq ts (cons (cons 'close-paren
+                             (cons (match-beginning 0) (match-end 0)))
+                       ts))
+        (setq curdepth (1- curdepth)))
+
+       ;; String initiators
+       ((looking-at "\\s\"")
+        ;; Zing to the end of this string.
+        (setq ts (cons (cons 'string
+                             (cons (match-beginning 0)
+                                   (save-excursion
+                                     (condition-case nil
+                                         (forward-sexp 1)
+                                       ;; This case makes flex
+                                       ;; robust to broken strings.
+                                       (error
+                                        (goto-char end)))
+                                     (setq ep (point)))))
+                       ts)))
+
+       ;; comments
+       ((looking-at cs)
+        ;; If the language doesn't deal with comments nor
+        ;; whitespaces, ignore them here.
+        (let ((comment-start-point (point)))
+          (forward-comment 1)
+          (if (eq (point) comment-start-point)
+              ;; In this case our start-skip string failed
+              ;; to work properly.  Lets try and move over
+              ;; whatever white space we matched to begin
+              ;; with.
+              (skip-syntax-forward "-.'" (point-at-eol)))
+          (if (eq (point) comment-start-point)
+              (error "Strange comment syntax prevents lexical analysis"))
+          (setq ep (point))))
+
+       ;; punctuation
+       ((looking-at "\\(\\s.\\|\\s$\\|\\s'\\)")
+        (setq ts (cons (cons 'punctuation
+                             (cons (match-beginning 0) (match-end 0)))
+                       ts)))
+
+       ;; unknown token
+       (t
+        (error "What is that?")))
+
+      (goto-char (or ep (match-end 0)))
+      (setq ep nil))
+
+    (goto-char pos)
+    ;;(message "Flexing muscles...done")
+    (nreverse ts)))
+
+;;;###autoload
 (defun evilmi-sdk-tokens (n)
   "Get semantic tokens of current N lines."
   (unless (and n (> n 1)) (setq n 1))
-  (let* (b e)
+  (let* (b e tokens)
     (save-excursion
       (setq b (line-beginning-position))
       (forward-line (1- n))
       (setq e (line-end-position)))
-    (semantic-lex b e)))
+    (save-restriction
+      (narrow-to-region b e)
+      (setq tokens (evilmi-sdk-semantic-flex b e)))
+    tokens))
 
 (provide 'evil-matchit-sdk)
 ;;; evil-matchit-sdk.el ends here

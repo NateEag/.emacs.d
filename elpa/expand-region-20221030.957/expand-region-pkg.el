@@ -1,4 +1,4 @@
-(define-package "expand-region" "20210708.1952" "Increase selected region by semantic units." 'nil :commit "7e5bbe2763c12bae3e77fe0c49bcad05ff91dbfe" :authors
+(define-package "expand-region" "20221030.957" "Increase selected region by semantic units." 'nil :commit "b70feaa644310dc2d599dc277cd20a1f2b6446ac" :authors
   '(("Magnar Sveen" . "magnars@gmail.com"))
   :maintainer
   '("Magnar Sveen" . "magnars@gmail.com")

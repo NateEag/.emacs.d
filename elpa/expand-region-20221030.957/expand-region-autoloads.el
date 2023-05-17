@@ -1,4 +1,4 @@
-;;; expand-region-autoloads.el --- automatically extracted autoloads
+;;; expand-region-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,7 +10,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from cc-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cc-mode-expansions" '("er/")))
+(register-definition-prefixes "cc-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -18,7 +18,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from clojure-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode-expansions" '("er/")))
+(register-definition-prefixes "clojure-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -26,7 +26,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from cperl-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cperl-mode-expansions" '("er/")))
+(register-definition-prefixes "cperl-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -34,7 +34,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from css-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "css-mode-expansions" '("er/")))
+(register-definition-prefixes "css-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -42,7 +42,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from enh-ruby-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "enh-ruby-mode-expansions" '("er/add-enh-ruby-mode-expansions")))
+(register-definition-prefixes "enh-ruby-mode-expansions" '("er/add-enh-ruby-mode-expansions"))
 
 ;;;***
 
@@ -50,7 +50,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from er-basic-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "er-basic-expansions" '("er--" "er/mark-")))
+(register-definition-prefixes "er-basic-expansions" '("er--" "er/mark-"))
 
 ;;;***
 
@@ -58,7 +58,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from erlang-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "erlang-mode-expansions" '("er/add-erlang-mode-expansions")))
+(register-definition-prefixes "erlang-mode-expansions" '("er/add-erlang-mode-expansions"))
 
 ;;;***
 
@@ -81,7 +81,16 @@ before calling `er/expand-region' for the first time.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from expand-region-core.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "expand-region-core" '("er--" "er/")))
+(autoload 'er/contract-region "expand-region-core" "\
+Contract the selected region to its previous size.
+With prefix argument contracts that many times.
+If prefix argument is negative calls `er/expand-region'.
+If prefix argument is 0 it resets point and mark to their state
+before calling `er/expand-region' for the first time.
+
+\(fn ARG)" t nil)
+
+(register-definition-prefixes "expand-region-core" '("er--" "er/"))
 
 ;;;***
 
@@ -150,7 +159,7 @@ Whether expand-region should use subword expansions.")
 
 (custom-autoload 'expand-region-subword-enabled "expand-region-custom" t)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "expand-region-custom" '("expand-region-")))
+(register-definition-prefixes "expand-region-custom" '("expand-region-"))
 
 ;;;***
 
@@ -158,7 +167,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from feature-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "feature-mode-expansions" '("er--block-between-keywords" "er/")))
+(register-definition-prefixes "feature-mode-expansions" '("er--block-between-keywords" "er/"))
 
 ;;;***
 
@@ -166,7 +175,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from html-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "html-mode-expansions" '("er--" "er/")))
+(register-definition-prefixes "html-mode-expansions" '("er--" "er/"))
 
 ;;;***
 
@@ -174,7 +183,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from js-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js-mode-expansions" '("er/")))
+(register-definition-prefixes "js-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -182,7 +191,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from js2-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "js2-mode-expansions" '("er/add-js2-mode-expansions" "js2-mark-parent-statement")))
+(register-definition-prefixes "js2-mode-expansions" '("er/add-js2-mode-expansions" "js2-mark-parent-statement"))
 
 ;;;***
 
@@ -190,7 +199,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  0))
 ;;; Generated autoloads from jsp-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "jsp-expansions" '("er/")))
+(register-definition-prefixes "jsp-expansions" '("er/"))
 
 ;;;***
 
@@ -198,7 +207,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from latex-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "latex-mode-expansions" '("er/")))
+(register-definition-prefixes "latex-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -206,7 +215,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from nxml-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nxml-mode-expansions" '("er/")))
+(register-definition-prefixes "nxml-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -214,7 +223,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from octave-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "octave-expansions" '("er/")))
+(register-definition-prefixes "octave-expansions" '("er/"))
 
 ;;;***
 
@@ -222,7 +231,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from python-el-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-el-expansions" '("er--python-string-delimiter" "er/")))
+(register-definition-prefixes "python-el-expansions" '("er--python-string-delimiter" "er/"))
 
 ;;;***
 
@@ -230,7 +239,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from python-el-fgallina-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-el-fgallina-expansions" '("er--python-" "er/")))
+(register-definition-prefixes "python-el-fgallina-expansions" '("er--python-" "er/"))
 
 ;;;***
 
@@ -238,7 +247,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from python-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode-expansions" '("er--" "er/" "py-goto-beyond-clause")))
+(register-definition-prefixes "python-mode-expansions" '("er--" "er/" "py-goto-beyond-clause"))
 
 ;;;***
 
@@ -246,7 +255,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from ruby-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ruby-mode-expansions" '("er/")))
+(register-definition-prefixes "ruby-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -254,7 +263,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from sml-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sml-mode-expansions" '("er/")))
+(register-definition-prefixes "sml-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -262,7 +271,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from subword-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "subword-mode-expansions" '("er/")))
+(register-definition-prefixes "subword-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -270,7 +279,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from text-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "text-mode-expansions" '("er/")))
+(register-definition-prefixes "text-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -278,7 +287,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from the-org-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "the-org-mode-expansions" '("er/")))
+(register-definition-prefixes "the-org-mode-expansions" '("er/"))
 
 ;;;***
 
@@ -286,7 +295,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from web-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "web-mode-expansions" '("er/add-web-mode-expansions")))
+(register-definition-prefixes "web-mode-expansions" '("er/add-web-mode-expansions"))
 
 ;;;***
 
@@ -294,7 +303,7 @@ Whether expand-region should use subword expansions.")
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from yaml-mode-expansions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "yaml-mode-expansions" '("er--" "er/" "yaml-indent")))
+(register-definition-prefixes "yaml-mode-expansions" '("er--" "er/" "yaml-indent"))
 
 ;;;***
 

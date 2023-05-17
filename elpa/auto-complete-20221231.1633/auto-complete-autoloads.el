@@ -1,4 +1,4 @@
-;;; auto-complete-autoloads.el --- automatically extracted autoloads
+;;; auto-complete-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -17,10 +17,19 @@ Start auto-completion at current point.
 (autoload 'auto-complete-mode "auto-complete" "\
 AutoComplete mode
 
-If called interactively, enable Auto-Complete mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Auto-Complete mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `auto-complete-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -39,16 +48,20 @@ or call the function `global-auto-complete-mode'.")
 (autoload 'global-auto-complete-mode "auto-complete" "\
 Toggle Auto-Complete mode in all buffers.
 With prefix ARG, enable Global Auto-Complete mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+otherwise, disable it.
 
-Auto-Complete mode is enabled in all buffers where
-`auto-complete-mode-maybe' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Auto-Complete mode is enabled in all buffers where `auto-complete-mode-maybe'
+would do it.
+
 See `auto-complete-mode' for more information on Auto-Complete mode.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-complete" '("ac-" "auto-complete-mode")))
+(register-definition-prefixes "auto-complete" '("ac-" "auto-complete-mode"))
 
 ;;;***
 
@@ -59,7 +72,7 @@ See `auto-complete-mode' for more information on Auto-Complete mode.
 (autoload 'ac-config-default "auto-complete-config" "\
 No documentation." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-complete-config" '("ac-")))
+(register-definition-prefixes "auto-complete-config" '("ac-"))
 
 ;;;***
 

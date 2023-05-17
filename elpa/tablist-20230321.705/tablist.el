@@ -298,7 +298,8 @@ as argument for the function `completion-in-region'.")
 
 ;;;###autoload
 (define-minor-mode tablist-minor-mode
-  nil nil nil nil
+  "Toggle tablist minor mode."
+  :global nil
   (unless (derived-mode-p 'tabulated-list-mode)
     (error "Buffer is not in Tabulated List Mode"))
   (tablist-init (not tablist-minor-mode)))
@@ -779,7 +780,7 @@ STATE is a return value of `tablist-get-mark-state'."
 
 (defun tablist-repeat-over-lines (arg function)
   "Call FUNCTION for the next ARG entries."
-  ;; Move out of potentially invisble area.
+  ;; Move out of potentially invisible area.
   (tablist-skip-invisible-entries)
   (let ((pos (make-marker)))
     (while (and (> arg 0)
@@ -989,7 +990,8 @@ Optional REVERT-P means, revert the display afterwards."
     kmap))
 
 (define-minor-mode tablist-edit-column-minor-mode
-  "" nil nil nil
+  "Toggle tablist-edit-column minor mode."
+  :global nil
   (unless (or tablist-minor-mode
               (derived-mode-p 'tablist-mode))
     (error "Not in a tablist buffer"))

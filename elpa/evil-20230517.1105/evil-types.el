@@ -104,10 +104,8 @@ and will be removed in a future version."
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :normalize (lambda (beg end)
-               (goto-char end)
-               (when (eq (char-after) ?\n)
-                 (setq end (max beg (1- end))))
-               (evil-range beg end))
+               (evil-range beg (if (eq (char-after end) ?\n)
+                                   (max beg (1- end)) end)))
   :string (lambda (beg end)
             (let ((width (- end beg)))
               (format "%s character%s" width
@@ -120,18 +118,14 @@ and will be removed in a future version."
             (evil-range
              (progn
                (goto-char beg)
-               (min (line-beginning-position)
-                    (progn
-                      ;; move to beginning of line as displayed
-                      (evil-move-beginning-of-line)
-                      (line-beginning-position))))
+               ;; move to beginning of line as displayed
+               (evil-move-beginning-of-line)
+               (point))
              (progn
                (goto-char end)
-               (max (line-beginning-position 2)
-                    (progn
-                      ;; move to end of line as displayed
-                      (evil-move-end-of-line)
-                      (line-beginning-position 2))))))
+               ;; move to the end of line as displayed
+               (evil-move-end-of-line)
+               (line-beginning-position 2))))
   :contract (lambda (beg end)
               (evil-range beg (max beg (1- end))))
   :string (lambda (beg end)
@@ -417,7 +411,7 @@ REGISTER"
 
 (defun evil-ex-get-optional-register-and-count (string)
   "Parse STRING as an ex arg with both optional REGISTER and COUNT.
-Returns a list (REGISTER COUNT)."
+Return a list (REGISTER COUNT)."
   (let* ((split-args (split-string (or string "")))
          (arg-count (length split-args))
          (arg0 (car split-args))

@@ -397,7 +397,7 @@ letter, otherwise it will be case-insensitive."
 
 ;; a pattern
 (defun evil-ex-make-substitute-pattern (regexp flags)
-  "Creates a PATTERN for substitution with FLAGS.
+  "Create a PATTERN for substitution with FLAGS.
 This function respects the values of `evil-ex-substitute-case'
 and `evil-ex-substitute-global'."
   (evil-ex-make-pattern regexp
@@ -413,7 +413,7 @@ and `evil-ex-substitute-global'."
                                  (memq ?g flags)))))
 
 (defun evil-ex-make-search-pattern (regexp)
-  "Creates a PATTERN for search.
+  "Create a PATTERN for search.
 This function respects the values of `evil-ex-search-case'."
   (evil-ex-make-pattern regexp evil-ex-search-case t))
 
@@ -435,8 +435,8 @@ expression and is not transformed."
     ;; possibly transform regular expression from vim-style to
     ;; Emacs-style.
     (if (and evil-ex-search-vim-style-regexp
-             (not (or (string-match-p "\\`\\\\_?<" regexp)
-                      (string-match-p "\\\\_?>\\'" regexp))))
+             (not (or (string-match-p "\\`\\\\_<" regexp)
+                      (string-match-p "\\\\_>\\'" regexp))))
         (setq re (evil-transform-vim-style-regexp re))
       ;; Even for Emacs regular expressions we translate certain
       ;; whitespace sequences
@@ -661,9 +661,10 @@ The following properties are supported:
                         (while (and (not (eobp))
                                     (evil-ex-search-find-next-pattern pattern)
                                     (<= (match-end 0) end)
-                                    (not (and (= (match-end 0) end)
-                                              (string= (evil-ex-pattern-regex pattern)
-                                                       "^"))))
+                                    (not (and (= (match-beginning 0) end)
+                                              (save-excursion
+                                                (goto-char (match-beginning 0))
+                                                (bolp)))))
                           (let ((ov (or (pop old-ovs) (make-overlay 0 0))))
                             (move-overlay ov (match-beginning 0) (match-end 0))
                             (overlay-put ov 'face face)
@@ -743,7 +744,7 @@ Note that this function ignores the whole-line property of PATTERN."
       (user-error "Unknown search direction: %s" direction)))))
 
 (defun evil-ex-hl-idle-update ()
-  "Triggers the timer to update the highlights in the current buffer."
+  "Trigger the timer to update the highlights in the current buffer."
   (when (and evil-ex-interactive-search-highlight
              evil-ex-active-highlights-alist)
     (when evil-ex-hl-update-timer
@@ -902,6 +903,8 @@ message to be shown. This function does nothing if
   (evil-ex-search-activate-highlight nil))
 (put 'evil-ex-search-start-session 'permanent-local-hook t)
 
+(defvar evil-ex-search-yank-point nil)
+
 (defun evil-ex-search-stop-session ()
   "Stop interactive search."
   (with-current-buffer evil-ex-current-buffer
@@ -919,12 +922,13 @@ message to be shown. This function does nothing if
   (remove-hook 'after-change-functions #'evil-ex-search-update-pattern t)
   (when evil-ex-search-overlay
     (delete-overlay evil-ex-search-overlay)
-    (setq evil-ex-search-overlay nil)))
+    (setq evil-ex-search-overlay nil))
+  (setq evil-ex-search-yank-point nil))
 (put 'evil-ex-search-stop-session 'permanent-local-hook t)
 
 (defun evil-ex-split-search-pattern (pattern direction)
   "Split PATTERN in regexp, offset and next-pattern parts.
-Returns a triple (regexp  offset next-search)."
+Return a triple (regexp offset next-search)."
   (save-match-data
     (if (or (and (eq direction 'forward)
                  (string-match "\\(?:^\\|[^\\\\]\\)\\(?:\\\\\\\\\\)*\\(/\\([^;]*\\)\\(?:;\\([/?].*\\)?\\)?\\)?$"
@@ -939,7 +943,7 @@ Returns a triple (regexp  offset next-search)."
 
 (defun evil-ex-search-full-pattern (pattern-string count direction)
   "Search for a full search pattern PATTERN-STRING in DIRECTION.
-This function split PATTERN-STRING in
+This function splits PATTERN-STRING into
 pattern/offset/;next-pattern parts and performs the search in
 DIRECTION which must be either 'forward or 'backward. The first
 search is repeated COUNT times. If the pattern part of
@@ -1090,7 +1094,7 @@ current search result."
 
 (defun evil-ex-search-setup ()
   "Hook to initialize the minibuffer for ex search."
-  (add-hook 'pre-command-hook #'evil-ex-remove-default))
+  (add-hook 'pre-command-hook #'evil-ex-remove-default nil t))
 
 (defun evil-ex-start-search (direction count)
   "Start a new search in a certain DIRECTION."
@@ -1236,18 +1240,15 @@ This handler highlights the pattern of the current substitution."
 
 (defun evil-ex-pattern-update-replacement (_hl overlay)
   "Update the replacement display."
-  (when (fboundp 'match-substitute-replacement)
-    (let ((fixedcase (not case-replace))
-          repl)
-      (setq repl (if evil-ex-substitute-current-replacement
-                     (evil-match-substitute-replacement
-                      evil-ex-substitute-current-replacement
-                      fixedcase)
-                   ""))
-      (put-text-property 0 (length repl)
-                         'face 'evil-ex-substitute-replacement
-                         repl)
-      (overlay-put overlay 'after-string repl))))
+  (let ((repl (if evil-ex-substitute-current-replacement
+                  (evil-match-substitute-replacement
+                   evil-ex-substitute-current-replacement
+                   (not case-replace))
+                "")))
+    (put-text-property 0 (length repl)
+                       'face 'evil-ex-substitute-replacement
+                       repl)
+    (overlay-put overlay 'after-string repl)))
 
 (defun evil-ex-parse-global (string)
   "Parse STRING as a global argument."
@@ -1267,7 +1268,7 @@ This handler highlights the pattern of the current substitution."
     (list pattern command)))
 
 (defun evil-ex-get-substitute-info (string &optional implicit-r)
-  "Returns the substitution info of command line STRING.
+  "Return the substitution info of command line STRING.
 This function returns a three-element list \(PATTERN REPLACEMENT
 FLAGS) consisting of the substitution parts of STRING. PATTERN is
 a ex-pattern (see `evil-ex-make-pattern') and REPLACEMENT in a
@@ -1330,6 +1331,33 @@ a :substitute command with arguments."
   (interactive)
   (evil-ex-delete-hl 'evil-ex-substitute)
   (evil-ex-delete-hl 'evil-ex-search))
+
+(defun evil-search-yank-word ()
+  "Pull next word from buffer into search string."
+  (interactive)
+  (let ((fwd-fn #'forward-word)
+        (minibuf-content (minibuffer-contents-no-properties))
+        (word "") start)
+    (with-current-buffer evil-ex-current-buffer
+      ;; Start to initial point if C-w have never been hit.
+      (unless evil-ex-search-yank-point
+        (if (string= "" minibuf-content)
+            (setq evil-ex-search-yank-point evil-ex-search-start-point)
+          (setq evil-ex-search-yank-point (point))))
+      (save-excursion
+        (goto-char evil-ex-search-yank-point)
+        (setq start (point))
+        (when (looking-at-p (regexp-quote minibuf-content))
+          (forward-char (length minibuf-content))
+          (setq start (point))
+          (funcall fwd-fn 1))
+        (setq word (buffer-substring-no-properties start (point)))))
+    (when (equal evil-ex-search-case 'smart)
+      (let ((case-fold-search nil))
+        (unless (string-match-p "[A-Z]" minibuf-content)
+          (setq word (downcase word)))))
+    (insert word)))
+
 
 (provide 'evil-search)
 

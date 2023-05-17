@@ -36,7 +36,8 @@
   :group 'evil)
 
 (defcustom evil-jumps-cross-buffers t
-  "When non-nil, the jump commands can cross borders between buffers, otherwise the jump commands act only within the current buffer."
+  "When non-nil, the jump commands can cross borders between buffers.
+Otherwise the jump commands act only within the current buffer."
   :type 'boolean
   :group 'evil-jumps)
 
@@ -56,7 +57,7 @@
   :group 'evil-jumps)
 
 (defcustom evil-jumps-ignored-file-patterns '("COMMIT_EDITMSG$" "TAGS$")
-  "A list of pattern regexps to match on the file path to exclude from being included in the jump list."
+  "List of regexps to exclude file path from inclusion in the jump list."
   :type '(repeat string)
   :group 'evil-jumps)
 
@@ -73,7 +74,7 @@
 (eval-when-compile (defvar evil--jumps-debug nil))
 
 (defvar evil--jumps-buffer-targets "\\*\\(new\\|scratch\\)\\*"
-  "Regexp to match against `buffer-name' to determine whether it's a valid jump target.")
+  "Regexp to determine if buffer with `buffer-name' is a valid jump target.")
 
 (defvar evil--jumps-window-jumps (make-hash-table)
   "Hashtable which stores all jumps on a per window basis.")
@@ -94,9 +95,8 @@
        (insert (apply #'format format args) "\n"))))
 
 (defun evil--jumps-get-current (&optional window)
-  (unless window
-    (setq window (frame-selected-window)))
-  (let* ((jump-struct (gethash window evil--jumps-window-jumps)))
+  (unless window (setq window (selected-window)))
+  (let ((jump-struct (gethash window evil--jumps-window-jumps)))
     (unless jump-struct
       (setq jump-struct (make-evil-jumps-struct))
       (puthash window jump-struct evil--jumps-window-jumps))
@@ -123,7 +123,7 @@
   (remove-hook 'savehist-mode-hook #'evil--jumps-savehist-load))
 
 (defun evil--jumps-savehist-sync ()
-  "Updates the printable value of window jumps for `savehist'."
+  "Update the printable value of window jumps for `savehist'."
   (setq evil-jumps-history
         (delq nil (mapcar #'(lambda (jump)
                               (let* ((mark (car jump))
@@ -137,13 +137,18 @@
                                   (list pos file-name))))
                           (ring-elements (evil--jumps-get-window-jump-list))))))
 
+(defun evil--jumps-current-file-name ()
+  "Get the current buffer file name for `evil--jumps-push'."
+  (or buffer-file-name
+      (when (derived-mode-p 'dired-mode) default-directory)))
+
 (defun evil--jumps-jump (idx shift)
   (let ((target-list (evil--jumps-get-window-jump-list)))
     (evil--jumps-message "jumping from %s by %s" idx shift)
     (evil--jumps-message "target list = %s" target-list)
     (setq idx (+ idx shift))
-    (let* ((current-file-name (or (buffer-file-name) (buffer-name)))
-           (size (ring-length target-list)))
+    (let ((current-file-name (or (evil--jumps-current-file-name) (buffer-name)))
+          (size (ring-length target-list)))
       (unless evil-jumps-cross-buffers
         ;; skip jump marks pointing to other buffers
         (while (and (< idx size) (>= idx 0)
@@ -166,29 +171,29 @@
           (run-hooks 'evil-jumps-post-jump-hook))))))
 
 (defun evil--jumps-push ()
-  "Pushes the current cursor/file position to the jump list."
-  (let ((target-list (evil--jumps-get-window-jump-list)))
-    (let ((file-name (buffer-file-name))
-          (buffer-name (buffer-name))
-          (current-pos (point-marker))
-          (first-pos nil)
-          (first-file-name nil)
-          (excluded nil))
-      (when (and (not file-name)
-                 (string-match-p evil--jumps-buffer-targets buffer-name))
-        (setq file-name buffer-name))
-      (when file-name
-        (dolist (pattern evil-jumps-ignored-file-patterns)
-          (when (string-match-p pattern file-name)
-            (setq excluded t)))
-        (unless excluded
-          (unless (ring-empty-p target-list)
-            (setq first-pos (car (ring-ref target-list 0)))
-            (setq first-file-name (car (cdr (ring-ref target-list 0)))))
-          (unless (and (equal first-pos current-pos)
-                       (equal first-file-name file-name))
-            (evil--jumps-message "pushing %s on %s" current-pos file-name)
-            (ring-insert target-list `(,current-pos ,file-name))))))
+  "Push the current cursor/file position to the jump list."
+  (let ((target-list (evil--jumps-get-window-jump-list))
+        (file-name (evil--jumps-current-file-name))
+        (buffer-name (buffer-name))
+        (current-pos (point-marker))
+        (first-pos nil)
+        (first-file-name nil)
+        (excluded nil))
+    (when (and (not file-name)
+               (string-match-p evil--jumps-buffer-targets buffer-name))
+      (setq file-name buffer-name))
+    (when file-name
+      (dolist (pattern evil-jumps-ignored-file-patterns)
+        (when (string-match-p pattern file-name)
+          (setq excluded t)))
+      (unless excluded
+        (unless (ring-empty-p target-list)
+          (setq first-pos (car (ring-ref target-list 0)))
+          (setq first-file-name (car (cdr (ring-ref target-list 0)))))
+        (unless (and (equal first-pos current-pos)
+                     (equal first-file-name file-name))
+          (evil--jumps-message "pushing %s on %s" current-pos file-name)
+          (ring-insert target-list `(,current-pos ,file-name)))))
     (evil--jumps-message "%s %s"
                          (selected-window)
                          (and (not (ring-empty-p target-list))
@@ -239,6 +244,7 @@ POS defaults to point."
       (when pos
         (goto-char pos))
       (evil--jumps-push))))
+(put 'evil-set-jump 'permanent-local-hook t)
 
 (defun evil--jump-backward (count)
   (setq evil--jumps-jumping-backward t)
@@ -287,6 +293,7 @@ POS defaults to point."
                  (evil--jumps-message "removing %s" key)
                  (remhash key evil--jumps-window-jumps)))
              evil--jumps-window-jumps)))
+(put 'evil--jumps-window-configuration-hook 'permanent-local-hook t)
 
 (defun evil--jump-hook (&optional command)
   "`pre-command-hook' for evil-jumps.
@@ -298,6 +305,7 @@ change the current buffer."
       (evil-set-jump)
     (setf (evil-jumps-struct-previous-pos (evil--jumps-get-current))
           (point-marker))))
+(put 'evil--jump-hook 'permanent-local-hook t)
 
 (defun evil--jump-handle-buffer-crossing ()
   (let ((jumping-backward evil--jumps-jumping-backward))
@@ -329,6 +337,7 @@ change the current buffer."
                         (not (eq previous-buffer (window-buffer window))))))
                 (evil-set-jump previous-pos)
               (set-marker previous-pos nil))))))))
+(put 'evil--jump-handle-buffer-crossing 'permanent-local-hook t)
 
 (if (bound-and-true-p savehist-loaded)
     (evil--jumps-savehist-load)
@@ -344,8 +353,7 @@ change the current buffer."
     (remove-hook 'pre-command-hook #'evil--jump-hook t)
     (remove-hook 'post-command-hook #'evil--jump-handle-buffer-crossing t)
     (remove-hook 'next-error-hook #'evil-set-jump t)
-    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)
-    (evil--jump-handle-buffer-crossing)))
+    (remove-hook 'window-configuration-change-hook #'evil--jumps-window-configuration-hook t)))
 
 (add-hook 'evil-local-mode-hook #'evil--jumps-install-or-uninstall)
 

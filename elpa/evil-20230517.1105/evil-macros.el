@@ -25,13 +25,14 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
 (require 'evil-common)
 (require 'evil-states)
 (require 'evil-repeat)
 
-;;; Code:
-
 (declare-function evil-ex-p "evil-ex")
+(declare-function evil-line-or-visual-line "evil-commands")
 
 ;; set some error codes
 (put 'beginning-of-line 'error-conditions '(beginning-of-line error))
@@ -166,40 +167,32 @@ Optional keyword arguments are:
 (defmacro evil-narrow-to-line (&rest body)
   "Narrow BODY to the current line.
 BODY will signal the errors 'beginning-of-line or 'end-of-line
-upon reaching the beginning or end of the current line.
-
-\(fn [[KEY VAL]...] BODY...)"
-  (declare (indent defun)
-           (debug t))
-  `(let* ((range (evil-expand (point) (point) 'line))
-          (beg (evil-range-beginning range))
-          (end (evil-range-end range))
-          (min (point-min))
-          (max (point-max)))
+upon reaching the beginning or end of the current line."
+  (declare (indent defun) (debug t))
+  `(cl-destructuring-bind (beg end &rest) (evil-line-expand (point) (point))
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
-     ;; don't include the newline in Normal state
-     (when (and (not evil-move-beyond-eol)
-                (not (evil-visual-state-p))
-                (not (evil-operator-state-p)))
-       (setq end (max beg (1- end))))
+     ;; Do not include the newline in Normal state
+     (and (not evil-move-beyond-eol)
+          (not (evil-visual-state-p))
+          (not (evil-operator-state-p))
+          (setq end (max beg (1- end))))
      (evil-with-restriction beg end
-       (evil-signal-without-movement
-         (condition-case err
-             (progn ,@body)
-           (beginning-of-buffer
-            (if (= beg min)
-                (signal (car err) (cdr err))
-              (signal 'beginning-of-line nil)))
-           (end-of-buffer
-            (if (= end max)
-                (signal (car err) (cdr err))
-              (signal 'end-of-line nil))))))))
+       (condition-case err
+           (progn ,@body)
+         (beginning-of-buffer
+          (if (= (point-min) beg)
+              (signal 'beginning-of-line nil)
+            (signal (car err) (cdr err))))
+         (end-of-buffer
+          (if (= (point-max) end)
+              (signal 'end-of-line nil)
+            (signal (car err) (cdr err))))))))
 
 ;; we don't want line boundaries to trigger the debugger
 ;; when `debug-on-error' is t
-(add-to-list 'debug-ignored-errors "^Beginning of line$")
-(add-to-list 'debug-ignored-errors "^End of line$")
+(cl-pushnew 'beginning-of-line debug-ignored-errors)
+(cl-pushnew 'end-of-line debug-ignored-errors)
 
 (defun evil-eobp (&optional pos)
   "Whether point is at end-of-buffer with regard to end-of-line."
@@ -208,8 +201,7 @@ upon reaching the beginning or end of the current line.
     (cond
      ((eobp))
      ;; the rest only pertains to Normal state
-     ((not (evil-normal-state-p))
-      nil)
+     ((not (evil-normal-state-p)) nil)
      ;; at the end of the last line
      ((eolp)
       (forward-char)
@@ -497,6 +489,7 @@ Optional keyword arguments are:
                    `(,(nth 0 args) ,(nth 1 args)
                      &optional ,@(nthcdr 2 args))
                  args))
+         (end-marker (make-symbol "end-marker"))
          arg doc key keys visual)
     ;; collect docstring
     (when (and (> (length body) 1)
@@ -557,10 +550,16 @@ Optional keyword arguments are:
              (t
               (goto-char orig))))))
        (unwind-protect
-           (let ((evil-inhibit-operator evil-inhibit-operator-value))
+           (let ((evil-inhibit-operator evil-inhibit-operator-value)
+                 (,end-marker (make-marker)))
+             (set-marker ,end-marker ,(cadr args))
              (unless (and evil-inhibit-operator
                           (called-interactively-p 'any))
-               ,@body))
+               ,@body)
+             (evil-set-marker ?\[ (or ,(car args) (point-max)))
+             (evil-set-marker ?\] (max (or ,(car args) (point-max))
+                                       (1- (or (marker-position ,end-marker) (point-max)))))
+             (set-marker ,end-marker nil))
          (setq evil-inhibit-operator-value nil)))))
 
 ;; this is used in the `interactive' specification of an operator command
@@ -568,52 +567,50 @@ Optional keyword arguments are:
   "Read a motion from the keyboard and return its buffer positions.
 The return value is a list (BEG END), or (BEG END TYPE) if
 RETURN-TYPE is non-nil."
-  (let* ((evil-ex-p (and (not (minibufferp)) (evil-ex-p)))
+  (let* ((ex-p (and (not (minibufferp)) (evil-ex-p)))
          (motion (or evil-operator-range-motion
-                     (when evil-ex-p 'evil-line)))
+                     (when ex-p 'evil-line)))
          (type evil-operator-range-type)
-         (range (evil-range (point) (point)))
-         command count)
+         range count)
     (setq evil-this-type-modified nil)
     (evil-save-echo-area
       (cond
        ;; Ex mode
-       ((and evil-ex-p evil-ex-range)
+       ((and ex-p evil-ex-range)
         (setq range evil-ex-range))
        ;; Visual selection
-       ((and (not evil-ex-p) (evil-visual-state-p))
+       ((and (not ex-p) (evil-visual-state-p))
         (setq range (evil-visual-range)))
        ;; active region
-       ((and (not evil-ex-p) (region-active-p))
+       ((and (not ex-p) (region-active-p))
         (setq range (evil-range (region-beginning)
                                 (region-end)
                                 (or evil-this-type 'exclusive))))
+       ;; motion
        (t
-        ;; motion
         (evil-save-state
           (unless motion
-            (evil-change-state 'operator)
             ;; Make linewise operator shortcuts. E.g., "d" yields the
             ;; shortcut "dd", and "g?" yields shortcuts "g??" and "g?g?".
             (let ((keys (nth 2 (evil-extract-count (this-command-keys)))))
-              (setq keys (listify-key-sequence keys))
-              (dotimes (var (length keys))
-                (define-key evil-operator-shortcut-map
-                  (vconcat (nthcdr var keys)) 'evil-line-or-visual-line)))
+              (evil-change-state 'operator)
+              (cl-loop for keys on (listify-key-sequence keys) do
+                       (define-key evil-operator-shortcut-map
+                         (vconcat keys) #'evil-line-or-visual-line)))
             ;; read motion from keyboard
-            (setq command (evil-read-motion motion)
-                  motion (nth 0 command)
-                  count (nth 1 command)
-                  type (or type (nth 2 command))))
+            (let ((command (evil-read-motion motion)))
+              (setq motion (car command)
+                    count (cadr command)
+                    type (or type (nth 2 command)))))
           (cond
            ((eq motion #'undefined)
-            (setq range (if return-type '(nil nil nil) '(nil nil))
+            (setq range (list nil nil)
                   motion nil))
            ((or (null motion) ; keyboard-quit
                 (evil-get-command-property motion :suppress-operator))
-            (when (fboundp 'evil-repeat-abort)
-              (evil-repeat-abort))
+            (evil-repeat-abort)
             (setq quit-flag t
+                  range (evil-range (point) (point)) ; zero-len range
                   motion nil))
            (evil-repeat-count
             (setq count evil-repeat-count
@@ -628,27 +625,22 @@ RETURN-TYPE is non-nil."
             (let ((evil-state 'operator)
                   mark-active)
               ;; calculate motion range
-              (setq range (evil-motion-range
-                           motion
-                           count
-                           type))))
+              (setq range (evil-motion-range motion count type))))
           ;; update global variables
           (setq evil-this-motion motion
                 evil-this-motion-count count
                 type (evil-type range type)
-                evil-this-type type))))
-      (when (evil-range-p range)
-        (unless (or (null type) (eq (evil-type range) type))
-          (evil-contract-range range)
-          (evil-set-type range type)
-          (evil-expand-range range))
-        (evil-set-range-properties range nil)
-        (unless return-type
-          (evil-set-type range nil))
-        (setq evil-operator-range-beginning (evil-range-beginning range)
-              evil-operator-range-end (evil-range-end range)
-              evil-operator-range-type (evil-type range)))
-      range)))
+                evil-this-type type)))))
+    (unless (or (null type) (eq (evil-type range) type))
+      (evil-contract-range range)
+      (evil-set-range-type range type)
+      (evil-expand-range range))
+    (setq evil-operator-range-beginning (evil-range-beginning range)
+          evil-operator-range-end (evil-range-end range)
+          evil-operator-range-type (evil-type range))
+    (setcdr (cdr range)
+            (when return-type (list (evil-type range))))
+    range))
 
 (defmacro evil-define-type (type doc &rest body)
   "Define type TYPE.
@@ -700,9 +692,7 @@ be transformations on buffer positions, like `:expand' and `:contract'.
            `(defun ,name (beg end &rest properties)
               ,(format "Return size of %s from BEG to END \
 with PROPERTIES.\n\n%s%s" type string doc)
-              (let ((beg (evil-normalize-position beg))
-                    (end (evil-normalize-position end))
-                    (type ',type)
+              (let ((type ',type)
                     plist range)
                 (when (and beg end)
                   (save-excursion
@@ -724,9 +714,7 @@ with PROPERTIES.\n\n%s%s" type string doc)
            `(defun ,name (beg end &rest properties)
               ,(format "Perform %s transformation on %s from BEG to END \
 with PROPERTIES.\n\n%s%s" sym type string doc)
-              (let ((beg (evil-normalize-position beg))
-                    (end (evil-normalize-position end))
-                    (type ',type)
+              (let ((type ',type)
                     plist range)
                 (when (and beg end)
                   (save-excursion

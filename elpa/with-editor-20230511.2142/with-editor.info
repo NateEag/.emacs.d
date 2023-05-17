@@ -1,7 +1,7 @@
 This is with-editor.info, produced by makeinfo version 6.7 from
 with-editor.texi.
 
-     Copyright (C) 2015-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -39,9 +39,9 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 3.2.0-git.
+This manual is for With-Editor version 3.3.0.
 
-     Copyright (C) 2015-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -170,7 +170,7 @@ it receives a signal.
      performant implementation:
 
           "sh -c '\
-          echo \"WITH-EDITOR: $$ OPEN $0 IN $(pwd)\"; \
+          echo \"WITH-EDITOR: $$ OPEN $0$1 IN $(pwd)\"; \
           trap \"exit 0\" USR1; \
           trap \"exit 1\" USR2; \
           while true; do sleep 1; done'"
@@ -366,13 +366,13 @@ Appendix B Variable Index
 
 Tag Table:
 Node: Top773
-Node: Using the With-Editor package2567
-Node: Configuring With-Editor3153
-Node: Using With-Editor commands7699
-Node: Using With-Editor as a library10984
-Node: Debugging13009
-Node: Function and Command Index13901
-Node: Variable Index15399
+Node: Using the With-Editor package2563
+Node: Configuring With-Editor3149
+Node: Using With-Editor commands7698
+Node: Using With-Editor as a library10983
+Node: Debugging13008
+Node: Function and Command Index13900
+Node: Variable Index15398
 
 End Tag Table
 

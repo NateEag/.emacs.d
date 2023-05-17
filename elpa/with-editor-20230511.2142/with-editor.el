@@ -1,13 +1,13 @@
 ;;; with-editor.el --- Use the Emacsclient as $EDITOR  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2014-2022 The Magit Project Contributors
+;; Copyright (C) 2014-2023 The Magit Project Contributors
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/with-editor
 ;; Keywords: processes terminals
 
-;; Package-Version: 3.2.0-git
-;; Package-Requires: ((emacs "25.1") (compat "28.1.1.0"))
+;; Package-Version: 3.3.0
+;; Package-Requires: ((emacs "25.1") (compat "29.1.4.1"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -168,7 +168,7 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))))
 
 (defcustom with-editor-sleeping-editor "\
 sh -c '\
-printf \"\\nWITH-EDITOR: $$ OPEN $0\\037 IN $(pwd)\\n\"; \
+printf \"\\nWITH-EDITOR: $$ OPEN $0\\037$1\\037 IN $(pwd)\\n\"; \
 sleep 604800 & sleep=$!; \
 trap \"kill $sleep; exit 0\" USR1; \
 trap \"kill $sleep; exit 1\" USR2; \
@@ -197,13 +197,16 @@ with \"bash\" (and install that), or you can use the older, less
 performant implementation:
 
   \"sh -c '\\
-  echo -e \\\"\\nWITH-EDITOR: $$ OPEN $0 IN $(pwd)\\n\\\"; \\
+  echo -e \\\"\\nWITH-EDITOR: $$ OPEN $0$1 IN $(pwd)\\n\\\"; \\
   trap \\\"exit 0\\\" USR1; \\
   trap \\\"exit 1\" USR2; \\
   while true; do sleep 1; done'\"
 
-Note that the unit separator character () right after the file
-name ($0) is required.
+Note that the two unit separator characters () right after $0
+and $1 are required.  Normally $0 is the file name and $1 is
+missing or else gets ignored.  But if $0 has the form \"+N[:N]\",
+then it is treated as a position in the file and $1 is expected
+to be the file.
 
 Also note that using this alternative implementation leads to a
 delay of up to a second.  The delay can be shortened by replacing
@@ -266,7 +269,7 @@ used when reading a filename in the minibuffer.")
 (defcustom with-editor-shell-command-use-emacsclient t
   "Whether to use the emacsclient when running shell commands.
 
-This affects `with-editor-shell-command-async' and, if the input
+This affects `with-editor-async-shell-command' and, if the input
 ends with \"&\" `with-editor-shell-command' .
 
 If `shell-command-with-editor-mode' is enabled, then it also
@@ -397,18 +400,16 @@ And some tools that do not handle $EDITOR properly also break."
 
 ;;; Mode
 
-(defvar with-editor-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c\C-c"                           #'with-editor-finish)
-    (define-key map [remap server-edit]                  #'with-editor-finish)
-    (define-key map [remap evil-save-and-close]          #'with-editor-finish)
-    (define-key map [remap evil-save-modified-and-close] #'with-editor-finish)
-    (define-key map "\C-c\C-k"                           #'with-editor-cancel)
-    (define-key map [remap kill-buffer]                  #'with-editor-cancel)
-    (define-key map [remap ido-kill-buffer]              #'with-editor-cancel)
-    (define-key map [remap iswitchb-kill-buffer]         #'with-editor-cancel)
-    (define-key map [remap evil-quit]                    #'with-editor-cancel)
-    map))
+(defvar-keymap with-editor-mode-map
+  "C-c C-c"                                #'with-editor-finish
+  "<remap> <server-edit>"                  #'with-editor-finish
+  "<remap> <evil-save-and-close>"          #'with-editor-finish
+  "<remap> <evil-save-modified-and-close>" #'with-editor-finish
+  "C-c C-k"                                #'with-editor-cancel
+  "<remap> <kill-buffer>"                  #'with-editor-cancel
+  "<remap> <ido-kill-buffer>"              #'with-editor-cancel
+  "<remap> <iswitchb-kill-buffer>"         #'with-editor-cancel
+  "<remap> <evil-quit>"                    #'with-editor-cancel)
 
 (define-minor-mode with-editor-mode
   "Edit a file as the $EDITOR of an external process."
@@ -508,7 +509,16 @@ at run-time.
       (server-start))
     ;; Tell $EDITOR to use the Emacsclient.
     (push (concat with-editor--envvar "="
-                  (shell-quote-argument with-editor-emacsclient-executable)
+                  ;; Quoting is the right thing to do.  Applications that
+                  ;; fail because of that, are the ones that need fixing,
+                  ;; e.g., by using 'eval "$EDITOR" file'.  See #121.
+                  (shell-quote-argument
+                   ;; If users set the executable manually, they might
+                   ;; begin the path with "~", which would get quoted.
+                   (if (string-prefix-p "~" with-editor-emacsclient-executable)
+                       (concat (expand-file-name "~")
+                               (substring with-editor-emacsclient-executable 1))
+                     with-editor-emacsclient-executable))
                   ;; Tell the process where the server file is.
                   (and (not server-use-tcp)
                        (concat " --socket-name="
@@ -633,8 +643,11 @@ may not insert the text into the PROCESS's buffer.  Then it calls
 
 (defvar with-editor-filter-visit-hook nil)
 
-(defconst with-editor-sleeping-editor-regexp
-  "^WITH-EDITOR: \\([0-9]+\\) OPEN \\([^]+?\\)\\(?: IN \\([^\r]+?\\)\\)?\r?$")
+(defconst with-editor-sleeping-editor-regexp "^\
+WITH-EDITOR: \\([0-9]+\\) \
+OPEN \\([^]+?\\)\
+\\(?:\\([^]*\\)\\)?\
+\\(?: IN \\([^\r]+?\\)\\)?\r?$")
 
 (defvar with-editor--max-incomplete-length 1000)
 
@@ -655,8 +668,16 @@ may not insert the text into the PROCESS's buffer.  Then it calls
       (when process
         (process-put process 'incomplete nil))
       (let ((pid  (match-string 1 string))
-            (file (match-string 2 string))
-            (dir  (match-string 3 string)))
+            (arg0 (match-string 2 string))
+            (arg1 (match-string 3 string))
+            (dir  (match-string 4 string))
+            file line column)
+        (cond ((string-match "\\`\\+\\([0-9]+\\)\\(?::\\([0-9]+\\)\\)?\\'" arg0)
+               (setq file arg1)
+               (setq line (string-to-number (match-string 1 arg0)))
+               (setq column (match-string 2 arg0))
+               (setq column (and column (string-to-number column))))
+              ((setq file arg0)))
         (unless (file-name-absolute-p file)
           (setq file (expand-file-name file dir)))
         (when default-directory
@@ -666,6 +687,19 @@ may not insert the text into the PROCESS's buffer.  Then it calls
           (setq with-editor--pid pid)
           (setq with-editor-previous-winconf
                 (current-window-configuration))
+          (when line
+            (let ((pos (save-excursion
+                         (save-restriction
+                           (goto-char (point-min))
+                           (forward-line (1- line))
+                           (when column
+                             (move-to-column column))
+                           (point)))))
+              (when (and (buffer-narrowed-p)
+                         widen-automatically
+                         (not (<= (point-min) pos (point-max))))
+                (widen))
+              (goto-char pos)))
           (run-hooks 'with-editor-filter-visit-hook)
           (funcall (or (with-editor-server-window) #'switch-to-buffer)
                    (current-buffer))

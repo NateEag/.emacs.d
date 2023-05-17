@@ -4,9 +4,9 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net>
 ;; URL: http://github.com/alphapapa/ts.el
-;; Package-Version: 20210813.1617
-;; Package-Commit: 3fee71ceefac71ba55eb34829d7e94bb3df37cee
-;; Version: 0.3-pre
+;; Package-Version: 20220822.2313
+;; Package-Commit: 552936017cfdec89f7fc20c254ae6b37c3f22c5b
+;; Version: 0.3
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (s "1.12.0"))
 ;; Keywords: calendar, lisp
 
@@ -70,7 +70,7 @@
 ;;;; Structs
 
 (cl-defmacro ts-defstruct (&rest args)
-  "Like `cl-defstruct', but with additional slot options.
+  "Like `cl-defstruct', but with additional slot options from ARGS.
 
 Additional slot options and values:
 
@@ -324,7 +324,7 @@ range."
 
 ;; We don't want to force `org' to load when this library does, so we declare
 ;; the function.  Users should load `org' before calling `ts-parse-org'.
-(declare-function org-parse-time-string "org.el")
+(declare-function org-parse-time-string "org-macs.el")
 
 (defsubst ts-parse-org (org-ts-string)
   "Return timestamp object for Org timestamp string ORG-TS-STRING.
@@ -373,7 +373,7 @@ not support timestamps that contain seconds."
 ;;;; Functions
 
 (cl-defun ts-apply (&rest args)
-  "Return new timestamp based on TS with new slot values.
+  "Return new timestamp based on TS with new slot values from ARGS.
 Fill timestamp slots, overwrite given slot values, and return new
 timestamp with Unix timestamp value derived from new slot values.
 SLOTS is a list of alternating key-value pairs like that passed
@@ -398,17 +398,17 @@ to `make-ts'."
     (ts-update ts)))
 
 (defmacro ts-define-fill ()
-  "Define `ts-fill' function that fills all applicable slots of `ts' object from its `unix' slot."
+  "Define function that fills all applicable slots of a `ts' from its `unix' slot."
   (let* ((slots (->> (cl-struct-slot-info 'ts)
-                  (--select (and (not (member (car it) '(unix internal cl-tag-slot)))
-                                 (plist-get (cddr it) :constructor)))
+                     (--select (and (not (member (car it) '(unix internal cl-tag-slot)))
+                                    (plist-get (cddr it) :constructor)))
 
-                  (--map (list (intern (concat ":" (symbol-name (car it))))
-                               (cddr it)))))
+                     (--map (list (intern (concat ":" (symbol-name (car it))))
+                                  (cddr it)))))
          (keywords (-map #'car slots))
          (constructors (->> slots
-                         (--map (plist-get (cadr it) :constructor))
-                         -non-nil))
+                            (--map (plist-get (cadr it) :constructor))
+                            -non-nil))
          (types (--map (plist-get (cadr it) :type) slots))
          (format-string (s-join "\f" constructors))
          (value-conversions (cl-loop for type in types
@@ -487,8 +487,8 @@ seconds, etc."
                                ;; Return string joining the names and values of PLACES.
                                `(->> (list ,@(cl-loop for place in places
                                                       collect `(format> ,place)))
-                                  -non-nil
-                                  (s-join (if abbreviate "" ", ")))))
+                                     -non-nil
+                                     (s-join (if abbreviate "" ", ")))))
       (-let* (((&plist :years :days :hours :minutes :seconds) (ts-human-duration seconds)))
         (join-places years days hours minutes seconds)))))
 
@@ -578,7 +578,8 @@ to 47 hours into the future:
      (setf ,ts (ts-update ,ts))))
 
 (cl-defmacro ts-incf (place &optional (value 1))
-  "Increment timestamp PLACE by VALUE (default 1), update its Unix timestamp, and return the new value of PLACE."
+  "Increment `ts' PLACE by VALUE (default 1) and return the new value of PLACE.
+Updates its `unix' slot accordingly."
   `(progn
      (setf ,(cadr place) (ts-fill ,(cadr place)))
      (prog1
@@ -587,7 +588,8 @@ to 47 hours into the future:
              (ts-update ,(cadr place))))))
 
 (cl-defmacro ts-decf (place &optional (value 1))
-  "Decrement timestamp PLACE by VALUE (default 1), update its Unix timestamp, and return the new value of PLACE."
+  "Decrement `ts' PLACE by VALUE (default 1) and return the new value of PLACE.
+Updates its `unix' slot accordingly."
   `(progn
      (setf ,(cadr place) (ts-fill ,(cadr place)))
      (prog1

@@ -1,4 +1,4 @@
-;;; ts-autoloads.el --- automatically extracted autoloads
+;;; ts-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "ts" "ts.el" (0 0 0 0))
 ;;; Generated autoloads from ts.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ts" '("ts-" "ts<" "ts=" "ts>")))
+(register-definition-prefixes "ts" '("ts-" "ts<" "ts=" "ts>"))
 
 ;;;***
 

@@ -13,6 +13,9 @@
 (autoload 'tree-sitter-ispell-run-at-point "tree-sitter-ispell" "\
 Run ispell at current point if there is a text node." t nil)
 
+(autoload 'tree-sitter-ispell-run-buffer "tree-sitter-ispell" "\
+Run ispell for every text node for the current buffer." t nil)
+
 (register-definition-prefixes "tree-sitter-ispell" '("tree-sitter-ispell-"))
 
 ;;;***

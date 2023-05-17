@@ -1,32 +1,36 @@
-;;; packed.el --- package manager agnostic Emacs Lisp package utilities  -*- lexical-binding: t -*-
+;;; packed.el --- [DEPRECATED] Package manager agnostic Emacs Lisp package utilities  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2012-2022  Jonas Bernoulli
+;; Copyright (C) 2012-2022 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/packed
-;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20220402.1638
-;; Package-Commit: 1e2d1a96a2105fec7c1e95d3484790da45fbdf36
-;; Package-Requires: ((emacs "24.3"))
+;; Keywords: lisp
+;; Package-Version: 20221130.2228
+;; Package-Commit: 169064f7acfe198cc7dd43d02518b773691e1314
 
-;; This file is not part of GNU Emacs.
+;; Package-Requires: ((emacs "25.1") (compat "28.1.1.0"))
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
-;; For a full copy of the GNU General Public License
-;; see <http://www.gnu.org/licenses/>.
-
-;; SPDX-License-Identifier: GPL-3.0-or-later
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
+
+;; [DEPRECATED] This library has been deprecated.
+;;     Only a subset of the functionality provided by this library
+;;     turned out to be useful.  Those parts have been moved to the
+;;     `elx' package.
 
 ;; Packed provides some package manager agnostic utilities to work
 ;; with Emacs Lisp packages.  As far as Packed is concerned packages
@@ -43,6 +47,7 @@
 ;;; Code:
 
 (require 'bytecomp)
+(require 'compat)
 (require 'cl-lib)
 
 (defvar autoload-modified-buffers)
@@ -265,7 +270,7 @@ non-nil return nil."
                 (car libraries))
                ((packed-main-library-2 package libraries))
                ((packed-main-library-2
-                 (if (string-match "-mode$" package)
+                 (if (string-suffix-p "-mode" package)
                      (substring package 0 -5)
                    (concat package "-mode"))
                  libraries)))))
@@ -350,8 +355,8 @@ Elements of `load-path' which no longer exist are not removed."
                dir (file-name-nondirectory file))
          (if (cdr elt)
              (cl-incf (pcase (byte-recompile-file file force 0)
-                        (`no-byte-compile skip-count)
-                        (`t lib-count)
+                        ('no-byte-compile skip-count)
+                        ('t lib-count)
                         (_  fail-count)))
            (setq skip-count (1+ skip-count)))
          (unless (eq last-dir dir)
@@ -401,7 +406,8 @@ nil if not found."
 (defmacro packed-with-loaddefs (dest &rest body)
   (declare (indent 1))
   `(packed-without-mode-hooks
-     (require 'autoload)
+     (with-suppressed-warnings ((obsolete autoload))
+       (require 'autoload))
      (let ((generated-autoload-file ,dest) buf)
        (prog1 (progn ,@body)
          (while (setq buf (find-buffer-visiting generated-autoload-file))

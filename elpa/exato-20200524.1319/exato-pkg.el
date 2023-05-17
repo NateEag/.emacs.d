@@ -1,0 +1,2 @@
+;;; Generated package description from exato.el  -*- no-byte-compile: t -*-
+(define-package "exato" "20200524.1319" "EXATO: Evil XML/HTML Attributes Text Object" '((evil "1.2.13") (emacs "24")) :commit "5e7b5721bf48aa49c6cdb5d41b908ef7d513b2a8" :authors '(("Filipe Silva" . "filipe.silva@gmail.com")) :maintainers '(("Filipe Silva" . "filipe.silva@gmail.com")) :maintainer '("Filipe Silva" . "filipe.silva@gmail.com") :url "https://github.com/ninrod/exato")

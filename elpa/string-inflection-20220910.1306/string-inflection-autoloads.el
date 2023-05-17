@@ -1,4 +1,4 @@
-;;; string-inflection-autoloads.el --- automatically extracted autoloads
+;;; string-inflection-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,6 +12,9 @@
 
 (autoload 'string-inflection-ruby-style-cycle "string-inflection" "\
 foo_bar => FOO_BAR => FooBar => foo_bar" t nil)
+
+(autoload 'string-inflection-elixir-style-cycle "string-inflection" "\
+foo_bar => FooBar => foo_bar" t nil)
 
 (autoload 'string-inflection-python-style-cycle "string-inflection" "\
 foo_bar => FOO_BAR => FooBar => foo_bar" t nil)
@@ -43,7 +46,7 @@ FOO_BAR format" t nil)
 (autoload 'string-inflection-kebab-case "string-inflection" "\
 foo-bar format" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "string-inflection" '("string-inflection-")))
+(register-definition-prefixes "string-inflection" '("string-inflection-"))
 
 ;;;***
 

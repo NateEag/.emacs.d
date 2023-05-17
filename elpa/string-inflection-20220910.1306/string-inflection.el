@@ -4,8 +4,8 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20210918.419
-;; Package-Commit: fd7926ac17293e9124b31f706a4e8f38f6a9b855
+;; Package-Version: 20220910.1306
+;; Package-Commit: 50ad54970b3cc79b6b83979bde9889ad9a9e1a9c
 ;; Version: 1.0.16
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -28,9 +28,10 @@
 ;; There are three main functions:
 ;;
 ;;   1. For Ruby   -> string-inflection-ruby-style-cycle   (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   2. For Python -> string-inflection-python-style-cycle (foo_bar => FOO_BAR => FooBar => foo_bar)
-;;   3. For Java   -> string-inflection-java-style-cycle   (fooBar  => FOO_BAR => FooBar => fooBar)
-;;   4. For All    -> string-inflection-all-cycle          (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
+;;   2. For Elixir -> string-inflection-elixir-style-cycle (foo_bar => FooBar => foo_bar)
+;;   3. For Python -> string-inflection-python-style-cycle (foo_bar => FOO_BAR => FooBar => foo_bar)
+;;   4. For Java   -> string-inflection-java-style-cycle   (fooBar  => FOO_BAR => FooBar => fooBar)
+;;   5. For All    -> string-inflection-all-cycle          (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
 ;;
 ;;
 ;; Example 1:
@@ -53,6 +54,9 @@
 ;;      ;; for python
 ;;      ((eq major-mode 'python-mode)
 ;;       (string-inflection-python-style-cycle))
+;;      ;; for elixir
+;;      ((eq major-mode 'elixir-mode)
+;;       (string-inflection-elixir-style-cycle))
 ;;      (t
 ;;       ;; default
 ;;       (string-inflection-ruby-style-cycle))))
@@ -69,6 +73,11 @@
 ;;   (add-hook 'ruby-mode-hook
 ;;             '(lambda ()
 ;;                (local-set-key (kbd "C-c C-u") 'string-inflection-ruby-style-cycle)))
+;;
+;;   ;; for elixir
+;;   (add-hook 'elixir-mode-hook
+;;             '(lambda ()
+;;                (local-set-key (kbd "C-c C-u") 'string-inflection-elixir-style-cycle)))
 ;;
 ;;   ;; for python
 ;;   (add-hook 'python-mode-hook
@@ -100,11 +109,13 @@ the beginning."
 (defconst string-inflection-word-chars "a-zA-Z0-9_-")
 
 (defcustom string-inflection-erase-chars-when-region "./"
-  "When selected in the region, this character is included in the transformation as part of the string.
+  "When selected in the region, this character is included in the transformation
+as part of the string.
 
 Exactly assume that the underscore exists.
-For example, when you select `Foo/Bar', it is considered that `Foo_Bar' is selected.
-If include `:', select `FOO::VERSION' to run `M-x\ string-inflection-underscore' to `foo_version'."
+For example, when you select `Foo/Bar', it is considered that `Foo_Bar' is
+selected. If include `:', select `FOO::VERSION' to run
+`M-x\ string-inflection-underscore' to `foo_version'."
   :group 'string-inflection
   :type 'string)
 
@@ -118,6 +129,13 @@ If include `:', select `FOO::VERSION' to run `M-x\ string-inflection-underscore'
    (string-inflection-ruby-style-cycle-function (string-inflection-get-current-word))))
 
 (fset 'string-inflection-cycle 'string-inflection-ruby-style-cycle)
+
+;;;###autoload
+(defun string-inflection-elixir-style-cycle ()
+  "foo_bar => FooBar => foo_bar"
+  (interactive)
+  (string-inflection-insert
+   (string-inflection-elixir-style-cycle-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-python-style-cycle ()
@@ -321,6 +339,14 @@ If include `:', select `FOO::VERSION' to run `M-x\ string-inflection-underscore'
 
 (defalias 'string-inflection-python-style-cycle-function
   'string-inflection-ruby-style-cycle-function)
+
+(defun string-inflection-elixir-style-cycle-function (str)
+  "foo_bar => FooBar => foo_bar"
+  (cond
+   ((string-inflection-underscore-p str)
+    (string-inflection-pascal-case-function str))
+   (t
+    (string-inflection-underscore-function str))))
 
 (defun string-inflection-java-style-cycle-function (str)
   "fooBar => FOO_BAR => FooBar => fooBar"

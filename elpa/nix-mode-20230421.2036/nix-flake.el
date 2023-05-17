@@ -1,7 +1,7 @@
 ;;; nix-flake.el --- Transient interface to Nix flake commands -*- lexical-binding: t -*-
 
 ;; Keywords: nix, languages, tools, unix
-;; Package-Requires: ((emacs "27.1") (transient "0.3"))
+;; Homepage: https://github.com/NixOS/nix-mode
 
 ;;; Commentary:
 
@@ -15,7 +15,7 @@
 (require 'transient)
 
 (defgroup nix-flake nil
-  "Nix flake commands"
+  "Nix flake commands."
   :group 'nix)
 
 ;;;; Custom variables
@@ -23,7 +23,7 @@
 (defcustom nix-flake-init-post-action 'open-flake-nix
   "Action to run after successfully initializing a flake.
 
-This action is run after a flake is successlly initialized by
+This action is run after a flake is successfully initialized by
 `nix-flake-init` (or generally `nix-flake-dispatch`).
 
 You can also specify a function, which should take no arguments.
@@ -569,6 +569,9 @@ See `nix-flake-init-post-action' variable for details."
     (if (file-exists-p "flake.nix")
         (user-error "The directory already contains a flake")
       (nix-flake-init-dispatch))))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\flake.lock\\'" . js-mode))
 
 (provide 'nix-flake)
 ;;; nix-flake.el ends here

@@ -1,4 +1,4 @@
-;;; nix-mode-autoloads.el --- automatically extracted autoloads
+;;; nix-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,14 +12,19 @@
 (autoload 'pcomplete/nix "nix" "\
 Completion for the nix command." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix" '("nix-")))
+(register-definition-prefixes "nix" '("nix-"))
 
 ;;;***
 
 ;;;### (autoloads nil "nix-build" "nix-build.el" (0 0 0 0))
 ;;; Generated autoloads from nix-build.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-build" '("nix-build")))
+(autoload 'nix-build "nix-build" "\
+Run nix-build in a compilation buffer.
+FILE the file to parse.
+ATTR the attribute to build.
+
+\(fn &optional FILE ATTR)" t nil)
 
 ;;;***
 
@@ -31,16 +36,21 @@ Pretty print Nix’s .drv files.
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("\\`/nix/store/.+\\.drv\\'" . nix-drv-mode))
+(add-to-list 'auto-mode-alist '("^/nix/store/.+\\.drv\\'" . nix-drv-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-drv-mode" '("nix-drv-mode-dejsonify-buffer")))
+(register-definition-prefixes "nix-drv-mode" '("nix-drv-mode-dejsonify-buffer"))
 
 ;;;***
 
 ;;;### (autoloads nil "nix-edit" "nix-edit.el" (0 0 0 0))
 ;;; Generated autoloads from nix-edit.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-edit" '("nix-edit")))
+(autoload 'nix-edit "nix-edit" "\
+Open the nix log.
+FILE the nix file to load from.
+ATTR the attribute to find in nix expressions.
+
+\(fn &optional FILE ATTR)" t nil)
 
 ;;;***
 
@@ -63,7 +73,9 @@ whatever supported by Nix.
 (autoload 'nix-flake-init "nix-flake" "\
 Run \"nix flake init\" command via a transient interface." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-flake" '("nix-flake-")))
+(add-to-list 'auto-mode-alist '("\\flake.lock\\'" . js-mode))
+
+(register-definition-prefixes "nix-flake" '("nix-flake-"))
 
 ;;;***
 
@@ -73,7 +85,7 @@ Run \"nix flake init\" command via a transient interface." t nil)
 (autoload 'nix-format-before-save "nix-format" "\
 Add this to `before-save-hook' to run nixfmt when saving." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-format" '("nix-")))
+(register-definition-prefixes "nix-format" '("nix-"))
 
 ;;;***
 
@@ -81,14 +93,21 @@ Add this to `before-save-hook' to run nixfmt when saving." nil nil)
 ;;;;;;  0 0))
 ;;; Generated autoloads from nix-instantiate.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-instantiate" '("nix-instantiate")))
+(register-definition-prefixes "nix-instantiate" '("nix-instantiate"))
 
 ;;;***
 
 ;;;### (autoloads nil "nix-log" "nix-log.el" (0 0 0 0))
 ;;; Generated autoloads from nix-log.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-log" '("nix-log")))
+(autoload 'nix-log "nix-log" "\
+Open the nix log.
+FILE nix file to parse.
+ATTR attribute to load the log of.
+
+\(fn FILE ATTR)" t nil)
+
+(register-definition-prefixes "nix-log" '("nix-log-path"))
 
 ;;;***
 
@@ -141,7 +160,7 @@ The hook `nix-mode-hook' is run when Nix mode is started.
 
 (add-to-list 'auto-mode-alist '("\\.nix\\'" . nix-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-mode" '("nix-")))
+(register-definition-prefixes "nix-mode" '("nix-"))
 
 ;;;***
 
@@ -153,7 +172,7 @@ The hook `nix-mode-hook' is run when Nix mode is started.
 Toggle Nix Prettify mode.
 
 With a prefix argument ARG, enable Nix Prettify mode if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
+positive, and disable it otherwise. If called from Lisp, enable
 the mode if ARG is omitted or nil.
 
 When Nix Prettify mode is enabled, hash-parts of the Nix store
@@ -187,19 +206,23 @@ or call the function `nix-prettify-global-mode'.")
 
 (autoload 'nix-prettify-global-mode "nix-prettify-mode" "\
 Toggle Nix-Prettify mode in all buffers.
-With prefix ARG, enable Nix-Prettify-Global mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Nix-Prettify-Global mode if ARG is positive; otherwise,
+disable it.
 
-Nix-Prettify mode is enabled in all buffers where
-`nix-prettify-turn-on' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Nix-Prettify mode is enabled in all buffers where `nix-prettify-turn-on' would
+do it.
+
 See `nix-prettify-mode' for more information on Nix-Prettify mode.
 
 \(fn &optional ARG)" t nil)
 
 (define-obsolete-function-alias 'global-nix-prettify-mode 'nix-prettify-global-mode "v1.2.2")
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-prettify-mode" '("nix-prettify-")))
+(register-definition-prefixes "nix-prettify-mode" '("nix-prettify-"))
 
 ;;;***
 
@@ -213,7 +236,7 @@ Load the Nix-REPL." t nil)
 Completion at point function for Nix using \"nix-repl\".
 See `completion-at-point-functions'." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-repl" '("nix-")))
+(register-definition-prefixes "nix-repl" '("nix-"))
 
 ;;;***
 
@@ -237,14 +260,14 @@ FILE a Nix expression to search in.
 
 \(fn SEARCH &optional FILE DISPLAY-BUFFER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-search" '("nix-search-")))
+(register-definition-prefixes "nix-search" '("nix-search-"))
 
 ;;;***
 
 ;;;### (autoloads nil "nix-shebang" "nix-shebang.el" (0 0 0 0))
 ;;; Generated autoloads from nix-shebang.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-shebang" '("nix-shebang-")))
+(register-definition-prefixes "nix-shebang" '("nix-shebang-"))
 
 ;;;***
 
@@ -299,14 +322,14 @@ ATTR an attribute of the Nix file to use.
 
 \(fn FILE &optional ATTR)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-shell" '("nix-")))
+(register-definition-prefixes "nix-shell" '("nix-"))
 
 ;;;***
 
 ;;;### (autoloads nil "nix-store" "nix-store.el" (0 0 0 0))
 ;;; Generated autoloads from nix-store.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-store" '("nix-")))
+(register-definition-prefixes "nix-store" '("nix-"))
 
 ;;;***
 

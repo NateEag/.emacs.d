@@ -1,4 +1,4 @@
-;;; nix-prettify.el -- Prettify Nix store file names  -*- lexical-binding: t -*-
+;;; nix-prettify-mode.el --- Prettify Nix store file names  -*- lexical-binding: t -*-
 
 ;; Copyright © 2014, 2015 Alex Kost <alezost@gmail.com>
 ;; Modified by Matthew Bauer for use in nix-mode
@@ -6,8 +6,8 @@
 ;; Author: Alex Kost
 ;; Maintainer: Matthew Bauer <mjbauer95@gmail.com>
 ;; Homepage: https://github.com/NixOS/nix-mode
-;; Version: 1.1
 ;; Keywords: nix
+
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -125,7 +125,7 @@ enabling/disabling `nix-prettify-mode'.  If nil, do nothing.")
   "Toggle Nix Prettify mode.
 
 With a prefix argument ARG, enable Nix Prettify mode if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
+positive, and disable it otherwise. If called from Lisp, enable
 the mode if ARG is omitted or nil.
 
 When Nix Prettify mode is enabled, hash-parts of the Nix store

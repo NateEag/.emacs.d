@@ -1,9 +1,8 @@
-;;; nix-search.el -- run nix commands in Emacs -*- lexical-binding: t -*-
+;;; nix-search.el --- Run nix commands -*- lexical-binding: t -*-
 
 ;; Author: Matthew Bauer <mjbauer95@gmail.com>
 ;; Homepage: https://github.com/NixOS/nix-mode
 ;; Keywords: nix
-;; Version: 1.4.0
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,9 +18,9 @@
 ;;;###autoload
 (defun nix-search--search (search file &optional no-cache use-flakes)
   (nix--process-json-nocheck "search" "--json"
-    (if use-flakes "" "--file") file
-    (if no-cache  "--no-cache" "")
-    search))
+			     (unless use-flakes "--file") file
+			     (when no-cache "--no-cache")
+			     (unless (string-empty-p search) search)))
 
 (defface nix-search-pname
   '((t :height 1.5
@@ -75,6 +74,7 @@
   "Major mode for showing Nix search results.
 
 \\{nix-search-mode-map}"
+  :interactive nil
   :group 'nix-mode
 
   (easy-menu-add nix-search-mode-menu)

@@ -2,7 +2,9 @@
 
 ;; This file is NOT part of GNU Emacs.
 
-;; Version: 1.4.5
+;; Homepage: https://github.com/NixOS/nix-mode
+
+;; This file is NOT part of GNU Emacs.
 
 ;;; Commentary:
 
@@ -14,12 +16,12 @@
 (require 'nix)
 
 (defgroup nix-repl nil
-  "nix-repl customizations"
+  "Nix-repl customizations."
   :group 'nix)
 
 (defcustom nix-repl-executable-args '("repl")
   "Arguments to provide to nix-repl."
-  :type 'list)
+  :type '(repeat string))
 
 (defvar nix-repl-completion-redirect-buffer
   " *nix-repl completions redirect*"
@@ -43,6 +45,7 @@
 
 (define-derived-mode nix-repl-mode comint-mode "Nix-REPL"
   "Interactive prompt for Nix."
+  :interactive nil
   (setq-local comint-prompt-regexp nix-prompt-regexp)
   (setq-local comint-prompt-read-only t)
   (let* ((is-remote (file-remote-p default-directory))

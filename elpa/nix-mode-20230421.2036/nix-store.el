@@ -1,9 +1,8 @@
-;;; nix-store.el -- run nix commands in Emacs -*- lexical-binding: t -*-
+;;; nix-store.el --- Run nix commands -*- lexical-binding: t -*-
 
 ;; Author: Matthew Bauer <mjbauer95@gmail.com>
 ;; Homepage: https://github.com/NixOS/nix-mode
 ;; Keywords: nix
-;; Version: 1.4.0
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -13,39 +12,46 @@
 
 (require 'eieio)
 (require 'nix)
+(require 'nix-log)
 (require 'magit-section)
-(require 'cl-lib)
+(eval-when-compile
+  (require 'cl-lib))
 
 (defgroup nix-store nil
   "Nix-store customizations."
   :group 'nix)
 
+(defcustom nix-store-path-omit-self t
+  "Do not list the current entry itself within sections of `nix-store-path-mode'."
+  :package-version '(nix-mode . "1.6.0")
+  :type 'boolean)
+
 (defun nix-store-realise (path)
   "Realise a path asynchronously.
 PATH the path within /nix/store to realise"
   (make-process
-    :buffer nil
-    :command (list nix-store-executable "--realise" path)
-    :noquery t
-    :name (format "*nix-store*<%s>" path)))
+   :buffer nil
+   :command (list nix-store-executable "--realise" path)
+   :noquery t
+   :name (format "*nix-store*<%s>" path)))
 
 (defvar-local nix-buffer-store-path nil "Buffer-local object holding an `nix-store-path` object.")
 
 (defclass nix-store-path ()
-  ((path      :initarg :path                       :accessor nix-store-path-path)
-    (status   :initarg :status :initform 'realised :accessor nix-store-path-status)
-    (hash     :initarg :hash                       :accessor nix-store-path-hash)
-    (size     :initarg :size                       :accessor nix-store-path-size)
-    (derivers :initarg :derivers                   :accessor nix-store-path-derivers)
-    (outputs  :initarg :outputs                    :accessor nix-store-path-outputs)
-    (references :initarg :references               :accessor nix-store-path-references)
-    (referrers  :initarg :referrers                :accessor nix-store-path-referrers)
-    (requisites :initarg :requisites               :accessor nix-store-path-requisites))
+  ((path       :initarg :path        :accessor nix-store-path-path)
+   (status     :initarg :status      :accessor nix-store-path-status)
+   (hash       :initarg :hash        :accessor nix-store-path-hash)
+   (size       :initarg :size        :accessor nix-store-path-size)
+   (derivers   :initarg :derivers    :accessor nix-store-path-derivers)
+   (outputs    :initarg :outputs     :accessor nix-store-path-outputs)
+   (references :initarg :references  :accessor nix-store-path-references)
+   (referrers  :initarg :referrers   :accessor nix-store-path-referrers)
+   (requisites :initarg :requisites  :accessor nix-store-path-requisites))
   "Nix-Store-Path Class holds all information of the path that
 is displayed")
 
 (cl-defmethod nix-store-fill-data ((object nix-store-path))
-  "Query the nix store store via `nix-store-executable' and save that data into OBJECT."
+  "Query the nix store via `nix-store-executable' and save that data into OBJECT."
   (oset object :size (nix-store--query 'size (nix-store-path-path object)))
   (oset object :hash (nix-store--query 'hash (nix-store-path-path object)))
   (oset object :derivers (nix-store--query 'deriver (nix-store-path-path object)))
@@ -53,6 +59,7 @@ is displayed")
   (oset object :referrers (nix-store--query 'referrers (nix-store-path-path object)))
   (oset object :requisites (nix-store--query 'requisites (nix-store-path-path object)))
   (oset object :references (nix-store--query 'references (nix-store-path-path object)))
+  (oset object :status (file-exists-p (car (nix-store-path-outputs object))))
   object)
 
 (cl-defun nix-store--query (argument &optional (path (nix-store-path-path nix-buffer-store-path)))
@@ -63,27 +70,30 @@ being queried. Runs `nix-store-executable' to get that
 information."
   (let ((nix-executable nix-store-executable))
     (cond
-      ((eq 'deriver argument)
-	;; Special treatment for 'derivers', we want to treat a single entry
-	;; with this string as an empty list
-	(remove "unknown-deriver"
-	  (nix--process-lines "--query" "--deriver" path )))
-      ((eq 'size argument) (string-to-number (nix--process-string "--query" "--size" path )))
-      ((eq 'hash argument) (nix--process-string "--query" "--hash" path ))
-      ((eq 'requisites argument) (nix--process-lines "--query" "--requisites" path ))
-      ((eq 'references argument) (nix--process-lines "--query" "--references" path ))
-      ((eq 'referrers argument) (nix--process-lines "--query" "--referrers" path ))
-      ((eq 'outputs argument)
-	(ignore-errors
-	  ;; This can fail for non-derivation paths
-	  (nix--process-lines "--query" "--outputs" path )))
-      (t (error "Unknown argument to nix-store --query: %s" argument)))))
+     ((eq 'deriver argument)
+      ;; Special treatment for 'derivers', we want to treat a single entry
+      ;; with this string as an empty list
+      (remove "unknown-deriver"
+	      (nix--process-lines "--query" "--deriver" path )))
+     ((eq 'size argument) (string-to-number (nix--process-string "--query" "--size" path )))
+     ((eq 'hash argument) (nix--process-string "--query" "--hash" path ))
+     ((eq 'requisites argument) (nix--process-lines "--query" "--requisites" path ))
+     ((eq 'references argument) (nix--process-lines "--query" "--references" path ))
+     ((eq 'referrers argument) (nix--process-lines "--query" "--referrers" path ))
+     ((eq 'outputs argument)
+      (ignore-errors
+	;; This can fail for non-derivation paths
+	(nix--process-lines "--query" "--outputs" path )))
+     (t (error "Unknown argument to nix-store --query: %s" argument)))))
 
 (cl-defun nix-store-path-insert-path (&optional (store-path nix-buffer-store-path))
   "Insert a section showing the path of STORE-PATH."
   (magit-insert-section (path (nix-store-path-path store-path))
     (magit-insert-heading (propertize (format "%-11s" "Path:") 'face 'magit-section-heading)
-      (format "%s" (oref store-path path)))))
+      (propertize (oref store-path path)
+		  'face (if (file-exists-p (nix-store-path-path store-path))
+			    'nix-store-path-realised-face
+			  'nix-store-path-unrealised-face) ))))
 
 (cl-defun nix-store-path-insert-size (&optional (store-path nix-buffer-store-path))
   "Insert a section showing the size of STORE-PATH."
@@ -101,17 +111,24 @@ information."
   "Insert a section showing the status of STORE-PATH."
   (magit-insert-section (status (nix-store-path-status store-path))
     (magit-insert-heading (propertize (format "%-11s" "Status:") 'face 'magit-section-heading)
-      (format "%s" (oref store-path status)))))
+      (if (nix-store-path-status store-path) "realised" "unrealised"))))
 
 (defmacro nix-store--magit-insert-section-list (type value label)
   "Helper macro for inserting a list as a magit-section.
 TYPE and VALUE will be used as the type and value of the section
 respectively. The LABEL is the text displayed."
-  `(let ((value ,value))
+  `(let ((value (cl-remove
+		 (and nix-store-path-omit-self (nix-store-path-path nix-buffer-store-path))
+		 ,value :test #'equal)))
      (when (and (listp value) (> (length value) 0))
        (magit-insert-section (,type value)
 	 (magit-insert-heading ,label)
-	 (cl-loop for x in value do (magit-insert-section (store-path x) (insert x) (newline)))
+	 (cl-loop for x in value
+		  for exists = (file-exists-p x)
+		  for face = (if exists 'nix-store-path-realised-face 'nix-store-path-unrealised-face)
+		  do
+		  (magit-insert-section (store-path x)
+		    (insert (propertize x 'face face) ?\n)))
 	 (insert ?\n)
 	 (magit-insert-child-count (magit-current-section))))))
 
@@ -137,28 +154,30 @@ respectively. The LABEL is the text displayed."
 
 (defcustom nix-store-path-headers-hook
   '(nix-store-path-insert-path
-     nix-store-path-insert-status
-     nix-store-path-insert-hash
-     nix-store-path-insert-size)
+    nix-store-path-insert-status
+    nix-store-path-insert-hash
+    nix-store-path-insert-size)
   "Hook run to insert headers into the nix-store buffer.
 A list of function that each take one argument, the store path object."
   :group 'nix-store
   :type 'hook
+  :package-version '(nix-mode . "1.5.0")
   :options '(nix-store-path-insert-path
-	      nix-store-path-insert-status
-	      nix-store-path-insert-hash
-	      nix-store-path-insert-size))
+	     nix-store-path-insert-status
+	     nix-store-path-insert-hash
+	     nix-store-path-insert-size))
 
 (defcustom nix-store-path-sections-hook
   '(nix-store-path-insert-derivers
-     nix-store-path-insert-outputs
-     nix-store-path-insert-references
-     nix-store-path-insert-referrers
-     nix-store-path-insert-requisites)
+    nix-store-path-insert-outputs
+    nix-store-path-insert-references
+    nix-store-path-insert-referrers
+    nix-store-path-insert-requisites)
   "Hook run to insert sections into a nix-store buffer.
 A list of function that each take one argument, the store path object."
   :group 'nix-store
-  :type 'hook)
+  :type 'hook
+  :package-version '(nix-mode . "1.5.0"))
 
 (defun nix-store-show-path (path)
   "Show a nix-store PATH.
@@ -172,7 +191,7 @@ implement your own ones) you can customize the variable
   (switch-to-buffer (format "Nix Store Path: %s" path))
   (nix-store-path-mode)
   (setq nix-buffer-store-path (nix-store-fill-data (make-instance 'nix-store-path :path path))
-    list-buffers-directory path)
+	list-buffers-directory path)
   (when (file-directory-p path)
     (setq default-directory path))
   (let ((inhibit-read-only t))
@@ -180,7 +199,7 @@ implement your own ones) you can customize the variable
     (magit-insert-section (store-path)
       (magit-insert-headers 'nix-store-path-headers-hook)
       (magit-run-section-hook 'nix-store-path-sections-hook))
-    (setf (point) (point-min))))
+    (goto-char (point-min))))
 
 (defun nix-store-path-at-point ()
   "Return the nix-store path at point."
@@ -194,9 +213,17 @@ It uses \\[nix-store-show-path] to display the store path."
   (interactive)
   (nix-store-show-path (nix-store-path-at-point)))
 
+(defun nix-store-show-log ()
+  "Opens the log file for the derivation of the nix-store path."
+  (interactive)
+  (if-let ((drv-path (car (nix-store-path-derivers nix-buffer-store-path))))
+      (find-file (nix-log-path drv-path))
+    (user-error "This store path has no associated derivation.")))
+
 (defvar nix-store-path-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") 'nix-store-show-path-at-point)
+    (define-key map (kbd "l") 'nix-store-show-log)
     map))
 
 (defun nix-store--revert-buffer-function (&rest _ignore)
@@ -204,6 +231,7 @@ It uses \\[nix-store-show-path] to display the store path."
   (nix-store-show-path (nix-store-path-path nix-buffer-store-path)))
 
 (define-derived-mode nix-store-path-mode magit-section-mode "Nix Store Path"
+  :group 'nix-store
   (setq-local revert-buffer-function #'nix-store--revert-buffer-function)
   (read-only-mode 1))
 

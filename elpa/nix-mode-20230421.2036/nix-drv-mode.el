@@ -1,10 +1,8 @@
-;;; nix-drv-mode.el --- Major mode for viewing .drv files
+;;; nix-drv-mode.el --- Major mode for viewing .drv files -*- lexical-binding: t -*-
 
 ;; Maintainer: Matthew Bauer <mjbauer95@gmail.com>
 ;; Homepage: https://github.com/NixOS/nix-mode
-;; Version: 1.2.1
 ;; Keywords: nix, languages, tools, unix
-;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -45,7 +43,7 @@
     (read-only-mode nil)))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\`/nix/store/.+\\.drv\\'". nix-drv-mode))
+(add-to-list 'auto-mode-alist '("^/nix/store/.+\\.drv\\'" . nix-drv-mode))
 
 (provide 'nix-drv-mode)
 ;;; nix-drv-mode.el ends here

@@ -18,9 +18,11 @@
 
 (require 'pcomplete)
 (require 'json)
+(eval-when-compile
+  (require 'let-alist))
 
 (defgroup nix nil
-  "Nix-related customizations"
+  "Nix-related customizations."
   :group 'languages)
 
 (defcustom nix-executable "nix"
@@ -68,7 +70,7 @@
 
 (defvar nix-version nil)
 (defun nix-version ()
-  "Get the version of Nix"
+  "Get the version of Nix."
   (or nix-version (nix--process-string "--version")))
 
 (defun nix-show-config ()
@@ -196,7 +198,10 @@ OPTIONS a list of options to accept."
   "Whether Nix is a version with Flakes support."
   ;; earlier versions reported as 3, now it’s just nix-2.4
   (and (nix-is-24)
-       (seq-contains-p (alist-get 'value (alist-get 'experimental-features (nix-show-config))) "flakes")))
+       (let-alist (nix-show-config)
+	 (or
+	  (seq-contains-p .experimental-features.value 2)
+	  (seq-contains-p .experimental-features.value "flakes")))))
 
 ;;;###autoload
 (defun pcomplete/nix ()

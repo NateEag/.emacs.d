@@ -48,9 +48,10 @@
   "Mark used for the old beginning of the prompt.")
 
 (defun haskell-interactive-prompt-regex ()
-  "Generate a regex for searching for any occurrence of the prompt\
-at the beginning of the line.  This should prevent any
-interference with prompts that look like haskell expressions."
+  "Generate a regex for searching whether prompt or not.
+The regex is for searching for any occurrence of the prompt at the beginning of
+the line.  This should prevent any interference with prompts that look like
+haskell expressions."
   (concat "^" (regexp-quote haskell-interactive-prompt)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -395,7 +396,7 @@ SESSION, otherwise operate on the current buffer."
                           'rear-nonsticky t)))))
 
 (defun haskell-interactive-mode-goto-end-point ()
-  "Go to the 'end' of the buffer (before the prompt)."
+  "Go to the \\='end\\=' of the buffer (before the prompt)."
   (goto-char haskell-interactive-mode-prompt-start)
   (goto-char (line-beginning-position)))
 

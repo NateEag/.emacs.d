@@ -91,14 +91,14 @@ Using this function is more efficient than matching against the
 regexp `haskell-lexeme-qid-or-qsym'.
 
 Returns:
-  'qid - if matched a qualified id: 'Data.Map' or 'Map'
-  'qsym - if matched a qualified id: 'Monad.>>=' or '>>='
-  'qprefix - if matched only modid prefix: 'Data.'
+  \\='qid - if matched a qualified id: \\='Data.Map\\=' or \\='Map\\='
+  \\='qsym - if matched a qualified id: \\='Monad.>>=\\=' or \\='>>=\\='
+  \\='qprefix - if matched only modid prefix: \\='Data.\\='
 
-After successful 'qid or 'qsym match (match-string 1) will return
+After successful \\='qid or \\='qsym match (match-string 1) will return
 the unqualified part (if any)."
   (let ((begin (point))
-        (match-data-old (match-data)))
+        (match-data-old (match-data t)))
     (save-excursion
       (while (looking-at (concat haskell-lexeme-modid "\\."))
         (goto-char (match-end 0)))
@@ -138,7 +138,7 @@ When match is successful, match-data will contain:
   (match-text 2) - whole qualified identifier
   (match-text 3) - unqualified part of identifier
   (match-text 4) - closing backtick"
-  (let ((match-data-old (match-data))
+  (let ((match-data-old (match-data t))
         first-backtick-start
         last-backtick-start
         qid-start
@@ -159,15 +159,12 @@ When match is successful, match-data will contain:
           (when (looking-at "`")
             (setq last-backtick-start (match-beginning 0))
             (set-match-data
-             (mapcar
-              (lambda (p)
-                (set-marker (make-marker) p))
-              (list
-               first-backtick-start (1+ last-backtick-start)
-               first-backtick-start (1+ first-backtick-start)
-               qid-start id-end
-               id-start id-end
-               last-backtick-start (1+ last-backtick-start))))
+             (list
+              first-backtick-start (1+ last-backtick-start)
+              first-backtick-start (1+ first-backtick-start)
+              qid-start id-end
+              id-start id-end
+              last-backtick-start (1+ last-backtick-start)))
             (setq result t)))))
     (unless result
       (set-match-data match-data-old))
@@ -357,8 +354,8 @@ After successful match:
   "Non-nil when point is just in front of Template Haskell
 quaisquote literal.
 
-Quasi quotes start with '[xxx|' or '[$xxx|' sequence and end with
-  '|]'. The 'xxx' is a quoter name. There is no escaping mechanism
+Quasi quotes start with \\='[xxx|\\=' or \\='[$xxx|\\=' sequence and end with
+  \\='|]\\='. The \\='xxx\\=' is a quoter name. There is no escaping mechanism
 provided for the ending sequence.
 
 Regexp has subgroup expressions:
@@ -368,9 +365,9 @@ Regexp has subgroup expressions:
  (match-text 4) matches the closing vertical bar
                 or nil if at the end of the buffer.
 
-Note that this function excludes 'e', 't', 'd', 'p' as quoter
-names according to Template Haskell specification."
-  (let ((match-data-old (match-data)))
+Note that this function excludes \\='e\\=', \\='t\\=', \\='d'\\=, \\='p\\='
+as quoter names according to Template Haskell specification."
+  (let ((match-data-old (match-data t)))
     (if (and
          (looking-at (rx-to-string `(: "[" (optional "$")
                                        (regexp ,haskell-lexeme-modid-opt-prefix)
@@ -383,9 +380,9 @@ names according to Template Haskell specification."
         ;; note that quasi quote syntax does not have any escaping
         ;; mechanism and if not closed it will span til lthe end of buffer
         (goto-char (match-end 0))
-        (let ((match-data (match-data))
+        (let ((match-data (match-data t))
               (match-data-2 (and (re-search-forward "|]" nil t)
-                                 (match-data))))
+                                 (match-data t))))
           (if match-data-2
               (set-match-data
                (list
@@ -445,15 +442,17 @@ type of Haskell token recognized.  Use `match-string',
 result.
 
 Possible results are:
-- 'special: for chars [](){}`,;
-- 'comment: for single line comments
-- 'nested-comment: for multiline comments
-- 'qsymid: for qualified identifiers or symbols
-- 'string: for strings literals
-- 'char: for char literals
-- 'number: for decimal, float, hexadecimal and octal number literals
-- 'template-haskell-quote: for a string of apostrophes for template haskell
-- 'template-haskell-quasi-quote: for a string of apostrophes for template haskell
+- \\='special: for chars [](){}`,;
+- \\='comment: for single line comments
+- \\='nested-comment: for multiline comments
+- \\='qsymid: for qualified identifiers or symbols
+- \\='string: for strings literals
+- \\='char: for char literals
+- \\='number: for decimal, float, hexadecimal and octal number literals
+- \\='template-haskell-quote: for a string of apostrophes for template
+   haskell
+- \\='template-haskell-quasi-quote: for a string of apostrophes for template
+   haskell
 
 Note that for qualified symbols (match-string 1) returns the
 unqualified identifier or symbol.  Further qualification for
@@ -472,20 +471,20 @@ See `haskell-lexeme-classify-by-first-char' for details."
             (> (skip-chars-forward "\n") 0))))
   (let
       ((case-fold-search nil)
-       (point (point-marker)))
+       (point (point)))
     (or
      (and
       (equal (string-to-syntax "<")
              (get-char-property (point) 'syntax-table))
       (progn
-        (set-match-data (list point (set-marker (make-marker) (line-end-position))))
+        (set-match-data (list point (line-end-position)))
         'literate-comment))
      (and (looking-at "\n")
           'newline)
      (and (looking-at "{-")
           (save-excursion
             (forward-comment 1)
-            (set-match-data (list point (point-marker)))
+            (set-match-data (list point (point)))
             'nested-comment))
      (and (haskell-lexeme-looking-at-char-literal)
           'char)
@@ -499,7 +498,7 @@ See `haskell-lexeme-classify-by-first-char' for details."
           (if (save-match-data
                 (string-match "\\`---*\\'" (match-string-no-properties 0)))
               (progn
-                (set-match-data (list point (set-marker (make-marker) (line-end-position))))
+                (set-match-data (list point (line-end-position)))
                 'comment)
             'qsymid))
      (and (looking-at haskell-lexeme-number)

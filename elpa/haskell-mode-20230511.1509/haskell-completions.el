@@ -144,7 +144,7 @@ whitespace or new line, otherwise returns nil.
 
 (defun haskell-completions-grab-pragma-prefix ()
   "Grab completion prefix for pragma completions.
-Returns a list of form '(prefix-start-position
+Returns a list of form \\='(prefix-start-position
 prefix-end-position prefix-value prefix-type) for pramga names
 such as WARNING, DEPRECATED, LANGUAGE etc.  Also returns
 completion prefixes for options in case OPTIONS_GHC pragma, or
@@ -214,7 +214,7 @@ pragma is supported also."
 
 (defun haskell-completions-grab-identifier-prefix ()
   "Grab completion prefix for identifier at point.
-Returns a list of form '(prefix-start-position
+Returns a list of form \\='(prefix-start-position
 prefix-end-position prefix-value prefix-type) for haskell
 identifier at point depending on result of function
 `haskell-ident-pos-at-point'."
@@ -265,7 +265,7 @@ identifier at point depending on result of function
 
 (defun haskell-completions-grab-prefix (&optional minlen)
    "Grab prefix at point for possible completion.
-Returns a list of form '(prefix-start-position
+Returns a list of form \\='(prefix-start-position
 prefix-end-position prefix-value prefix-type) depending on
 situation, e.g. is it needed to complete pragma, module name,
 arbitrary identifier, etc.  Returns nil in case it is
@@ -308,11 +308,11 @@ PREFIX should be a list such one returned by
     (when (not (eql typ 'haskell-completions-general-prefix))
       (let ((candidates
              (cl-case typ
-               ('haskell-completions-pragma-name-prefix
+               (haskell-completions-pragma-name-prefix
                 haskell-completions--pragma-names)
-               ('haskell-completions-ghc-option-prefix
+               (haskell-completions-ghc-option-prefix
                 haskell-ghc-supported-options)
-               ('haskell-completions-language-extension-prefix
+               (haskell-completions-language-extension-prefix
                 haskell-ghc-supported-extensions)
                (otherwise
                 (append (when (bound-and-true-p haskell-tags-on-save)

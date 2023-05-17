@@ -434,7 +434,8 @@ Returns the location of the start of the comment, nil otherwise."
         (haskell-indent-skip-blanks-and-newlines-forward end))))
 
 (defun haskell-indent-next-symbol-safe (end)
-  "Puts point to the next following symbol, or to end if there are no more symbols in the sexp."
+  "Puts point if there are no more symbols in the sexp.
+The point is put to the next following symbol, or to end."
   (condition-case _errlist (haskell-indent-next-symbol end)
     (error (goto-char end))))
 
@@ -1323,7 +1324,7 @@ of the regions to move."
 (defun haskell-indent-align-def (p-arg type)
   "Align guards or rhs within the current definition before point.
 If P-ARG is t align all defs up to the mark.
-TYPE is either 'guard or 'rhs."
+TYPE is either \\='guard or \\='rhs."
   (save-excursion
     (let (start-block end-block
                       (maxcol (if (eq type 'rhs) haskell-indent-rhs-align-column 0))

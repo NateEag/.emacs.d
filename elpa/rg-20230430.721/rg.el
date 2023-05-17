@@ -6,9 +6,9 @@
 ;;
 ;; Author: David Landell <david.landell@sunnyhill.email>
 ;;         Roland McGrath <roland@gnu.org>
-;; Version: 2.2.0
+;; Version: 2.3.0
 ;; URL: https://github.com/dajva/rg.el
-;; Package-Requires: ((emacs "25.1") (transient "0.3.0") (wgrep "2.1.10"))
+;; Package-Requires: ((emacs "26.1") (transient "0.3.0") (wgrep "2.1.10"))
 ;; Keywords: matching, tools
 
 ;; This file is not part of GNU Emacs.
@@ -68,12 +68,21 @@
   :group 'external)
 
 (defcustom rg-custom-type-aliases
-  '(("gyp" .    "*.gyp *.gypi"))
+  '()
   "A list of file type aliases that are added to the 'rg' built in aliases.
 Each list element may be a (string . string) cons containing the name of the
 type alias and the file patterns, or a lambda returning a similar cons cell.
 A lambda should return nil if it currently has no type aliases to contribute."
   :type '(repeat (choice (cons string string) function))
+  :group 'rg)
+
+(defcustom rg-prioritized-type-aliases '()
+  "A list of file type aliases that are prioritized.
+When detecting the file type from the current buffer these aliases are selected
+if there are conflicting aliases for a file type.  Contains only the alias names
+and need to match alias names of ripgrep's built in aliases.  The order of the
+list is not significant."
+  :type '(repeat string)
   :group 'rg)
 
 (defcustom rg-executable (executable-find "rg")
@@ -324,7 +333,14 @@ filtered out."
 If SKIP-INTERNAL is non nil the `rg-internal-type-aliases' will be
 excluded."
   (unless rg-builtin-type-aliases
-    (setq rg-builtin-type-aliases (rg-list-builtin-type-aliases)))
+    (let ((builtin-aliases (rg-list-builtin-type-aliases)))
+      (setq rg-builtin-type-aliases
+            (delete-dups
+             (append
+              (seq-filter (lambda (item)
+                            (member (car item) rg-prioritized-type-aliases))
+                          builtin-aliases)
+              builtin-aliases)))))
   (append (rg-get-custom-type-aliases) rg-builtin-type-aliases
           (unless skip-internal rg-internal-type-aliases)))
 
@@ -354,6 +370,16 @@ excluded."
         (message "Warning: rg-default-alias-fallback customization does not match any alias. Using \"all\".")
         (car rg-internal-type-aliases))))))
 
+(defun rg-tag-default ()
+  "Get the marked area or thing at point.
+Returns nil if nothing at point."
+  (or (and transient-mark-mode mark-active
+	   (/= (point) (mark))
+	   (buffer-substring-no-properties (point) (mark)))
+      (funcall (or find-tag-default-function
+		   (get major-mode 'find-tag-default-function)
+		   'find-tag-default))))
+
 (defun rg-read-files ()
   "Read files argument for interactive rg."
   (let ((default-alias (rg-default-alias)))
@@ -372,7 +398,7 @@ excluded."
   "Read search pattern argument from user.
 If LITERAL is non nil prompt for literal string.
 DEFAULT is the default pattern to use at the prompt."
-  (let ((default (or default (grep-tag-default)))
+  (let ((default (or default (rg-tag-default)))
         (prompt (concat (if literal "Literal" "Regexp")
                         " search for")))
     (read-regexp prompt default 'rg-pattern-history)))
@@ -387,11 +413,13 @@ DEFAULT is the default pattern to use at the prompt."
               (fboundp 'ffip-project-root))
      (ffip-project-root))
    (when (and (require 'project nil t)
-              (fboundp 'project-current)
-              (fboundp 'project-roots))
-     (let ((project (project-current)))
-       (when project
-         (car (project-roots project)))))
+              (fboundp 'project-current))
+     (if-let ((project (project-current)))
+         (cond
+          ((fboundp 'project-root)
+           (project-root project))
+          ((fboundp 'project-roots)
+           (car (project-roots project))))))
    (let ((file (expand-file-name (or file default-directory))))
      (condition-case nil
          (vc-call-backend (vc-responsible-backend file) 'root file)
@@ -667,7 +695,8 @@ the :query option is missing, set it to ASK"
            (alias-opt (plist-get search-cfg :files))
            (dir-opt (plist-get search-cfg :dir))
            (flags-opt (plist-get search-cfg :flags))
-           (binding-list `((literal ,(rg-parse-format-literal format-opt)))))
+           (literal-opt (rg-parse-format-literal format-opt))
+           (binding-list `((literal ,literal-opt))))
 
       ;; confirm binding
       (cond ((eq confirm-opt 'never)
@@ -683,7 +712,8 @@ the :query option is missing, set it to ASK"
 
       ;; query binding
       (unless (eq query-opt 'ask)
-        (let ((query (cond ((eq query-opt 'point) '(grep-tag-default))
+        (let ((query (cond ((eq query-opt 'point) '(or (rg-tag-default)
+                                                       (rg-read-pattern literal)))
                            (t query-opt))))
           (setq binding-list (append binding-list `((query ,query))))))
 
@@ -798,7 +828,7 @@ specified default if left out.
             invoking the search.
 :menu       Bind the command into `rg-menu'.  Must be a list with three
             items in it.  The first item is the description of the
-            group in witch the new command will appear.  If the group
+            group in which the new command will appear.  If the group
             does not exist a new will be created.  The second item is
             the key binding for this new command (ether a key vector
             or a key description string) and the third item is the
@@ -824,7 +854,7 @@ Example:
          ,@decls
          (interactive
           (list ,@(mapcar 'cdr iargs)))
-         (let ,local-bindings
+         (let* ,local-bindings
            (rg-run query files dir literal confirm flags)))
        (rg-menu-wrap-transient-search ,name)
        ,@menu-forms)))

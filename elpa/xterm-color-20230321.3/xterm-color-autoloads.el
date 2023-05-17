@@ -1,4 +1,4 @@
-;;; xterm-color-autoloads.el --- automatically extracted autoloads
+;;; xterm-color-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -42,8 +42,8 @@ This can be inserted into `comint-preoutput-filter-functions'.
 
 (autoload 'xterm-color-colorize-buffer "xterm-color" "\
 Apply `xterm-color-filter' to current buffer, and replace its contents.
-Colors are applied using 'face, unless font-lock-mode is active, in
-which case 'font-lock-face is used. Operation with font-lock mode active
+Colors are applied using \\='face, unless font-lock-mode is active, in
+which case \\='font-lock-face is used. Operation with font-lock mode active
 is not recommended.
 
 If USE-OVERLAYS is non-nil, colors are applied to the buffer using overlays
@@ -69,7 +69,7 @@ ANSI sequences are not processed. One can use a different Emacs package,
 such as ansi-color.el to do so. This is really meant to be used for easy
 comparisons/benchmarks with libraries that offer similar functionality." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "xterm-color" '("+xterm-color--table-256+" "xterm-color-")))
+(register-definition-prefixes "xterm-color" '("+xterm-color--table-256+" "xterm-color-"))
 
 ;;;***
 

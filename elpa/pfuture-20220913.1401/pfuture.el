@@ -5,8 +5,8 @@
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Homepage: https://github.com/Alexander-Miller/pfuture
 ;; Package-Requires: ((emacs "25.2"))
-;; Package-Version: 20220425.1242
-;; Package-Commit: f9e67bd7edbd5b4e033efd82c0acc4a85ff860a8
+;; Package-Version: 20220913.1401
+;; Package-Commit: 19b53aebbc0f2da31de6326c495038901bffb73c
 ;; Version: 1.10.3
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -61,9 +61,9 @@
 (defun pfuture-new (&rest cmd)
   "Create a new future process for command CMD.
 Any arguments after the command are interpreted as arguments to the command.
-This will return a process object with additional 'stderr and 'stdout
-properties, which can be read via \(process-get process 'stdout\) and
-\(process-get process 'stderr\) or alternatively with
+This will return a process object with additional \\='stderr and \\='stdout
+properties, which can be read via \(process-get process \\='stdout\) and
+\(process-get process \\='stderr\) or alternatively with
 \(pfuture-result process\) or \(pfuture-stderr process\).
 
 Note that CMD must be a *sequence* of strings, meaning
@@ -122,54 +122,54 @@ FN may either be a (sharp) quoted function, and unquoted function or an sexp."
 
 (cl-defmacro pfuture-callback
     (command &key
-             directory
              on-success
              on-error
              on-status-change
+             directory
              name
              connection-type
              buffer
              filter)
   "Pfuture variant that supports a callback-based workflow.
-Internally based on `make-process'. Requires lexical scope.
+Internally based on `make-process'.  Requires lexical scope.
 
-The first - and only required - argument is COMMAND. It is an (unquoted) list of
-the command and the arguments for the process that should be started. A vector
-is likewise acceptable - the difference is purely cosmetic (this does not apply
-when command is passed as a variable, in this case it must be a list).
+The first - and only required - argument is COMMAND.  It is an (unquoted) list
+of the command and the arguments for the process that should be started.  A
+vector is likewise acceptable - the difference is purely cosmetic (this does not
+apply when command is passed as a variable, in this case it must be a list).
 
 The rest of the argument list is made up of the following keyword arguments:
 
 ON-SUCCESS is the code that will run once the process has finished with an exit
-code of 0. In its context, these variables are bound:
-`process': The process object, as passed to the sentinel callback function.
-`status': The string exit status, as passed to the sentinel callback function.
-`pfuture-buffer': The buffer where the output of the process is collected,
- including both stdin and stdout. You can use `pfuture-callback-output' to
- quickly grab the buffer's content.
+code of 0. In its context, these variables are bound: `process': The process
+object, as passed to the sentinel callback function.  `status': The string exit
+status, as passed to the sentinel callback function.  `pfuture-buffer': The
+buffer where the output of the process is collected, including both stdin and
+stdout.  You can use `pfuture-callback-output' to quickly grab the buffer's
+content.
 
 ON-SUCCESS may take one of 3 forms: an unquoted sexp, a quoted function or an
-unquoted function. In the former two cases the passed fuction will be called
+unquoted function.  In the former two cases the passed fuction will be called
 with `process', `status' and `buffer' as its arguments.
 
-ON-FAILURE is the inverse to ON-SUCCESS; it will only run if the process has
-finished with a non-zero exit code. Otherwise the same conditions apply as for
+ON-ERROR is the inverse to ON-SUCCESS; it will only run if the process has
+finished with a non-zero exit code.  Otherwise the same conditions apply as for
 ON-SUCCESS.
 
 ON-STATUS-CHANGE will run on every status change, even if the process remains
-running. It is meant for debugging and has access to the same variables as
+running.  It is meant for debugging and has access to the same variables as
 ON-SUCCESS and ON-ERROR, including the (potentially incomplete) process output
-buffer. Otherwise the same conditions as for ON-SUCCESS and ON-ERROR apply.
+buffer.  Otherwise the same conditions as for ON-SUCCESS and ON-ERROR apply.
 
 DIRECTORY is the value given to `default-directory' for the context of the
-process. If not given it will fall back the current value of
+process.  If not given it will fall back the current value of
 `default-directory'.
 
-NAME will be passed to the :name property of `make-process'. If not given it
+NAME will be passed to the :name property of `make-process'.  If not given it
 will fall back to \"Pfuture Callback [$COMMAND]\".
 
 CONNECTION-TYPE will be passed to the :connection-process property of
-`make-process'. If not given it will fall back to 'pipe.
+`make-process'. If not given it will fall back to \\='pipe.
 
 BUFFER is the buffer that will be used by the process to collect its output,
 quickly collectible with `pfuture-output-from-buffer'.
@@ -183,7 +183,7 @@ to overwrite pfuture's own filter. By default pfuture uses its filter function
 to collect the launched process' output in its buffer, thus when providing a
 custom filter output needs to be gathered another way. Note that the process'
 buffer is stored in its `buffer' property and is therefore accessible via
-\(process-get process 'buffer\)."
+\(process-get process \\='buffer\)."
   (declare (indent 1))
   (let* ((command (if (vectorp command)
                       `(quote ,(cl-map 'list #'identity command))
@@ -229,10 +229,11 @@ Meant to be used with `pfuture-callback'."
 
 Will accept the following optional keyword arguments:
 
-TIMEOUT: The timeout in seconds to wait for the process. May be a float to
-specify fractional number of seconds. In case of a timeout nil will be returned.
+TIMEOUT: The timeout in seconds to wait for the process.  May be a float to
+specify fractional number of seconds.  In case of a timeout nil will be
+returned.
 
-JUST-THIS-ONE: When t only read from the process of FUTURE and no other. For
+JUST-THIS-ONE: When t only read from the process of FUTURE and no other.  For
 details see documentation of `accept-process-output'."
   (let (inhibit-quit)
     (accept-process-output
@@ -272,7 +273,7 @@ To get the full output use either `pfuture-await' or `pfuture-await-to-finish'."
 Same as `pfuture-await', but will keep reading (and blocking) so long as the
 process is *alive*.
 
-If the process never quits this method will block forever. Use with caution!"
+If the process never quits this method will block forever.  Use with caution!"
   ;; If the sentinel hasn't run, disable it. We are going to delete
   ;; the stderr process here.
   (set-process-sentinel process nil)

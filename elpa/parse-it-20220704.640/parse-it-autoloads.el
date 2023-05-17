@@ -1,4 +1,4 @@
-;;; parse-it-autoloads.el --- automatically extracted autoloads
+;;; parse-it-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -22,35 +22,35 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from parse-it-actionscript.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-actionscript" '("parse-it-actionscript")))
+(register-definition-prefixes "parse-it-actionscript" '("parse-it-actionscript"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-asm" "parse-it-asm.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-asm.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-asm" '("parse-it-asm")))
+(register-definition-prefixes "parse-it-asm" '("parse-it-asm"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-ast" "parse-it-ast.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-ast.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-ast" '("parse-it-ast-")))
+(register-definition-prefixes "parse-it-ast" '("parse-it-ast-"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-c" "parse-it-c.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-c.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-c" '("parse-it-c")))
+(register-definition-prefixes "parse-it-c" '("parse-it-c"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-c++" "parse-it-c++.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-c++.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-c++" '("parse-it-c++")))
+(register-definition-prefixes "parse-it-c++" '("parse-it-c++"))
 
 ;;;***
 
@@ -58,14 +58,14 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  0 0))
 ;;; Generated autoloads from parse-it-csharp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-csharp" '("parse-it-csharp")))
+(register-definition-prefixes "parse-it-csharp" '("parse-it-csharp"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-css" "parse-it-css.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-css.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-css" '("parse-it-css")))
+(register-definition-prefixes "parse-it-css" '("parse-it-css"))
 
 ;;;***
 
@@ -73,42 +73,42 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  0))
 ;;; Generated autoloads from parse-it-elisp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-elisp" '("parse-it-elisp")))
+(register-definition-prefixes "parse-it-elisp" '("parse-it-elisp"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-go" "parse-it-go.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-go.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-go" '("parse-it-go")))
+(register-definition-prefixes "parse-it-go" '("parse-it-go"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-html" "parse-it-html.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-html.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-html" '("parse-it-html")))
+(register-definition-prefixes "parse-it-html" '("parse-it-html"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-java" "parse-it-java.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-java.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-java" '("parse-it-java")))
+(register-definition-prefixes "parse-it-java" '("parse-it-java"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-js" "parse-it-js.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-js.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-js" '("parse-it-js")))
+(register-definition-prefixes "parse-it-js" '("parse-it-js"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-json" "parse-it-json.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-json.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-json" '("parse-it-json")))
+(register-definition-prefixes "parse-it-json" '("parse-it-json"))
 
 ;;;***
 
@@ -116,28 +116,28 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  0 0))
 ;;; Generated autoloads from parse-it-kotlin.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-kotlin" '("parse-it-kotlin")))
+(register-definition-prefixes "parse-it-kotlin" '("parse-it-kotlin"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-lex" "parse-it-lex.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-lex.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lex" '("parse-it-lex-")))
+(register-definition-prefixes "parse-it-lex" '("parse-it-lex-"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-lisp" "parse-it-lisp.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-lisp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lisp" '("parse-it-lisp")))
+(register-definition-prefixes "parse-it-lisp" '("parse-it-lisp"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-lua" "parse-it-lua.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-lua.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-lua" '("parse-it-lua")))
+(register-definition-prefixes "parse-it-lua" '("parse-it-lua"))
 
 ;;;***
 
@@ -145,21 +145,21 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from parse-it-markdown.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-markdown" '("parse-it-markdown")))
+(register-definition-prefixes "parse-it-markdown" '("parse-it-markdown"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-objc" "parse-it-objc.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-objc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-objc" '("parse-it-objc")))
+(register-definition-prefixes "parse-it-objc" '("parse-it-objc"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-php" "parse-it-php.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-php.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-php" '("parse-it-php")))
+(register-definition-prefixes "parse-it-php" '("parse-it-php"))
 
 ;;;***
 
@@ -167,21 +167,21 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  0 0))
 ;;; Generated autoloads from parse-it-python.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-python" '("parse-it-python")))
+(register-definition-prefixes "parse-it-python" '("parse-it-python"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-r" "parse-it-r.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-r.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-r" '("parse-it-r")))
+(register-definition-prefixes "parse-it-r" '("parse-it-r"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-sql" "parse-it-sql.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-sql.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-sql" '("parse-it-sql")))
+(register-definition-prefixes "parse-it-sql" '("parse-it-sql"))
 
 ;;;***
 
@@ -189,7 +189,7 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  0))
 ;;; Generated autoloads from parse-it-swift.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-swift" '("parse-it-swift")))
+(register-definition-prefixes "parse-it-swift" '("parse-it-swift"))
 
 ;;;***
 
@@ -197,21 +197,21 @@ If optional argument is nil; then it will use current buffer instead.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from parse-it-typescript.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-typescript" '("parse-it-typescript")))
+(register-definition-prefixes "parse-it-typescript" '("parse-it-typescript"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-util" "parse-it-util.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-util.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-util" '("parse-it-util--")))
+(register-definition-prefixes "parse-it-util" '("parse-it-util--"))
 
 ;;;***
 
 ;;;### (autoloads nil "parse-it-xml" "parse-it-xml.el" (0 0 0 0))
 ;;; Generated autoloads from parse-it-xml.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "parse-it-xml" '("parse-it-xml")))
+(register-definition-prefixes "parse-it-xml" '("parse-it-xml"))
 
 ;;;***
 

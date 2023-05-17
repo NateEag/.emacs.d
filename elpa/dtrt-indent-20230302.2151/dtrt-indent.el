@@ -1,11 +1,11 @@
 ;;; dtrt-indent.el --- Adapt to foreign indentation offsets
 
 ;; Copyright (C) 2003, 2007, 2008 Julian Scheid
-;; Copyright (C) 2014-2022 Reuben Thomas
+;; Copyright (C) 2014-2023 Reuben Thomas
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
 ;; Maintainer: Reuben Thomas <rrt@sc3d.org>
-;; Version: 1.7
+;; Version: 1.9
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -41,8 +41,8 @@
 ;; only be made if the guess is considered reliable.  This way it
 ;; should leave you off no worse than before.
 ;;
-;; To install, M-x customize-group dtrt-indent-global, and turn on "Dtrt
-;; Indent Global Mode".
+;; To install, M-x customize-variable dtrt-indent-global-mode, and turn on
+;; "Dtrt Indent Global Mode".
 ;;
 ;; The default settings have been carefully chosen and tested to work
 ;; reliably on a wide range of source files.  However, if it doesn't work
@@ -209,7 +209,8 @@ adjusted transparently."
 (define-globalized-minor-mode dtrt-indent-global-mode dtrt-indent-mode
   (lambda ()
     ;; javascript-mode is an alias for js-mode, so derived-mode-p does not
-    ;; detect it is derived from 'prog-mode (Emacs bug #46331)
+    ;; detect it is derived from 'prog-mode (Emacs bug #46331: remove once
+    ;; Emacs >= 28.1 can be assumed)
     (when (derived-mode-p 'prog-mode 'text-mode 'javascript-mode)
       (dtrt-indent-mode))))
 
@@ -857,6 +858,8 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
                   (nth 1 best-guess)
                 0))
              (total-lines (nth 1 histogram-and-total-lines))
+             (enough-relevant-lines
+              (>= total-lines dtrt-indent-min-relevant-lines))
              (hard-tab-percentage (if (> total-lines 0)
                                       (/ (float (nth 2 histogram-and-total-lines))
                                          total-lines)
@@ -875,10 +878,13 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
                   dtrt-indent-min-quality)
                (format "best guess below minimum quality (%f < %f)"
                        (* 100.0 (nth 1 best-guess))
-                       dtrt-indent-min-quality)))))
+                       dtrt-indent-min-quality))
+              ((not enough-relevant-lines)
+               (format "not enough relevant lines (%d required)"
+                       dtrt-indent-min-relevant-lines)))))
 
         (cond
-         (rejected)
+         ((not enough-relevant-lines))
          ((or (= 0 hard-tab-percentage)
               (>= (/ soft-tab-percentage
                      hard-tab-percentage)

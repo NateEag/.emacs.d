@@ -1,4 +1,4 @@
-;;; nix-update-autoloads.el --- automatically extracted autoloads
+;;; nix-update-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,10 @@
 ;;;### (autoloads nil "nix-update" "nix-update.el" (0 0 0 0))
 ;;; Generated autoloads from nix-update.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "nix-update" '("nix-update-fetch")))
+(autoload 'nix-update-fetch "nix-update" "\
+Update the nix fetch expression at point.
+
+\(fn &optional ARG)" t nil)
 
 ;;;***
 

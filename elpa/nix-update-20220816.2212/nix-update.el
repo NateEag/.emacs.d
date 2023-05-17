@@ -6,8 +6,8 @@
 ;; Maintainer: John Wiegley <johnw@newartisans.com>
 ;; Created: 1 Feb 2018
 ;; Version: 1.0
-;; Package-Version: 20190124.1935
-;; Package-Commit: fc6c39c2da3fcfa62f4796816c084a6389c8b6e7
+;; Package-Version: 20220816.2212
+;; Package-Commit: aab70a38165575a9cb41726f1cc67df60fbf2832
 ;; Package-Requires: ((emacs "25"))
 ;; Keywords: nix
 ;; URL: https://github.com/jwiegley/nix-update-el
@@ -35,10 +35,12 @@
 ;;; Code:
 
 (require 'rx)
+(require 'json)
 
-(defun nix-update-fetch ()
+;;;###autoload
+(defun nix-update-fetch (&optional arg)
   "Update the nix fetch expression at point."
-  (interactive)
+  (interactive "P")
   (save-excursion
     (when (re-search-forward
            (rx (and (submatch
@@ -46,6 +48,8 @@
                          (and "fetch"
                               (or "url"
                                   "git"
+                                  "Pypi"
+                                  "zip"
                                   (and "FromGit" (or "Hub" "Lab"))))))
                     (1+ space)
                     "{"))
@@ -59,11 +63,22 @@
           (cl-flet ((get-field
                      (field)
                      (goto-char (point-min))
-                     (when (re-search-forward
-                            (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;")
-                            nil
-                            t)
-                       (match-string 1)))
+                     (let ((field-re (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;"))
+                           (res))
+                       (cond
+                        ((re-search-forward field-re nil t)
+                         (match-string 1))
+                        ((and (re-search-forward
+                               (concat "inherit\\s-+.*" field ".*;")
+                               nil
+                               t)
+                              (save-restriction
+                                (widen)
+                                (backward-up-list) (backward-up-list)
+                                (prog1
+                                    (re-search-forward field-re nil t)
+                                  (setq res (match-string 1)))))
+                         res))))
                     (set-field
                      (field value)
                      (goto-char (point-min))
@@ -78,12 +93,13 @@
                          (when (looking-at "^\\(\\s-+\\)")
                            (setq leader (match-string 1)))
                          (goto-char (line-end-position))
-                         (insert ?\n leader field " = " value ";")))))
+                         (insert ?\n leader field " = \"" value "\";")))))
             (let ((data
                    (pcase type
                      (`"fetchFromGitHub"
                       (let ((owner (get-field "owner"))
                             (repo (get-field "repo"))
+                            (rev (or (and (null arg) (get-field "rev")) ""))
                             (submodules
                              (let ((subs (get-field "fetchSubmodules")))
                                (and subs (string-equal subs "true")))))
@@ -96,17 +112,18 @@
                               (concat
                                "nix-prefetch-git --no-deepClone"
                                (if submodules " --fetch-submodules" "")
-                               " --quiet git://github.com/%s/%s.git %s")
-                              owner repo "refs/heads/master")
+                               " --quiet https://github.com/%s/%s.git %s")
+                              owner repo rev)
                              (current-buffer))
                             (message
-                             "Fetching GitHub repository: %s/%s ...done"
-                             owner repo))
+                             "Fetching GitHub repository: %s/%s:%s ...done"
+                             owner repo rev))
                           (goto-char (point-min))
                           (json-read-object))))
                      (`"fetchFromGitLab"
                       (let ((owner (get-field "owner"))
-                            (repo (get-field "repo")))
+                            (repo (get-field "repo"))
+                            (rev (or (and (null arg) (get-field "rev")) "")))
                         (with-temp-buffer
                           (message "Fetching GitLab repository: %s/%s ..."
                                    owner repo)
@@ -116,7 +133,7 @@
                               (concat
                                "nix-prefetch-git --no-deepClone"
                                " --quiet https://gitlab.com/%s/%s.git %s")
-                              owner repo "refs/heads/master")
+                              owner repo rev)
                              (current-buffer))
                             (message
                              "Fetching GitLab repository: %s/%s ...done"
@@ -124,7 +141,8 @@
                           (goto-char (point-min))
                           (json-read-object))))
                      (`"fetchgit"
-                      (let ((url (get-field "url")))
+                      (let ((url (get-field "url"))
+                            (rev (or (and (null arg) (get-field "rev")) "")))
                         (with-temp-buffer
                           (message "Fetching Git URL: %s ..." url)
                           (let ((inhibit-redisplay t))
@@ -132,7 +150,7 @@
                              (format (concat
                                       "nix-prefetch-git --no-deepClone"
                                       " --quiet '%s' %s")
-                                     url "refs/heads/master")
+                                     url rev)
                              (current-buffer))
                             (message "Fetching Git URL: %s ...done" url))
                           (goto-char (point-min))
@@ -143,6 +161,24 @@
                           (message "Fetching URL %s: ..." url)
                           (let ((inhibit-redisplay t))
                             (shell-command (format "nix-prefetch-url '%s'" url)
+                                           (current-buffer))
+                            (message "Fetching URL %s: ...done" url))
+                          (goto-char (point-min))
+                          (while (looking-at "^\\(path is\\|warning\\)")
+                            (forward-line))
+                          (list
+                           (cons 'date
+                                 (format-time-string "%Y-%m-%dT%H:%M:%S%z"))
+                           (cons 'sha256
+                                 (buffer-substring
+                                  (line-beginning-position)
+                                  (line-end-position)))))))
+                     (`"fetchzip"
+                      (let ((url (get-field "url")))
+                        (with-temp-buffer
+                          (message "Fetching URL %s: ..." url)
+                          (let ((inhibit-redisplay t))
+                            (shell-command (format "nix-prefetch-url --unpack '%s'" url)
                                            (current-buffer))
                             (message "Fetching URL %s: ...done" url))
                           (goto-char (point-min))
@@ -174,16 +210,42 @@
                            (cons 'sha256
                                  (buffer-substring
                                   (line-beginning-position)
+                                  (line-end-position)))))))
+                     (`"fetchPypi"
+                      (let ((pname (get-field "pname"))
+                            (version (get-field "version")))
+                        (message "version: %s" version)
+                        (with-temp-buffer
+                          (message "Fetching PyPi Package: %s-%s: ..." pname version)
+                          (let ((inhibit-redisplay t))
+                            (shell-command
+                             (format
+                              "nix-prefetch-url mirror://pypi/%s/%s/%s-%s.tar.gz"
+                              (substring pname 0 1)
+                              pname
+                              pname
+                              version)
+                             (current-buffer))
+                            (message "Fetching PyPi Package: %s-%s: ...done" pname version))
+                          (goto-char (point-min))
+                          (while (looking-at "^\\(path is\\|warning\\)")
+                            (forward-line))
+                          (list
+                           (cons 'sha256
+                                 (buffer-substring
+                                  (line-beginning-position)
                                   (line-end-position))))))))))
               (if (assq 'rev data)
                   (set-field "rev" (alist-get 'rev data)))
+              (set-field "sha256" (alist-get 'sha256 data))
               (if (assq 'date data)
                   (set-field "# date"
                              (let ((date (alist-get 'date data)))
                                (if (string-match "\\`\"\\(.+\\)\"\\'" date)
                                    (match-string 1 date)
-                                 date))))
-              (set-field "sha256" (alist-get 'sha256 data)))))))))
+                                 date)))))))))))
+
+
 
 (provide 'nix-update)
 

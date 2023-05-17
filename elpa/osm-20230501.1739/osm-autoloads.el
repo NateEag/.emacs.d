@@ -1,4 +1,4 @@
-;;; osm-autoloads.el --- automatically extracted autoloads
+;;; osm-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -19,8 +19,9 @@ Go to LAT/LON/ZOOM.
 
 (autoload 'osm "osm" "\
 Go to LINK.
+When called interactively, call the function `osm-home'.
 
-\(fn &rest LINK)" nil t)
+\(fn &rest LINK)" t nil)
 
 (autoload 'osm-bookmark-jump "osm" "\
 Jump to osm bookmark BM.
@@ -53,18 +54,13 @@ Select tile SERVER.
 
 \(fn SERVER)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "osm" '("osm-")))
+(when (>= emacs-major-version 28) (add-to-list 'browse-url-default-handlers '("\\`geo:" . osm)))
+
+(register-definition-prefixes "osm" '("osm-"))
 
 ;;;***
 
-;;;### (autoloads nil "osm-ol" "osm-ol.el" (0 0 0 0))
-;;; Generated autoloads from osm-ol.el
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "osm-ol" '("osm-ol-")))
-
-;;;***
-
-;;;### (autoloads nil nil ("osm-pkg.el") (0 0 0 0))
+;;;### (autoloads nil nil ("osm-ol.el" "osm-pkg.el") (0 0 0 0))
 
 ;;;***
 

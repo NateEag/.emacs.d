@@ -1,4 +1,4 @@
-;;; use-package-autoloads.el --- automatically extracted autoloads
+;;; use-package-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -11,15 +11,14 @@
 ;;; Generated autoloads from use-package-bind-key.el
 
 (autoload 'use-package-autoload-keymap "use-package-bind-key" "\
-Loads PACKAGE and then binds the key sequence used to invoke
-this function to KEYMAP-SYMBOL. It then simulates pressing the
-same key sequence a again, so that the next key pressed is routed
-to the newly loaded keymap.
+Load PACKAGE and bind key sequence invoking this function to KEYMAP-SYMBOL.
+Then simulate pressing the same key sequence a again, so that the
+next key pressed is routed to the newly loaded keymap.
 
-This function supports use-package's :bind-keymap keyword. It
+This function supports use-package's :bind-keymap keyword.  It
 works by binding the given key sequence to an invocation of this
-function for a particular keymap. The keymap is expected to be
-defined by the package. In this way, loading the package is
+function for a particular keymap.  The keymap is expected to be
+defined by the package.  In this way, loading the package is
 deferred until the prefix key sequence is pressed.
 
 \(fn KEYMAP-SYMBOL PACKAGE OVERRIDE)" nil nil)
@@ -56,7 +55,7 @@ deferred until the prefix key sequence is pressed.
 
 \(fn NAME KEYWORD ARG REST STATE)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-bind-key" '("use-package-handler/:bind*")))
+(register-definition-prefixes "use-package-bind-key" '("use-package-handler/:bind*"))
 
 ;;;***
 
@@ -67,8 +66,8 @@ deferred until the prefix key sequence is pressed.
 (autoload 'use-package "use-package-core" "\
 Declare an Emacs package by specifying a group of configuration options.
 
-For full documentation, please see the README file that came with
-this file.  Usage:
+For the full documentation, see Info node `(use-package) top'.
+Usage:
 
   (use-package package-name
      [:keyword [option]]...)
@@ -90,6 +89,7 @@ this file.  Usage:
                  package.  This is useful if the package is being lazily
                  loaded, and you wish to conditionally call functions in your
                  `:init' block that are defined in the package.
+:autoload        Similar to :commands, but it for no-interactive one.
 :hook            Specify hook(s) to attach this package to.
 
 :bind            Bind keys, and define autoloads for the bound commands.
@@ -104,11 +104,14 @@ this file.  Usage:
                  `:magic-fallback', or `:interpreter'.  This can be an integer,
                  to force loading after N seconds of idle time, if the package
                  has not already been loaded.
-:after           Delay the use-package declaration until after the named modules
-                 have loaded. Once load, it will be as though the use-package
-                 declaration (without `:after') had been seen at that moment.
 :demand          Prevent the automatic deferred loading introduced by constructs
                  such as `:bind' (see `:defer' for the complete list).
+
+:after           Delay the effect of the use-package declaration
+                 until after the named libraries have loaded.
+                 Before they have been loaded, no other keyword
+                 has any effect at all, and once they have been
+                 loaded it is as if `:after' was not specified.
 
 :if EXPR         Initialize and load only if EXPR evaluates to a non-nil value.
 :disabled        The package is ignored completely if this keyword is present.
@@ -117,18 +120,18 @@ this file.  Usage:
 :load-path       Add to the `load-path' before attempting to load the package.
 :diminish        Support for diminish.el (if installed).
 :delight         Support for delight.el (if installed).
-:custom          Call `custom-set' or `set-default' with each variable
+:custom          Call `Custom-set' or `set-default' with each variable
                  definition without modifying the Emacs `custom-file'.
                  (compare with `custom-set-variables').
-:custom-face     Call `customize-set-faces' with each face definition.
+:custom-face     Call `custom-set-faces' with each face definition.
 :ensure          Loads the package using package.el if necessary.
 :pin             Pin the package to an archive.
 
 \(fn NAME &rest ARGS)" nil t)
 
-(function-put 'use-package 'lisp-indent-function '1)
+(function-put 'use-package 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-core" '("use-package-")))
+(register-definition-prefixes "use-package-core" '("use-package-"))
 
 ;;;***
 
@@ -146,7 +149,7 @@ Normalize arguments to delight.
 
 \(fn NAME KEYWORD ARGS REST STATE)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-delight" '("use-package-normalize-delight")))
+(register-definition-prefixes "use-package-delight" '("use-package-normalize-delight"))
 
 ;;;***
 
@@ -164,7 +167,7 @@ Normalize arguments to delight.
 
 \(fn NAME KEYWORD ARG REST STATE)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-diminish" '("use-package-normalize-diminish")))
+(register-definition-prefixes "use-package-diminish" '("use-package-normalize-diminish"))
 
 ;;;***
 
@@ -182,7 +185,7 @@ Normalize arguments to delight.
 
 \(fn NAME KEYWORD ENSURE REST STATE)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-ensure" '("use-package-")))
+(register-definition-prefixes "use-package-ensure" '("use-package-"))
 
 ;;;***
 
@@ -191,15 +194,14 @@ Normalize arguments to delight.
 ;;; Generated autoloads from use-package-jump.el
 
 (autoload 'use-package-jump-to-package-form "use-package-jump" "\
-Attempt to find and jump to the `use-package' form that loaded
-PACKAGE. This will only find the form if that form actually
-required PACKAGE. If PACKAGE was previously required then this
-function will jump to the file that originally required PACKAGE
-instead.
+Attempt to find and jump to the `use-package' form that loaded PACKAGE.
+This will only find the form if that form actually required
+PACKAGE.  If PACKAGE was previously required then this function
+will jump to the file that originally required PACKAGE instead.
 
 \(fn PACKAGE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-jump" '("use-package-find-require")))
+(register-definition-prefixes "use-package-jump" '("use-package-find-require"))
 
 ;;;***
 
@@ -208,11 +210,11 @@ instead.
 ;;; Generated autoloads from use-package-lint.el
 
 (autoload 'use-package-lint "use-package-lint" "\
-Check for errors in use-package declarations.
+Check for errors in `use-package' declarations.
 For example, if the module's `:if' condition is met, but even
 with the specified `:load-path' the module cannot be found." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-lint" '("use-package-lint-declaration")))
+(register-definition-prefixes "use-package-lint" '("use-package-lint-declaration"))
 
 ;;;***
 

@@ -1,37 +1,35 @@
 ;;; use-package-bind-key.el --- Support for the :bind/:bind-keymap keywords  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2012-2017 John Wiegley
+;; Copyright (C) 2012-2022 Free Software Foundation, Inc.
 
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Maintainer: John Wiegley <johnw@newartisans.com>
-;; Created: 17 Jun 2012
-;; Modified: 4 Dec 2017
-;; Version: 1.0
-;; Package-Requires: ((emacs "24.3") (use-package "2.4")  (bind-key "2.4"))
-;; Keywords: dotemacs startup speed config package
-;; URL: https://github.com/jwiegley/use-package
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3, or (at
-;; your option) any later version.
+;; This file is part of GNU Emacs.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; GNU Emacs is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; GNU Emacs is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
 ;; Provides support for the :bind, :bind*, :bind-keymap and :bind-keymap*
-;; keywords. Note that these are currently still baked into
+;; keywords.  Note that these are currently still baked into
 ;; `use-package-keywords' and `use-package-deferring-keywords', although this
 ;; is harmless if they are never used.
+;;
+;; These keywords are made available by default by requiring `use-package'.
+;;
+;; See the `use-package' info manual for more information.
 
 ;;; Code:
 
@@ -40,15 +38,14 @@
 
 ;;;###autoload
 (defun use-package-autoload-keymap (keymap-symbol package override)
-  "Loads PACKAGE and then binds the key sequence used to invoke
-this function to KEYMAP-SYMBOL. It then simulates pressing the
-same key sequence a again, so that the next key pressed is routed
-to the newly loaded keymap.
+  "Load PACKAGE and bind key sequence invoking this function to KEYMAP-SYMBOL.
+Then simulate pressing the same key sequence a again, so that the
+next key pressed is routed to the newly loaded keymap.
 
-This function supports use-package's :bind-keymap keyword. It
+This function supports use-package's :bind-keymap keyword.  It
 works by binding the given key sequence to an invocation of this
-function for a particular keymap. The keymap is expected to be
-defined by the package. In this way, loading the package is
+function for a particular keymap.  The keymap is expected to be
+defined by the package.  In this way, loading the package is
 deferred until the prefix key sequence is pressed."
   (if (not (require package nil t))
       (use-package-error (format "Cannot load package.el: %s" package))
@@ -72,8 +69,17 @@ deferred until the prefix key sequence is pressed."
   (let ((arg args)
         args*)
     (while arg
-      (let ((x (car arg)))
+      (let ((x (car arg))
+            (y (cadr arg)))
         (cond
+         ;; (KEY DESC . COMMAND), i.e. (KEY . (DESC . COMMAND))
+         ((and (or (stringp x)
+                   (vectorp x))
+               (consp y)
+               (stringp (car y))
+               (or (use-package-recognize-function (cdr y) t #'stringp)))
+          (setq args* (nconc args* (list (cons x y))))
+          (setq arg (cddr arg)))
          ;; (KEY . COMMAND)
          ((and (consp x)
                (or (stringp (car x))
@@ -86,13 +92,20 @@ deferred until the prefix key sequence is pressed."
          ;;   :prefix-docstring STRING
          ;;   :prefix-map SYMBOL
          ;;   :prefix STRING
+	 ;;   :repeat-docstring STRING
+         ;;   :repeat-map SYMBOL
          ;;   :filter SEXP
          ;;   :menu-name STRING
          ;;   :package SYMBOL
+	 ;;   :continue and :exit are used within :repeat-map
          ((or (and (eq x :map) (symbolp (cadr arg)))
               (and (eq x :prefix) (stringp (cadr arg)))
               (and (eq x :prefix-map) (symbolp (cadr arg)))
               (and (eq x :prefix-docstring) (stringp (cadr arg)))
+	      (and (eq x :repeat-map) (symbolp (cadr arg)))
+	      (eq x :continue)
+	      (eq x :exit)
+              (and (eq x :repeat-docstring) (stringp (cadr arg)))
               (eq x :filter)
               (and (eq x :menu-name) (stringp (cadr arg)))
               (and (eq x :package) (symbolp (cadr arg))))

@@ -1,29 +1,29 @@
-;;; bicycle.el --- cycle outline and code visibility  -*- lexical-binding: t -*-
+;;; bicycle.el --- Cycle outline and code visibility  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022 Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20220402.1036
-;; Package-Commit: 624de5d111adb277ff3fb0d044bf685e24642de5
+;; Package-Version: 20230515.943
+;; Package-Commit: dfc0c874d66d671cbb15149db27134e4ff4f54b8
 
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "25.1") (compat "29.1.4.1"))
 
-;; This file is not part of GNU Emacs.
+;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -56,6 +56,8 @@
 ;;     (add-hook 'prog-mode-hook #'hs-minor-mode))
 
 ;;; Code:
+
+(require 'compat)
 
 (require 'hideshow)
 (require 'outline)

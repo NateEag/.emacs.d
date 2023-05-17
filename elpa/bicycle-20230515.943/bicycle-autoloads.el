@@ -1,4 +1,4 @@
-;;; bicycle-autoloads.el --- automatically extracted autoloads
+;;; bicycle-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -30,7 +30,7 @@ Cycle visibility of all sections.
              collapsed individually (using a `hideshow' command
              or function)." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bicycle" '("bicycle-" "outline-code-level")))
+(register-definition-prefixes "bicycle" '("bicycle-" "outline-code-level"))
 
 ;;;***
 

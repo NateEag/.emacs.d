@@ -3,7 +3,7 @@
 ;; Copyright (C) 2022 Damien Cassou
 
 ;; Authors: Damien Cassou <damien@cassou.me>
-;; Version: 0.2.0
+;; Version: 0.3.0
 ;; URL: https://github.com/DamienCassou/eslint-disable-rule
 ;; Package-Requires: ((emacs "27.2"))
 ;; Created: 15 March 2022

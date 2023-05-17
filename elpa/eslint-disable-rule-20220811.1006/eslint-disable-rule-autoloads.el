@@ -1,4 +1,4 @@
-;;; eslint-disable-rule-autoloads.el --- automatically extracted autoloads
+;;; eslint-disable-rule-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -22,7 +22,7 @@ on `eslint-disable-rule-require-description'.
 
 \(fn RULE-NAME &optional DESCRIPTION)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule" '("eslint-disable-rule-")))
+(register-definition-prefixes "eslint-disable-rule" '("eslint-disable-rule-"))
 
 ;;;***
 
@@ -33,7 +33,7 @@ on `eslint-disable-rule-require-description'.
 (autoload 'eslint-disable-rule-all "eslint-disable-rule-all" "\
 Return a list of all eslint rules." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-all" '("eslint-disable-rule-all-executable")))
+(register-definition-prefixes "eslint-disable-rule-all" '("eslint-disable-rule-all-executable"))
 
 ;;;***
 
@@ -47,7 +47,7 @@ Return a list of eslint rule names from flycheck-eslint errors.
 Return nil if `flycheck' or `flycheck-eslint' are not active so it is safe,
 but useless, to use even when not using flycheck." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-flycheck" '("eslint-disable-rule-flycheck--eslint-active-p")))
+(register-definition-prefixes "eslint-disable-rule-flycheck" '("eslint-disable-rule-flycheck--eslint-"))
 
 ;;;***
 
@@ -61,7 +61,7 @@ Return a list of eslint rule names from flymake-eslint errors.
 Return nil if `flymake' or `flymake-eslint' are not active so it is safe,
 but useless, to use even when not using flymake." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eslint-disable-rule-flymake" '("eslint-disable-rule-flymake--")))
+(register-definition-prefixes "eslint-disable-rule-flymake" '("eslint-disable-rule-flymake--"))
 
 ;;;***
 

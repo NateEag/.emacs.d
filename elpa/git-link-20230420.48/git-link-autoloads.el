@@ -1,4 +1,4 @@
-;;; git-link-autoloads.el --- automatically extracted autoloads
+;;; git-link-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -18,8 +18,11 @@ or active region. The URL will be added to the kill ring.  If
 With a prefix argument of - generate a link without line number(s).
 Also see `git-link-use-single-line-number'.
 
-With any other prefix argument prompt for the remote's name.
+With a single prefix argument prompt for the remote's name.
 Defaults to \"origin\".
+
+With a double prefix argument invert the value of
+`git-link-use-commit'.
 
 \(fn REMOTE START END)" t nil)
 
@@ -43,7 +46,7 @@ Defaults to \"origin\".
 
 \(fn REMOTE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-link" '("git-link-")))
+(register-definition-prefixes "git-link" '("git-link-"))
 
 ;;;***
 

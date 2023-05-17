@@ -1,10 +1,10 @@
 ;;; git-link.el --- Get the GitHub/Bitbucket/GitLab URL for a buffer location -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2020 Skye Shaw and others
+;; Copyright (C) 2013-2022 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.8.6
-;; Package-Version: 20220217.2315
-;; Package-Commit: f5691f8c66eb0f6050d9ab3834ab32661244b378
+;; Version: 0.9.0
+;; Package-Version: 20230420.48
+;; Package-Commit: 1727e9b7ec41a234a2cc14151b9ffd9c1c4f4b14
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, aws, azure, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -37,6 +37,13 @@
 
 ;;; Change Log:
 
+;; 2023-02-15 - v0.9.0
+;; * Add support for GoogleSource (thanks Peter Becich)
+;; * Add plain=1 to force showing a non rendered GitHub links (thanks Erick Navarro)
+;; * Add prefix arg to override git-link-use-commit when calling git-link (thanks Nacho Barrientos)
+;; * Fix git-link-homepage for Bitbucket (Issue #97 thanks Sibi Prabakaran)
+;; * Fix the Codeberg links to line ranges (Issue #109 thanks Wojciech Siewierski)
+;;
 ;; 2022-02-17 - v0.8.6
 ;; * Fix URL escaping of pathnames on Emacs < 27 (Issue #93 thanks David Ongaro)
 ;;
@@ -189,8 +196,9 @@
   :group 'git-link)
 
 (defcustom git-link-open-in-browser nil
-  "If non-nil also open link in browser via `browse-url'."
-  :type 'boolean
+  "If t also open the link via `browse-url'.  To use an alternate
+function set to that function's symbol."
+  :type '(choice boolean function)
   :group 'git-link)
 
 (defcustom git-link-use-commit nil
@@ -216,6 +224,7 @@ See its docs."
     ("gitorious" git-link-gitorious)
     ("gitlab" git-link-gitlab)
     ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-savannah)
+    ("googlesource.com" git-link-googlesource)
     ("visualstudio\\|azure" git-link-azure)
     ("sourcegraph" git-link-sourcegraph)
     ("\\(amazonaws\\|amazon\\)\\.com" git-link-codecommit))
@@ -237,6 +246,7 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
     ("gitorious" git-link-commit-gitorious)
     ("gitlab" git-link-commit-github)
     ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-commit-savannah)
+    ("googlesource.com" git-link-commit-googlesource)
     ("visualstudio\\|azure" git-link-commit-azure)
     ("sourcegraph" git-link-commit-sourcegraph)
     ("\\(amazonaws\\|amazon\\)\\.com" git-link-commit-codecommit))
@@ -253,10 +263,11 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 (defcustom git-link-homepage-remote-alist
   '(("git.sr.ht" git-link-homepage-github)
     ("github" git-link-homepage-github)
-    ("bitbucket" git-link-homepage-bitbucket)
+    ("bitbucket" git-link-homepage-github)
     ("gitorious" git-link-homepage-github)
     ("gitlab" git-link-homepage-github)
     ("git\\.\\(sv\\|savannah\\)\\.gnu\\.org" git-link-homepage-savannah)
+    ("googlesource.com" git-link-homepage-github)
     ("visualstudio\\|azure" git-link-homepage-github)
     ("sourcegraph" git-link-homepage-github)
     ("\\(amazonaws\\|amazon\\)\\.com" git-link-homepage-codecommit))
@@ -268,6 +279,13 @@ to the commit on remote host.
 As an example, \"gitlab\" will match with both \"gitlab.com\" and
 \"gitlab.example.com\"."
   :type '(alist :key-type string :value-type (group function))
+  :group 'git-link)
+
+(defcustom git-link-extensions-rendered-plain '("org" "md" "rst" "adoc" "markdown" "asciidoc")
+  "List of extensions that should be rendered in plain mode, systems like
+Github, Gitlab, etc show a rendered version by default, for these extensions
+we can prevent that behaviour."
+  :type 'list
   :group 'git-link)
 
 (defun git-link--exec(&rest args)
@@ -310,7 +328,7 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
       dir)))
 
 (defun git-link--remote-url (name)
-  (git-link--get-config (format "remote.%s.url" name)))
+  (car (git-link--exec "remote" "get-url" name)))
 
 (defun git-link--branch-remote (branch)
   (git-link--get-config (format "branch.%s.remote" branch)))
@@ -506,7 +524,9 @@ return (FILENAME . REVISION) otherwise nil."
   (message (replace-regexp-in-string "%" "%%" link t t))
   (setq deactivate-mark t)
   (when git-link-open-in-browser
-    (browse-url link)))
+    (if (fboundp git-link-open-in-browser)
+        (funcall git-link-open-in-browser link)
+      (browse-url link))))
 
 (defun git-link-codeberg (hostname dirname filename branch commit start end)
     (format "https://%s/%s/src/%s/%s"
@@ -517,7 +537,7 @@ return (FILENAME . REVISION) otherwise nil."
                     (when start
                       (concat "#"
                               (if end
-                                  (format "L%s-%s" start end)
+                                  (format "L%s-L%s" start end)
                                 (format "L%s" start)))))))
 
 (defun git-link-gitlab (hostname dirname filename branch commit start end)
@@ -539,10 +559,20 @@ return (FILENAME . REVISION) otherwise nil."
 	  (or branch commit)
 	  (concat filename
                   (when start
-                    (concat "#"
+                    (concat (if (git-link--should-render-plain filename) "?plain=1#" "#")
                             (if end
                                 (format "L%s-L%s" start end)
                               (format "L%s" start)))))))
+
+(defun git-link-googlesource (hostname dirname filename branch commit start end)
+  (format "https://%s/%s/+/%s/%s"
+	  hostname
+	  dirname
+	  (or branch commit)
+	  (concat filename
+                  (when start
+                    (format "#%s" start)
+                    ))))
 
 (defun git-link-azure (hostname dirname filename branch commit start end)
   (format "https://%s/%s?path=%%2F%s&version=%s&line=%s&lineEnd=%s&lineStartColumn=1&lineEndColumn=9999&lineStyle=plain"
@@ -571,6 +601,12 @@ return (FILENAME . REVISION) otherwise nil."
 	  hostname
 	  dirname
 	  commit))
+
+(defun git-link-commit-googlesource (hostname dirname commit)
+  (format "https://%s/%s/+/%s"
+	  hostname
+	  dirname
+          commit))
 
 (defun git-link-commit-azure (hostname dirname commit)
  (format "https://%s/%s/commit/%s"
@@ -710,9 +746,16 @@ return (FILENAME . REVISION) otherwise nil."
   'git-link-homepage-svannah 'git-link-homepage-savannah "cf947f9")
 
 (defun git-link--select-remote ()
-  (if current-prefix-arg
+  (if (equal '(4) current-prefix-arg)
       (git-link--read-remote)
     (git-link--remote)))
+
+(defun git-link--should-render-plain (filename)
+  "Check if the extension of the given filename belongs
+to the list of extensions which generated link should be
+shown as a plain file"
+  (let ((extension (or (file-name-extension filename) "")))
+    (member (downcase extension) git-link-extensions-rendered-plain)))
 
 ;;;###autoload
 (defun git-link (remote start end)
@@ -724,8 +767,11 @@ or active region. The URL will be added to the kill ring.  If
 With a prefix argument of - generate a link without line number(s).
 Also see `git-link-use-single-line-number'.
 
-With any other prefix argument prompt for the remote's name.
-Defaults to \"origin\"."
+With a single prefix argument prompt for the remote's name.
+Defaults to \"origin\".
+
+With a double prefix argument invert the value of
+`git-link-use-commit'."
   (interactive
    (if (equal '- current-prefix-arg)
        (list (git-link--remote) nil nil)
@@ -768,7 +814,9 @@ Defaults to \"origin\"."
                          (if (or (git-link--using-git-timemachine)
                                  (git-link--using-magit-blob-mode)
                                  vc-revison
-                                 git-link-use-commit)
+                                 (if (equal '(16) current-prefix-arg)
+                                     (not git-link-use-commit)
+                                   git-link-use-commit))
                              nil
                            (url-hexify-string branch))
                          commit

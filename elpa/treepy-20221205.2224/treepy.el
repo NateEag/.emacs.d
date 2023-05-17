@@ -1,44 +1,36 @@
-;;; treepy.el --- Generic tree traversal tools           -*- lexical-binding: t -*-
-;;
-;; Filename: treepy.el
-;; 
+;;; treepy.el --- Generic tree traversal tools  -*- lexical-binding: t -*-
+
 ;; Copyright (C) 2017 Daniel Barreto
-;;
-;; Description: Generic Tree Traversing Tools
+
 ;; Author: Daniel Barreto <daniel.barreto.n@gmail.com>
 ;; Keywords: lisp, maint, tools
-;; Package-Version: 20191108.2217
+;; Package-Version: 20221205.2224
+;; Package-Commit: 7c4a0d21322506a4d4b2301b4274ec955b429b47
 ;; Created: Mon Jul 10 15:17:36 2017 (+0200)
 ;; Version: 0.1.1
 ;; Package-Requires: ((emacs "25.1"))
 ;; URL: https://github.com/volrath/treepy.el
-;; 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;; Commentary:
-;; 
-;; Generic tools for recursive and iterative tree traversal based on
-;; clojure.walk and clojure.zip respectively.  Depends on `map', a map
-;; manipulation library built in Emacs 25.1.  All functions are prefixed
-;; with "treepy-"
-;; 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or (at
 ;; your option) any later version.
-;; 
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-;; 
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
-;; 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+
+;;; Commentary:
+
+;; Generic tools for recursive and iterative tree traversal based on
+;; clojure.walk and clojure.zip respectively.  Depends on `map', a map
+;; manipulation library built in Emacs 25.1.  All functions are prefixed
+;; with "treepy-".
+
 ;;; Code:
 
 (require 'map)
@@ -90,18 +82,28 @@ Return a list of each form as it is walked."
 
 (defun treepy-postwalk-replace (smap form &optional testfn)
   "Use SMAP to transform FORM by doing replacing operations.
-Recursively replace in FORM keys in SMAP with their values.  Does
-replacement at the leaves of the tree first.  The optional TESTFN
-parameter is the function to be used by `map-contains-key'."
-  (treepy-postwalk (lambda (x) (if (map-contains-key smap x testfn) (map-elt smap x) x))
+Recursively replace in FORM keys in SMAP with their values.
+Does replacement at the leaves of the tree first."
+  ;; Also see comment in `map-contains-key's definition.
+  (declare (advertised-calling-convention (smap key) "0.1.3"))
+  (treepy-postwalk (lambda (x)
+                     (if (with-suppressed-warnings ((callargs map-contains-key))
+                           (map-contains-key smap x testfn))
+                         (map-elt smap x)
+                       x))
                    form))
 
 (defun treepy-prewalk-replace (smap form &optional testfn)
   "Use SMAP to transform FORM by doing replacing operations.
-Recursively replace in FORM keys in SMAP with their values.  Does
-replacement at the root of the tree first.  The optional TESTFN
-parameter is the function to be used by `map-contains-key'."
-  (treepy-prewalk (lambda (x) (if (map-contains-key smap x testfn) (map-elt smap x) x))
+Recursively replace in FORM keys in SMAP with their values.
+Does replacement at the root of the tree first."
+  ;; Also see comment in `map-contains-key's definition.
+  (declare (advertised-calling-convention (smap key) "0.1.3"))
+  (treepy-prewalk (lambda (x)
+                    (if (with-suppressed-warnings ((callargs map-contains-key))
+                          (map-contains-key smap x testfn))
+                        (map-elt smap x)
+                      x))
                   form))
 
 
@@ -158,9 +160,9 @@ Execute BODY in this context."
   (declare (indent defun))
   (let ((lex-ctx (mapcar (lambda (v)
                            (cl-case v
-                             ('node    `(node (treepy-node ,loc)))
-                             ('context `(context (treepy--context ,loc)))
-                             (t        `(,v (treepy--context ,loc (quote ,(intern (concat ":" (symbol-name v)))))))))
+                             (node    `(node (treepy-node ,loc)))
+                             (context `(context (treepy--context ,loc)))
+                             (t       `(,v (treepy--context ,loc (quote ,(intern (concat ":" (symbol-name v)))))))))
                          vars)))
     `(let* (,@lex-ctx) ,@body)))
 
@@ -441,8 +443,8 @@ When reaching the end, returns a distinguished loc detectable via
 Use ORDER if given.  Possible values for ORDER are `:preorder' and
 `:postorder', defaults to the former."
   (cl-case (or order ':preorder)
-    (':preorder (treepy--preorder-next loc))
-    (':postorder (treepy--postorder-next loc))
+    (:preorder (treepy--preorder-next loc))
+    (:postorder (treepy--postorder-next loc))
     (t (error "Unrecognized order"))))
 
 (defun treepy--preorder-prev (loc)
@@ -472,8 +474,8 @@ If already at the root, returns nil."
 Use ORDER if given.  Possible values for ORDER are `:preorder' and `:postorder',
 defaults to the former."
   (cl-case (or order ':preorder)
-    (':preorder (treepy--preorder-prev loc))
-    (':postorder (treepy--postorder-prev loc))
+    (:preorder (treepy--preorder-prev loc))
+    (:postorder (treepy--postorder-prev loc))
     (t (error "Unrecognized order"))))
 
 (defun treepy-end-p (loc)

@@ -6,7 +6,8 @@
 ;; Maintainer: browse-kill-ring <browse-kill-ring@tonotdo.com>
 ;; Created: 7 Apr 2001
 ;; Version: 2.0.0
-;; Package-Version: 20200210.921
+;; Package-Version: 20220410.1509
+;; Package-Commit: 6e06736a8245a8cdf436f6585c71439239219836
 ;; URL: https://github.com/browse-kill-ring/browse-kill-ring
 ;; Keywords: convenience
 
@@ -945,7 +946,7 @@ reselects ENTRY in the `*Kill Ring*' buffer."
   "Update `browse-kill-ring-preview-overlay' to match item at PT.
 This function is called whenever the selection in the `*Kill
 Ring*' buffer is adjusted, the `browse-kill-ring-preview-overlay'
-is udpated to preview the text of the selection at PT (or the
+is updated to preview the text of the selection at PT (or the
 current point if not specified)."
   (let ((new-text (browse-kill-ring-current-string
                    (current-buffer) (or pt (point)) t)))

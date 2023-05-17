@@ -3,10 +3,10 @@
 ;; Copyright (C) 2015 Olli Piepponen
 ;;
 ;; Author: Olli Piepponen <opieppo@gmail.com>
-;; URL: https://github.com/luxbock/evil-cleverparens
-;; Keywords: cleverparens, parentheses, evil, paredit, smartparens
+;; URL: https://github.com/emacs-evil/evil-cleverparens
+;; Keywords: convenience, emulations
 ;; Version: 0.1.0
-;; Package-Requires: ((evil "1.0") (smartparens "1.6.1"))
+;; Package-Requires: ((evil "1.0") (paredit "1") (smartparens "1.6.1") (emacs "24.4") (dash "2.12.0"))
 ;;
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -23,6 +23,21 @@
 (require 'evil-common)
 (require 'smartparens)
 (require 'evil-cleverparens-util)
+
+
+;;;###autoload (autoload 'evil-cp-a-WORD "evil-cleverparens-text-objects" nil t)
+(evil-define-text-object evil-cp-a-WORD (count &optional beg end type)
+  "Select a symbol"
+  (evil-select-an-object (if evil-cleverparens-swap-move-by-word-and-symbol
+                             'evil-word 'evil-symbol)
+                         beg end type count))
+
+;;;###autoload (autoload 'evil-cp-inner-WORD "evil-cleverparens-text-objects" nil t)
+(evil-define-text-object evil-cp-inner-WORD (count &optional beg end type)
+  "Select inner symbol"
+  (evil-select-inner-object (if evil-cleverparens-swap-move-by-word-and-symbol
+                                'evil-word 'evil-symbol)
+                            beg end type count))
 
 ;;;###autoload (autoload 'evil-cp-a-form "evil-cleverparens-text-objects" nil t)
 (evil-define-text-object evil-cp-a-form (count &optional beg end type)

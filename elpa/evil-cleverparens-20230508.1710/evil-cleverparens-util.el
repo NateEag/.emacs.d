@@ -3,10 +3,10 @@
 ;; Copyright (C) 2015 Olli Piepponen
 ;;
 ;; Author: Olli Piepponen <opieppo@gmail.com>
-;; URL: https://github.com/luxbock/evil-cleverparens
-;; Keywords: cleverparens, parentheses, evil, paredit, smartparens
+;; URL: https://github.com/emacs-evil/evil-cleverparens
+;; Keywords: convenience, emulations
 ;; Version: 0.1.0
-;; Package-Requires: ((evil "1.0") (smartparens "1.6.1"))
+;; Package-Requires: ((evil "1.0") (paredit "1") (smartparens "1.6.1") (emacs "24.4") (dash "2.12.0"))
 ;;
 ;; This file is NOT part of GNU Emacs.
 ;;
@@ -41,6 +41,7 @@
   "Predicate for checking if the point is on a string delimiter."
   (and (looking-at (sp--get-stringlike-regexp))
        (not (paredit-in-string-escape-p))))
+
 (defun evil-cp--looking-at-whitespace-p (&optional pos)
   (save-excursion
     (when pos (goto-char pos))
@@ -72,6 +73,15 @@ question. Ignores parentheses inside strings."
     (when pos (goto-char pos))
     (and (sp--looking-at-p (evil-cp--get-opening-regexp))
          (not (evil-cp--inside-string-p)))))
+
+(defun evil-cp--looking-at-opening-anywhere-p (&optional pos)
+  "Predicate that returns true if point is looking at an opening
+parentheses as defined by smartparens for the major mode in
+question. Includes parentheses inside strings."
+  (save-excursion
+    (when pos (goto-char pos))
+    (and (sp--looking-at-p (evil-cp--get-opening-regexp))
+         (not (evil-cp--looking-at-string-closing-p)))))
 
 (defun evil-cp--looking-at-closing-p (&optional pos)
   "Predicate that returns true if point is looking at an closing
@@ -147,6 +157,15 @@ string delimiter."
          ,@body)
      ,@body))
 
+(defmacro evil-cp--guard-point-inc-string (&rest body)
+  "Adjust cursor if on any opening and execute BODY.
+Just like `evil-cp--guard-point' but works inside strings."
+  `(if (evil-cp--looking-at-opening-anywhere-p)
+       (save-excursion
+         (forward-char 1)
+         ,@body)
+     ,@body))
+
 (defmacro evil-cp--point-after (&rest body)
   "Return location of point after performing body."
   `(save-excursion
@@ -169,8 +188,8 @@ point lands is a safe region, in which case its bounds are
 returned."
   `(save-excursion
      ,@body
-     (let ((pbol (point-at-bol))
-           (peol (point-at-eol)))
+     (let ((pbol (line-beginning-position))
+           (peol (line-end-position)))
        (when (and (sp-region-ok-p pbol peol))
          (cons pbol peol)))))
 
@@ -268,14 +287,14 @@ open/closing delimiters."
   "Skips whitespace and comments forward."
   (catch 'stop
     (if reversep
-        (while (or (looking-back evil-cp--ws-regexp)
+        (while (or (looking-back evil-cp--ws-regexp (1- (point)))
                    (evil-cp--point-in-comment (1- (point))))
           (backward-char)
           (when (bobp) (throw 'stop :bobp)))
       (while (or (looking-at evil-cp--ws-regexp)
                  (evil-cp--point-in-comment))
         (forward-char)
-        (when (looking-at sp-comment-char)
+        (when (and sp-comment-char (looking-at sp-comment-char))
           (forward-line))
         (when (eobp) (throw 'stop :eobp))))))
 
@@ -288,12 +307,12 @@ point when the operation was successful."
   (when (let ((sppss (syntax-ppss)))
           (or (not (zerop (car sppss)))
               (nth 3 sppss)))
-    (if (not (in-string-p))
+    (if (not (nth 3 (syntax-ppss)))
         (progn
           (backward-up-list)
           (point))
       (when (not (and ignore-strings-p (evil-cp--top-level-form-p)))
-        (while (in-string-p)
+        (while (nth 3 (syntax-ppss))
           (backward-char))
         (when ignore-strings-p
           (backward-up-list))
@@ -308,12 +327,12 @@ point when the operation was successful."
   (when (let ((sppss (syntax-ppss)))
           (or (not (zerop (car sppss)))
               (nth 3 sppss)))
-    (if (not (in-string-p))
+    (if (not (nth 3 (syntax-ppss)))
         (progn
           (up-list)
           (point))
       (when (not (and ignore-strings-p (evil-cp--top-level-form-p)))
-        (while (in-string-p)
+        (while (nth 3 (syntax-ppss))
           (forward-char))
         (when ignore-strings-p
           (up-list))
@@ -375,7 +394,7 @@ for temporarily moving the point to before proceeding.
 balanced parentheses."
   (let ((region (evil-yank-rectangle beg end)))
     (with-temp-buffer
-      (insert region)
+      (insert (or region ""))
       (sp-region-ok-p (point-min) (point-max)))))
 
 (defun evil-cp--sp-obj-bounds (thing)

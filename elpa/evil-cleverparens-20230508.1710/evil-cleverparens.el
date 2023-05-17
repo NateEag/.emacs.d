@@ -3,8 +3,8 @@
 ;; Copyright (C) 2015 Olli Piepponen
 ;;
 ;; Author: Olli Piepponen <opieppo@gmail.com>
-;; URL: https://github.com/luxbock/evil-cleverparens
-;; Keywords: cleverparens, parentheses, evil, paredit, smartparens
+;; URL: https://github.com/emacs-evil/evil-cleverparens
+;; Keywords: convenience, emulations
 ;; Version: 0.1.0
 ;; Package-Requires: ((evil "1.0") (paredit "1") (smartparens "1.6.1") (emacs "24.4") (dash "2.12.0"))
 ;;
@@ -14,8 +14,8 @@
 
 ;;; Commentary:
 
-;; Use Vim/evil like modal editing with lisp without screwing up the structure
-;; of your code. Tries to offer useful alternatives for behavior which would
+;; Use Vim/evil like modal editing with Lisp without screwing up the structure
+;; of your code.  Tries to offer useful alternatives for behavior which would
 ;; otherwise be destructive.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -170,7 +170,7 @@ This is a feature copied from `evil-smartparens'."
 location of point, which also works for strings. Unlike
 `sp-splice-sexp', this one doesn't perform clean-up for empty
 forms."
-  (evil-cp--guard-point
+  (evil-cp--guard-point-inc-string
    (-when-let (ok (sp-get-enclosing-sexp 1))
      (if (equal ";" (sp-get ok :prefix))
          (sp-get ok
@@ -187,11 +187,15 @@ contained within the region."
     (while (> chars-left 0)
       (cond
        ((evil-cp--point-in-string-or-comment)
-        (let* ((ending (cdr (or (sp-get-comment-bounds)
-                                (sp-get-quoted-string-bounds))))
-               (diff (- (min end ending) (point))))
-          (delete-char diff)
-          (setq chars-left (- chars-left diff))))
+        (if (sp-get-comment-bounds)
+            (let* ((ending (cdr (or (sp-get-comment-bounds)
+                                    (sp-get-quoted-string-bounds))))
+                   (diff (- (min end ending) (point))))
+              (delete-char diff)
+              (setq chars-left (- chars-left diff)))
+          (progn
+            (evil-cp--splice-form)
+            (cl-decf chars-left))))
 
        ((evil-cp--looking-at-opening-p)
         (let ((other-paren (evil-cp--matching-paren-pos)))
@@ -208,7 +212,9 @@ contained within the region."
               (let ((char-count (sp-get (sp-get-string) (- :end :beg))))
                 (delete-char char-count)
                 (setq chars-left (- chars-left char-count)))
-            (forward-char)
+            (if (= 1 (- end (point)))
+                (evil-cp--splice-form)
+              (forward-char))
             (cl-decf chars-left))))
 
        ((evil-cp--looking-at-paren-p)
@@ -216,7 +222,7 @@ contained within the region."
         (cl-decf chars-left))
 
        ((evil-cp--looking-at-string-delimiter-p)
-        (forward-char)
+        (delete-char 1)
         (cl-decf chars-left))
 
        (t
@@ -242,7 +248,6 @@ and deleting other characters. Can be overriden by
              (evil-cp-yank beg end type register yank-handler)
            (evil-yank beg end type register yank-handler))
          (evil-cp-delete-or-splice-region beg end))))
-
 
 (evil-define-operator evil-cp-delete-char-or-splice-backwards
   (beg end type register yank-handler)
@@ -287,7 +292,7 @@ buffer if BACKP is nil and at the beginning if it is true."
                    t)
                ((scan-error) nil))))
     (when backp (goto-char (point-min)))
-    (apply #'insert (nreverse closing))
+    (apply #'insert (if backp closing (nreverse closing)))
     ;; see above
     (when backp (delete-char 1))))
 
@@ -501,8 +506,11 @@ respecting parentheses."
                                 'evil-cp-yank-form-handler))
 
      ((eq type 'line)
-      (evil-cp--ignoring-yank beg end type register
-                              'evil-yank-line-handler))
+      (let ((beg (+ beg (save-excursion ; skip preceding whitespace
+                          (beginning-of-line)
+                          (sp-forward-whitespace t)))))
+        (evil-cp--ignoring-yank beg end type register
+                                'evil-yank-line-handler)))
 
      ;; unbalanced, fill missing
      (evil-cleverparens-complete-parens-in-yanked-region
@@ -519,12 +527,12 @@ respecting parentheses."
   (interactive "<R><x>")
   (cond
    ((evil-visual-state-p)
-    (let ((beg (point-at-bol))
+    (let ((beg (line-beginning-position))
           (end (if (eq type 'line)
                    (1- end)
                  (save-excursion
                    (goto-char end)
-                   (point-at-eol)))))
+                   (line-end-position)))))
       (evil-exit-visual-state)
       (evil-cp--yank-characters beg end type register)))
 
@@ -534,26 +542,26 @@ respecting parentheses."
       (when (paredit-in-string-escape-p)
         (backward-char))
       (evil-yank-characters (point)
-                            (min (point-at-eol)
+                            (min (line-end-position)
                                  (cdr (paredit-string-start+end-points)))
                             register)))
 
    ((paredit-in-comment-p)
-    (evil-yank-characters (point) (point-at-eol) register))
+    (evil-yank-characters (point) (line-end-position) register))
 
-   ((save-excursion (paredit-skip-whitespace t (point-at-eol))
+   ((save-excursion (paredit-skip-whitespace t (line-end-position))
                     (or (eolp) (eq (char-after) ?\; )))
     (save-excursion
       (if (paredit-in-char-p)
           (backward-char)))
-    (evil-yank-characters (point) (point-at-eol) register))
+    (evil-yank-characters (point) (line-end-position) register))
 
    (t
     (save-excursion
       (if (paredit-in-char-p)
           (backward-char 2))
       (let ((beginning (point))
-            (eol (point-at-eol)))
+            (eol (line-end-position)))
         (let ((end-of-list-p (paredit-forward-sexps-to-kill beginning eol)))
           (when end-of-list-p
             (up-list)
@@ -566,9 +574,9 @@ respecting parentheses."
                    (paredit-skip-whitespace t)
                    (and (not (eq (char-after) ?\; ))
                         (point)))
-                 (point-at-eol)))
+                 (line-end-position)))
             ((and (not end-of-list-p)
-                  (eq (point-at-eol) eol))
+                  (eq (line-end-position) eol))
              eol)
             (t
              (point)))
@@ -577,7 +585,8 @@ respecting parentheses."
 (defun evil-cp--delete-characters (beg end)
   "Deletes everything except unbalanced parentheses / string
 delimiters in the region defined by BEG and END."
-  (let ((chars-left (- end beg)))
+  (let ((chars-left (- end beg))
+        (end (set-marker (make-marker) end)))
     (goto-char beg)
     (while (> chars-left 0)
       (cond
@@ -606,7 +615,8 @@ delimiters in the region defined by BEG and END."
         (cl-decf chars-left))
        (t
         (delete-char 1)
-        (cl-decf chars-left))))))
+        (cl-decf chars-left))))
+    (set-marker end nil)))
 
 (defun evil-cp-first-non-blank-non-opening ()
   "Like `evil-first-non-blank' but also skips opening parentheses
@@ -614,80 +624,77 @@ and string delimiters."
   (interactive)
   (evil-first-non-blank)
   (while (and (evil-cp--looking-at-any-opening-p)
-             (<= (point) (point-at-eol)))
+             (<= (point) (line-end-position)))
     (forward-char)))
 
-(evil-define-operator evil-cp-delete (beg end type register yank-handler)
-  "A version of `evil-delete' that attempts to leave the region
-its acting on with balanced parentheses. The behavior of
-kill-ring is determined by the
-`evil-cleverparens-complete-parens-in-yanked-region' variable."
-  :move-point nil
-  (interactive "<R><x><y>")
-  (let ((safep (evil-cp-region-ok-p beg end)))
-    (evil-cp-yank beg end type register yank-handler)
-    (cond ((or (= beg end)
-               (evil-cp--override)
-               (and (eq type 'block) (evil-cp--balanced-block-p beg end))
-               (and safep (not (eq type 'block))))
-           (evil-delete beg end type register yank-handler))
-
-          ((eq type 'line)
-           (goto-char beg)
-           (save-excursion
-             (evil-cp--delete-characters
-              (+ beg
-                 (save-excursion  ; skip preceding whitespace
-                   (beginning-of-line)
-                   (sp-forward-whitespace t)))
-              (1- end)))
-           (when (and evil-cleverparens-indent-afterwards
-                      (evil-cp--inside-any-form-p))
-             (save-excursion
-               (evil-cp--backward-up-list)
-               (indent-sexp)))
-           (evil-cp-first-non-blank-non-opening)
-           (if (evil-cp--looking-at-any-closing-p)
-               (when (save-excursion
-                       (forward-line -1)
-                       (not (evil-cp--comment-block?)))
-                 (forward-line -1)
-                 (join-line 1)
-                 (forward-line 1))
-             (join-line 1)))
-
-          (t (evil-cp--delete-characters beg end)))))
+(defun evil-cp--act-until-closing (beg end action)
+  "Do ACTION on all balanced expressions, starting at BEG.
+Stop ACTION when the first unbalanced closing delimeter or eol is reached."
+  (goto-char beg)
+  (let ((endp nil)
+        (end (set-marker (make-marker) end)))
+    (while (not endp)
+      (cond
+       ((<= end (point)) (setq endp t))
+       ((evil-cp--looking-at-any-opening-p)
+        (let ((other-end (evil-cp--matching-paren-pos)))
+          ;; matching paren is in the range of the command
+          (let ((char-count
+                 (evil-cp--guard-point
+                  (sp-get (sp-get-enclosing-sexp)
+                    (- :end :beg)))))
+            (funcall action char-count))))
+       ((evil-cp--looking-at-any-closing-p)
+        (setq endp t))
+       (t (funcall action 1))))
+    (set-marker end nil)))
 
 (evil-define-operator evil-cp-delete-line (beg end type register yank-handler)
   "Kills the balanced expressions on the line until the eol."
   :motion nil
   :keep-visual t
   :move-point nil
+  ;; TODO this could take a count, like `evil-delete-line'
   (interactive "<R><x>")
-  (cond ((evil-visual-state-p)
-         ;; Not sure what this should do in visual-state
-         (let ((safep (sp-region-ok-p beg end)))
-           (if (not safep)
-               (evil-cp--fail)
-             (evil-delete-line beg end type register yank-handler))))
+  (when (and (evil-visual-state-p) (eq type 'inclusive))
+    (let ((range (evil-expand
+                  beg end
+                  (if (and evil-respect-visual-line-mode visual-line-mode)
+                      'screen-line 'line))))
+      (setq beg (car range)
+            end (cadr range)
+            type (evil-type range))))
+  (unless beg (setq beg (point)))
+  (unless end (setq end (line-end-position)))
+  (cond ((evil-cp-region-ok-p beg end)
+         (evil-delete-line beg end type register yank-handler))
 
         ((paredit-in-string-p)
          (save-excursion
            (when (paredit-in-string-escape-p)
              (backward-char))
            (let ((beg (point))
-                 (end (min (point-at-eol)
+                 (end (min (line-end-position)
                            (cdr (paredit-string-start+end-points)))))
              (evil-yank-characters beg end register)
              (delete-region beg end))))
 
         ((paredit-in-comment-p)
          (let ((beg (point))
-               (end (point-at-eol)))
+               (end (line-end-position)))
            (evil-yank-characters beg end register)
            (delete-region beg end)))
 
-        ((save-excursion (paredit-skip-whitespace t (point-at-eol))
+        ((evil-visual-state-p)
+         (progn (evil-force-normal-state)
+                (goto-char beg)
+                (evil-cp-delete-line beg end type register yank-handler)))
+
+        ((and (evil-cp--looking-at-any-closing-p)
+              (evil-cp--looking-at-empty-form))
+         (evil-cp-delete-enclosing 1))
+
+        ((save-excursion (paredit-skip-whitespace t (line-end-position))
                          (or (eolp) (eq (char-after) ?\; )))
          (when (paredit-in-char-p) (backward-char))
          ;; `kill-line' inlined from from `simple.el'
@@ -712,27 +719,68 @@ kill-ring is determined by the
          (save-excursion
            (when (paredit-in-char-p) (backward-char 2))
            (let* ((beg (point))
-                  (eol (point-at-eol))
-                  (end-of-list-p (paredit-forward-sexps-to-kill beg eol)))
-             (when end-of-list-p (up-list) (backward-char))
-             (let ((end (cond
-                         (kill-whole-line
-                          (or (save-excursion
-                                (paredit-skip-whitespace t)
-                                (and (not (eq (char-after) ?\; ))
-                                     (point)))
-                              (point-at-eol)))
-                         ((and (not end-of-list-p)
-                               (eq (point-at-eol) eol))
-                          eol)
-                         (t
-                          (point)))))
-               (evil-yank-characters beg end register)
-               (delete-region beg end)))))))
+                  (end (progn (evil-cp--act-until-closing beg end #'forward-char) (point))))
+             (evil-yank-characters beg end register)
+             (evil-cp--act-until-closing beg end #'delete-char))))))
+
+(evil-define-operator evil-cp-delete (beg end type register yank-handler)
+  "A version of `evil-delete' that attempts to leave the region
+it's acting on with balanced parentheses. The behavior of
+kill-ring is determined by the
+`evil-cleverparens-complete-parens-in-yanked-region' variable."
+  :move-point nil
+  (interactive "<R><x><y>")
+  (let ((safep (evil-cp-region-ok-p beg end)))
+    (cond ((or (= beg end)
+               (evil-cp--override)
+               (and (eq type 'block) (evil-cp--balanced-block-p beg end))
+               (and safep (not (eq type 'block))))
+           (evil-delete beg end type register yank-handler))
+
+          ((eq type 'line)
+           (evil-cp-yank beg end type register yank-handler)
+           (goto-char beg)
+           (save-excursion
+             (evil-cp--delete-characters
+              (+ beg
+                 (save-excursion  ; skip preceding whitespace
+                   (beginning-of-line)
+                   (sp-forward-whitespace t)))
+              (if (save-excursion (goto-char end) (eobp))
+                  end
+                (1- end))))
+           (when (and evil-cleverparens-indent-afterwards
+                      (evil-cp--inside-any-form-p))
+             (save-excursion
+               (evil-cp--backward-up-list)
+               (indent-sexp)))
+           (if (save-excursion
+                 (skip-chars-forward "\t ")
+                 (evil-cp--looking-at-any-closing-p))
+               (when (save-excursion
+                       (forward-line -1)
+                       (not (evil-cp--comment-block?)))
+                 (forward-line -1)
+                 (join-line 1)
+                 (forward-line 1))
+             (join-line 1)))
+
+          (t (evil-cp-yank beg end type register yank-handler)
+             (evil-cp--delete-characters beg end))))
+
+  (when (and (eq type 'line)
+             (called-interactively-p 'any))
+    (evil-cp-first-non-blank-non-opening)
+    (when (and (not evil-start-of-line)
+               evil-operator-start-col
+               ;; Special exceptions to ever saving column:
+               (not (memq evil-this-motion '(evil-forward-word-begin
+                                             evil-forward-WORD-begin
+                                             evil-cp-forward-symbol-begin))))
+      (move-to-column evil-operator-start-col))))
 
 (evil-define-operator evil-cp-change (beg end type register yank-handler delete-func)
   "Call `evil-change' while keeping parentheses balanced."
-  :move-point nil
   (interactive "<R><x><y>")
   (if (or (= beg end)
           (evil-cp--override)
@@ -787,6 +835,7 @@ kill-ring is determined by the
   "Motion for moving forward by a sexp via `sp-forward-sexp'."
   :type exclusive
   (let ((count (or count 1)))
+    (when (evil-eolp) (forward-char))
     (sp-forward-sexp count)))
 
 (evil-define-motion evil-cp-backward-sexp (count)
@@ -809,7 +858,8 @@ level sexp)."
     (if (evil-cp--looking-at-closing-p)
         (forward-char 2))
     (end-of-defun count)
-    (backward-char (if (eobp) 1 2))))
+    (if (looking-back "[ \t\n]" 1) (skip-chars-backward " \t\n"))
+    (backward-char 1)))
 
 ;; TODO: this looks ugly
 (defun evil-cp--paren-navigation-helper (move-dir paren-side)
@@ -827,10 +877,10 @@ level sexp)."
     (when (funcall paren-p) (funcall move-fn))
     (while (not done-p)
       (cond
-       ((= (point) (funcall the-end))
-        (setq done-p t)
-        (goto-char pt-orig))
        ((funcall paren-p)
+        (setq done-p t))
+       ((= (point) (funcall the-end))
+        (goto-char pt-orig)
         (setq done-p t))
        (t
         (funcall move-fn))))))
@@ -892,6 +942,26 @@ closing paren."
     (backward-char)))
 
 
+(defun evil-cp--strict-forward-symbol (&optional count)
+  "Move forward COUNT symbols.
+Like `forward-symbol' but stricter.  Skips sexp prefixes."
+  (let ((mmode-prefix (cdr (assoc major-mode sp-sexp-prefix))))
+    (cond ((< 0 count)
+           (forward-symbol 1)
+           (if (and (eq (car mmode-prefix) 'regexp)
+                    (looking-at-p (evil-cp--get-opening-regexp))
+                    (looking-back (cadr mmode-prefix) 1))
+               (evil-cp--strict-forward-symbol count)
+             (evil-cp--strict-forward-symbol (1- count))))
+
+          ((> 0 count)
+           (forward-symbol -1)
+           (if (and (eq (car mmode-prefix) 'regexp)
+                    (looking-at-p (string-join (list (cadr mmode-prefix)
+                                                     (evil-cp--get-opening-regexp)))))
+               (evil-cp--strict-forward-symbol count)
+             (evil-cp--strict-forward-symbol (1+ count)))))))
+
 (defun forward-evil-cp-symbol (&optional count)
   "Move forward COUNT \"WORDS\".
 Moves point COUNT WORDS forward or (- COUNT) WORDS backward if
@@ -903,7 +973,7 @@ WORD is a sequence of non-whitespace characters
    count
    #'(lambda (&optional cnt)
        (let ((pnt (point)))
-         (forward-symbol cnt)
+         (evil-cp--strict-forward-symbol cnt)
          (if (= pnt (point)) cnt 0)))
    #'forward-evil-empty-line))
 
@@ -936,7 +1006,7 @@ working. Could be used to implement a future
            (evil-forward-beginning thing count))
 
           ((and evil-want-change-word-to-end
-                (eq evil-this-operator #'evil-change)
+                (memq evil-this-operator evil-change-commands)
                 (< orig (or (cdr-safe (bounds-of-thing-at-point thing)) orig)))
            (forward-thing thing count))
 
@@ -986,16 +1056,6 @@ movement."
     (evil-signal-at-bob-or-eob (- (or count 1)))
     (evil-backward-beginning thing count)))
 
-(evil-define-motion evil-cp-backward-symbol-begin (count)
-  "Copy of `evil-backward-word-begin' using 'evil-symbol for the
-movement."
-  :type exclusive
-  (let ((thing (if evil-cleverparens-move-skip-delimiters
-                   'evil-cp-symbol
-                 'evil-symbol)))
-    (evil-signal-at-bob-or-eob (- (or count 1)))
-    (evil-backward-beginning thing count)))
-
 (evil-define-motion evil-cp-backward-symbol-end (count)
   "Copy of `evil-backward-word-end' using 'evil-symbol for the
 movement."
@@ -1025,7 +1085,7 @@ movement."
       (forward-char)
       (dotimes (_ depth)
         (sp-backward-slurp-sexp))
-      (while (looking-back " ")
+      (while (looking-back " " (1- (point)))
         (backward-delete-char 1))
       (insert " ")
       (backward-sexp)
@@ -1077,7 +1137,7 @@ sexp inside it. Should not be called in an empty list."
 
 (evil-define-command evil-cp-< (count)
   "Slurping/barfing operation that acts differently based on the
-points location in the form.
+point's location in the form.
 
 When point is on the opening delimiter of the form boundary, it
 will slurp the next element backwards while maintaining the
@@ -1149,7 +1209,8 @@ regular forward-slurp."
         (when (not (or (evil-cp--looking-at-empty-form)
                        (evil-cp--singleton-list-p)))
           (forward-char)
-          (sp-backward-barf-sexp)
+          (let (sp-barf-move-point-with-delimiter) ; It's not helpful here
+            (sp-backward-barf-sexp))
           (sp-forward-sexp)
           (evil-cp-next-opening)))
        (t
@@ -1212,7 +1273,7 @@ regular forward-slurp."
             (evil-cp--skip-whitespace-and-comments)
             (evil-cp--movement-bounds (forward-sexp))))
          (next-line
-          (or (when (not (= (point-at-eol) (point-max)))
+          (or (when (not (= (line-end-position) (point-max)))
                 (save-excursion
                   (forward-line)
                   (evil-cp--comment-block-bounds)))
@@ -1238,7 +1299,7 @@ regular forward-slurp."
            (when (not (bobp))
              (evil-cp--next-sexp-bounds))))
         (prev-line
-         (when (not (= (point-at-bol) (point-min)))
+         (when (not (= (line-beginning-position) (point-min)))
            (or (save-excursion
                  (forward-line -1)
                  (evil-cp--comment-block-bounds))
@@ -1258,7 +1319,7 @@ from the end of THIS-BOUNDS."
     (let ((that-bounds (evil-cp--next-thing-bounds
                         (goto-char (cdr this-bounds))
                         by-line-p)))
-      (if (not (= (point) (point-at-eol)))
+      (if (not (= (point) (line-end-position)))
           (evil-cp--swap-regions this-bounds that-bounds)
         (progn
           (backward-char)
@@ -1278,7 +1339,7 @@ thing from the beginning of of THIS-BOUNDS."
                         (goto-char (car this-bounds))
                         by-line-p)))
       (when that-bounds
-        (if (not (= (point) (point-at-eol)))
+        (if (not (= (point) (line-end-position)))
             (evil-cp--swap-regions this-bounds that-bounds)
           (backward-char)
           (evil-cp--swap-regions this-bounds that-bounds)
@@ -1294,7 +1355,7 @@ thing from the beginning of of THIS-BOUNDS."
 or a comment."
   (save-excursion
     (evil-first-non-blank)
-    (looking-at-p sp-comment-char)))
+    (and sp-comment-char (looking-at-p sp-comment-char))))
 
 (defun evil-cp--comment-block-bounds (&optional pos)
   "Gets the bounds for a comment block (i.e. a group of lines
@@ -1422,7 +1483,7 @@ mode at the end of form. Using an arbitrarily large COUNT is
 guaranteened to take the point to the beginning of the top level
 form."
   (interactive "<c>")
-  (let ((line-end (point-at-eol)))
+  (let ((line-end (line-end-position)))
     (when (or (when (sp-up-sexp count) (backward-char) t)
               (-when-let (enc-end (cdr (evil-cp--top-level-bounds)))
                 (goto-char (1- enc-end))))
@@ -1477,11 +1538,11 @@ sexp regardless of what level the point is currently at."
                         (evil-cp--looking-at-any-opening-p))
                 (insert " ")
                 (cl-incf offset))))
-          (backward-char offset)))
+          (backward-char (if prefixp (1+ offset) offset))))
     (when (not (eobp))
       (let* ((col-pos (current-column))
-             (end     (point-at-eol))
-             (line    (buffer-substring-no-properties (point-at-bol) end)))
+             (end     (line-end-position))
+             (line    (buffer-substring-no-properties (line-beginning-position) end)))
         (goto-char end)
         (insert "\n" line)
         (beginning-of-line)
@@ -1603,9 +1664,8 @@ entering insert-state."
 (evil-define-command evil-cp-yank-enclosing (count &optional register)
   "Copies the enclosing form to kill-ring. With COUNT, yanks the
 nth form upwards instead. When called with a raw prefix argument,
-yanks the top-level form and deletes the leftover whitespace,
-while adding a yank-handler that inserts two newlines at the end
-and beginning of the copied top-level form."
+yanks the top-level form, while adding a yank-handler that inserts
+two newlines at the end and beginning of the copied top-level form."
   (interactive "<c><x>")
   (when (evil-cp--inside-any-form-p)
     (save-excursion
@@ -1628,7 +1688,7 @@ and beginning of the copied top-level form."
     (beginning-of-line)
     (skip-chars-forward "\s")
     (or (evil-cp--looking-at-any-closing-p)
-        (= (point) (point-at-eol)))))
+        (= (point) (line-end-position)))))
 
 (evil-define-command evil-cp-delete-enclosing (count &optional register)
   "Kills the enclosing form. With COUNT, kills the nth form
@@ -1657,8 +1717,8 @@ the top-level form and deletes the extra whitespace."
         (forward-line -1)
         (join-line 1)
         (end-of-line))
-      (when (looking-back "\s")
-        (delete-backward-char 1)))))
+      (when (looking-back "\s" (1- (point)))
+        (delete-char -1)))))
 
 (evil-define-command evil-cp-change-enclosing (count &optional register)
   "Calls `evil-cp-delete-enclosing' and enters insert-state."
@@ -1700,7 +1760,8 @@ the top-level form and deletes the extra whitespace."
 
 (defun evil-cp--wrap-next (pair count)
   (let ((pt-orig (point))
-        (this-pair (evil-cp-pair-for pair)))
+        (this-pair (evil-cp-pair-for pair))
+        end)
     (when (sp-point-in-symbol)
       (sp-get (sp-get-symbol)
         (goto-char :beg)))
@@ -1723,7 +1784,8 @@ the top-level form and deletes the extra whitespace."
 
 (defun evil-cp--wrap-previous (pair count)
   (let ((pt-orig (point))
-        (this-pair (evil-cp-pair-for pair)))
+        (this-pair (evil-cp-pair-for pair))
+        beg)
     (when (and (sp-point-in-symbol) (not (eobp))) ; bug in `sp-point-in-symbol'?
       (sp-get (sp-get-symbol)
         (goto-char :end)))
@@ -1880,10 +1942,10 @@ to true."
         (evil-cp--point-in-string-or-comment)
         (evil-cp--looking-at-empty-form))
     (call-interactively 'evil-insert))
-   ((and (looking-back "(")
+   ((and (looking-back "(" (1- (point)))
          ;; should I use `sp-sexp-prefix' here?
-         (not (looking-back "'("))
-         (not (looking-back "#(")))
+         (not (looking-back "'(" (- (point) 2)))
+         (not (looking-back "#(" (- (point) 2))))
     (setq evil-cp--inserted-space-after-round-open t)
     (insert " ")
     (backward-char)
@@ -1906,7 +1968,7 @@ to true."
   (interactive "p")
   (cond
    ((or (evil-visual-state-p)
-        (looking-at-p "[\n\t ]+")
+        (looking-at-p ".[\n\t ]+")
         (bobp)
         (eobp)
         (evil-cp--point-in-string-or-comment)
@@ -1914,8 +1976,8 @@ to true."
     (call-interactively 'evil-append))
    ((and (or (looking-at-p "(\\b")
              (evil-cp--looking-at-any-opening-p))
-         (not (looking-back "'"))
-         (not (looking-back "#")))
+         (not (looking-back "'" (1- (point))))
+         (not (looking-back "#" (1- (point)))))
     (setq evil-cp--inserted-space-after-round-open t)
     (forward-char)
     (insert " ")
@@ -2035,6 +2097,12 @@ and/or beginning."
   evil-cleverparens via a modifier key (using the meta-key by
   default). Only enabled in evil's normal mode.")
 
+(defvar evil-cp-insert-key "i"
+  "Key to use to switch to insert mode")
+
+(defvar evil-cp-append-key "a"
+  "Key to use to switch to append mode")
+
 (defun evil-cp--populate-mode-bindings-for-state (bindings state addp)
   "Helper function that defines BINDINGS for the evil-state
 STATE when ADDP is true. If ADDP is false, then the keys in
@@ -2055,7 +2123,7 @@ in question."
   (let ((keys (if evil-cleverparens-swap-move-by-word-and-symbol
                   evil-cp-swapped-movement-keys
                 evil-cp-regular-movement-keys)))
-    (evil-cp--populate-mode-bindings-for-state keys 'normal t)))
+    (evil-cp--populate-mode-bindings-for-state keys 'motion t)))
 
 (defun evil-cp--enable-regular-bindings ()
   "Enables the regular evil-cleverparens bindings based on
@@ -2065,16 +2133,19 @@ in question."
      evil-cp-regular-bindings
      state
      t))
+  ;; Enable `evil-cp-change' as an `evil-change command'.
+  (add-to-list 'evil-change-commands #'evil-cp-change)
+
   (if evil-cleverparens-use-regular-insert
       ;; in case we change our mind
       (progn
         (evil-define-key 'normal evil-cleverparens-mode-map
-          "i" 'evil-insert)
+          evil-cp-insert-key 'evil-insert)
         (remove-hook 'evil-insert-state-exit-hook
                      'evil-cp-insert-exit-hook))
     (evil-define-key 'normal evil-cleverparens-mode-map
-      "i" 'evil-cp-insert
-      "a" 'evil-cp-append)
+      evil-cp-insert-key 'evil-cp-insert
+      evil-cp-append-key 'evil-cp-append)
     (add-hook 'evil-insert-state-exit-hook
               'evil-cp-insert-exit-hook))
   ;; If evil-snipe is not present or does not want to use s and S bindings,
@@ -2120,13 +2191,16 @@ true."
   (define-key evil-outer-text-objects-map "c" #'evil-cp-a-comment)
   (define-key evil-inner-text-objects-map "c" #'evil-cp-inner-comment)
   (define-key evil-outer-text-objects-map "d" #'evil-cp-a-defun)
-  (define-key evil-inner-text-objects-map "d" #'evil-cp-inner-defun))
+  (define-key evil-inner-text-objects-map "d" #'evil-cp-inner-defun)
+  (define-key evil-outer-text-objects-map "W" #'evil-cp-a-WORD)
+  (define-key evil-inner-text-objects-map "W" #'evil-cp-inner-WORD))
 
 (defun evil-cp--enable-surround-operators ()
   "Enables the use of `evil-cp-delete' and `evil-cp-change' with
 `evil-surround-mode'"
-  (add-to-list 'evil-surround-operator-alist '(evil-cp-delete . delete))
-  (add-to-list 'evil-surround-operator-alist '(evil-cp-change . change)))
+  (when (boundp 'evil-surround-operator-alist)
+    (add-to-list 'evil-surround-operator-alist '(evil-cp-delete . delete))
+    (add-to-list 'evil-surround-operator-alist '(evil-cp-change . change))))
 
 ;; Setup keymap
 (defvar evil-cleverparens-mode-map (make-sparse-keymap))
@@ -2153,7 +2227,9 @@ for an advanced modal structural editing experience."
             (evil-cp--enable-surround-operators)
           (add-hook 'evil-surround-mode-hook
                     'evil-cp--enable-surround-operators))
-        (run-hooks 'evil-cleverparens-enabled-hook))
+        (run-hooks 'evil-cleverparens-enabled-hook)
+        (sp-update-local-pairs nil)
+        (evil-normalize-keymaps))
     (run-hooks 'evil-cleverparens-disabled-hook)))
 
 (provide 'evil-cleverparens)

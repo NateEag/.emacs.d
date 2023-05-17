@@ -4,9 +4,9 @@
 
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/05/28
-;; Version: 0.1.4
-;; Package-Version: 20220314.1353
-;; Package-Commit: 32eaec0fc7d20b8acbd4d459bfb8f8b72d75bb66
+;; Version: 0.1.6
+;; Package-Version: 20220328.316
+;; Package-Commit: 501871ab543b9967bfe87a8a82f83ab96b7f909e
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/twlz0ne/elpl
 ;; Keywords: lisp, tool
@@ -90,6 +90,7 @@
     (define-key map (kbd "RET") 'elpl-return)
     (define-key map (kbd "TAB") 'completion-at-point)
     (define-key map (kbd "`")   'elpl-electric-backquote)
+    (define-key map (kbd "'")   'elpl-insert-single-quote)
     map)
   "Keymap for ELPL mode.")
 
@@ -246,18 +247,25 @@ Return the output."
              elpl-program nil (elpl-cli-arguments))
       (elpl-mode))))
 
-(defun elpl-electric-backquote (arg)
-  "Insert a backquote."
-  (interactive "*P")
+(defun elpl-electric-backquote (&optional arg)
+  "Insert backquote.
+Optional prefix ARG means how many backquotes to insert, default is 1."
+  (interactive "P")
   (let* ((ps (syntax-ppss))
          (in-string-p (nth 3 ps))
          (in-comment-p (nth 4 ps)))
     (when (bound-and-true-p smartparens-mode)
       (setq-local sp-pair-list (delq (assoc "`" sp-pair-list) sp-pair-list)))
-    (insert "`")
+    (insert (make-string (or arg 1) ?`))
     (when (or in-string-p in-comment-p)
       (save-excursion
         (insert "'")))))
+
+(defun elpl-insert-single-quote (&optional arg)
+  "Insert single quote.
+Optional prefix ARG means how many single quotes to insert, default is 1."
+  (interactive "*P")
+  (insert (make-string (or arg 1) ?')))
 
 (define-derived-mode elpl-mode comint-mode "ELPL"
   "Major mode for interactively evaluating Emacs Lisp expressions.

@@ -1,4 +1,4 @@
-;;; elpl-autoloads.el --- automatically extracted autoloads
+;;; elpl-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,7 +12,7 @@
 (autoload 'elpl "elpl" "\
 Run an inferior instance of `elpl-cli' inside Emacs." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elpl" '("elpl-")))
+(register-definition-prefixes "elpl" '("elpl-"))
 
 ;;;***
 

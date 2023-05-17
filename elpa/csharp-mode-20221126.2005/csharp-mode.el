@@ -1,13 +1,13 @@
 ;;; csharp-mode.el --- C# mode derived mode  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
+;; Copyright (C) 2020-2022  Free Software Foundation, Inc.
 
 ;; Author     : Theodor Thornhill <theo@thornhill.no>
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
 ;;              Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 1.1.1
+;; Version    : 2.0.0
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
 ;; Package-Requires: ((emacs "26.1"))
@@ -36,6 +36,10 @@
   (require 'cc-fonts))
 
 (require 'csharp-compilation)
+
+(eval-and-compile
+  (when (version< "29" emacs-version)
+    (warn "csharp-mode is part of Emacs as of Emacs 29 - please delete this package.")))
 
 (defgroup csharp nil
   "Major mode for editing C# code."
@@ -66,14 +70,18 @@
     declaration."))
 
 (eval-and-compile
-  (c-add-language 'csharp-mode 'java-mode))
+  (c-add-language 'csharp-mode 'java-mode)
+
+  (defun csharp--make-mode-syntax-table ()
+    (let ((table (make-syntax-table)))
+      (c-populate-syntax-table table)
+      (modify-syntax-entry ?@ "_" table)
+      table))
+  (defvar csharp--make-mode-syntax-table #'csharp--make-mode-syntax-table
+    "Workaround for Emacs bug#57065."))
 
 (c-lang-defconst c-make-mode-syntax-table
-  csharp `(lambda ()
-            (let ((table (make-syntax-table)))
-              (c-populate-syntax-table table)
-              (modify-syntax-entry ?@ "_" table)
-              table)))
+  csharp #'csharp--make-mode-syntax-table)
 
 (c-lang-defconst c-identifier-syntax-modifications
   csharp (append '((?@ . "w"))
@@ -478,7 +486,7 @@ compilation and evaluation time conflicts."
      (save-excursion
        ;; 'new' should be part of the line
        (goto-char (c-point 'iopl))
-       (looking-at ".*\\s *new\\s *.*"))
+       (looking-at ".*new.*"))
      ;; Line should not already be terminated
      (save-excursion
        (goto-char (c-point 'eopl))
@@ -559,18 +567,16 @@ compilation and evaluation time conflicts."
 
 ;;; End of fix for strings on version 27.1
 
-
-
 (defvar csharp-mode-syntax-table
   (funcall (c-lang-const c-make-mode-syntax-table csharp))
-  "Syntax table used in csharp-mode buffers.")
+  "Syntax table used in `csharp-mode' buffers.")
 
 (defvar csharp-mode-map
   (let ((map (c-make-inherited-keymap)))
     map)
-  "Keymap used in csharp-mode buffers.")
+  "Keymap used in `csharp-mode' buffers.")
 
-(easy-menu-define csharp-mode-menu csharp-mode-map "C# Mode Commands"
+(easy-menu-define csharp-mode-menu csharp-mode-map "C# Mode Commands."
   (cons "C#" (c-lang-const c-mode-menu csharp)))
 
 ;;;###autoload
@@ -584,6 +590,8 @@ compilation and evaluation time conflicts."
 Key bindings:
 \\{csharp-mode-map}"
   :after-hook (c-update-modeline)
+  (when (version< "29" emacs-version)
+    (warn "csharp-mode is part of Emacs as of Emacs 29 - please delete this package."))
   (c-initialize-cc-mode t)
   (c-init-language-vars csharp-mode)
   (c-common-init 'csharp-mode)

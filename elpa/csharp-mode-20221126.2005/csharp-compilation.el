@@ -7,7 +7,7 @@
 ;;              Theodor Thornhill <theo@thornhill.no>
 ;; Created    : September 2020
 ;; Modified   : 2020
-;; Version    : 1.1.1
+;; Version    : 2.0.0
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/emacs-csharp/csharp-mode
 
@@ -78,7 +78,7 @@
    "\\([^(\r\n)]+\\)(\\([0-9]+\\)\\(?:,\\([0-9]+\\)\\)?"
    ;; handle weird devenv output format with 4 numbers, not 2 by having optional
    ;; extra capture-groups.
-   "\\(?:,\\([0-9]+\\)\\)?*): "
+   "\\(?:,\\([0-9]+\\)\\)*): "
    "warning [[:alnum:]]+: .+$")
   "Regexp to match compilation warning from xbuild.")
 
@@ -90,11 +90,6 @@
 
 (defconst csharp-compilation-re-dotnet-testfail
   (concat
-   "^[[:blank:]]+X \\(?:.+\n\\)"
-   "[[:blank:]]+Error Message:\n"
-   "[[:blank:]]+\\(?:.+\n\\)"
-   "\\(?:^Expected: \\(?:.+\n\\)\\)?"
-   "\\(?:^Actual: \\(?:.+\n\\)\\)?"
    "[[:blank:]]+Stack Trace:\n"
    "[[:blank:]]+at [^\n]+ in \\([^\n]+\\):line \\([0-9]+\\)"))
 

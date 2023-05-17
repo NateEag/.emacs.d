@@ -1,4 +1,4 @@
-;;; csharp-mode-autoloads.el --- automatically extracted autoloads
+;;; csharp-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,7 +10,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from csharp-compilation.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-compilation" '("csharp-")))
+(register-definition-prefixes "csharp-compilation" '("csharp-"))
 
 ;;;***
 
@@ -27,7 +27,7 @@ Key bindings:
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-mode" '("codedoc-font-lock-" "csharp-")))
+(register-definition-prefixes "csharp-mode" '("codedoc-font-lock-" "csharp-"))
 
 ;;;***
 
@@ -43,7 +43,7 @@ Key bindings:
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csharp-tree-sitter" '("csharp-" "tree-sitter-indent-csharp-tree-sitter-scopes")))
+(register-definition-prefixes "csharp-tree-sitter" '("csharp-" "tree-sitter-indent-csharp-tree-sitter-scopes"))
 
 ;;;***
 

@@ -1,7 +1,9 @@
-(define-package "csharp-mode" "20211124.1105" "C# mode derived mode"
+(define-package "csharp-mode" "20221126.2005" "C# mode derived mode"
   '((emacs "26.1"))
-  :commit "856ecbc0a78ae3bdc2db2ae4d16be43e2d9d9c5e" :authors
+  :commit "d8b058c9e9d0429ea7e81d121ce19b064bd7e0f5" :authors
   '(("Theodor Thornhill" . "theo@thornhill.no"))
+  :maintainers
+  '(("Jostein Kjønigsen" . "jostein@gmail.com"))
   :maintainer
   '("Jostein Kjønigsen" . "jostein@gmail.com")
   :keywords

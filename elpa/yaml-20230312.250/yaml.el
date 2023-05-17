@@ -4,8 +4,8 @@
 
 ;; Author: Zachary Romero <zkry@posteo.org>
 ;; Version: 0.5.1
-;; Package-Version: 20220713.358
-;; Package-Commit: 0ac7f365bb6b4507259b31679bb37ac291e1f1c7
+;; Package-Version: 20230312.250
+;; Package-Commit: a19fbf948a945571300e5a20ff1dbfa6ecfa0d16
 ;; Homepage: https://github.com/zkry/yaml.el
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: tools
@@ -934,7 +934,7 @@ This is currently unimplemented."
       (and (yaml--state-curr-doc)
            (yaml--start-of-line)
            (string-match
-            "\\^g(?:---|\\.\\.\\.\\)\\([[:blank:]]\\|$\\)"
+            "\\^g\\(?:---|\\.\\.\\.\\)\\([[:blank:]]\\|$\\)"
             (substring yaml--parsing-input yaml--parsing-position)))))
 
 (defun yaml--ord (f)
@@ -1030,7 +1030,13 @@ then check EXPR at the current position."
            (not ,ok-symbol)
          ,ok-symbol))))
 
-(defun yaml--initialize-parsing-state (args)
+(cl-defun yaml--initialize-parsing-state
+    (&key (null-object :null)
+          (false-object :false)
+          object-type
+          object-key-type
+          sequence-type
+          string-values)
   "Initialize state required for parsing according to plist ARGS."
   (setq yaml--cache nil)
   (setq yaml--object-stack nil)
@@ -1038,65 +1044,75 @@ then check EXPR at the current position."
   (setq yaml--root nil)
   (setq yaml--anchor-mappings (make-hash-table :test 'equal))
   (setq yaml--resolve-aliases nil)
-  (setq yaml--parsing-null-object
-	    (if (plist-member args :null-object)
-	        (plist-get args :null-object)
-	      :null))
-  (setq yaml--parsing-false-object
-	    (if (plist-member args :false-object)
-	        (plist-get args :false-object)
-	      :false))
-  (let ((object-type (plist-get args :object-type))
-        (object-key-type (plist-get args :object-key-type))
-        (sequence-type (plist-get args :sequence-type))
-        (string-values (plist-get args :string-values)))
-    (cond
-     ((or (not object-type)
-          (equal object-type 'hash-table))
-      (setq yaml--parsing-object-type 'hash-table))
-     ((equal 'alist object-type)
-      (setq yaml--parsing-object-type 'alist))
-     ((equal 'plist object-type)
-      (setq yaml--parsing-object-type 'plist))
-     (t (error "Invalid object-type.  Must be hash-table, alist, or plist")))
-    (cond
-     ((or (not object-key-type)
-          (equal 'symbol object-key-type))
-      (if (equal 'plist yaml--parsing-object-type)
-          (setq yaml--parsing-object-key-type 'keyword)
-        (setq yaml--parsing-object-key-type 'symbol)))
-     ((equal 'string object-key-type)
-      (setq yaml--parsing-object-key-type 'string))
-     ((equal 'keyword object-key-type)
-      (setq yaml--parsing-object-key-type 'keyword))
-     (t (error "Invalid object-key-type.  Must be string, keyword, or symbol")))
-    (cond
-     ((or (not sequence-type)
-          (equal sequence-type 'array))
-      (setq yaml--parsing-sequence-type 'array))
-     ((equal 'list sequence-type)
-      (setq yaml--parsing-sequence-type 'list))
-     (t (error "Invalid sequence-type.  sequence-type must be list or array")))
-    (if string-values
-        (setq yaml--string-values t)
-      (setq yaml--string-values nil))))
+  (setq yaml--parsing-null-object null-object)
+  (setq yaml--parsing-false-object false-object)
+  (cond
+   ((or (not object-type)
+        (equal object-type 'hash-table))
+    (setq yaml--parsing-object-type 'hash-table))
+   ((equal 'alist object-type)
+    (setq yaml--parsing-object-type 'alist))
+   ((equal 'plist object-type)
+    (setq yaml--parsing-object-type 'plist))
+   (t (error "Invalid object-type.  Must be hash-table, alist, or plist")))
+  (cond
+   ((or (not object-key-type)
+        (equal 'symbol object-key-type))
+    (if (equal 'plist yaml--parsing-object-type)
+        (setq yaml--parsing-object-key-type 'keyword)
+      (setq yaml--parsing-object-key-type 'symbol)))
+   ((equal 'string object-key-type)
+    (setq yaml--parsing-object-key-type 'string))
+   ((equal 'keyword object-key-type)
+    (setq yaml--parsing-object-key-type 'keyword))
+   (t (error "Invalid object-key-type.  Must be string, keyword, or symbol")))
+  (cond
+   ((or (not sequence-type)
+        (equal sequence-type 'array))
+    (setq yaml--parsing-sequence-type 'array))
+   ((equal 'list sequence-type)
+    (setq yaml--parsing-sequence-type 'list))
+   (t (error "Invalid sequence-type.  sequence-type must be list or array")))
+  (if string-values
+      (setq yaml--string-values t)
+    (setq yaml--string-values nil)))
 
-(defun yaml-parse-string (string &rest args)
-  "Parse the YAML value in STRING.  Keyword ARGS are as follows:
+(cl-defun yaml-parse-string (string
+                             &key
+                             (null-object :null)
+                             (false-object :false)
+                             object-type
+                             object-key-type
+                             sequence-type
+                             string-values)
+  "Parse the YAML value in STRING.
 
 OBJECT-TYPE specifies the Lisp object to use for representing
 key-value YAML mappings.  Possible values for OBJECT-TYPE are
-the symbols hash-table, alist, and plist.
+the symbols `hash-table' (default), `alist', and `plist'.
 
-SEQUENCE-TYPE specifies the Lisp object to use for representing YAML
-sequences.   Possible values for SEQUENCE-TYPE are the symbols list, and array.
+OBJECT-KEY-TYPE specifies the Lisp type to use for keys in
+key-value YAML mappings.  Possible values are the symbols
+`string', `symbol', and `keyword'.  By default, this is `symbol';
+if OBJECT-TYPE is `plist', the default is `keyword' (and `symbol'
+becomes synonym for `keyword').
+
+SEQUENCE-TYPE specifies the Lisp object to use for representing
+YAML sequences.  Possible values for SEQUENCE-TYPE are the symbols
+`list', and `array' (default).
 
 NULL-OBJECT contains the object used to represent the null value.
-It defaults to the symbol :null.
+It defaults to the symbol `:null'.
 
 FALSE-OBJECT contains the object used to represent the false
-value.  It defaults to the symbol :false."
-  (yaml--initialize-parsing-state args)
+value.  It defaults to the symbol `:false'."
+  (yaml--initialize-parsing-state
+   :null-object null-object
+   :false-object false-object
+   :object-type object-type
+   :object-key-type object-key-type
+   :sequence-type sequence-type
+   :string-values string-values)
   (let ((res (yaml--parse string
                (yaml--top))))
     (when (< yaml--parsing-position (length yaml--parsing-input))
@@ -1116,7 +1132,7 @@ value.  It defaults to the symbol :false."
 
 (defun yaml-parse-tree (string)
   "Parse the YAML value in STRING and return its parse tree."
-  (yaml--initialize-parsing-state nil)
+  (yaml--initialize-parsing-state)
   (let* ((yaml--parsing-store-position t)
          (res (yaml--parse string
                 (yaml--top))))
@@ -2388,7 +2404,7 @@ Rules for this function are defined by the yaml-spec JSON file."
 
     ('ns-esc-8-bit
      (yaml--frame "ns-esc-8-bit"
-       (yaml--all (yaml--chr ?\x)
+       (yaml--all (yaml--chr ?x)
                   (yaml--rep 2 2
                     (lambda () (yaml--parse-from-grammar 'ns-hex-digit))))))
 

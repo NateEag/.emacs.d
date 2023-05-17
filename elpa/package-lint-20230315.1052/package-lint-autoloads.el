@@ -1,4 +1,4 @@
-;;; package-lint-autoloads.el --- automatically extracted autoloads
+;;; package-lint-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -21,7 +21,7 @@ Returns a list, each element of which is list of
 
    (LINE COL TYPE MESSAGE)
 
-where TYPE is either 'warning or 'error.
+where TYPE is either `warning' or `error'.
 
 Current buffer is used if none is specified.
 
@@ -41,7 +41,7 @@ whether or not warnings alone produce a non-zero exit code." nil nil)
 (autoload 'package-lint-looks-like-a-package-p "package-lint" "\
 Return non-nil if the current buffer appears to be intended as a package." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "package-lint" '("package-lint-")))
+(register-definition-prefixes "package-lint" '("package-lint-"))
 
 ;;;***
 

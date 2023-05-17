@@ -1,10 +1,12 @@
-(define-package "package-lint" "20220404.1243" "A linting library for elisp package authors"
+(define-package "package-lint" "20230315.1052" "A linting library for elisp package authors"
   '((cl-lib "0.5")
     (emacs "24.1")
     (let-alist "1.0.6"))
-  :commit "6ca68488851404a41dbf993095eeb49f76dff877" :authors
+  :commit "78ae823bd89d83299a0d7a52797d2593d03e9795" :authors
   '(("Steve Purcell" . "steve@sanityinc.com")
     ("Fanael Linithien" . "fanael4@gmail.com"))
+  :maintainers
+  '(("Steve Purcell" . "steve@sanityinc.com"))
   :maintainer
   '("Steve Purcell" . "steve@sanityinc.com")
   :keywords

@@ -86,6 +86,9 @@ The path can be absolute or relative to that of the linted file.")
   "List of errors and warnings for the current buffer.
 This is bound dynamically while the checks run.")
 
+(defconst package-lint-emacs-head-version '(29)
+  "Version of Emacs HEAD.")
+
 (defconst package-lint-backport-libraries
   (list (list 'cl-lib "\\`cl-")
         (list 'cl-generic "\\`cl-\\(?:def\\)?generic")
@@ -95,6 +98,8 @@ This is bound dynamically while the checks run.")
         (list 'nadvice "\\`advice-")
         (list 'ol "\\`org-link-" 'org "9.3")
         (list 'seq "\\`seq-")
+        (list 'transient "\\`transient-")
+        (list 'hierarchy "\\`hierarchy-")
         (list 'let-alist "\\`let-alist"))
   "A sequence of (FEATURE SYMBOL-NAME-MATCH) for backport libraries.
 These are libraries that are built into newer Emacsen and also
@@ -128,7 +133,7 @@ optional minimum version containing the feature.")
     info)
   "A hash table from SYMBOL to a list of events in its history.
 Each event is of the form (ACTION . EMACS-VER), where ACTION is a
-symbol such as 'variable-added.")
+symbol such as `variable-added'.")
 
 (defun package-lint-symbol-info (sym)
   "Retrieve information about SYM, as an alist of (ACTION . EMACS-VER)."
@@ -176,11 +181,15 @@ symbol such as 'variable-added.")
     "org-babel-prep-session:"
     "org-babel-variable-assignments:"
     "org-babel-default-header-args:"
-    "pcomplete/"))
+    "pcomplete/"
+    "use-package-normalize/"
+    "use-package-handler/"
+    "use-package-autoloads/"))
   "A regexp matching whitelisted non-standard symbol prefixes.")
 
 (defvar package-lint--allowed-prefix-mappings
   '(("ob-" . ("org-"))
+    ("oc-" . ("org-"))
     ("ol-" . ("org-"))
     ("ox-" . ("org-")))
   "Alist containing mappings of package prefixes to symbol prefixes.")
@@ -424,20 +433,30 @@ the form (PACKAGE-NAME PACKAGE-VERSION DEP-POSITION)."
   (let (valid-deps)
     (dolist (entry parsed-deps)
       (pcase entry
-        ((and `(,package-name ,package-version)
-              (guard (symbolp package-name))
-              (guard (stringp package-version)))
+        ((or (and `(,package-name ,package-version)
+                  (guard (symbolp package-name))
+                  (guard (stringp package-version)))
+             (and `(,package-name)
+                  (guard (symbolp package-name)))
+             (and package-name
+                  (guard (symbolp package-name))))
          ;; Find the column at which the dependency is declared so we can
          ;; properly report the position of errors.
          (let ((dep-pos
                 (save-excursion
                   (goto-char position)
-                  (let ((pattern
-                         (format "( *\\(%s\\)\\(?:)\\|[^[:alnum:]_\\-].*?)\\)"
-                                 (regexp-quote (symbol-name package-name)))))
-                    (if (re-search-forward pattern (line-end-position) t)
+                  (let* ((symbol-pattern
+                          (format "\\(%s\\)"
+                                  (regexp-quote (symbol-name package-name))))
+                         (list-pattern
+                          (format "( *%s\\(?:[^[:alnum:]_\\-].*?\\)?)"
+                                  symbol-pattern)))
+                    (if (or (re-search-forward list-pattern (line-end-position) t)
+                            (re-search-forward symbol-pattern (line-end-position) t))
                         (match-beginning 1)
                       position)))))
+           (unless package-version
+             (setq package-version "0"))
            (if (ignore-errors (version-to-list package-version))
                (push (list package-name
                            (version-to-list package-version)
@@ -478,7 +497,7 @@ required version PACKAGE-VERSION.  If not, raise an error for DEP-POS."
          'error
          "You can only depend on Emacs version 24 or greater: package.el for Emacs 23 does not support the \"emacs\" pseudopackage."
          dep-pos))
-       ((version-list-<= '(28) package-version)
+       ((version-list-<= package-lint-emacs-head-version package-version)
         (package-lint--error-at-point
          'warning
          "This makes the package uninstallable in all released Emacs versions."
@@ -572,20 +591,20 @@ type of the symbol, either FUNCTION or FEATURE."
      symbol-regexp
      (lambda (sym)
        (let-alist (package-lint-symbol-info sym)
-         (let ((added-in-version (cl-ecase type
-                                   ('function .function-added)
-                                   ('feature .library-added))))
+         (let ((added-in-version (pcase type
+                                   (`function .function-added)
+                                   (`feature .library-added))))
            (when (and added-in-version (version-list-< emacs-version-dep added-in-version))
              (unless (and (eq type 'function) (package-lint--seen-fboundp-check-for sym))
                (let* ((available-backport-with-ver
-                       (cl-ecase type
-                         ('feature
+                       (pcase type
+                         (`feature
                           (cl-some (lambda (bp)
                                      (when (string= (car bp) sym)
                                        (or (cddr bp)
                                            (list (car bp)))))
                                    package-lint-backport-libraries))
-                         ('function
+                         (`function
                           (cl-some (lambda (bp)
                                      (when (string-match-p (nth 1 bp) sym)
                                        (or (cddr bp)
@@ -918,7 +937,7 @@ Valid definition names are:
       (when position
         (goto-char position)
         (looking-at-p (rx (*? space) "(" (*? space)
-                          (or "defadvice" "cl-defmethod" "define-advice")
+                          (or "defadvice" "cl-defmethod" "define-advice" "defalias" "defvaralias" (seq "define-obsolete-" (or "face" "function" "variable") "-alias"))
                           symbol-end)))))
 
 (defun package-lint--check-defs-prefix (prefix definitions)
@@ -1199,7 +1218,7 @@ Returns a list, each element of which is list of
 
    (LINE COL TYPE MESSAGE)
 
-where TYPE is either 'warning or 'error.
+where TYPE is either `warning' or `error'.
 
 Current buffer is used if none is specified."
   (with-current-buffer (or buffer (current-buffer))

@@ -1,25 +1,24 @@
-;;; forge-repo.el --- Repository support          -*- lexical-binding: t -*-
+;;; forge-repo.el --- Repository support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -169,14 +168,15 @@ repository, if any."
           (setq remote (forge--get-remote 'warn)))
         (if-let ((url (and remote
                            (magit-git-string "remote" "get-url" remote))))
-            (when-let ((repo (forge-get-repository url remote demand)))
+            (when-let* ((repo (forge-get-repository url remote demand)))
+              ;; Cannot use and-let* because of debbugs#31840.
               (oset repo worktree (magit-toplevel))
               repo)
           (when (memq demand forge--signal-no-entry)
             (error
              "Cannot determine forge repository.  %s\nSee %s."
              (cond (remote (format "No url configured for %S." remote))
-                   ((let ((config (magit-get "forge.remote")))
+                   ((and-let* ((config (magit-get "forge.remote")))
                       (format "Value of `forge.remote' is %S but %s"
                               config "that remote does not exist.")))
                    ((magit-list-remotes) "Cannot decide on remote to use.")
@@ -266,7 +266,7 @@ Return the repository identified by HOST, OWNER and NAME."
                          (forge-sql [:select [githost owner name]
                                      :from repository]))
                  nil t nil nil
-                 (when-let ((default (or (forge-current-repository)
+                 (and-let* ((default (or (forge-current-repository)
                                          (forge-get-repository nil))))
                    (format "%s/%s @%s"
                            (oref default owner)
@@ -322,7 +322,7 @@ Return the repository identified by HOST, OWNER and NAME."
          (?o . ,owner)
          (?n . ,name)
          (?p . ,path)
-         (?P . ,(replace-regexp-in-string "/" "%2F" path)))))))
+         (?P . ,(string-replace "/" "%2F" path)))))))
 
 (cl-defmethod forge-get-url ((repo forge-repository))
   (forge--format (oref repo remote) 'remote-url-format))
@@ -339,10 +339,10 @@ Return the repository identified by HOST, OWNER and NAME."
 (defun forge--msg (repo echo done format &rest args)
   (let ((msg (apply #'format format args)))
     (when repo
-      (setq msg (replace-regexp-in-string
+      (setq msg (string-replace
                  "REPO"
                  (concat (oref repo owner) "/" (oref repo name))
-                 msg t)))
+                 msg)))
     (when (and echo msg)
       (message "%s%s" msg (if done "...done" "...")))
     (when (buffer-live-p forge--mode-line-buffer)

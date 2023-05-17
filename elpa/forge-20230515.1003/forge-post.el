@@ -1,25 +1,24 @@
-;;; forge-post.el --- Post support                 -*- lexical-binding: t -*-
+;;; forge-post.el --- Post support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -38,6 +37,15 @@
   :type 'hook
   :options '(visual-line-mode
              turn-on-flyspell))
+
+(defcustom forge-buffer-draft-p nil
+  "Whether new pull-requests start out as drafts by default.
+
+The buffer-local value is use to keep track of the draft status
+of the current pull-request."
+  :package-version '(forge . "0.4.0")
+  :group 'forge
+  :type 'boolean)
 
 ;;; Class
 
@@ -77,11 +85,13 @@
 
 (defun forge-topic-at-point ()
   (or (magit-section-value-if '(issue pullreq))
-      (when-let ((branch (magit-branch-at-point)))
-        (when-let ((n (magit-get "branch" branch "pullRequest")))
-          (forge-get-pullreq (string-to-number n))))
-      (when-let ((rev (magit-commit-at-point)))
-        (forge--pullreq-from-rev rev))))
+      (and-let* ((branch (magit-branch-at-point))
+                 (n (magit-get "branch" branch "pullRequest")))
+        (forge-get-pullreq (string-to-number n)))
+      (and-let* ((rev (magit-commit-at-point)))
+        (forge--pullreq-from-rev rev))
+      (forge--issue-by-forge-short-link-at-point)
+      (forge--pullreq-by-forge-short-link-at-point)))
 
 (defun forge-current-topic ()
   (or (forge-topic-at-point)
@@ -91,12 +101,12 @@
            (forge-get-topic (tabulated-list-get-id)))))
 
 (defun forge--pullreq-from-rev (rev)
-  (when-let ((repo    (forge-get-repository nil))
+  (and-let* ((repo    (forge-get-repository nil))
              (refspec (oref repo pullreq-refspec))
              (name    (magit-rev-name rev (cadr (split-string refspec ":")))))
     (save-match-data
-      (when (string-match "\\([0-9]*\\)\\([~^][0-9]*\\)?\\'" name)
-        (forge-get-pullreq (string-to-number (match-string 0 name)))))))
+      (and (string-match "\\([0-9]*\\)\\([~^][0-9]*\\)?\\'" name)
+           (forge-get-pullreq (string-to-number (match-string 0 name)))))))
 
 ;;; Utilities
 
@@ -106,17 +116,16 @@
 
 ;;; Mode
 
-(defvar forge-post-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c")                      #'forge-post-submit)
-    (define-key map [remap evil-save-and-close]          #'forge-post-submit)
-    (define-key map [remap evil-save-modified-and-close] #'forge-post-submit)
-    (define-key map (kbd "C-c C-k")                      #'forge-post-cancel)
-    (define-key map [remap kill-buffer]                  #'forge-post-cancel)
-    (define-key map [remap ido-kill-buffer]              #'forge-post-cancel)
-    (define-key map [remap iswitchb-kill-buffer]         #'forge-post-cancel)
-    (define-key map [remap evil-quit]                    #'forge-post-cancel)
-    map))
+(defvar-keymap forge-post-mode-map
+  "C-c C-e"                                #'forge-post-dispatch
+  "C-c C-c"                                #'forge-post-submit
+  "<remap> <evil-save-and-close>"          #'forge-post-submit
+  "<remap> <evil-save-modified-and-close>" #'forge-post-submit
+  "C-c C-k"                                #'forge-post-cancel
+  "<remap> <kill-buffer>"                  #'forge-post-cancel
+  "<remap> <ido-kill-buffer>"              #'forge-post-cancel
+  "<remap> <iswitchb-kill-buffer>"         #'forge-post-cancel
+  "<remap> <evil-quit>"                    #'forge-post-cancel)
 
 (define-derived-mode forge-post-mode gfm-mode "Forge-Post" "")
 
@@ -127,11 +136,12 @@
 (defvar-local forge--submit-post-function nil)
 (defvar-local forge--cancel-post-function nil)
 (defvar-local forge--pre-post-buffer nil)
+(make-variable-buffer-local 'forge-buffer-draft-p)
 
 (defun forge--prepare-post-buffer (filename &optional header source target)
-  (let ((file (magit-git-dir
-               (convert-standard-filename
-                (concat "magit/posts/" filename)))))
+  (let ((file (convert-standard-filename
+               (expand-file-name (concat "magit/posts/" filename)
+                                 (magit-gitdir)))))
     (make-directory (file-name-directory file) t)
     (let ((prevbuf (current-buffer))
           (resume (and (file-exists-p file)
@@ -235,14 +245,27 @@
   (lambda (error &rest _)
     (error "Failed to submit post: %S" error)))
 
+(transient-define-prefix forge-post-dispatch ()
+  "Dispatch a post creation command."
+  ["Variables"
+   ("d" "Create draft" forge-post-toggle-draft)]
+  ["Act"
+   ("C-c" "Submit" forge-post-submit)
+   ("C-k" "Cancel" forge-post-cancel)])
+
+(transient-define-infix forge-post-toggle-draft ()
+  "Toggle whether the pull-request being created is a draft."
+  :class 'transient-lisp-variable
+  :variable 'forge-buffer-draft-p
+  :reader (lambda (&rest _) (not forge-buffer-draft-p))
+  :if (lambda () (equal (file-name-nondirectory buffer-file-name) "new-pullreq")))
+
 ;;; Notes
 
 (defclass forge-note (forge-post) ())
 
-(defvar forge-note-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-note)
-    map))
+(defvar-keymap forge-note-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-note)
 
 (defun forge--save-note (_repo topic)
   (let ((value (string-trim (buffer-substring-no-properties

@@ -1,25 +1,24 @@
-;;; forge-pullreq.el --- Pullreq support          -*- lexical-binding: t -*-
+;;; forge-pullreq.el --- Pullreq support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -69,16 +68,10 @@
    (timeline)
    (marks                :closql-table (pullreq-mark mark))
    (note                 :initarg :note :initform nil)
-   ;; We don't use these fields:
-   ;; includesCreatedEdit (huh?),
-   ;; lastEditedAt (same as updatedAt?),
-   ;; publishedAt (same as createdAt?),
-   ;; activeLockReason, additions, authorAssociation, (baseRefName), baseRefOid,
-   ;; bodyHTML, bodyText, canBeRebased, changedFiles, closed, createdViaEmail,
-   ;; databaseId, deletions, editor, (headRefName), headRefOid, mergeCommit,
-   ;; mergeStateStatus, mergeable, merged, mergedBy, permalink,
-   ;; potentialMergeCommit,, reactionGroups, resourcePath, revertResourcePath,
-   ;; revertUrl, url, viewer{*}
+   (base-rev             :initarg :base-rev)
+   (head-rev             :initarg :head-rev)
+   (draft-p              :initarg :draft-p)
+   (their-id             :initarg :their-id)
    ))
 
 (defclass forge-pullreq-post (forge-post)
@@ -96,14 +89,6 @@
    (body                 :initarg :body)
    (edits)
    (reactions)
-   ;; We don't use these fields:
-   ;; includesCreatedEdit (huh?),
-   ;; lastEditedAt (same as updatedAt?),
-   ;; publishedAt (same as createdAt?),
-   ;; pullRequest (same as issue),
-   ;; repository (use .pullreq.project),
-   ;; authorAssociation, bodyHTML, bodyText, createdViaEmail,
-   ;; editor, id, reactionGroups, resourcePath, url, viewer{*}
    ))
 
 ;;; Query
@@ -123,7 +108,7 @@
               'forge-pullreq))
 
 (cl-defmethod forge-get-pullreq ((number integer))
-  (when-let ((repo (forge-get-repository t)))
+  (and-let* ((repo (forge-get-repository t)))
     (forge-get-pullreq repo number)))
 
 (cl-defmethod forge-get-pullreq ((id string))
@@ -174,53 +159,21 @@
              (equal (magit-get "branch" branch-n "pullRequest") number)
              branch-n))))
 
-(defun forge--pullreq-branch-select (pullreq)
-  (let* ((number (oref pullreq number))
-         (branch-n (format "pr-%s" number))
-         (branch (or (forge--pullreq-branch-internal pullreq)
-                     branch-n)))
-    (when (member branch '("master" "next" "maint"))
-      (setq branch branch-n))
-    (when (magit-branch-p branch)
-      (if (equal branch branch-n)
-          (unless (y-or-n-p (format "Reset existing branch %S? " branch))
-            (user-error "Abort"))
-        (pcase (read-char-choice
-                (format "A branch named %S already exists.
-
-This could be because you checked out this pull-request before,
-in which case resetting might be the appropriate thing to do.
-
-Or the contributor worked directly on their version of a branch
-that also exists on the upstream, in which case you probably
-should not reset because you would end up resetting your version.
-
-Or you are trying to checkout a pull-request that you created
-yourself, in which case you probably should not reset either.
-
-  [r]eset existing %S branch
-  [c]reate new \"pr-%s\" branch instead
-  [a]bort" branch branch number) '(?r ?c ?a))
-          (?r)
-          (?c (setq branch branch-n)
-              (when (magit-branch-p branch)
-                (error "Oh no!  %S already exists too" branch)))
-          (?a (user-error "Abort"))))
-      (message ""))
-    branch))
-
 (defun forge--pullreq-ref (pullreq)
   (let ((ref (format "refs/pullreqs/%s" (oref pullreq number))))
     (and (magit-rev-verify ref) ref)))
 
 (defun forge--pullreq-range (pullreq &optional endpoints)
-  (when-let ((head (forge--pullreq-ref pullreq)))
+  (and-let* ((head (forge--pullreq-ref pullreq)))
     (concat (forge--get-remote) "/" (oref pullreq base-ref)
             (if endpoints "..." "..")
             head)))
 
 (cl-defmethod forge-get-url ((pullreq forge-pullreq))
   (forge--format pullreq 'pullreq-url-format))
+
+(defun forge--pullreq-by-forge-short-link-at-point ()
+  (forge--topic-by-forge-short-link-at-point '("#" "!") #'forge-get-pullreq))
 
 ;;; Sections
 
@@ -236,41 +189,52 @@ yourself, in which case you probably should not reset either.
 
 (defun forge-pullreq-at-point ()
   (or (magit-section-value-if 'pullreq)
-      (when-let ((post (magit-section-value-if 'post)))
+      (and-let* ((post (magit-section-value-if 'post)))
         (cond ((forge-pullreq-p post)
                post)
               ((forge-pullreq-post-p post)
-               (forge-get-pullreq post))))))
+               (forge-get-pullreq post))))
+      (forge--pullreq-by-forge-short-link-at-point)))
 
-(defvar forge-pullreqs-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] #'forge-browse-pullreqs)
-    (define-key map [remap magit-visit-thing]  #'forge-list-pullreqs)
-    (define-key map (kbd "C-c C-n")            #'forge-create-pullreq)
-    map))
+(defvar-keymap forge-pullreqs-section-map
+  "<remap> <magit-browse-thing>" #'forge-browse-pullreqs
+  "<remap> <magit-visit-thing>"  #'forge-list-pullreqs
+  "C-c C-n"                      #'forge-create-pullreq)
 
-(defvar forge-pullreq-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] #'forge-browse-pullreq)
-    (define-key map [remap magit-visit-thing]  #'forge-visit-pullreq)
-    map))
+(defvar-keymap forge-pullreq-section-map
+  "<remap> <magit-browse-thing>" #'forge-browse-pullreq
+  "<remap> <magit-visit-thing>"  #'forge-visit-pullreq)
 
 (defun forge-insert-pullreqs ()
   "Insert a list of mostly recent and/or open pull-requests.
 Also see option `forge-topic-list-limit'."
-  (when forge-display-in-status-buffer
+  (when (and forge-display-in-status-buffer (forge-db t))
     (when-let ((repo (forge-get-repository nil)))
       (unless (oref repo sparse-p)
         (forge-insert-topics "Pull requests"
                              (forge-ls-recent-topics repo 'pullreq)
                              (forge--topic-type-prefix repo 'pullreq))))))
 
-(defun forge--insert-pullreq-commits (pullreq)
-  (when-let ((range (forge--pullreq-range pullreq)))
-    (magit-insert-section-body
-      (cl-letf (((symbol-function #'magit-cancel-section) (lambda ())))
-        (magit-insert-log range magit-buffer-log-args)
-        (magit-make-margin-overlay nil t)))))
+(defun forge--insert-pullreq-commits (pullreq &optional all)
+  (cl-letf (((symbol-function #'magit-cancel-section) (lambda ())))
+    (if all
+        ;; Numeric pr ref, pr branch (if it exists) and api
+        ;; pr range may be out of sync.  Just show them all.
+        (magit-insert-section-body
+          (magit--insert-log nil
+           (delq nil (list (concat "^" (or (oref pullreq base-rev)
+                                           (concat (forge--get-remote) "/"
+                                                   (oref pullreq base-ref))))
+                           (forge--pullreq-ref pullreq)
+                           (forge--pullreq-branch-active pullreq)
+                           (and-let* ((branch (oref pullreq head-ref)))
+                             (and (magit-local-branch-p branch) branch))))
+           (seq-uniq (cons "--graph" magit-buffer-log-args)))
+          (magit-make-margin-overlay nil t))
+      (when-let ((range (forge--pullreq-range pullreq)))
+        (magit-insert-section-body
+          (magit--insert-log nil range magit-buffer-log-args)
+          (magit-make-margin-overlay nil t))))))
 
 (cl-defmethod forge--insert-topic-contents :after ((pullreq forge-pullreq)
                                                    _width _prefix)

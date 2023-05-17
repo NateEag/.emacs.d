@@ -1,25 +1,24 @@
-;;; forge-issue.el --- Issue support               -*- lexical-binding: t -*-
+;;; forge-issue.el --- Issue support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -58,6 +57,7 @@
    (timeline)
    (marks                :closql-table (issue-mark mark))
    (note                 :initarg :note :initform nil)
+   (their-id             :initarg :their-id)
    ))
 
 (defclass forge-issue-post (forge-post)
@@ -94,7 +94,7 @@
               'forge-issue))
 
 (cl-defmethod forge-get-issue ((number integer))
-  (when-let ((repo (forge-get-repository t)))
+  (and-let* ((repo (forge-get-repository t)))
     (forge-get-issue repo number)))
 
 (cl-defmethod forge-get-issue ((id string))
@@ -129,6 +129,9 @@
 (cl-defmethod forge-get-url ((issue forge-issue))
   (forge--format issue 'issue-url-format))
 
+(defun forge--issue-by-forge-short-link-at-point ()
+  (forge--topic-by-forge-short-link-at-point '("#") #'forge-get-issue))
+
 ;;; Sections
 
 (defun forge-current-issue ()
@@ -143,29 +146,26 @@
 
 (defun forge-issue-at-point ()
   (or (magit-section-value-if 'issue)
-      (when-let ((post (magit-section-value-if 'post)))
+      (and-let* ((post (magit-section-value-if 'post)))
         (cond ((forge-issue-p post)
                post)
               ((forge-issue-post-p post)
-               (forge-get-issue post))))))
+               (forge-get-issue post))))
+      (forge--issue-by-forge-short-link-at-point)))
 
-(defvar forge-issues-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] #'forge-browse-issues)
-    (define-key map [remap magit-visit-thing]  #'forge-list-issues)
-    (define-key map (kbd "C-c C-n")            #'forge-create-issue)
-    map))
+(defvar-keymap forge-issues-section-map
+  "<remap> <magit-browse-thing>" #'forge-browse-issues
+  "<remap> <magit-visit-thing>"  #'forge-list-issues
+  "C-c C-n"                      #'forge-create-issue)
 
-(defvar forge-issue-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] #'forge-browse-issue)
-    (define-key map [remap magit-visit-thing]  #'forge-visit-issue)
-    map))
+(defvar-keymap forge-issue-section-map
+  "<remap> <magit-browse-thing>" #'forge-browse-issue
+  "<remap> <magit-visit-thing>"  #'forge-visit-issue)
 
 (defun forge-insert-issues ()
   "Insert a list of mostly recent and/or open issues.
 Also see option `forge-topic-list-limit'."
-  (when forge-display-in-status-buffer
+  (when (and forge-display-in-status-buffer (forge-db t))
     (when-let ((repo (forge-get-repository nil)))
       (when (and (not (oref repo sparse-p))
                  (or (not (slot-boundp repo 'issues-p)) ; temporary KLUDGE

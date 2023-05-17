@@ -1,6 +1,6 @@
 This is forge.info, produced by makeinfo version 6.7 from forge.texi.
 
-     Copyright (C) 2018-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2018-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -26,9 +26,9 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, such as Github and Gitlab,
 from the comfort of Magit and the rest of Emacs.
 
-This manual is for Forge version 0.3.2-git.
+This manual is for Forge version 0.3.2.50-git.
 
-     Copyright (C) 2018-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2018-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -46,7 +46,6 @@ This manual is for Forge version 0.3.2-git.
 * Supported Forges and Hosts::
 * Getting Started::
 * Usage::
-* Other Options::
 * FAQ::
 * Keystroke Index::
 * Function and Command Index::
@@ -62,6 +61,7 @@ Supported Forges and Hosts
 
 Getting Started
 
+* Loading Forge::
 * Token Creation::
 * Initial Pull::
 * Repository Detection::
@@ -154,6 +154,11 @@ Github Caveats
    • Forge uses the Github GraphQL API when possible but has to fall
      back to use the REST API in many cases because the former is still
      rather incomplete.
+
+   • The Github GraphQL API has a hard-coded timeout on queries.  The
+     only solution is to reduce the number of entities we query at once,
+     which can be done by adjusting either the ‘forge.graphqlItemLimit’
+     git variable or the field "GQL entity limit" in a status buffer.
 
    • Forge depends on the ‘updated_at’ field being updated when
      appropriate.  For Github pull-requests at least, that is not always
@@ -312,37 +317,49 @@ File: forge.info,  Node: Getting Started,  Next: Usage,  Prev: Supported Forges 
 3 Getting Started
 *****************
 
-Getting started using Forge should be fairly easy provided you take the
-time to read the documentation.  First see *note (ghub)Getting Started::
-from Ghub’s manual.  Ghub is the library that Forge uses to communicate
-with forge APIs.  While Ghub can be used independently of Forge, its
-"Getting Started" part was written with Forge users in mind.
+Initial setup turned out to more challenging for many users than I had
+hoped.  I am trying to counter that by providing detailed instructions
+that cover not just the happy path but also many of the issues users
+have ran into in the past.  The recommended reading is longer than one
+might wish, but skipping it does not necessarily save time.
 
-   Please begin reading in *note (ghub)Getting Started:: and then come
-back here and make sure to read the subsections.
+   Forge uses the Ghub package to access the APIs of supported forges.
+How this works and how to create and store a token is documented in
+*note (ghub)Getting Started::.  Please read that in full before coming
+back here and continuing with the subsections listed below.
 
-   Loading Magit doesn’t cause Forge to be loaded automatically.  Adding
-something like this to your init file takes care of this:
-
-     (with-eval-after-load 'magit
-       (require 'forge))
-
-   Or if you use ‘use-package’:
-
-     (use-package forge
-       :after magit)
+   <https://github.com/magit/forge/wiki> lists additional resources;
+including a link to a much shorter quick-start guide provided by a user.
 
 * Menu:
 
+* Loading Forge::
 * Token Creation::
 * Initial Pull::
 * Repository Detection::
 * Caveats::
 
 
-File: forge.info,  Node: Token Creation,  Next: Initial Pull,  Up: Getting Started
+File: forge.info,  Node: Loading Forge,  Next: Token Creation,  Up: Getting Started
 
-3.1 Token Creation
+3.1 Loading Forge
+=================
+
+Loading Magit doesn’t cause Forge to be loaded automatically.  Adding
+something like this to your init file takes care of that:
+
+     (with-eval-after-load 'magit
+       (require 'forge))
+
+Or if you use ‘use-package’:
+
+     (use-package forge
+       :after magit)
+
+
+File: forge.info,  Node: Token Creation,  Next: Initial Pull,  Prev: Loading Forge,  Up: Getting Started
+
+3.2 Token Creation
 ==================
 
 Forge uses the Ghub package to access the APIs of supported Git forges.
@@ -373,7 +390,7 @@ around reading the documentation and doing this manually I am afraid.
 
 File: forge.info,  Node: Initial Pull,  Next: Repository Detection,  Prev: Token Creation,  Up: Getting Started
 
-3.2 Initial Pull
+3.3 Initial Pull
 ================
 
 To start using Forge in a certain repository visit the Magit status
@@ -405,7 +422,7 @@ making hundreds of REST requests.
 
 File: forge.info,  Node: Repository Detection,  Next: Caveats,  Prev: Initial Pull,  Up: Getting Started
 
-3.3 Repository Detection
+3.4 Repository Detection
 ========================
 
 Ghub does *not* associate a given local repository with a repository on
@@ -497,7 +514,7 @@ the key for ‘git@github.com:magit/forge.git’ is ‘github.com’.
 
 File: forge.info,  Node: Caveats,  Prev: Repository Detection,  Up: Getting Started
 
-3.4 Caveats
+3.5 Caveats
 ===========
 
    • Fetched information is stored in a database.  The table schemata of
@@ -516,7 +533,7 @@ File: forge.info,  Node: Caveats,  Prev: Repository Detection,  Up: Getting Star
      Supported Forges and Hosts::.
 
 
-File: forge.info,  Node: Usage,  Next: Other Options,  Prev: Getting Started,  Up: Top
+File: forge.info,  Node: Usage,  Next: FAQ,  Prev: Getting Started,  Up: Top
 
 4 Usage
 *******
@@ -773,6 +790,7 @@ commit or branch section.
 
 ‘C-c C-w’ (‘forge-browse-TYPE’)
 ‘C-c C-w’ (‘forge-browse-dwim’)
+‘N b r’ (‘forge-browse-remote’)
 ‘N b I’ (‘forge-browse-issues’)
 ‘N b P’ (‘forge-browse-pullreqs’)
 ‘N b t’ (‘forge-browse-topic’)
@@ -933,7 +951,7 @@ dedicated buffers:
           fork created within this account.  If unspecified, then the
           name of the account is used.
 
-     Example: ‘(("tarsius") ("emacsmirror" :remote-name "mirror"))’.
+     Example: ‘(("tarsius") ("emacsmirror" remote-name "mirror"))’.
 
  -- User Option: forge-owned-ignored
      This is a list of repository names that are considered to not be
@@ -993,6 +1011,9 @@ a post visits that post in a browser.
      This command toggles the state of an existing topic between "open"
      and "closed".
 
+‘C-c C-e [on "Draft" section]’ (‘forge-edit-topic-draft’)
+     This command toggles whether an existing topic is a draft or not.
+
 ‘C-c C-e [on "Labels" section]’ (‘forge-edit-topic-labels’)
      This command reads a list of labels for an existing topic in the
      minibuffer.
@@ -1050,6 +1071,15 @@ the process has to be finished or canceled using a separate command.
      This command cancels the post that is being edited in the current
      buffer.
 
+‘C-c C-e’ (‘forge-post-dispatch’)
+     This prefix command features the above two commands as suffixes,
+     and when creating a pull-request also the following command.  More
+     suffix commands will likely be added in the future.
+
+‘C-c C-e d’ (‘forge-post-toggle-draft’)
+     This command toggles whether the pull-request being created is a
+     draft.
+
 
 File: forge.info,  Node: Miscellaneous,  Prev: Working with Topics,  Up: Usage
 
@@ -1104,7 +1134,7 @@ File: forge.info,  Node: Miscellaneous,  Prev: Working with Topics,  Up: Usage
      modified, then it will be added to the database again.
 
      Due to how the supported APIs work, it would be too expensive to
-     automatically remove topics from the local datbase that were
+     automatically remove topics from the local database that were
      removed from the forge.  The only purpose of this command is to
      allow you to manually clean up the local database.
 
@@ -1117,32 +1147,7 @@ File: forge.info,  Node: Miscellaneous,  Prev: Working with Topics,  Up: Usage
      still under heavy development.
 
 
-File: forge.info,  Node: Other Options,  Next: FAQ,  Prev: Usage,  Up: Top
-
-5 Other Options
-***************
-
- -- User Option: forge-database-connector
-     This option controls which database connector is used by Forge.
-
-     This must be set before ‘forge’ is loaded.  To use an alternative
-     connector you must install the respective package explicitly.
-
-        • When ‘sqlite’, then use the ‘emacsql-sqlite’ library that is
-          being maintained in the same repository as ‘emacsql’ itself.
-
-        • When ‘libsqlite3’, then use the ‘emacsql-libsqlite’ library,
-          which itself uses a module provided by the ‘sqlite3’ package.
-          This is still experimental.
-
-        • When ‘sqlite3’, then use the ‘emacsql-sqlite3’ library, which
-          uses the official ‘sqlite3’ command-line tool, which I do not
-          recommended because it is not suitable to be used like this,
-          but has the advantage that you likely don’t need a compiler.
-          See <https://nullprogram.com/blog/2014/02/06/>.
-
-
-File: forge.info,  Node: FAQ,  Next: Keystroke Index,  Prev: Other Options,  Up: Top
+File: forge.info,  Node: FAQ,  Next: Keystroke Index,  Prev: Usage,  Up: Top
 
 Appendix A FAQ
 **************
@@ -1171,7 +1176,7 @@ File: forge.info,  Node: error in process filter HTTP Error 502 "Bad gateway",  
 A.2 ‘error in process filter: HTTP Error: 502, "Bad gateway"’
 =============================================================
 
-This is a frequently occuring error.  Adding some formatting the full
+This is a frequently occurring error.  Adding some formatting the full
 error is:
 
      error in process filter: ghub--signal-error: HTTP Error: 502,
@@ -1226,17 +1231,23 @@ Appendix B Keystroke Index
 * b N:                                   Branching.           (line  13)
 * b n:                                   Branching.           (line 102)
 * C-c C-c:                               Editing Topics and Posts.
-                                                              (line  89)
+                                                              (line  92)
+* C-c C-e:                               Editing Topics and Posts.
+                                                              (line 100)
+* C-c C-e d:                             Editing Topics and Posts.
+                                                              (line 105)
 * C-c C-e [on "Assignees" section]:      Editing Topics and Posts.
-                                                              (line  53)
-* C-c C-e [on "Labels" section]:         Editing Topics and Posts.
+                                                              (line  56)
+* C-c C-e [on "Draft" section]:          Editing Topics and Posts.
                                                               (line  40)
+* C-c C-e [on "Labels" section]:         Editing Topics and Posts.
+                                                              (line  43)
 * C-c C-e [on "Marks" section]:          Editing Topics and Posts.
-                                                              (line  44)
+                                                              (line  47)
 * C-c C-e [on "Note" section]:           Editing Topics and Posts.
-                                                              (line  62)
+                                                              (line  65)
 * C-c C-e [on "Review-Requests" section]: Editing Topics and Posts.
-                                                              (line  57)
+                                                              (line  60)
 * C-c C-e [on "State" section]:          Editing Topics and Posts.
                                                               (line  36)
 * C-c C-e [on "Title" section]:          Editing Topics and Posts.
@@ -1244,30 +1255,31 @@ Appendix B Keystroke Index
 * C-c C-e [on a post section]:           Editing Topics and Posts.
                                                               (line  27)
 * C-c C-k:                               Editing Topics and Posts.
-                                                              (line  93)
+                                                              (line  96)
 * C-c C-k [on a comment section]:        Editing Topics and Posts.
-                                                              (line  65)
+                                                              (line  68)
 * C-c C-n:                               Editing Topics and Posts.
                                                               (line  17)
 * C-c C-n [on "Issues" section]:         Creating Topics.     (line  12)
 * C-c C-n [on "Pull requests" section]:  Creating Topics.     (line   8)
 * C-c C-r:                               Editing Topics and Posts.
                                                               (line  17)
-* C-c C-v:                               Visiting Topics.     (line  35)
-* C-c C-w:                               Visiting Topics.     (line  21)
-* C-c C-w <1>:                           Visiting Topics.     (line  21)
+* C-c C-v:                               Visiting Topics.     (line  36)
+* C-c C-w:                               Visiting Topics.     (line  22)
+* C-c C-w <1>:                           Visiting Topics.     (line  22)
 * f n:                                   Pulling.             (line  13)
 * f N:                                   Pulling.             (line  25)
 * m M [if enabled]:                      Editing Topics and Posts.
-                                                              (line  69)
+                                                              (line  72)
 * N:                                     Usage.               (line  23)
 * N a:                                   Usage.               (line  13)
 * N a <1>:                               Miscellaneous.       (line  15)
-* N b I:                                 Visiting Topics.     (line  21)
-* N b i:                                 Visiting Topics.     (line  21)
-* N b P:                                 Visiting Topics.     (line  21)
-* N b p:                                 Visiting Topics.     (line  21)
-* N b t:                                 Visiting Topics.     (line  21)
+* N b I:                                 Visiting Topics.     (line  22)
+* N b i:                                 Visiting Topics.     (line  22)
+* N b P:                                 Visiting Topics.     (line  22)
+* N b p:                                 Visiting Topics.     (line  22)
+* N b r:                                 Visiting Topics.     (line  22)
+* N b t:                                 Visiting Topics.     (line  22)
 * N c f:                                 Miscellaneous.       (line   7)
 * N c i:                                 Creating Topics.     (line  12)
 * N c p:                                 Creating Topics.     (line   8)
@@ -1283,15 +1295,15 @@ Appendix B Keystroke Index
 * N l r:                                 Listing Topics and Notifications.
                                                               (line  62)
 * N M [if enabled]:                      Editing Topics and Posts.
-                                                              (line  69)
+                                                              (line  72)
 * N r:                                   Repository Detection.
                                                               (line  80)
 * N t c:                                 Miscellaneous.       (line  28)
 * N t t:                                 Miscellaneous.       (line  24)
-* N v i:                                 Visiting Topics.     (line  35)
-* N v p:                                 Visiting Topics.     (line  35)
-* N v t:                                 Visiting Topics.     (line  35)
-* RET:                                   Visiting Topics.     (line  35)
+* N v i:                                 Visiting Topics.     (line  36)
+* N v p:                                 Visiting Topics.     (line  36)
+* N v t:                                 Visiting Topics.     (line  36)
+* RET:                                   Visiting Topics.     (line  36)
 * Z n:                                   Branching.           (line 107)
 
 
@@ -1308,13 +1320,14 @@ Appendix C Function and Command Index
 * forge-add-repository <1>:              Miscellaneous.       (line  15)
 * forge-add-user-repositories:           Miscellaneous.       (line  31)
 * forge-branch-pullreq:                  Branching.           (line  13)
-* forge-browse-dwim:                     Visiting Topics.     (line  21)
-* forge-browse-issue:                    Visiting Topics.     (line  21)
-* forge-browse-issues:                   Visiting Topics.     (line  21)
-* forge-browse-pullreq:                  Visiting Topics.     (line  21)
-* forge-browse-pullreqs:                 Visiting Topics.     (line  21)
-* forge-browse-topic:                    Visiting Topics.     (line  21)
-* forge-browse-TYPE:                     Visiting Topics.     (line  21)
+* forge-browse-dwim:                     Visiting Topics.     (line  22)
+* forge-browse-issue:                    Visiting Topics.     (line  22)
+* forge-browse-issues:                   Visiting Topics.     (line  22)
+* forge-browse-pullreq:                  Visiting Topics.     (line  22)
+* forge-browse-pullreqs:                 Visiting Topics.     (line  22)
+* forge-browse-remote:                   Visiting Topics.     (line  22)
+* forge-browse-topic:                    Visiting Topics.     (line  22)
+* forge-browse-TYPE:                     Visiting Topics.     (line  22)
 * forge-checkout-pullreq:                Branching.           (line 102)
 * forge-checkout-worktree:               Branching.           (line 107)
 * forge-create-issue:                    Creating Topics.     (line  12)
@@ -1322,20 +1335,22 @@ Appendix C Function and Command Index
                                                               (line  17)
 * forge-create-pullreq:                  Creating Topics.     (line   8)
 * forge-delete-comment:                  Editing Topics and Posts.
-                                                              (line  65)
+                                                              (line  68)
 * forge-dispatch:                        Usage.               (line  23)
 * forge-edit-post:                       Editing Topics and Posts.
                                                               (line  27)
 * forge-edit-topic-assignees:            Editing Topics and Posts.
-                                                              (line  53)
-* forge-edit-topic-labels:               Editing Topics and Posts.
+                                                              (line  56)
+* forge-edit-topic-draft:                Editing Topics and Posts.
                                                               (line  40)
+* forge-edit-topic-labels:               Editing Topics and Posts.
+                                                              (line  43)
 * forge-edit-topic-marks:                Editing Topics and Posts.
-                                                              (line  44)
+                                                              (line  47)
 * forge-edit-topic-note:                 Editing Topics and Posts.
-                                                              (line  62)
+                                                              (line  65)
 * forge-edit-topic-review-requests:      Editing Topics and Posts.
-                                                              (line  57)
+                                                              (line  60)
 * forge-edit-topic-state:                Editing Topics and Posts.
                                                               (line  36)
 * forge-edit-topic-title:                Editing Topics and Posts.
@@ -1384,11 +1399,15 @@ Appendix C Function and Command Index
 * forge-list-requested-reviews:          Listing Topics and Notifications.
                                                               (line  92)
 * forge-merge:                           Editing Topics and Posts.
-                                                              (line  69)
+                                                              (line  72)
 * forge-post-cancel:                     Editing Topics and Posts.
-                                                              (line  93)
+                                                              (line  96)
+* forge-post-dispatch:                   Editing Topics and Posts.
+                                                              (line 100)
 * forge-post-submit:                     Editing Topics and Posts.
-                                                              (line  89)
+                                                              (line  92)
+* forge-post-toggle-draft:               Editing Topics and Posts.
+                                                              (line 105)
 * forge-pull:                            Pulling.             (line  13)
 * forge-pull-notifications:              Pulling.             (line  25)
 * forge-pull-topic:                      Pulling.             (line  47)
@@ -1399,10 +1418,10 @@ Appendix C Function and Command Index
                                                               (line  31)
 * forge-toggle-closed-visibility <1>:    Miscellaneous.       (line  28)
 * forge-toggle-display-in-status-buffer: Miscellaneous.       (line  24)
-* forge-visit-issue:                     Visiting Topics.     (line  35)
-* forge-visit-pullreq:                   Visiting Topics.     (line  35)
-* forge-visit-topic:                     Visiting Topics.     (line  35)
-* forge-visit-TYPE:                      Visiting Topics.     (line  35)
+* forge-visit-issue:                     Visiting Topics.     (line  36)
+* forge-visit-pullreq:                   Visiting Topics.     (line  36)
+* forge-visit-topic:                     Visiting Topics.     (line  36)
+* forge-visit-TYPE:                      Visiting Topics.     (line  36)
 
 
 File: forge.info,  Node: Variable Index,  Prev: Function and Command Index,  Up: Top
@@ -1413,7 +1432,6 @@ Appendix D Variable Index
  [index ]
 * Menu:
 
-* forge-database-connector:              Other Options.       (line   6)
 * forge-owned-accounts:                  Listing Topics and Notifications.
                                                               (line 116)
 * forge-owned-ignored:                   Listing Topics and Notifications.
@@ -1427,56 +1445,56 @@ Appendix D Variable Index
 
 Tag Table:
 Node: Top751
-Node: Introduction2432
-Node: Supported Forges and Hosts2995
-Node: Supported Forges4245
-Ref: Github4401
-Ref: Github Caveats4544
-Ref: Github Hosts4898
-Ref: Gitlab4954
-Ref: Gitlab Caveats4969
-Ref: Gitlab Hosts5094
-Node: Partially Supported Forges5214
-Ref: Gitea https//giteaio5420
-Ref: Gitea Hosts5520
-Ref: Gogs https//gogsio5576
-Ref: Gogs Hosts5779
-Ref: Bitbucket https//bitbucketorg5837
-Ref: Bitbucket Caveats6035
-Ref: Bitbucket Hosts6932
-Node: Supported Semi-Forges6997
-Ref: Gitweb https//git-scmcom/docs/gitweb7168
-Ref: Gitweb Caveats7247
-Ref: Cgit https//gitzx2c4com/cgit/about7487
-Ref: Cgit Caveats7564
-Ref: Cgit Hosts7913
-Ref: Stgit https//codemadnessorg/git/stagit/file/READMEhtml8040
-Ref: Stgit Caveats8157
-Ref: Stgit Hosts8443
-Ref: Srht https//metasrht8503
-Ref: Srht Caveats8552
-Ref: Srht Hosts8835
-Node: Getting Started8886
-Node: Token Creation9857
-Node: Initial Pull11114
-Node: Repository Detection12509
-Node: Caveats16648
-Node: Usage17574
-Node: Pulling19056
-Node: Branching21739
-Node: Working with Topics28128
-Node: Visiting Topics28501
-Node: Listing Topics and Notifications30538
-Node: Creating Topics35863
-Node: Editing Topics and Posts36352
-Node: Miscellaneous40368
-Node: Other Options42990
-Node: FAQ44070
-Node: Is it possible to create a single pull-request without pulling everything?44546
-Node: error in process filter HTTP Error 502 "Bad gateway"45012
-Node: Keystroke Index47382
-Node: Function and Command Index52579
-Node: Variable Index60044
+Node: Introduction2435
+Node: Supported Forges and Hosts2998
+Node: Supported Forges4248
+Ref: Github4404
+Ref: Github Caveats4547
+Ref: Github Hosts5193
+Ref: Gitlab5249
+Ref: Gitlab Caveats5264
+Ref: Gitlab Hosts5389
+Node: Partially Supported Forges5509
+Ref: Gitea https//giteaio5715
+Ref: Gitea Hosts5815
+Ref: Gogs https//gogsio5871
+Ref: Gogs Hosts6074
+Ref: Bitbucket https//bitbucketorg6132
+Ref: Bitbucket Caveats6330
+Ref: Bitbucket Hosts7227
+Node: Supported Semi-Forges7292
+Ref: Gitweb https//git-scmcom/docs/gitweb7463
+Ref: Gitweb Caveats7542
+Ref: Cgit https//gitzx2c4com/cgit/about7782
+Ref: Cgit Caveats7859
+Ref: Cgit Hosts8208
+Ref: Stgit https//codemadnessorg/git/stagit/file/READMEhtml8335
+Ref: Stgit Caveats8452
+Ref: Stgit Hosts8738
+Ref: Srht https//metasrht8798
+Ref: Srht Caveats8847
+Ref: Srht Hosts9130
+Node: Getting Started9181
+Node: Loading Forge10179
+Node: Token Creation10574
+Node: Initial Pull11853
+Node: Repository Detection13248
+Node: Caveats17387
+Node: Usage18313
+Node: Pulling19785
+Node: Branching22468
+Node: Working with Topics28857
+Node: Visiting Topics29230
+Node: Listing Topics and Notifications31307
+Node: Creating Topics36631
+Node: Editing Topics and Posts37120
+Node: Miscellaneous41647
+Node: FAQ44270
+Node: Is it possible to create a single pull-request without pulling everything?44738
+Node: error in process filter HTTP Error 502 "Bad gateway"45204
+Node: Keystroke Index47575
+Node: Function and Command Index53265
+Node: Variable Index61223
 
 End Tag Table
 

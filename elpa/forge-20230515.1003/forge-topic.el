@@ -1,25 +1,24 @@
-;;; forge-topic.el --- Topics support              -*- lexical-binding: t -*-
+;;; forge-topic.el --- Topics support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -30,6 +29,8 @@
 
 (require 'forge)
 (require 'forge-post)
+
+(defvar bug-reference-auto-setup-functions)
 
 ;;; Options
 
@@ -293,9 +294,7 @@ implement such a function themselves.  See #447.")
 
 (defun forge--sanitize-string (string)
   ;; For Gitlab this may also be nil.
-  (if string
-      (replace-regexp-in-string "\r\n" "\n" string t t)
-    ""))
+  (if string (string-replace "\r\n" "\n" string) ""))
 
 (defun forge-insert-topics (heading topics prefix)
   "Under a new section with HEADING, insert TOPICS."
@@ -359,16 +358,26 @@ identifier."
      (format-time-string "%s" (parse-iso8601-time-string (oref topic created)))
      t)))
 
+(defun forge--topic-by-forge-short-link-at-point (known-prefixes finder)
+  "Finds a topic by forge-dependant short link around point.
+The topic number is expected to be a number prefixed by any of
+the elements in KNOWN-PREFIXES. If a reference is found, FINDER
+is called and a topic object is returned if available."
+  (and-let* ((number (number-at-point))
+             (prefix (buffer-substring-no-properties
+                      (- (match-beginning 0) 1)
+                      (match-beginning 0))))
+    (and (member prefix known-prefixes)
+         (funcall finder number))))
+
 ;;; Mode
 
-(defvar forge-topic-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-n") #'forge-create-post)
-    (define-key map (kbd "C-c C-r") #'forge-create-post)
-    (define-key map [remap magit-browse-thing] #'forge-browse-topic)
-    (define-key map [remap magit-visit-thing] #'markdown-follow-link-at-point)
-    (define-key map [mouse-2] #'markdown-follow-link-at-point)
-    map))
+(defvar-keymap forge-topic-mode-map
+  "C-c C-n"                      #'forge-create-post
+  "C-c C-r"                      #'forge-create-post
+  "<remap> <magit-browse-thing>" #'forge-browse-topic
+  "<remap> <magit-visit-thing>"  #'markdown-follow-link-at-point
+  "<mouse-2>"                    #'markdown-follow-link-at-point)
 
 (define-derived-mode forge-topic-mode magit-mode "View Topic"
   "View a forge issue or pull-request."
@@ -378,6 +387,7 @@ identifier."
 (defvar forge-topic-headers-hook
   '(forge-insert-topic-title
     forge-insert-topic-state
+    forge-insert-topic-draft
     forge-insert-topic-refs
     forge-insert-topic-milestone
     forge-insert-topic-labels
@@ -385,12 +395,10 @@ identifier."
     forge-insert-topic-assignees
     forge-insert-topic-review-requests))
 
-(defvar forge-post-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-browse-thing] #'forge-browse-post)
-    (define-key map [remap magit-edit-thing]   #'forge-edit-post)
-    (define-key map (kbd "C-c C-k")            #'forge-delete-comment)
-    map))
+(defvar-keymap forge-post-section-map
+  "<remap> <magit-browse-thing>" #'forge-browse-post
+  "<remap> <magit-edit-thing>"   #'forge-edit-post
+  "C-c C-k"                      #'forge-delete-comment)
 
 (defvar-local forge-buffer-topic nil)
 (defvar-local forge-buffer-topic-ident nil)
@@ -422,11 +430,10 @@ identifier."
      (format "%s: %s" forge-buffer-topic-ident (oref topic title)))
     (magit-insert-section (topicbuf)
       (magit-insert-headers 'forge-topic-headers-hook)
-      (when (and (forge-pullreq-p topic)
-                 (not (oref topic merged)))
+      (when (forge-pullreq-p topic)
         (magit-insert-section (pullreq topic)
           (magit-insert-heading "Commits")
-          (forge--insert-pullreq-commits topic)))
+          (forge--insert-pullreq-commits topic t)))
       (when-let ((note (oref topic note)))
         (magit-insert-section (note)
           (magit-insert-heading "Note")
@@ -448,8 +455,9 @@ identifier."
                                                  (float-time
                                                   (date-to-time created))))
                                          'font-lock-face 'forge-post-date))))))
-              (add-face-text-property 0 (length heading)
-                                      'magit-diff-hunk-heading t heading)
+              (font-lock-append-text-property
+               0 (length heading)
+               'font-lock-face 'magit-diff-hunk-heading heading)
               (magit-insert-heading heading))
             (insert (forge--fontify-markdown body) "\n\n"))))
       (when (and (display-images-p)
@@ -460,20 +468,16 @@ identifier."
 (cl-defmethod magit-buffer-value (&context (major-mode forge-topic-mode))
   forge-buffer-topic-ident)
 
-(defvar forge-topic-title-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-title)
-    map))
+(defvar-keymap forge-topic-title-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-title)
 
 (cl-defun forge-insert-topic-title
     (&optional (topic forge-buffer-topic))
   (magit-insert-section (topic-title)
     (insert (format "%-11s" "Title: ") (oref topic title) "\n")))
 
-(defvar forge-topic-state-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-state)
-    map))
+(defvar-keymap forge-topic-state-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-state)
 
 (cl-defun forge-insert-topic-state
     (&optional (topic forge-buffer-topic))
@@ -484,15 +488,22 @@ identifier."
                (magit--propertize-face
                 (symbol-name state)
                 (pcase (list state (forge-pullreq-p (forge-topic-at-point)))
-                  (`(merged) 'forge-topic-merged)
-                  (`(closed) 'forge-topic-closed)
-                  (`(open t) 'forge-topic-unmerged)
-                  (`(open)   'forge-topic-open))))))))
+                  ('(merged) 'forge-topic-merged)
+                  ('(closed) 'forge-topic-closed)
+                  ('(open t) 'forge-topic-unmerged)
+                  ('(open)   'forge-topic-open))))))))
 
-(defvar forge-topic-milestone-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-milestone)
-    map))
+(defvar-keymap forge-topic-draft-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-draft)
+
+(cl-defun forge-insert-topic-draft
+    (&optional (topic forge-buffer-topic))
+  (when (forge-pullreq-p topic)
+    (magit-insert-section (topic-draft)
+      (insert (format "%-11s%s\n" "Draft: " (oref topic draft-p))))))
+
+(defvar-keymap forge-topic-milestone-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-milestone)
 
 (cl-defun forge-insert-topic-milestone
     (&optional (topic forge-buffer-topic))
@@ -506,13 +517,11 @@ identifier."
             "\n")))
 
 (defun forge--get-topic-milestone (topic)
-  (when-let ((id (oref topic milestone)))
+  (and-let* ((id (oref topic milestone)))
     (caar (forge-sql [:select [title] :from milestone :where (= id $s1)] id))))
 
-(defvar forge-topic-labels-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-labels)
-    map))
+(defvar-keymap forge-topic-labels-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-labels)
 
 (cl-defun forge-insert-topic-labels
     (&optional (topic forge-buffer-topic))
@@ -524,7 +533,7 @@ identifier."
     (insert ?\n)))
 
 (defun forge--format-topic-labels (topic)
-  (when-let ((labels (closql--iref topic 'labels)))
+  (and-let* ((labels (closql--iref topic 'labels)))
     (mapconcat (pcase-lambda (`(,name ,color ,_desc))
                  (propertize name 'font-lock-face (list :box color)))
                labels " ")))
@@ -548,10 +557,8 @@ identifier."
         (when description
           (overlay-put o 'help-echo description))))))
 
-(defvar forge-topic-marks-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-marks)
-    map))
+(defvar-keymap forge-topic-marks-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-marks)
 
 (cl-defun forge-insert-topic-marks
     (&optional (topic forge-buffer-topic))
@@ -622,10 +629,8 @@ Return a value between 0 and 1."
                     (or head-ref deleted))
                   "\n"))))))
 
-(defvar forge-topic-assignees-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-assignees)
-    map))
+(defvar-keymap forge-topic-assignees-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-assignees)
 
 (cl-defun forge-insert-topic-assignees
     (&optional (topic forge-buffer-topic))
@@ -640,15 +645,12 @@ Return a value between 0 and 1."
       (insert (propertize "none" 'font-lock-face 'magit-dimmed)))
     (insert ?\n)))
 
-(defvar forge-topic-review-requests-section-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map [remap magit-edit-thing] #'forge-edit-topic-review-requests)
-    map))
+(defvar-keymap forge-topic-review-requests-section-map
+  "<remap> <magit-edit-thing>" #'forge-edit-topic-review-requests)
 
 (cl-defun forge-insert-topic-review-requests
     (&optional (topic forge-buffer-topic))
-  (when (and (forge-github-repository-p (forge-get-repository topic))
-             (forge-pullreq-p topic))
+  (when (forge-pullreq-p topic)
     (magit-insert-section (topic-review-requests)
       (insert (format "%-11s" "Review-Requests: "))
       (if-let ((review-requests (closql--iref topic 'review-requests)))
@@ -775,8 +777,10 @@ Return a value between 0 and 1."
   (save-match-data
     (save-excursion
       (goto-char (point-min))
-      (let ((alist (or (save-excursion (forge--topic-parse-yaml))
-                       (save-excursion (forge--topic-parse-plain)))))
+      (let ((alist (save-excursion (forge--topic-parse-yaml))))
+        (if alist
+            (setf (alist-get 'yaml alist) t)
+          (setq alist (save-excursion (forge--topic-parse-plain))))
         (setf (alist-get 'file alist) file)
         (setf (alist-get 'text alist) (magit--buffer-string nil nil ?\n))
         (when (and file (not (alist-get 'prompt alist)))
@@ -926,7 +930,8 @@ alist, containing just `text' and `position'.")
 If forge data has been fetched for the current repository, then
 enable `bug-reference-mode' or `bug-reference-prog-mode' and
 modify `bug-reference-bug-regexp' if appropriate."
-  (unless bug-reference-url-format
+  (unless (or bug-reference-url-format
+              (not (forge-db t)))
     (magit--with-safe-default-directory nil
       (when-let ((repo (forge-get-repository 'full)))
         (if (>= emacs-major-version 28)
@@ -963,7 +968,7 @@ modify `bug-reference-bug-regexp' if appropriate."
         (add-hook 'completion-at-point-functions
                   #'forge-topic-completion-at-point nil t)))))
 
-(when (and (not noninteractive) forge--sqlite-available-p)
+(unless noninteractive
   (dolist (hook forge-bug-reference-hooks)
     (add-hook hook #'forge-bug-reference-setup)))
 

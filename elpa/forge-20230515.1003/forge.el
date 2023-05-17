@@ -1,27 +1,26 @@
-;;; forge.el --- Access Git forges from Magit     -*- lexical-binding: t -*-
+;;; forge.el --- Access Git forges from Magit  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/forge
 ;; Keywords: git tools vc
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -67,7 +66,7 @@
 If you want to disable this, then you must set this to nil before
 `forge' is loaded.")
 
-(when (and forge-add-default-sections forge--sqlite-available-p)
+(when forge-add-default-sections
   (magit-add-section-hook 'magit-status-sections-hook #'forge-insert-pullreqs nil t)
   (magit-add-section-hook 'magit-status-sections-hook #'forge-insert-issues   nil t))
 
@@ -76,9 +75,20 @@ If you want to disable this, then you must set this to nil before
 ;;;###autoload
 (defvar forge-add-default-bindings t
   "Whether to add Forge's bindings to various Magit keymaps.
+
 If you want to disable this, then you must set this to nil before
 `magit' is loaded.  If you do it before `forge' but after `magit'
-is loaded, then `magit-mode-map' ends up being modified anyway.")
+is loaded, then `magit-mode-map' ends up being modified anyway.
+
+If this is nil, then `forge-toggle-display-in-status-buffer' can
+no longer do its job.  It might be better to set the global value
+of `forge-display-in-status-buffer' to nil instead.  That way you
+can still display topics on demand in the status buffer.")
+
+;;;###autoload
+(with-eval-after-load 'git-commit
+  (when forge-add-default-bindings
+    (define-key git-commit-mode-map (kbd "C-c C-v") #'forge-visit-topic)))
 
 ;;;###autoload
 (with-eval-after-load 'magit-mode
@@ -111,6 +121,10 @@ is loaded, then `magit-mode-map' ends up being modified anyway.")
     '("f" "pull-request" forge-checkout-pullreq))
   (transient-append-suffix 'magit-branch "W"
     '("F" "from pull-request" forge-branch-pullreq))
+
+  (transient-suffix-put 'magit-remote 'magit-update-default-branch :key "b u")
+  (transient-append-suffix 'magit-remote "b u"
+    '("b r" "Rename default branch" forge-rename-default-branch))
 
   (transient-append-suffix 'magit-worktree "c"
     '("n" "pull-request worktree" forge-checkout-worktree))

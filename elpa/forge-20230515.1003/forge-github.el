@@ -1,25 +1,24 @@
-;;; forge-github.el --- Github support            -*- lexical-binding: t -*-
+;;; forge-github.el --- Github support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -52,14 +51,17 @@
                            &optional callback)
   (let ((buf (current-buffer))
         (dir default-directory)
-        (selective-p (oref repo selective-p)))
+        (selective-p (oref repo selective-p))
+        (ghub-graphql-items-per-request
+         (string-to-number
+          (or (magit-get "forge.graphqlItemLimit") "100"))))
     (ghub-fetch-repository
      (oref repo owner)
      (oref repo name)
      (lambda (data)
        (forge--msg repo t t   "Pulling REPO")
        (forge--msg repo t nil "Storing REPO")
-       (emacsql-with-transaction (forge-db)
+       (closql-with-transaction (forge-db)
          (let-alist data
            (forge--update-repository repo data)
            (forge--update-assignees  repo .assignableUsers)
@@ -134,11 +136,11 @@
     (oset repo watchers       .watchers.totalCount)))
 
 (cl-defmethod forge--update-issues ((repo forge-github-repository) data bump)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (mapc (lambda (e) (forge--update-issue repo e bump)) data)))
 
 (cl-defmethod forge--update-issue ((repo forge-github-repository) data bump)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (let-alist data
       (let* ((issue-id (forge--object-id 'forge-issue repo .number))
              (issue (or (forge-get-issue repo .number)
@@ -148,6 +150,7 @@
                                       :repository (oref repo id)
                                       :number     .number)))))
         (oset issue id         issue-id)
+        (oset issue their-id   .id)
         (oset issue state      (pcase-exhaustive .state
                                  ("CLOSED" 'closed)
                                  ("OPEN"   'open)))
@@ -185,11 +188,11 @@
         issue))))
 
 (cl-defmethod forge--update-pullreqs ((repo forge-github-repository) data bump)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (mapc (lambda (e) (forge--update-pullreq repo e bump)) data)))
 
 (cl-defmethod forge--update-pullreq ((repo forge-github-repository) data bump)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (let-alist data
       (let* ((pullreq-id (forge--object-id 'forge-pullreq repo .number))
              (pullreq (or (forge-get-pullreq repo .number)
@@ -198,6 +201,7 @@
                            (forge-pullreq :id           pullreq-id
                                           :repository   (oref repo id)
                                           :number       .number)))))
+        (oset pullreq their-id     .id)
         (oset pullreq state        (pcase-exhaustive .state
                                      ("MERGED" 'merged)
                                      ("CLOSED" 'closed)
@@ -211,12 +215,15 @@
                                          (t "0")))
         (oset pullreq closed       .closedAt)
         (oset pullreq merged       .mergedAt)
+        (oset pullreq draft-p      .isDraft)
         (oset pullreq locked-p     .locked)
         (oset pullreq editable-p   .maintainerCanModify)
         (oset pullreq cross-repo-p .isCrossRepository)
         (oset pullreq base-ref     .baseRef.name)
+        (oset pullreq base-rev     .baseRefOid)
         (oset pullreq base-repo    .baseRef.repository.nameWithOwner)
         (oset pullreq head-ref     .headRef.name)
+        (oset pullreq head-rev     .headRefOid)
         (oset pullreq head-user    .headRef.repository.owner.login)
         (oset pullreq head-repo    .headRef.repository.nameWithOwner)
         (oset pullreq milestone    (and .milestone.id
@@ -247,11 +254,11 @@
         pullreq))))
 
 (cl-defmethod forge--update-revnotes ((repo forge-github-repository) data)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (mapc (apply-partially #'forge--update-revnote repo) data)))
 
 (cl-defmethod forge--update-revnote ((repo forge-github-repository) data)
-  (emacsql-with-transaction (forge-db)
+  (closql-with-transaction (forge-db)
     (let-alist data
       (closql-insert
        (forge-db)
@@ -338,7 +345,7 @@
                             (forge--ghub-massage-notification
                              data forge githost)))
                         (forge--ghub-get nil "/notifications"
-                          '((all . t))
+                          '((all . nil))
                           :host apihost :unpaginate t)))
          (groups (-partition-all 50 notifs))
          (pages  (length groups))
@@ -358,7 +365,7 @@
                          nil #'cb nil :auth 'forge :host apihost))
                (forge--msg nil t t   "Pulling notifications")
                (forge--msg nil t nil "Storing notifications")
-               (emacsql-with-transaction (forge-db)
+               (closql-with-transaction (forge-db)
                  (forge-sql [:delete-from notification
                              :where (= forge $s1)] forge)
                  (pcase-dolist (`(,key ,repo ,query ,obj) notifs)
@@ -391,8 +398,7 @@
                   (owner  (oref repo owner))
                   (name   (oref repo name))
                   (id     (forge--object-id repoid (string-to-number .id)))
-                  (alias  (intern (concat "_" (replace-regexp-in-string
-                                               "=" "_" id)))))
+                  (alias  (intern (concat "_" (string-replace "=" "_" id)))))
              (list alias repo
                    `((,alias repository)
                      [(name ,name)
@@ -509,6 +515,9 @@
 
 (cl-defmethod forge--submit-create-pullreq ((_ forge-github-repository) repo)
   (let-alist (forge--topic-parse-buffer)
+    (when (and .yaml (local-variable-p 'forge-buffer-draft-p))
+      (user-error "Cannot use yaml frontmatter and set `%s' at the same time"
+                  'forge-buffer-draft-p))
     (pcase-let* ((`(,base-remote . ,base-branch)
                   (magit-split-branch-name forge--buffer-base-branch))
                  (`(,head-remote . ,head-branch)
@@ -525,8 +534,9 @@
                         head-branch
                       (concat (oref head-repo owner) ":"
                               head-branch)))
-          ;; KLUDGE for https://github.com/zkry/yaml.el/pull/28.
-          (draft . ,(if (eq .draft :false) nil .draft))
+          (draft . ,(if (local-variable-p 'forge-buffer-draft-p)
+                        forge-buffer-draft-p
+                      .draft))
           (maintainer_can_modify . t))
         :callback  (forge--post-submit-callback)
         :errorback (forge--post-submit-errorback)))))
@@ -577,6 +587,28 @@
                   (open   "CLOSED"))))
     :callback (forge--set-field-callback)))
 
+(cl-defmethod forge--set-topic-draft
+  ((_repo forge-github-repository) topic value)
+  (let ((buffer (current-buffer)))
+    (ghub-graphql
+     `(mutation (,(if value
+                      'convertPullRequestToDraft
+                    'markPullRequestReadyForReview)
+                 [(input $input ,(if value
+                                     'ConvertPullRequestToDraftInput!
+                                   'MarkPullRequestReadyForReviewInput!))]
+                 (pullRequest isDraft)))
+     `((input (pullRequestId . ,(oref topic their-id))))
+     :host (oref (forge-get-repository topic) apihost)
+     :auth 'forge
+     :callback (lambda (data &rest _)
+                 (if (assq 'error data)
+                     (ghub--graphql-pp-response data)
+                   (oset topic draft-p value)
+                   (when (buffer-live-p buffer)
+                     (with-current-buffer buffer
+                       (magit-refresh-buffer))))))))
+
 (cl-defmethod forge--set-topic-milestone
   ((repo forge-github-repository) topic milestone)
   (forge--ghub-patch topic
@@ -595,12 +627,6 @@
   (forge--ghub-put topic "/repos/:owner/:repo/issues/:number/labels" nil
     :payload labels
     :callback (forge--set-field-callback)))
-
-(cl-defmethod forge--delete-comment
-  ((_repo forge-github-repository) post)
-  (forge--ghub-delete post "/repos/:owner/:repo/issues/comments/:number")
-  (closql-delete post)
-  (magit-refresh))
 
 (cl-defmethod forge--set-topic-assignees
   ((_repo forge-github-repository) topic assignees)
@@ -626,9 +652,15 @@
         `((reviewers . ,remove)))))
   (forge-pull))
 
+(cl-defmethod forge--delete-comment
+  ((_repo forge-github-repository) post)
+  (forge--ghub-delete post "/repos/:owner/:repo/issues/comments/:number")
+  (closql-delete post)
+  (magit-refresh))
+
 (cl-defmethod forge--topic-templates ((repo forge-github-repository)
                                       (_ (subclass forge-issue)))
-  (when-let ((files (magit-revision-files (oref repo default-branch))))
+  (and-let* ((files (magit-revision-files (oref repo default-branch))))
     (let ((case-fold-search t))
       (if-let ((file (--first (string-match-p "\
 \\`\\(\\|docs/\\|\\.github/\\)issue_template\\(\\.[a-zA-Z0-9]+\\)?\\'" it)
@@ -647,7 +679,7 @@
 
 (cl-defmethod forge--topic-templates ((repo forge-github-repository)
                                       (_ (subclass forge-pullreq)))
-  (when-let ((files (magit-revision-files (oref repo default-branch))))
+  (and-let* ((files (magit-revision-files (oref repo default-branch))))
     (let ((case-fold-search t))
       (if-let ((file (--first (string-match-p "\
 \\`\\(\\|docs/\\|\\.github/\\)pull_request_template\\(\\.[a-zA-Z0-9]+\\)?\\'" it)
@@ -658,6 +690,17 @@
         ;; but due to this limitation I doubt many people use them,
         ;; so Forge doesn't support them either.
         ))))
+
+(cl-defmethod forge--set-default-branch ((repo forge-github-repository)
+                                         newname oldname)
+  (forge--ghub-post repo
+    (format "/repos/:owner/:name/branches/%s/rename" oldname)
+    `((new_name . ,newname)))
+  (message "Waiting 5 seconds for GitHub to complete rename...")
+  (sleep-for 5)
+  (message "Waiting 5 seconds for GitHub to complete rename...done")
+  (magit-call-git "fetch" "--prune" (oref repo remote))
+  (magit--set-default-branch newname oldname))
 
 (cl-defmethod forge--fork-repository ((repo forge-github-repository) fork)
   (with-slots (owner name) repo

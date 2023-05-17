@@ -1,31 +1,31 @@
-;;; forge-core.el --- Core functionality           -*- lexical-binding: t -*-
+;;; forge-core.el --- Core functionality  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
 (require 'magit)
 
 (require 'cl-lib)
+(require 'compat)
 (require 'dash)
 (require 'eieio)
 (require 'subr-x)
@@ -106,7 +106,21 @@ Complications:
 * When connecting to a Github Enterprise edition whose REST
   API's end point is \"<host>/v3\" and whose GraphQL API's
   end point is \"<host>/graphql\", then use \"<host>/v3\" as
-  APIHOST.  This is a historic accident.  See issue #174."
+  APIHOST.  This is a historic accident.  See issue #174.
+
+* This variable does not account for the possibility that the
+  git repository does not use the same address as the web
+  interface.  That is another historic accident and if many
+  users are affected by it, we might have to fix it properly.
+  If you would like that, comment on issue #532.
+
+  For now a workaround has to be used.  Assuming the web
+  interface is available at \"example.com\" and the repository
+  is at \"ssh.example.com\", use \"example.com\" as GITHOST and
+  add something like this to \".gitconfig\":
+
+    [url \"git@ssh.example.com\"]
+        insteadOf = git@example.com"
   :package-version '(forge . "0.1.0")
   :group 'forge
   :type '(repeat (list (string :tag "Git host")
@@ -234,7 +248,7 @@ at that time."
            (?o . ,owner)
            (?n . ,name)
            (?p . ,path)
-           (?P . ,(replace-regexp-in-string "/" "%2F" path)))))
+           (?P . ,(string-replace "/" "%2F" path)))))
     (user-error "Cannot browse non-forge remote %s" remote)))
 
 (defun forge--url-regexp ()
@@ -249,12 +263,12 @@ at that time."
           "\\(?:\\.git\\|/\\)?\\'"))
 
 (defun forge--split-remote-url (remote)
-  (when-let ((url (magit-git-string "remote" "get-url" remote)))
+  (and-let* ((url (magit-git-string "remote" "get-url" remote)))
     (forge--split-url url)))
 
 (defun forge--split-url (url)
   (and (string-match (forge--url-regexp) url)
-       (when-let ((host (match-string 1 url))
+       (and-let* ((host (match-string 1 url))
                   (path (match-string 2 url))
                   (path (forge--split-url-path
                          (nth 3 (assoc host forge-alist))
@@ -279,7 +293,7 @@ at that time."
          (nth 2 (assoc (match-string 1 url) forge-alist)))))
 
 (defun forge--forge-remote-p (remote)
-  (when-let ((url (magit-git-string "remote" "get-url" remote)))
+  (and-let* ((url (magit-git-string "remote" "get-url" remote)))
     (forge--url-p url)))
 
 (defun forge--url-equal (urlA urlB)
@@ -304,11 +318,11 @@ at that time."
            ":\\([^/]+\\)"
            (lambda (str)
              (let ((slot (intern (substring str 1))))
-               (or (when-let
+               (or (and-let*
                        ((v (ignore-errors
                              (cl-case slot
                                (repo    (oref object name))
-                               (project (concat (replace-regexp-in-string
+                               (project (concat (string-replace
                                                  "/" "%2F" (oref object owner))
                                                 "%2F"
                                                 (oref object name)))

@@ -1,25 +1,24 @@
-;;; forge-list.el --- Tabulated-list interface     -*- lexical-binding: t -*-
+;;; forge-list.el --- Tabulated-list interface  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2022  Jonas Bernoulli
+;; Copyright (C) 2018-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; Forge is free software; you can redistribute it and/or modify it
-;; under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
 ;;
-;; Forge is distributed in the hope that it will be useful, but WITHOUT
-;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
-;; or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
-;; License for more details.
+;; This file is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with Forge.  If not, see http://www.gnu.org/licenses.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -94,16 +93,14 @@ This is a list of package names.  Used by the commands
 ;;; Modes
 ;;;; Topics
 
-(defvar forge-topic-list-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map tabulated-list-mode-map)
-    (define-key map (kbd "RET") #'forge-visit-topic)
-    (define-key map [return]    #'forge-visit-topic)
-    (define-key map (kbd "o")   #'forge-browse-topic)
-    (define-key map (kbd "'")   #'forge-dispatch)
-    (define-key map (kbd "?")   #'magit-dispatch)
-    map)
-  "Local keymap for Forge-Topic-List mode buffers.")
+(defvar-keymap forge-topic-list-mode-map
+  :doc "Local keymap for Forge-Topic-List mode buffers."
+  :parent tabulated-list-mode-map
+  "RET"      #'forge-visit-topic
+  "<return>" #'forge-visit-topic
+  "o"        #'forge-browse-topic
+  "'"        #'forge-dispatch
+  "?"        #'magit-dispatch)
 
 (define-derived-mode forge-topic-list-mode tabulated-list-mode
   "Issues"
@@ -157,16 +154,14 @@ This is a list of package names.  Used by the commands
 
 ;;;; Repository
 
-(defvar forge-repository-list-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map tabulated-list-mode-map)
-    (define-key map (kbd "RET") #'forge-visit-repository)
-    (define-key map [return]    #'forge-visit-repository)
-    (define-key map (kbd "o")   #'forge-browse-repository)
-    (define-key map (kbd "'")   #'forge-dispatch)
-    (define-key map (kbd "?")   #'magit-dispatch)
-    map)
-  "Local keymap for Forge-Repository-List mode buffers.")
+(defvar-keymap forge-repository-list-mode-map
+  :doc "Local keymap for Forge-Repository-List mode buffers."
+  :parent tabulated-list-mode-map
+  "RET"      #'forge-visit-repository
+  "<return>" #'forge-visit-repository
+  "o"        #'forge-browse-repository
+  "'"        #'forge-dispatch
+  "?"        #'magit-dispatch)
 
 (define-derived-mode forge-repository-list-mode tabulated-list-mode
   "Repositories"
@@ -449,7 +444,7 @@ it silently fails."
     (vconcat (if table
                  (let ((table (symbol-name table)))
                    (--map (let ((col (symbol-name it)))
-                            (if (string-match-p ":" col)
+                            (if (string-search ":" col)
                                 it
                               (intern (concat table ":" col))))
                           columns))

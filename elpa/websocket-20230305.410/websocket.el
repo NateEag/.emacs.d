@@ -5,9 +5,9 @@
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Homepage: https://github.com/ahyatt/emacs-websocket
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20210110.17
-;; Package-Commit: 34e11124fdd9d73e431499ba8a6b6a8023519664
-;; Version: 1.13
+;; Package-Version: 20230305.410
+;; Package-Commit: 1a08093b122d8cf20366a1cba5faddf7a53d08ed
+;; Version: 1.14
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;
 ;; This program is free software; you can redistribute it and/or
@@ -722,6 +722,7 @@ to the websocket protocol.
 
           (when (and (member status '(closed failed exit signal))
                      (not (eq 'closed (websocket-ready-state websocket))))
+            (setf (websocket-ready-state websocket) 'closed)
             (websocket-try-callback 'websocket-on-close 'on-close websocket))))))
 
 (defun websocket-ensure-handshake (url conn key protocols extensions custom-header-alist nowait)
@@ -915,36 +916,37 @@ All these parameters are defined as in `websocket-open'."
          (cookie-header (url-cookie-generate-header-lines
                          host-port (car (url-path-and-query parsed-url))
                          (equal (url-type parsed-url) "wss"))))
-    (format (concat "Host: %s\r\n"
-                    "Upgrade: websocket\r\n"
-                    "Connection: Upgrade\r\n"
-                    "Sec-WebSocket-Key: %s\r\n"
-                    "Sec-WebSocket-Version: 13\r\n"
-                    (when protocol
-                      (concat
-                       (mapconcat
-                        (lambda (protocol)
-                          (format "Sec-WebSocket-Protocol: %s" protocol))
-                        protocol "\r\n")
-                       "\r\n"))
-                    (when extensions
-                      (format "Sec-WebSocket-Extensions: %s\r\n"
-                              (mapconcat
-                               (lambda (ext)
-                                 (concat
-                                  (car ext)
-                                  (when (cdr ext) "; ")
-                                  (when (cdr ext)
-                                    (mapconcat 'identity (cdr ext) "; "))))
-                               extensions ", ")))
-                    (when cookie-header cookie-header)
-                    (concat (mapconcat (lambda (cons) (format "%s: %s" (car cons) (cdr cons)))
-                                       custom-headers-alist "\r\n")
-                            (when custom-headers-alist "\r\n"))
-                    "\r\n")
-            host-port
-            key
-            protocol)))
+    (concat
+     (format (concat "Host: %s\r\n"
+                     "Upgrade: websocket\r\n"
+                     "Connection: Upgrade\r\n"
+                     "Sec-WebSocket-Key: %s\r\n"
+                     "Sec-WebSocket-Version: 13\r\n"
+                     (when protocol
+                       (concat
+                        (mapconcat
+                         (lambda (protocol)
+                           (format "Sec-WebSocket-Protocol: %s" protocol))
+                         protocol "\r\n")
+                        "\r\n"))
+                     (when extensions
+                       (format "Sec-WebSocket-Extensions: %s\r\n"
+                               (mapconcat
+                                (lambda (ext)
+                                  (concat
+                                   (car ext)
+                                   (when (cdr ext) "; ")
+                                   (when (cdr ext)
+                                     (mapconcat 'identity (cdr ext) "; "))))
+                                extensions ", "))))
+             host-port
+             key
+             protocol)
+     (when cookie-header cookie-header)
+     (mapconcat (lambda (cons) (format "%s: %s" (car cons) (cdr cons)))
+                custom-headers-alist "\r\n")
+     (when custom-headers-alist "\r\n")
+     "\r\n")))
 
 (defun websocket-get-server-response (websocket client-protocols client-extensions)
   "Get the websocket response from client WEBSOCKET."

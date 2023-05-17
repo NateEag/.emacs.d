@@ -1,11 +1,11 @@
 ;;; csv-mode.el --- Major mode for editing comma/char separated values  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2003, 2004, 2012-2020  Free Software Foundation, Inc
+;; Copyright (C) 2003-2023  Free Software Foundation, Inc
 
 ;; Author: "Francis J. Wright" <F.J.Wright@qmul.ac.uk>
 ;; Maintainer: emacs-devel@gnu.org
-;; Version: 1.18
-;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
+;; Version: 1.22
+;; Package-Requires: ((emacs "27.1") (cl-lib "0.5"))
 ;; Keywords: convenience
 
 ;; This package is free software; you can redistribute it and/or modify
@@ -19,7 +19,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -54,6 +54,15 @@
 ;; - C-c C-t (`csv-transpose') interchanges rows and columns.  For
 ;;   details, see the documentation for the individual commands.
 
+;; - `csv-set-separator' sets the CSV separator of the current buffer,
+;;   while `csv-guess-set-separator' guesses and sets the separator
+;;   based on the current buffer's contents.
+;;   `csv-guess-set-separator' can be useful to add to the mode hook
+;;   to have CSV mode guess and set the separator automatically when
+;;   visiting a buffer:
+;;
+;;     (add-hook 'csv-mode-hook 'csv-guess-set-separator)
+
 ;; CSV mode can recognize fields separated by any of several single
 ;; characters, specified by the value of the customizable user option
 ;; `csv-separators'.  CSV data fields can be delimited by quote
@@ -75,6 +84,17 @@
 ;; the current field index in the mode line, cf. `line-number-mode'
 ;; and `column-number-mode'.  It is on by default.
 
+;;;; See also:
+
+;; the standard GNU Emacs 21 packages align.el, which will align
+;; columns within a region, and delim-col.el, which helps to prettify
+;; columns in a text region or rectangle;
+
+;; csv.el by Ulf Jasper <ulf.jasper at web.de>, which provides
+;; functions for reading/parsing comma-separated value files and is
+;; available at http://de.geocities.com/ulf_jasper/emacs.html (and in
+;; the gnu.emacs.sources archives).
+
 ;;; Installation:
 
 ;; Put this file somewhere that Emacs can find it (i.e. in one of the
@@ -85,8 +105,16 @@
 ;; (autoload 'csv-mode "csv-mode"
 ;;   "Major mode for editing comma-separated value files." t)
 
-;;; History:
+;;; News:
 
+;; Since 1.21:
+;; - New command `csv-insert-column'.
+;; - New config var `csv-align-min-width' for `csv-align-mode'.
+
+;; Since 1.9:
+;; - `csv-align-mode' auto-aligns columns dynamically (on screen).
+
+;; Before that:
 ;; Begun on 15 November 2003 to provide lexicographic sorting of
 ;; simple CSV data by field and released as csv.el.  Facilities to
 ;; kill multiple fields and customize separator added on 9 April 2004.
@@ -99,17 +127,6 @@
 ;; Transposition added on 22 June 2004.  Separator invisibility added
 ;; on 23 June 2004.
 
-;;; See also:
-
-;; the standard GNU Emacs 21 packages align.el, which will align
-;; columns within a region, and delim-col.el, which helps to prettify
-;; columns in a text region or rectangle;
-
-;; csv.el by Ulf Jasper <ulf.jasper at web.de>, which provides
-;; functions for reading/parsing comma-separated value files and is
-;; available at http://de.geocities.com/ulf_jasper/emacs.html (and in
-;; the gnu.emacs.sources archives).
-
 ;;; To do (maybe):
 
 ;; Make separators and quotes buffer-local and locally settable.
@@ -119,7 +136,9 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl-lib))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'subr-x))
 
 (defgroup CSV nil
   "Major mode for editing files of comma-separated value type."
@@ -163,12 +182,14 @@ session.  Use `customize-set-variable' instead if that is required."
                      (error "%S is already a quote" x)))
 	       value)
 	 (custom-set-default variable value)
-	 (setq csv-separator-chars (mapcar #'string-to-char value)
-	       csv--skip-chars (apply #'concat "^\n" csv-separators)
-	       csv-separator-regexp (apply #'concat `("[" ,@value "]"))
-	       csv-font-lock-keywords
-	       ;; NB: csv-separator-face variable evaluates to itself.
-	       `((,csv-separator-regexp (0 'csv-separator-face))))))
+         (setq csv-separator-chars (mapcar #'string-to-char value))
+         (setq csv--skip-chars
+               (apply #'concat "^\n"
+                      (mapcar (lambda (s) (concat "\\" s)) value)))
+         (setq csv-separator-regexp (regexp-opt value))
+         (setq csv-font-lock-keywords
+               ;; NB: csv-separator-face variable evaluates to itself.
+               `((,csv-separator-regexp (0 'csv-separator-face))))))
 
 (defcustom csv-field-quotes '("\"")
   "Field quotes: a list of *single-character* strings.
@@ -213,7 +234,7 @@ FIELD-QUOTES should be a list of single-character strings."
 (defvar csv-comment-start nil
   "String that starts a comment line, or nil if no comment syntax.
 Such comment lines are ignored by CSV mode commands.
-This variable is buffer local\; its default value is that of
+This variable is buffer local; its default value is that of
 `csv-comment-start-default'.  It is set by the function
 `csv-set-comment-start' -- do not set it directly!")
 
@@ -265,19 +286,19 @@ after separators."
 
 (defvar csv-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [(control ?c) (control ?v)] 'csv-toggle-invisibility)
-    (define-key map [(control ?c) (control ?t)] 'csv-transpose)
-    (define-key map [(control ?c) (control ?c)] 'csv-set-comment-start)
-    (define-key map [(control ?c) (control ?u)] 'csv-unalign-fields)
-    (define-key map [(control ?c) (control ?a)] 'csv-align-fields)
-    (define-key map [(control ?c) (control ?z)] 'csv-yank-as-new-table)
-    (define-key map [(control ?c) (control ?y)] 'csv-yank-fields)
-    (define-key map [(control ?c) (control ?k)] 'csv-kill-fields)
-    (define-key map [(control ?c) (control ?d)] 'csv-toggle-descending)
-    (define-key map [(control ?c) (control ?r)] 'csv-reverse-region)
-    (define-key map [(control ?c) (control ?n)] 'csv-sort-numeric-fields)
-    (define-key map [(control ?c) (control ?s)] 'csv-sort-fields)
-    (define-key map "\t" #'csv-tab-command)
+    (define-key map [(control ?c) (control ?v)] #'csv-toggle-invisibility)
+    (define-key map [(control ?c) (control ?t)] #'csv-transpose)
+    (define-key map [(control ?c) (control ?c)] #'csv-set-comment-start)
+    (define-key map [(control ?c) (control ?u)] #'csv-unalign-fields)
+    (define-key map [(control ?c) (control ?a)] #'csv-align-fields)
+    (define-key map [(control ?c) (control ?z)] #'csv-yank-as-new-table)
+    (define-key map [(control ?c) (control ?y)] #'csv-yank-fields)
+    (define-key map [(control ?c) (control ?k)] #'csv-kill-fields)
+    (define-key map [(control ?c) (control ?d)] #'csv-toggle-descending)
+    (define-key map [(control ?c) (control ?r)] #'csv-reverse-region)
+    (define-key map [(control ?c) (control ?n)] #'csv-sort-numeric-fields)
+    (define-key map [(control ?c) (control ?s)] #'csv-sort-fields)
+    (define-key map "\t"      #'csv-tab-command)
     (define-key map [backtab] #'csv-backtab-command)
     map))
 
@@ -348,7 +369,7 @@ It must be either a string or nil."
    (list (edit-and-eval-command
 	  "Comment start (string or nil): " csv-comment-start)))
   ;; Paragraph means a group of contiguous records:
-  (set (make-local-variable 'paragraph-separate) "[:space:]*$") ; White space.
+  (set (make-local-variable 'paragraph-separate) "[[:space:]]*$") ; White space.
   (set (make-local-variable 'paragraph-start) "\n");Must include \n explicitly!
   ;; Remove old comment-start/end if available
   (with-syntax-table text-mode-syntax-table
@@ -367,6 +388,23 @@ It must be either a string or nil."
      (string-to-char string) "<" csv-mode-syntax-table)
     (modify-syntax-entry ?\n ">" csv-mode-syntax-table))
   (setq csv-comment-start string))
+
+(defvar csv--set-separator-history nil)
+
+(defun csv-set-separator (sep)
+  "Set the CSV separator in the current buffer to SEP."
+  (interactive (list (read-char-from-minibuffer
+                      "Separator: " nil 'csv--set-separator-history)))
+  (when (and (boundp 'csv-field-quotes)
+             (member (string sep) csv-field-quotes))
+    (error "%c is already a quote" sep))
+  (setq-local csv-separators (list (string sep)))
+  (setq-local csv-separator-chars (list sep))
+  (setq-local csv--skip-chars (format "^\n\\%c" sep))
+  (setq-local csv-separator-regexp (regexp-quote (string sep)))
+  (setq-local csv-font-lock-keywords
+              `((,csv-separator-regexp (0 'csv-separator-face))))
+  (font-lock-refresh-defaults))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
@@ -389,7 +427,7 @@ Usually they sort in order of ascending sort key.")
       (remove-from-invisibility-spec 'csv)
     (add-to-invisibility-spec 'csv))
   (message "Separators in aligned records will be %svisible \
-\(after re-aligning if soft\)"
+\(after re-aligning if soft)"
 	   (if (memq 'csv buffer-invisibility-spec) "in" ""))
   (redraw-frame (selected-frame)))
 
@@ -473,10 +511,10 @@ Assumes point is at beginning of line."
 Signal an error if the buffer is read-only.
 If TYPE is noarg then return a list (beg end).
 Otherwise, return a list (arg beg end), where arg is:
-  the raw prefix argument by default\;
-  a single field index if TYPE is single\;
+  the raw prefix argument by default;
+  a single field index if TYPE is single;
   a list of field indices or index ranges if TYPE is multiple.
-Field defaults to the current prefix arg\; if not set, prompt user.
+Field defaults to the current prefix arg; if not set, prompt user.
 
 A field index list consists of positive or negative integers or ranges,
 separated by any non-integer characters.  A range has the form m-n,
@@ -604,7 +642,7 @@ Field indices increase from 1 on the left or decrease from -1 on the right.
 A prefix argument specifies a single field, otherwise prompt for field index.
 Ignore blank and comment lines.  The variable `sort-fold-case'
 determines whether alphabetic case affects the sort order.
-When called non-interactively, FIELD is a single field index\;
+When called non-interactively, FIELD is a single field index;
 BEG and END specify the region to sort."
   ;; (interactive "*P\nr")
   (interactive (csv-interactive-args 'single))
@@ -624,7 +662,7 @@ Specified non-null field must contain a number in each line of the region,
 which may begin with \"0x\" or \"0\" for hexadecimal and octal values.
 Otherwise, the number is interpreted according to sort-numeric-base.
 Ignore blank and comment lines.
-When called non-interactively, FIELD is a single field index\;
+When called non-interactively, FIELD is a single field index;
 BEG and END specify the region to sort."
   ;; (interactive "*P\nr")
   (interactive (csv-interactive-args 'single))
@@ -683,6 +721,14 @@ point or marker arguments, BEG and END, delimiting the region."
 	      (t
 	       (setq ended t))))))
   (skip-chars-forward csv--skip-chars))
+
+(defun csv--bof-p ()
+  (or (bolp)
+      (memq (preceding-char) csv-separator-chars)))
+
+(defun csv--eof-p ()
+  (or (eolp)
+      (memq (following-char) csv-separator-chars)))
 
 (defun csv-beginning-of-field ()
   "Skip backward over one field."
@@ -839,7 +885,8 @@ the mode line after `csv-field-index-delay' seconds of Emacs idle time."
     (let ((start (point))
 	  (field 0))
       (beginning-of-line)
-      (while (< (point) start)
+      (while (and (<= (point) start)
+                  (not (eolp)))
 	(csv-end-of-field)
 	(unless (eolp)
 	  (forward-char 1))
@@ -917,6 +964,21 @@ Ignore blank and comment lines."
 	(push (csv-kill-one-field field) csv-killed-fields))
     (forward-line)))
 
+(defun csv-insert-column (field)
+  "Insert an empty column at point."
+  (interactive
+   (let ((cur (csv--field-index)))
+     (list (if (and (csv--eof-p) (not (csv--bof-p))) (1+ cur) cur))))
+  (save-excursion
+    (goto-char (point-min))
+    (while (not (eobp))
+      (or (csv-not-looking-at-record)
+	  (progn
+	    (csv-sort-skip-fields field t)
+	    (insert (car csv-separators))))
+      (forward-line 1))
+    (csv--jit-flush-columns)))
+
 (defun csv-kill-many-columns (fields)
   "Kill several fields in all lines in (narrowed) buffer.
 FIELDS is an unordered list of field indices.
@@ -951,7 +1013,7 @@ Ignore blank and comment lines."
       (setq f (cdr f))))
   (goto-char (point-min))
   ;; Kill from right to avoid miscounting:
-  (setq fields (sort fields '>))
+  (setq fields (sort fields #'>))
   (while (not (eobp))
     (or (csv-not-looking-at-record)
 	(let ((fields fields) killed-fields field)
@@ -967,14 +1029,14 @@ Ignore blank and comment lines."
 (defun csv-yank-fields (field beg end)
   "Yank fields as the ARGth field of each line in the region.
 ARG may be arbitrarily large and records are extended as necessary.
-If not set, the region defaults to the CSV records around point\;
+If not set, the region defaults to the CSV records around point;
 if point is not in a CSV record then offer to yank as a new table.
 The fields yanked are those last killed by `csv-kill-fields'.
 Fields are separated by `csv-separators' and null fields are allowed anywhere.
 Field indices increase from 1 on the left or decrease from -1 on the right.
 A prefix argument specifies a single field, otherwise prompt for field index.
 Ignore blank and comment lines.  When called non-interactively, FIELD
-is a single field index\; BEG and END specify the region to process."
+is a single field index; BEG and END specify the region to process."
   ;; (interactive "*P\nr")
   (interactive (condition-case err
 		   (csv-interactive-args 'single)
@@ -1071,10 +1133,10 @@ Unalign first (see `csv-unalign-fields').  Ignore blank and comment lines.
 In hard-aligned records, separators become invisible whenever
 `buffer-invisibility-spec' is non-nil.  In soft-aligned records, make
 separators invisible if and only if `buffer-invisibility-spec' is
-non-nil when the records are aligned\; this can be changed only by
+non-nil when the records are aligned; this can be changed only by
 re-aligning.  \(Unaligning always makes separators visible.)
 
-When called non-interactively, use hard alignment if HARD is non-nil\;
+When called non-interactively, use hard alignment if HARD is non-nil;
 BEG and END specify the region to align.
 If there is no selected region, default to the whole buffer."
   (interactive (cons current-prefix-arg
@@ -1204,7 +1266,7 @@ Undo soft alignment introduced by `csv-align-fields'.  If invoked with
 an argument then also remove all spaces and tabs around separators.
 Also make all invisible separators visible again.
 Ignore blank and comment lines.  When called non-interactively, remove
-spaces and tabs if HARD non-nil\; BEG and END specify region to unalign.
+spaces and tabs if HARD non-nil; BEG and END specify region to unalign.
 If there is no selected region, default to the whole buffer."
   (interactive (cons current-prefix-arg
                      (if (use-region-p)
@@ -1321,7 +1383,10 @@ point is assumed to be at the beginning of the line."
 	(split-string row-text csv-separator-regexp)
       (save-excursion
 	(while (< (setq field-start (point)) row-end-position)
-	  (csv-forward-field 1)
+          ;; csv-forward-field will skip a separator if point is on
+          ;; it, and we'll miss an empty field
+          (unless (memq (following-char) csv-separator-chars)
+	    (csv-forward-field 1))
 	  (push
 	   (buffer-substring-no-properties field-start (point))
 	   fields)
@@ -1352,8 +1417,12 @@ If there is already a header line, then unset the header line."
       (overlay-put csv--header-line 'modification-hooks
                    '(csv--header-flush)))
     (csv--header-flush)
+    ;; These are introduced in Emacs 29.
+    (unless (boundp 'header-line-indent)
+      (setq-local header-line-indent ""
+                  header-line-indent-width 0))
     (setq header-line-format
-          '(:eval (csv--header-string)))))
+          '("" header-line-indent (:eval (csv--header-string))))))
 
 (defun csv--header-flush (&rest _)
   ;; Force re-computation of the header-line.
@@ -1387,9 +1456,10 @@ If there is already a header line, then unset the header line."
                         (nexti (next-single-property-change i 'display str))
                         (newprop
                          `(space :align-to
-                                 ,(if (numberp x)
-                                      (- x (or csv--header-hscroll 0))
-                                    `(- ,x csv--header-hscroll)))))
+                                 (+ ,(if (numberp x)
+                                         (- x (or csv--header-hscroll 0))
+                                       `(- ,x csv--header-hscroll))
+                                    header-line-indent-width))))
                    (put-text-property i (or nexti (length str))
                                       'display newprop str)
                    (setq i nexti))))
@@ -1402,6 +1472,10 @@ If there is already a header line, then unset the header line."
   "Maximum width of a column in `csv-align-mode'.
 This does not apply to the last column (for which the usual `truncate-lines'
 setting works better)."
+  :type 'integer)
+
+(defcustom csv-align-min-width 1
+  "Minimum width of a column in `csv-align-mode'."
   :type 'integer)
 
 (defvar-local csv--config-column-widths nil
@@ -1433,6 +1507,11 @@ setting works better)."
   (jit-lock-refontify))
 
 (defvar-local csv--jit-columns nil)
+
+(defun csv--jit-flush-columns ()
+  "Throw away all cached info about column widths."
+  ;; FIXME: Maybe we should kill its overlays as well.
+  (setq csv--jit-columns nil))
 
 (defun csv--jit-merge-columns (column-widths)
   ;; FIXME: The incremental update (delayed by jit-lock-context-time) of column
@@ -1489,10 +1568,11 @@ setting works better)."
     (delete-overlay ol)))
 
 (defun csv--jit-unalign (beg end)
-  (remove-text-properties beg end
-                          '(display nil csv--jit nil invisible nil
-                            cursor-sensor-functions nil csv--revealed nil))
-  (remove-overlays beg end 'csv--jit t))
+  (with-silent-modifications
+    (remove-text-properties beg end
+                            '( display nil csv--jit nil invisible nil
+                               cursor-sensor-functions nil csv--revealed nil))
+    (remove-overlays beg end 'csv--jit t)))
 
 (defun csv--jit-flush (beg end)
   "Cause all the buffer (except for the BEG...END region) to be re-aligned."
@@ -1589,7 +1669,8 @@ setting works better)."
                      (left-padding 0) (right-padding 0)
                      (field-width (pop field-widths))
                      (column-width
-                      (min (car (pop w))
+                      (min (max csv-align-min-width
+                                (car (pop w)))
                            (or width-config
                                ;; Don't apply csv-align-max-width
                                ;; to the last field!
@@ -1717,6 +1798,8 @@ setting works better)."
     (add-to-invisibility-spec '(csv-truncate . t))
     (kill-local-variable 'csv--jit-columns)
     (cursor-sensor-mode 1)
+    (when (fboundp 'header-line-indent-mode)
+      (header-line-indent-mode))
     (jit-lock-register #'csv--jit-align)
     (jit-lock-refontify))
    (t
@@ -1724,6 +1807,104 @@ setting works better)."
     (jit-lock-unregister #'csv--jit-align)
     (csv--jit-unalign (point-min) (point-max))))
   (csv--header-flush))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;  Separator guessing
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defvar csv--preferred-separators
+  '(?, ?\; ?\t)
+  "Preferred separator characters in case of a tied score.")
+
+(defun csv-guess-set-separator ()
+  "Guess and set the CSV separator of the current buffer.
+
+Add it to the mode hook to have CSV mode guess and set the
+separator automatically when visiting a buffer:
+
+  (add-hook \\='csv-mode-hook \\='csv-guess-set-separator)"
+  (interactive)
+  (let ((sep (csv-guess-separator
+              (buffer-substring-no-properties
+               (point-min)
+               ;; We're probably only going to look at the first 2048
+               ;; or so chars, but take more than we probably need to
+               ;; minimize the chance of breaking the input in the
+               ;; middle of a (long) row.
+               (min 8192 (point-max)))
+              2048)))
+    (when sep
+      (csv-set-separator sep))))
+
+(defun csv-guess-separator (text &optional cutoff)
+  "Return a guess of which character is the CSV separator in TEXT."
+  (let ((best-separator nil)
+        (best-score 0))
+    (dolist (candidate (csv--separator-candidates text cutoff))
+      (let ((candidate-score
+             (csv--separator-score candidate text cutoff)))
+        (when (or (> candidate-score best-score)
+                  (and (= candidate-score best-score)
+                       (member candidate csv--preferred-separators)))
+          (setq best-separator candidate)
+          (setq best-score candidate-score))))
+    best-separator))
+
+(defun csv--separator-candidates (text &optional cutoff)
+  "Return a list of candidate CSV separators in TEXT.
+When CUTOFF is passed, look only at the first CUTOFF number of characters."
+  (let ((chars (make-hash-table)))
+    (dolist (c (string-to-list
+                (if cutoff
+                    (substring text 0 (min cutoff (length text)))
+                  text)))
+      (when (and (not (gethash c chars))
+                 (or (= c ?\t)
+                     (and (not (member c '(?. ?/ ?\" ?')))
+                          (not (member (get-char-code-property c 'general-category)
+                                       '(Lu Ll Lt Lm Lo Nd Nl No Ps Pe Cc Co))))))
+        (puthash c t chars)))
+    (hash-table-keys chars)))
+
+(defun csv--separator-score (separator text &optional cutoff)
+  "Return a score on how likely SEPARATOR is a separator in TEXT.
+
+When CUTOFF is passed, stop the calculation at the next whole
+line after having read CUTOFF number of characters.
+
+The scoring is based on the idea that most CSV data is tabular,
+i.e. separators should appear equally often on each line.
+Furthermore, more commonly appearing characters are scored higher
+than those who appear less often.
+
+Adapted from the paper \"Wrangling Messy CSV Files by Detecting
+Row and Type Patterns\" by Gerrit J.J. van den Burg , Alfredo
+Nazábal, and Charles Sutton: https://arxiv.org/abs/1811.11242."
+  (let ((groups
+         (with-temp-buffer
+           (csv-set-separator separator)
+           (save-excursion
+             (insert text))
+           (let ((groups (make-hash-table))
+                 (chars-read 0))
+             (while (and (/= (point) (point-max))
+                         (or (not cutoff)
+                             (< chars-read cutoff)))
+               (let* ((lep (line-end-position))
+                      (nfields (length (csv--collect-fields lep))))
+                 (cl-incf (gethash nfields groups 0))
+                 (cl-incf chars-read (- lep (point)))
+                 (goto-char (+ lep 1))))
+             groups)))
+        (sum 0))
+    (maphash
+     (lambda (length num)
+       (cl-incf sum (* num (/ (- length 1) (float length)))))
+     groups)
+    (let ((unique-groups (hash-table-count groups)))
+      (if (= 0 unique-groups)
+          0
+        (/ sum unique-groups)))))
 
 ;;; TSV support
 

@@ -1,4 +1,4 @@
-;;; csv-mode-autoloads.el --- automatically extracted autoloads
+;;; csv-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -56,7 +56,7 @@ Major mode for editing files of tab-separated value type.
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csv-mode" '("csv-" "tsv-")))
+(register-definition-prefixes "csv-mode" '("csv-" "tsv-"))
 
 ;;;***
 
@@ -64,7 +64,7 @@ Major mode for editing files of tab-separated value type.
 ;;;;;;  0))
 ;;; Generated autoloads from csv-mode-tests.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csv-mode-tests" '("csv-mode-tests--align-fields")))
+(register-definition-prefixes "csv-mode-tests" '("csv-tests--"))
 
 ;;;***
 

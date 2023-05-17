@@ -1,4 +1,4 @@
-;;; notmuch-transient-autoloads.el --- automatically extracted autoloads
+;;; notmuch-transient-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -19,7 +19,7 @@
  (autoload 'notmuch-search-transient "notmuch-transient" nil t)
  (autoload 'notmuch-tag-transient "notmuch-transient" nil t)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-transient" '("notmuch-")))
+(register-definition-prefixes "notmuch-transient" '("notmuch-"))
 
 ;;;***
 

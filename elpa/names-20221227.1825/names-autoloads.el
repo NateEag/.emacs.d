@@ -1,9 +1,12 @@
-;;; names-autoloads.el --- automatically extracted autoloads
+;;; names-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "names" "names.el" (23400 19259 0 0))
+;;;### (autoloads nil "names" "names.el" (0 0 0 0))
 ;;; Generated autoloads from names.el
 
 (defvar names--inside-make-autoload nil "\
@@ -70,17 +73,25 @@ and a description of their effects, see the variable
 
 (function-put 'define-namespace 'lisp-indent-function '(lambda (&rest x) 0))
 
-(eval-after-load 'find-func '(defadvice find-function-search-for-symbol (around names-around-find-function-search-for-symbol-advice (symbol type library) activate) "Make sure `find-function-search-for-symbol' understands namespaces." ad-do-it (ignore-errors (unless (cdr ad-return-value) (with-current-buffer (car ad-return-value) (search-forward-regexp "^(define-namespace\\_>") (skip-chars-forward "\n[:blank:]") (let* ((names--regexp (concat "\\`" (regexp-quote (symbol-name (read (current-buffer)))))) (short-symbol (let ((name (symbol-name symbol))) (when (string-match names--regexp name) (intern (replace-match "" nil nil name)))))) (when short-symbol (ad-set-arg 0 short-symbol) ad-do-it)))))))
+(eval-after-load 'find-func '(defadvice find-function-search-for-symbol (around names-around-find-function-search-for-symbol-advice (symbol type library) activate) "Make sure `find-function-search-for-symbol' understands namespaces." ad-do-it (ignore-errors (unless (cdr ad-return-value) (with-current-buffer (car ad-return-value) (search-forward-regexp "^(define-namespace\\_>") (skip-chars-forward "\15\n[:blank:]") (let* ((names--regexp (concat "\\`" (regexp-quote (symbol-name (read (current-buffer)))))) (short-symbol (let ((name (symbol-name symbol))) (when (string-match names--regexp name) (intern (replace-match "" nil nil name)))))) (when short-symbol (ad-set-arg 0 short-symbol) ad-do-it)))))))
 
 (defadvice make-autoload (around names-before-make-autoload-advice (form file &optional expansion) activate) "\
 Make sure `make-autoload' understands `define-namespace'.
 Use the `names--inside-make-autoload' variable to indicate to
-`define-namespace' that we're generating autoloads." (require (quote names)) (if (null (eq (car-safe form) (quote define-namespace))) ad-do-it (setq names--inside-make-autoload t) (setq form (macroexpand form)) (setq names--inside-make-autoload nil) (if (version< emacs-version "24.3") (setq ad-return-value (cons (quote progn) (mapcar (lambda (x) (names--make-autoload-compat x file)) (cdr form)))) (ad-set-arg 2 (quote expansion)) (ad-set-arg 0 form) ad-do-it)))
+`define-namespace' that we're generating autoloads." (require 'names) (if (null (eq (car-safe form) 'define-namespace)) ad-do-it (setq names--inside-make-autoload t) (setq form (macroexpand form)) (setq names--inside-make-autoload nil) (if (version< emacs-version "24.3") (setq ad-return-value (cons 'progn (mapcar (lambda (x) (names--make-autoload-compat x file)) (cdr form)))) (ad-set-arg 2 'expansion) (ad-set-arg 0 form) ad-do-it)))
+
+(register-definition-prefixes "names" '("names-"))
 
 ;;;***
 
-;;;### (autoloads nil nil ("names-dev.el" "names-pkg.el") (23400
-;;;;;;  19259 0 0))
+;;;### (autoloads nil "names-dev" "names-dev.el" (0 0 0 0))
+;;; Generated autoloads from names-dev.el
+
+(register-definition-prefixes "names-dev" '("find-function-read" "names-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("names-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -88,5 +99,6 @@ Use the `names--inside-make-autoload' variable to indicate to
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; names-autoloads.el ends here

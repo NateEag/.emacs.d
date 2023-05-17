@@ -1,4 +1,4 @@
-;;; bind-key-autoloads.el --- automatically extracted autoloads
+;;; bind-key-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -13,18 +13,19 @@
 Bind KEY-NAME to COMMAND in KEYMAP (`global-map' if not passed).
 
 KEY-NAME may be a vector, in which case it is passed straight to
-`define-key'. Or it may be a string to be interpreted as
-spelled-out keystrokes, e.g., \"C-c C-z\". See documentation of
-`edmacro-mode' for details.
+`define-key'.  Or it may be a string to be interpreted as
+spelled-out keystrokes, e.g., \"C-c C-z\".  See the documentation
+of `edmacro-mode' for details.
 
-COMMAND must be an interactive function or lambda form.
+COMMAND must be an interactive function, lambda form, or a cons
+`(STRING . DEFN)'.
 
 KEYMAP, if present, should be a keymap variable or symbol.
 For example:
 
-  (bind-key \"M-h\" #'some-interactive-function my-mode-map)
+  (bind-key \"M-h\" #\\='some-interactive-function my-mode-map)
 
-  (bind-key \"M-h\" #'some-interactive-function 'my-mode-map)
+  (bind-key \"M-h\" #\\='some-interactive-function \\='my-mode-map)
 
 If PREDICATE is non-nil, it is a form evaluated to determine when
 a key should be bound. It must return non-nil in such cases.
@@ -56,6 +57,19 @@ Accepts keyword arguments:
                          for these bindings
 :prefix-docstring STR  - docstring for the prefix-map variable
 :menu-name NAME        - optional menu string for prefix map
+:repeat-docstring STR  - docstring for the repeat-map variable
+:repeat-map MAP        - name of the repeat map that should be created
+                         for these bindings. If specified, the
+                         `repeat-map' property of each command bound
+                         (within the scope of the `:repeat-map' keyword)
+                         is set to this map.
+:exit BINDINGS         - Within the scope of `:repeat-map' will bind the
+                         key in the repeat map, but will not set the
+                         `repeat-map' property of the bound command.
+:continue BINDINGS     - Within the scope of `:repeat-map' forces the
+                         same behaviour as if no special keyword had
+                         been used (that is, the command is bound, and
+                         it's `repeat-map' property set)
 :filter FORM           - optional form to determine when bindings apply
 
 The rest of the arguments are conses of keybinding string and a
@@ -64,14 +78,18 @@ function symbol (unquoted).
 \(fn &rest ARGS)" nil t)
 
 (autoload 'bind-keys* "bind-key" "\
+Bind multiple keys at once, in `override-global-map'.
+Accepts the same keyword arguments as `bind-keys' (which see).
 
+This binds keys in such a way that bindings are not overridden by
+other modes.  See `override-global-mode'.
 
 \(fn &rest ARGS)" nil t)
 
 (autoload 'describe-personal-keybindings "bind-key" "\
 Display all the personal keybindings defined by `bind-key'." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bind-key" '("bind-key" "compare-keybindings" "get-binding-description" "override-global-m" "personal-keybindings")))
+(register-definition-prefixes "bind-key" '("bind-key" "compare-keybindings" "get-binding-description" "override-global-m" "personal-keybindings"))
 
 ;;;***
 

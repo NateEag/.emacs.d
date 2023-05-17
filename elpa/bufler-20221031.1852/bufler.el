@@ -171,7 +171,8 @@ must be called to get up-to-date results."
 (defcustom bufler-filter-buffer-name-regexps
   (list (rx "*Compile-Log*") (rx "*Disabled Command*")
         ;; Org export logs.
-        (rx "*Org " (1+ anything) "Output*"))
+        (rx "*Org " (1+ anything) "Output*")
+        (rx "*xref*"))
   "Regular expressions matched against buffer names.
 Buffers whose names match are hidden when function
 `bufler--buffer-name-filtered-p' is in `bufler-filter-buffer-fns'
@@ -209,6 +210,12 @@ May be used to add extra space between groups in `bufler-list'."
                         ((0 . "\n")))
                  (alist :key-type (integer :tag "Group level")
                         :value-type (string :tag "Suffix string"))))
+
+(defcustom bufler-list-switch-buffer-action '((display-buffer-reuse-window
+                                               display-buffer-same-window))
+  "Display buffer action used by `bufler-list-buffer-switch'.
+See `display-buffer' for more information."
+  :type 'sexp)
 
 (defcustom bufler-cache-related-dirs-p t
   "Whether to cache whether directory pairs are related.
@@ -403,6 +410,33 @@ which are otherwise filtered by `bufler-filter-buffer-fns'."
 ;;;###autoload
 (defalias 'bufler #'bufler-list)
 
+;;;###autoload
+(cl-defun bufler-sidebar (&key (side 'right) (slot 0))
+  "Display Bufler list in dedicated side window.
+With universal prefix, use left SIDE instead of right.  With two
+universal prefixes, prompt for side and slot."
+  (interactive (list :side (pcase current-prefix-arg
+                             ('nil 'right)
+                             ('(0) 'left)
+                             (_ (intern (completing-read "Side: " '(left right top bottom) nil t))))
+                     :slot (pcase current-prefix-arg
+                             ('nil 0)
+                             ('(0) 0)
+                             (_ (read-number "Slot: ")))))
+
+  (let ((display-buffer-mark-dedicated t)
+        buffer)
+    (save-window-excursion
+      (bufler-list)
+      (setf buffer (window-buffer (selected-window))))
+    (select-window
+     (display-buffer buffer
+                     `(display-buffer-in-side-window
+                       (side . ,side)
+                       (slot . ,slot)
+                       (window-parameters
+		        (no-delete-other-windows . t)))))))
+
 (declare-function bufler-workspace-switch-buffer "bufler-workspace")
 ;;;###autoload
 (defalias 'bufler-switch-buffer #'bufler-workspace-switch-buffer)
@@ -440,14 +474,7 @@ NAME, okay, `checkdoc'?"
 
 (bufler-define-buffer-command switch "Switch to buffer."
   (lambda (buffer)
-    (let ((bufler-window (selected-window)))
-      (ignore-errors
-        ;; Ignoring the error seems like the easiest way to handle
-        ;; this.  There are a surprising number of nuances in getting
-        ;; this to behave exactly as desired in all cases.
-        (delete-window bufler-window))
-      (pop-to-buffer buffer '((display-buffer-reuse-window
-                               display-buffer-same-window)))))
+    (pop-to-buffer buffer bufler-list-switch-buffer-action))
   :refresh-p nil)
 
 (bufler-define-buffer-command peek "Peek at buffer in another window."
@@ -769,6 +796,7 @@ PLIST may be a plist setting the following options:
 (bufler-define-column "Name" (:max-width nil)
   ;; MAYBE: Move indentation back to `bufler-list'.  But this seems to
   ;; work well, and that might be more complicated.
+  (ignore depth)
   (let ((indentation (make-string (* 2 bufler-indent-per-level) ? ))
         (mode-annotation (when (cl-loop for fn in bufler-buffer-mode-annotate-preds
                                         thereis (funcall fn buffer))

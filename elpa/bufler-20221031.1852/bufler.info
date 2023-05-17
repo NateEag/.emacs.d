@@ -1,4 +1,4 @@
-This is README.info, produced by makeinfo version 6.5 from README.texi.
+This is README.info, produced by makeinfo version 5.2 from README.texi.
 
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -57,9 +57,9 @@ Defining groups
 
 Changelog
 
-* 0.3-pre: 03-pre.
-* 0.2: 02.
-* 0.1: 01.
+* 0.3-pre: 03-pre. 
+* 0.2: 02. 
+* 0.1: 01. 
 
 
 
@@ -173,11 +173,14 @@ A workflow using Bufler could be something like this:
      The buffers are presented by group with their "outline paths,"
      which makes it easier to find the buffer you’re looking for, since
      they’re organized by project, directory, mode, etc.
-  5. If you want to focus on a certain group’s buffers: a.  Use ‘C-u C-u
-     M-x bufler-switch-buffer RET’ and select a buffer; or b.  Use ‘M-x
-     bufler-workspace-frame-set RET’ and select a workspace; or c.  Use
-     ‘M-x bufler RET’ and press ‘f’ to focus the current frame on a
-     workspace, or ‘F’ to open a new frame focused on a workspace.
+  5. If you want to focus on a certain group’s buffers:
+       1. Use ‘C-u C-u M-x bufler-switch-buffer RET’ and select a
+          buffer; or
+       2. Use ‘M-x bufler-workspace-frame-set RET’ and select a
+          workspace; or
+       3. Use ‘M-x bufler RET’ and press ‘f’ to focus the current frame
+          on a workspace, or ‘F’ to open a new frame focused on a
+          workspace.
   6. The next time you call ‘bufler-switch-buffer’ in that frame, it
      will only offer buffers from that frame’s buffer group, making it
      easier to find buffers related to the current project.  (Of course,
@@ -517,9 +520,9 @@ File: README.info,  Node: Changelog,  Next: Credits,  Prev: Compared to Ibuffer,
 
 * Menu:
 
-* 0.3-pre: 03-pre.
-* 0.2: 02.
-* 0.1: 01.
+* 0.3-pre: 03-pre. 
+* 0.2: 02. 
+* 0.1: 01. 
 
 
 File: README.info,  Node: 03-pre,  Next: 02,  Up: Changelog
@@ -551,14 +554,27 @@ File: README.info,  Node: 03-pre,  Next: 02,  Up: Changelog
      arguments.
    • Option ‘bufler-list-display-buffer-action’, which controls how the
      ‘bufler-list’ buffer is displayed.
+   • Option ‘bufler-list-switch-buffer-action’, which controls how
+     buffers are displayed when switched to from the buffer list.
+     (Fixes #76 (https://github.com/alphapapa/bufler.el/issues/76).
+     Thanks to Julian M.  Burgos (https://github.com/jmburgos), Tory S.
+     Anderson (https://github.com/WorldsEndless), and jcalve
+     (https://github.com/jcalve) for reporting.)
    • Option ‘bufler-indent-per-level’, which sets the indentation
      applied per level of depth.
+   • Command ‘bufler-sidebar’ displays the Bufler list in a side window.
 
    *Fixed*
    • Option ‘bufler-filter-buffer-modes’ had the wrong customization
      type.
    • Depend on at least version 2.1 of the ‘map’ package (required for
      ‘pcase’ macro expansion).
+
+   *Changed*
+   • Don’t show ‘*xref*’ buffers by default.
+   • Command ‘bufler-switch-buffer’ allows entering a non-existent
+     buffer name to create a buffer and switch to it (like
+     ‘switch-to-buffer’).
 
 
 File: README.info,  Node: 02,  Next: 01,  Prev: 03-pre,  Up: Changelog
@@ -613,28 +629,28 @@ GPLv3
 
 Tag Table:
 Node: Top258
-Node: Screenshots1359
-Node: Installation2429
-Node: Quelpa2638
-Node: Usage3217
-Node: Workflow4788
-Node: Commands7010
-Node: Bindings8474
-Node: Tips9406
-Node: Defining groups9747
-Node: Default groups example11134
-Node: Group types14061
-Node: Helm support17007
-Node: Ivy support17753
-Node: Prism support18180
-Node: Compared to Ibuffer18620
-Node: Changelog20370
-Node: 03-pre20539
-Node: 0222378
-Node: 0122523
-Node: Credits22622
-Node: Development23311
-Node: License23481
+Node: Screenshots1362
+Node: Installation2432
+Node: Quelpa2641
+Node: Usage3220
+Node: Workflow4791
+Node: Commands7051
+Node: Bindings8515
+Node: Tips9447
+Node: Defining groups9788
+Node: Default groups example11175
+Node: Group types14102
+Node: Helm support17048
+Node: Ivy support17794
+Node: Prism support18221
+Node: Compared to Ibuffer18661
+Node: Changelog20411
+Node: 03-pre20583
+Node: 0223119
+Node: 0123264
+Node: Credits23363
+Node: Development24052
+Node: License24222
 
 End Tag Table
 

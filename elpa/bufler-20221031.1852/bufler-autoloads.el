@@ -1,4 +1,4 @@
-;;; bufler-autoloads.el --- automatically extracted autoloads
+;;; bufler-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -21,6 +21,13 @@ which are otherwise filtered by `bufler-filter-buffer-fns'.
 
 (defalias 'bufler #'bufler-list)
 
+(autoload 'bufler-sidebar "bufler" "\
+Display Bufler list in dedicated side window.
+With universal prefix, use left SIDE instead of right.  With two
+universal prefixes, prompt for side and slot.
+
+\(fn &key (SIDE \\='right) (SLOT 0))" t nil)
+
 (defalias 'bufler-switch-buffer #'bufler-workspace-switch-buffer)
 
 (defalias 'bufler-mode #'bufler-workspace-mode)
@@ -33,7 +40,7 @@ See documentation for details.
 
 (function-put 'bufler-defgroups 'lisp-indent-function 'defun)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bufler" '("bufler-")))
+(register-definition-prefixes "bufler" '("bufler-"))
 
 ;;;***
 
@@ -41,7 +48,7 @@ See documentation for details.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from bufler-group-tree.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bufler-group-tree" '("bufler-group-tree")))
+(register-definition-prefixes "bufler-group-tree" '("bufler-group-tree"))
 
 ;;;***
 
@@ -102,16 +109,24 @@ or call the function `bufler-workspace-mode'.")
 (autoload 'bufler-workspace-mode "bufler-workspace" "\
 When active, set the frame title according to current Bufler group.
 
-If called interactively, enable Bufler-Workspace mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Bufler-Workspace mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='bufler-workspace-mode)'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(cl-eval-when (load) (when (require 'tab-bar nil t) (require 'bufler-workspace-tabs)))
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bufler-workspace" '("bufler-workspace-")))
+(register-definition-prefixes "bufler-workspace" '("bufler-workspace-"))
 
 ;;;***
 
@@ -119,7 +134,39 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from bufler-workspace-tabs.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bufler-workspace-tabs" '("bufler-")))
+(defvar bufler-workspace-tabs-mode nil "\
+Non-nil if Bufler-Workspace-Tabs mode is enabled.
+See the `bufler-workspace-tabs-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `bufler-workspace-tabs-mode'.")
+
+(custom-autoload 'bufler-workspace-tabs-mode "bufler-workspace-tabs" nil)
+
+(autoload 'bufler-workspace-tabs-mode "bufler-workspace-tabs" "\
+Use Bufler workspaces for `tab-bar-mode' and `tab-line-mode'.
+
+This is a minor mode.  If called interactively, toggle the
+`Bufler-Workspace-Tabs mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='bufler-workspace-tabs-mode)'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
+
+\(fn &optional ARG)" t nil)
+
+(defalias 'bufler-tabs-mode #'bufler-workspace-tabs-mode)
+
+(register-definition-prefixes "bufler-workspace-tabs" '("bufler-workspace-tabs"))
 
 ;;;***
 

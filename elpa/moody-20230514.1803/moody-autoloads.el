@@ -1,4 +1,4 @@
-;;; moody-autoloads.el --- automatically extracted autoloads
+;;; moody-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -57,7 +57,7 @@ moody variants do not use any tab or ribbon.
 
 \(fn &optional RESTORE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "moody" '("moody-")))
+(register-definition-prefixes "moody" '("moody-"))
 
 ;;;***
 

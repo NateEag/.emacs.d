@@ -6,8 +6,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20220614.1604
-;; Package-Commit: 38ed1d2e64138eb16a9d8ed2987cff2e01b4a93b
+;; Package-Version: 20230127.417
+;; Package-Commit: 01e338c335c07e4407239619e57361944a82cb8a
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.3
 
@@ -44,7 +44,6 @@
 (require 'cl-lib)
 (require 'url)
 (require 'mail-utils)
-(require 'autorevert)
 (require 'auth-source)
 (require 'mailheader)
 
@@ -243,6 +242,7 @@ Some arguments such as HEADERS is changed to the one actually
 passed to the backend.  Also, it has additional keywords such
 as URL which is the requested URL.")
 
+;;;###autoload
 (defun request-response-header (response field-name)
   "Fetch the values of RESPONSE header field named FIELD-NAME.
 
@@ -267,6 +267,7 @@ Examples::
 ;;    (see https://tools.ietf.org/html/rfc2616.html#section-4.2).
 ;;    Python's requests module does this too.
 
+;;;###autoload
 (defun request-response-headers (response)
   "Return RESPONSE headers as an alist.
 I would have chosen a function name that wasn't so suggestive that
@@ -329,7 +330,7 @@ Example::
   (request-cookie-alist \"127.0.0.1\" \"/\")  ; => ((\"key\" . \"value\") ...)"
   (funcall (request--choose-backend 'get-cookies) host localpart secure))
 
-
+;;;###autoload
 (cl-defun request (url &rest settings
                        &key
                        (params nil)
@@ -363,10 +364,10 @@ SYNC            (bool)   If non-nil, wait until request is done. Default is nil.
 
 * Callback functions
 
-Callback functions STATUS, ERROR, COMPLETE and `cdr's in element of
+Callback functions STATUS, ERROR, COMPLETE and `cdr\\='s in element of
 the alist STATUS-CODE take same keyword arguments listed below.  For
 forward compatibility, these functions must ignore unused keyword
-arguments (i.e., it's better to use `&allow-other-keys' [#]_).::
+arguments (i.e., it\\='s better to use `&allow-other-keys\\=' [#]_).::
 
     (CALLBACK                      ; SUCCESS/ERROR/COMPLETE/STATUS-CODE
      :data          data           ; whatever PARSER function returns, or nil
@@ -375,25 +376,25 @@ arguments (i.e., it's better to use `&allow-other-keys' [#]_).::
      :response      response       ; request-response object
      ...)
 
-.. [#] `&allow-other-keys' is a special \"markers\" available in macros
-   in the CL library for function definition such as `cl-defun' and
-   `cl-function'.  Without this marker, you need to specify all arguments
+.. [#] `&allow-other-keys\\=' is a special \"markers\" available in macros
+   in the CL library for function definition such as `cl-defun\\=' and
+   `cl-function\\='.  Without this marker, you need to specify all arguments
    to be passed.  This becomes problem when request.el adds new arguments
-   when calling callback functions.  If you use `&allow-other-keys'
+   when calling callback functions.  If you use `&allow-other-keys\\='
    (or manually ignore other arguments), your code is free from this
-   problem.  See info node `(cl) Argument Lists' for more information.
+   problem.  See info node `(cl) Argument Lists\\=' for more information.
 
 Arguments data, error-thrown, symbol-status can be accessed by
-`request-response-data', `request-response-error-thrown',
-`request-response-symbol-status' accessors, i.e.::
+`request-response-data\\=', `request-response-error-thrown\\=',
+`request-response-symbol-status\\=' accessors, i.e.::
 
     (request-response-data RESPONSE)  ; same as data
 
 Response object holds other information which can be accessed by
 the following accessors:
-`request-response-status-code',
-`request-response-url' and
-`request-response-settings'
+`request-response-status-code\\=',
+`request-response-url\\=' and
+`request-response-settings\\='
 
 * STATUS-CODE callback
 
@@ -443,15 +444,15 @@ PARSER function takes no argument and it is executed in the
 buffer with HTTP response body.  The current position in the HTTP
 response buffer is at the beginning of the buffer.  As the HTTP
 header is stripped off, the cursor is actually at the beginning
-of the response body.  So, for example, you can pass `json-read'
+of the response body.  So, for example, you can pass `json-read\\='
 to parse JSON object in the buffer.  To fetch whole response as a
-string, pass `buffer-string'.
+string, pass `buffer-string\\='.
 
-When using `json-read', it is useful to know that the returned
-type can be modified by `json-object-type', `json-array-type',
-`json-key-type', `json-false' and `json-null'.  See docstring of
+When using `json-read\\=', it is useful to know that the returned
+type can be modified by `json-object-type\\=', `json-array-type\\=',
+`json-key-type\\=', `json-false\\=' and `json-null\\='.  See docstring of
 each function for what it does.  For example, to convert JSON
-objects to plist instead of alist, wrap `json-read' by `lambda'
+objects to plist instead of alist, wrap `json-read\\=' by `lambda\\='
 like this.::
 
     (request
@@ -461,29 +462,29 @@ like this.::
                  (json-read)))
      ...)
 
-This is analogous to the `dataType' argument of jQuery.ajax_.
+This is analogous to the `dataType\\=' argument of jQuery.ajax_.
 Only this function can access to the process buffer, which
 is killed immediately after the execution of this function.
 
 * SYNC
 
-Synchronous request is functional, but *please* don't use it
+Synchronous request is functional, but *please* don\\='t use it
 other than testing or debugging.  Emacs users have better things
 to do rather than waiting for HTTP request.  If you want a better
-way to write callback chains, use `request-deferred'.
+way to write callback chains, use `request-deferred\\='.
 
-If you can't avoid using it (e.g., you are inside of some hook
+If you can\\='t avoid using it (e.g., you are inside of some hook
 which must return some value), make sure to set TIMEOUT to
 relatively small value.
 
-Due to limitation of `url-retrieve-synchronously', response slots
-`request-response-error-thrown', `request-response-history' and
-`request-response-url' are unknown (always nil) when using
-synchronous request with `url-retrieve' backend.
+Due to limitation of `url-retrieve-synchronously\\=', response slots
+`request-response-error-thrown\\=', `request-response-history\\=' and
+`request-response-url\\=' are unknown (always nil) when using
+synchronous request with `url-retrieve\\=' backend.
 
 * Note
 
-API of `request' is somewhat mixture of jQuery.ajax_ (Javascript)
+API of `request\\=' is somewhat mixture of jQuery.ajax_ (Javascript)
 and requests.request_ (Python).
 
 .. _jQuery.ajax: https://api.jquery.com/jQuery.ajax/
@@ -499,9 +500,8 @@ and requests.request_ (Python).
                      "request-default-error-callback: %s %s"
                      url symbol-status))))
     (setq settings (plist-put settings :error error)))
-  (unless (or (stringp data)
-              (null data)
-              (assoc-string "Content-Type" headers t))
+  (when (and (consp data)
+             (not (assoc-string "Content-Type" headers t)))
     (setq data (request--urlencode-alist data))
     (setq settings (plist-put settings :data data)))
   (when params
@@ -555,6 +555,7 @@ and requests.request_ (Python).
                        (buffer-substring (point-min) (min (1+ (point)) (point-max))))
           (delete-region (point-min) (min (1+ (point)) (point-max))))))))
 
+;;;###autoload
 (defun request-untrampify-filename (file)
   "Return FILE as the local file name."
   (or (file-remote-p file 'localname) file))
@@ -670,6 +671,7 @@ RESPONSE via ENCODING."
                  (request-response-settings response))
           (setq done-p t))))))
 
+;;;###autoload
 (defun request-abort (response)
   "Abort request for RESPONSE (the object returned by `request').
 Note that this function invoke ERROR and COMPLETE callbacks.
@@ -816,12 +818,12 @@ Currently it is used only for testing.")
         (call-process request-curl nil t nil "--version")
         (let ((version
                (progn
-                 (setf (point) (point-min))
+                 (goto-char (point-min))
                  (when (re-search-forward "[.0-9]+" nil t)
                    (match-string 0))))
               (compression
                (progn
-                 (setf (point) (point-min))
+                 (goto-char (point-min))
                  (not (null (re-search-forward "libz\\>" nil t))))))
           (setf (gethash request-curl request--curl-capabilities-cache)
                 `(:version ,version :compression ,compression)))))))
@@ -897,24 +899,27 @@ BUG: Simultaneous requests are a known cause of cookie-jar corruption."
             for (name . item) in files
             collect "--form"
             collect
-            (apply #'format "%s=@%s;filename=%s%s"
+            (apply #'format "%s=%s%s;filename=%s%s"
                    (cond ((stringp item)
-                          (list name item (file-name-nondirectory item) ""))
+                          (list name "@" item (file-name-nondirectory item) ""))
                          ((bufferp item)
                           (if stdin-p
                               (error (concat "request--curl-command-args: "
                                              "only one buffer or data entry permitted"))
                             (setq stdin-p t))
-                          (list name "-" (buffer-name item) ""))
+                          (list name "@" "-" (buffer-name item) ""))
                          ((listp item)
                           (unless (plist-get (cdr item) :file)
                             (if stdin-p
                                 (error (concat "request--curl-command-args: "
                                                "only one buffer or data entry permitted"))
                               (setq stdin-p t)))
-                          (list name (or (plist-get (cdr item) :file) "-") (car item)
-                                (if (plist-get item :mime-type)
-                                    (format ";type=%s" (plist-get item :mime-type))
+                          (list name
+                                (if (plist-get (cdr item) :use-contents) "<" "@")
+                                (or (plist-get (cdr item) :file) "-")
+                                (car item)
+                                (if (plist-get (cdr item) :mime-type)
+                                    (format ";type=%s" (plist-get (cdr item) :mime-type))
                                   "")))
                          (t (error (concat "request--curl-command-args: "
                                            "%S not string, buffer, or list")
@@ -946,9 +951,12 @@ posting fields, FILES containing one or more lists of the form
   (NAME . BUFFER)
   (NAME . (FILENAME :buffer BUFFER))
   (NAME . (FILENAME :data DATA))
+  (NAME . (FILENAME :file FILE :use-contents t))
 with NAME and FILENAME defined by curl(1)'s overwrought `--form` switch format,
 TIMEOUT in seconds, RESPONSE a mandatory struct, ENCODING, and SEMAPHORE,
-an internal semaphore.
+an internal semaphore.  Adding `:use-contents t` sends a text field
+with the file's contents as opposed to attaching a file as described
+in curl(1).
 
 Redirection handling strategy
 -----------------------------
@@ -1059,7 +1067,7 @@ See \"set-cookie-av\" in https://www.ietf.org/rfc/rfc2965.txt")
 
 (defun request--consume-200-connection-established ()
   "Remove \"HTTP/* 200 Connection established\" header at the point."
-  (when (looking-at-p "HTTP/1\\.[0-1] 200 Connection established")
+  (when (looking-at-p "HTTP/1\\.[0-1] 200 Connect")
     (delete-region (point) (progn (request--goto-next-body) (point)))))
 
 (defun request--curl-preprocess (&optional url)
@@ -1147,33 +1155,9 @@ See info entries on sentinels regarding PROC and EVENT."
               (or error (and (numberp code) (>= code 400) `(error . (http ,code)))))
         (apply #'request--callback buffer settings))))))
 
-(defun request-auto-revert-notify-rm-watch ()
-  "Backport of M. Engdegard's fix of `auto-revert-notify-rm-watch'."
-  (let ((desc auto-revert-notify-watch-descriptor)
-        (table (if (boundp 'auto-revert--buffers-by-watch-descriptor)
-                   auto-revert--buffers-by-watch-descriptor
-                 (when (boundp 'auto-revert-notify-watch-descriptor-hash-list)
-                   auto-revert-notify-watch-descriptor-hash-list))))
-    (when (and desc table)
-      (let ((buffers (delq (current-buffer) (gethash desc table))))
-        (if buffers
-            (puthash desc buffers table)
-          (remhash desc table)))
-      (condition-case nil ;; ignore-errors doesn't work for me, sorry
-	  (file-notify-rm-watch desc)
-        (error))
-      (remove-hook 'kill-buffer-hook #'auto-revert-notify-rm-watch t)))
-  (setq auto-revert-notify-watch-descriptor nil
-	auto-revert-notify-modified-p nil))
-
 (cl-defun request--curl-sync (url &rest settings &key response &allow-other-keys)
   "Internal synchronous curl call to URL with SETTINGS bespeaking RESPONSE."
   (let (finished)
-    (auto-revert-set-timer)
-    (when auto-revert-use-notify
-      (dolist (buf (buffer-list))
-        (with-current-buffer buf
-          (request-auto-revert-notify-rm-watch))))
     (prog1 (apply #'request--curl url
                   :semaphore (lambda (&rest _) (setq finished t))
                   settings)

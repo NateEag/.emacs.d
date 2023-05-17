@@ -1,8 +1,11 @@
-(define-package "prettier" "20211018.955" "Code formatting with Prettier"
+(define-package "prettier" "20230515.2017" "Code formatting with Prettier"
   '((emacs "26.1")
     (iter2 "0.9")
-    (nvm "0.2"))
-  :commit "485417c0677255249e944b1174225547e4c61c00" :authors
+    (nvm "0.2")
+    (editorconfig "0.8"))
+  :commit "1d9d789d91651a8773c7a3a688ec0cf3635fa94e" :authors
+  '(("Julian Scheid" . "julians37@gmail.com"))
+  :maintainers
   '(("Julian Scheid" . "julians37@gmail.com"))
   :maintainer
   '("Julian Scheid" . "julians37@gmail.com")

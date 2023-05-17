@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009, 2011-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2023  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20220710
+;; Version: 20230408
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 
@@ -2339,7 +2339,7 @@ If any given node in NODES is nil, doesn't record that link."
   top)          ; top-level `js2-scope' (script/function)
 
 (js2--struct-put 'js2-scope 'js2-visitor 'js2-visit-block)
-(js2--struct-put 'js2-scope 'js2-printer 'js2-print-none)
+(js2--struct-put 'js2-scope 'js2-printer 'js2-print-block)
 
 (defun js2-node-get-enclosing-scope (node)
   "Return the innermost `js2-scope' node surrounding NODE.
@@ -6341,15 +6341,16 @@ its relevant fields and puts it into `js2-ti-tokens'."
     (catch 'break
       (while (/= c quote-char)
         (catch 'continue
-          (when (eq c js2-EOF_CHAR)
+          (cond
+           ((eq c js2-EOF_CHAR)
             (js2-unget-char)
             (js2-report-error "msg.unterminated.string.lit")
             (throw 'break nil))
-          (when (and (eq c ?\n) (not (eq quote-char ?`)))
+           ((and (eq c ?\n) (not (eq quote-char ?`)))
             (js2-unget-char)
             (js2-report-error "msg.unterminated.string.lit")
             (throw 'break nil))
-          (when (eq c ?\\)
+           ((eq c ?\\)
             ;; We've hit an escaped character
             (setq c (js2-get-char))
             (cl-case c
@@ -6427,10 +6428,10 @@ its relevant fields and puts it into `js2-ti-tokens'."
                            c (js2-get-char))))
                  (js2-unget-char)
                  (setq c val)))))
-          (when (and (eq quote-char ?`) (eq c ?$))
+           ((and (eq quote-char ?`) (eq c ?$))
             (when (eq (setq nc (js2-get-char)) ?\{)
               (throw 'break nil))
-            (js2-unget-char))
+            (js2-unget-char)))
           (js2-add-to-string c)
           (setq c (js2-get-char)))))
     (js2-set-string-from-buffer token)
@@ -8063,7 +8064,7 @@ string is NAME.  Returns nil and keeps current token otherwise."
                nil)
            ;; The parse was successful, so process and return the "await".
            (js2-record-face 'font-lock-keyword-face current-token)
-           (unless (js2-inside-async-function)
+           (unless (or (js2-inside-async-function) (equal js2-nesting-of-function 0))
              (js2-report-error "msg.bad.await" nil
                                beg (- end beg)))
            pn))))
@@ -11145,6 +11146,10 @@ expression)."
        ((and class-p
              (= tt js2-SEMI))
         nil)
+       ((and class-p
+             (eq tt js2-LC))
+        (setq after-comma nil
+              elem (js2-parse-block)))
        (t
         (js2-report-error "msg.bad.prop")
         (unless js2-recover-from-parse-errors

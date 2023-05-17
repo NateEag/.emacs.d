@@ -1,4 +1,4 @@
-;;; format-all-autoloads.el --- automatically extracted autoloads
+;;; format-all-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -50,6 +50,9 @@ The PROMPT argument works as for `format-all-buffer'.
 
 \(fn START END &optional PROMPT)" t nil)
 
+(autoload 'format-all-ensure-formatter "format-all" "\
+Ensure current buffer has a formatter, using default if not." t nil)
+
 (autoload 'format-all-mode "format-all" "\
 Toggle automatic source code formatting before save.
 
@@ -74,7 +77,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cabal-fmt" "cmake-format" "crystal" "dart" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-" "fantomas" "fish-indent" "fprettify" "gawk" "gleam" "hindent" "html-tidy" "isort" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nginxfmt" "nix" "ocp-indent" "ormolu" "perltidy" "pgformatter" "prettier" "pur" "raco-fmt" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "terraform-fmt" "ts-standard" "v-fmt" "yapf" "zprint")))
+(register-definition-prefixes "format-all" '("alejandra" "atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cmake-format" "crystal" "csharpier" "dart" "dfmt" "dhall" "dockfmt" "efmt" "elm-format" "emacs-" "erb-format" "fantomas" "fish-indent" "fprettify" "gawk" "gleam" "hindent" "html-tidy" "isort" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nginxfmt" "nix" "ormolu" "perltidy" "pgformatter" "prettier" "pur" "raco-fmt" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "taplo-fmt" "terraform-fmt" "ts-standard" "v-fmt" "verible" "yapf" "zig" "zprint"))
 
 ;;;***
 

@@ -18,8 +18,8 @@
 ;; Authors: Sebastian Sturm
 ;;          Oliver Rausch
 ;; Keywords: languages, debug
-;; Package-Version: 20210904.2043
-;; Package-Commit: 3e87441a625d65ced5a208a0b0442d573596ffa3
+;; Package-Version: 20220831.1823
+;; Package-Commit: 9ecf4dd9b1207109802bd1882aa621eb1c385106
 ;; URL: https://github.com/emacs-lsp/lsp-ivy
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
 ;; Version: 0.5
@@ -164,37 +164,42 @@ textual representation with the original candidate as property."
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (let* ((non-essential t)
-         (prev-query nil)
-         (unfiltered-candidates '())
-         (workspace-root (lsp-workspace-root)))
-    (ivy-read
-     prompt
-     (lambda (user-input)
-       (let* ((parts (split-string user-input))
-              (query (or (car parts) ""))
-              (filter-regexps? (mapcar #'regexp-quote (cdr parts))))
-         (unless (string-equal prev-query query)
-           (setq unfiltered-candidates
-                 (with-lsp-workspaces workspaces
-                   (lsp-request-while-no-input
-                    "workspace/symbol"
-                    (lsp-make-workspace-symbol-params :query query)))))
-         (setq prev-query query)
-         (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
-                 unfiltered-candidates)))
-     :dynamic-collection t
-     :require-match t
-     :initial-input initial-input
-     :action #'lsp-ivy--workspace-symbol-action
-     :caller 'lsp-ivy-workspace-symbol)))
+  (if workspaces
+      (with-lsp-workspaces workspaces
+        (let* ((non-essential t)
+               (prev-query nil)
+               (unfiltered-candidates '())
+               (workspace-root (lsp-workspace-root)))
+          (ivy-read
+           prompt
+           (lambda (user-input)
+             (let* ((parts (split-string user-input))
+                    (query (or (car parts) ""))
+                    (filter-regexps? (mapcar #'regexp-quote (cdr parts))))
+               (unless (string-equal prev-query query)
+                 (setq unfiltered-candidates
+                       (with-lsp-workspaces workspaces
+                         (lsp-request-while-no-input
+                          "workspace/symbol"
+                          (lsp-make-workspace-symbol-params :query query)))))
+               (setq prev-query query)
+               (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
+                       unfiltered-candidates)))
+           :dynamic-collection t
+           :require-match t
+           :initial-input initial-input
+           :action #'lsp-ivy--workspace-symbol-action
+           :caller 'lsp-ivy-workspace-symbol)))
+    (user-error "No LSP workspace active")))
 
 ;;;###autoload
 (defun lsp-ivy-workspace-symbol (arg)
   "`ivy' for lsp workspace/symbol.
 When called with prefix ARG the default selection will be symbol at point."
   (interactive "P")
-  (lsp-ivy--workspace-symbol (lsp-workspaces)
+  (lsp-ivy--workspace-symbol (or (lsp-workspaces)
+                                 (gethash (lsp-workspace-root default-directory)
+                                          (lsp-session-folder->servers (lsp-session))))
                              "Workspace symbol: "
                              (when arg (thing-at-point 'symbol))))
 

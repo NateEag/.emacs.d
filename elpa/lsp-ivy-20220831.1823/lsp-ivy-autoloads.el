@@ -1,4 +1,4 @@
-;;; lsp-ivy-autoloads.el --- automatically extracted autoloads
+;;; lsp-ivy-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -24,7 +24,7 @@ When called with prefix ARG the default selection will be symbol at point.
 (autoload 'lsp-ivy-workspace-folders-remove "lsp-ivy" "\
 Remove a project-root from the list of workspace folders." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ivy" '("lsp-ivy-")))
+(register-definition-prefixes "lsp-ivy" '("lsp-ivy-"))
 
 ;;;***
 

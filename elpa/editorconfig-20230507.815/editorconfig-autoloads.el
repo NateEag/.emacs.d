@@ -1,4 +1,4 @@
-;;; editorconfig-autoloads.el --- automatically extracted autoloads
+;;; editorconfig-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -29,10 +29,19 @@ or call the function `editorconfig-mode'.")
 (autoload 'editorconfig-mode "editorconfig" "\
 Toggle EditorConfig feature.
 
-If called interactively, enable Editorconfig mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Editorconfig mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='editorconfig-mode)'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 To disable EditorConfig in some buffers, modify
 `editorconfig-exclude-modes' or `editorconfig-exclude-regexps'.
@@ -58,7 +67,7 @@ version in the echo area and the messages buffer.
 
 \(fn &optional SHOW-VERSION)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "editorconfig" '("editorconfig-")))
+(register-definition-prefixes "editorconfig" '("editorconfig-"))
 
 ;;;***
 
@@ -73,7 +82,7 @@ Major mode for editing .editorconfig files.
 
 (add-to-list 'auto-mode-alist '("\\.editorconfig\\'" . editorconfig-conf-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "editorconfig-conf-mode" '("editorconfig-conf-mode-")))
+(register-definition-prefixes "editorconfig-conf-mode" '("editorconfig-conf-mode-"))
 
 ;;;***
 
@@ -92,8 +101,8 @@ If FILE is not given, use currently visiting file.
 Give CONFNAME for basename of config file other than .editorconfig.
 If need to specify config format version, give CONFVERSION.
 
-This functions returns alist of properties.  Each element will look like
-'(KEY . VALUE) .
+This function returns an alist of properties.  Each element will
+look like (KEY . VALUE).
 
 \(fn &optional FILE CONFNAME CONFVERSION)" nil nil)
 
@@ -108,7 +117,7 @@ hash object instead.
 
 \(fn &optional FILE CONFNAME CONFVERSION)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "editorconfig-core" '("editorconfig-core--")))
+(register-definition-prefixes "editorconfig-core" '("editorconfig-core--"))
 
 ;;;***
 
@@ -116,7 +125,7 @@ hash object instead.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from editorconfig-core-handle.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "editorconfig-core-handle" '("editorconfig-core-handle")))
+(register-definition-prefixes "editorconfig-core-handle" '("editorconfig-core-handle"))
 
 ;;;***
 
@@ -142,7 +151,7 @@ be used:
 
 \(fn STRING PATTERN)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "editorconfig-fnmatch" '("editorconfig-fnmatch-")))
+(register-definition-prefixes "editorconfig-fnmatch" '("editorconfig-fnmatch-"))
 
 ;;;***
 

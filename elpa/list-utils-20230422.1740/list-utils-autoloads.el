@@ -1,4 +1,4 @@
-;;; list-utils-autoloads.el --- automatically extracted autoloads
+;;; list-utils-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -11,7 +11,7 @@
 
 (let ((loads (get 'list-utils 'custom-loads))) (if (member '"list-utils" loads) nil (put 'list-utils 'custom-loads (cons '"list-utils" loads))))
 
-(require 'cl)
+(require 'cl-macs)
 
 (cl-defstruct tconc head tail)
 
@@ -51,7 +51,7 @@ elements, eg
 
     '(1 2 3 4 . 5)
 
-Such improper lists are produced by `list*'.
+Such improper lists are produced by `cl-list*'.
 
 \(fn CELL)" nil nil)
 
@@ -64,7 +64,7 @@ copies of any improper lists contained within.
 Optional RECUR-INTERNAL is for internal use only.
 
 Improper lists consist of proper lists consed to a final
-element, and are produced by `list*'.
+element, and are produced by `cl-list*'.
 
 \(fn LIST &optional TREE RECUR-INTERNAL)" nil nil)
 
@@ -72,7 +72,7 @@ element, and are produced by `list*'.
 Make a cons cell or improper LIST into a proper list.
 
 Improper lists consist of proper lists consed to a final
-element, and are produced by `list*'.
+element, and are produced by `cl-list*'.
 
 If optional TREE is non-nil, traverse LIST, making any
 improper lists contained within into proper lists.
@@ -87,7 +87,7 @@ Modifies LIST and returns the modified value.
 Copy a proper LIST into an improper list.
 
 Improper lists consist of proper lists consed to a final
-element, and are produced by `list*'.
+element, and are produced by `cl-list*'.
 
 If optional TREE is non-nil, traverse LIST, making proper
 copies of any improper lists contained within.
@@ -100,7 +100,7 @@ Optional RECUR-INTERNAL is for internal use only.
 Make proper LIST into an improper list.
 
 Improper lists consist of proper lists consed to a final
-element, and are produced by `list*'.
+element, and are produced by `cl-list*'.
 
 If optional TREE is non-nil, traverse LIST, making any
 proper lists contained within into improper lists.
@@ -482,7 +482,7 @@ This functionality overlaps with the undocumented `cl-do-remf'.
 
 \(fn PLIST PROP)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "list-utils" '("list-utils-htt-")))
+(register-definition-prefixes "list-utils" '("list-utils-htt-"))
 
 ;;;***
 

@@ -1,16 +1,15 @@
 ;;; goto-line-preview.el --- Preview line when executing `goto-line` command    -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh
+;; Copyright (C) 2019-2023  Shen, Jen-Chieh
 ;; Created date 2019-03-01 14:53:00
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Preview line when executing `goto-line` command.
-;; Keyword: line navigation
+;; URL: https://github.com/emacs-vs/goto-line-preview
+;; Package-Version: 20230111.1531
+;; Package-Commit: c6db484cf401351f7f2f57496b0466b774435947
 ;; Version: 0.1.1
-;; Package-Version: 20210323.422
-;; Package-Commit: c83688ea95b4308145555fea50e953a26d67b1b2
 ;; Package-Requires: ((emacs "25"))
-;; URL: https://github.com/jcs-elpa/goto-line-preview
+;; Keywords: convenience line navigation
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -39,7 +38,7 @@
   :prefix "goto-line-preview-"
   :group 'convenience
   :group 'tools
-  :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/goto-line-preview"))
+  :link '(url-link :tag "Repository" "https://github.com/emacs-vs/goto-line-preview"))
 
 (defcustom goto-line-preview-before-hook nil
   "Hooks run before `goto-line-preview' is run."
@@ -90,9 +89,14 @@
         jumped)
     (run-hooks 'goto-line-preview-before-hook)
     (unwind-protect
-        (setq jumped (read-number (if goto-line-preview--relative-p
-                                      "Goto line relative: "
-                                    "Goto line: ")))
+        (setq jumped (read-number
+		      (let ((lines (line-number-at-pos (point-max))))
+			(format (if goto-line-preview--relative-p
+				    "[%d] Goto line relative: (%d to %d) "
+				  "[%d] Goto line: (%d to %d) ")
+				goto-line-preview--prev-line-num
+				(max 0 (min 1 lines))
+				lines))))
       (if jumped
           (with-current-buffer (window-buffer goto-line-preview--prev-window)
             (unless (region-active-p) (push-mark window-point)))

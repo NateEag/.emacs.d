@@ -1,4 +1,4 @@
-;;; goto-line-preview-autoloads.el --- automatically extracted autoloads
+;;; goto-line-preview-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -18,7 +18,7 @@ Preview goto line relative." t nil)
 
 (define-obsolete-function-alias 'goto-line-preview-goto-line 'goto-line-preview "0.1.1")
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "goto-line-preview" '("goto-line-preview-")))
+(register-definition-prefixes "goto-line-preview" '("goto-line-preview-"))
 
 ;;;***
 

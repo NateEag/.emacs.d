@@ -1,4 +1,4 @@
-;;; pos-tip-autoloads.el --- automatically extracted autoloads
+;;; pos-tip-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "pos-tip" "pos-tip.el" (0 0 0 0))
 ;;; Generated autoloads from pos-tip.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pos-tip" '("pos-tip-")))
+(register-definition-prefixes "pos-tip" '("pos-tip-"))
 
 ;;;***
 

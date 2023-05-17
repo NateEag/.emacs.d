@@ -4,7 +4,7 @@
 
 ;; Author: Julien Danjou <julien@danjou.info>
 ;; Keywords: faces
-;; Version: 1.0.5
+;; Version: 1.0.6
 
 ;; This file is part of GNU Emacs.
 
@@ -45,9 +45,9 @@
 ;;; Hexadecimal colors
 
 (defvar rainbow-hexadecimal-colors-font-lock-keywords
-  '(("[^&]\\(#\\(?:[0-9a-fA-F]\\{3\\}\\)\\{1,4\\}\\)"
+  '(("[^&]\\(#\\(?:[0-9a-fA-F]\\{3\\}\\)\\{1,4\\}\\)\\b"
      (1 (rainbow-colorize-itself 1)))
-    ("^\\(#\\(?:[0-9a-fA-F]\\{3\\}\\)\\{1,4\\}\\)"
+    ("^\\(#\\(?:[0-9a-fA-F]\\{3\\}\\)\\{1,4\\}\\)\\b"
      (0 (rainbow-colorize-itself)))
     ("[Rr][Gg][Bb]:[0-9a-fA-F]\\{1,4\\}/[0-9a-fA-F]\\{1,4\\}/[0-9a-fA-F]\\{1,4\\}"
      (0 (rainbow-colorize-itself)))
@@ -1209,167 +1209,6 @@ This will fontify with colors the string like \"#aabbcc\" or \"blue\"."
   ;; Call `font-lock-mode' to refresh the buffer when used
   ;; e.g. interactively.
   (font-lock-mode 1))
-
-;;;; ChangeLog:
-
-;; 2020-07-28  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	fix(rainbow_mode): remove spurious + in regex
-;; 
-;; 	Thanks Peder Stray for the report and suggestion.
-;; 
-;; 2020-03-30  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	fix(rainbow-mode): fix typo in docstring
-;; 
-;; 	Thanks Bauke Jan Douma <bjdouma@xs4all.nl>
-;; 
-;; 2019-12-23  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	Release rainbow-mode 1.0.3
-;; 
-;; 	* Use cl-lib instead of cl
-;; 
-;; 	  As of Emacs 27.1 `cl' is officially deprecated.
-;; 
-;; 	  `cl' was only required for `multiple-value-bind' and using that was
-;; 	 conceptually wrong to begin with: `color-hsl-to-rgb' does NOT return
-;; 	three
-;; 	 values; it returns one value which happens to consist of three
-;; 	components and
-;; 	 any one of these components by itself is meaningless. Now we use
-;; 	 `cl-destructuring-bind', which does not have the same connotation.
-;; 
-;; 	* rainbow-keywords-hook: New hook run by rainbow-mode
-;; 
-;; 	* rainbow-mode: Remove unnecessary progn
-;; 	 Also improve a contained comment.
-;; 
-;; 	Thanks Jonas Bernoulli <jonas@bernoul.li>
-;; 
-;; 2019-11-25  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	Release rainbow-mode 1.0.2
-;; 
-;; 2019-11-25  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	Fix a off-by-one error and some wording in rainbow-mode
-;; 
-;; 	* packages/rainbow-mode/rainbow-mode.el (rainbow-color-luminance): Fix a 
-;; 	off-by-one error and wording.
-;; 	(rainbow-x-color-luminance): Fix wording.
-;; 
-;; 	Thanks Peder Stray.
-;; 
-;; 2018-05-21  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	* rainbow-mode/rainbow-mode.el: do not fail if face-property is a symbol
-;; 
-;; 	It turns out there are cases when `face-property' can be just a symbol
-;; 	and we need to protect our selves from that, i.e. `car' should not fail.
-;; 	Hence,
-;; 	`car-safe' is there and if it's `nil', then fall back to `face-property'
-;; 	as is.
-;; 
-;; 	See https://github.com/tarsius/hl-todo/issues/17
-;; 
-;; 2018-03-26  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: release 1.0
-;; 
-;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;; 
-;; 	Allow outline-minor-mode to find section headings
-;; 
-;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;; 
-;; 	Set type of customizable options
-;; 
-;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;; 
-;; 	Enforce use of spaces for indentation
-;; 
-;; 	Also untabify some code added by a contributor who, unlike you, has not
-;; 	globally set `indent-tabs-mode' to nil.
-;; 
-;; 2017-05-29  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	Fix `rainbow-color-luminance' docstring
-;; 
-;; 2015-10-12  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow: add font-lock at the end
-;; 
-;; 	See https://github.com/fxbois/web-mode/issues/612
-;; 
-;; 2015-03-06  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow: fix font-lock-mode refresh
-;; 
-;; 2014-10-15  Stefan Monnier  <monnier@iro.umontreal.ca>
-;; 
-;; 	* packages/rainbow-mode/rainbow-mode.el (ansi-color-context)
-;; 	(xterm-color-current): Declare.
-;; 
-;; 2014-09-07  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: support float in CSS and limit to 100%
-;; 
-;; 2013-08-05  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: 0.9, allow spaces in LaTeX colors
-;; 
-;; 2013-05-03  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: add support for R, bump version to 0.8
-;; 
-;; 	Signed-off-by: Julien Danjou <julien@danjou.info>
-;; 
-;; 2013-02-26  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: version 0.7
-;; 
-;; 	* rainbow-mode.el: don't activate font-lock-mode
-;; 
-;; 2012-12-11  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	* rainbow-mode: update to 0.6, add support for ANSI coloring
-;; 
-;; 2012-11-26  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: fix some LaTex docstrings
-;; 
-;; 2012-11-14  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: version 0.5
-;; 
-;; 	* rainbow-mode.el: fix syntax error on
-;; 	 `rainbow-hexadecimal-colors-font-lock-keywords'.
-;; 
-;; 2012-11-09  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode: version 0.4
-;; 
-;; 	* rainbow-mode.el: Use functions from color package to colorize HSL
-;; 	rather
-;; 	 than our own copy.
-;; 
-;; 2012-11-09  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	rainbow-mode 0.3
-;; 
-;; 	* rainbow-mode.el: avoid colorizing HTML entities
-;; 
-;; 2011-09-23  Julien Danjou  <julien@danjou.info>
-;; 
-;; 	Update rainbow-mode to version 0.2
-;; 
-;; 2011-07-01  Chong Yidong  <cyd@stupidchicken.com>
-;; 
-;; 	Give every package its own directory in packages/ including single-file
-;; 	packages.
-;; 
-
 
 (provide 'rainbow-mode)
 

@@ -1,15 +1,15 @@
 ;;; flymake-phpstan.el --- Flymake backend for PHP using PHPStan  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  Friends of Emacs-PHP development
+;; Copyright (C) 2023  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 31 Mar 2020
-;; Version: 0.6.0
-;; Package-Version: 20210714.1805
-;; Package-Commit: 0869b152f82a76138daa53e953285936b9d558bd
+;; Version: 0.7.2
+;; Package-Version: 20230417.1142
+;; Package-Commit: 2dc25cb2f3d83484ea0eb063c9ffca8148828a2b
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
-;; Package-Requires: ((emacs "26.1") (phpstan "0.5.0"))
+;; Package-Requires: ((emacs "26.1") (phpstan "0.7.2"))
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify

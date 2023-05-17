@@ -1,4 +1,4 @@
-;;; flymake-phpstan-autoloads.el --- automatically extracted autoloads
+;;; flymake-phpstan-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -13,7 +13,7 @@
 (autoload 'flymake-phpstan-turn-on "flymake-phpstan" "\
 Enable `flymake-phpstan' as buffer-local Flymake backend." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flymake-phpstan" '("flymake-phpstan")))
+(register-definition-prefixes "flymake-phpstan" '("flymake-phpstan"))
 
 ;;;***
 

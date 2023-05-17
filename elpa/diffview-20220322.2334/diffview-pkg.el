@@ -1,2 +1,0 @@
-;;; Generated package description from diffview.el  -*- no-byte-compile: t -*-
-(define-package "diffview" "20220322.2334" "View diffs in side-by-side format" 'nil :commit "af2251a01f532efa819d236802cb3d942befe5a1" :authors '(("Mitchel Humpherys" . "mitch.special@gmail.com")) :maintainer '("Mitchel Humpherys" . "mitch.special@gmail.com") :keywords '("convenience" "diff") :url "https://github.com/mgalgs/diffview-mode")

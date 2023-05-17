@@ -2,8 +2,8 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.2.0
-;; Package-Version: 20220103.1342
-;; Package-Commit: d71ceb415732c3b76a2948147fa3559622aceba2
+;; Package-Version: 20220812.956
+;; Package-Commit: 268536f564b7eba99264a89a9149268eb4bc67ac
 ;; Package-Requires: ((emacs "25.1") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -16,12 +16,12 @@
 
 ;;; Commentary:
 
-;; direnv (https://direnv.net/) integration for emacs. see the readme
-;; at https://github.com/wbolster/emacs-direnv for details.
+;; direnv (https://direnv.net/) integration for Emacs.  See the readme at
+;; https://github.com/wbolster/emacs-direnv for details.
 ;;
 ;; quick usage instructions for those familiar with direnv:
 ;;
-;; - use ‘direnv-update-environment’ to manually update the emacs
+;; - use ‘direnv-update-environment’ to manually update the Emacs
 ;;   environment so that inferior shells, linters, compilers, and test
 ;;   runners start with the intended environmental variables.
 ;;
@@ -38,7 +38,7 @@
 (require 'subr-x)
 
 (defgroup direnv nil
-  "direnv integration for Emacs"
+  "`direnv' integration for Emacs."
   :group 'environment
   :prefix "direnv-")
 
@@ -108,7 +108,7 @@ use `default-directory', since there is no file name (or directory)."
   (unless direnv--executable
     (setq direnv--executable (direnv--detect)))
   (unless direnv--executable
-    (user-error "Could not find the direnv executable. Is ‘exec-path’ correct?"))
+    (user-error "Could not find the direnv executable.  Is ‘exec-path’ correct?"))
   (let ((environment process-environment)
         (stderr-tempfile (make-temp-file "direnv-stderr"))) ;; call-process needs a file for stderr output
     (unwind-protect
@@ -209,7 +209,7 @@ NEW-DIRECTORY, but OLD-DIRECTORY can be nil."
 (defun direnv--show-summary (summary old-directory new-directory)
   "Show a SUMMARY message.
 
-OLD-DIRECTORY and NEW-DIRECTORY are the directories before and afther
+OLD-DIRECTORY and NEW-DIRECTORY are the directories before and after
 the environment changes."
   (let ((summary
          (if (string-empty-p summary) "no changes" summary))
@@ -249,7 +249,8 @@ See `direnv-update-directory-environment' for FORCE-SUMMARY."
 (defun direnv-update-directory-environment (&optional directory force-summary)
   "Update the environment for DIRECTORY.
 
-When FORCE-SUMMARY is non-nil or when called interactively, show a summary message."
+When FORCE-SUMMARY is non-nil or when called interactively, show
+a summary message."
   (interactive)
   (let ((directory (or directory default-directory))
         (old-directory direnv--active-directory)
@@ -294,13 +295,26 @@ visited (local) file."
       (direnv--enable)
     (direnv--disable)))
 
+(defvar direnv-envrc-stdlib-functions
+  '("MANPATH_add" "PATH_add" "PATH_rm" "direnv_apply_dump" "direnv_layout_dir"
+    "direnv_load" "direnv_version" "dotenv" "dotenv_if_exists"
+    "env_vars_required" "expand_path" "fetchurl" "find_up" "has" "join_args"
+    "layout" "load_prefix" "log_error" "log_status" "on_git_branch" "path_add"
+    "path_rm" "rvm" "semver_search" "source_env" "source_env_if_exists"
+    "source_up" "source_up_if_exists" "source_url" "strict_env" "unstrict_env"
+    "use" "user_rel_path" "watch_dir" "watch_file")
+  "`direnv' stdlib functions.")
+
 ;;;###autoload
 (define-derived-mode direnv-envrc-mode
   sh-mode "envrc"
   "Major mode for .envrc files as used by direnv.
 
 Since .envrc files are shell scripts, this mode inherits from ‘sh-mode’.
-\\{direnv-envrc-mode-map}")
+\\{direnv-envrc-mode-map}"
+  (font-lock-add-keywords
+   nil `((,(regexp-opt direnv-envrc-stdlib-functions 'symbols)
+          (0 font-lock-keyword-face)))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.envrc\\'" . direnv-envrc-mode))

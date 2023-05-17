@@ -1,17 +1,17 @@
 ;;; git-gutter.el --- Port of Sublime Text plugin GitGutter -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016-2020 Syohei YOSHIDA <syohex@gmail.com>
-;; Copyright (C) 2020 Neil Okamoto <neil.okamoto+melpa@gmail.com>
-;; Copyright (C) 2020 Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2020-2022 Neil Okamoto <neil.okamoto+melpa@gmail.com>
+;; Copyright (C) 2020-2022 Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;;             Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacsorphanage/git-gutter
-;; Package-Version: 20211222.913
-;; Package-Commit: 9174c74cd607e297d7f14c0595d4c20ebb53847d
-;; Version: 0.91
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Version: 20220922.256
+;; Package-Commit: ec28e85d237065cb3c28db4b66d129da6d309f9c
+;; Version: 0.92
+;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -220,7 +220,7 @@ Can be a directory-local variable in your project.")
 (cl-defstruct git-gutter-hunk
   type content start-line end-line)
 
-(defvar git-gutter:enabled nil)
+(defvar-local git-gutter:enabled nil)
 (defvar git-gutter:diffinfos nil)
 (defvar git-gutter:has-indirect-buffers nil)
 (defvar git-gutter:real-this-command nil)
@@ -252,10 +252,11 @@ Argument TEST is the case before BODY execution."
 (defun git-gutter:in-git-repository-p ()
   (when (executable-find "git")
     (with-temp-buffer
-      (when (zerop (git-gutter:execute-command
-                    "git" t "rev-parse" "--is-inside-work-tree"))
-        (goto-char (point-min))
-        (looking-at-p "true")))))
+      (when-let ((exec-result (git-gutter:execute-command
+                               "git" t "rev-parse" "--is-inside-work-tree")))
+        (when (zerop exec-result)
+          (goto-char (point-min))
+          (looking-at-p "true"))))))
 
 (defun git-gutter:in-repository-common-p (cmd check-subcmd repodir)
   (and (executable-find cmd)
@@ -531,7 +532,7 @@ Argument TEST is the case before BODY execution."
          (git-gutter))
         ((memq git-gutter:real-this-command git-gutter:update-windows-commands)
          (git-gutter)
-         (unless global-linum-mode
+         (unless (bound-and-true-p global-linum-mode)
            (git-gutter:update-other-window-buffers (selected-window)
                                                    (current-buffer))))))
 
@@ -605,8 +606,6 @@ Argument TEST is the case before BODY execution."
           (progn
             (when git-gutter:init-function
               (funcall git-gutter:init-function))
-            (make-local-variable 'git-gutter:enabled)
-            (setq-local git-gutter:has-indirect-buffers nil)
             (make-local-variable 'git-gutter:diffinfos)
             ;;(setq-local git-gutter:start-revision nil)
             (add-hook 'kill-buffer-hook 'git-gutter:kill-buffer-hook nil t)
@@ -955,10 +954,23 @@ Argument TEST is the case before BODY execution."
         (git-gutter:start-diff-process (file-name-nondirectory file)
                                        (get-buffer-create proc-buf))))))
 
-(defun git-gutter:make-indirect-buffer (&rest _args)
-  (when (and git-gutter-mode (not (buffer-base-buffer)))
-    (setq git-gutter:has-indirect-buffers t)))
-(advice-add 'make-indirect-buffer :before #'git-gutter:make-indirect-buffer)
+(defun git-gutter:kill-indirect-buffer ()
+  (with-current-buffer (buffer-base-buffer)
+    (when git-gutter:has-indirect-buffers
+      (if (< 1 git-gutter:has-indirect-buffers)
+          (setq git-gutter:has-indirect-buffers (1- git-gutter:has-indirect-buffers))
+        (kill-local-variable 'git-gutter:has-indirect-buffers)))))
+
+(defun git-gutter:make-indirect-buffer (oldfun base-buffer &rest args)
+  (with-current-buffer (or (buffer-base-buffer (window-normalize-buffer base-buffer))
+                           base-buffer)
+    (if git-gutter:has-indirect-buffers
+        (setq git-gutter:has-indirect-buffers (1+ git-gutter:has-indirect-buffers))
+      (setq-local git-gutter:has-indirect-buffers 1))
+    (with-current-buffer (apply oldfun base-buffer args)
+      (add-hook 'kill-buffer-hook #'git-gutter:kill-indirect-buffer nil t)
+      (current-buffer))))
+(advice-add 'make-indirect-buffer :around #'git-gutter:make-indirect-buffer)
 
 (defun git-gutter:vc-revert (&rest _args)
   (when git-gutter-mode
@@ -1133,7 +1145,7 @@ start revision."
           (delete-file original))))))
 
 ;; for linum-user
-(when (and global-linum-mode (not (boundp 'git-gutter-fringe)))
+(when (and (bound-and-true-p global-linum-mode) (not (boundp 'git-gutter-fringe)))
   (git-gutter:linum-setup))
 
 (defun git-gutter:all-hunks ()

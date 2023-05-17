@@ -1,4 +1,4 @@
-;;; git-gutter-autoloads.el --- automatically extracted autoloads
+;;; git-gutter-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -15,10 +15,19 @@ Setup for linum-mode." nil nil)
 (autoload 'git-gutter-mode "git-gutter" "\
 Git-Gutter mode
 
-If called interactively, enable Git-Gutter mode if ARG is positive, and disable
-it if ARG is zero or negative.  If called from Lisp, also enable the mode if
-ARG is omitted or nil, and toggle it if ARG is `toggle'; disable the mode
-otherwise.
+This is a minor mode.  If called interactively, toggle the `Git-Gutter mode'
+mode.  If the prefix argument is positive, enable the mode, and if it is zero
+or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the mode if
+ARG is nil, omitted, or is a positive number.  Disable the mode if ARG is a
+negative number.
+
+To check whether the minor mode is enabled in the current buffer, evaluate
+`git-gutter-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -36,12 +45,15 @@ or call the function `global-git-gutter-mode'.")
 
 (autoload 'global-git-gutter-mode "git-gutter" "\
 Toggle Git-Gutter mode in all buffers.
-With prefix ARG, enable Global Git-Gutter mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Global Git-Gutter mode if ARG is positive; otherwise, disable
+it.
 
-Git-Gutter mode is enabled in all buffers where
-`git-gutter--turn-on' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Git-Gutter mode is enabled in all buffers where `git-gutter--turn-on' would do it.
+
 See `git-gutter-mode' for more information on Git-Gutter mode.
 
 \(fn &optional ARG)" t nil)
@@ -52,7 +64,7 @@ Show diff information in gutter" t nil)
 (autoload 'git-gutter:toggle "git-gutter" "\
 Toggle to show diff information." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-gutter" '("git-gutter")))
+(register-definition-prefixes "git-gutter" '("git-gutter"))
 
 ;;;***
 

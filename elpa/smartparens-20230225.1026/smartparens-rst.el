@@ -1,10 +1,10 @@
-;;; smartparens-racket.el --- Additional configuration for Racket based modes.  -*- lexical-binding: t; -*-
+;;; smartparens-rst.el --- Additional configuration for rst based modes.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015 Vikraman Choudhury
+;; Copyright (C) 2019-2020 Matus Goljer
 
-;; Author: Vikraman Choudhury <git@vikraman.org>
-;; Maintainer: Vikraman Choudhury <git@vikraman.org>
-;; Created: 26 Oct 2015
+;; Author: Matus Goljer <matus.goljer@gmail.com>
+;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
+;; Created: 28th January 2019
 ;; Keywords: abbrev convenience editing
 ;; URL: https://github.com/Fuco1/smartparens
 
@@ -29,10 +29,10 @@
 
 ;;; Commentary:
 
-;; This file provides some additional configuration for Racket based
+;; This file provides some additional configuration for rst based
 ;; modes.  To use it, simply add:
 ;;
-;; (require 'smartparens-racket)
+;; (require 'smartparens-rst)
 ;;
 ;; into your configuration.  You can use this in conjunction with the
 ;; default config or your own configuration.
@@ -46,11 +46,21 @@
 ;;; Code:
 
 (require 'smartparens)
+(require 'smartparens-text)
+(require 'smartparens-markdown)
 
-(sp-with-modes '(racket-mode racket-repl-mode)
-  (sp-local-pair "`" nil :actions nil)
-  (sp-local-pair "'" nil :actions nil)
-  (sp-local-pair "#|" "|#"))
+(defun sp-rst-point-after-backtick (_id action _context)
+  (when (eq action 'insert)
+    (sp--looking-back-p "`_")))
 
-(provide 'smartparens-racket)
-;;; smartparens-racket.el ends here
+(sp-with-modes 'rst-mode
+  (sp-local-pair "*" "*"
+                 :unless '(sp--gfm-point-after-word-p sp-point-at-bol-p)
+                 :post-handlers '(("[d1]" "SPC"))
+                 :skip-match 'sp--gfm-skip-asterisk)
+  (sp-local-pair "**" "**")
+  (sp-local-pair "_" "_" :unless '(sp-point-after-word-p sp-rst-point-after-backtick))
+  (sp-local-pair "``" "``"))
+
+(provide 'smartparens-rst)
+;;; smartparens-rst.el ends here

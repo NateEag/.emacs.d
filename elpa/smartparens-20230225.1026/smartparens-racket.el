@@ -1,10 +1,11 @@
-;;; smartparens-javascript.el --- Additional configuration for JavaScript based modes.  -*- lexical-binding: t; -*-
+;;; smartparens-racket.el --- Additional configuration for Racket based modes.  -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2017 Marinin Tim
-;; Author: Tim Marinin <mt@marinin.xyz>
-;; Maintainer: Tim Marinin <mt@marinin.xyz>
-;; Created: 2017-03-03
-;; Keywords: abbrev convenience editing javascript
+;; Copyright (C) 2015, 2018 Vikraman Choudhury
+
+;; Author: Vikraman Choudhury <git@vikraman.org>
+;; Maintainer: Vikraman Choudhury <git@vikraman.org>
+;; Created: 26 Oct 2015
+;; Keywords: abbrev convenience editing
 ;; URL: https://github.com/Fuco1/smartparens
 
 ;; This file is not part of GNU Emacs.
@@ -28,10 +29,10 @@
 
 ;;; Commentary:
 
-;; This file provides some additional configuration for JavaScript based
+;; This file provides some additional configuration for Racket based
 ;; modes.  To use it, simply add:
 ;;
-;; (require 'smartparens-javascript)
+;; (require 'smartparens-racket)
 ;;
 ;; into your configuration.  You can use this in conjunction with the
 ;; default config or your own configuration.
@@ -46,10 +47,10 @@
 
 (require 'smartparens)
 
-;; (|sys).path.append---the dot should not travel with the closing
-;; paren
-(--each '(js-mode javascript-mode js2-mode typescript-mode rjsx-mode)
-  (add-to-list 'sp-sexp-suffix (list it 'regexp "")))
+(sp-with-modes '(racket-mode racket-repl-mode)
+  (sp-local-pair "`" nil :actions nil)
+  (sp-local-pair "'" nil :actions nil)
+  (sp-local-pair "#|" "|#"))
 
-(provide 'smartparens-javascript)
-;;; smartparens-javascript.el ends here
+(provide 'smartparens-racket)
+;;; smartparens-racket.el ends here

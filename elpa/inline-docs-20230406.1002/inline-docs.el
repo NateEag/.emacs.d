@@ -2,8 +2,8 @@
 
 ;; Author: stardiviner <numbchild@gmail.com>
 ;; Keywords: inline docs overlay
-;; Package-Version: 20220210.1402
-;; Package-Commit: cda596d9ff4c2aa5035692a97c430f6589eafbb1
+;; Package-Version: 20230406.1002
+;; Package-Commit: 8eb1c43b53a7f51cf74cb85529d108b5ce5efff5
 ;; URL: https://repo.or.cz/inline-docs.git
 ;; Created: 20th Jan 2017
 ;; Version: 1.0.1
@@ -89,7 +89,7 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
 
 (defun inline-docs--string-display (string apply-face)
   "Show STRING contents below point line until next command with APPLY-FACE."
-  (let* ((border-line (make-string (window-body-width) inline-docs-border-symbol))
+  (let* ((border-line (make-string (- (window-body-width) 2) inline-docs-border-symbol))
          (offset (make-string
                   (if (= (current-indentation) 0) ; fix (wrong-type-argument wholenump -1) when current indentation is 0 minus 1 will caused wholenump exception.
                       (current-indentation)

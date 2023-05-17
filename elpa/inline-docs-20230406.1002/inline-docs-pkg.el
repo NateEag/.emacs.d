@@ -1,0 +1,2 @@
+;;; Generated package description from inline-docs.el  -*- no-byte-compile: t -*-
+(define-package "inline-docs" "20230406.1002" "Show inline contextual docs." '((emacs "24.3")) :commit "8eb1c43b53a7f51cf74cb85529d108b5ce5efff5" :authors '(("stardiviner" . "numbchild@gmail.com")) :maintainers '(("stardiviner" . "numbchild@gmail.com")) :maintainer '("stardiviner" . "numbchild@gmail.com") :keywords '("inline" "docs" "overlay") :url "https://repo.or.cz/inline-docs.git")

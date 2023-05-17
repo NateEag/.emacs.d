@@ -1,4 +1,4 @@
-;;; inline-docs-autoloads.el --- automatically extracted autoloads
+;;; inline-docs-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -16,7 +16,7 @@ Display inline docs FORMAT-STRING under point with extra ARGS.
 
 (defalias 'inline-docs 'inline-docs-display-docs-momentary)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inline-docs" '("inline-docs-")))
+(register-definition-prefixes "inline-docs" '("inline-docs-"))
 
 ;;;***
 

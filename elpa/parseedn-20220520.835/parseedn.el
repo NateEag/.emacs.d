@@ -4,8 +4,8 @@
 
 ;; Author: Arne Brasseur <arne@arnebrasseur.net>
 ;; Keywords: lisp clojure edn parser
-;; Package-Version: 20220207.1352
-;; Package-Commit: ea7b5281ec80aca0bd1cc93a348aebb302497339
+;; Package-Version: 20220520.835
+;; Package-Commit: a09686fbb9113b8b1b4f20c9e1dc0d6fea01a64f
 ;; Package-Requires: ((emacs "26") (parseclj "1.1.0") (map "2"))
 ;; Version: 1.1.0
 
@@ -158,16 +158,16 @@ TAG-READERS is an optional association list.  For more information, see
 
 (defun parseedn-print-seq (coll)
   "Insert sequence COLL as EDN into the current buffer."
-  (parseedn-print (elt coll 0))
-  (let ((next (seq-drop coll 1)))
-    (when (not (seq-empty-p next))
+  (when (not (seq-empty-p coll))
+    (while (not (seq-empty-p coll))
+      (parseedn-print (elt coll 0))
       (insert " ")
-      (parseedn-print-seq next))))
+      (setq coll (seq-drop coll 1)))
+    (delete-char -1)))
 
 (defun parseedn-print-hash-or-alist (map &optional ks)
   "Insert hash table MAP or elisp alist as an EDN map into the current buffer."
-  (let ((alist? (listp map))
-        (keys (or ks (map-keys map))))
+  (when-let ((keys (or ks (map-keys map))))
     (parseedn-print (car keys))
     (insert " ")
     (parseedn-print (map-elt map (car keys)))

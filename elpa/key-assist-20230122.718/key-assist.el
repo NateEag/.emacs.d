@@ -8,8 +8,8 @@
 ;; Homepage: https://github.com/Boruch-Baum/emacs-key-assist
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;; Keywords: abbrev convenience docs help
-;; Package-Version: 20210722.758
-;; Package-Commit: 8e5cd089e0b2fedec57c55eeff74cdb6121441aa
+;; Package-Version: 20230122.718
+;; Package-Commit: 41a958ca6b038586bfdcf01045bb8b9d379248fe
 ;; Package: key-assist
 ;; Version: 1.0
 ;; Package-Requires: ((emacs "24.3"))
@@ -327,6 +327,7 @@ internally for processing 'collection lists."
 ;;
 ;;; Interactive functions:
 
+;;;###autoload
 (defun key-assist (&optional spec prompt nosort)
   "Prompt to eval a locally relevant function, with hints and keybindings.
 Press TAB to see the hints.

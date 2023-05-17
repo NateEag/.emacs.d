@@ -1,13 +1,13 @@
 ;;; popup.el --- Visual Popup User Interface
 
 ;; Copyright (C) 2009-2015  Tomohiro Matsuyama
-;; Copyright (c) 2020-2022 Jen-Chieh Shen
+;; Copyright (c) 2020-2023 Jen-Chieh Shen
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Maintainer: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/auto-complete/popup-el
-;; Package-Version: 20211231.1823
-;; Package-Commit: ec3d3169a4d60b0374198580e31b6c59f51ab08a
+;; Package-Version: 20221231.1634
+;; Package-Commit: 71cede0588c10526f88dd0375bce776ec2eed05e
 ;; Keywords: lisp
 ;; Version: 0.5.9
 ;; Package-Requires: ((emacs "24.3"))
@@ -44,7 +44,7 @@
 ;;; Utilities
 
 (defun popup-calculate-max-width (max-width)
-  "Determines whether the width with MAX-WIDTH desired is character or window \
+  "Determines whether the width with MAX-WIDTH desired is character or window
 proportion based, And return the result."
   (cl-typecase max-width
     (integer max-width)
@@ -246,15 +246,15 @@ ITEM is not string."
 
 Optional argument REP is the replacement string of
 non-displayable character."
-  (unless rep (setq rep ""))
-  (let ((result ""))
+  (let ((rep (or rep ""))
+        (results (list)))
     (dolist (string (split-string str ""))
       (let* ((char (string-to-char string))
              (string (if (char-displayable-p char)
                          string
                        rep)))
-        (setq result (concat result string))))
-    result))
+        (push string results)))
+    (string-join (reverse results))))
 
 (cl-defun popup-make-item (name
                            &key

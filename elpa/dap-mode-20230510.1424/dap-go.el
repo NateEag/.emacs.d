@@ -55,10 +55,13 @@ Update `dap-go' using `C-u M-x dap-go-setup'")
   :group 'dap-go
   :type 'string)
 
-(dap-utils-vscode-setup-function "dap-go" "golang" "go" dap-go-debug-path "0.22.1")
+(dap-utils-vscode-setup-function "dap-go" "golang" "go" dap-go-debug-path "0.32.0")
 
 (defun dap-go--populate-default-args (conf)
   "Populate CONF with the default arguments."
+  (lwarn '(dap-go) :warning
+         "`dap-go' is deprecated. Use `dap-dlv-go' instead.
+ See https://emacs-lsp.github.io/dap-mode/page/configuration/#go")
   (setq conf (pcase (plist-get conf :mode)
                ("auto" (dap-go--populate-auto-args conf))
                ("debug" (dap--put-if-absent conf :program (f-dirname (buffer-file-name))))

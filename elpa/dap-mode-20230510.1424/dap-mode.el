@@ -18,7 +18,7 @@
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/dap-mode
-;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3"))
+;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3") (lsp-docker "1.0.0"))
 ;; Version: 0.7
 
 ;;; Commentary:
@@ -35,8 +35,10 @@
 (require 'ansi-color)
 (require 'posframe)
 (require 'ht)
+(require 'lsp-docker)
 
 (require 'dap-launch)
+(require 'dap-tasks)
 
 (defcustom dap-breakpoints-file (expand-file-name (locate-user-emacs-file ".dap-breakpoints"))
   "Where to persist breakpoints"
@@ -206,6 +208,12 @@ locations."
   :type 'hook
   :group 'dap-mode)
 
+(defcustom dap-stack-trace-limit 1000
+  "Number of stack frames to return in the automatic stack trace
+request on hitting a breakpoint. 0 means to return all frames."
+  :group 'dap-mode
+  :type 'number)
+
 (defvar dap--debug-providers (make-hash-table :test 'equal))
 
 (defcustom dap-debug-template-configurations nil
@@ -279,6 +287,9 @@ locations."
   (thread-stack-frames (make-hash-table :test 'eql) :read-only t)
   ;; the arguments that were used to start the debug session.
   (launch-args nil)
+  ;; path translation functions
+  (local-to-remote-path-fn nil)
+  (remote-to-local-path-fn nil)
   ;; Currently-available server capabilities
   (current-capabilities (make-hash-table :test 'equal))
   (error-message nil)
@@ -486,10 +497,11 @@ FILE-NAME is the filename in which the breakpoints have been udpated."
           (run-hooks 'dap-breakpoints-changed-hook))))
 
     ;; Update all of the active sessions with the list of breakpoints.
-    (let ((set-breakpoints-req (dap--set-breakpoints-request
-                                file-name
-                                updated-file-breakpoints)))
-      (mapc (lambda (session)
+    (mapc (lambda (session)
+            (let ((set-breakpoints-req (dap--set-breakpoints-request
+                                        session
+                                        file-name
+                                        updated-file-breakpoints)))
               (dap--send-message
                set-breakpoints-req
                (dap--resp-handler
@@ -497,8 +509,8 @@ FILE-NAME is the filename in which the breakpoints have been udpated."
                   (dap--update-breakpoints session
                                            resp
                                            file-name)))
-               session))
-            (-filter #'dap--session-running (dap--get-sessions))))
+               session)))
+          (-filter #'dap--session-running (dap--get-sessions)))
     (dap--persist-breakpoints breakpoints)))
 
 (defun dap-breakpoint-toggle ()
@@ -765,53 +777,52 @@ will be reversed."
 
 (defun dap--request-source-for-frame-by-reference (debug-session stack-frame line column name)
   "Request source string for a STACK-FRAME using the sourceReference."
-  (with-lsp-workspace (dap--debug-session-workspace debug-session)
-    (-when-let* ((source (gethash "source" stack-frame))
-                 (sourceReference (gethash "sourceReference" source))
-                 (sourceReferenceKey (format "%s-%s" name sourceReference)))
-      (select-window (get-mru-window (selected-frame) nil))
-      (if-let* ((existing-buffer (get-buffer sourceReferenceKey)))
-          (switch-to-buffer existing-buffer)
-        (dap--send-message
-         (dap--make-request "source" (list :sourceReference sourceReference))
-         (dap--resp-handler
-          (-lambda ((&hash "body" (&hash "content" content)))
-            (switch-to-buffer (generate-new-buffer sourceReferenceKey))
-            (insert content)
-            (goto-char (point-min))
-            (forward-line (1- line))
-            (forward-char column))
-          (lambda (errmsg)
-            (message "No source code for %s. Cursor at %s:%s. Error: %s." name line column errmsg)))
-         debug-session)))))
+  (-when-let* ((source (gethash "source" stack-frame))
+               (sourceReference (gethash "sourceReference" source))
+               (sourceReferenceKey (format "%s-%s" name sourceReference)))
+    (select-window (get-mru-window (selected-frame) nil))
+    (if-let* ((existing-buffer (get-buffer sourceReferenceKey)))
+        (switch-to-buffer existing-buffer)
+      (dap--send-message
+       (dap--make-request "source" (list :sourceReference sourceReference))
+       (dap--resp-handler
+        (-lambda ((&hash "body" (&hash "content" content)))
+          (switch-to-buffer (generate-new-buffer sourceReferenceKey))
+          (insert content)
+          (goto-char (point-min))
+          (forward-line (1- line))
+          (forward-char column))
+        (lambda (errmsg)
+          (message "No source code for %s. Cursor at %s:%s. Error: %s." name line column errmsg)))
+       debug-session))))
 
-(defun dap--get-path-for-frame (stack-frame)
+(defun dap--get-path-for-frame (debug-session stack-frame)
   "Get file path for a STACK-FRAME."
   (-when-let* ((source (gethash "source" stack-frame))
                (path (gethash "path" source)))
-    (if (-> path url-unhex-string url-generic-parse-url url-type)
-        (lsp--uri-to-path path)
-      path)))
+    (let ((remote-path (if (-> path url-unhex-string url-generic-parse-url url-type)
+                           (lsp--uri-to-path path)
+                         path)))
+      (--> debug-session (dap--debug-session-remote-to-local-path-fn it) (funcall it remote-path)))))
 
 (defun dap--go-to-stack-frame (debug-session stack-frame)
   "Make STACK-FRAME the active STACK-FRAME of DEBUG-SESSION."
-  (with-lsp-workspace (dap--debug-session-workspace debug-session)
-    (when stack-frame
-      (-let* (((&hash "line" line "column" column "name" name) stack-frame)
-              (path (dap--get-path-for-frame stack-frame)))
-        (setf (dap--debug-session-active-frame debug-session) stack-frame)
-        ;; If we have a source file with path attached, open it and
-        ;; position the point in the line/column referenced in the
-        ;; stack trace.
-        (if (and path (file-exists-p path))
-            (progn
-              (select-window (get-mru-window (selected-frame) nil))
-              (find-file path)
-              (goto-char (point-min))
-              (forward-line (1- line))
-              (forward-char column))
-          (dap--request-source-for-frame-by-reference debug-session stack-frame line column name))))
-    (run-hook-with-args 'dap-stack-frame-changed-hook debug-session)))
+  (when stack-frame
+    (-let* (((&hash "line" line "column" column "name" name) stack-frame)
+            (path (dap--get-path-for-frame debug-session stack-frame)))
+      (setf (dap--debug-session-active-frame debug-session) stack-frame)
+      ;; If we have a source file with path attached, open it and
+      ;; position the point in the line/column referenced in the
+      ;; stack trace.
+      (if (and path (file-exists-p path))
+          (progn
+            (select-window (get-mru-window (selected-frame) nil))
+            (find-file path)
+            (goto-char (point-min))
+            (forward-line (1- line))
+            (forward-char column))
+        (dap--request-source-for-frame-by-reference debug-session stack-frame line column name))))
+  (run-hook-with-args 'dap-stack-frame-changed-hook debug-session))
 
 (defun dap--select-thread-id (debug-session thread-id &optional force)
   "Make the thread with id=THREAD-ID the active thread for DEBUG-SESSION."
@@ -822,7 +833,7 @@ will be reversed."
     (run-hook-with-args 'dap-stopped-hook debug-session))
 
   (dap--send-message
-   (dap--make-request "stackTrace" (list :threadId thread-id))
+   (dap--make-request "stackTrace" (list :threadId thread-id :levels dap-stack-trace-limit))
    (dap--resp-handler
     (-lambda ((&hash "body" (&hash "stackFrames" stack-frames)))
       (puthash thread-id
@@ -832,7 +843,15 @@ will be reversed."
       ;; thread-id is the same as the active one
       (when (and (eq debug-session (dap--cur-session))
                  (eq thread-id (dap--debug-session-thread-id (dap--cur-session))))
-        (dap--go-to-stack-frame debug-session (cl-first stack-frames)))))
+        ;; filter stack frames excluding those associated to non-existing paths
+        ;; fall back to original stack-frames if none found
+        (-when-let (stack-frames
+                    (or (-filter (lambda(stack-frame)
+                                   (-when-let (path (dap--get-path-for-frame debug-session stack-frame))
+                                     (file-exists-p path)))
+                                 stack-frames)
+                        stack-frames))
+          (dap--go-to-stack-frame debug-session (cl-first stack-frames))))))
    debug-session))
 
 (defun dap--buffer-list ()
@@ -962,7 +981,8 @@ PARAMS are the event params.")
          (puthash thread-id (or type reason)
                   (dap--debug-session-thread-states debug-session))
          (dap--select-thread-id debug-session thread-id)
-         (when (string= "exception" reason)
+         (when (and (string= "exception" reason)
+                    (gethash "supportsExceptionInfoRequest" (dap--debug-session-current-capabilities debug-session)))
            (dap--send-message
             (dap--make-request "exceptionInfo" (list :threadId thread-id))
             (-lambda ((&hash "body" (&hash? "description" "exceptionId" exception-id)))
@@ -1001,7 +1021,7 @@ PARAMS are the event params.")
   (-let* (((&hash "arguments" (&hash? "args" "cwd" "title" "kind") "seq")
            parsed-msg)
           (default-directory cwd)
-          (command-to-run (string-join args " "))
+          (command-to-run (combine-and-quote-strings args " "))
           (kind (or kind dap-default-terminal-kind)))
     (or
      (when (string= kind "external")
@@ -1182,7 +1202,15 @@ ADAPTER-ID the id of the adapter."
 
 (defun dap--create-session (launch-args)
   "Create debug session from LAUNCH-ARGS."
-  (-let* (((&plist :host :dap-server-path :name session-name :debugServer port) launch-args)
+  (-let* (((&plist
+            :host
+            :dap-server-path
+            :name session-name
+            :path-mappings path-mappings
+            :debugServer port
+            :local-to-remote-path-fn local-to-remote-path-fn
+            :remote-to-local-path-fn remote-to-local-path-fn)
+           launch-args)
           (proc (if dap-server-path
                     (make-process
                      :name session-name
@@ -1196,6 +1224,8 @@ ADAPTER-ID the id of the adapter."
                           :launch-args launch-args
                           :proc proc
                           :name session-name
+                          :local-to-remote-path-fn (or local-to-remote-path-fn (-partial #'dap--local-to-remote-path-1 nil))
+                          :remote-to-local-path-fn (or remote-to-local-path-fn (-partial #'dap--remote-to-local-path-identical nil))
                           :output-buffer (dap--create-output-buffer session-name))))
     (set-process-sentinel proc
                           (lambda (_process exit-str)
@@ -1214,29 +1244,29 @@ ADAPTER-ID the id of the adapter."
                           (run-hook-with-args 'dap-session-changed-hook))))
                      debug-session))
 
-(defun dap--set-breakpoints-request (file-name file-breakpoints)
+(defun dap--set-breakpoints-request (debug-session file-name file-breakpoints)
   "Make `setBreakpoints' request for FILE-NAME.
 FILE-BREAKPOINTS is a list of the breakpoints to set for FILE-NAME."
-  (with-temp-buffer
-    (insert-file-contents file-name)
-    (dap--make-request
-     "setBreakpoints"
-     (list :source (list :name (f-filename file-name)
-                         :path (if (eq system-type 'windows-nt)
-                                   (s-replace "/" "\\" file-name)
-                                 file-name))
-           :breakpoints (->> file-breakpoints
-                             (-map (-lambda ((it &as &plist :condition :hit-condition :log-message))
-                                     (let ((result (->> it dap-breakpoint-get-point line-number-at-pos (list :line))))
-                                       (when condition (plist-put result :condition condition))
-                                       (when log-message (plist-put result :logMessage log-message))
-                                       (when hit-condition (plist-put result :hitCondition hit-condition))
-                                       result)))
-                             (apply 'vector))
-           :sourceModified :json-false
-           :lines (->> file-breakpoints
-                       (--map (-> it dap-breakpoint-get-point line-number-at-pos))
-                       (apply 'vector))))))
+  (let ((file-name-only (f-filename file-name))
+        (remote-file-path (--> debug-session dap--debug-session-local-to-remote-path-fn (funcall it file-name))))
+    (with-temp-buffer
+      (insert-file-contents file-name)
+      (dap--make-request
+       "setBreakpoints"
+       (list :source (list :name file-name-only
+                           :path remote-file-path)
+             :breakpoints (->> file-breakpoints
+                               (-map (-lambda ((it &as &plist :condition :hit-condition :log-message))
+                                       (let ((result (->> it dap-breakpoint-get-point line-number-at-pos (list :line))))
+                                         (when condition (plist-put result :condition condition))
+                                         (when log-message (plist-put result :logMessage log-message))
+                                         (when hit-condition (plist-put result :hitCondition hit-condition))
+                                         result)))
+                               (apply 'vector))
+             :sourceModified :json-false
+             :lines (->> file-breakpoints
+                         (--map (-> it dap-breakpoint-get-point line-number-at-pos))
+                         (apply 'vector)))))))
 
 (defun dap--update-breakpoints (debug-session resp file-name)
   "Update breakpoints in FILE-NAME.
@@ -1262,18 +1292,19 @@ DEBUG-SESSION is the active debug session."
 
 (defun dap--set-exception-breakpoints (debug-session callback)
   (-let [(&dap-session 'current-capabilities 'launch-args (&plist :type)) debug-session]
-    (dap--send-message
-     (dap--make-request "setExceptionBreakpoints"
-                        (list :filters
-                              (or (-some->> current-capabilities
-                                    (gethash "exceptionBreakpointFilters")
-                                    (-keep (-lambda ((&hash "default" "filter"))
-                                             (when (dap--breakpoint-filter-enabled filter type default)
-                                               filter))))
-                                  [])))
-     (lambda (_result)
-       (funcall callback))
-     debug-session)))
+    (-if-let (exception-breakpoint-filters (-some->> current-capabilities
+                                             (gethash "exceptionBreakpointFilters")
+                                             (-keep (-lambda ((&hash "default" "filter"))
+                                                      (when (dap--breakpoint-filter-enabled filter type default)
+                                                        filter)))))
+        (dap--send-message
+         (dap--make-request "setExceptionBreakpoints"
+                            (list :filters
+                                  exception-breakpoint-filters))
+         (lambda (_result)
+           (funcall callback))
+         debug-session)
+      (funcall callback))))
 
 (defun dap--configure-breakpoints (debug-session breakpoints callback)
   "Configure breakpoints for DEBUG-SESSION.
@@ -1289,7 +1320,7 @@ RESULT to use for the callback."
        (lambda (file-name file-breakpoints)
          (condition-case _err
              (dap--send-message
-              (dap--set-breakpoints-request file-name file-breakpoints)
+              (dap--set-breakpoints-request debug-session file-name file-breakpoints)
               (dap--resp-handler
                (lambda (resp)
                  (setf finished (1+ finished))
@@ -1346,7 +1377,7 @@ RESULT to use for the callback."
                  (new-stack-frame (dap--completing-read "Select active frame: "
                                                         stack-frames
                                                         (-lambda ((frame &as &hash "name"))
-                                                          (if-let (frame-path (dap--get-path-for-frame frame))
+                                                          (if-let (frame-path (dap--get-path-for-frame (dap--cur-session) frame))
                                                               (format "%s: %s (in %s)"
                                                                       (cl-incf index) name frame-path)
                                                             (format "%s: %s" (cl-incf index) name)))
@@ -1651,6 +1682,12 @@ list are called and their results (which must be lists) are
 concatenated. The user can then choose one of them from the
 resulting list.")
 
+(defconst dap-tasks-configuration-providers
+  '(dap-tasks-find-parse-tasks-json)
+  "List of functions that can contribute task configurations to dap-debug.
+When a launch configuration specifies a 'preLaunchTask', it can pull from
+the results of these functions.")
+
 (defun dap-start-debugging (conf)
   "Like `dap-start-debugging-noexpand', but expand variables.
 CONF's variables are expanded before being passed to
@@ -1669,7 +1706,7 @@ should be started after the :port argument is taken.
 before starting the debug process."
   (-let* (((&plist :name :skip-debug-session :cwd :program-to-start
                    :wait-for-port :type :request :port
-                   :startup-function :environment-variables :hostName host) launch-args)
+                   :startup-function :environment-variables :program :hostName host) launch-args)
           (session-name (dap--calculate-unique-name name (dap--get-sessions)))
           (default-directory (or cwd default-directory))
           (process-environment (if environment-variables
@@ -1702,20 +1739,26 @@ before starting the debug process."
               (ht-update! (dap--debug-session-current-capabilities debug-session) capabilities)
 
               (dap--set-sessions (cons debug-session debug-sessions)))
-            (dap--send-message
-             (dap--make-request request (-> launch-args
-                                            (cl-copy-list)
-                                            (dap--plist-delete :dap-compilation)
-                                            (dap--plist-delete :dap-compilation-dir)
-                                            (dap--plist-delete :cleanup-function)
-                                            (dap--plist-delete :startup-function)
-                                            (dap--plist-delete :dap-server-path)
-                                            (dap--plist-delete :environment-variables)
-                                            (dap--plist-delete :wait-for-port)
-                                            (dap--plist-delete :skip-debug-session)
-                                            (dap--plist-delete :program-to-start)))
-             (dap--session-init-resp-handler debug-session)
-             debug-session)))
+            (let ((translated-launch-args (cl-copy-list launch-args)))
+              (when cwd (plist-put translated-launch-args :cwd (funcall (dap--debug-session-local-to-remote-path-fn debug-session) cwd)))
+              (when program (plist-put translated-launch-args :program (funcall (dap--debug-session-local-to-remote-path-fn debug-session) program)))
+              (dap--send-message
+               (dap--make-request request (-> translated-launch-args
+                                              (cl-copy-list)
+                                              (dap--plist-delete :dap-compilation)
+                                              (dap--plist-delete :dap-compilation-dir)
+                                              (dap--plist-delete :cleanup-function)
+                                              (dap--plist-delete :startup-function)
+                                              (dap--plist-delete :dap-server-path)
+                                              (dap--plist-delete :environment-variables)
+                                              (dap--plist-delete :wait-for-port)
+                                              (dap--plist-delete :skip-debug-session)
+                                              (dap--plist-delete :program-to-start)
+                                              (dap--plist-delete :path-mappings)
+                                              (dap--plist-delete :local-to-remote-path-fn)
+                                              (dap--plist-delete :remote-to-local-path-fn)))
+               (dap--session-init-resp-handler debug-session)
+               debug-session))))
          debug-session)
 
         (dap--set-cur-session debug-session)
@@ -1727,6 +1770,36 @@ before starting the debug process."
 By default, it is hidden."
   :type 'boolean
   :group 'dap-mode)
+
+(defun dap-debug-run-task (tasks cb)
+  "Given either a task or list of task TASKS, attempt to execute them in sequence.
+If all succeed, then run CB."
+  (let* ((task (if (listp tasks)
+                   (car tasks)
+                 tasks))
+         (default-directory (or (dap-tasks--get-key :cwd task)
+                                (lsp-workspace-root)
+                                default-directory))
+         (command (dap-tasks-configuration-get-command task))
+         (name (dap-tasks-configuration-get-name task)))
+    (with-current-buffer
+        (compilation-start command t (lambda (&rest _) (format "*DAP compilation:%s*" name)))
+      (let (window)
+        (cl-labels ((cf (buf status &rest _)
+                        (with-current-buffer buf
+                          (remove-hook 'compilation-finish-functions #'cf t)
+                          (if (string= "finished\n" status)
+                              (progn
+                                (when (and (not dap-debug-compilation-keep)
+                                           (window-live-p window)
+                                           (eq buf (window-buffer window)))
+                                  (delete-window window))
+                                (if (length= tasks 0)
+                                    (funcall cb)
+                                  (dap-debug-run-task (cdr tasks) cb)))
+                            (lsp--error "Compilation step failed")))))
+          (add-hook 'compilation-finish-functions #'cf nil t)
+          (setq window (display-buffer (current-buffer))))))))
 
 ;;;###autoload
 (defun dap-debug (debug-args)
@@ -1750,6 +1823,7 @@ be used to compile the project, spin up docker, ...."
   ;; expand them properly. Any python configuration that uses variables in :args
   ;; will fail.
   (let* ((debug-args (dap-variables-expand-in-launch-configuration debug-args))
+         (taskConfigurations (dap-tasks-configuration-get-all))
          (launch-args (or (-some-> (plist-get debug-args :type)
                             (gethash dap--debug-providers)
                             (funcall debug-args))
@@ -1761,26 +1835,18 @@ be used to compile the project, spin up docker, ...."
                    (funcall launch-args #'dap-start-debugging-noexpand)
                  (dap-start-debugging-noexpand launch-args)))))
     (-if-let ((&plist :dap-compilation) launch-args)
-        (let ((default-directory (or (plist-get launch-args :dap-compilation-dir)
-                                     (lsp-workspace-root)
-                                     default-directory)))
-          (with-current-buffer (compilation-start dap-compilation t (lambda (&rest _)
-                                                                      "*DAP compilation*"))
-            (let (window)
-              (cl-labels ((cf (buf status &rest _)
-                              (with-current-buffer buf
-                                (remove-hook 'compilation-finish-functions #'cf t)
-                                (if (string= "finished\n" status)
-                                    (progn
-                                      (when (and (not dap-debug-compilation-keep)
-                                                 (window-live-p window)
-                                                 (eq buf (window-buffer window)))
-                                        (delete-window window))
-                                      (funcall cb))
-                                  (lsp--error "Compilation step failed")))))
-                (add-hook 'compilation-finish-functions #'cf nil t)
-                (setq window (display-buffer (current-buffer)))))))
-      (funcall cb))))
+        (dap-debug-run-task `(:cwd ,(or (plist-get launch-args :dap-compilation-dir)
+                                        (lsp-workspace-root)
+                                        default-directory)
+                              :command ,dap-compilation
+                              :label ,(truncate-string-to-width dap-compilation 20)) cb)
+      (-if-let ((&plist :preLaunchTask) launch-args)
+          (let* ((task (dap-tasks-get-configuration-by-label preLaunchTask))
+                 (tasks (dap-tasks-configuration-get-depends task)))
+            (if tasks
+                (dap-debug-run-task tasks cb)
+              (user-error "No valid tasks found labelled \"%s\". Please check your tasks.json" preLaunchTask)))
+        (funcall cb)))))
 
 (defun dap-debug-edit-template (&optional debug-args)
   "Edit registered template DEBUG-ARGS.
@@ -1919,6 +1985,28 @@ If the current session it will be terminated."
          (gethash buffer-file-name)
          (dap--set-breakpoints-in-file buffer-file-name))
     (add-hook 'kill-buffer-hook 'dap--buffer-killed nil t)))
+
+(defun dap--local-to-remote-path (mappings path)
+  "Translate paths using lsp-docker and path mappings"
+  (if mappings
+      (lsp--uri-to-path-1 (lsp-docker--path->uri mappings path))
+    path))
+
+(defun dap--local-to-remote-path-1 (_mappings path)
+  "Don't translate anything, just fix the separator for Windows."
+  (if (eq system-type 'windows-nt)
+      (s-replace "/" "\\" path)
+    path))
+
+(defun dap--remote-to-local-path (mappings path)
+  "Translate paths using lsp-docker and path mappings"
+  (if mappings
+      (lsp-docker--uri->path mappings nil (lsp--path-to-uri-1 path))
+    path))
+
+(defun dap--remote-to-local-path-identical (_mappings path)
+  "Don't translate anything"
+  path)
 
 (defun dap-mode-mouse-set-clear-breakpoint (event)
   "Set or remove a breakpoint at the position represented by an

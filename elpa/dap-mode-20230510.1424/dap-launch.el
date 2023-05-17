@@ -26,27 +26,6 @@
 (require 'lsp-mode)
 (require 'json)
 
-(defun dap-launch-sanitize-json ()
-  "Remove all C-style comments and trailing commas in the current buffer.
-Comments in strings are ignored. The buffer is modified in place.
-Replacement starts at point, and strings before it are ignored,
-so you may want to move point to `point-min' with `goto-char'
-first. This function moves `point'. Both // and /**/ comments are
-supported."
-  (while (re-search-forward
-          (rx
-           (or (group
-                (or (: "//" (* nonl) eol)
-                    (: "/*" (* (or (not (any ?*))
-                                   (: (+ ?*) (not (any ?/))))) (+ ?*) ?/)
-                    (: "," (group (* (any blank space ?\v ?\u2028 ?\u2029))
-                                  (any ?\} ?\])))))
-               (: "\"" (* (or (not (any ?\\ ?\")) (: ?\\ nonl))) "\"")))
-          nil t)
-    ;; we matched a comment
-    (when (match-beginning 1)
-      (replace-match (or (match-string 2) "")))))
-
 (declare-function dap-variables-find-vscode-config "dap-variables" (f root))
 (defun dap-launch-find-launch-json ()
   "Return the path to current project's launch.json file.
@@ -57,6 +36,7 @@ Yields nil if it cannot be found or there is no project."
 
 (defun dap-launch-get-launch-json ()
   "Parse the project's launch.json as json data and return the result."
+  (require 'dap-utils)
   (when-let ((launch-json (dap-launch-find-launch-json))
              (json-object-type 'plist)
              ;; Use 'vector instead of 'list. With 'list for array type,
@@ -88,7 +68,7 @@ Yields nil if it cannot be found or there is no project."
     (with-temp-buffer
       ;; NOTE: insert-file-contents does not move point
       (insert-file-contents launch-json)
-      (dap-launch-sanitize-json)
+      (dap-utils-sanitize-json)
       ;; dap-launch-remove-comments does move point
       (goto-char (point-min))
 
@@ -103,11 +83,34 @@ Yields nil if it cannot be found or there is no project."
 Extract the name from the :name property."
   (push (dap-launch-configuration-get-name conf) conf))
 
+(defun dap--launch-extract-environment (conf)
+  "Transform environment config into dap-mode format.
+This handles a single configuration plist."
+  (if (not (plist-get conf :environment))
+      ;; No environment specified, just return the old configuration
+      conf
+    ;; Standard format for the "environment" key is
+    ;;   {"name": "foo", "value": "bar"},
+    ;; which results in a (:name "foo" :value "bar) plist.
+    ;; We need to transform this into a ("foo" . "bar") cons cell.
+    (let ((environ-spec (mapcar
+                         (lambda (env-plist)
+                           (cons (plist-get env-plist :name)
+                                 (plist-get env-plist :value)))
+                         (plist-get conf :environment))))
+      (plist-put conf :environment-variables environ-spec))))
+
+(defun dap--launch-extract-environments (conflist)
+	"Transform environment config into dap-mode format.
+This is intended to be run on a list of configurations."
+	(mapcar #'dap--launch-extract-environment conflist))
+
 (defun dap-launch-parse-launch-json (json)
   "Return a list of all launch configurations in JSON.
 JSON must have been acquired with `dap-launch--get-launch-json'."
   (mapcar #'dap-launch-configuration-prepend-name
-          (or (plist-get json :configurations) (list json))))
+          (dap--launch-extract-environments
+           (or (plist-get json :configurations) (list json)))))
 
 (defun dap-launch-find-parse-launch-json ()
   "Return a list of all launch configurations for the current project.

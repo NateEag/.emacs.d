@@ -6,7 +6,7 @@
 ;; URL: http://github.com/ananthakumaran/tide
 ;; Version: 4.5.4
 ;; Keywords: typescript
-;; Package-Requires: ((emacs "25.1") (dash "2.10.0") (s "1.11.0") (flycheck "27") (typescript-mode "0.1") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "25.1") (dash "2.10.0") (s "1.11.0") (flycheck "27") (cl-lib "0.5"))
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -27,7 +27,6 @@
 
 ;;; Code:
 
-(require 'typescript-mode)
 (require 'etags)
 (require 'json)
 (require 'cl-lib)
@@ -301,7 +300,7 @@ this variable to non-nil value for Javascript buffers using `setq-local' macro."
      (make-variable-buffer-local ',name)
      (put ',name 'permanent-local t)))
 
-(defvar tide-supported-modes '(typescript-mode web-mode js-mode js2-mode js2-jsx-mode js3-mode rjsx-mode))
+(defvar tide-supported-modes '(typescript-mode typescript-ts-mode tsx-ts-mode web-mode js-mode js2-mode js2-jsx-mode js3-mode rjsx-mode))
 
 (defvar tide-server-buffer-name "*tide-server*")
 (defvar tide-request-counter 0)
@@ -1262,16 +1261,19 @@ Noise can be anything like braces, reserved keywords, etc."
 (defun tide-command:quickinfo (cb)
   (tide-fallback-if-not-supported "quickinfo-full" tide-command:quickinfo-full tide-command:quickinfo-old cb))
 
-
-(defun tide-eldoc-function ()
-  (unless (member last-command '(next-error previous-error))
-    (if (tide-method-call-p)
-        (tide-command:signatureHelp #'tide-eldoc-maybe-show)
-      (when (looking-at "\\s_\\|\\sw")
-        (tide-command:quickinfo
-         (tide-on-response-success-callback response (:ignore-empty t)
-           (tide-eldoc-maybe-show (tide-doc-text (plist-get response :body))))))))
-  nil)
+(defun tide-eldoc-function (&optional cb)
+  (cond ((member last-command '(next-error previous-error))
+         nil)
+        ((tide-method-call-p)
+         (tide-command:signatureHelp (lambda (text) (tide-eldoc-maybe-show text cb)))
+         t)
+        ((looking-at "\\s_\\|\\sw")
+         (tide-command:quickinfo
+          (tide-on-response-success-callback response (:ignore-empty t)
+            (tide-eldoc-maybe-show (tide-doc-text (plist-get response :body)) cb)))
+         t)
+        (t
+         nil)))
 
 (defun tide-eldoc-display-message-p()
   (if (fboundp 'eldoc-display-message-no-interference-p)
@@ -1279,14 +1281,18 @@ Noise can be anything like braces, reserved keywords, etc."
     (eldoc-display-message-p)))
 
 ;;; Copied from eldoc.el
-(defun tide-eldoc-maybe-show (text)
+(defun tide-eldoc-maybe-show (text &optional cb)
   (with-demoted-errors "eldoc error: %s"
     (and (or (tide-eldoc-display-message-p)
              ;; Erase the last message if we won't display a new one.
              (when eldoc-last-message
-               (eldoc-message nil)
+               (if (version< emacs-version "28.1")
+                   (eldoc-message nil)
+                 (funcall cb nil))
                nil))
-         (eldoc-message text))))
+         (if (version< emacs-version "28.1")
+             (eldoc-message text)
+           (funcall cb text)))))
 
 (defun tide-documentation-at-point ()
   "Show documentation of the symbol at point."
@@ -1342,8 +1348,17 @@ Noise can be anything like braces, reserved keywords, etc."
             (basic-save-buffer))
           (run-hooks 'tide-post-code-edit-hook))))))
 
-(defun tide-get-flycheck-errors-ids-at-point ()
-  (-map #'flycheck-error-id (flycheck-overlay-errors-at (point))))
+(defun tide-get-flycheck-errors-ids-at-point (&optional checker)
+  "Return flycheck errors at point.
+
+If CHECKER is non-nil, it is expected to be a symbol specifying
+the checker whose errors we want to return."
+  (let* ((errors (flycheck-overlay-errors-at (point)))
+         (filtered-errors
+          (if checker
+              (--filter (eq (flycheck-error-checker it) checker) errors)
+            errors)))
+    (-map #'flycheck-error-id filtered-errors)))
 
 (defun tide-command:getCodeFixes ()
   (tide-send-command-sync
@@ -1511,7 +1526,7 @@ always be formatted as described above."
           (open-line 1))
         (insert "// tslint:disable-next-line:"
                 (string-join error-ids " "))
-        (typescript-indent-line)))))
+        (indent-according-to-mode)))))
 
 ;;; Disable Eslint Warnings
 
@@ -1537,7 +1552,8 @@ to the flag.  Note that this function does not preserve the
 formatting of the already existing flag.  The resulting flag will
 always be formatted as described above."
   (interactive)
-  (let ((error-ids (delq nil (tide-get-flycheck-errors-ids-at-point)))
+  (let ((error-ids
+         (delq nil (tide-get-flycheck-errors-ids-at-point 'javascript-eslint)))
         (start (point)))
     (when error-ids
       (save-excursion
@@ -1553,7 +1569,7 @@ always be formatted as described above."
           (open-line 1))
         (insert "// eslint-disable-next-line "
                 (string-join error-ids ", "))
-        (typescript-indent-line)))))
+        (indent-according-to-mode)))))
 
 ;;; Auto completion
 
@@ -2307,8 +2323,10 @@ current buffer."
   (unless (stringp buffer-file-name)
     (setq tide-require-manual-setup t))
 
-  (set (make-local-variable 'eldoc-documentation-function)
-       'tide-eldoc-function)
+  (if (version< emacs-version "28.1")
+      (set (make-local-variable 'eldoc-documentation-function)
+           'tide-eldoc-function)
+    (add-hook 'eldoc-documentation-functions #'tide-eldoc-function nil t))
   (set (make-local-variable 'imenu-auto-rescan) t)
   (set (make-local-variable 'imenu-create-index-function)
        'tide-imenu-index)
@@ -2346,9 +2364,7 @@ current buffer."
         (add-hook 'hack-local-variables-hook
                   'tide-configure-buffer-if-server-exists nil t)
         (when tide-enable-xref
-          (add-hook 'xref-backend-functions #'xref-tide-xref-backend nil t))
-        (when (commandp 'typescript-insert-and-indent)
-          (eldoc-add-command 'typescript-insert-and-indent)))
+          (add-hook 'xref-backend-functions #'xref-tide-xref-backend nil t)))
     (remove-hook 'after-save-hook 'tide-sync-buffer-contents t)
     (remove-hook 'after-save-hook 'tide-auto-compile-file t)
     (remove-hook 'after-change-functions 'tide-handle-change t)
@@ -2508,7 +2524,7 @@ current buffer."
   "A TypeScript syntax checker using tsserver."
   :start #'tide-flycheck-start
   :verify #'tide-flycheck-verify
-  :modes '(typescript-mode)
+  :modes '(typescript-mode typescript-ts-mode)
   :predicate #'tide-flycheck-predicate)
 
 (add-to-list 'flycheck-checkers 'typescript-tide)
@@ -2538,7 +2554,7 @@ current buffer."
   "A TSX syntax checker using tsserver."
   :start #'tide-flycheck-start
   :verify #'tide-flycheck-verify
-  :modes '(web-mode)
+  :modes '(web-mode tsx-ts-mode)
   :predicate (lambda ()
                (and
                 (tide-file-extension-p "tsx")

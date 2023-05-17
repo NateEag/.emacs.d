@@ -1,11 +1,12 @@
-(define-package "tide" "20220514.614" "Typescript Interactive Development Environment"
+(define-package "tide" "20230428.1846" "Typescript Interactive Development Environment"
   '((emacs "25.1")
     (dash "2.10.0")
     (s "1.11.0")
     (flycheck "27")
-    (typescript-mode "0.1")
     (cl-lib "0.5"))
-  :commit "96bfc5da11a9b83b32368c38e933a405270652de" :authors
+  :commit "ea47d8faa64de4f48473dc753ae3ea5abeaf770e" :authors
+  '(("Anantha kumaran" . "ananthakumaran@gmail.com"))
+  :maintainers
   '(("Anantha kumaran" . "ananthakumaran@gmail.com"))
   :maintainer
   '("Anantha kumaran" . "ananthakumaran@gmail.com")

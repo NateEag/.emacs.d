@@ -1,12 +1,14 @@
-;;; lorem-ipsum.el --- Insert dummy pseudo Latin text.
+;;; lorem-ipsum.el --- Insert dummy pseudo Latin text  -*- lexical-binding: t -*-
 
 ;; Copyright (c) 2003 Jean-Philippe Theberge
 
 ;; Author: Jean-Philippe Theberge (jphil21@sourceforge.net)
 ;; Maintainer: Joe Schafer (joe@jschaf.com)
-;; Package-Version: 20190819.2042
-;; Package-X-Original-Version: 0.2
+;; Version: 0.4
+;; Package-Version: 20221214.1857
+;; Package-Commit: 4e87a899868e908a7a9e1812831d76c8d072f885
 ;; Keywords: tools, language, convenience
+;; URL: https://github.com/jschaf/emacs-lorem-ipsum
 
 ;; Special Thanks: The emacswiki users, the #emacs@freenode.net citizens
 ;;                 and Marcus Tullius Cicero
@@ -27,13 +29,7 @@
 ;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with lorem-ipsum.el.  If not, see <http://www.gnu.org/licenses/>.
-
-;;; History:
-
-;; Version 0.1 released by Jean-Philippe Theberge in 2003.  After
-;; attempting to contact Jean-Philippe, Joe Schafer took over as
-;; maintainer and published to Github.
+;; along with lorem-ipsum.el.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -41,27 +37,32 @@
 ;; text into a buffer.
 ;;
 ;; To install manually, add this file to your `load-path'.  Use the
-;; default keybindings by adding the following to your .emacs file:
+;; default keybindings by adding the following to your init file:
 ;;
 ;; (lorem-ipsum-use-default-bindings)
 ;;
-;; This will setup the folling keybindings:
+;; This will setup the following keybindings:
 ;;
 ;; C-c l p: lorem-ipsum-insert-paragraphs
 ;; C-c l s: lorem-ipsum-insert-sentences
 ;; C-c l l: lorem-ipsum-insert-list
 ;;
-;; If you want a different keybinding, say you want the prefix C-c C-l, use a variation of the
-;; following:
+;; If you want a different keybinding, say you want the prefix C-c C-l, use a
+;; variation of the following:
 ;;
 ;; (global-set-key (kbd "C-c C-l s") 'lorem-ipsum-insert-sentences)
 ;; (global-set-key (kbd "C-c C-l p") 'lorem-ipsum-insert-paragraphs)
 ;; (global-set-key (kbd "C-c C-l l") 'lorem-ipsum-insert-list)
 
+;;; History:
+
+;; Version 0.1 released by Jean-Philippe Theberge in 2003.  After
+;; attempting to contact Jean-Philippe, Joe Schafer took over as
+;; maintainer and published to Github.
 
 ;;; Code:
 
-(defconst lorem-ipsum-version "0.2")
+(defconst lorem-ipsum-version "0.3")
 
 (defgroup lorem-ipsum nil
   "Insert filler text."
@@ -70,8 +71,7 @@
 
 ;;;###autoload
 (defun lorem-ipsum-use-default-bindings ()
-  "Use the default keybindings of C-c l [spl]."
-  (interactive)
+  "Use the default keybindings of `C-c l [spl]'."
   (global-set-key (kbd "C-c l s") 'lorem-ipsum-insert-sentences)
   (global-set-key (kbd "C-c l p") 'lorem-ipsum-insert-paragraphs)
   (global-set-key (kbd "C-c l l") 'lorem-ipsum-insert-list))
@@ -151,56 +151,53 @@
 (make-variable-buffer-local 'lorem-ipsum-list-item-end)
 (make-variable-buffer-local 'lorem-ipsum-list-end)
 
-(add-hook 'sgml-mode-hook (lambda ()
-			    (setq lorem-ipsum-paragraph-separator "<br><br>\n"
-				  lorem-ipsum-sentence-separator "&nbsp;&nbsp;"
-				  lorem-ipsum-list-beginning "<ul>\n"
-				  lorem-ipsum-list-bullet "<li>"
-				  lorem-ipsum-list-item-end "</li>\n"
-				  lorem-ipsum-list-end "</ul>\n")))
+(defun lorem-ipsum-sgml-mode-hook ()
+  "Set some variables for lorem-ipsum in `sgml-mode'."
+  (setq lorem-ipsum-paragraph-separator "<br><br>\n"
+	lorem-ipsum-sentence-separator "&nbsp;&nbsp;"
+	lorem-ipsum-list-beginning "<ul>\n"
+	lorem-ipsum-list-bullet "<li>"
+	lorem-ipsum-list-item-end "</li>\n"
+	lorem-ipsum-list-end "</ul>\n"))
+
+(add-hook 'sgml-mode-hook #'lorem-ipsum-sgml-mode-hook)
 
 ;;;###autoload
 (defun lorem-ipsum-insert-paragraphs (&optional num)
   "Insert lorem ipsum paragraphs into buffer.
 If NUM is non-nil, insert NUM paragraphs."
   (interactive "p")
-  (if (not num)(setq num 1))
-  (if (> num 0)
-      (progn
-	(insert (concat
-		 (mapconcat 'identity
-			    (nth (random (length lorem-ipsum-text))
-				 lorem-ipsum-text) lorem-ipsum-sentence-separator) lorem-ipsum-paragraph-separator))
-	(lorem-ipsum-insert-paragraphs (- num 1)))))
-
-;;;###autoload
-(defalias 'Lorem-ipsum-insert-paragraphs 'lorem-ipsum-insert-paragraphs)
+  (if (not num) (setq num 1))
+  (when (> num 0)
+    (insert (concat
+	     (mapconcat #'identity
+			(nth (random (length lorem-ipsum-text))
+			     lorem-ipsum-text)
+                        lorem-ipsum-sentence-separator)
+             lorem-ipsum-paragraph-separator))
+    (lorem-ipsum-insert-paragraphs (- num 1))))
 
 ;;;###autoload
 (defun lorem-ipsum-insert-sentences (&optional num)
   "Insert lorem ipsum sentences into buffer.
 If NUM is non-nil, insert NUM sentences."
   (interactive "p")
-  (if (not num)(setq num 1))
-  (if (> num 0)
-      (progn
-	(let ((para
-	       (nth (random (length lorem-ipsum-text)) lorem-ipsum-text)))
-	  (insert (concat (nth (random (length para)) para) lorem-ipsum-sentence-separator)))
-	(lorem-ipsum-insert-sentences (- num 1)))))
-
-;;;###autoload
-(defalias 'Lorem-ipsum-insert-sentences 'lorem-ipsum-insert-sentences)
+  (if (not num) (setq num 1))
+  (when (> num 0)
+    (let ((para
+ 	     (nth (random (length lorem-ipsum-text)) lorem-ipsum-text)))
+	(insert (concat (nth (random (length para)) para) lorem-ipsum-sentence-separator)))
+      (lorem-ipsum-insert-sentences (- num 1))))
 
 ;;;###autoload
 (defun lorem-ipsum-insert-list (&optional num)
   "Insert lorem ipsum list items into buffer.
 If NUM is non-nil, insert NUM list items."
   (interactive "p")
-  (if (not num)(setq num 1))
+  (if (not num) (setq num 1))
   (when (> num 0)
     (insert lorem-ipsum-list-beginning)
-    (dotimes (i num)
+    (dotimes (_ num)
       (let ((para (nth (random (length lorem-ipsum-text)) lorem-ipsum-text)))
         (insert (concat lorem-ipsum-list-bullet
                         (nth (random (length para)) para)
@@ -208,7 +205,14 @@ If NUM is non-nil, insert NUM list items."
     (insert lorem-ipsum-list-end)))
 
 ;;;###autoload
-(defalias 'Lorem-ipsum-insert-list 'lorem-ipsum-insert-list)
+(define-obsolete-function-alias 'Lorem-ipsum-insert-paragraphs
+  'lorem-ipsum-insert-paragraphs "29.1")
+;;;###autoload
+(define-obsolete-function-alias 'Lorem-ipsum-insert-sentences
+  'lorem-ipsum-insert-sentences "29.1")
+;;;###autoload
+(define-obsolete-function-alias 'Lorem-ipsum-insert-list
+  'lorem-ipsum-insert-list "29.1")
 
 (provide 'lorem-ipsum)
 

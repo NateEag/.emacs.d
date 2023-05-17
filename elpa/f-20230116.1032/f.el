@@ -28,6 +28,11 @@
 ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
 ;; Boston, MA 02110-1301, USA.
 
+;;; Commentary:
+;;
+;; Much inspired by magnar's excellent s.el and dash.el, f.el is a
+;; modern API for working with files and directories in Emacs.
+
 ;;; Code:
 
 
@@ -209,9 +214,9 @@ This function expects no duplicate paths."
 (defun f-read-bytes (path &optional beg end)
   "Read binary data from PATH.
 
-Return the binary data as unibyte string. The optional second and
-third arguments BEG and END specify what portion of the file to
-read."
+Return the binary data as unibyte string.  The optional second
+and third arguments BEG and END specify what portion of the file
+to read."
   (with-temp-buffer
     (set-buffer-multibyte nil)
     (setq buffer-file-coding-system 'binary)
@@ -277,10 +282,10 @@ If APPEND is non-nil, append the DATA to the existing contents."
   "Create directories DIRS.
 
 DIRS should be a successive list of directories forming together
-a full path. The easiest way to call this function with a fully
+a full path.  The easiest way to call this function with a fully
 formed path is using `f-split' alongside it:
 
-    (apply #'f-mkdir (f-split \"path/to/file\"))
+    (apply #\\='f-mkdir (f-split \"path/to/file\"))
 
 Although it works sometimes, it is not recommended to use fully
 formed paths in the function. In this case, it is recommended to
@@ -454,11 +459,37 @@ The extension, in a file name, is the part that follows the last
 
 (defalias 'f-descendant-of? 'f-descendant-of-p)
 
-(defun f-hidden-p (path)
-  "Return t if PATH is hidden, nil otherwise."
-  (unless (f-exists-p path)
-    (error "Path does not exist: %s" path))
-  (string= (substring path 0 1) "."))
+(defun f-hidden-p (path &optional behavior)
+  "Return t if PATH is hidden, nil otherwise.
+
+BEHAVIOR controls when a path should be considered as hidden
+depending on its value.  Beware, if PATH begins with \"./\", the
+current dir \".\" will not be considered as hidden.
+
+When BEHAVIOR is nil, it will only check if the path begins with
+a dot, as in .a/b/c, and return t if there is one.  This is the
+old behavior of f.el left as default for backward-compatibility
+purposes.
+
+When BEHAVIOR is ANY, return t if any of the elements of PATH is
+hidden, nil otherwise.
+
+When BEHAVIOR is LAST, return t only if the last element of PATH
+is hidden, nil otherwise.
+
+TODO: Hidden directories and files on Windows are marked
+differently than on *NIX systems.  This should be properly
+implemented."
+  (let ((split-path (f-split path))
+        (check-hidden (lambda (elt)
+                        (and (string= (substring elt 0 1) ".")
+                             (not (member elt '("." "..")))))))
+    (pcase behavior
+      ('any  (-any check-hidden split-path))
+      ('last (apply check-hidden (last split-path)))
+      (otherwise (if (null otherwise)
+                     (funcall check-hidden (car split-path))
+                   (error "Invalid value %S for argument BEHAVIOR" otherwise))))))
 
 (defalias 'f-hidden? 'f-hidden-p)
 
@@ -491,26 +522,142 @@ detect the depth.
 '/' will be zero depth,  '/usr' will be one depth.  And so on."
   (- (length (f-split (f-expand path))) 1))
 
-(defun f-change-time (path)
+;; For Emacs 28 and below, forward-declare ‘current-time-list’, which was
+;; introduced in Emacs 29.
+(defvar current-time-list)
+
+(defun f--get-time (path timestamp-p fn)
+  "Helper function, get time-related information for PATH.
+Helper for `f-change-time', `f-modification-time',
+`f-access-time'.  It is meant to be called internally, avoid
+calling it manually unless you have to.
+
+If TIMESTAMP-P is non-nil, return the date requested as a
+timestamp.  If the value is \\='seconds, return the timestamp as
+a timestamp with a one-second precision.  Otherwise, the
+timestamp is returned in a (TICKS . HZ) format, see
+`current-time' if using Emacs 29 or newer.
+
+Otherwise, if TIMESTAMP-P is nil, return the default style of
+`current-time'.
+
+FN is the function specified by the caller function to retrieve
+the correct data from PATH."
+      (let* ((current-time-list (not timestamp-p))
+             (date (apply fn (list (file-attributes path))))
+             (emacs29-or-newer-p (version<= "29" emacs-version)))
+        (cond
+         ((and (eq timestamp-p 'seconds) emacs29-or-newer-p)
+          (/ (car date) (cdr date)))
+         ((or (and (not (eq timestamp-p 'seconds)) emacs29-or-newer-p)
+              (and (not timestamp-p) (not emacs29-or-newer-p)))
+          date)
+         ((and (eq timestamp-p 'seconds) (not emacs29-or-newer-p))
+          (+ (* (nth 0 date) (expt 2 16))
+             (nth 1 date)))
+         ((and timestamp-p (not emacs29-or-newer-p))
+          `(,(+ (* (nth 0 date) (expt 2 16) 1000)
+                (* (nth 1 date) 1000)
+                (nth 3 date))
+            . 1000)))))
+
+(defun f-change-time (path &optional timestamp-p)
   "Return the last status change time of PATH.
 
 The status change time (ctime) of PATH in the same format as
-`current-time'. See `file-attributes' for technical details."
-  (nth 6 (file-attributes path)))
+`current-time'.  For details on TIMESTAMP-P and the format of the
+returned value, see `f--get-time'."
+  (f--get-time path
+               timestamp-p
+               (if (fboundp 'file-attribute-status-change-time)
+                   #'file-attribute-status-change-time
+                 (lambda (f) (nth 6 f)))))
 
-(defun f-modification-time (path)
+(defun f-modification-time (path &optional timestamp-p)
   "Return the last modification time of PATH.
-
 The modification time (mtime) of PATH in the same format as
-`current-time'. See `file-attributes' for technical details."
-  (nth 5 (file-attributes path)))
+`current-time'.  For details on TIMESTAMP-P and the format of the
+returned value, see `f--get-time'."
+  (f--get-time path
+               timestamp-p
+               (if (fboundp 'file-attribute-modification-time)
+                   #'file-attribute-modification-time
+                 (lambda (f) (nth 5 f)))))
 
-(defun f-access-time (path)
+(defun f-access-time (path &optional timestamp-p)
   "Return the last access time of PATH.
-
 The access time (atime) of PATH is in the same format as
-`current-time'. See `file-attributes' for technical details."
-  (nth 4 (file-attributes path)))
+`current-time'.  For details on TIMESTAMP-P and the format of the
+returned value, see `f--get-time'."
+  (f--get-time path
+               timestamp-p
+               (if (fboundp 'file-attribute-access-time)
+                   #'file-attribute-access-time
+                 (lambda (f) (nth 4 f)))))
+
+(defun f--three-way-compare (a b)
+  "Three way comparison.
+
+Return -1 if A < B.
+Return 0 if A = B.
+Return 1 if A > B."
+  (cond ((< a b) -1)
+        ((= a b) 0)
+        ((> a b) 1)))
+
+;; TODO: How to properly test this function?
+(defun f--date-compare (file other method)
+  "Three-way comparison of the date of FILE and OTHER.
+
+This function can return three values:
+* 1 means FILE is newer than OTHER
+* 0 means FILE and NEWER share the same date
+* -1 means FILE is older than OTHER
+
+The statistics used for the date comparison depends on METHOD.
+When METHOD is null, compare their modification time.  Otherwise,
+compare their change time when METHOD is \\='change, or compare
+their last access time when METHOD is \\='access."
+  (let* ((fn-method (cond
+                     ((eq 'change method) #'f-change-time)
+                     ((eq 'access method) #'f-access-time)
+                     ((null method)       #'f-modification-time)
+                     (t (error "Unknown method %S" method))))
+         (date-file (apply fn-method (list file)))
+         (date-other (apply fn-method (list other)))
+         (dates      (-zip-pair date-file date-other)))
+    (message "[DEBUG]: file: %s\t\tother: %s" file other)
+    (message "[DEBUG]: dates: %S" dates)
+    (-reduce-from (lambda (acc elt)
+                    (if (= acc 0)
+                        (f--three-way-compare (car elt) (cdr elt))
+                      acc))
+                  0
+                  dates)))
+
+(defun f-older-p (file other &optional method)
+  "Compare if FILE is older than OTHER.
+
+For more info on METHOD, see `f--date-compare'."
+  (< (f--date-compare file other method) 0))
+
+(defalias 'f-older? #'f-older-p)
+
+(defun f-newer-p (file other &optional method)
+  "Compare if FILE is newer than OTHER.
+
+For more info on METHOD, see `f--date-compare'."
+  (> (f--date-compare file other method) 0))
+
+(defalias 'f-newer? #'f-newer-p)
+
+(defun f-same-time-p (file other &optional method)
+  "Check if FILE and OTHER share the same access or modification time.
+
+For more info on METHOD, see `f--date-compare'."
+  (= (f--date-compare file other method) 0))
+
+(defalias 'f-same-time? #'f-same-time-p)
 
 
 ;;;; Misc

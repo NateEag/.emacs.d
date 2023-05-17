@@ -1,4 +1,4 @@
-;;; clojure-mode-autoloads.el --- automatically extracted autoloads
+;;; clojure-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -115,7 +115,7 @@ Major mode for editing ClojureC code.
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("\\.\\(clj\\|dtm\\|edn\\)\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.\\(clj\\|cljd\\|dtm\\|edn\\)\\'" . clojure-mode))
 
 (add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojurec-mode))
 
@@ -125,7 +125,9 @@ Major mode for editing ClojureC code.
 
 (add-to-list 'interpreter-mode-alist '("bb" . clojure-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent")))
+(add-to-list 'interpreter-mode-alist '("nbb" . clojurescript-mode))
+
+(register-definition-prefixes "clojure-mode" '("add-custom-clojure-indents" "clojure" "define-clojure-indent" "put-clojure-indent"))
 
 ;;;***
 

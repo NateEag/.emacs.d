@@ -4,13 +4,12 @@
 ;; Created date 2018-12-01 23:56:15
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Automatically rename paired HTML/XML tag.
-;; Keyword: auto-complete html rename tag xml
-;; Version: 0.3.5
-;; Package-Version: 20210805.1344
-;; Package-Commit: 77f66b75209628a267a5ced84cd85774e0e26b9a
-;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs-elpa/auto-rename-tag
+;; Package-Version: 20220704.639
+;; Package-Commit: 58ef595757350f4d8c1cea30d6902b26afaf8743
+;; Version: 0.3.5
+;; Package-Requires: ((emacs "24.4"))
+;; Keywords: convenience auto-complete html rename tag xml
 
 ;; This file is NOT part of GNU Emacs.
 

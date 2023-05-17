@@ -2,7 +2,8 @@
 
 ;; Author:  <m.sakurai at kiwanami.net>
 ;; Version: 0.0.1
-;; Package-Version: 20170521.1935
+;; Package-Version: 20191227.950
+;; Package-Commit: 0d19800db70a6348c627a69f444b91d21ad89629
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
 ;;; Commentary:

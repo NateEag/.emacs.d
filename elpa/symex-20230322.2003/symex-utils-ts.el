@@ -1,4 +1,4 @@
-;;; symex-ui.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-utils-ts.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -21,22 +21,21 @@
 
 ;;; Commentary:
 
-;; User interface-related resources
+;; Generic utilities used by symex (Tree Sitter) mode
 
 ;;; Code:
 
+(defun symex-ts--delete-current-line-if-empty (point)
+  "Delete the line containing POINT if it is empty."
+  (save-excursion (goto-char point)
+                  (when (string-match "^[[:space:]]*$"
+                                      (buffer-substring-no-properties
+                                        (line-beginning-position)
+                                        (line-end-position)))
+                    (kill-whole-line)
+                    (pop kill-ring)
+                    (setq kill-ring-yank-pointer kill-ring)
+                    t)))
 
-(require 'symex-custom)
-
-(defun symex--toggle-highlight ()
-  "Toggle highlighting of selected symex."
-  (interactive)
-  (if mark-active
-      (deactivate-mark)
-    (mark-sexp))
-  (setq symex-highlight-p
-        (not symex-highlight-p)))
-
-
-(provide 'symex-ui)
-;;; symex-ui.el ends here
+(provide 'symex-utils-ts)
+;;; symex-utils-ts.el ends here

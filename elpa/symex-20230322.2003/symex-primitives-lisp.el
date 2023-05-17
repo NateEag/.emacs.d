@@ -1,4 +1,4 @@
-;;; symex-primitives.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
+;;; symex-primitives-lisp.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
 ;; URL: https://github.com/countvajhula/symex.el
 
@@ -38,48 +38,60 @@
 ;;; PRIMITIVES ;;;
 ;;;;;;;;;;;;;;;;;;
 
+;;; User Interface
+
+(defun symex-lisp--adjust-point ()
+  "Helper to adjust point to indicate the correct symex."
+  (unless (or (bobp)
+              (symex-lisp--point-at-start-p)
+              (looking-back "[,'`]" (line-beginning-position))
+              (save-excursion (backward-char)  ; just inside symex
+                              (or (lispy-left-p)
+                                  (symex-string-p))))
+    (backward-sexp)))
+
 ;;; Predicates
 
-(defmacro symex-if-stuck (do-what operation &rest body)
+(defmacro symex-lisp--if-stuck (do-what operation &rest body)
   "Attempt OPERATION and if it fails, then do DO-WHAT."
-  `(let ((orig-pt (point)))
-     ,operation
-     (if (= orig-pt (point))
-         ,do-what
-       ,@body)))
+  (let ((orig-pt (gensym)))
+    `(let ((,orig-pt (point)))
+       ,operation
+       (if (= ,orig-pt (point))
+           ,do-what
+         ,@body))))
 
-(defun symex--point-at-root-symex-p ()
+(defun symex-lisp--point-at-root-symex-p ()
   "Check if point is at a root symex."
   (save-excursion
-    (symex-if-stuck t
-                    (symex--exit)
-                    nil)))
+    (symex-lisp--if-stuck t
+                          (symex-lisp--go-down)
+                          nil)))
 
-(defun symex--point-at-first-symex-p ()
+(defun symex-lisp--point-at-first-symex-p ()
   "Check if point is at the first symex at some level."
   (save-excursion
-    (symex-if-stuck t
-                    (symex--backward)
-                    nil)))
+    (symex-lisp--if-stuck t
+                          (symex-lisp--backward)
+                          nil)))
 
-(defun symex--point-at-last-symex-p ()
+(defun symex-lisp--point-at-last-symex-p ()
   "Check if point is at the last symex at some level."
   (save-excursion
-    (symex-if-stuck t
-                    (symex--forward)
-                    nil)))
+    (symex-lisp--if-stuck t
+                          (symex-lisp--forward)
+                          nil)))
 
-(defun symex--point-at-final-symex-p ()
+(defun symex-lisp--point-at-final-symex-p ()
   "Check if point is at the last symex in the buffer."
-  (save-excursion
-    (symex-if-stuck (progn (symex-if-stuck t
-                                           (symex--exit)
-                                           nil))
-                    (symex--forward)
-                    nil)))
+  (and (symex-lisp--point-at-last-symex-p)
+       (symex-lisp--point-at-root-symex-p)))
 
-(defun symex--point-at-initial-symex-p ()
+(defun symex-lisp--point-at-initial-symex-p ()
   "Check if point is at the first symex in the buffer."
+  ;; this is used in the primitive motions, so it cannot
+  ;; be defined in terms of them, as the other predicates
+  ;; above are
   (save-excursion
     (condition-case nil
         (or (bobp)
@@ -87,7 +99,7 @@
                    (not (thing-at-point 'sexp))))
       (error nil))))
 
-(defun symex--point-at-start-p ()
+(defun symex-lisp--point-at-start-p ()
   "Check if point is at the start of a symex."
   (and (not (eolp))
        (not (looking-at-p lispy-right))
@@ -243,20 +255,57 @@ as special cases here."
 
 ;;; Navigation
 
-(defun symex--get-end-point (count)
+(defun symex-lisp--select-nearest ()
+  "Select the appropriate symex nearest to point."
+  (cond ((and (not (eobp))
+              (save-excursion (forward-char) (lispy-right-p))) ; |)
+         (forward-char)
+         (lispy-different))
+        ((thing-at-point 'sexp)       ; som|ething
+         (beginning-of-thing 'sexp))
+        (t (symex-lisp--if-stuck (symex-lisp--backward)
+                                 (symex-lisp--forward)))))
+
+
+(defun symex-lisp--get-starting-point ()
+  "Get the point value at the start of the current symex."
+  (save-excursion
+    (unless (symex--point-at-start-p)
+      (condition-case nil
+          (backward-sexp)
+        (error nil)))
+    (point)))
+
+(defun symex-lisp--get-end-point-helper (count)
+  "Helper to get the point value after COUNT symexes.
+
+If the containing expression terminates earlier than COUNT
+symexes, returns the end point of the last one found.
+
+Note that this mutates point - it should not be called directly."
+  (if (= count 0)
+      (point)
+    (condition-case nil
+        (forward-sexp)
+      (error (point)))
+    (symex-lisp--get-end-point-helper (1- count))))
+
+(defun symex-lisp--get-end-point (count)
   "Get the point value after COUNT symexes.
 
 If the containing expression terminates earlier than COUNT
 symexes, returns the end point of the last one found."
   (save-excursion
-    (if (= count 0)
-        (point)
-      (condition-case nil
-          (forward-sexp)
-        (error (point)))
-      (symex--get-end-point (1- count)))))
+    (symex-lisp--get-end-point-helper count)))
 
-(defun symex--forward-one ()
+(defun symex-lisp--point-height-offset ()
+  "Compute the height offset of the current symex.
+
+This is measured from the lowest symex indicated by point. For
+symex-oriented languages like Lisp, this is always zero."
+  0)
+
+(defun symex-lisp--forward-one ()
   "Forward one symex."
   (let ((original-location (point))
         (result 0))
@@ -291,7 +340,7 @@ symexes, returns the end point of the last one found."
         (setq result 0)))
     result))
 
-(defun symex--forward (&optional count)
+(defun symex-lisp--forward (&optional count)
   "Forward symex.
 
 Go forward COUNT times, defaulting to one.
@@ -305,22 +354,22 @@ of symex mode (use the public `symex-go-forward` instead)."
   (let ((count (or count 1))
         (result 0))
     (dotimes (_ count)
-      (let ((res (symex--forward-one)))
+      (let ((res (symex-lisp--forward-one)))
         (setq result (+ res result))))
     (when (> result 0)
       (symex-make-move result 0))))
 
-(defun symex--backward-one ()
+(defun symex-lisp--backward-one ()
   "Backward one symex."
   (let ((result 0))
-    (unless (symex--point-at-initial-symex-p)
+    (unless (symex-lisp--point-at-initial-symex-p)
       (condition-case nil
           (progn (backward-sexp 1)
                  (setq result (1+ result)))
         (error nil)))
     result))
 
-(defun symex--backward (&optional count)
+(defun symex-lisp--backward (&optional count)
   "Backward symex.
 
 Go backward COUNT times, defaulting to one.
@@ -334,7 +383,7 @@ of symex mode (use the public `symex-go-backward` instead)."
   (let ((count (or count 1))
         (result 0))
     (dotimes (_ count)
-      (let ((res (symex--backward-one)))
+      (let ((res (symex-lisp--backward-one)))
         (setq result (+ res result))))
     (when (> result 0)
       (symex-make-move (- result) 0))))
@@ -344,8 +393,8 @@ of symex mode (use the public `symex-go-backward` instead)."
   (re-search-forward symex--re-symex-line)
   (back-to-indentation))
 
-(defun symex--enter-one ()
-  "Enter one level."
+(defun symex-lisp--go-up-by-one ()
+  "Go up one level."
   (let ((result 1))
     (cond ((or (symex-empty-list-p)
                (symex--special-empty-list-p))
@@ -369,10 +418,10 @@ of symex mode (use the public `symex-go-backward` instead)."
           (t (setq result 0)))
     result))
 
-(defun symex--enter (&optional count)
-  "Enter higher symex level.
+(defun symex-lisp--go-up (&optional count)
+  "Go up to a higher level.
 
-Enter COUNT times, defaulting to one.
+Go up COUNT times, defaulting to one.
 
 This is a primitive operation that is provided below the public
 abstraction level of symex.el.  It currently uses built-in Emacs
@@ -383,13 +432,13 @@ of symex mode (use the public `symex-go-up` instead)."
   (let ((count (or count 1))
         (result 0))
     (dotimes (_ count)
-      (let ((res (symex--enter-one)))
+      (let ((res (symex-lisp--go-up-by-one)))
         (setq result (+ res result))))
     (when (> result 0)
       (symex-make-move 0 result))))
 
-(defun symex--exit-one ()
-  "Exit one level."
+(defun symex-lisp--go-down-by-one ()
+  "Go down one level."
   (condition-case nil
       (progn (paredit-backward-up 1)
              ;; one-off - better to recognize these as delimiters
@@ -407,10 +456,10 @@ of symex mode (use the public `symex-go-up` instead)."
              1)
     (error 0)))
 
-(defun symex--exit (&optional count)
-  "Exit to lower symex level.
+(defun symex-lisp--go-down (&optional count)
+  "Go down to a lower level.
 
-Exit COUNT times, defaulting to one.
+Go down COUNT times, defaulting to one.
 
 This is a primitive operation that is provided below the public
 abstraction level of symex.el.  It currently uses built-in Emacs
@@ -421,7 +470,7 @@ of symex mode (use the public `symex-go-down` instead)."
   (let ((count (or count 1))
         (result 0))
     (dotimes (_ count)
-      (let ((res (symex--exit-one)))
+      (let ((res (symex-lisp--go-down-by-one)))
         (setq result (+ res result))))
     (when (> result 0)
       (symex-make-move 0 (- result)))))
@@ -434,7 +483,7 @@ of symex mode (use the public `symex-go-down` instead)."
 If there is an intervening comment line, then join only up to that
 line."
   (let* ((start (point))
-         (end (save-excursion (symex--go-forward)
+         (end (save-excursion (symex-lisp--forward)
                               (point)))
          (comment-line-position
           (symex--intervening-comment-line-p start end)))
@@ -453,6 +502,16 @@ match."
                                   (match-beginning 0))))
         (delete-region start end))))
 
+;;; Utilities
 
-(provide 'symex-primitives)
-;;; symex-primitives.el ends here
+(defun symex-lisp--exit ()
+  "Take necessary actions upon Symex mode exit.
+
+There are no Lisp-specific actions to take, at the present time, so
+this function does nothing. It is only here for completeness and
+symmetry with the tree-sitter primitives."
+  nil)
+
+
+(provide 'symex-primitives-lisp)
+;;; symex-primitives-lisp.el ends here

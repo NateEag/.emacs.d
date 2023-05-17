@@ -38,6 +38,7 @@
 (require 'symex-interface-common-lisp)
 (require 'symex-interface-arc)
 (require 'symex-interop)
+(require 'symex-ui)
 
 ;; These are customization or config variables defined elsewhere;
 ;; explicitly indicating them here to avoid byte compile warnings
@@ -45,6 +46,8 @@
 (defvar symex-highlight-p)
 (defvar symex-racket-modes)
 (defvar symex-elisp-modes)
+(defvar symex-clojure-modes)
+(defvar symex-common-lisp-modes)
 
 ;; buffer-local branch memory stack
 (defvar-local symex--branch-memory nil)
@@ -86,7 +89,7 @@
                  (symex-eval-scheme))
                 ((member major-mode symex-clojure-modes)
                  (symex-eval-clojure))
-                ((equal major-mode 'lisp-mode)
+                ((member major-mode symex-common-lisp-modes)
                  (symex-eval-common-lisp))
                 ((equal major-mode 'arc-mode)
                  (symex-eval-arc))
@@ -153,7 +156,7 @@ to how the Lisp interpreter does it (when it is following
          (symex-eval-definition-scheme))
         ((member major-mode symex-clojure-modes)
          (symex-eval-definition-clojure))
-        ((equal major-mode 'lisp-mode)
+        ((member major-mode symex-common-lisp-modes)
          (symex-eval-definition-common-lisp))
         ((equal major-mode 'arc-mode)
          (symex-eval-definition-arc))
@@ -172,7 +175,7 @@ to how the Lisp interpreter does it (when it is following
            (symex-eval-pretty-scheme))
           ((member major-mode symex-clojure-modes)
            (symex-eval-pretty-clojure))
-          ((equal major-mode 'lisp-mode)
+          ((member major-mode symex-common-lisp-modes)
            (symex-eval-pretty-common-lisp))
           ((equal major-mode 'arc-mode)
            (symex-eval-pretty-arc))
@@ -191,7 +194,7 @@ to how the Lisp interpreter does it (when it is following
            (symex-eval-print-scheme))
           ((member major-mode symex-clojure-modes)
            (symex-eval-print-clojure))
-          ((equal major-mode 'lisp-mode)
+          ((member major-mode symex-common-lisp-modes)
            (symex-eval-print-common-lisp))
           ((equal major-mode 'arc-mode)
            (symex-eval-print-arc))
@@ -214,7 +217,7 @@ executing it."
            (symex-eval-thunk-scheme))
           ((member major-mode symex-clojure-modes)
            (symex-eval-thunk-clojure))
-          ((equal major-mode 'lisp-mode)
+          ((member major-mode symex-common-lisp-modes)
            (symex-eval-thunk-common-lisp))
           ((equal major-mode 'arc-mode)
            (symex-eval-thunk-arc))
@@ -233,7 +236,7 @@ executing it."
            (symex-describe-symbol-scheme))
           ((member major-mode symex-clojure-modes)
            (symex-describe-symbol-clojure))
-          ((equal major-mode 'lisp-mode)
+          ((member major-mode symex-common-lisp-modes)
            (symex-describe-symbol-common-lisp))
           ((equal major-mode 'arc-mode)
            (symex-describe-symbol-arc))
@@ -250,7 +253,7 @@ executing it."
          (symex-repl-scheme))
         ((member major-mode symex-clojure-modes)
          (symex-repl-clojure))
-        ((equal major-mode 'lisp-mode)
+        ((member major-mode symex-common-lisp-modes)
          (symex-repl-common-lisp))
         ((equal major-mode 'arc-mode)
          (symex-repl-arc))
@@ -267,7 +270,7 @@ executing it."
          (symex-run-scheme))
         ((member major-mode symex-clojure-modes)
          (symex-run-clojure))
-        ((equal major-mode 'lisp-mode)
+        ((member major-mode symex-common-lisp-modes)
          (symex-run-common-lisp))
         (t (error "Symex mode: Lisp flavor not recognized!"))))
 
@@ -302,7 +305,7 @@ Version 2017-11-01"
                              "*scratch - Scheme*")
                             ((member major-mode symex-clojure-modes)
                              "*scratch - Clojure*")
-                            ((equal major-mode 'lisp-mode)
+                            ((member major-mode symex-common-lisp-modes)
                              "*scratch - Common Lisp*")
                             (t (error "Symex mode: Lisp flavor not recognized!"))))
          (buf (get-buffer buffer-name)))
@@ -316,19 +319,6 @@ Version 2017-11-01"
   (goto-char (point-max))
   (recenter)
   (evil-window-mru))
-
-(defun symex-select-nearest ()
-  "Select symex nearest to point."
-  (interactive)
-  (cond ((and (not (eobp))
-              (save-excursion (forward-char) (lispy-right-p)))  ; |)
-         (forward-char)
-         (lispy-different))
-        ((thing-at-point 'sexp)  ; som|ething
-         (beginning-of-thing 'sexp))
-        (t (symex-if-stuck (symex--go-backward)
-                           (symex--go-forward))))
-  (point))
 
 (defun symex-select-nearest-in-line ()
   "Select symex nearest to point that's on the current line."
@@ -345,13 +335,14 @@ Version 2017-11-01"
 (defun symex-index ()  ; TODO: may be better framed as a computation
   "Get relative (from start of containing symex) index of current symex."
   (interactive)
-  (save-excursion
-    (symex-select-nearest)
+  (symex-save-excursion
     (let ((original-location (point)))
       (let ((current-location (symex-goto-first))
+            (move-made symex--move-zero)
             (result 0))
-        (while (< current-location original-location)
-          (symex--execute-tree-move (symex-make-move 1 0))
+        (while (and move-made
+                    (< current-location original-location))
+          (setq move-made (symex--execute-tree-move (symex-make-move 1 0)))
           (setq current-location (point))
           (setq result (1+ result)))
         result))))
@@ -359,16 +350,9 @@ Version 2017-11-01"
 (defun symex-height ()  ; TODO: may be better framed as a computation
   "Get height (above root) of current symex."
   (interactive)
-  (save-excursion
-    (symex-select-nearest)
-    (let ((moves (symex-execute-traversal symex--traversal-goto-lowest)))
-      (length moves))))
-
-(defun symex-depth ()
-  "DEPRECATED.  Renamed to `symex-height`.
-
-This interface will be removed in a future version."
-  (symex-height))
+  (symex-save-excursion
+   (let ((moves (symex-execute-traversal symex--traversal-goto-lowest)))
+     (length moves))))
 
 (defun symex-next-visual-line (&optional count)
   "Coordinate navigation to move down.
@@ -430,6 +414,12 @@ Leaps COUNT times, defaulting to once."
   (dotimes (_ count)
     (symex--leap-forward)))
 
+(defun symex--tree-index ()
+  "Index of current tree."
+  (symex-save-excursion
+   (symex-goto-lowest)
+   (symex-index)))
+
 (defun symex--leap-backward (&optional soar)
   "Leap backward to a neighboring branch, preserving height and position.
 
@@ -460,37 +450,44 @@ approach is the one employed here."
                       symex--traversal-postorder
                     symex--traversal-postorder-in-tree))
         (height (symex-height))
-        (index (symex-index)))
-    (let* ((find-neighboring-branch
+        (index (symex-index))
+        (original-tree-index (symex--tree-index)))
+    (let* ((ensure-at-first-node
             (symex-traversal
-             (circuit (precaution traverse
-                                  (afterwards (not (lambda ()
-                                                     (= (symex-height)
-                                                        height))))))))
-           (run-along-neighboring-branch
+             (decision (at first)
+                       symex--move-zero
+                       symex--traversal-goto-first)))
+           (find-neighboring-branch
             (symex-traversal
-             (maneuver (decision (at first)
-                                 find-neighboring-branch
-                                 (maneuver symex--traversal-goto-first
-                                           find-neighboring-branch))
+             (maneuver ensure-at-first-node
+                       (circuit (precaution traverse
+                                            (afterwards (lambda ()
+                                                          (or (not (= (symex-height)
+                                                                      height))
+                                                              (if soar
+                                                                  (= original-tree-index
+                                                                     (symex--tree-index))
+                                                                nil))))))
                        traverse
-                       symex--traversal-goto-first
-                       (circuit (precaution (move forward)
-                                            (beforehand (lambda ()
-                                                          (< (symex-index)
-                                                             index)))))))))
+                       ensure-at-first-node)))
+           (run-along-branch
+            (symex-traversal
+             (circuit (precaution (move forward)
+                                  (beforehand (lambda ()
+                                                (< (symex-index)
+                                                   index)))))))
+           (leap-backward
+            (symex-traversal
+             (venture find-neighboring-branch
+                      run-along-branch))))
       (symex-execute-traversal
        (symex-traversal
-        (precaution (maneuver run-along-neighboring-branch
-                              (circuit
-                               (precaution (decision (lambda ()
-                                                       (< (symex-index)
-                                                          index))
-                                                     run-along-neighboring-branch
-                                                     symex--move-zero)
-                                           (beforehand (lambda ()
-                                                         (< (symex-index)
-                                                            index))))))
+        (precaution (venture leap-backward
+                             (circuit
+                              (precaution leap-backward
+                                          (beforehand (lambda ()
+                                                        (< (symex-index)
+                                                           index))))))
                     (beforehand (not (at root)))
                     (afterwards (lambda ()
                                   (and (= (symex-index)
@@ -510,36 +507,40 @@ the implementation."
                       symex--traversal-preorder
                     symex--traversal-preorder-in-tree))
         (height (symex-height))
-        (index (symex-index)))
+        (index (symex-index))
+        (original-tree-index (symex--tree-index)))
     (let* ((find-neighboring-branch
             (symex-traversal
-             (circuit (precaution traverse
-                                  (afterwards (not (lambda ()
-                                                     (= (symex-height)
-                                                        height))))))))
-           (run-along-neighboring-branch
-            (symex-traversal
              (maneuver (decision (at last)
-                                 find-neighboring-branch
-                                 (maneuver symex--traversal-goto-last
-                                           find-neighboring-branch))
-                       traverse
-                       (circuit (precaution (move forward)
-                                            (beforehand (lambda ()
-                                                          (< (symex-index)
-                                                             index)))))))))
+                                 symex--move-zero
+                                 symex--traversal-goto-last)
+                       (circuit (precaution traverse
+                                            (afterwards (lambda ()
+                                                          (or (not (= (symex-height)
+                                                                      height))
+                                                              (if soar
+                                                                  (= original-tree-index
+                                                                     (symex--tree-index))
+                                                                nil))))))
+                       traverse)))
+           (run-along-branch
+            (symex-traversal
+             (circuit (precaution (move forward)
+                                  (beforehand (lambda ()
+                                                (< (symex-index)
+                                                   index)))))))
+           (leap-forward
+            (symex-traversal
+             (venture find-neighboring-branch
+                      run-along-branch))))
       (symex-execute-traversal
        (symex-traversal
-        (precaution (maneuver run-along-neighboring-branch
-                              (circuit
-                               (precaution (decision (lambda ()
-                                                       (< (symex-index)
-                                                          index))
-                                                     run-along-neighboring-branch
-                                                     symex--move-zero)
-                                           (beforehand (lambda ()
-                                                         (< (symex-index)
-                                                            index))))))
+        (precaution (venture leap-forward
+                             (circuit
+                              (precaution leap-forward
+                                          (beforehand (lambda ()
+                                                        (< (symex-index)
+                                                           index))))))
                     (beforehand (not (at root)))
                     (afterwards (lambda ()
                                   (and (= (symex-index)
@@ -547,11 +548,17 @@ the implementation."
                                        (= (symex-height)
                                           height))))))))))
 
+(defun symex-select-nearest-advice (&rest _)
+  "Advice to select the nearest symex."
+  (when (and (fboundp 'evil-symex-state-p)
+             (evil-symex-state-p))
+    (symex-select-nearest)))
+
 (defun symex--selection-side-effects ()
   "Things to do as part of symex selection, e.g. after navigations."
   (interactive)
   (when symex-highlight-p
-    (mark-sexp)))
+    (symex--update-overlay)))
 
 (defun symex-selection-advice (orig-fn &rest args)
   "Attach symex selection side effects to a given function.
@@ -680,7 +687,8 @@ ORIG-FN applied to ARGS is the invocation being advised."
     ;; these are "internal" state transitions, used in e.g. symex-evaluate
     (deactivate-mark)
     (when symex-refocus-p
-      (symex--restore-scroll-margin))))
+      (symex--restore-scroll-margin))
+    (symex--primitive-exit)))
 
 (provide 'symex-misc)
 ;;; symex-misc.el ends here

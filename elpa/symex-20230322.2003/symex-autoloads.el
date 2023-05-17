@@ -173,11 +173,35 @@ features." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "symex-primitives-lisp" "symex-primitives-lisp.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from symex-primitives-lisp.el
+
+(register-definition-prefixes "symex-primitives-lisp" '("symex-"))
+
+;;;***
+
 ;;;### (autoloads nil "symex-transformations" "symex-transformations.el"
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from symex-transformations.el
 
 (register-definition-prefixes "symex-transformations" '("symex-"))
+
+;;;***
+
+;;;### (autoloads nil "symex-transformations-lisp" "symex-transformations-lisp.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from symex-transformations-lisp.el
+
+(register-definition-prefixes "symex-transformations-lisp" '("symex-lisp--"))
+
+;;;***
+
+;;;### (autoloads nil "symex-transformations-ts" "symex-transformations-ts.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from symex-transformations-ts.el
+
+(register-definition-prefixes "symex-transformations-ts" '("symex-ts-"))
 
 ;;;***
 
@@ -189,10 +213,17 @@ features." t nil)
 
 ;;;***
 
+;;;### (autoloads nil "symex-ts" "symex-ts.el" (0 0 0 0))
+;;; Generated autoloads from symex-ts.el
+
+(register-definition-prefixes "symex-ts" '("symex-ts-"))
+
+;;;***
+
 ;;;### (autoloads nil "symex-ui" "symex-ui.el" (0 0 0 0))
 ;;; Generated autoloads from symex-ui.el
 
-(register-definition-prefixes "symex-ui" '("symex--toggle-highlight"))
+(register-definition-prefixes "symex-ui" '("symex--"))
 
 ;;;***
 
@@ -200,6 +231,14 @@ features." t nil)
 ;;; Generated autoloads from symex-utils.el
 
 (register-definition-prefixes "symex-utils" '("symex--"))
+
+;;;***
+
+;;;### (autoloads nil "symex-utils-ts" "symex-utils-ts.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from symex-utils-ts.el
+
+(register-definition-prefixes "symex-utils-ts" '("symex-ts--delete-current-line-if-empty"))
 
 ;;;***
 

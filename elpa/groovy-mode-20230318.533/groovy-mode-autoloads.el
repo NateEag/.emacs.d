@@ -1,4 +1,4 @@
-;;; groovy-mode-autoloads.el --- automatically extracted autoloads
+;;; groovy-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -16,10 +16,19 @@ With no argument, this command toggles the mode.  Non-null prefix
 argument turns on the mode.  Null prefix argument turns off the
 mode.
 
-If called interactively, enable Groovy-Electric mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Groovy-Electric mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `groovy-electric-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 When Groovy Electric mode is enabled, simple, double and back
 quotes as well as braces are paired auto-magically. Expansion
@@ -28,7 +37,7 @@ have Font Lock enabled. ${ } is expanded when in a GString
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "groovy-electric" '("groovy-electric-")))
+(register-definition-prefixes "groovy-electric" '("groovy-electric-"))
 
 ;;;***
 
@@ -52,7 +61,7 @@ Key bindings:
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "groovy-mode" '("groovy-")))
+(register-definition-prefixes "groovy-mode" '("groovy-"))
 
 ;;;***
 
@@ -60,7 +69,7 @@ Key bindings:
 ;;; Generated autoloads from inf-groovy.el
 
 (autoload 'inf-groovy-keys "inf-groovy" "\
-Set local key defs for inf-groovy in groovy-mode" nil nil)
+Set local key defs for inf-groovy in `groovy-mode'." nil nil)
 
 (autoload 'inferior-groovy-mode "inf-groovy" "\
 Major mode for interacting with an inferior groovy (groovysh) process.
@@ -68,21 +77,21 @@ Major mode for interacting with an inferior groovy (groovysh) process.
 The following commands are available:
 \\{inferior-groovy-mode-map}
 
-A groovy process can be fired up with M-x run-groovy.
+A groovy process can be fired up with \\[run-groovy].
 
-Customisation: Entry to this mode runs the hooks on comint-mode-hook and
-inferior-groovy-mode-hook (in that order).
+Customisation: Entry to this mode runs the hooks on
+`comint-mode-hook' and `inferior-groovy-mode-hook' (in that order).
 
 You can send text to the inferior groovy process from other buffers containing
 Groovy source.
-    switch-to-groovy switches the current buffer to the groovy process buffer.
-    groovy-send-definition sends the current definition to the groovy process.
-    groovy-send-region sends the current region to the groovy process.
+    `switch-to-groovy' switches the current buffer to the groovy process buffer.
+    `groovy-send-definition' sends the current definition to the groovy process.
+    `groovy-send-region' sends the current region to the groovy process.
 
-    groovy-send-definition-and-go, groovy-send-region-and-go,
+    `groovy-send-definition-and-go', `groovy-send-region-and-go',
         switch to the groovy process buffer after sending their text.
 For information on running multiple processes in multiple buffers, see
-documentation for variable groovy-buffer.
+documentation for variable `groovy-buffer'.
 
 Commands:
 Return after the end of the process' output sends the text from the
@@ -92,7 +101,8 @@ Return before the end of the process' output copies the sexp ending at point
 Delete converts tabs to spaces as it moves back.
 Tab indents for groovy; with argument, shifts rest
     of expression rigidly with the current line.
-C-M-q does Tab on each line starting within following expression.
+\\<groovy-mode-map>
+\\[prog-indent-sexp] does Tab on each line starting within following expression.
 Paragraphs are separated only by blank lines.  # start comments.
 If you accidentally suspend your process, use \\[comint-continue-subjob]
 to continue it." t nil)
@@ -111,7 +121,7 @@ process buffer for a list of commands.
 
 (eval-after-load 'groovy-mode (lambda nil (add-hook 'groovy-mode-hook 'inf-groovy-keys)))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inf-groovy" '("groovy" "inf" "remove-in-string" "switch-to-groovy")))
+(register-definition-prefixes "inf-groovy" '("groovy" "inf" "remove-in-string" "switch-to-groovy"))
 
 ;;;***
 

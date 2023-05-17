@@ -1,6 +1,8 @@
-(define-package "jq-mode" "20200604.833" "Edit jq scripts."
+(define-package "jq-mode" "20220610.1119" "Edit jq scripts."
   '((emacs "25.1"))
-  :commit "42ad0a99f0114233e2cb317585cb9af494d18a2f" :authors
+  :commit "071c1c29bac30351ad338136f2b625e5601365cd" :authors
+  '(("Bjarte Johansen <Bjarte dot Johansen at gmail dot com>"))
+  :maintainers
   '(("Bjarte Johansen <Bjarte dot Johansen at gmail dot com>"))
   :maintainer
   '("Bjarte Johansen <Bjarte dot Johansen at gmail dot com>")

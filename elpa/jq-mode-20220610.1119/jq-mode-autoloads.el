@@ -1,4 +1,4 @@
-;;; jq-mode-autoloads.el --- automatically extracted autoloads
+;;; jq-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -20,14 +20,14 @@ Runs jq interactively on a json buffer.
 
 \(fn BEG END)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "jq-mode" '("jq-")))
+(register-definition-prefixes "jq-mode" '("jq-"))
 
 ;;;***
 
 ;;;### (autoloads nil "ob-jq" "ob-jq.el" (0 0 0 0))
 ;;; Generated autoloads from ob-jq.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ob-jq" '("org-babel-")))
+(register-definition-prefixes "ob-jq" '("org-babel-"))
 
 ;;;***
 

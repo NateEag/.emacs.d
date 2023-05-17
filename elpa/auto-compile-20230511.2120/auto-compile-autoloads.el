@@ -1,4 +1,4 @@
-;;; auto-compile-autoloads.el --- automatically extracted autoloads
+;;; auto-compile-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,10 +12,19 @@
 (autoload 'auto-compile-mode "auto-compile" "\
 Compile Emacs Lisp source files after the visiting buffers are saved.
 
-If called interactively, enable Auto-Compile mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Auto-Compile mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `auto-compile-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 After a buffer containing Emacs Lisp code is saved to its source
 file update the respective byte code file.  If the latter does
@@ -44,11 +53,15 @@ or call the function `auto-compile-on-save-mode'.")
 (autoload 'auto-compile-on-save-mode "auto-compile" "\
 Toggle Auto-Compile mode in all buffers.
 With prefix ARG, enable Auto-Compile-On-Save mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+otherwise, disable it.
 
-Auto-Compile mode is enabled in all buffers where
-`turn-on-auto-compile-mode' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Auto-Compile mode is enabled in all buffers where `turn-on-auto-compile-mode'
+would do it.
+
 See `auto-compile-mode' for more information on Auto-Compile mode.
 
 \(fn &optional ARG)" t nil)
@@ -84,10 +97,10 @@ multiple files is toggled as follows:
   removed.  If `auto-compile-deletes-stray-dest' is non-nil this
   even includes byte code files for which no source file exists.
 
-* When _creating_ byte code files only do so for source files
-  that are actual libraries.  Source files that provide the
-  correct feature are considered to be libraries; see
-  `packed-library-p'.
+* When _creating_ byte code files then only compile files for
+  which `auto-compile-predicate-function' returns non-nil.  By
+  default that includes all files that look like source files,
+  based solely on their filenames.
 
 * Note that non-libraries can still be automatically compiled,
   you just cannot _recursively_ turn on automatic compilation
@@ -97,9 +110,8 @@ multiple files is toggled as follows:
   affected source files even when the respective source files are
   up-to-date.  Do so even for non-library source files.
 
-* Only enter subdirectories for which `packed-ignore-directory-p'
-  returns nil; i.e. don't enter hidden directories or directories
-  containing a file named \".nosearch\".
+* Compile libraries in subdirectories, except for files in hidden
+  directories and directories containing a file named \".nosearch\".
 
 \(fn FILE ACTION)" t nil)
 
@@ -113,10 +125,20 @@ for a description of this minor mode.")
 (autoload 'auto-compile-on-load-mode "auto-compile" "\
 Before loading a library recompile it if it needs recompilation.
 
-If called interactively, enable Auto-Compile-On-Load mode if ARG
-is positive, and disable it if ARG is zero or negative.  If
-called from Lisp, also enable the mode if ARG is omitted or nil,
-and toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Auto-Compile-On-Load mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='auto-compile-on-load-mode)'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 A library needs to be recompiled if the source file is newer than
 it's byte-compile destination.  Without this advice the outdated
@@ -126,7 +148,7 @@ Also see the related `auto-compile-on-save-mode'.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-compile" '("auto-compile-" "byte-compile-log-warning" "load" "mode-line-" "require" "save-buffers-kill-" "turn-on-auto-compile-mode")))
+(register-definition-prefixes "auto-compile" '("auto-compile-" "byte-compile-log-warning" "load" "mode-line-" "require" "save-buffers-kill-" "turn-on-auto-compile-mode"))
 
 ;;;***
 

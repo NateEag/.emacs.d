@@ -73,12 +73,151 @@ it is disabled.
 
 ;;;***
 
+;;;### (autoloads nil "php-complete" "php-complete.el" (0 0 0 0))
+;;; Generated autoloads from php-complete.el
+
+(let ((loads (get 'php-complete 'custom-loads))) (if (member '"php-complete" loads) nil (put 'php-complete 'custom-loads (cons '"php-complete" loads))))
+
+(defvar php-complete-function-modules '(bcmath core gmp libxml intl mbstring pcntl posix sodium xml xmlwriter) "\
+Module names for function names completion.")
+
+(custom-autoload 'php-complete-function-modules "php-complete" t)
+
+(put 'php-complete-function-modules 'safe-local-variable (lambda (value) (and (listp value) (cl-loop for v in values always (assq v php-defs-functions-alist)))))
+
+(autoload 'php-complete-complete-function "php-complete" "\
+Complete PHP keyword at point.
+
+If INTERACTIVE is nil the function acts like a capf.
+
+\(fn &optional INTERACTIVE)" t nil)
+
+(register-definition-prefixes "php-complete" '("php-complete--"))
+
+;;;***
+
+;;;### (autoloads nil "php-defs" "php-defs.el" (0 0 0 0))
+;;; Generated autoloads from php-defs.el
+
+(register-definition-prefixes "php-defs" '("php-defs-functions-alist"))
+
+;;;***
+
 ;;;### (autoloads nil "php-face" "php-face.el" (0 0 0 0))
 ;;; Generated autoloads from php-face.el
 
 (let ((loads (get 'php-faces 'custom-loads))) (if (member '"php-face" loads) nil (put 'php-faces 'custom-loads (cons '"php-face" loads))))
 
 (register-definition-prefixes "php-face" '("php-annotations-annotation-face"))
+
+;;;***
+
+;;;### (autoloads nil "php-flymake" "php-flymake.el" (0 0 0 0))
+;;; Generated autoloads from php-flymake.el
+
+(autoload 'php-flymake "php-flymake" "\
+Flymake backend for PHP syntax check.
+
+See `flymake-diagnostic-functions' about REPORT-FN and ARGS parameters.
+
+\(fn REPORT-FN &rest ARGS)" nil nil)
+
+(register-definition-prefixes "php-flymake" '("php-flymake-"))
+
+;;;***
+
+;;;### (autoloads nil "php-format" "php-format.el" (0 0 0 0))
+;;; Generated autoloads from php-format.el
+
+(autoload 'php-format-this-buffer-file "php-format" "\
+Apply format this buffer file." t nil)
+
+(autoload 'php-format-project "php-format" "\
+Apply format this buffer file." t nil)
+
+(autoload 'php-format-on-after-save-hook "php-format" "\
+Apply format on after save hook." nil nil)
+
+(autoload 'php-format-auto-mode "php-format" "\
+Automatically apply formatting when saving an edited file.
+
+This is a minor mode.  If called interactively, toggle the
+`Php-Format-Auto mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `php-format-auto-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
+
+\(fn &optional ARG)" t nil)
+
+(register-definition-prefixes "php-format" '("php-format-"))
+
+;;;***
+
+;;;### (autoloads nil "php-ide" "php-ide.el" (0 0 0 0))
+;;; Generated autoloads from php-ide.el
+
+(defvar php-ide-features nil "\
+A set of PHP-IDE features symbol.")
+
+(custom-autoload 'php-ide-features "php-ide" t)
+
+(put 'php-ide-features 'safe-local-variable (lambda (v) (cl-loop for feature in (if (listp v) v (list v)) always (symbolp feature))))
+
+(defvar php-ide-eglot-executable nil "\
+Command name or path to the command of Eglot LSP executable.")
+
+(custom-autoload 'php-ide-eglot-executable "php-ide" t)
+
+(put 'php-ide-eglot-executable 'safe-local-variable (lambda (v) (cond ((stringp v) (file-exists-p v)) ((listp v) (cl-every #'stringp v)) ((assq v php-ide-lsp-command-alist)))))
+
+(autoload 'php-ide-eglot-server-program "php-ide" "\
+Return a list of command to execute LSP Server." nil nil)
+
+(autoload 'php-ide-mode "php-ide" "\
+Minor mode for integrate IDE-like tools.
+
+This is a minor mode.  If called interactively, toggle the
+`Php-Ide mode' mode.  If the prefix argument is positive, enable
+the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `php-ide-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'php-ide-turn-on "php-ide" "\
+Turn on PHP IDE-FEATURES and execute `php-ide-mode'." nil nil)
+
+(register-definition-prefixes "php-ide" '("php-ide-"))
+
+;;;***
+
+;;;### (autoloads nil "php-ide-phpactor" "php-ide-phpactor.el" (0
+;;;;;;  0 0 0))
+;;; Generated autoloads from php-ide-phpactor.el
+
+(autoload 'php-ide-phpactor-activate "php-ide-phpactor" "\
+Activate PHP-IDE using phpactor.el." t nil)
+
+(autoload 'php-ide-phpactor-deactivate "php-ide-phpactor" "\
+Dectivate PHP-IDE using phpactor.el." t nil)
+
+(register-definition-prefixes "php-ide-phpactor" '("php-ide-phpactor-"))
 
 ;;;***
 

@@ -56,6 +56,12 @@
                  (const :tag "Left" left))
   :group 'lsp-ui-imenu)
 
+(defcustom lsp-ui-imenu-buffer-position 'right
+  "Where to place the `lsp-ui-imenu' buffer."
+  :type '(choice (const :tag "Left" left)
+		 (const :tag "Right" right))
+  :group 'lsp-ui-imenu)
+
 (defcustom lsp-ui-imenu-colors '("deep sky blue" "green3")
   "Color list to cycle through for entry groups."
   :type '(repeat color)
@@ -64,6 +70,12 @@
 (defcustom lsp-ui-imenu-window-width 0
   "When not 0, don't fit window to buffer and use value as window-width."
   :type 'number
+  :group 'lsp-ui-imenu)
+
+(defcustom lsp-ui-imenu-window-fix-width nil
+  "If non-nil, the `lsp-ui-imenu' window will permanently maintain its width.
+ie. it will not be affected by `balance-windows' etc."
+  :type 'boolean
   :group 'lsp-ui-imenu)
 
 (defcustom lsp-ui-imenu-auto-refresh nil
@@ -177,7 +189,10 @@
 
 (defun lsp-ui-imenu--put-separator nil
   (let ((ov (make-overlay (point) (point))))
-    (overlay-put ov 'after-string (propertize "\n" 'face '(:height 0.6)))))
+    (overlay-put ov 'after-string (propertize "\n" 'face '(:height 0.6)))
+    (overlay-put ov 'priority 0)))
+
+(defvar-local overlay-priority 0)
 
 (defun lsp-ui-imenu--put-toplevel-title (title color-index)
   (if (eq lsp-ui-imenu-kind-position 'top)
@@ -188,7 +203,8 @@
          (concat (propertize "\n" 'face '(:height 0.6))
                  (propertize title 'face `(:foreground ,color))
                  "\n"
-                 (propertize "\n" 'face '(:height 0.6)))))
+                 (propertize "\n" 'face '(:height 0.6))))
+	(overlay-put ov 'priority (setq overlay-priority (1- overlay-priority))))
     ;; Left placement, title is put with the first sub item. Only put a separator here.
     (lsp-ui-imenu--put-separator)))
 
@@ -199,7 +215,8 @@
      ov 'after-string
      (concat (lsp-ui-imenu--pad " " padding bars depth color-index t is-last)
              (propertize title 'face `(:foreground ,title-color))
-             (propertize "\n" 'face '(:height 1))))))
+             (propertize "\n" 'face '(:height 1))))
+    (overlay-put ov 'priority (setq overlay-priority (1- overlay-priority)))))
 
 (defun lsp-ui-imenu--insert-items (title items padding bars depth color-index)
   "Insert ITEMS for TITLE.
@@ -214,31 +231,30 @@ DEPTH is the depth of the items in the index tree, starting from 0.
 COLOR-INDEX is the index of the color of the leftmost bar.
 
 Return the updated COLOR-INDEX."
-  (let ((len (length items)))
-    (--each-indexed items
-      (let ((is-last (= (1+ it-index) len)))
-        (if (imenu--subalist-p it)
-            (-let* (((sub-title . entries) it))
-              (if (= depth 0)
-                  (lsp-ui-imenu--put-toplevel-title sub-title color-index)
-                (lsp-ui-imenu--put-subtitle sub-title padding bars depth color-index is-last))
-              (when (and is-last (> depth 0))
-                (aset bars (1- depth) nil))
-              (let ((lsp-ui-imenu-kind-position (if (> depth 0) 'top
-                                                  lsp-ui-imenu-kind-position)))
-                (lsp-ui-imenu--insert-items sub-title
-                                            entries
-                                            padding
-                                            bars
-                                            (1+ depth)
-                                            color-index))
-              (when (and is-last (> depth 0))
-                (aset bars (1- depth) t))
-              (when (= depth 0)
-                (setq color-index (1+ color-index))))
-          (insert (lsp-ui-imenu--make-line title it-index it
-                                           padding bars depth color-index
-                                           is-last))))))
+  (--each-indexed items
+    (let ((is-last (= (1+ it-index) (length items))))
+      (if (imenu--subalist-p it)
+          (-let* (((sub-title . entries) it))
+            (if (= depth 0)
+                (lsp-ui-imenu--put-toplevel-title sub-title color-index)
+              (lsp-ui-imenu--put-subtitle sub-title padding bars depth color-index is-last))
+            (when (and is-last (> depth 0))
+              (aset bars (1- depth) nil))
+            (let ((lsp-ui-imenu-kind-position (if (> depth 0) 'top
+                                                lsp-ui-imenu-kind-position)))
+              (lsp-ui-imenu--insert-items sub-title
+                                          entries
+                                          padding
+                                          bars
+                                          (1+ depth)
+                                          color-index))
+            (when (and is-last (> depth 0))
+              (aset bars (1- depth) t))
+            (when (= depth 0)
+              (setq color-index (1+ color-index))))
+        (insert (lsp-ui-imenu--make-line title it-index it
+                                         padding bars depth color-index
+                                         is-last)))))
   color-index)
 
 (defun lsp-ui-imenu--get-padding (items)
@@ -295,19 +311,24 @@ ITEMS are used when the kind position is 'left."
   (imenu--make-index-alist)
   (let ((imenu-buffer (get-buffer-create lsp-ui-imenu-buffer-name)))
     (lsp-ui-imenu--refresh-content)
-    (let ((win (display-buffer-in-side-window imenu-buffer '((side . right)))))
+    (let ((win (display-buffer-in-side-window imenu-buffer
+					      `((side . ,(if (eq lsp-ui-imenu-buffer-position 'left)
+							     'left
+							   'right))))))
       (set-window-margins win 1)
       (select-window win)
       (set-window-start win 1)
       (lsp-ui-imenu--move-to-name-beginning)
       (set-window-dedicated-p win t)
-      ;; when `lsp-ui-imenu-window-width' is 0, fit window to buffer
-      (if (= lsp-ui-imenu-window-width 0)
-          (let ((fit-window-to-buffer-horizontally 'only))
-            (fit-window-to-buffer win)
-            (window-resize win 3 t))
-        (let ((x (- lsp-ui-imenu-window-width (window-width))))
-          (window-resize (selected-window) x t))))))
+      (let ((window-size-fixed)) ;; Temporarily set `window-size-fixed' to nil for resizing.
+	;; When `lsp-ui-imenu-window-width' is 0, fit window to buffer:
+	(if (= lsp-ui-imenu-window-width 0)
+            (let ((fit-window-to-buffer-horizontally 'only))
+              (fit-window-to-buffer win)
+              (window-resize win 3 t))
+          (let ((x (- lsp-ui-imenu-window-width (window-width))))
+            (window-resize (selected-window) x t))))
+      )))
 
 (defun lsp-ui-imenu--kill nil
   "Kill imenu window."
@@ -364,7 +385,8 @@ ITEMS are used when the kind position is 'left."
   "Keymap for ‘lsp-ui-peek-mode’.")
 
 (define-derived-mode lsp-ui-imenu-mode special-mode "lsp-ui-imenu"
-  "Mode showing imenu entries.")
+  "Mode showing imenu entries."
+  (setq window-size-fixed (if lsp-ui-imenu-window-fix-width 'width nil)))
 
 (defun lsp-ui-imenu--refresh ()
   "Safe refresh imenu content."

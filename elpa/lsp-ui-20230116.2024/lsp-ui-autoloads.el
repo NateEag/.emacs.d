@@ -1,4 +1,4 @@
-;;; lsp-ui-autoloads.el --- automatically extracted autoloads
+;;; lsp-ui-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -19,14 +19,14 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui" '("lsp-ui-")))
+(register-definition-prefixes "lsp-ui" '("lsp-ui-"))
 
 ;;;***
 
 ;;;### (autoloads nil "lsp-ui-doc" "lsp-ui-doc.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-ui-doc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-doc" '("lsp-ui-doc-")))
+(register-definition-prefixes "lsp-ui-doc" '("lsp-ui-doc-"))
 
 ;;;***
 
@@ -34,21 +34,21 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-ui-flycheck.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-flycheck" '("lsp-ui-flycheck-")))
+(register-definition-prefixes "lsp-ui-flycheck" '("lsp-ui-flycheck-"))
 
 ;;;***
 
 ;;;### (autoloads nil "lsp-ui-imenu" "lsp-ui-imenu.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-ui-imenu.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-imenu" '("lsp-ui-imenu")))
+(register-definition-prefixes "lsp-ui-imenu" '("lsp-ui-imenu" "overlay-priority"))
 
 ;;;***
 
 ;;;### (autoloads nil "lsp-ui-peek" "lsp-ui-peek.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-ui-peek.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-peek" '("lsp-")))
+(register-definition-prefixes "lsp-ui-peek" '("lsp-"))
 
 ;;;***
 
@@ -56,14 +56,14 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-ui-sideline.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-sideline" '("lsp-ui-sideline")))
+(register-definition-prefixes "lsp-ui-sideline" '("lsp-ui-sideline"))
 
 ;;;***
 
 ;;;### (autoloads nil "lsp-ui-util" "lsp-ui-util.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-ui-util.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-ui-util" '("lsp-ui-util-")))
+(register-definition-prefixes "lsp-ui-util" '("lsp-ui-util-"))
 
 ;;;***
 

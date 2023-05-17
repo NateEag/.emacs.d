@@ -1,4 +1,4 @@
-;;; gnuplot-autoloads.el --- automatically extracted autoloads
+;;; gnuplot-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -14,7 +14,7 @@ Major mode for editing and executing GNUPLOT scripts.
 This was written with version 4.6 of gnuplot in mind, but should
 work with newer and older versions.
 
-Report bugs at https://github.com/emacsorphanage/gnuplot/issues
+Report bugs at https://github.com/emacs-gnuplot/gnuplot/issues
 
                             ------O------
 
@@ -28,9 +28,9 @@ to make a list of keywords.
 
 The info file should be installed by default with the Gnuplot
 distribution, or is available at the `gnuplot-mode' web page:
-https://github.com/emacsorphanage/gnuplot/
+https://github.com/emacs-gnuplot/gnuplot/
 
-With the new context-sensitive mode active, gnuplot-mode can also
+With the new context-sensitive mode active, `gnuplot-mode' can also
 provide function/`eldoc-mode' syntax hints as you type.  This requires a
 separate file of strings, `gnuplot-eldoc.el', which is also
 provided by recent Gnuplot distributions.
@@ -77,7 +77,7 @@ following in your .emacs file:
 (autoload 'run-gnuplot "gnuplot" "\
 Run an inferior Gnuplot process." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot" '("gnuplot-")))
+(register-definition-prefixes "gnuplot" '("gnuplot-"))
 
 ;;;***
 
@@ -86,14 +86,24 @@ Run an inferior Gnuplot process." t nil)
 ;;; Generated autoloads from gnuplot-context.el
 
 (autoload 'gnuplot-context-sensitive-mode "gnuplot-context" "\
-Use context-sensitive completion and help in gnuplot-mode.
+Use context-sensitive completion and help in `gnuplot-mode'.
 
-If called interactively, enable Gnuplot-Context-Sensitive mode if
-ARG is positive, and disable it if ARG is zero or negative.  If
-called from Lisp, also enable the mode if ARG is omitted or nil,
-and toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Gnuplot-Context-Sensitive mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable
+the mode.
 
-When context-sensitive mode is enabled, gnuplot-mode tries to
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `gnuplot-context-sensitive-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
+
+When context-sensitive mode is enabled, `gnuplot-mode' tries to
 provide more useful completions and help suggestions for built-in
 keywords and functions by parsing each command as you type.  It
 attempts to take into account Gnuplot's many abbreviated
@@ -128,7 +138,7 @@ distribution. See gnuplot-context.el for details.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-context" '("gnuplot-")))
+(register-definition-prefixes "gnuplot-context" '("gnuplot-"))
 
 ;;;***
 
@@ -153,7 +163,7 @@ Note that \"cntrparam\" is not currently supported." t nil)
 
 (autoload 'gnuplot-gui-toggle-popup "gnuplot-gui" nil t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-gui" '("gnuplot-")))
+(register-definition-prefixes "gnuplot-gui" '("gnuplot-"))
 
 ;;;***
 

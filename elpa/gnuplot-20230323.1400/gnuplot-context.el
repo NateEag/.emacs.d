@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012-2013 Jon Oddie <jonxfield@gmail.com>
 
 ;; Author:     Jon Oddie <jonxfield@gmail.com>
-;; URL:        https://github.com/emacsorphanage/gnuplot
+;; URL:        https://github.com/emacs-gnuplot/gnuplot
 
 ;; This file is not part of GNU Emacs.
 
@@ -41,11 +41,10 @@
 ;;
 ;; Gnuplot's context sensitive mode is best controlled using Customize
 ;; (M-x customize-group gnuplot): simply enable the
-;; `gnuplot-context-sensitive-mode' setting.  On recent Emacs (>= 23),
-;; you may also want to turn on `gnuplot-tab-completion' so that the
-;; TAB key does auto-completion on lines which are already
-;; indented.  (This just sets the Emacs variable `tab-always-indent' to
-;; `complete' in Gnuplot buffers).
+;; `gnuplot-context-sensitive-mode' setting. You may also want to turn
+;; on `gnuplot-tab-completion' so that the TAB key does auto-completion
+;; on lines which are already indented. (This just sets the Emacs
+;; variable `tab-always-indent' to `complete' in Gnuplot buffers).
 ;;
 ;; If you need to turn context sensitivity on or off from Lisp code
 ;; for some reason, call the function
@@ -297,7 +296,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
                (token
                 (cond
                  ((gnuplot-tokenize-by-regexps
-                   ("[A-Za-z_][A-Za-z0-9_]*" name)
+                   ("[[:alpha:]_][[:alpha:]0-9_]*" name)
                    ("[0-9]+\\(\\.[0-9]*\\)?\\([eE][+-]?[0-9]+\\)?\\|\\.[0-9]+\\([eE][+-]?[0-9]+\\)?" number)
                    (gnuplot-operator-regexp operator)
                    (";" separator)))
@@ -1729,7 +1728,7 @@ name; otherwise continues tokenizing up to the token at point.  FIXME."
 
 ;;;; Variables to be set via pattern matching
 (defvar gnuplot-completions nil
-  "List of possible gnuplot-mode completions at point.
+  "List of possible `gnuplot-mode' completions at point.
 This is filled in by `gnuplot-match-pattern' when it reaches the
 token before point.")
 
@@ -1747,7 +1746,7 @@ for the topmost entry when it reaches the token at point.")
 Set by `gnuplot-match-pattern'.  See also `gnuplot-info-at-point'.")
 
 (defvar gnuplot-captures nil
-  "Alist of named capture groups for gnuplot-mode completion code.
+  "Alist of named capture groups for `gnuplot-mode' completion code.
 
 Each entry is of the form (NAME BEGIN END), where NAME is the
 name specified in the (capture NAME PATTERN) form in the
@@ -1756,7 +1755,7 @@ list beginning the capture group, and END is the tail of the
 token list just after the end of the capture group.")
 
 (defvar gnuplot-eldoc-hash nil
-  "ElDoc strings for gnuplot-mode.
+  "ElDoc strings for `gnuplot-mode'.
 
 These have to be compiled from the Gnuplot source tree using
 `doc2texi.el'.")
@@ -2097,10 +2096,7 @@ there."
 
 (defun gnuplot--find-info-node (node)
   (save-window-excursion
-    (if (>= emacs-major-version 23)
-        (info (format "(gnuplot)%s" node))
-      (info)
-      (Info-find-node "gnuplot" node)))
+    (info (format "(gnuplot)%s" node)))
   (gnuplot--adjust-info-display))
 
 
@@ -2188,9 +2184,9 @@ command."
 
 ;;;###autoload
 (define-minor-mode gnuplot-context-sensitive-mode
-  "Use context-sensitive completion and help in gnuplot-mode.
+  "Use context-sensitive completion and help in `gnuplot-mode'.
 
-When context-sensitive mode is enabled, gnuplot-mode tries to
+When context-sensitive mode is enabled, `gnuplot-mode' tries to
 provide more useful completions and help suggestions for built-in
 keywords and functions by parsing each command as you type.  It
 attempts to take into account Gnuplot's many abbreviated

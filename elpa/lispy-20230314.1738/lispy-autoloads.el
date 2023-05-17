@@ -1,4 +1,4 @@
-;;; lispy-autoloads.el --- automatically extracted autoloads
+;;; lispy-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,56 +9,63 @@
 ;;;### (autoloads nil "elpa" "elpa.el" (0 0 0 0))
 ;;; Generated autoloads from elpa.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elpa" '("straight-reload-all")))
+(register-definition-prefixes "elpa" '("straight-reload-all"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-clojure" "le-clojure.el" (0 0 0 0))
 ;;; Generated autoloads from le-clojure.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-clojure" '("lispy-")))
+(register-definition-prefixes "le-clojure" '("lispy-"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-hy" "le-hy.el" (0 0 0 0))
 ;;; Generated autoloads from le-hy.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-hy" '("lispy--")))
+(register-definition-prefixes "le-hy" '("lispy--"))
+
+;;;***
+
+;;;### (autoloads nil "le-js" "le-js.el" (0 0 0 0))
+;;; Generated autoloads from le-js.el
+
+(register-definition-prefixes "le-js" '("lispy--"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-julia" "le-julia.el" (0 0 0 0))
 ;;; Generated autoloads from le-julia.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-julia" '("lispy-")))
+(register-definition-prefixes "le-julia" '("lispy-"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-lisp" "le-lisp.el" (0 0 0 0))
 ;;; Generated autoloads from le-lisp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-lisp" '("lispy-")))
+(register-definition-prefixes "le-lisp" '("lispy-"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-python" "le-python.el" (0 0 0 0))
 ;;; Generated autoloads from le-python.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-python" '("lispy-")))
+(register-definition-prefixes "le-python" '("lispy-" "python-shell--interpreter"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-racket" "le-racket.el" (0 0 0 0))
 ;;; Generated autoloads from le-racket.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-racket" '("lispy-")))
+(register-definition-prefixes "le-racket" '("lispy-"))
 
 ;;;***
 
 ;;;### (autoloads nil "le-scheme" "le-scheme.el" (0 0 0 0))
 ;;; Generated autoloads from le-scheme.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "le-scheme" '("lispy-")))
+(register-definition-prefixes "le-scheme" '("lispy-"))
 
 ;;;***
 
@@ -68,10 +75,19 @@
 (autoload 'lispy-mode "lispy" "\
 Minor mode for navigating and editing LISP dialects.
 
-If called interactively, enable Lispy mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the `Lispy
+mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `lispy-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 When `lispy-mode' is on, most unprefixed keys,
 i.e. [a-zA-Z+-./<>], conditionally call commands instead of
@@ -94,14 +110,14 @@ backward through lists, which is useful to move into special.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "eval-error" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
+(register-definition-prefixes "lispy" '("ac-trigger-commands" "eval-error" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error"))
 
 ;;;***
 
 ;;;### (autoloads nil "lispy-inline" "lispy-inline.el" (0 0 0 0))
 ;;; Generated autoloads from lispy-inline.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-inline" '("lispy-")))
+(register-definition-prefixes "lispy-inline" '("lispy-"))
 
 ;;;***
 
@@ -112,14 +128,14 @@ backward through lists, which is useful to move into special.
 Select a line within current top level sexp.
 See `lispy-occur-backend' for the selection back end." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-occur" '("lispy-")))
+(register-definition-prefixes "lispy-occur" '("lispy-"))
 
 ;;;***
 
 ;;;### (autoloads nil "lispy-tags" "lispy-tags.el" (0 0 0 0))
 ;;; Generated autoloads from lispy-tags.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy-tags" '("lispy-" "no-semantic-support")))
+(register-definition-prefixes "lispy-tags" '("lispy-" "no-semantic-support"))
 
 ;;;***
 

@@ -1,0 +1,8 @@
+jediepcserver.py
+setup.py
+jediepcserver.egg-info/PKG-INFO
+jediepcserver.egg-info/SOURCES.txt
+jediepcserver.egg-info/dependency_links.txt
+jediepcserver.egg-info/entry_points.txt
+jediepcserver.egg-info/requires.txt
+jediepcserver.egg-info/top_level.txt

@@ -6,8 +6,8 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <mail@vasilij.de>
 ;; URL: https://github.com/yoshiki/yaml-mode
-;; Package-Version: 20220104.1503
-;; Package-Commit: 535273d5a1eb76999d20afbcf4d9f056d8ffd2da
+;; Package-Version: 20230329.723
+;; Package-Commit: b153150e0e77b4ec462d741cdb16956c6ae270d6
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: data yaml
 ;; Version: 0.0.15
@@ -180,7 +180,7 @@ that key is pressed to begin a block literal."
              "y" "Y" "yes" "Yes" "YES" "n" "N" "no" "No" "NO"
              "true" "True" "TRUE" "false" "False" "FALSE"
              "on" "On" "ON" "off" "Off" "OFF") t)
-          " *$")
+          "\\_>")
   "Regexp matching certain scalar constants in scalar context.")
 
 
@@ -308,8 +308,8 @@ artificially limited to the value of
   (if (eolp) (goto-char (1+ (point))))
   (unless (or (eobp) (>= (point) bound))
     (let ((begin (point))
-          (end (min (1+ (point-at-eol)) bound)))
-      (goto-char (point-at-bol))
+          (end (min (1+ (line-end-position)) bound)))
+      (goto-char (line-beginning-position))
       (while (and (looking-at yaml-blank-line-re)
                   (not (bobp)))
         (forward-line -1))
@@ -370,11 +370,9 @@ back-dent the line by `yaml-indent-offset' spaces.  On reaching column
   (let ((ci (current-indentation))
         (need (yaml-compute-indentation)))
     (save-excursion
-      (beginning-of-line)
-      (delete-horizontal-space)
       (if (and (equal last-command this-command) (/= ci 0))
-          (indent-to (* (/ (- ci 1) yaml-indent-offset) yaml-indent-offset))
-        (indent-to need)))
+          (indent-line-to (* (/ (- ci 1) yaml-indent-offset) yaml-indent-offset))
+        (indent-line-to need)))
     (if (< (current-column) (current-indentation))
         (forward-to-indentation 0))))
 
@@ -428,7 +426,7 @@ margin."
 otherwise do nothing."
   (interactive)
   (save-excursion
-    (goto-char (point-at-bol))
+    (goto-char (line-beginning-position))
     (while (and (looking-at-p yaml-blank-line-re) (not (bobp)))
       (forward-line -1))
     (let ((nlines yaml-block-literal-search-lines)

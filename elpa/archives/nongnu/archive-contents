@@ -336,6 +336,17 @@
 	    (:authors
 	     ("Akib Azmain Turja" . "akib@disroot.org"))
 	    (:commit . "bebdb6a165bdc3bb6b357706d0ce58f57271d137"))])
+ (devil .
+	[(0 3 0)
+	 ((emacs
+	   (24 4)))
+	 "Minor mode for Devil-like command entering" tar
+	 ((:url . "https://github.com/susam/devil")
+	  (:keywords "convenience" "abbrev")
+	  (:maintainer "Susam Pal" . "susam@susam.net")
+	  (:authors
+	   ("Susam Pal" . "susam@susam.net"))
+	  (:commit . "79fd50fe22ce45968779f0e176247ab7988f0905"))])
  (diff-ansi .
 	    [(0 2)
 	     ((emacs
@@ -439,7 +450,7 @@
 	    ("Tim Vaughan" . "plugd@thelambdalab.xyz"))
 	   (:commit . "81f2883614c303184116449ec3583ef5c136ec2f"))])
  (engine-mode .
-	      [(2 2 2)
+	      [(2 2 3)
 	       ((cl-lib
 		 (0 5)))
 	       "Define and query search engines from within Emacs" tar
@@ -447,7 +458,7 @@
 		(:maintainer "Harry R. Schwartz" . "hello@harryrschwartz.com")
 		(:authors
 		 ("Harry R. Schwartz" . "hello@harryrschwartz.com"))
-		(:commit . "00e0dde543e36745c8a14165bc0c9871468f7f3f"))])
+		(:commit . "fae1bd4fdf7d102744505bf2a8f4dc88d5b8f2fd"))])
  (evil .
        [(1 15 0)
 	nil "extensible vi layer" tar

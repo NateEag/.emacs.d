@@ -1,0 +1,2 @@
+[console_scripts]
+jediepcserver = jediepcserver:main

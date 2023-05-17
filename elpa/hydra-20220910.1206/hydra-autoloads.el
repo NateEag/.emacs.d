@@ -1,4 +1,4 @@
-;;; hydra-autoloads.el --- automatically extracted autoloads
+;;; hydra-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -67,7 +67,7 @@ result of `defhydra'.
 
 (function-put 'defhydra 'doc-string-elt '3)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "hydra" '("defhydra" "hydra-")))
+(register-definition-prefixes "hydra" '("defhydra" "hydra-"))
 
 ;;;***
 
@@ -75,14 +75,14 @@ result of `defhydra'.
 ;;;;;;  0))
 ;;; Generated autoloads from hydra-examples.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "hydra-examples" '("hydra-" "org-agenda-cts" "whitespace-mode")))
+(register-definition-prefixes "hydra-examples" '("hydra-" "org-agenda-cts" "whitespace-mode"))
 
 ;;;***
 
 ;;;### (autoloads nil "hydra-ox" "hydra-ox.el" (0 0 0 0))
 ;;; Generated autoloads from hydra-ox.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "hydra-ox" '("hydra-ox")))
+(register-definition-prefixes "hydra-ox" '("hydra-ox"))
 
 ;;;***
 

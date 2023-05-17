@@ -1,7 +1,9 @@
-(define-package "hydra" "20220102.803" "Make bindings that stick around."
+(define-package "hydra" "20220910.1206" "Make bindings that stick around."
   '((cl-lib "0.5")
     (lv "0"))
-  :commit "9e9e00cb240ea1903ffd36a54956b3902c379d29" :authors
+  :commit "317e1de33086637579a7aeb60f77ed0405bf359b" :authors
+  '(("Oleh Krehel" . "ohwoeowho@gmail.com"))
+  :maintainers
   '(("Oleh Krehel" . "ohwoeowho@gmail.com"))
   :maintainer
   '("Oleh Krehel" . "ohwoeowho@gmail.com")

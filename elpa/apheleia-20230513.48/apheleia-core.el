@@ -1,27 +1,13 @@
-;;; apheleia.el --- Reformat buffer stably -*- lexical-binding: t -*-
-
-;; Copyright (C) 2019-2022 Radian LLC and contributors
-
-;; Author: Radian LLC <contact+apheleia@radian.codes>
-;; Created: 7 Jul 2019
-;; Homepage: https://github.com/raxod502/apheleia
-;; Keywords: tools
-;; Package-Version: 20221210.207
-;; Package-Commit: deab8fb972f0cbc03c6a5409564435121b5db9c2
-;; Package-Requires: ((emacs "26"))
-;; SPDX-License-Identifier: MIT
-;; Version: 3.1
+;;; apheleia-core.el --- Apheleia core library -*- lexical-binding: t -*-
 
 ;;; Commentary:
 
-;; Apheleia is an Emacs Lisp package which allows you to reformat a
-;; buffer without moving point. This solves the usual problem of
-;; running a tool like Prettier or Black on `before-save-hook', namely
-;; that it resets point to the beginning of the buffer. Apheleia
-;; maintains the position of point relative to its surrounding text
-;; even if the buffer is modified by the reformatting.
-
-;; Please see https://github.com/raxod502/apheleia for more information.
+;; `apheleia' core library.
+;;
+;; This file contains the core of `apheleia'. This includes `apheleia-mode',
+;; utility functions for calling formatters based on `apheleia-formatters'
+;; and hooks to reformat the current buffer while minimising the displacement
+;; to `point'.
 
 ;;; Code:
 
@@ -29,27 +15,25 @@
 (require 'map)
 (require 'subr-x)
 
+(require 'apheleia)
+
 (eval-when-compile
   (require 'rx))
-
-(defgroup apheleia nil
-  "Reformat buffer without moving point."
-  :group 'external
-  :link '(url-link :tag "GitHub" "https://github.com/raxod502/apheleia")
-  :link '(emacs-commentary-link :tag "Commentary" "apheleia"))
 
 (defcustom apheleia-hide-log-buffers nil
   "Non-nil means log buffers will be hidden.
 Hidden buffers have names that begin with a space, and do not
 appear in `switch-to-buffer' unless you type in a space
 manually."
-  :type 'boolean)
+  :type 'boolean
+  :group 'apheleia)
 
 (defcustom apheleia-log-only-errors t
   "Non-nil means Apheleia will only log when an error occurs.
 Otherwise, Apheleia will log every time a formatter is run, even
 if it is successful."
-  :type 'boolean)
+  :type 'boolean
+  :group 'apheleia)
 
 (defcustom apheleia-formatter-exited-hook nil
   "Abnormal hook run after a formatter has finished running.
@@ -66,7 +50,8 @@ none (e.g., because logging is not enabled).
 This hook is run before `apheleia-after-format-hook', and may be
 run multiple times if `apheleia-mode-alist' configures multiple
 formatters to run in a chain, with one run per formatter."
-  :type 'hook)
+  :type 'hook
+  :group 'apheleia)
 
 (defcustom apheleia-remote-algorithm 'cancel
   "How `apheleia' should process remote files/buffers.
@@ -86,7 +71,8 @@ features of `apheleia' (such as `file' in `apheleia-formatters') is not
 compatible with this option and formatters relying on them will crash."
   :type '(choice (const :tag "Run the formatter on the local machine" local)
                  (const :tag "Run the formatter on the remote machine" remote)
-                 (const :tag "Disable formatting for remote buffers" cancel)))
+                 (const :tag "Disable formatting for remote buffers" cancel))
+  :group 'apheleia)
 
 (defcustom apheleia-mode-lighter " Apheleia"
   "Lighter for `apheleia-mode'."
@@ -190,7 +176,8 @@ diff region that is too large. The value of this variable serves
 as a limit on the input size to the algorithm; larger diff
 regions will still be applied, but Apheleia won't try to move
 point correctly."
-  :type 'integer)
+  :type 'integer
+  :group 'apheleia)
 
 (defun apheleia--apply-rcs-patch (content-buffer patch-buffer)
   "Apply RCS patch.
@@ -762,13 +749,12 @@ cmd is to be run."
            ;; remote.
            (remote-match (equal run-on-remote remote))
            (stdin (or stdin-buffer (current-buffer)))
-           (npx nil))
+           (npx nil)
+           (command (apply #'list command)))
       ;; TODO: Support arbitrary package managers, not just NPM.
       (when (memq 'npx command)
         (setq npx t)
         (setq command (remq 'npx command)))
-      (unless (stringp (car command))
-        (error "Command cannot start with %S" (car command)))
       (when (and npx remote-match)
         (when-let ((project-dir
                     (locate-dominating-file
@@ -940,121 +926,6 @@ being run, for diagnostic purposes."
                :callback
                (apply-partially #'kill-buffer scratch)))))
 
-(defcustom apheleia-formatters
-  '((bean-format . ("bean-format"))
-    (black . ("black" "-"))
-    (brittany . ("brittany"))
-    (clang-format . ("clang-format"
-                     "-assume-filename"
-                     (or (buffer-file-name)
-                         (cdr (assoc major-mode
-                                     '((c-mode        . ".c")
-                                       (c++-mode      . ".cpp")
-                                       (cuda-mode     . ".cu")
-                                       (protobuf-mode . ".proto"))))
-                         ".c")))
-    (crystal-tool-format . ("crystal" "tool" "format" "-"))
-    (dart-format . ("dart" "format"))
-    (elm-format . ("elm-format" "--yes" "--stdin"))
-    (fish-indent . ("fish_indent"))
-    (gofmt . ("gofmt"))
-    (gofumpt . ("gofumpt"))
-    (goimports . ("goimports"))
-    (google-java-format . ("google-java-format" "-"))
-    (isort . ("isort" "-"))
-    (lisp-indent . apheleia-indent-lisp-buffer)
-    (ktlint . ("ktlint" "--stdin" "-F"))
-    (latexindent . ("latexindent" "--logfile=/dev/null"))
-    (mix-format . ("mix" "format" "-"))
-    (nixfmt . ("nixfmt"))
-    (ocamlformat . ("ocamlformat" "-" "--name" filepath
-                    "--enable-outside-detected-project"))
-    (phpcs . ("apheleia-phpcs"))
-    (prettier . (npx "prettier" "--stdin-filepath" filepath))
-    (prettier-css
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=css"))
-    (prettier-html
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=html"))
-    (prettier-graphql
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=graphql"))
-    (prettier-javascript
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=babel-flow"))
-    (prettier-json
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=json"))
-    (prettier-markdown
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=markdown"))
-    (prettier-ruby
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=ruby"))
-    (prettier-scss
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=scss"))
-    (prettier-typescript
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=typescript"))
-    (prettier-yaml
-     . (npx "prettier" "--stdin-filepath" filepath "--parser=yaml"))
-    (shfmt . ("shfmt" "-i" "4"))
-    (stylua . ("stylua" "-"))
-    (rustfmt . ("rustfmt" "--quiet" "--emit" "stdout"))
-    (terraform . ("terraform" "fmt" "-")))
-  "Alist of code formatting commands.
-The keys may be any symbols you want, and the values are shell
-commands, lists of strings and symbols, or a function symbol.
-
-If the value is a function, the function will be called with
-keyword arguments (see the implementation of
-`apheleia--run-formatter-function' to see which). It should use
-`cl-defun' with `&allow-other-keys' for forward compatibility.
-
-Otherwise in Lisp code, the format of commands is similar to what
-you pass to `make-process', except as follows.
-
-Normally, the contents of the current buffer are passed to the
-command on stdin, and the output is read from stdout. However, if
-you use the symbol `file' as one of the elements of commands,
-then the filename of the current buffer is substituted for
-it. (Use `filepath' instead of `file' if you need the filename of
-the current buffer, but you still want its contents to be passed
-on stdin.)
-
-If you instead use the symbol `input' as one of the elements of
-commands, then the contents of the current buffer are written to
-a temporary file and its name is substituted for `input'. Also,
-if you use the symbol `output' as one of the elements of
-commands, then it is substituted with the name of a temporary
-file. In that case, it is expected that the command writes to
-that file, and the file is then read into an Emacs buffer.
-
-If you use the symbol `inplace' as one of the elements of the
-list, then the contents of the current buffer are written to a
-temporary file and its name is substituted for `inplace'.
-However, unlike `input', it is expected that the formatter write
-the formatted file back to the same file in place. In other
-words, `inplace' is like `input' and `output' together.
-
-If you use the symbol `npx' as one of the elements of commands,
-then the first string element of the command list is resolved
-inside node_modules/.bin if such a directory exists anywhere
-above the current `default-directory'.
-
-The \"scripts/formatters\" subdirectory of the Apheleia source
-repository is automatically prepended to $PATH (variable
-`exec-path', to be specific) when invoking external formatters.
-This is intended for internal use. If you would like to define
-your own script, you can simply place it on your normal $PATH
-rather than using this system."
-  :type '(alist
-          :key-type symbol
-          :value-type
-          (choice
-           (repeat
-            (choice
-             (string :tag "Argument")
-             (const :tag "Look for command in node_modules/.bin" npx)
-             (const :tag "Name of file being formatted" filepath)
-             (const :tag "Name of real file used for input" file)
-             (const :tag "Name of temporary file used for input" input)
-             (const :tag "Name of temporary file used for output" output)))
-           (function :tag "Formatter function"))))
-
 (cl-defun apheleia-indent-lisp-buffer
     (&key buffer scratch callback &allow-other-keys)
   "Format a Lisp BUFFER.
@@ -1121,92 +992,21 @@ function: %s" command)))
      stdin
      (car formatters))))
 
-(defcustom apheleia-mode-alist
-  '(;; php-mode has to come before cc-mode
-    (php-mode . phpcs)
-    ;; json-mode has to come before javascript-mode (aka js-mode)
-    (json-mode . prettier-json)
-    (json-ts-mode . prettier-json)
-    ;; rest are alphabetical
-    (bash-ts-mode . shfmt)
-    (beancount-mode . bean-format)
-    (c++-ts-mode . clang-format)
-    (cc-mode . clang-format)
-    (c-mode . clang-format)
-    (c-ts-mode . clang-format)
-    (c++-mode . clang-format)
-    (caml-mode . ocamlformat)
-    (common-lisp-mode . lisp-indent)
-    (crystal-mode . crystal-tool-format)
-    (css-mode . prettier-css)
-    (css-ts-mode . prettier-css)
-    (dart-mode . dart-format)
-    (elixir-mode . mix-format)
-    (elm-mode . elm-format)
-    (fish-mode . fish-indent)
-    (go-mode . gofmt)
-    (graphql-mode . prettier-graphql)
-    (haskell-mode . brittany)
-    (html-mode . prettier-html)
-    (java-mode . google-java-format)
-    (java-ts-mode . google-java-format)
-    (js3-mode . prettier-javascript)
-    (js-mode . prettier-javascript)
-    (js-ts-mode . prettier-javascript)
-    (kotlin-mode . ktlint)
-    (latex-mode . latexindent)
-    (LaTeX-mode . latexindent)
-    (lua-mode . stylua)
-    (lisp-mode . lisp-indent)
-    (nix-mode . nixfmt)
-    (python-mode . black)
-    (python-ts-mode . black)
-    (ruby-mode . prettier-ruby)
-    (rustic-mode . rustfmt)
-    (rust-mode . rustfmt)
-    (scss-mode . prettier-scss)
-    (sh-mode . shfmt)
-    (terraform-mode . terraform)
-    (TeX-latex-mode . latexindent)
-    (TeX-mode . latexindent)
-    (tuareg-mode . ocamlformat)
-    (typescript-mode . prettier-typescript)
-    (typescript-ts-mode . prettier-typescript)
-    (web-mode . prettier)
-    (yaml-mode . prettier-yaml))
-  "Alist mapping major mode names to formatters to use in those modes.
-This determines what formatter to use in buffers without a
-setting for `apheleia-formatter'. The keys are major mode
-symbols (matched against `major-mode' with `derived-mode-p') or
-strings (matched against value of variable `buffer-file-name'
-with `string-match-p'), and the values are symbols with entries
-in `apheleia-formatters' (or equivalently, they are allowed
-values for `apheleia-formatter'). Values can be a list of such
-symnols causing each formatter in the list to be called one after
-the other (with the output of the previous formatter).
-Earlier entries in this variable take precedence over later ones.
-
-Be careful when writing regexps to include \"\\'\" and to escape
-\"\\.\" in order to properly match a file extension. For example,
-to match \".jsx\" files you might use \"\\.jsx\\'\".
-
-If a given mode derives from another mode (e.g. `php-mode' and
-`cc-mode'), then ensure that the deriving mode comes before the mode
-to derive from, as the list is interpreted sequentially."
-  :type '(alist
-          :key-type
-          (choice (symbol :tag "Major mode")
-                  (string :tag "Buffer name regexp"))
-          :value-type
-          (choice (symbol :tag "Formatter")
-                  (repeat
-                   (symbol :tag "Formatter")))))
-
 (defvar-local apheleia-formatter nil
   "Name of formatter to use in current buffer, a symbol or nil.
 If non-nil, then `apheleia-formatters' should have a matching
-entry. This overrides `apheleia-mode-alist'.")
-(put 'apheleia-formatter 'safe-local-variable 'symbolp)
+entry. This overrides `apheleia-mode-alist'.
+
+The value can also be a list of symbols to apply multiple
+formatters in sequence.")
+
+(defun apheleia--formatter-safe-p (val)
+  "Return non-nil if VAL is a good value for `apheleia-formatter'."
+  (or (symbolp val)
+      (and (listp val)
+           (cl-every #'symbolp val))))
+
+(put 'apheleia-formatter 'safe-local-variable #'apheleia--formatter-safe-p)
 
 (defun apheleia--ensure-list (arg)
   "Ensure ARG is a list of length at least 1.
@@ -1337,7 +1137,8 @@ changes), CALLBACK, if provided, is invoked with no arguments."
 
 (defcustom apheleia-post-format-hook nil
   "Normal hook run after Apheleia formats a buffer successfully."
-  :type 'hook)
+  :type 'hook
+  :group 'apheleia)
 
 (defcustom apheleia-inhibit-functions nil
   "List of functions that prevent Apheleia from turning on automatically.
@@ -1347,7 +1148,8 @@ can still manually enable `apheleia-mode' in such a buffer.
 
 See also `apheleia-inhibit' for another way to accomplish a
 similar task."
-  :type '(repeat function))
+  :type '(repeat function)
+  :group 'apheleia)
 
 ;; Handle recursive references.
 (defvar apheleia-mode)
@@ -1409,10 +1211,11 @@ to see if it is allowed."
       (apheleia-mode)))
 
   (define-globalized-minor-mode apheleia-global-mode
-    apheleia-mode apheleia-mode-maybe)
+    apheleia-mode apheleia-mode-maybe
+    :group 'apheleia)
 
   (put 'apheleia-mode 'safe-local-variable #'booleanp))
 
-(provide 'apheleia)
+(provide 'apheleia-core)
 
-;;; apheleia.el ends here
+;;; apheleia-core.el ends here

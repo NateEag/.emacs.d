@@ -9,7 +9,14 @@
 ;;;### (autoloads nil "apheleia" "apheleia.el" (0 0 0 0))
 ;;; Generated autoloads from apheleia.el
 
-(autoload 'apheleia-format-buffer "apheleia" "\
+(register-definition-prefixes "apheleia" '("apheleia-"))
+
+;;;***
+
+;;;### (autoloads nil "apheleia-core" "apheleia-core.el" (0 0 0 0))
+;;; Generated autoloads from apheleia-core.el
+
+(autoload 'apheleia-format-buffer "apheleia-core" "\
 Run code formatter asynchronously on current buffer, preserving point.
 
 FORMATTER is a symbol appearing as a key in
@@ -33,7 +40,7 @@ changes), CALLBACK, if provided, is invoked with no arguments.
 
 \(fn FORMATTER &optional CALLBACK)" t nil)
 
-(autoload 'apheleia--format-after-save "apheleia" "\
+(autoload 'apheleia--format-after-save "apheleia-core" "\
 Run code formatter for current buffer if any configured, then save." nil nil)
 
 (define-minor-mode apheleia-mode "\
@@ -54,11 +61,23 @@ Enable `apheleia-mode' if allowed by user configuration.
 This checks `apheleia-inhibit-functions' and `apheleia-inhibit'
 to see if it is allowed." (unless (or apheleia-inhibit (run-hook-with-args-until-success 'apheleia-inhibit-functions)) (apheleia-mode)))
 
-(define-globalized-minor-mode apheleia-global-mode apheleia-mode apheleia-mode-maybe)
+(define-globalized-minor-mode apheleia-global-mode apheleia-mode apheleia-mode-maybe :group 'apheleia)
 
 (put 'apheleia-mode 'safe-local-variable #'booleanp)
 
-(register-definition-prefixes "apheleia" '("apheleia-"))
+(register-definition-prefixes "apheleia-core" '("apheleia-"))
+
+;;;***
+
+;;;### (autoloads nil "apheleia-utils" "apheleia-utils.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from apheleia-utils.el
+
+(register-definition-prefixes "apheleia-utils" '("apheleia-formatters-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("apheleia-pkg.el") (0 0 0 0))
 
 ;;;***
 

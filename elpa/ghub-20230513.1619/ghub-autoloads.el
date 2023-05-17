@@ -1,4 +1,4 @@
-;;; ghub-autoloads.el --- automatically extracted autoloads
+;;; ghub-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "buck" "buck.el" (0 0 0 0))
 ;;; Generated autoloads from buck.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "buck" '("buck-default-host")))
+(register-definition-prefixes "buck" '("buck-default-host"))
 
 ;;;***
 
@@ -26,42 +26,42 @@ asking the user for the correct information again.
 Set `url-http-real-basic-auth-storage' to nil
 and call `auth-source-forget+'." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ghub" '("ghub-")))
+(register-definition-prefixes "ghub" '("ghub-"))
 
 ;;;***
 
 ;;;### (autoloads nil "ghub-graphql" "ghub-graphql.el" (0 0 0 0))
 ;;; Generated autoloads from ghub-graphql.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ghub-graphql" '("ghub-")))
+(register-definition-prefixes "ghub-graphql" '("ghub-"))
 
 ;;;***
 
 ;;;### (autoloads nil "glab" "glab.el" (0 0 0 0))
 ;;; Generated autoloads from glab.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "glab" '("glab-default-host")))
+(register-definition-prefixes "glab" '("glab-default-host"))
 
 ;;;***
 
 ;;;### (autoloads nil "gogs" "gogs.el" (0 0 0 0))
 ;;; Generated autoloads from gogs.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gogs" '("gogs-default-host")))
+(register-definition-prefixes "gogs" '("gogs-default-host"))
 
 ;;;***
 
 ;;;### (autoloads nil "gsexp" "gsexp.el" (0 0 0 0))
 ;;; Generated autoloads from gsexp.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gsexp" '("gsexp-")))
+(register-definition-prefixes "gsexp" '("gsexp-"))
 
 ;;;***
 
 ;;;### (autoloads nil "gtea" "gtea.el" (0 0 0 0))
 ;;; Generated autoloads from gtea.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gtea" '("gtea-default-host")))
+(register-definition-prefixes "gtea" '("gtea-default-host"))
 
 ;;;***
 

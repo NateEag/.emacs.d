@@ -1,25 +1,25 @@
-;;; ghub-graphql.el --- access Github API using GrapthQL  -*- lexical-binding: t -*-
+;;; ghub-graphql.el --- Access Github API using GrapthQL  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2016-2022  Jonas Bernoulli
+;; Copyright (C) 2016-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/ghub
 ;; Keywords: tools
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
-;; For a copy of the GPL see https://www.gnu.org/licenses/gpl.txt.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Code:
 
@@ -27,13 +27,24 @@
 (require 'gsexp)
 (require 'treepy)
 
-(eval-when-compile
-  (require 'subr-x))
+;; Needed for Emacs < 27.
+(eval-when-compile (require 'json))
+(declare-function json-read-from-string "json" (string))
+(declare-function json-encode "json" (object))
+
+(eval-when-compile (require 'pp)) ; Needed for Emacs < 29.
+(eval-when-compile (require 'subr-x))
 
 ;;; Api
 
+(defvar ghub-graphql-items-per-request 100
+  "Number of GraphQL items to query for entities that return a collection.
+
+Adjust this value if you're hitting query timeouts against larger
+repositories.")
+
 (cl-defun ghub-graphql (graphql &optional variables
-                                &key username auth host
+                                &key username auth host forge
                                 headers silent
                                 callback errorback value extra)
   "Make a GraphQL request using GRAPHQL and VARIABLES.
@@ -41,29 +52,34 @@ Return the response as a JSON-like alist.  Even if the response
 contains `errors', do not raise an error.  GRAPHQL is a GraphQL
 string.  VARIABLES is a JSON-like alist.  The other arguments
 behave as for `ghub-request' (which see)."
-  (cl-assert (stringp graphql))
   (cl-assert (not (stringp variables)))
-  (ghub-request "POST" "/graphql" nil
-                :payload `(("query" . ,graphql)
-                           ,@(and variables `(("variables" ,@variables))))
+  (cl-assert (or (stringp graphql)
+                 (memq (car-safe graphql) '(query mutation))))
+  (unless (stringp graphql)
+    (setq graphql (gsexp-encode (ghub--graphql-prepare-query graphql))))
+  (ghub-request "POST"
+                (if (eq forge 'gitlab) "/api/graphql" "/graphql")
+                nil
+                :payload `((query . ,graphql)
+                           ,@(and variables `((variables ,@variables))))
                 :headers headers :silent silent
-                :username username :auth auth :host host
+                :username username :auth auth :host host :forge forge
                 :callback callback :errorback errorback
                 :extra extra :value value))
 
 (cl-defun ghub-graphql-rate-limit (&key username auth host)
   "Return rate limit information."
   (let-alist (ghub-graphql
-              "query { rateLimit { limit cost remaining resetAt }}"
+              '(query (rateLimit limit cost remaining resetAt))
               nil :username username :auth auth :host host)
     .data.rateLimit))
 
 (cl-defun ghub--repository-id (owner name &key username auth host)
   "Return the id of the repository specified by OWNER, NAME and HOST."
   (let-alist (ghub-graphql
-              "query ($owner:String!, $name:String!) {
-                 repository(owner:$owner, name:$name) { id }
-               }"
+              '(query (repository [(owner $owner String!)
+                                   (name  $name  String!)]
+                                  id))
               `((owner . ,owner)
                 (name  . ,name))
               :username username :auth auth :host host)
@@ -108,6 +124,7 @@ behave as for `ghub-request' (which see)."
                       (:singular issue number)
                       (orderBy ((field UPDATED_AT) (direction DESC)))]
                      number
+                     id
                      state
                      (author login)
                      title
@@ -147,6 +164,7 @@ behave as for `ghub-request' (which see)."
                       (:singular pullRequest number)
                       (orderBy ((field UPDATED_AT) (direction DESC)))]
                      number
+                     id
                      state
                      (author login)
                      title
@@ -154,6 +172,7 @@ behave as for `ghub-request' (which see)."
                      updatedAt
                      closedAt
                      mergedAt
+                     isDraft
                      locked
                      maintainerCanModify
                      isCrossRepository
@@ -328,18 +347,22 @@ See Info node `(ghub)GraphQL Support'."
     :variables variables
     :until     until
     :buffer    (current-buffer)
-    :callback  (let ((buf (current-buffer)))
-                 (if narrow
-                     (lambda (data)
-                       (let ((path narrow) key)
-                         (while (setq key (pop path))
-                           (setq data (cdr (assq key data)))))
-                       (ghub--graphql-set-mode-line buf nil)
-                       (funcall callback data))
-                   (lambda (data)
-                     (ghub--graphql-set-mode-line buf nil)
-                     (funcall callback data))))
-    :errorback errorback)))
+    :callback  (and (not (eq callback 'synchronous))
+                    (let ((buf (current-buffer)))
+                      (if narrow
+                          (lambda (data)
+                            (let ((path narrow) key)
+                              (while (setq key (pop path))
+                                (setq data (cdr (assq key data)))))
+                            (ghub--graphql-set-mode-line buf nil)
+                            (funcall (or callback #'ghub--graphql-pp-response)
+                                     data))
+                        (lambda (data)
+                          (ghub--graphql-set-mode-line buf nil)
+                          (funcall (or callback #'ghub--graphql-pp-response)
+                                   data)))))
+    :errorback (and (not (eq callback 'synchronous))
+                    errorback))))
 
 (cl-defun ghub--graphql-retrieve (req &optional lineage cursor)
   (let ((p (cl-incf (ghub--graphql-req-pages req))))
@@ -365,11 +388,12 @@ See Info node `(ghub)GraphQL Support'."
     (cl-block nil
       (while t
         (let ((node (treepy-node loc)))
-          (when (vectorp node)
+          (when (and (vectorp node)
+                     (listp (aref node 0)))
             (let ((alist (cl-coerce node 'list))
                   vars)
               (when (cadr (assq :edges alist))
-                (push (list 'first 100) vars)
+                (push (list 'first ghub-graphql-items-per-request) vars)
                 (setq loc  (treepy-up loc))
                 (setq node (treepy-node loc))
                 (setq loc  (treepy-replace
@@ -381,10 +405,10 @@ See Info node `(ghub)GraphQL Support'."
                 (setq loc  (treepy-next loc)))
               (dolist (elt alist)
                 (cond ((keywordp (car elt)))
-                      ((= (length elt) 3)
+                      ((length= elt 3)
                        (push (list (nth 0 elt) (nth 1 elt)) vars)
                        (push (list (nth 1 elt) (nth 2 elt)) variables))
-                      ((= (length elt) 2)
+                      ((length= elt 2)
                        (push elt vars))))
               (setq loc (treepy-replace loc (vconcat (nreverse vars)))))))
         (if (treepy-end-p loc)
@@ -452,11 +476,13 @@ See Info node `(ghub)GraphQL Support'."
                                               cursor)
                       (cl-return))
                   (setq loc (treepy-replace loc (cons key nodes))))))))
-        (if (not (treepy-end-p loc))
-            (setq loc (treepy-next loc))
-          (funcall (ghub--req-callback req)
-                   (treepy-root loc))
-          (cl-return))))))
+        (cond ((not (treepy-end-p loc))
+               (setq loc (treepy-next loc)))
+              ((ghub--req-callback req)
+               (funcall (ghub--req-callback req)
+                        (treepy-root loc))
+               (cl-return))
+              ((cl-return (treepy-root loc))))))))
 
 (defun ghub--graphql-lineage (loc)
   (let (lineage)
@@ -528,6 +554,10 @@ See Info node `(ghub)GraphQL Support'."
       (setq mode-line-process
             (and string (concat " " (apply #'format string args))))
       (force-mode-line-update t))))
+
+(defun ghub--graphql-pp-response (data)
+  (require 'pp) ; needed for Emacs < 29.
+  (pp-display-expression data "*Pp Eval Output*"))
 
 ;;; _
 (provide 'ghub-graphql)

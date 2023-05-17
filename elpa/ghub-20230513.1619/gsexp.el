@@ -1,25 +1,25 @@
-;;; gsexp.el --- GraphQl as S-expressions  -*- lexical-binding: t -*-
+;;; gsexp.el --- GraphQl as S-expressions  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2016-2022  Jonas Bernoulli
+;; Copyright (C) 2016-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/ghub
 ;; Keywords: tools
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
-;; For a copy of the GPL see https://www.gnu.org/licenses/gpl.txt.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -32,6 +32,8 @@
 
 (require 'cl-lib)
 
+(defvar gsexp-one-variable-per-line nil)
+
 (defun gsexp-encode (document)
   (gsexp--pp (gsexp--encode-field document)))
 
@@ -43,18 +45,23 @@
     (symbol-name field))
    ((listp (car field))
     (concat (format "%s: " (caar field))
-            (gsexp--encode-field (cons (cadar field)
+            (gsexp--encode-field (cons (car (cdar field))
                                        (cdr field)))))
-   (t
-    (concat (symbol-name (pop field))
-            (and (vectorp (car field))
-                 (format " (\n%s)"
-                         (mapconcat #'gsexp--encode-argument
-                                    (append (pop field) nil)
-                                    ",\n")))
-            (and field
-                 (format " {\n%s\n}"
-                         (mapconcat #'gsexp--encode-field field "\n")))))))
+   ((concat
+     (pcase (pop field)
+       (`[] "")
+       ((and (pred symbolp) op) (symbol-name op))
+       (`[,op] (symbol-name op))
+       (`[,op ,name] (format "%s %s" op name)))
+     (and (vectorp (car field))
+          (format " (%s%s)"
+                  (if gsexp-one-variable-per-line "\n" "")
+                  (mapconcat #'gsexp--encode-argument
+                             (append (pop field) nil)
+                             (if gsexp-one-variable-per-line ",\n" ","))))
+     (and field
+          (format " {\n%s\n}"
+                  (mapconcat #'gsexp--encode-field field "\n")))))))
 
 (cl-defun gsexp--encode-argument ((argument value))
   (format "%s: %s" argument (gsexp--encode-value value)))
@@ -74,7 +81,7 @@
                     (pcase-lambda (`(,name ,value))
                       (format "%s: %s" name (gsexp--encode-value value)))
                     value ", ")))
-   (t (error "Invalid field value: %S" value))))
+   ((error "Invalid field value: %S" value))))
 
 (defun gsexp--pp (string)
   (with-temp-buffer
@@ -83,7 +90,7 @@
     (while (< (point) (point-max))
       (unless (and (bolp) (eolp))
         (save-excursion
-          (let ((level (car (syntax-ppss (point-at-bol)))))
+          (let ((level (car (syntax-ppss (line-beginning-position)))))
             (when (looking-at "\\s-*\\s)")
               (cl-decf level))
             (indent-line-to (* 2 level)))))

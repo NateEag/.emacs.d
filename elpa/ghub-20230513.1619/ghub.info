@@ -1,6 +1,6 @@
 This is ghub.info, produced by makeinfo version 6.7 from ghub.texi.
 
-     Copyright (C) 2017-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -26,9 +26,9 @@ Ghub User and Developer Manual
 Ghub is an Emacs library that is used by various packages to access the
 APIs of various instances of various Git forge implementations.
 
-This manual is for Ghub version 3.5.6-git.
+This manual is for Ghub version 3.6.0.
 
-     Copyright (C) 2017-2022 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2023 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -116,7 +116,7 @@ the string "tarsius^forge".
 
    This package used to attempt to get the answers to these questions
 using a setup wizard.  Unfortunately that had to be removed because (a)
-it only ever supported Github, (b) Github is about to remove support for
+it only ever supported Github, (b) by now Github has removed support for
 that on their end, (c) it did not always work, and (d) when it couldn’t
 be used, or failed, then it made things _more_ complicated.
 
@@ -733,7 +733,7 @@ instead implement something more powerful, though also more opinionated.
      again that you already have.
 
      Other arguments behave as for ‘ghub-graphql’ and ‘ghub-request’,
-     more or less.
+     more or less.  If ‘CALLBACK’ is nil, pretty-print the response.
 
    Using ‘ghub--graphql-vacuum’, the following resource specific
 functions are implemented.  These functions are not part of the public
@@ -1137,30 +1137,30 @@ Appendix B Variable Index
 
 Tag Table:
 Node: Top754
-Node: Introduction2282
-Node: Getting Started2687
-Node: Basic Concepts Arguments and Variables4369
-Node: Setting the Username8223
-Ref: Setting your Githubcom Username8707
-Ref: Setting your Gitlabcom Username9063
-Ref: Setting your Github Enterprise Username9529
-Ref: Setting your Username for Other Hosts and/or Forges10262
-Node: Creating and Storing a Token11068
-Node: Creating a Token11332
-Node: Storing a Token12352
-Node: Github Configuration Variables14197
-Node: API15908
-Node: Their APIs16146
-Node: Making REST Requests16871
-Node: Making GraphQL Requests26284
-Node: Github Convenience Wrappers32913
-Node: Non-Github Convenience Wrappers36617
-Node: Notes42121
-Node: Using Ghub in Personal Scripts42328
-Node: Using Ghub in Your Own Package43219
-Node: Forge Limitations and Notes44154
-Node: Function Index45127
-Node: Variable Index50776
+Node: Introduction2278
+Node: Getting Started2683
+Node: Basic Concepts Arguments and Variables4365
+Node: Setting the Username8219
+Ref: Setting your Githubcom Username8703
+Ref: Setting your Gitlabcom Username9059
+Ref: Setting your Github Enterprise Username9525
+Ref: Setting your Username for Other Hosts and/or Forges10258
+Node: Creating and Storing a Token11064
+Node: Creating a Token11328
+Node: Storing a Token12348
+Node: Github Configuration Variables14193
+Node: API15904
+Node: Their APIs16142
+Node: Making REST Requests16867
+Node: Making GraphQL Requests26280
+Node: Github Convenience Wrappers32963
+Node: Non-Github Convenience Wrappers36667
+Node: Notes42171
+Node: Using Ghub in Personal Scripts42378
+Node: Using Ghub in Your Own Package43269
+Node: Forge Limitations and Notes44204
+Node: Function Index45177
+Node: Variable Index50826
 
 End Tag Table
 

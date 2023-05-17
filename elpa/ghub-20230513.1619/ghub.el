@@ -1,25 +1,25 @@
-;;; ghub.el --- Client libraries for Git forge APIs  -*- lexical-binding: t -*-
+;;; ghub.el --- Client libraries for Git forge APIs  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2016-2022  Jonas Bernoulli
+;; Copyright (C) 2016-2023 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/ghub
 ;; Keywords: tools
+
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
-;; This file is not part of GNU Emacs.
-
-;; This file is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
+;; This file is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published
+;; by the Free Software Foundation, either version 3 of the License,
+;; or (at your option) any later version.
+;;
 ;; This file is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
-;; For a copy of the GPL see https://www.gnu.org/licenses/gpl.txt.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -52,14 +52,19 @@
 
 (require 'auth-source)
 (require 'cl-lib)
+(require 'compat)
 (require 'gnutls)
 (require 'let-alist)
 (require 'url)
 (require 'url-auth)
 (require 'url-http)
 
-(eval-when-compile
-  (require 'subr-x))
+(eval-when-compile (require 'subr-x))
+
+;; Needed for Emacs < 27.
+(eval-when-compile (require 'json))
+(declare-function json-read-from-string "json" (string))
+(declare-function json-encode "json" (object))
 
 (declare-function glab-repository-id "glab" (owner name &key username auth host))
 (declare-function gtea-repository-id "gtea" (owner name &key username auth host))
@@ -337,10 +342,15 @@ Both callbacks are called with four arguments.
    (ghub--make-req
     :url (url-generic-parse-url
           (concat (if (member host ghub-insecure-hosts) "http://" "https://")
-                  (if (and (equal resource "/graphql")
-                           (string-suffix-p "/v3" host))
-                      (substring host 0 -3)
-                    host)
+                  (cond ((and (equal resource "/graphql")
+                              (string-suffix-p "/v3" host))
+                         ;; Needed for some Github Enterprise instances.
+                         (substring host 0 -3))
+                        ((and (equal resource "/api/graphql")
+                              (string-suffix-p "/api/v4" host))
+                         ;; Needed for all Gitlab instances.
+                         (substring host 0 -7))
+                        (host))
                   resource
                   (and query (concat "?" (ghub--url-encode-params query)))))
     :forge forge
@@ -419,7 +429,7 @@ this function is called with nil for PAYLOAD."
   (if (eq (ghub--req-forge req) 'bitbucket)
       (if payload
           (let* ((page (cl-mapcan (lambda (key)
-                                    (when-let ((elt (assq key payload)))
+                                    (and-let* ((elt (assq key payload)))
                                       (list elt)))
                                   '(size page pagelen next previous)))
                  (headers (cons (cons 'link-alist page) headers)))
@@ -429,7 +439,7 @@ this function is called with nil for PAYLOAD."
               (setq-default ghub-response-headers headers))
             page)
         (cdr (assq 'link-alist ghub-response-headers)))
-    (when-let ((rels (cdr (assoc "Link" (or headers ghub-response-headers)))))
+    (and-let* ((rels (cdr (assoc "Link" (or headers ghub-response-headers)))))
       (mapcar (lambda (elt)
                 (pcase-let ((`(,url ,rel) (split-string elt "; ")))
                   (cons (intern (substring rel 5 -1))
@@ -459,48 +469,29 @@ Signal an error if the id cannot be determined."
 
 ;;;; Internal
 
-(defvar ghub-use-workaround-for-emacs-bug
-  (and
-   ;; Note: For build sans gnutls, `libgnutls-version' is -1.
-   (>= libgnutls-version 30603)
-   (or (version<= emacs-version "26.2")
-       (eq system-type 'darwin))
-   'force)
-  "Whether to use a kludge that hopefully works around an Emacs bug.
+(defvar ghub-use-workaround-for-emacs-bug t
+  "Whether to work around Emacs bug debbugs#34341.
 
-In Emacs versions before 26.3 there is a bug that often but not
-always causes network connections to fail when using TLS1.3.  It
-appears that even when using Emacs 26.3 the bug still exists but
-only on macOS.
+First see https://github.com/magit/ghub/wiki/Known-Issues,
+for information about this bug and another related bug.
 
-The workaround works by binding `gnutls-algorithm-priority' to
-\"NORMAL:-VERS-TLS1.3\" in `ghub--retrieve' around the call to
-`url-retrieve' or `url-retrieve-synchronously'.  If you would
-like to use the same kludge for other uses of these functions,
-then you have to set this variable globally to the mentioned
-value.
+Because our under of these bugs evolved over time, the possible
+values of this variable are a bit odd: If t, enable workaround if
+necessary (i.e., if Emacs < 26.3 and GnuTLS >= 3.6.3 are used).
+If `force', enable workaround even if that is believed to be
+unnecessary.  If nil, do not enable the workaround.  The default
+is t.")
 
-This variable controls whether the `ghub' package should use the
-kludge.
+(defvar ghub-use-workaround-for-emacs-bug-54989 t
+  "Whether to work around Emacs bug debbugs#54989.
 
-- If nil, then never use the kludge.
-- If `force' then always use the kludge no matter what.
-- For any other non-nil value use the kludge, if and only if we
-  believe that doing so is the correct thing to do.
+First see https://github.com/magit/ghub/wiki/Known-Issues,
+for information about this bug and another related bug.
 
-The default value of this variable is either nil or `force'.  It
-is `force' if using libgnutls >=3.6.3 (the version introducing
-TLS1.3); AND also using Emacs < 26.3 and/or macOS (any version).
-
-If the value is any other non-nil value, then `ghub--retrieve'
-used the same logic as describe in the previous paragraph, but
-every time it is called.  (This complication is mostly a historic
-accident, which we don't want to change because doing so would
-break this kludge for some users who have been relying on it for
-a while already.)
-
-For more information see https://github.com/magit/ghub/issues/81
-and https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341.")
+If t, work around the bug if necessary (i.e., if not using Emacs'
+\"master\" branch).  If nil, then don't work around the bug.  The
+default is t.  Setting this variable only has an effect if it is
+done before `ghub' is loaded.")
 
 (cl-defun ghub--retrieve (payload req)
   (let ((url-request-extra-headers
@@ -517,9 +508,9 @@ and https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341.")
                   (or (eq ghub-use-workaround-for-emacs-bug 'force)
                       (and (not gnutls-algorithm-priority)
                            (>= libgnutls-version 30603)
-                           (or (version<= emacs-version "26.2")
-                               (eq system-type 'darwin))
-                           (memq (ghub--req-forge req) '(github nil)))))
+                           (version< emacs-version "26.3")
+                           ;; (memq (ghub--req-forge req) '(github nil))
+                           )))
              "NORMAL:-VERS-TLS1.3"
            gnutls-algorithm-priority)))
     (if (or (ghub--req-callback  req)
@@ -567,23 +558,14 @@ and https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341.")
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
 
-(defun ghub--handle-response-headers (status req)
+(defun ghub--handle-response-headers (_status req)
   (goto-char (point-min))
   (forward-line 1)
   (let (headers)
     (when (memq url-http-end-of-headers '(nil 0))
       (setq url-debug t)
-      (let ((print-escape-newlines nil))
-        (error "BUG: missing headers
-  See https://github.com/magit/ghub/issues/81.
-  url: %s
-  headers: %S
-  status: %S
-  buffer: %S"
-               (url-recreate-url (ghub--req-url req))
-               url-http-end-of-headers
-               status
-               (current-buffer))))
+      (error "BUG: missing headers; but there's a patch for that \
+see https://github.com/magit/ghub/wiki/Known-Issues"))
     (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
                               url-http-end-of-headers t)
       (push (cons (match-string 1)
@@ -700,9 +682,10 @@ and https://debbugs.gnu.org/cgi/bugreport.cgi?bug=34341.")
   (mapconcat (lambda (param)
                (pcase-let ((`(,key . ,val) param))
                  (concat (url-hexify-string (symbol-name key)) "="
-                         (if (integerp val)
-                             (number-to-string val)
-                           (url-hexify-string val)))))
+                         (cl-typecase val
+                           (integer (number-to-string val))
+                           (boolean (if val "true" "false"))
+                           (t (url-hexify-string val))))))
              params "&"))
 
 ;;; Authentication
@@ -886,9 +869,8 @@ won't see the secret from a line that is followed by a commented
 line."
     (save-match-data (funcall fn))))
 
-(progn ; (when (< emacs-major-version 28)
-  ;; Fixed by Emacs commit 0b98ea5fbe276c67206896dca111c000f984ee0f,
-  ;; but keep this advice until 28.1 is released.
+(when (< emacs-major-version 28)
+  ;; Fixed by Emacs commit 0b98ea5fbe276c67206896dca111c000f984ee0f.
   (advice-add 'url-http-handle-authentication :around
               'url-http-handle-authentication@unauthorized-bugfix)
   (defun url-http-handle-authentication@unauthorized-bugfix (fn proxy)
@@ -901,6 +883,129 @@ the user being asked for their name."
     (if (assoc "Authorization" url-http-extra-headers)
         t ; Return "success", here also known as "successfully failed".
       (funcall fn proxy))))
+
+(when (and (< emacs-major-version 29)
+           ghub-use-workaround-for-emacs-bug-54989)
+  ;; Fixed in Emacs commit 0829c6836eff14dda0cf8b3047376967f7b000f4.
+  ;; Cleanup from 26faa2b943675107e1664b2fea7174137c473475 is not
+  ;; included in this copy because doing that would require changes
+  ;; to more functions.  This function has seen a few other changes
+  ;; since Emacs 25.1, the oldest version we still support.  Of these
+  ;; only 4f1df40db36b221e7842bd75d6281922dcb268ee makes a functional
+  ;; change, fixing debbug#35658.  The first release to contain that
+  ;; commit is 27.1.  That commit either fixes a related bug or it
+  ;; deals with the same bug but only partially fixes it.
+  (advice-add 'url-http-chunked-encoding-after-change-function :override
+              'url-http-chunked-encoding-after-change-function@54989-backport)
+  (defvar url-http-chunked-last-crlf-missing nil)
+  (defvar url-http-content-type)
+  (defvar url-http-chunked-start)
+  (defvar url-http-chunked-length)
+  (defvar url-http-chunked-counter)
+  (defun url-http-chunked-encoding-after-change-function@54989-backport
+      (st nd length)
+    "Backport bugfix from https://debbugs.gnu.org/cgi/bugreport.cgi?bug=54989."
+    (if url-http-chunked-last-crlf-missing
+        (progn
+          (goto-char url-http-chunked-last-crlf-missing)
+          (if (not (looking-at "\r\n"))
+              (url-http-debug
+               "Still spinning for the terminator of last chunk...")
+            (url-http-debug "Saw the last CRLF.")
+            (delete-region (match-beginning 0) (match-end 0))
+            (when (url-http-parse-headers)
+              (url-http-activate-callback))))
+      (save-excursion
+        (goto-char st)
+        (let ((read-next-chunk t)
+              (case-fold-search t)
+              (regexp nil)
+              (no-initial-crlf nil))
+          ;; We need to loop thru looking for more chunks even within
+          ;; one after-change-function call.
+          (while read-next-chunk
+            (setq no-initial-crlf (= 0 url-http-chunked-counter))
+            (with-no-warnings
+              (if url-http-content-type
+                  (url-display-percentage nil
+                                          "Reading [%s]... chunk #%d"
+                                          url-http-content-type url-http-chunked-counter)
+                (url-display-percentage nil
+                                        "Reading... chunk #%d"
+                                        url-http-chunked-counter)))
+            (url-http-debug "Reading chunk %d (%d %d %d)"
+                            url-http-chunked-counter st nd length)
+            (setq regexp (if no-initial-crlf
+                             "\\([0-9a-z]+\\).*\r?\n"
+                           "\r?\n\\([0-9a-z]+\\).*\r?\n"))
+
+            (if url-http-chunked-start
+                ;; We know how long the chunk is supposed to be, skip over
+                ;; leading crap if possible.
+                (if (> nd (+ url-http-chunked-start url-http-chunked-length))
+                    (progn
+                      (url-http-debug "Got to the end of chunk #%d!"
+                                      url-http-chunked-counter)
+                      (goto-char (+ url-http-chunked-start
+                                    url-http-chunked-length)))
+                  (url-http-debug "Still need %d bytes to hit end of chunk"
+                                  (- (+ url-http-chunked-start
+                                        url-http-chunked-length)
+                                     nd))
+                  (setq read-next-chunk nil)))
+            (if (not read-next-chunk)
+                (url-http-debug "Still spinning for next chunk...")
+              (if no-initial-crlf (skip-chars-forward "\r\n"))
+              (if (not (looking-at regexp))
+                  (progn
+                    ;; Must not have received the entirety of the chunk header,
+                    ;; need to spin some more.
+                    (url-http-debug "Did not see start of chunk @ %d!" (point))
+                    (setq read-next-chunk nil))
+                ;; The data we got may have started in the middle of the
+                ;; initial chunk header, so move back to the start of the
+                ;; line and re-compute.
+                (when (= url-http-chunked-counter 0)
+                  (beginning-of-line)
+                  (looking-at regexp))
+                (add-text-properties (match-beginning 0) (match-end 0)
+                                     (list 'chunked-encoding t
+                                           'face 'cursor
+                                           'invisible t))
+                (setq url-http-chunked-length
+                      (string-to-number (buffer-substring (match-beginning 1)
+                                                          (match-end 1))
+                                        16)
+                      url-http-chunked-counter (1+ url-http-chunked-counter)
+                      url-http-chunked-start (set-marker
+                                              (or url-http-chunked-start
+                                                  (make-marker))
+                                              (match-end 0)))
+                (delete-region (match-beginning 0) (match-end 0))
+                (url-http-debug "Saw start of chunk %d (length=%d, start=%d"
+                                url-http-chunked-counter url-http-chunked-length
+                                (marker-position url-http-chunked-start))
+                (if (= 0 url-http-chunked-length)
+                    (progn
+                      ;; Found the end of the document!  Wheee!
+                      (url-http-debug "Saw end of stream chunk!")
+                      (setq read-next-chunk nil)
+                      (with-no-warnings
+                        (url-display-percentage nil nil))
+                      ;; Every chunk, even the last 0-length one, is
+                      ;; terminated by CRLF.  Skip it.
+                      (if (not (looking-at "\r?\n"))
+                          (progn
+                            (url-http-debug
+                             "Spinning for the terminator of last chunk...")
+                            (setq-local url-http-chunked-last-crlf-missing
+                                        (point)))
+                        (url-http-debug "Removing terminator of last chunk")
+                        (delete-region (match-beginning 0) (match-end 0))
+                        (when (re-search-forward "^\r?\n" nil t)
+                          (url-http-debug "Saw end of trailers..."))
+                        (when (url-http-parse-headers)
+                          (url-http-activate-callback)))))))))))))
 
 ;;; _
 (provide 'ghub)

@@ -1,9 +1,12 @@
-;;; bats-mode-autoloads.el --- automatically extracted autoloads
+;;; bats-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "bats-mode" "bats-mode.el" (23400 19100 0 0))
+;;;### (autoloads nil "bats-mode" "bats-mode.el" (0 0 0 0))
 ;;; Generated autoloads from bats-mode.el
 
 (autoload 'bats-mode "bats-mode" "\
@@ -17,11 +20,14 @@ See URL `https://github.com/sstephenson/bats'.
 
 (add-to-list 'auto-mode-alist '("\\.bats\\'" . bats-mode))
 
+(register-definition-prefixes "bats-mode" '("bats-"))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; bats-mode-autoloads.el ends here

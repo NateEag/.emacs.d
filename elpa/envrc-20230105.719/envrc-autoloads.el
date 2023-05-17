@@ -1,4 +1,4 @@
-;;; envrc-autoloads.el --- automatically extracted autoloads
+;;; envrc-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -12,10 +12,19 @@
 (autoload 'envrc-mode "envrc" "\
 A local minor mode in which env vars are set by direnv.
 
-If called interactively, enable Envrc mode if ARG is positive,
-and disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it if
-ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the `Envrc
+mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `envrc-mode'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 \(fn &optional ARG)" t nil)
 
@@ -33,12 +42,17 @@ or call the function `envrc-global-mode'.")
 
 (autoload 'envrc-global-mode "envrc" "\
 Toggle Envrc mode in all buffers.
-With prefix ARG, enable Envrc-Global mode if ARG is positive;
-otherwise, disable it.  If called from Lisp, enable the mode if
-ARG is omitted or nil.
+With prefix ARG, enable Envrc-Global mode if ARG is positive; otherwise,
+disable it.
 
-Envrc mode is enabled in all buffers where
-`(lambda nil (unless (or (minibufferp) (file-remote-p default-directory)) (envrc-mode 1)))' would do it.
+If called from Lisp, toggle the mode if ARG is `toggle'.
+Enable the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+Envrc mode is enabled in all buffers where `(lambda nil (unless (or
+\(minibufferp) (file-remote-p default-directory)) (envrc-mode 1)))' would do
+it.
+
 See `envrc-mode' for more information on Envrc mode.
 
 \(fn &optional ARG)" t nil)
@@ -51,7 +65,7 @@ Major mode for .envrc files as used by direnv.
 
 (add-to-list 'auto-mode-alist '("\\.envrc\\'" . envrc-file-mode))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "envrc" '("envrc-")))
+(register-definition-prefixes "envrc" '("envrc-"))
 
 ;;;***
 

@@ -4,10 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
-;; Package-Commit: 57d78f0138d9c676dff182e713249ad055ccf85d
+;; Package-Commit: 1954e8c0b5c8440ea9852eeb7c046a677fa544f6
 ;; Homepage: https://github.com/purcell/envrc
-;; Package-Requires: ((seq "2") (emacs "24.4") (inheritenv "0.1"))
-;; Package-Version: 20220218.1627
+;; Package-Requires: ((seq "2") (emacs "25.1") (inheritenv "0.1"))
+;; Package-Version: 20230105.719
 ;; Package-X-Original-Version: 0
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -77,6 +77,10 @@
 Messages are written into the *envrc-debug* buffer."
   :type 'boolean)
 
+(defcustom envrc-direnv-executable "direnv"
+  "The direnv executable used by envrc."
+  :type 'string)
+
 (define-obsolete-variable-alias 'envrc--lighter 'envrc-lighter "2021-05-17")
 
 (defcustom envrc-lighter '(:eval (envrc--lighter))
@@ -141,7 +145,8 @@ e.g. (define-key envrc-mode-map (kbd \"C-c e\") 'envrc-command-map)"
 ;;; Global state
 
 (defvar envrc--cache (make-hash-table :test 'equal :size 10)
-  "Known envrc directories and their direnv results, as produced by `envrc--export'.")
+  "Known envrc directorie and their direnv results.
+The values are as produced by `envrc--export'.")
 
 ;;; Local state
 
@@ -226,20 +231,24 @@ Return value is either 'error, 'none, or an alist of environment
 variable names and values."
   (unless (envrc--env-dir-p env-dir)
     (error "%s is not a directory with a .envrc" env-dir))
-  (message "Running direnv in %s..." env-dir)
+  (message "Running direnv in %s ... (C-g to abort)" env-dir)
   (let ((stderr-file (make-temp-file "envrc"))
         result)
     (unwind-protect
         (let ((default-directory env-dir))
           (with-temp-buffer
-            (let ((exit-code (envrc--call-process-with-global-env' "direnv" nil (list t stderr-file) nil "export" "json")))
+            (let ((exit-code (condition-case nil
+                                 (envrc--call-process-with-global-env envrc-direnv-executable nil (list t stderr-file) nil "export" "json")
+                               (quit
+                                (message "interrupted!!")
+                                'interrupted))))
               (envrc--debug "Direnv exited with %s and stderr=%S, stdout=%S"
                             exit-code
                             (with-temp-buffer
                               (insert-file-contents stderr-file)
                               (buffer-string))
                             (buffer-string))
-              (if (zerop exit-code)
+              (if (eq 0 exit-code)
                   (progn
                     (message "Direnv succeeded in %s" env-dir)
                     (if (zerop (buffer-size))
@@ -254,9 +263,9 @@ variable names and values."
                   (insert-file-contents (let (ansi-color-context)
                                           (ansi-color-apply stderr-file)))
                   (goto-char (point-max))
-                  (add-face-text-property initial-pos (point) (if (zerop exit-code) 'success 'error)))
+                  (add-face-text-property initial-pos (point) (if (eq 0 exit-code) 'success 'error)))
                 (insert "\n\n")
-                (unless (zerop exit-code)
+                (when (and (numberp exit-code) (/= 0 exit-code))
                   (display-buffer (current-buffer)))))))
       (delete-file stderr-file))
     result))
@@ -283,7 +292,10 @@ also appear in PAIRS."
   (with-current-buffer buf
     (kill-local-variable 'exec-path)
     (kill-local-variable 'process-environment)
-    (kill-local-variable 'eshell-path-env)))
+    (when (derived-mode-p 'eshell-mode)
+      (if (fboundp 'eshell-set-path)
+          (eshell-set-path (butlast exec-path))
+        (kill-local-variable 'eshell-path-env)))))
 
 
 (defun envrc--apply (buf result)
@@ -299,7 +311,9 @@ also appear in PAIRS."
       (let ((path (getenv "PATH"))) ;; Get PATH from the merged environment: direnv may not have changed it
         (setq-local exec-path (parse-colon-path path))
         (when (derived-mode-p 'eshell-mode)
-          (setq-local eshell-path-env path))))))
+          (if (fboundp 'eshell-set-path)
+              (eshell-set-path path)
+            (setq-local eshell-path-env path)))))))
 
 (defun envrc--update-env (env-dir)
   "Refresh the state of the direnv in ENV-DIR and apply in all relevant buffers."
@@ -333,8 +347,8 @@ If there is no current env dir, abort with a user error."
 (defun envrc--call-process-with-global-env (&rest args)
   "Like `call-process', but always use the global process environment.
 In particular, we ensure the default variable `exec-path' and
-`process-environment' are used.  This ensures the
-globally-accessible \"direnv\" binary is consistently available.
+`process-environment' are used.  This ensures an .envrc doesn't take
+`envrc-direnv-executable' out of our path.
 ARGS is as for `call-process'."
   (let ((exec-path (default-value 'exec-path))
         (process-environment (default-value 'process-environment)))
@@ -351,7 +365,7 @@ ARGS is as for `call-process'."
   (interactive)
   (envrc--with-required-current-env env-dir
     (let* ((default-directory env-dir)
-           (exit-code (envrc--call-process-with-global-env' "direnv" nil (get-buffer-create "*envrc-allow*") nil "allow")))
+           (exit-code (envrc--call-process-with-global-env envrc-direnv-executable nil (get-buffer-create "*envrc-allow*") nil "allow")))
       (if (zerop exit-code)
           (envrc--update-env env-dir)
         (display-buffer "*envrc-allow*")
@@ -362,7 +376,7 @@ ARGS is as for `call-process'."
   (interactive)
   (envrc--with-required-current-env env-dir
     (let* ((default-directory env-dir)
-           (exit-code (envrc--call-process-with-global-env' "direnv" nil (get-buffer-create "*envrc-deny*") nil "deny")))
+           (exit-code (envrc--call-process-with-global-env envrc-direnv-executable nil (get-buffer-create "*envrc-deny*") nil "deny")))
       (if (zerop exit-code)
           (envrc--update-env env-dir)
         (display-buffer "*envrc-deny*")
@@ -391,16 +405,20 @@ in a temp buffer.  ARGS is as for ORIG."
     (apply orig args)))
 
 (advice-add 'shell-command-to-string :around #'envrc-propagate-environment)
+(advice-add 'async-shell-command :around #'envrc-propagate-environment)
 (advice-add 'org-babel-eval :around #'envrc-propagate-environment)
 
 
 ;;; Major mode for .envrc files
 
 (defvar envrc-file-extra-keywords
-  '("MANPATH_add" "PATH_add" "direnv_layout_dir" "direnv_load" "dotenv"
-    "expand_path" "find_up" "has" "join_args" "layout" "load_prefix"
-    "log_error" "log_status" "path_add" "rvm" "source_env" "source_up"
-    "use" "use_guix" "use_nix" "user_rel_path" "watch_file")
+  '("MANPATH_add" "PATH_add" "PATH_rm" "direnv_apply_dump" "direnv_layout_dir"
+    "direnv_load" "direnv_version" "dotenv" "dotenv_if_exists"
+    "env_vars_required" "expand_path" "fetchurl" "find_up" "has" "join_args"
+    "layout" "load_prefix" "log_error" "log_status" "on_git_branch" "path_add"
+    "path_rm" "rvm" "semver_search" "source_env" "source_env_if_exists"
+    "source_up" "source_up_if_exists" "source_url" "strict_env" "unstrict_env"
+    "use" "use_guix" "use_flake" "use_nix" "user_rel_path" "watch_dir" "watch_file")
   "Useful direnv keywords to be highlighted.")
 
 ;;;###autoload

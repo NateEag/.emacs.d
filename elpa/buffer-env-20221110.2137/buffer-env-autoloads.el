@@ -1,4 +1,4 @@
-;;; buffer-env-autoloads.el --- automatically extracted autoloads
+;;; buffer-env-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -27,7 +27,7 @@ When called interactively, ask for a FILE.
 (autoload 'buffer-env-reset "buffer-env" "\
 Reset the process environment of this buffer to the default values." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "buffer-env" '("buffer-env-")))
+(register-definition-prefixes "buffer-env" '("buffer-env-"))
 
 ;;;***
 

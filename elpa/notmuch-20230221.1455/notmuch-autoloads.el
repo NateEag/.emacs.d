@@ -1,4 +1,4 @@
-;;; notmuch-autoloads.el --- automatically extracted autoloads
+;;; notmuch-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,14 +9,14 @@
 ;;;### (autoloads nil "coolj" "coolj.el" (0 0 0 0))
 ;;; Generated autoloads from coolj.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "coolj" '("coolj-")))
+(register-definition-prefixes "coolj" '("coolj-"))
 
 ;;;***
 
 ;;;### (autoloads nil "make-deps" "make-deps.el" (0 0 0 0))
 ;;; Generated autoloads from make-deps.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "make-deps" '("batch-make-deps" "make-deps")))
+(register-definition-prefixes "make-deps" '("batch-make-deps" "make-deps"))
 
 ;;;***
 
@@ -52,7 +52,7 @@ Cycle through any existing notmuch buffers (search, show or hello).
 If the current buffer is the only notmuch buffer, bury it.
 If no notmuch buffers exist, run `notmuch'." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch" '("notmuch-")))
+(register-definition-prefixes "notmuch" '("notmuch-"))
 
 ;;;***
 
@@ -60,7 +60,7 @@ If no notmuch buffers exist, run `notmuch'." t nil)
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-address.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-address" '("notmuch-address-")))
+(register-definition-prefixes "notmuch-address" '("notmuch-address-"))
 
 ;;;***
 
@@ -75,7 +75,7 @@ If no notmuch buffers exist, run `notmuch'." t nil)
 
 \(fn COMMAND &optional ARG &rest IGNORE)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-company" '("notmuch-company-last-prefix")))
+(register-definition-prefixes "notmuch-company" '("notmuch-company-last-prefix"))
 
 ;;;***
 
@@ -83,7 +83,7 @@ If no notmuch buffers exist, run `notmuch'." t nil)
 ;;;;;;  0))
 ;;; Generated autoloads from notmuch-compat.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-compat" '("notmuch-")))
+(register-definition-prefixes "notmuch-compat" '("notmuch-"))
 
 ;;;***
 
@@ -91,14 +91,14 @@ If no notmuch buffers exist, run `notmuch'." t nil)
 ;;;;;;  0))
 ;;; Generated autoloads from notmuch-crypto.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-crypto" '("notmuch-crypto-")))
+(register-definition-prefixes "notmuch-crypto" '("notmuch-crypto-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-draft" "notmuch-draft.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-draft.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-draft" '("notmuch-draft-")))
+(register-definition-prefixes "notmuch-draft" '("notmuch-draft-"))
 
 ;;;***
 
@@ -110,7 +110,7 @@ Run notmuch and display saved searches, known tags, etc.
 
 \(fn &optional NO-DISPLAY)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-hello" '("notmuch-")))
+(register-definition-prefixes "notmuch-hello" '("notmuch-"))
 
 ;;;***
 
@@ -143,14 +143,14 @@ not appear in the pop-up buffer.
 
 \(fn ACTION-MAP PROMPT)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-jump" '("notmuch-jump-")))
+(register-definition-prefixes "notmuch-jump" '("notmuch-jump-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-lib" "notmuch-lib.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-lib.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-lib" '("notmuch-")))
+(register-definition-prefixes "notmuch-lib" '("notmuch-"))
 
 ;;;***
 
@@ -158,7 +158,7 @@ not appear in the pop-up buffer.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from notmuch-maildir-fcc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-maildir-fcc" '("notmuch-" "with-temporary-notmuch-message-buffer")))
+(register-definition-prefixes "notmuch-maildir-fcc" '("notmuch-" "with-temporary-notmuch-message-buffer"))
 
 ;;;***
 
@@ -166,14 +166,14 @@ not appear in the pop-up buffer.
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-message.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-message" '("notmuch-message-")))
+(register-definition-prefixes "notmuch-message" '("notmuch-message-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-mua" "notmuch-mua.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-mua.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-mua" '("notmuch-")))
+(register-definition-prefixes "notmuch-mua" '("notmuch-"))
 
 ;;;***
 
@@ -181,21 +181,21 @@ not appear in the pop-up buffer.
 ;;;;;;  0))
 ;;; Generated autoloads from notmuch-parser.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-parser" '("notmuch-sexp-")))
+(register-definition-prefixes "notmuch-parser" '("notmuch-sexp-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-print" "notmuch-print.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-print.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-print" '("notmuch-print-")))
+(register-definition-prefixes "notmuch-print" '("notmuch-print-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-query" "notmuch-query.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-query.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-query" '("notmuch-query-")))
+(register-definition-prefixes "notmuch-query" '("notmuch-query-"))
 
 ;;;***
 
@@ -226,35 +226,35 @@ matched.
 
 \(fn THREAD-ID &optional ELIDE-TOGGLE PARENT-BUFFER QUERY-CONTEXT BUFFER-NAME)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-show" '("notmuch-" "with-current-notmuch-show-message")))
+(register-definition-prefixes "notmuch-show" '("notmuch-" "with-current-notmuch-show-message"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-tag" "notmuch-tag.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-tag.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-tag" '("notmuch-")))
+(register-definition-prefixes "notmuch-tag" '("notmuch-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-tree" "notmuch-tree.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-tree.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-tree" '("notmuch-")))
+(register-definition-prefixes "notmuch-tree" '("notmuch-"))
 
 ;;;***
 
 ;;;### (autoloads nil "notmuch-wash" "notmuch-wash.el" (0 0 0 0))
 ;;; Generated autoloads from notmuch-wash.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "notmuch-wash" '("notmuch-wash-")))
+(register-definition-prefixes "notmuch-wash" '("notmuch-wash-"))
 
 ;;;***
 
 ;;;### (autoloads nil "rstdoc" "rstdoc.el" (0 0 0 0))
 ;;; Generated autoloads from rstdoc.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "rstdoc" '("rst")))
+(register-definition-prefixes "rstdoc" '("rst"))
 
 ;;;***
 

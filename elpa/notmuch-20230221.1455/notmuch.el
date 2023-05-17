@@ -90,11 +90,11 @@
     ("tags" . "(%s)"))
   "Search result formatting.
 
-Supported fields are: date, count, authors, subject, tags.
-For example:
-    (setq notmuch-search-result-format
-          \\='((\"authors\" . \"%-40s\")
-            (\"subject\" . \"%s\")))
+List of pairs of (field . format-string).  Supported field
+strings are: \"date\", \"count\", \"authors\", \"subject\",
+\"tags\".  It is also supported to pass a function in place of a
+field name. In this case the function is passed the thread
+object (plist) and format string.
 
 Line breaks are permitted in format strings (though this is
 currently experimental).  Note that a line break at the end of an
@@ -102,7 +102,16 @@ currently experimental).  Note that a line break at the end of an
 place it instead at the beginning of the following field.  To
 enter a line break when setting this variable with setq, use \\n.
 To enter a line break in customize, press \\[quoted-insert] C-j."
-  :type '(alist :key-type string :value-type string)
+  :type '(alist
+	  :key-type
+	  (choice
+	   (const :tag "Date" "date")
+	   (const :tag "Count" "count")
+	   (const :tag "Authors" "authors")
+	   (const :tag "Subject" "subject")
+	   (const :tag "Tags" "tags")
+	   function)
+	  :value-type (string :tag "Format"))
   :group 'notmuch-search)
 
 ;; The name of this variable `notmuch-init-file' is consistent with the
@@ -181,6 +190,7 @@ there will be called at other points of notmuch execution."
     (define-key map "c" 'notmuch-search-stash-map)
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "l" 'notmuch-search-filter)
+    (define-key map "E" 'notmuch-search-edit-search)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
     (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-search-tag-all)
@@ -520,7 +530,9 @@ no messages in the region then return nil."
 
 With a prefix argument, invert the default value of
 `notmuch-show-only-matching-messages' when displaying the
-thread."
+thread.
+
+Return non-nil on success."
   (interactive "P")
   (let ((thread-id (notmuch-search-find-thread-id)))
     (if thread-id
@@ -532,7 +544,8 @@ thread."
 		      (format "*%s*" (truncate-string-to-width
 				      (notmuch-search-find-subject)
 				      30 nil nil t)))
-      (message "End of search results."))))
+      (message "End of search results.")
+      nil)))
 
 (defun notmuch-tree-from-search-current-query ()
   "Tree view of current query."
@@ -828,6 +841,7 @@ non-authors is found, assume that all of the authors match."
 	      overlay)
 	  (insert invisible-string)
 	  (setq overlay (make-overlay start (point)))
+	  (overlay-put overlay 'evaporate t)
 	  (overlay-put overlay 'invisible 'ellipsis)
 	  (overlay-put overlay 'isearch-open-invisible #'delete-overlay)))
       (insert padding))))
@@ -1143,6 +1157,12 @@ search results and that are also tagged with the given TAG."
   (interactive
    (list (notmuch-select-tag-with-completion "Notmuch search tag: ")))
   (notmuch-search (concat "tag:" tag)))
+
+(defun notmuch-search-edit-search (query)
+  "Edit the current search"
+  (interactive (list (read-from-minibuffer "Edit search: "
+					   notmuch-search-query-string)))
+  (notmuch-search query notmuch-search-oldest-first))
 
 ;;;###autoload
 (defun notmuch ()

@@ -5,7 +5,7 @@
 ;; Author: Feng Shu <tumashu@163.com>
 ;; Maintainer: Feng Shu <tumashu@163.com>
 ;; URL: https://github.com/tumashu/posframe
-;; Version: 1.1.7
+;; Version: 1.4.2
 ;; Keywords: convenience, tooltip
 ;; Package-Requires: ((emacs "26.1"))
 
@@ -127,182 +127,6 @@ effect.")
                 emacs-basic-display
                 (not (display-graphic-p))))))
 
-(cl-defun posframe--create-posframe (buffer-or-name
-                                     &key
-                                     parent-frame
-                                     foreground-color
-                                     background-color
-                                     left-fringe
-                                     right-fringe
-                                     border-width
-                                     border-color
-                                     internal-border-width
-                                     internal-border-color
-                                     font
-                                     keep-ratio
-                                     lines-truncate
-                                     override-parameters
-                                     respect-header-line
-                                     respect-mode-line
-                                     accept-focus)
-  "Create and return a posframe child frame.
-This posframe's buffer is BUFFER-OR-NAME.
-
-The below optional arguments are similar to `posframe-show''s:
-PARENT-FRAME, FOREGROUND-COLOR, BACKGROUND-COLOR, LEFT-FRINGE,
-RIGHT-FRINGE, BORDER-WIDTH, BORDER-COLOR, INTERNAL-BORDER-WIDTH,
-INTERNAL-BORDER-COLOR, FONT, KEEP-RATIO, LINES-TRUNCATE,
-OVERRIDE-PARAMETERS, RESPECT-HEADER-LINE, RESPECT-MODE-LINE,
-ACCEPT-FOCUS."
-  (let ((left-fringe (or left-fringe 0))
-        (right-fringe (or right-fringe 0))
-        ;; See emacs.git:  Add distinct controls for child frames' borders (Bug#45620)
-        ;; http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=ff7b1a133bfa7f2614650f8551824ffaef13fadc
-        (border-width (or border-width internal-border-width 0))
-        (border-color (or border-color internal-border-color))
-        (buffer (get-buffer-create buffer-or-name))
-        (after-make-frame-functions nil)
-        (x-gtk-resize-child-frames posframe-gtk-resize-child-frames)
-        (args (list "args"
-                    foreground-color
-                    background-color
-                    right-fringe
-                    left-fringe
-                    border-width
-                    border-color
-                    internal-border-width
-                    internal-border-color
-                    font
-                    keep-ratio
-                    override-parameters
-                    respect-header-line
-                    respect-mode-line
-                    accept-focus)))
-    (with-current-buffer buffer
-      ;; Many variables take effect after call `set-window-buffer'
-      (setq-local display-line-numbers nil)
-      (setq-local frame-title-format "")
-      (setq-local left-margin-width nil)
-      (setq-local right-margin-width nil)
-      (setq-local left-fringe-width nil)
-      (setq-local right-fringe-width nil)
-      (setq-local fringes-outside-margins 0)
-      (setq-local fringe-indicator-alist nil)
-      ;; Need to use `lines-truncate' as our keyword variable instead of
-      ;; `truncate-lines' so we don't shadow the variable that we are trying to
-      ;; set.
-      (setq-local truncate-lines lines-truncate)
-      (setq-local cursor-type nil)
-      (setq-local cursor-in-non-selected-windows nil)
-      (setq-local show-trailing-whitespace nil)
-      (setq-local posframe--accept-focus accept-focus)
-      (unless respect-mode-line
-        (setq-local mode-line-format nil))
-      (unless respect-header-line
-        (setq-local header-line-format nil))
-
-      ;; Find existing posframe: buffer-local variables used by
-      ;; posframe can be cleaned by other packages, so we should find
-      ;; existing posframe first if possible.
-      (unless (or posframe--frame posframe--last-args)
-        (setq-local posframe--frame
-                    (posframe--find-existing-posframe buffer args))
-        (setq-local posframe--last-args args))
-
-      ;; Create child-frame
-      (unless (and posframe--frame
-                   (frame-live-p posframe--frame)
-                   ;; For speed reason, posframe will reuse
-                   ;; existing frame at possible, but when
-                   ;; user change args, recreating frame
-                   ;; is needed.
-                   (equal posframe--last-args args))
-        (posframe-delete-frame buffer)
-        (setq-local posframe--last-args args)
-        (setq-local posframe--last-posframe-pixel-position nil)
-        (setq-local posframe--last-posframe-size nil)
-        (setq-local posframe--frame
-                    (make-frame
-                     `(,@override-parameters
-                       ,(when foreground-color
-                          (cons 'foreground-color foreground-color))
-                       ,(when background-color
-                          (cons 'background-color background-color))
-                       ,(when font
-                          (cons 'font font))
-                       (title . "posframe")
-                       (parent-frame . ,parent-frame)
-                       (keep-ratio ,keep-ratio)
-                       (posframe-buffer . ,(cons (buffer-name buffer)
-                                                 buffer))
-                       (fullscreen . nil)
-                       (no-accept-focus . ,(not accept-focus))
-                       (min-width  . 0)
-                       (min-height . 0)
-                       (border-width . 0)
-                       (internal-border-width . ,border-width)
-                       (child-frame-border-width . ,border-width)
-                       (vertical-scroll-bars . nil)
-                       (horizontal-scroll-bars . nil)
-                       (left-fringe . ,left-fringe)
-                       (right-fringe . ,right-fringe)
-                       (menu-bar-lines . 0)
-                       (tool-bar-lines . 0)
-                       (tab-bar-lines . 0)
-                       (line-spacing . 0)
-                       (unsplittable . t)
-                       (no-other-frame . t)
-                       (undecorated . t)
-                       (visibility . nil)
-                       (cursor-type . nil)
-                       (minibuffer . nil)
-                       (width . 1)
-                       (height . 1)
-                       (no-special-glyphs . t)
-                       (skip-taskbar . t)
-                       (inhibit-double-buffering . ,posframe-inhibit-double-buffering)
-                       ;; Do not save child-frame when use desktop.el
-                       (desktop-dont-save . t))))
-        (set-frame-parameter posframe--frame 'last-args args)
-        (when border-color
-	  (set-face-background
-           (if (facep 'child-frame-border)
-               'child-frame-border
-             'internal-border)
-           border-color posframe--frame)
-          ;; HACK: Set face background after border color, otherwise the
-          ;; border is not updated (BUG!).
-          (when (version< emacs-version "28.0")
-            (set-frame-parameter
-             posframe--frame 'background-color
-             (or background-color (face-attribute 'default :background)))))
-        (let ((posframe-window (frame-root-window posframe--frame)))
-          ;; This method is more stable than 'setq mode/header-line-format nil'
-          (unless respect-mode-line
-            (set-window-parameter posframe-window 'mode-line-format 'none))
-          (unless respect-header-line
-            (set-window-parameter posframe-window 'header-line-format 'none))
-          (set-window-buffer posframe-window buffer)
-          ;; When the buffer of posframe is killed, the child-frame of
-          ;; this posframe will be deleted too.
-          (set-window-dedicated-p posframe-window t)))
-
-      ;; Remove tab-bar always.
-      ;; NOTE: if we do not test the value of frame parameter
-      ;; 'tab-bar-lines before set it, posframe will flicker when
-      ;; scroll.
-      (unless (equal (frame-parameter posframe--frame 'tab-bar-lines) 0)
-        (set-frame-parameter posframe--frame 'tab-bar-lines 0))
-      (when (version< "27.0" emacs-version)
-        (setq-local tab-line-format nil))
-
-      ;; If user set 'parent-frame to nil after run posframe-show.
-      ;; for cache reason, next call to posframe-show will be affected.
-      ;; so we should force set parent-frame again in this place.
-      (set-frame-parameter posframe--frame 'parent-frame parent-frame)
-
-      posframe--frame)))
-
 ;;;###autoload
 (cl-defun posframe-show (buffer-or-name
                          &key
@@ -325,6 +149,8 @@ ACCEPT-FOCUS."
                          internal-border-width
                          internal-border-color
                          font
+                         cursor
+                         window-point
                          foreground-color
                          background-color
                          respect-header-line
@@ -364,6 +190,8 @@ position.  Its argument is a plist of the following form:
    :posframe-height xxx
    :posframe-buffer xxx
    :parent-frame xxx
+   :parent-window-start xxx
+   :parent-window-end xxx
    :parent-window-left xxx
    :parent-window-top xxx
    :parent-frame-width xxx
@@ -383,30 +211,7 @@ position.  Its argument is a plist of the following form:
 By default, poshandler is auto-selected based on the type of POSITION,
 but the selection can be overridden using the POSHANDLER argument.
 
-The names of poshandler functions are like:
-
-   `posframe-poshandler-p0.5p0-to-w0.5p1'
-
-which mean align posframe(0.5, 0) to a position(a, b)
-
-1. a = x of window(0.5, 0)
-2. b = y of point(1, 1)
-
-    posframe(p), frame(f), window(w), point(p), mouse(m)
-
-         (0,0)      (0.5,0)      (1,0)
-          +------------+-----------+
-          |                        |
-          |                        |
-          |                        |
- (0, 0.5) +                        + (1, 0.5)
-          |                        |
-          |                        |
-          |                        |
-          +------------+-----------+
-         (0,1)      (0.5,1)      (1,1)
-
-The alias of builtin poshandler functions are listed below:
+The builtin poshandler functions are listed below:
 
 1.  `posframe-poshandler-frame-center'
 2.  `posframe-poshandler-frame-top-center'
@@ -426,15 +231,7 @@ The alias of builtin poshandler functions are listed below:
 16. `posframe-poshandler-point-bottom-left-corner'
 17. `posframe-poshandler-point-bottom-left-corner-upward'
 18. `posframe-poshandler-point-window-center'
-
-by the way, poshandler can be used by other packages easily with
-the help of function `posframe-poshandler-argbuilder'.  like:
-
-   (let* ((info (posframe-poshandler-argbuilder *MY-CHILD-FRAME*))
-          (posn (posframe-poshandler-window-center
-                 `(:posframe-width 800 :posframe-height 400 ,@info))))
-     `((left . ,(car posn))
-       (top . ,(cdr posn))))
+19. `posframe-poshandler-point-frame-center'
 
  (3) POSHANDLER-EXTRA-INFO
 
@@ -486,25 +283,34 @@ derived from the current frame by default, but can be overridden
 using the FONT, FOREGROUND-COLOR and BACKGROUND-COLOR arguments,
 respectively.
 
- (10) RESPECT-HEADER-LINE and RESPECT-MODE-LINE
+ (10) CURSOR and WINDOW-POINT
+
+By default, cursor is not showed in posframe, user can let cursor
+showed with this argument help by set its value to a `cursor-type'.
+
+When cursor need to be showed in posframe, user may need to set
+WINDOW-POINT to the point of BUFFER, which can let cursor showed
+at this point.
+
+ (11) RESPECT-HEADER-LINE and RESPECT-MODE-LINE
 
 By default, posframe will display no header-line, mode-line and
 tab-line.  In case a header-line, mode-line or tab-line is
 desired, users can set RESPECT-HEADER-LINE and RESPECT-MODE-LINE
 to t.
 
- (11) INITIALIZE
+ (12) INITIALIZE
 
 INITIALIZE is a function with no argument.  It will run when
 posframe buffer is first selected with `with-current-buffer'
 in `posframe-show', and only run once (for performance reasons).
 
- (12) LINES-TRUNCATE
+ (13) LINES-TRUNCATE
 
 If LINES-TRUNCATE is non-nil, then lines will truncate in the
 posframe instead of wrap.
 
- (13) OVERRIDE-PARAMETERS
+ (14) OVERRIDE-PARAMETERS
 
 OVERRIDE-PARAMETERS is very powful, *all* the valid frame parameters
 used by posframe's frame can be overridden by it.
@@ -512,7 +318,7 @@ used by posframe's frame can be overridden by it.
 NOTE: some `posframe-show' arguments are not frame parameters, so they
 can not be overrided by this argument.
 
- (14) TIMEOUT
+ (15) TIMEOUT
 
 TIMEOUT can specify the number of seconds after which the posframe
 will auto-hide.
@@ -522,12 +328,12 @@ will auto-hide.
 If REFRESH is a number, posframe's frame-size will be re-adjusted
 every REFRESH seconds.
 
- (16) ACCEPT-FOCUS
+ (17) ACCEPT-FOCUS
 
 When ACCEPT-FOCUS is non-nil, posframe will accept focus.
 be careful, you may face some bugs when set it to non-nil.
 
- (17) HIDEHANDLER
+ (18) HIDEHANDLER
 
 HIDEHANDLER is a function, when it return t, posframe will be
 hide, this function has a plist argument:
@@ -539,7 +345,7 @@ The builtin hidehandler functions are listed below:
 
 1. `posframe-hidehandler-when-buffer-switch'
 
- (18) REFPOSHANDLER
+ (19) REFPOSHANDLER
 
 REFPOSHANDLER is a function, a reference position (most is
 top-left of current frame) will be returned when call this
@@ -576,9 +382,12 @@ You can use `posframe-delete-all' to delete all posframes."
                    (min (max height min-height) max-height)))
          (x-pixel-offset (or x-pixel-offset 0))
          (y-pixel-offset (or y-pixel-offset 0))
+         (window-point (or window-point 0))
          ;;-----------------------------------------------------
          (buffer (get-buffer-create buffer-or-name))
          (parent-window (selected-window))
+         (parent-window-start (window-start parent-window))
+         (parent-window-end (window-end parent-window))
          (parent-window-top (window-pixel-top parent-window))
          (parent-window-left (window-pixel-left parent-window))
          (parent-window-width (window-pixel-width parent-window))
@@ -616,7 +425,9 @@ You can use `posframe-delete-all' to delete all posframes."
       (setq posframe
             (posframe--create-posframe
              buffer
+             :position position
              :font font
+             :cursor cursor
              :parent-frame
              (unless ref-position
                parent-frame)
@@ -669,6 +480,8 @@ You can use `posframe-delete-all' to delete all posframes."
                        :parent-frame-height parent-frame-height
                        :ref-position ref-position
                        :parent-window parent-window
+                       :parent-window-start parent-window-start
+                       :parent-window-end parent-window-end
                        :parent-window-top parent-window-top
                        :parent-window-left parent-window-left
                        :parent-window-width parent-window-width
@@ -692,7 +505,7 @@ You can use `posframe-delete-all' to delete all posframes."
       ;; Make sure not hide buffer's content for scroll down.
       (let ((window (frame-root-window posframe--frame)))
         (when (window-live-p window)
-          (set-window-point window 0)))
+          (set-window-point window window-point)))
 
       ;; Hide posframe when switch buffer
       (let* ((parent-buffer (window-buffer parent-window))
@@ -746,6 +559,399 @@ You can use `posframe-delete-all' to delete all posframes."
             (cons position height))
       height)))
 
+(cl-defun posframe--create-posframe (buffer-or-name
+                                     &key
+                                     position
+                                     parent-frame
+                                     foreground-color
+                                     background-color
+                                     left-fringe
+                                     right-fringe
+                                     border-width
+                                     border-color
+                                     internal-border-width
+                                     internal-border-color
+                                     font
+                                     cursor
+                                     keep-ratio
+                                     lines-truncate
+                                     override-parameters
+                                     respect-header-line
+                                     respect-mode-line
+                                     accept-focus)
+  "Create and return a posframe child frame.
+This posframe's buffer is BUFFER-OR-NAME.
+
+The below optional arguments are similar to `posframe-show''s:
+PARENT-FRAME, FOREGROUND-COLOR, BACKGROUND-COLOR, LEFT-FRINGE,
+RIGHT-FRINGE, BORDER-WIDTH, BORDER-COLOR, INTERNAL-BORDER-WIDTH,
+INTERNAL-BORDER-COLOR, FONT, KEEP-RATIO, LINES-TRUNCATE,
+OVERRIDE-PARAMETERS, RESPECT-HEADER-LINE, RESPECT-MODE-LINE,
+ACCEPT-FOCUS."
+  (let ((left-fringe (or left-fringe 0))
+        (right-fringe (or right-fringe 0))
+        ;; See emacs.git:  Add distinct controls for child frames' borders (Bug#45620)
+        ;; http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=ff7b1a133bfa7f2614650f8551824ffaef13fadc
+        (border-width (or border-width internal-border-width 0))
+        (border-color (or border-color internal-border-color))
+        (buffer (get-buffer-create buffer-or-name))
+        (after-make-frame-functions nil)
+        (x-gtk-resize-child-frames posframe-gtk-resize-child-frames)
+        (args (list "args"
+                    foreground-color
+                    background-color
+                    right-fringe
+                    left-fringe
+                    border-width
+                    border-color
+                    internal-border-width
+                    internal-border-color
+                    font
+                    keep-ratio
+                    override-parameters
+                    respect-header-line
+                    respect-mode-line
+                    accept-focus)))
+    (with-current-buffer buffer
+      ;; Many variables take effect after call `set-window-buffer'
+      (setq-local display-line-numbers nil)
+      (setq-local frame-title-format "")
+      (setq-local left-margin-width nil)
+      (setq-local right-margin-width nil)
+      (setq-local left-fringe-width nil)
+      (setq-local right-fringe-width nil)
+      (setq-local fringes-outside-margins 0)
+      (setq-local fringe-indicator-alist nil)
+      ;; Need to use `lines-truncate' as our keyword variable instead
+      ;; of `truncate-lines' so we don't shadow the variable that we
+      ;; are trying to set.
+      (setq-local truncate-lines lines-truncate)
+      (setq-local show-trailing-whitespace nil)
+      (setq-local posframe--accept-focus accept-focus)
+      (unless respect-mode-line
+        (setq-local mode-line-format nil))
+      (unless respect-header-line
+        (setq-local header-line-format nil))
+
+      (if cursor
+          (progn
+            (setq-local cursor-type cursor)
+            (setq-local cursor-in-non-selected-windows cursor))
+        (setq-local cursor-type nil)
+        (setq-local cursor-in-non-selected-windows nil))
+
+      ;; Find existing posframe: buffer-local variables used by
+      ;; posframe can be cleaned by other packages, so we should find
+      ;; existing posframe first if possible.
+      (unless (or posframe--frame posframe--last-args)
+        (setq-local posframe--frame
+                    (posframe--find-existing-posframe buffer args))
+        (setq-local posframe--last-args args))
+
+      ;; Create child-frame
+      (unless (and posframe--frame
+                   (frame-live-p posframe--frame)
+                   ;; For speed reason, posframe will reuse
+                   ;; existing frame at possible, but when
+                   ;; user change args, recreating frame
+                   ;; is needed.
+                   (equal posframe--last-args args))
+        (posframe-delete-frame buffer)
+        (setq-local posframe--last-args args)
+        (setq-local posframe--last-posframe-pixel-position nil)
+        (setq-local posframe--last-posframe-size nil)
+        (setq-local posframe--frame
+                    (make-frame
+                     `(,@override-parameters
+                       ,(when foreground-color
+                          (cons 'foreground-color foreground-color))
+                       ,(when background-color
+                          (cons 'background-color background-color))
+                       (title . "posframe")
+                       (parent-frame . ,parent-frame)
+                       (keep-ratio ,keep-ratio)
+                       (posframe-buffer . ,(cons (buffer-name buffer)
+                                                 buffer))
+                       (fullscreen . nil)
+                       (no-accept-focus . ,(not accept-focus))
+                       (min-width  . 0)
+                       (min-height . 0)
+                       (border-width . 0)
+                       (internal-border-width . ,border-width)
+                       (child-frame-border-width . ,border-width)
+                       (vertical-scroll-bars . nil)
+                       (horizontal-scroll-bars . nil)
+                       (left-fringe . ,left-fringe)
+                       (right-fringe . ,right-fringe)
+                       (menu-bar-lines . 0)
+                       (tool-bar-lines . 0)
+                       (tab-bar-lines . 0)
+                       (line-spacing . 0)
+                       (unsplittable . t)
+                       (no-other-frame . t)
+                       (undecorated . t)
+                       (visibility . nil)
+                       (cursor-type . nil)
+                       (minibuffer . nil)
+                       (left . ,(if (consp position) (car position) 0))
+                       (top . ,(if (consp position) (cdr position) 0))
+                       (width . 1)
+                       (height . 1)
+                       (no-special-glyphs . t)
+                       (skip-taskbar . t)
+                       (inhibit-double-buffering . ,posframe-inhibit-double-buffering)
+                       ;; Do not save child-frame when use desktop.el
+                       (desktop-dont-save . t))))
+        (set-frame-parameter posframe--frame 'last-args args)
+        (set-frame-parameter
+         posframe--frame 'font
+         (or font (face-attribute 'default :font parent-frame)))
+        (when border-color
+          (if parent-frame
+	      (set-face-background
+               (if (facep 'child-frame-border)
+                   'child-frame-border
+                 'internal-border)
+               border-color posframe--frame)
+            ;; NOTE: when use refposhander feature, parent-frame will be
+            ;; nil, we should use internal-border instead.
+            (set-face-background
+             'internal-border
+             border-color posframe--frame))
+          ;; HACK: Set face background after border color, otherwise the
+          ;; border is not updated (BUG!).
+          (when (version< emacs-version "28.0")
+            (set-frame-parameter
+             posframe--frame 'background-color
+             (or background-color (face-attribute 'default :background)))))
+        (let ((posframe-window (frame-root-window posframe--frame)))
+          ;; This method is more stable than 'setq mode/header-line-format nil'
+          (unless respect-mode-line
+            (set-window-parameter posframe-window 'mode-line-format 'none))
+          (unless respect-header-line
+            (set-window-parameter posframe-window 'header-line-format 'none))
+          (set-window-buffer posframe-window buffer)
+          ;; When the buffer of posframe is killed, the child-frame of
+          ;; this posframe will be deleted too.
+          (set-window-dedicated-p posframe-window t)))
+
+      ;; Remove tab-bar always.
+      ;; NOTE: if we do not test the value of frame parameter
+      ;; 'tab-bar-lines before set it, posframe will flicker when
+      ;; scroll.
+      (unless (equal (frame-parameter posframe--frame 'tab-bar-lines) 0)
+        (set-frame-parameter posframe--frame 'tab-bar-lines 0))
+      (when (version< "27.0" emacs-version)
+        (setq-local tab-line-format nil))
+
+      ;; If user set 'parent-frame to nil after run posframe-show.
+      ;; for cache reason, next call to posframe-show will be affected.
+      ;; so we should force set parent-frame again in this place.
+      (set-frame-parameter posframe--frame 'parent-frame parent-frame)
+
+      posframe--frame)))
+
+(defun posframe--find-existing-posframe (buffer &optional last-args)
+  "Find existing posframe with BUFFER and LAST-ARGS."
+  (let ((posframe
+         (cl-find-if
+          (lambda (frame)
+            (let* ((buffer-info (frame-parameter frame 'posframe-buffer))
+                   (buffer-equal-p
+                    (or (equal (buffer-name buffer) (car buffer-info))
+                        (equal buffer (cdr buffer-info)))))
+              (if last-args
+                  (and buffer-equal-p
+                       (equal last-args (frame-parameter frame 'last-args)))
+                buffer-equal-p)))
+          (frame-list))))
+    (when posframe
+      (set-frame-parameter posframe 'existing-posframe t))
+    posframe))
+
+(defun posframe-delete-frame (buffer-or-name)
+  "Delete posframe pertaining to BUFFER-OR-NAME.
+BUFFER-OR-NAME can be a buffer or a buffer name."
+  (let* ((buffer (get-buffer buffer-or-name))
+         (posframe (when buffer
+                     (posframe--find-existing-posframe buffer)))
+         ;; NOTE: `delete-frame' runs ‘delete-frame-functions’ before
+         ;; actually deleting the frame, unless the frame is a
+         ;; tooltip, posframe is a child-frame, but its function like
+         ;; a tooltip.
+         (delete-frame-functions nil))
+    (when posframe
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (dolist (timer '(posframe--refresh-timer
+                           posframe--timeout-timer))
+            (when (timerp timer)
+              (cancel-timer timer)))))
+      (delete-frame posframe))))
+
+(defun posframe--insert-string (string no-properties)
+  "Insert STRING to current buffer.
+If NO-PROPERTIES is non-nil, all properties of STRING
+will be removed."
+  (when (and string (stringp string))
+    (remove-text-properties
+     0 (length string) '(read-only t) string)
+    (let ((str (if no-properties
+                   (substring-no-properties string)
+                 string)))
+      (erase-buffer)
+      (insert str))))
+
+(defun posframe--set-frame-size (size-info)
+  "Set POSFRAME's size based on SIZE-INFO."
+  (let ((posframe (plist-get size-info :posframe))
+        (width (plist-get size-info :width))
+        (height (plist-get size-info :height))
+        (max-width (plist-get size-info :max-width))
+        (max-height (plist-get size-info :max-height))
+        (min-width (plist-get size-info :min-width))
+        (min-height (plist-get size-info :min-height)))
+    (when height (set-frame-height posframe height))
+    (when width (set-frame-width posframe width))
+    (unless (and height width)
+      (posframe--fit-frame-to-buffer
+       posframe max-height min-height max-width min-width
+       (cond (width 'vertically)
+             (height 'horizontally))))
+    (setq-local posframe--last-posframe-size size-info)))
+
+(defun posframe--fit-frame-to-buffer (posframe max-height min-height max-width min-width only)
+  "POSFRAME version of function `fit-frame-to-buffer'.
+Arguments HEIGHT, MAX-HEIGHT, MIN-HEIGHT, WIDTH, MAX-WIDTH,
+MIN-WIDTH and ONLY are similar function `fit-frame-to-buffer''s."
+  ;; This only has effect if the user set the latter var to `hide'.
+  (let ((x-gtk-resize-child-frames posframe-gtk-resize-child-frames))
+    ;; More info: Don't skip empty lines when fitting mini frame to buffer (Bug#44080)
+    ;; http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=e0de9f3295b4c46cb7198ec0b9634809d7b7a36d
+    (if (functionp 'fit-frame-to-buffer-1)
+        (fit-frame-to-buffer-1
+         posframe max-height min-height max-width min-width only nil nil)
+      (fit-frame-to-buffer
+       posframe max-height min-height max-width min-width only))))
+
+(defun posframe--run-refresh-timer (repeat size-info)
+  "Refresh POSFRAME every REPEAT seconds.
+
+It will set POSFRAME's size by SIZE-INFO."
+  (let ((posframe (plist-get size-info :posframe))
+        (width (plist-get size-info :width))
+        (height (plist-get size-info :height)))
+    (when (and (numberp repeat) (> repeat 0))
+      (unless (and width height)
+        (when (timerp posframe--refresh-timer)
+          (cancel-timer posframe--refresh-timer))
+        (setq-local posframe--refresh-timer
+                    (run-with-timer
+                     nil repeat
+                     (lambda (size-info)
+                       (let ((frame-resize-pixelwise t))
+                         (when (and posframe (frame-live-p posframe))
+                           (posframe--set-frame-size size-info))))
+                     size-info))))))
+
+;; Posframe's position handler
+(defun posframe-run-poshandler (info)
+  "Run posframe's position handler.
+
+the structure of INFO can be found in docstring
+of `posframe-show'."
+  (if (equal info posframe--last-poshandler-info)
+      posframe--last-posframe-pixel-position
+    (setq posframe--last-poshandler-info info)
+    (let* ((ref-position (plist-get info :ref-position))
+           (poshandler (posframe--get-valid-poshandler info))
+           (position (funcall poshandler info)))
+      (if (not ref-position)
+          position
+        (posframe--calculate-new-position
+         info position ref-position)))))
+
+(defun posframe--get-valid-poshandler (info)
+  "Get valid poshandler function with the help of INFO."
+  (or (plist-get info :poshandler)
+      (let ((position (plist-get info :position)))
+        (cond ((integerp position)
+               #'posframe-poshandler-point-bottom-left-corner)
+              ((and (consp position)
+                    (integerp (car position))
+                    (integerp (cdr position)))
+               #'posframe-poshandler-absolute-x-y)
+              (t (error "Posframe: have no valid poshandler"))))))
+
+(defun posframe--calculate-new-position (info position ref-position)
+  "Calcuate new position according to INFO, POSITION and REF-POSITION."
+  (let* ((parent-frame-width (plist-get info :parent-frame-width))
+         (parent-frame-height (plist-get info :parent-frame-height))
+         (posframe-width (plist-get info :posframe-width))
+         (posframe-height (plist-get info :posframe-height))
+         (ref-x (or (car ref-position) 0))
+         (ref-y (or (cdr ref-position) 0))
+         (x (car position))
+         (y (cdr position)))
+    (when (< x 0)
+      (setq x (- (+ x parent-frame-width) posframe-width)))
+    (when (< y 0)
+      (setq y (- (+ y parent-frame-height) posframe-height)))
+    (cons (+ ref-x x)
+          (+ ref-y y))))
+
+(defun posframe--set-frame-position (posframe position
+                                              parent-frame-width
+                                              parent-frame-height)
+  "Move POSFRAME to POSITION.
+This need PARENT-FRAME-WIDTH and PARENT-FRAME-HEIGHT"
+  (unless (and (equal position posframe--last-posframe-pixel-position)
+               ;; When working frame's size change, re-posit
+               ;; the posframe.
+               (equal posframe--last-parent-frame-size
+                      (cons parent-frame-width parent-frame-height))
+               (equal posframe--last-posframe-displayed-size
+                      (cons (frame-pixel-width posframe)
+                            (frame-pixel-height posframe))))
+    (set-frame-position posframe (car position) (cdr position))
+    (setq-local posframe--last-posframe-pixel-position position)
+    (setq-local posframe--last-parent-frame-size
+                (cons parent-frame-width parent-frame-height))
+    (setq-local posframe--last-posframe-displayed-size
+                (cons (frame-pixel-width posframe)
+                      (frame-pixel-height posframe))))
+  (posframe--make-frame-visible posframe))
+
+(defun posframe--make-frame-visible (posframe)
+  "Let POSFRAME visible and redraw it when needed."
+  (unless (frame-visible-p posframe)
+    (make-frame-visible posframe)
+    (when (posframe--posframe-need-redraw-p posframe)
+      (redraw-frame posframe))))
+
+(defun posframe--posframe-need-redraw-p (posframe)
+  "Test POSFRAME need to redraw or not."
+  ;; When posframe is found by `posframe--find-existing-posframe',
+  ;; it need to redraw, more info:
+  ;; 1. https://github.com/tumashu/ivy-posframe/pull/30
+  ;; 2. https://github.com/tumashu/posframe/pull/118
+  (frame-parameter posframe 'existing-posframe))
+
+(defun posframe--run-timeout-timer (posframe secs)
+  "Hide POSFRAME after a delay of SECS seconds."
+  (when (and (numberp secs) (> secs 0))
+    (when (timerp posframe--timeout-timer)
+      (cancel-timer posframe--timeout-timer))
+    (setq-local posframe--timeout-timer
+                (run-with-timer
+                 secs nil #'posframe--make-frame-invisible posframe))))
+
+(defun posframe--make-frame-invisible (frame)
+  "`make-frame-invisible' replacement to hide FRAME safely."
+  (when (and (frame-live-p frame)
+             (frame-visible-p frame))
+    (make-frame-invisible frame)))
+
 (defun posframe-mouse-banish-simple (info)
   "Banish mouse to (0, 0) of posframe base on INFO."
   (let ((parent-frame (plist-get info :parent-frame))
@@ -792,127 +998,6 @@ https://github.com/tumashu/posframe/issues/4#issuecomment-357514918"
            (min p-h (+ h 10))
          (max 0 (- y 10)))))))
 
-(defun posframe--redirect-posframe-focus ()
-  "Redirect focus from the posframe to the parent frame.
-This prevents the posframe from catching keyboard input if the
-window manager selects it."
-  (when (and (eq (selected-frame) posframe--frame)
-             ;; Do not redirect focus when posframe can accept focus.
-             ;; See posframe-show's accept-focus argument.
-             (not posframe--accept-focus))
-    (redirect-frame-focus posframe--frame (frame-parent))))
-
-(if (version< emacs-version "27.1")
-    (with-no-warnings
-      (add-hook 'focus-in-hook #'posframe--redirect-posframe-focus))
-  (add-function :after after-focus-change-function #'posframe--redirect-posframe-focus))
-
-(defun posframe--insert-string (string no-properties)
-  "Insert STRING to current buffer.
-If NO-PROPERTIES is non-nil, all properties of STRING
-will be removed."
-  (when (and string (stringp string))
-    (remove-text-properties
-     0 (length string) '(read-only t) string)
-    (let ((str (if no-properties
-                   (substring-no-properties string)
-                 string)))
-      (erase-buffer)
-      (insert str))))
-
-(defun posframe--fit-frame-to-buffer (posframe max-height min-height max-width min-width only)
-  "POSFRAME version of function `fit-frame-to-buffer'.
-Arguments HEIGHT, MAX-HEIGHT, MIN-HEIGHT, WIDTH, MAX-WIDTH,
-MIN-WIDTH and ONLY are similar function `fit-frame-to-buffer''s."
-  ;; This only has effect if the user set the latter var to `hide'.
-  (let ((x-gtk-resize-child-frames posframe-gtk-resize-child-frames))
-    ;; More info: Don't skip empty lines when fitting mini frame to buffer (Bug#44080)
-    ;; http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=e0de9f3295b4c46cb7198ec0b9634809d7b7a36d
-    (if (functionp 'fit-frame-to-buffer-1)
-        (fit-frame-to-buffer-1
-         posframe max-height min-height max-width min-width only nil nil)
-      (fit-frame-to-buffer
-       posframe max-height min-height max-width min-width only))))
-
-(defun posframe--set-frame-size (size-info)
-  "Set POSFRAME's size based on SIZE-INFO."
-  (let ((posframe (plist-get size-info :posframe))
-        (width (plist-get size-info :width))
-        (height (plist-get size-info :height))
-        (max-width (plist-get size-info :max-width))
-        (max-height (plist-get size-info :max-height))
-        (min-width (plist-get size-info :min-width))
-        (min-height (plist-get size-info :min-height)))
-    (when height (set-frame-height posframe height))
-    (when width (set-frame-width posframe width))
-    (unless (and height width)
-      (posframe--fit-frame-to-buffer
-       posframe max-height min-height max-width min-width
-       (cond (width 'vertically)
-             (height 'horizontally))))
-    (setq-local posframe--last-posframe-size size-info)))
-
-(defun posframe--set-frame-position (posframe position
-                                              parent-frame-width
-                                              parent-frame-height)
-  "Move POSFRAME to POSITION.
-This need PARENT-FRAME-WIDTH and PARENT-FRAME-HEIGHT"
-  (unless (and (equal position posframe--last-posframe-pixel-position)
-               ;; When working frame's size change, re-posit
-               ;; the posframe.
-               (equal posframe--last-parent-frame-size
-                      (cons parent-frame-width parent-frame-height))
-               (equal posframe--last-posframe-displayed-size
-                      (cons (frame-pixel-width posframe)
-                            (frame-pixel-height posframe))))
-    (set-frame-position posframe (car position) (cdr position))
-    (setq-local posframe--last-posframe-pixel-position position)
-    (setq-local posframe--last-parent-frame-size
-                (cons parent-frame-width parent-frame-height))
-    (setq-local posframe--last-posframe-displayed-size
-                (cons (frame-pixel-width posframe)
-                      (frame-pixel-height posframe))))
-  ;; Make posframe's posframe--frame visible
-  (unless (frame-visible-p posframe)
-    (make-frame-visible posframe)
-    ;; Fix issue: https://github.com/tumashu/ivy-posframe/pull/30
-    (redraw-frame posframe)))
-
-(defun posframe--run-timeout-timer (posframe secs)
-  "Hide POSFRAME after a delay of SECS seconds."
-  (when (and (numberp secs) (> secs 0))
-    (when (timerp posframe--timeout-timer)
-      (cancel-timer posframe--timeout-timer))
-    (setq-local posframe--timeout-timer
-                (run-with-timer
-                 secs nil #'posframe--make-frame-invisible posframe))))
-
-(defun posframe--make-frame-invisible (frame)
-  "`make-frame-invisible' replacement to hide FRAME safely."
-  (when (and (frame-live-p frame)
-             (frame-visible-p frame))
-    (make-frame-invisible frame)))
-
-(defun posframe--run-refresh-timer (repeat size-info)
-  "Refresh POSFRAME every REPEAT seconds.
-
-It will set POSFRAME's size by SIZE-INFO."
-  (let ((posframe (plist-get size-info :posframe))
-        (width (plist-get size-info :width))
-        (height (plist-get size-info :height)))
-    (when (and (numberp repeat) (> repeat 0))
-      (unless (and width height)
-        (when (timerp posframe--refresh-timer)
-          (cancel-timer posframe--refresh-timer))
-        (setq-local posframe--refresh-timer
-                    (run-with-timer
-                     nil repeat
-                     (lambda (size-info)
-                       (let ((frame-resize-pixelwise t))
-                         (when (and posframe (frame-live-p posframe))
-                           (posframe--set-frame-size size-info))))
-                     size-info))))))
-
 (defun posframe-refresh (buffer-or-name)
   "Refresh posframe pertaining to BUFFER-OR-NAME.
 
@@ -943,6 +1028,14 @@ to do similar job:
         (with-current-buffer buffer-or-name
           (posframe--set-frame-size posframe--last-posframe-size))))))
 
+;;;###autoload
+(defun posframe-hide-all ()
+  "Hide all posframe frames."
+  (interactive)
+  (dolist (frame (frame-list))
+    (when (frame-parameter frame 'posframe-buffer)
+      (posframe--make-frame-invisible frame))))
+
 (defun posframe-hide (buffer-or-name)
   "Hide posframe pertaining to BUFFER-OR-NAME.
 BUFFER-OR-NAME can be a buffer or a buffer name."
@@ -950,12 +1043,13 @@ BUFFER-OR-NAME can be a buffer or a buffer name."
   ;; called, otherwise:
   ;;   (add-hook 'buffer-list-update-hook  #'posframe-hide)
   ;; will lead to infinite recursion.
-  (let ((buffer-list-update-hook nil))
-    (dolist (frame (frame-list))
-      (let ((buffer-info (frame-parameter frame 'posframe-buffer)))
-        (when (or (equal buffer-or-name (car buffer-info))
-                  (equal buffer-or-name (cdr buffer-info)))
-          (posframe--make-frame-invisible frame))))))
+  (when buffer-or-name
+    (let ((buffer-list-update-hook nil))
+      (dolist (frame (frame-list))
+        (let ((buffer-info (frame-parameter frame 'posframe-buffer)))
+          (when (or (equal buffer-or-name (car buffer-info))
+                    (equal buffer-or-name (cdr buffer-info)))
+            (posframe--make-frame-invisible frame)))))))
 
 (defun posframe-hidehandler-daemon ()
   "Run posframe hidehandler daemon."
@@ -990,73 +1084,6 @@ Argument INFO ."
     (and (buffer-live-p parent-buffer)
          (not (equal parent-buffer (current-buffer))))))
 
-(defun posframe-delete (buffer-or-name)
-  "Delete posframe pertaining to BUFFER-OR-NAME and kill the buffer.
-BUFFER-OR-NAME can be a buffer or a buffer name.
-
-This function is not commonly used, for delete and recreate
-posframe is very very slowly, `posframe-hide' is more useful."
-  (posframe-delete-frame buffer-or-name)
-  (posframe--kill-buffer buffer-or-name))
-
-(defun posframe-delete-frame (buffer-or-name)
-  "Delete posframe pertaining to BUFFER-OR-NAME.
-BUFFER-OR-NAME can be a buffer or a buffer name."
-  (let* ((buffer (get-buffer buffer-or-name))
-         (posframe (when buffer
-                     (posframe--find-existing-posframe buffer)))
-         ;; NOTE: `delete-frame' runs ‘delete-frame-functions’ before
-         ;; actually deleting the frame, unless the frame is a
-         ;; tooltip, posframe is a child-frame, but its function like
-         ;; a tooltip.
-         (delete-frame-functions nil))
-    (when posframe
-      (when (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (dolist (timer '(posframe--refresh-timer
-                           posframe--timeout-timer))
-            (when (timerp timer)
-              (cancel-timer timer)))))
-      (delete-frame posframe))))
-
-(defun posframe--find-existing-posframe (buffer &optional last-args)
-  "Find existing posframe with BUFFER and LAST-ARGS."
-  (cl-find-if
-   (lambda (frame)
-     (let* ((buffer-info (frame-parameter frame 'posframe-buffer))
-            (buffer-equal-p
-             (or (equal (buffer-name buffer) (car buffer-info))
-                 (equal buffer (cdr buffer-info)))))
-       (if last-args
-           (and buffer-equal-p
-                (equal last-args (frame-parameter frame 'last-args)))
-         buffer-equal-p)))
-   (frame-list)))
-
-(defun posframe--kill-buffer (buffer-or-name)
-  "Kill posframe's buffer: BUFFER-OR-NAME.
-BUFFER-OR-NAME can be a buffer or a buffer name."
-  (when (buffer-live-p (get-buffer buffer-or-name))
-    (kill-buffer buffer-or-name)))
-
-(defun posframe-funcall (buffer-or-name function &rest arguments)
-  "Select posframe of BUFFER-OR-NAME and call FUNCTION with ARGUMENTS.
-BUFFER-OR-NAME can be a buffer or a buffer name."
-  (when (functionp function)
-    (when (get-buffer buffer-or-name)
-      (with-current-buffer buffer-or-name
-        (when (framep posframe--frame)
-          (with-selected-frame posframe--frame
-            (apply function arguments)))))))
-
-;;;###autoload
-(defun posframe-hide-all ()
-  "Hide all posframe frames."
-  (interactive)
-  (dolist (frame (frame-list))
-    (when (frame-parameter frame 'posframe-buffer)
-      (posframe--make-frame-invisible frame))))
-
 ;;;###autoload
 (defun posframe-delete-all ()
   "Delete all posframe frames and buffers."
@@ -1070,121 +1097,39 @@ BUFFER-OR-NAME can be a buffer or a buffer name."
       (when posframe--frame
         (posframe--kill-buffer buffer)))))
 
-;; Posframe's position handler
-(defun posframe-run-poshandler (info)
-  "Run posframe's position handler.
+(defun posframe--kill-buffer (buffer-or-name)
+  "Kill posframe's buffer: BUFFER-OR-NAME.
+BUFFER-OR-NAME can be a buffer or a buffer name."
+  (when (buffer-live-p (get-buffer buffer-or-name))
+    (kill-buffer buffer-or-name)))
 
-the structure of INFO can be found in docstring
-of `posframe-show'."
-  (if (equal info posframe--last-poshandler-info)
-      posframe--last-posframe-pixel-position
-    (setq posframe--last-poshandler-info info)
-    (let* ((ref-position (plist-get info :ref-position))
-           (position (funcall
-                      (or (plist-get info :poshandler)
-                          (let ((position (plist-get info :position)))
-                            (cond ((integerp position)
-                                   #'posframe-poshandler-point-bottom-left-corner)
-                                  ((and (consp position)
-                                        (integerp (car position))
-                                        (integerp (cdr position)))
-                                   #'posframe-poshandler-absolute-x-y)
-                                  (t (error "Posframe: have no valid poshandler")))))
-                      info))
-           (x (car position))
-           (y (cdr position)))
-      (if (not ref-position)
-          position
-        (let* ((parent-frame-width (plist-get info :parent-frame-width))
-               (parent-frame-height (plist-get info :parent-frame-height))
-               (posframe-width (plist-get info :posframe-width))
-               (posframe-height (plist-get info :posframe-height))
-               (ref-x (or (car ref-position) 0))
-               (ref-y (or (cdr ref-position) 0)))
-          (when (< x 0)
-            (setq x (- (+ x parent-frame-width) posframe-width)))
-          (when (< y 0)
-            (setq y (- (+ y parent-frame-height) posframe-height)))
-          (cons (+ ref-x x)
-                (+ ref-y y)))))))
+(defun posframe-delete (buffer-or-name)
+  "Delete posframe pertaining to BUFFER-OR-NAME and kill the buffer.
+BUFFER-OR-NAME can be a buffer or a buffer name.
 
-(cl-defun posframe-poshandler-argbuilder (&optional
-                                          child-frame
-                                          &key
-                                          position
-                                          poshandler
-                                          refposhandler
-                                          x-pixel-offset
-                                          y-pixel-offset)
-  "Return a info list of CHILD-FRAME, used as poshandler's info argument.
+This function is not commonly used, for delete and recreate
+posframe is very very slowly, `posframe-hide' is more useful."
+  (posframe-delete-frame buffer-or-name)
+  (posframe--kill-buffer buffer-or-name))
 
-if CHILD-FRAME is nil, parent frame will use selected frame.  The
-documents of POSITION, POSHANDLER, X-PIXEL-OFFSET and
-Y-PIXEL-OFFSET can be found in dostring of `posframe-show'.
-
-NOTE: this function is not used by posframe itself, it just let
-poshandler easily used for other purposes.
-
-WARN: In some situation, this function will return wrong info,
-user should manual adjust returned info before use in poshandler
-function.
-
-Optional argument: REFPOSHANDLER."
-  (let* ((position (or position (point)))
-         (frame-width (or (and child-frame (frame-pixel-width child-frame)) 0))
-         (frame-height (or (and child-frame (frame-pixel-height child-frame)) 0))
-         (frame-buffer (and child-frame (window-buffer (frame-root-window child-frame))))
-         (parent-frame (selected-frame))
-         (parent-frame-width (frame-pixel-width parent-frame))
-         (parent-frame-height (frame-pixel-height parent-frame))
-         (parent-window (selected-window))
-         (parent-window-top (window-pixel-top parent-window))
-         (parent-window-left (window-pixel-left parent-window))
-         (parent-window-width (window-pixel-width parent-window))
-         (parent-window-height (window-pixel-height parent-window))
-         (font-width (default-font-width))
-         (font-height (with-current-buffer (window-buffer parent-window)
-                        (posframe--get-font-height position)))
-         (mode-line-height (window-mode-line-height parent-window))
-         (minibuffer-height (window-pixel-height (minibuffer-window)))
-         (header-line-height (window-header-line-height parent-window))
-         (tab-line-height (if (functionp 'window-tab-line-height)
-                              (window-tab-line-height parent-window)
-                            0))
-         (ref-position
-          (when (functionp refposhandler)
-            (ignore-errors
-              (funcall refposhandler parent-frame)))))
-    (list :position position
-          :poshandler poshandler
-          :font-height font-height
-          :font-width font-width
-          :posframe child-frame
-          :posframe-width frame-width
-          :posframe-height frame-height
-          :posframe-buffer frame-buffer
-          :parent-frame parent-frame
-          :parent-frame-width parent-frame-width
-          :parent-frame-height parent-frame-height
-          :ref-position ref-position
-          :parent-window parent-window
-          :parent-window-top parent-window-top
-          :parent-window-left parent-window-left
-          :parent-window-width parent-window-width
-          :parent-window-height parent-window-height
-          :mode-line-height mode-line-height
-          :minibuffer-height minibuffer-height
-          :header-line-height header-line-height
-          :tab-line-height tab-line-height
-          :x-pixel-offset (or x-pixel-offset 0)
-          :y-pixel-offset (or y-pixel-offset 0))))
+(defun posframe-funcall (buffer-or-name function &rest arguments)
+  "Select posframe of BUFFER-OR-NAME and call FUNCTION with ARGUMENTS.
+BUFFER-OR-NAME can be a buffer or a buffer name."
+  (when (functionp function)
+    (when (get-buffer buffer-or-name)
+      (with-current-buffer buffer-or-name
+        (when (framep posframe--frame)
+          (with-selected-frame posframe--frame
+            (apply function arguments)))))))
 
 (defun posframe-poshandler-absolute-x-y (info)
   "Posframe's position handler.
 
-Deal with (integer . integer) style position,
-the structure of INFO can be found in docstring
-of `posframe-show'."
+This poshandler function deal with (integer . integer) style
+position.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let ((position (plist-get info :position))
         (x-pixel-offset (plist-get info :x-pixel-offset))
         (y-pixel-offset (plist-get info :y-pixel-offset)))
@@ -1203,12 +1148,7 @@ Optional arguments: FONT-HEIGHT and UPWARD."
          (window (plist-get info :parent-window))
          (xmax (plist-get info :parent-frame-width))
          (ymax (plist-get info :parent-frame-height))
-         (position-info
-          (or
-           ;; :position-info has been removed, this line
-           ;; is used for compatible.
-           (plist-get info :position-info)
-           (plist-get info :position)))
+         (position-info (plist-get info :position))
          (position-info
           (if (integerp position-info)
               (posn-at-point position-info window)
@@ -1236,60 +1176,71 @@ Optional arguments: FONT-HEIGHT and UPWARD."
                      (- y-top (or posframe-height 0))
                    y-bottom)))))
 
-(defalias 'posframe-poshandler-point-bottom-left-corner #'posframe-poshandler-p0p0-to-p0p1)
-(defun posframe-poshandler-p0p0-to-p0p1 (info)
+(defun posframe-poshandler-point-bottom-left-corner (info)
   "Posframe's position handler.
 
-Let posframe(0, 0) align to point(0, 1).  The structure of INFO
-can be found in docstring of `posframe-show'.
+This poshandler function let top left corner of posframe align to
+bottom left corner of point.
 
-Optional arguments: FONT-HEIGHT, UPWARD and CENTERING."
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (posframe-poshandler-point-1 info))
 
-(defalias 'posframe-poshandler-point-window-center #'posframe-poshandler-p0.5p0-to-w0.5p1)
-(defun posframe-poshandler-p0.5p0-to-w0.5p1 (info)
+(defun posframe-poshandler-point-window-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0) align to a position, which x = x of
-window(0.5, 0) and y = y of point(0, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
-  (let ((x (car (posframe-poshandler-p0.5p0-to-w0.5w0 info)))
-        (y (cdr (posframe-poshandler-p0p0-to-p0p1 info))))
+This poshandler function let center of posframe vertical align to
+center of window and top edge of posframe horizontal align to
+buttom edge of current point.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
+  (let ((x (car (posframe-poshandler-window-top-center info)))
+        (y (cdr (posframe-poshandler-point-bottom-left-corner info))))
     (cons x y)))
 
-(defun posframe-poshandler-p0.5p0-to-f0.5p1 (info)
+(defun posframe-poshandler-point-frame-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0) align to a position, which x = x of
-frame(0.5, 0) and y = y of point(0, 1).  The structure of INFO can
-be found in docstring of `posframe-show'."
-  (let ((x (car (posframe-poshandler-p0.5p0-to-f0.5f0 info)))
-        (y (cdr (posframe-poshandler-p0p0-to-p0p1 info))))
+This poshandler function let center of posframe vertical align to
+center of frame and top edge of posframe horizontal align to
+buttom edge of current point.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
+  (let ((x (car (posframe-poshandler-frame-top-center info)))
+        (y (cdr (posframe-poshandler-point-bottom-left-corner info))))
     (cons x y)))
 
-(defalias 'posframe-poshandler-point-bottom-left-corner-upward #'posframe-poshandler-p0p1-to-p0p1)
-(defun posframe-poshandler-p0p1-to-p0p1 (info)
+(defun posframe-poshandler-point-bottom-left-corner-upward (info)
   "Posframe's position handler.
 
-Let posframe(0, 1) align to point(0, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let bottom left corner of posframe align
+to bottom left corner of point.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (posframe-poshandler-point-1 info nil t))
 
-(defalias 'posframe-poshandler-point-top-left-corner #'posframe-poshandler-p0p0-to-p0p0)
-(defun posframe-poshandler-p0p0-to-p0p0 (info)
+(defun posframe-poshandler-point-top-left-corner (info)
   "Posframe's position handler.
 
-Let posframe(0, 0) align to point(0, 0).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let top left corner of posframe align to
+top left corner of point.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let ((font-height 0))
     (posframe-poshandler-point-1 info font-height)))
 
-(defalias 'posframe-poshandler-frame-center #'posframe-poshandler-p0.5p0.5-to-f0.5f0.5)
-(defun posframe-poshandler-p0.5p0.5-to-f0.5f0.5 (info)
+(defun posframe-poshandler-frame-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0.5) align to frame(0.5, 0.5).  The structure of
-INFO can be found in docstring of `posframe-show'."
+This poshandler function let center of posframe align to center
+of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (cons (/ (- (plist-get info :parent-frame-width)
               (plist-get info :posframe-width))
            2)
@@ -1297,59 +1248,71 @@ INFO can be found in docstring of `posframe-show'."
               (plist-get info :posframe-height))
            2)))
 
-(defalias 'posframe-poshandler-frame-top-center #'posframe-poshandler-p0.5p0-to-f0.5f0)
-(defun posframe-poshandler-p0.5p0-to-f0.5f0 (info)
+(defun posframe-poshandler-frame-top-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0) align to frame(0.5, 0).  The structure of
-INFO can be found in docstring of `posframe-show'."
+This poshandler function let top edge center of posframe align
+to top edge center of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (cons (/ (- (plist-get info :parent-frame-width)
               (plist-get info :posframe-width))
            2)
         0))
 
-(defalias 'posframe-poshandler-frame-top-left-corner #'posframe-poshandler-p0p0-to-f0f0)
-(defun posframe-poshandler-p0p0-to-f0f0 (_info)
+(defun posframe-poshandler-frame-top-left-corner (_info)
   "Posframe's position handler.
 
-Let posframe(0, 0) align to frame(0, 0).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let top left corner of posframe align to
+top left corner of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   '(0 . 0))
 
-(defalias 'posframe-poshandler-frame-top-right-corner #'posframe-poshandler-p1p0-to-f1f0)
-(defun posframe-poshandler-p1p0-to-f1f0 (_info)
+(defun posframe-poshandler-frame-top-right-corner (_info)
   "Posframe's position handler.
 
-Let posframe(1, 0) align to frame(1, 0).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let top right corner of posframe align to
+top right corner of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   '(-1 . 0))
 
-(defalias 'posframe-poshandler-frame-bottom-left-corner #'posframe-poshandler-p0p1-to-f0f1)
-(defun posframe-poshandler-p0p1-to-f0f1 (info)
+(defun posframe-poshandler-frame-bottom-left-corner (info)
   "Posframe's position handler.
 
-Let posframe(0, 1) align to frame(0, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let bottom left corner of posframe align
+to buttom left corner of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (cons 0 (- 0
              (plist-get info :mode-line-height)
              (plist-get info :minibuffer-height))))
 
-(defalias 'posframe-poshandler-frame-bottom-right-corner #'posframe-poshandler-p1p1-to-f1f1)
-(defun posframe-poshandler-p1p1-to-f1f1 (info)
+(defun posframe-poshandler-frame-bottom-right-corner (info)
   "Posframe's position handler.
 
-Let posframe(1, 1) align to frame(1, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let bottom right corner of posframe
+align to buttom right corner of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (cons -1 (- 0
               (plist-get info :mode-line-height)
               (plist-get info :minibuffer-height))))
 
-(defalias 'posframe-poshandler-frame-bottom-center #'posframe-poshandler-p0.5p1-to-f0.5f1)
-(defun posframe-poshandler-p0.5p1-to-f0.5f1 (info)
+(defun posframe-poshandler-frame-bottom-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 1) align to frame(0.5, 1).  The structure of
-INFO can be found in docstring of `posframe-show'."
+This poshandler function let bottom edge center of posframe align
+to buttom edge center of frame.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (cons (/ (- (plist-get info :parent-frame-width)
               (plist-get info :posframe-width))
            2)
@@ -1358,12 +1321,14 @@ INFO can be found in docstring of `posframe-show'."
            (plist-get info :mode-line-height)
            (plist-get info :minibuffer-height))))
 
-(defalias 'posframe-poshandler-window-center #'posframe-poshandler-p0.5p0.5-to-w0.5w0.5)
-(defun posframe-poshandler-p0.5p0.5-to-w0.5w0.5 (info)
+(defun posframe-poshandler-window-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0.5) align to window(0.5, 0.5).  The structure
-of INFO can be found in docstring of `posframe-show'."
+This poshandler function let center of posframe align to center
+of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-width (plist-get info :parent-window-width))
@@ -1373,23 +1338,27 @@ of INFO can be found in docstring of `posframe-show'."
     (cons (max 0 (+ window-left (/ (- window-width posframe-width) 2)))
           (max 0 (+ window-top (/ (- window-height posframe-height) 2))))))
 
-(defalias 'posframe-poshandler-window-top-left-corner #'posframe-poshandler-p0p0-to-w0w0)
-(defun posframe-poshandler-p0p0-to-w0w0 (info)
+(defun posframe-poshandler-window-top-left-corner (info)
   "Posframe's position handler.
 
-Let posframe(0, 0) align to window(0, 0).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let top left corner of posframe align to
+top left corner of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top)))
     (cons window-left
           window-top)))
 
-(defalias 'posframe-poshandler-window-top-right-corner #'posframe-poshandler-p1p0-to-w1w0)
-(defun posframe-poshandler-p1p0-to-w1w0 (info)
+(defun posframe-poshandler-window-top-right-corner (info)
   "Posframe's position handler.
 
-Let posframe(1, 0) align to window(1, 0).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let top right corner of posframe align to
+top left right of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-width (plist-get info :parent-window-width))
@@ -1398,12 +1367,14 @@ can be found in docstring of `posframe-show'."
              (- 0 posframe-width))
           window-top)))
 
-(defalias 'posframe-poshandler-window-top-center #'posframe-poshandler-p0.5p0-to-w0.5w0)
-(defun posframe-poshandler-p0.5p0-to-w0.5w0 (info)
+(defun posframe-poshandler-window-top-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 0) align to window(0.5, 0).  The structure of
-INFO can be found in docstring of `posframe-show'."
+This poshandler function let top edge center of posframe align to
+top edge center of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-width (plist-get info :parent-window-width))
@@ -1411,12 +1382,14 @@ INFO can be found in docstring of `posframe-show'."
     (cons (max 0 (+ window-left (/ (- window-width posframe-width) 2)))
           window-top)))
 
-(defalias 'posframe-poshandler-window-bottom-left-corner #'posframe-poshandler-p0p1-to-w0w1)
-(defun posframe-poshandler-p0p1-to-w0w1 (info)
+(defun posframe-poshandler-window-bottom-left-corner (info)
   "Posframe's position handler.
 
-Let posframe(0, 1) align to window(0, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let bottom left corner of posframe align to
+bottom left corner of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-height (plist-get info :parent-window-height))
@@ -1426,12 +1399,14 @@ can be found in docstring of `posframe-show'."
           (+ window-top window-height
              (- 0 mode-line-height posframe-height)))))
 
-(defalias 'posframe-poshandler-window-bottom-right-corner #'posframe-poshandler-p1p1-to-w1w1)
-(defun posframe-poshandler-p1p1-to-w1w1 (info)
+(defun posframe-poshandler-window-bottom-right-corner (info)
   "Posframe's position handler.
 
-Let posframe(1, 1) align to window(1, 1).  The structure of INFO
-can be found in docstring of `posframe-show'."
+This poshandler function let bottom right corner of posframe
+align to bottom right corner of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-width (plist-get info :parent-window-width))
@@ -1444,12 +1419,14 @@ can be found in docstring of `posframe-show'."
           (+ window-top window-height
              (- 0 mode-line-height posframe-height)))))
 
-(defalias 'posframe-poshandler-window-bottom-center #'posframe-poshandler-p0.5p1-to-w0.5w1)
-(defun posframe-poshandler-p0.5p1-to-w0.5w1 (info)
+(defun posframe-poshandler-window-bottom-center (info)
   "Posframe's position handler.
 
-Let posframe(0.5, 1) align to window(0.5, 1).  The structure of
-INFO can be found in docstring of `posframe-show'."
+This poshandler function let bottom edge center of posframe align
+to bottom edge center of window.
+
+The structure of INFO can be found in docstring of
+`posframe-show'."
   (let* ((window-left (plist-get info :parent-window-left))
          (window-top (plist-get info :parent-window-top))
          (window-width (plist-get info :parent-window-width))
@@ -1483,6 +1460,20 @@ xwininfo."
                    (line-end-position)))))
           (cons x y))))))
 
+(if (version< emacs-version "27.1")
+    (with-no-warnings
+      (add-hook 'focus-in-hook #'posframe--redirect-posframe-focus))
+  (add-function :after after-focus-change-function #'posframe--redirect-posframe-focus))
+
+(defun posframe--redirect-posframe-focus ()
+  "Redirect focus from the posframe to the parent frame.
+This prevents the posframe from catching keyboard input if the
+window manager selects it."
+  (when (and (eq (selected-frame) posframe--frame)
+             ;; Do not redirect focus when posframe can accept focus.
+             ;; See posframe-show's accept-focus argument.
+             (not posframe--accept-focus))
+    (redirect-frame-focus posframe--frame (frame-parent))))
 
 (provide 'posframe)
 

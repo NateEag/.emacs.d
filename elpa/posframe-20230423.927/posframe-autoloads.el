@@ -37,6 +37,8 @@ position.  Its argument is a plist of the following form:
    :posframe-height xxx
    :posframe-buffer xxx
    :parent-frame xxx
+   :parent-window-start xxx
+   :parent-window-end xxx
    :parent-window-left xxx
    :parent-window-top xxx
    :parent-frame-width xxx
@@ -56,30 +58,7 @@ position.  Its argument is a plist of the following form:
 By default, poshandler is auto-selected based on the type of POSITION,
 but the selection can be overridden using the POSHANDLER argument.
 
-The names of poshandler functions are like:
-
-   `posframe-poshandler-p0.5p0-to-w0.5p1'
-
-which mean align posframe(0.5, 0) to a position(a, b)
-
-1. a = x of window(0.5, 0)
-2. b = y of point(1, 1)
-
-    posframe(p), frame(f), window(w), point(p), mouse(m)
-
-         (0,0)      (0.5,0)      (1,0)
-          +------------+-----------+
-          |                        |
-          |                        |
-          |                        |
- (0, 0.5) +                        + (1, 0.5)
-          |                        |
-          |                        |
-          |                        |
-          +------------+-----------+
-         (0,1)      (0.5,1)      (1,1)
-
-The alias of builtin poshandler functions are listed below:
+The builtin poshandler functions are listed below:
 
 1.  `posframe-poshandler-frame-center'
 2.  `posframe-poshandler-frame-top-center'
@@ -99,15 +78,7 @@ The alias of builtin poshandler functions are listed below:
 16. `posframe-poshandler-point-bottom-left-corner'
 17. `posframe-poshandler-point-bottom-left-corner-upward'
 18. `posframe-poshandler-point-window-center'
-
-by the way, poshandler can be used by other packages easily with
-the help of function `posframe-poshandler-argbuilder'.  like:
-
-   (let* ((info (posframe-poshandler-argbuilder *MY-CHILD-FRAME*))
-          (posn (posframe-poshandler-window-center
-                 `(:posframe-width 800 :posframe-height 400 ,@info))))
-     `((left . ,(car posn))
-       (top . ,(cdr posn))))
+19. `posframe-poshandler-point-frame-center'
 
  (3) POSHANDLER-EXTRA-INFO
 
@@ -159,25 +130,34 @@ derived from the current frame by default, but can be overridden
 using the FONT, FOREGROUND-COLOR and BACKGROUND-COLOR arguments,
 respectively.
 
- (10) RESPECT-HEADER-LINE and RESPECT-MODE-LINE
+ (10) CURSOR and WINDOW-POINT
+
+By default, cursor is not showed in posframe, user can let cursor
+showed with this argument help by set its value to a `cursor-type'.
+
+When cursor need to be showed in posframe, user may need to set
+WINDOW-POINT to the point of BUFFER, which can let cursor showed
+at this point.
+
+ (11) RESPECT-HEADER-LINE and RESPECT-MODE-LINE
 
 By default, posframe will display no header-line, mode-line and
 tab-line.  In case a header-line, mode-line or tab-line is
 desired, users can set RESPECT-HEADER-LINE and RESPECT-MODE-LINE
 to t.
 
- (11) INITIALIZE
+ (12) INITIALIZE
 
 INITIALIZE is a function with no argument.  It will run when
 posframe buffer is first selected with `with-current-buffer'
 in `posframe-show', and only run once (for performance reasons).
 
- (12) LINES-TRUNCATE
+ (13) LINES-TRUNCATE
 
 If LINES-TRUNCATE is non-nil, then lines will truncate in the
 posframe instead of wrap.
 
- (13) OVERRIDE-PARAMETERS
+ (14) OVERRIDE-PARAMETERS
 
 OVERRIDE-PARAMETERS is very powful, *all* the valid frame parameters
 used by posframe's frame can be overridden by it.
@@ -185,7 +165,7 @@ used by posframe's frame can be overridden by it.
 NOTE: some `posframe-show' arguments are not frame parameters, so they
 can not be overrided by this argument.
 
- (14) TIMEOUT
+ (15) TIMEOUT
 
 TIMEOUT can specify the number of seconds after which the posframe
 will auto-hide.
@@ -195,12 +175,12 @@ will auto-hide.
 If REFRESH is a number, posframe's frame-size will be re-adjusted
 every REFRESH seconds.
 
- (16) ACCEPT-FOCUS
+ (17) ACCEPT-FOCUS
 
 When ACCEPT-FOCUS is non-nil, posframe will accept focus.
 be careful, you may face some bugs when set it to non-nil.
 
- (17) HIDEHANDLER
+ (18) HIDEHANDLER
 
 HIDEHANDLER is a function, when it return t, posframe will be
 hide, this function has a plist argument:
@@ -212,7 +192,7 @@ The builtin hidehandler functions are listed below:
 
 1. `posframe-hidehandler-when-buffer-switch'
 
- (18) REFPOSHANDLER
+ (19) REFPOSHANDLER
 
 REFPOSHANDLER is a function, a reference position (most is
 top-left of current frame) will be returned when call this
@@ -235,7 +215,7 @@ An example parent frame poshandler function is:
 
 You can use `posframe-delete-all' to delete all posframes.
 
-\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER POSHANDLER-EXTRA-INFO WIDTH HEIGHT MAX-WIDTH MAX-HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE BORDER-WIDTH BORDER-COLOR INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER REFPOSHANDLER &allow-other-keys)" nil nil)
+\(fn BUFFER-OR-NAME &key STRING POSITION POSHANDLER POSHANDLER-EXTRA-INFO WIDTH HEIGHT MAX-WIDTH MAX-HEIGHT MIN-WIDTH MIN-HEIGHT X-PIXEL-OFFSET Y-PIXEL-OFFSET LEFT-FRINGE RIGHT-FRINGE BORDER-WIDTH BORDER-COLOR INTERNAL-BORDER-WIDTH INTERNAL-BORDER-COLOR FONT CURSOR WINDOW-POINT FOREGROUND-COLOR BACKGROUND-COLOR RESPECT-HEADER-LINE RESPECT-MODE-LINE INITIALIZE NO-PROPERTIES KEEP-RATIO LINES-TRUNCATE OVERRIDE-PARAMETERS TIMEOUT REFRESH ACCEPT-FOCUS HIDEHANDLER REFPOSHANDLER &allow-other-keys)" nil nil)
 
 (autoload 'posframe-hide-all "posframe" "\
 Hide all posframe frames." t nil)

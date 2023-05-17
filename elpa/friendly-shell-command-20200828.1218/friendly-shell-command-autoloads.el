@@ -1,4 +1,4 @@
-;;; friendly-shell-command-autoloads.el --- automatically extracted autoloads
+;;; friendly-shell-command-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,7 +10,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from friendly-shell-command.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "friendly-shell-command" '("friendly-shell-command--kill-buffer-sentinel")))
+(register-definition-prefixes "friendly-shell-command" '("friendly-shell-command--kill-buffer-sentinel"))
 
 ;;;***
 

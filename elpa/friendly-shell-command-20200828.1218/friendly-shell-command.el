@@ -3,8 +3,8 @@
 ;; Copyright (C) 2019-2020 Jordan Besly
 ;;
 ;; Version: 0.2.2
-;; Package-Version: 20200527.830
-;; Package-Commit: 5c0eda312d8da6de0848d56abca1b0f5840e81e6
+;; Package-Version: 20200828.1218
+;; Package-Commit: 1b1ba2033e59e5968380640280bd853701fbbb21
 ;; Keywords: processes, terminals
 ;; URL: https://github.com/p3r7/friendly-shell
 ;; Package-Requires: ((emacs "24.1")(cl-lib "0.6.1")(dash "2.17.0")(with-shell-interpreter "0.2.3"))

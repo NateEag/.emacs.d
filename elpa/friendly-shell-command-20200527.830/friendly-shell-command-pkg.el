@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/friendly-shell-command-20200527.830/friendly-shell-command.el  -*- no-byte-compile: t -*-
-(define-package "friendly-shell-command" "20200527.830" "Better shell-command API" '((emacs "24.1") (cl-lib "0.6.1") (dash "2.17.0") (with-shell-interpreter "0.2.3")) :commit "5c0eda312d8da6de0848d56abca1b0f5840e81e6" :keywords '("processes" "terminals") :url "https://github.com/p3r7/friendly-shell")

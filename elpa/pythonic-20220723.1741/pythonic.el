@@ -4,8 +4,8 @@
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/pythonic
-;; Package-Version: 20210122.1247
-;; Package-Commit: e0e5cc882f2f1316268ec461a34d4be8abc313b7
+;; Package-Version: 20220723.1741
+;; Package-Commit: c18a5bd8cb2ba59014b6b29b5bf1903bd2476a07
 ;; Version: 0.2
 ;; Package-Requires: ((emacs "25.1") (s "1.9") (f "0.17.2"))
 
@@ -297,7 +297,8 @@ process flag."
 (defun pythonic-activate (virtualenv)
   "Activate python VIRTUALENV."
   (interactive "DEnv: ")
-  (setq python-shell-virtualenv-root (pythonic-python-readable-file-name virtualenv)))
+  (setq python-shell-virtualenv-root
+        (and virtualenv (pythonic-python-readable-file-name virtualenv))))
 
 ;;;###autoload
 (defun pythonic-deactivate ()

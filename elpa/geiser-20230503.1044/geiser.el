@@ -1,6 +1,6 @@
 ;;; geiser.el --- GNU Emacs and Scheme talk to each other -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2015, 2018, 2021, 2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2013, 2015, 2018, 2021-2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -11,9 +11,9 @@
 ;; Maintainer: Jose Antonio Ortega Ruiz (jao@gnu.org)
 ;; Keywords: languages, scheme, geiser
 ;; Homepage: https://gitlab.com/emacs-geiser/
-;; Package-Requires: ((emacs "25.1") (transient "0.3") (project "0.8.1"))
+;; Package-Requires: ((emacs "25.1") (project "0.8.1"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.23.2
+;; Version: 0.28.2
 
 ;;; Commentary:
 
@@ -70,8 +70,7 @@
 (autoload 'geiser-reload "geiser-reload" "Reload Geiser code." t)
 
 ;;;###autoload
-(autoload 'geiser "geiser-repl"
-  "Start a Geiser REPL, or switch to a running one." t)
+(autoload 'geiser "geiser-repl" "Start a Geiser REPL." t)
 
 ;;;###autoload
 (autoload 'run-geiser "geiser-repl" "Start a Geiser REPL." t)
@@ -86,7 +85,7 @@
   t)
 
 ;;;###autoload
-(autoload 'switch-to-geiser "geiser-repl"
+(autoload 'geiser-repl-switch "geiser-repl"
   "Switch to a running one Geiser REPL." t)
 
 ;;;###autoload
@@ -101,11 +100,9 @@
 (autoload 'turn-off-geiser-mode "geiser-mode"
   "Disable Geiser's mode (useful in Scheme buffers)." t)
 
-;;;###autoload
 (autoload 'geiser-activate-implementation "geiser-impl"
   "Register the given implementation as active.")
 
-;;;###autoload
 (autoload 'geiser-implementation-extension "geiser-impl"
   "Register a file extension as handled by a given implementation.")
 
@@ -131,7 +128,7 @@
 (autoload 'geiser-mode--maybe-activate "geiser-mode")
 
 ;;;###autoload
-(add-hook 'scheme-mode-hook 'geiser-mode--maybe-activate)
+(add-hook 'scheme-mode-hook #'geiser-mode--maybe-activate)
 
 (provide 'geiser)
 ;;; geiser.el ends here

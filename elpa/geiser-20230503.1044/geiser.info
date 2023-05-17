@@ -26,22 +26,6 @@ File: geiser.info,  Node: Top,  Next: Introduction,  Prev: (dir),  Up: (dir)
 Geiser
 ******
 
-This manual documents Geiser, an Emacs environment to hack in Scheme.
-
-   Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020,
-2021 Jose Antonio Ortega Ruiz
-
-     Permission is granted to copy, distribute and/or modify this
-     document under the terms of the GNU Free Documentation License,
-     Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, no Front-Cover Texts, and
-     no Back-Cover Texts.  A copy of the license is available from the
-     Free Software Foundation Web site at
-     <http://www.gnu.org/licenses/fdl.html>.
-
-   The document was typeset with GNU Texinfo
-(http://www.gnu.org/software/texinfo/index.html).
-
 * Menu:
 
 * Introduction::
@@ -93,11 +77,11 @@ Cheat sheet
 * Documentation browser::
 
 
-   Geiser is a collection of Emacs major and minor modes that conspire
-with one or more Scheme interpreters to keep the Lisp Machine Spirit
-alive.  It draws inspiration (and a bit more) from environments such as
-Common Lisp's Slime, Factor's FUEL, Squeak or Emacs itself, and does its
-best to make Scheme hacking inside Emacs (even more) fun.
+Geiser is a collection of Emacs major and minor modes that conspire with
+one or more Scheme interpreters to keep the Lisp Machine Spirit alive.
+It draws inspiration (and a bit more) from environments such as Common
+Lisp's Slime, Factor's FUEL, Squeak or Emacs itself, and does its best
+to make Scheme hacking inside Emacs (even more) fun.
 
    Or, to be precise, what i (https://jao.io) consider fun.  Geiser is
 thus my humble contribution to the dynamic school of expression, and a
@@ -219,8 +203,8 @@ snapshot) and at least one of the supported Schemes, namely:
 
    * Chez (9.4) 9.4 or better, via geiser-chez
      (https://gitlab.com/emacs-geiser/chez)
-   * Chibi (0.7.3) 0.7.3 or better, via geiser-chez
-     (https://gitlab.com/emacs-geiser/chez)
+   * Chibi (0.7.3) 0.7.3 or better, via geiser-chibi
+     (https://gitlab.com/emacs-geiser/chibi)
    * Chicken (4.8.0) 4.8.0 or better, via geiser-chicken
      (https://gitlab.com/emacs-geiser/chicken)
    * Gambit (4.9.3) 4.9.3 or better, via geiser-gambit
@@ -372,8 +356,8 @@ File: geiser.info,  Node: Starting the REPL,  Next: First aids,  Prev: The REPL,
 
 To start a Scheme REPL (meaning, a Scheme process offering you a
 Read-Eval-Print Loop), Geiser provides the generic interactive command
-'run-geiser'.  If you invoke it (via, as is customary in Emacs, 'M-x
-run-geiser'), you'll be saluted by a prompt asking which one of the
+'geiser'.  If you invoke it (via, as is customary in Emacs, 'M-x
+geiser'), you'll be saluted by a prompt asking which one of the
 supported implementations you want to launch--yes, you can stop the
 asking, see *note below: active-implementations.  Tabbing for completion
 will offer you, as of this writing, 'guile', 'racket', 'chicken', 'mit',
@@ -493,8 +477,8 @@ File: geiser.info,  Node: Switching context,  Next: Completion and error handlin
 In tune with Geiser's modus operandi, evaluations in the REPL take place
 in the namespace of the current module.  As noted above, the REPL's
 prompt tells you the name of the current module.  To switch to a
-different one, you can use the command 'switch-to-geiser-module', bound
-to 'C-c C-m'.  You'll notice that Geiser simply uses a couple of
+different one, you can use the command 'geiser-repl-switch-to-module',
+bound to 'C-c C-m'.  You'll notice that Geiser simply uses a couple of
 meta-commands provided by the Scheme REPL (the stock ',m' in Guile and
 Chicken and the (geiser-defined) ',enter' in Racket), and that it
 doesn't even try to hide that fact.  That means that you can freely use
@@ -695,8 +679,8 @@ with some related tips.
 Choosing a Scheme implementation
 ................................
 
-Instead of using the generic 'run-geiser' command, you can directly
-start your Scheme of choice using any of the following commands:
+Instead of using the generic 'geiser' command, you can directly start
+your Scheme of choice using any of the following commands:
    * 'run-racket'
    * 'run-guile'
    * 'run-chicken'
@@ -902,7 +886,7 @@ File: geiser.info,  Node: The source and the REPL,  Next: Documentation helpers,
 
 As i've already mentioned a couple of times, geiser-mode needs a running
 REPL to be operative.  Thus, a common usage pattern will be for you to
-first call 'run-geiser' (or one of its variants, e.g.  'run-guile'), and
+first call 'geiser' (or one of its variants, e.g.  'run-guile'), and
 then open some Scheme files; but there's nothing wrong in first opening
 a couple Scheme buffers and then starting the REPL (you can even find it
 more convenient, since pressing 'C-c C-z' in a Scheme buffer will start
@@ -1011,7 +995,7 @@ Switching between source files and the REPL
 
 Once you have a working geiser-mode, you can switch from Scheme source
 buffers to the REPL or 'C-c C-z'.  Those shortcuts map to the
-interactive command 'switch-to-geiser'.
+interactive command 'geiser-repl-switch'.
 
    If you use a numeric prefix, as in 'C-u C-c C-z', besides being
 teleported to the REPL, the latter will switch to the namespace of the
@@ -1021,9 +1005,9 @@ context::.  This command is also bound to 'C-c C-a'.
 
    Once you're in the REPL, the same 'C-c C-z' shortcut will bring you
 back to the buffer you jumped from, provided you don't kill the Scheme
-process in between.  This is why the command is called switch-to-geiser
-instead of switch-to-repl, and what makes it really handy, if you ask
-me.
+process in between.  This is why the command is called
+geiser-repl-switch instead of switch-to-repl, and what makes it really
+handy, if you ask me.
 
    If for some reason you're not happy with the Scheme implementation
 that Geiser has assigned to your file, you can change it with 'C-c C-s',
@@ -1289,7 +1273,7 @@ default).
 
    By default, Geiser will tele-transport your pointer to the debug
 buffer: if you prefer to stay in the source buffer, set
-'geiser-debug-jump-to-debug-p' to nil.
+'geiser-debug-jump-to-debug' to nil.
 
    For schemes with good debug support (Guile is one), the debug buffers
 offer a debugging menu, accesible via the ',' (that's a comma) key.  If
@@ -1472,7 +1456,7 @@ C-c >          'geiser-xref-callees'         Show callees of procedure
                                              at point
 M-TAB          'completion-at-point'         Complete identifier at
                                              point
-M-', C-.       'geiser-completion--complete-module'Complete module name at
+M-', C-.       'geiser-capf-complete-module' Complete module name at
                                              point
 
 
@@ -1483,7 +1467,7 @@ File: geiser.info,  Node: REPL,  Next: Documentation browser,  Prev: Scheme buff
 
 Key            Command                       Description
 ---------------------------------------------------------------------------
-C-c C-z        'switch-to-geiser'            Start Scheme REPL, or jump
+C-c C-z        'geiser-repl-switch'          Start Scheme REPL, or jump
                                              to previous buffer
 C-c M-o        'geiser-repl-clear-buffer'    Clear REPL buffer
 C-c C-k        'geiser-repl-interrupt'       Interrupt REPL evaluation
@@ -1498,7 +1482,7 @@ S-TAB          'geiser-repl--previous-error' Go to previous error in the
 (backtab)                                    REPL buffer
 M-TAB          'completion-at-point'         Complete identifier at
                                              point
-M-', C-.       'geiser-completion--complete-module'Complete module name at
+M-', C-.       'geiser-capf-complete-module' Complete module name at
                                              point
 C-c [, C-c     'geiser-squarify'             Toggle between () and []
 C-[                                          for current form
@@ -1510,7 +1494,7 @@ M-p, M-n       (comint commands)             Prompt history, matching
                                              current prefix
 C-c M-p, C-c   (comint commands)             Previous/next prompt inputs
 M-n
-C-c C-m        'switch-to-geiser-module'     Set current module
+C-c C-m        'geiser-repl-switch-to-module'Set current module
 C-c C-i        'geiser-repl-import-module'   Import module into current
                                              namespace
 C-c C-d C-d    'geiser-doc-symbol-at-point'  See documentation for
@@ -1664,13 +1648,13 @@ Index
 * completion, at the REPL:               Completion and error handling.
                                                               (line   6)
 * connect to server:                     Starting the REPL.   (line  43)
-* corpses:                               Top.                 (line  79)
+* corpses:                               Top.                 (line  63)
 * current module:                        Modus operandi.      (line  15)
 * current module, change:                Switching context.   (line  21)
 * current module, in REPL:               Switching context.   (line   6)
 * default directory:                     Customization and tips.
                                                               (line  69)
-* derailment:                            Top.                 (line  79)
+* derailment:                            Top.                 (line  63)
 * dir-locals:                            The source and the REPL.
                                                               (line  87)
 * disabling autodoc:                     Documentation helpers.
@@ -1745,7 +1729,7 @@ Index
                                                               (line  18)
 * peace and quiet:                       Customization and tips.
                                                               (line 115)
-* philosophy:                            Top.                 (line  79)
+* philosophy:                            Top.                 (line  63)
 * philosophy <1>:                        To eval or not to eval.
                                                               (line   6)
 * port, default:                         Customization and tips.
@@ -1811,50 +1795,50 @@ Index
 
 Tag Table:
 Node: Top907
-Node: Introduction3375
-Node: Modus operandi3709
-Ref: current-module4364
-Node: Showing off5829
-Node: Installation7107
-Node: Must needs7320
-Node: The quick and easy way9000
-Ref: The quick and easy way-Footnote-110478
-Node: From the source's mouth10633
-Node: Friends11418
-Ref: paredit11692
-Node: The REPL12829
-Ref: quick-start12948
-Node: Starting the REPL13339
-Node: First aids17726
-Node: Switching context19559
-Node: Completion and error handling21484
-Ref: completion-caveat23192
-Node: Autodoc and friends25106
-Ref: repl-mod27176
-Node: Seeing is believing28182
-Node: Customization and tips29194
-Ref: choosing-impl29923
-Ref: active-implementations30158
-Ref: impl-binary30540
-Node: Between the parens34951
-Node: Activating Geiser36013
-Node: The source and the REPL38623
-Ref: repl-association39667
-Ref: repl-per-project42915
-Ref: switching-repl-buff44328
-Node: Documentation helpers46013
-Ref: doc-browser50281
-Node: To eval or not to eval53008
-Ref: To eval or not to eval-Footnote-157752
-Node: To err perchance to debug58005
-Node: Jumping around59510
-Node: Geiser writes for you60787
-Node: Cheat sheet63291
-Node: Scheme buffers63675
-Node: REPL68119
-Node: Documentation browser70712
-Node: No hacker is an island71780
-Node: Index75232
+Node: Introduction2668
+Node: Modus operandi3002
+Ref: current-module3657
+Node: Showing off5122
+Node: Installation6400
+Node: Must needs6613
+Node: The quick and easy way8295
+Ref: The quick and easy way-Footnote-19773
+Node: From the source's mouth9928
+Node: Friends10713
+Ref: paredit10987
+Node: The REPL12124
+Ref: quick-start12243
+Node: Starting the REPL12634
+Node: First aids17013
+Node: Switching context18846
+Node: Completion and error handling20776
+Ref: completion-caveat22484
+Node: Autodoc and friends24398
+Ref: repl-mod26468
+Node: Seeing is believing27474
+Node: Customization and tips28486
+Ref: choosing-impl29215
+Ref: active-implementations29446
+Ref: impl-binary29828
+Node: Between the parens34239
+Node: Activating Geiser35301
+Node: The source and the REPL37911
+Ref: repl-association38951
+Ref: repl-per-project42199
+Ref: switching-repl-buff43612
+Node: Documentation helpers45301
+Ref: doc-browser49569
+Node: To eval or not to eval52296
+Ref: To eval or not to eval-Footnote-157040
+Node: To err perchance to debug57293
+Node: Jumping around58796
+Node: Geiser writes for you60073
+Node: Cheat sheet62577
+Node: Scheme buffers62961
+Node: REPL67399
+Node: Documentation browser69986
+Node: No hacker is an island71054
+Node: Index74506
 
 End Tag Table
 

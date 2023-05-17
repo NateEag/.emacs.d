@@ -1,6 +1,6 @@
 ;;; geiser-compile.el -- compile/load scheme files  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2016, 2018, 2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2013, 2016, 2018, 2021-2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -16,8 +16,7 @@
 (require 'geiser-autodoc)
 (require 'geiser-eval)
 (require 'geiser-base)
-
-(declare-function geiser-restart-repl "geiser-mode" ())
+(require 'geiser-repl)
 
 
 ;;; Auxiliary functions:
@@ -46,44 +45,40 @@
     (geiser-autodoc--clean-cache)
     (geiser-eval--send code cont)))
 
+(defun geiser-compile--ensure-repl (force)
+  (when (or force
+            (and (not (geiser-repl--ensure-repl-buffer))
+                 (yes-or-no-p "No REPL is running: start it?")))
+    (geiser-repl-restart-repl)))
+
 
 ;;; User commands:
 
 (defun geiser-compile-file (path)
   "Compile and load Scheme file."
   (interactive "FScheme file: ")
-  (geiser-compile--file-op path t "Compiling"))
+  (geiser-compile--file-op (file-local-name path) t "Compiling"))
 
-(defun geiser-compile-current-buffer (&optional restart-p)
+(defun geiser-compile-current-buffer (&optional restart)
   "Compile and load current Scheme file.
 
 With prefix, restart REPL before compiling the file."
   (interactive "P")
-  (when restart-p (geiser-restart-repl))
-  (geiser-compile-file (buffer-file-name (current-buffer))))
+  (geiser-compile--ensure-repl restart)
+  (geiser-compile-file (file-local-name (buffer-file-name (current-buffer)))))
 
 (defun geiser-load-file (path)
   "Load Scheme file."
   (interactive "FScheme file: ")
-  (geiser-compile--file-op (expand-file-name path) nil "Loading"))
+  (geiser-compile--ensure-repl nil)
+  (geiser-compile--file-op (file-local-name (expand-file-name path)) nil "Loading"))
 
-(defun geiser-load-current-buffer (&optional restart-p)
+(defun geiser-load-current-buffer (&optional restart)
   "Load current Scheme file.
 
 With prefix, restart REPL before loading the file."
   (interactive "P")
-  (when restart-p (geiser-restart-repl))
-  (geiser-load-file (buffer-file-name (current-buffer))))
+  (geiser-compile--ensure-repl restart)
+  (geiser-load-file (file-local-name (buffer-file-name (current-buffer)))))
 
-;;;###autoload
-(defun geiser-add-to-load-path (path)
-  "Add a new directory to running Scheme's load path.
-When called interactively, this function will ask for the path to
-add, defaulting to the current buffer's directory."
-  (interactive "DDirectory to add: ")
-  (let* ((c `(:eval (:ge add-to-load-path ,(expand-file-name path))))
-         (r (geiser-eval--send/result c)))
-    (message "%s%s added to load path" path (if r "" "couldn't be"))))
-
-
 (provide 'geiser-compile)

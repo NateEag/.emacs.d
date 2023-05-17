@@ -1,6 +1,6 @@
-;;; geiser-completion.el -- tab completion
+;;; geiser-completion.el -- tab completion  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2018, 2020, 2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2012, 2018, 2020-2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -97,7 +97,7 @@
 
 (defvar geiser-completion--symbol-begin-function nil)
 
-(defun geiser-completion--def-symbol-begin (module)
+(defun geiser-completion--def-symbol-begin (_module)
   (save-excursion (skip-syntax-backward "^-()>") (point)))
 
 (geiser-impl--register-local-method
@@ -131,43 +131,6 @@ we're looking for a module name.")
             (when (>= (point) pos)
               (point)))
         (scan-error pos)))))
-
-(defun geiser-completion--thing-at-point (module &optional predicate)
-  (with-syntax-table scheme-mode-syntax-table
-    (let* ((beg (geiser-completion--symbol-begin module))
-           (end (or (geiser-completion--prefix-end beg module) beg))
-           (prefix (and (> end beg) (buffer-substring-no-properties beg end)))
-           (prefix (and prefix
-                        (if (string-match "\\([^-]+\\)-" prefix)
-                            (match-string 1 prefix)
-                          prefix)))
-           (cmps (and prefix (geiser-completion--complete prefix module))))
-      (and cmps (list beg end cmps)))))
-
-(defun geiser-completion--for-symbol (&optional predicate)
-  (geiser-completion--thing-at-point nil predicate))
-
-(defun geiser-completion--for-module (&optional predicate)
-  (geiser-completion--thing-at-point t predicate))
-
-(defun geiser-completion--for-filename ()
-  (when (geiser-syntax--in-string-p)
-    (let ((comint-completion-addsuffix "\""))
-      (ignore-errors (comint-filename-completion)))))
-
-(defun geiser-completion--setup (enable)
-  (set (make-local-variable 'completion-at-point-functions)
-       (if enable
-           '(geiser-completion--for-symbol
-             geiser-completion--for-module
-             geiser-completion--for-filename)
-         (default-value 'completion-at-point-functions))))
-
-(defun geiser-completion--complete-module ()
-  "Complete module name at point."
-  (interactive)
-  (let ((completion-at-point-functions '(geiser-completion--for-module)))
-    (call-interactively 'completion-at-point)))
 
 
 ;;; Smart tab mode:

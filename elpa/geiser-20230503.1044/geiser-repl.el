@@ -1,6 +1,6 @@
-;;; geiser-repl.el --- Geiser's REPL
+;;; geiser-repl.el --- Geiser's REPL  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2013, 2015-2016, 2018-2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2013, 2015-2016, 2018-2023 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -10,7 +10,7 @@
 
 ;;; Code:
 
-(require 'geiser-company)
+(require 'geiser-capf)
 (require 'geiser-doc)
 (require 'geiser-autodoc)
 (require 'geiser-edit)
@@ -18,7 +18,6 @@
 (require 'geiser-syntax)
 (require 'geiser-impl)
 (require 'geiser-eval)
-(require 'geiser-compile)
 (require 'geiser-connection)
 (require 'geiser-menu)
 (require 'geiser-image)
@@ -30,6 +29,9 @@
 (require 'scheme)
 (require 'font-lock)
 (require 'project)
+(require 'paren)
+
+(eval-when-compile (require 'subr-x))
 
 
 ;;; Customization:
@@ -51,9 +53,6 @@ symbol (e.g., `guile', `chicken', etc.)."
 See also `geiser-repl-current-project-function' for the function
 used to discover a buffer's project."
   :type 'boolean)
-
-(declare project-root "project.el")
-(declare project-current "project.el")
 
 (defun geiser-repl-project-root ()
   "Use project.el, to determine a buffer's project root."
@@ -106,10 +105,6 @@ change that."
   "Whether to enable `geiser-autodoc-mode' in the REPL by default."
   :type 'boolean)
 
-(geiser-custom--defcustom geiser-repl-company-p t
-  "Whether to use company-mode for completion, if available."
-  :type 'boolean)
-
 (geiser-custom--defcustom geiser-repl-read-only-prompt-p t
   "Whether the REPL's prompt should be read-only."
   :type 'boolean)
@@ -127,7 +122,7 @@ change that."
   :type 'boolean)
 
 (geiser-custom--defcustom geiser-repl-send-on-return-p t
-  "Sends input to REPL when ENTER is pressed in a balanced S-expression,
+  "Wheter to Send input to REPL when ENTER is pressed in a balanced S-expression,
 regardless of cursor positioning.
 
 When off, pressing ENTER inside a balance S-expression will
@@ -192,7 +187,7 @@ If you have a slow system, try to increase this time."
   "Whether to automatically invoke the external viewer to display
 images popping up in the REPL.
 
-See also `geiser-debug-auto-display-images-p'."
+See also `geiser-debug-auto-display-images'."
   :type 'boolean)
 
 (geiser-custom--defcustom geiser-repl-add-project-paths t
@@ -209,6 +204,28 @@ This variable is a good candidate for .dir-locals.el.
 
 This option has no effect if no project root is found."
   :type '(choice boolean (list string)))
+
+(geiser-custom--defcustom geiser-repl-startup-hook nil
+  "Functions run right after a REPL has started and is fully set up.
+
+See also `geiser-repl-startup-forms'."
+  :type 'hook)
+
+(geiser-custom--defcustom geiser-repl-startup-forms nil
+  "List scheme forms, as strings, sent to a REPL on start-up.
+
+This variable is a good candidate for .dir-locals.el.
+
+See also `geiser-repl-startup-hook'."
+  :type '(repeat string))
+
+(geiser-custom--defcustom geiser-repl-autoeval-mode-delay 0.125
+  "Delay before autoeval is run after an S-expression is balanced, in seconds."
+  :type 'number)
+
+(geiser-custom--defcustom geiser-repl-autoeval-mode-p nil
+  "Whether `geiser-repl-autoeval-mode' gets enabled by default in REPL buffers."
+  :type 'boolean)
 
 (geiser-custom--defface repl-input
   'comint-highlight-input geiser-repl "evaluated input highlighting")
@@ -282,8 +299,8 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defvar-local geiser-repl--project nil)
 
-(defsubst geiser-repl--set-this-buffer-repl (r)
-  (setq geiser-repl--repl r))
+(defsubst geiser-repl--set-this-buffer-repl (r &optional this)
+  (with-current-buffer (or this (current-buffer)) (setq geiser-repl--repl r)))
 
 (defsubst geiser-repl--set-this-buffer-project (p)
   (setq geiser-repl--project p))
@@ -313,17 +330,18 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defun geiser-repl--set-up-repl (impl)
   (or (and (not impl) geiser-repl--repl)
-      (setq geiser-repl--repl
-            (let ((impl (or impl
-                            geiser-impl--implementation
-                            (geiser-impl--guess))))
-              (when impl (geiser-repl--repl/impl impl))))))
+      (geiser-repl--set-this-buffer-repl
+       (let ((impl (or impl
+                       geiser-impl--implementation
+                       (geiser-impl--guess))))
+         (when impl (geiser-repl--repl/impl impl))))))
 
 (defun geiser-repl--active-impls ()
   (let ((act))
     (dolist (repl geiser-repl--repls act)
       (with-current-buffer repl
-        (add-to-list 'act geiser-impl--implementation)))))
+        (unless (memq geiser-impl--implementation act)
+          (push geiser-impl--implementation act))))))
 
 (defsubst geiser-repl--repl-name (impl)
   (format "%s REPL" (geiser-impl--impl-str impl)))
@@ -333,7 +351,13 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defun geiser-repl-buffer-name (impl)
   "Return default name of the REPL buffer for implementation IMPL."
-  (format "*Geiser %s*" (geiser-repl--repl-name impl)))
+  (let ((repl-name (geiser-repl--repl-name impl))
+        (current-project (funcall geiser-repl-current-project-function)))
+    (if (and geiser-repl-per-project-p current-project)
+        (let ((project-name (file-name-nondirectory
+                             (directory-file-name current-project))))
+          (format "*Geiser %s: %s*" repl-name project-name))
+      (format "*Geiser %s*" repl-name))))
 
 (defun geiser-repl--switch-to-buffer (buffer)
   (unless (eq buffer (current-buffer))
@@ -350,9 +374,11 @@ will be set up using `geiser-connect-local' when a REPL is started.")
            (old (geiser-repl--repl/impl impl proj geiser-repl--closed-repls))
            (old (and (buffer-live-p old)
                      (not (get-buffer-process old))
-                     old)))
+                     old))
+           (origin (current-buffer)))
       (geiser-repl--switch-to-buffer
        (or old (generate-new-buffer (geiser-repl--buffer-name impl))))
+      (geiser-repl--set-this-buffer-repl (current-buffer) origin)
       (unless old
         (geiser-repl-mode)
         (geiser-impl--set-buffer-implementation impl)
@@ -443,9 +469,9 @@ will be set up using `geiser-connect-local' when a REPL is started.")
   (add-text-properties
    start end
    '(font-lock-fontified t
-			 fontified t
-			 font-lock-multiline t
-			 font-lock-face geiser-font-lock-repl-output)))
+                         fontified t
+                         font-lock-multiline t
+                         font-lock-face geiser-font-lock-repl-output)))
 
 (defun geiser-repl--narrow-to-prompt ()
   "Narrow to active prompt region and return t, otherwise returns nil."
@@ -464,13 +490,13 @@ will be set up using `geiser-connect-local' when a REPL is started.")
       (narrow-to-region prompt-beg prompt-end)
       t)))
 
-(defun geiser-repl--wrap-fontify-region-function (beg end &optional loudly)
+(defun geiser-repl--wrap-fontify-region-function (_beg _end &optional _loudly)
   (save-restriction
     (when (geiser-repl--narrow-to-prompt)
       (let ((font-lock-dont-widen t))
         (font-lock-default-fontify-region (point-min) (point-max) nil)))))
 
-(defun geiser-repl--wrap-unfontify-region-function (beg end &optional loudly)
+(defun geiser-repl--wrap-unfontify-region-function (_beg _end &optional _loudly)
   (save-restriction
     (when (geiser-repl--narrow-to-prompt)
       (let ((font-lock-dont-widen t))
@@ -531,6 +557,10 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defvar-local geiser-repl--repl-buffer nil)
 
+(defvar-local geiser-repl--binary nil)
+
+(defvar-local geiser-repl--arglist nil)
+
 (defun geiser-repl--start-repl (impl address)
   (message "Starting Geiser REPL ...")
   (when (not address) (geiser-repl--check-version impl))
@@ -560,7 +590,6 @@ will be set up using `geiser-connect-local' when a REPL is started.")
           (geiser-repl--connection-setup impl address prompt-rx deb-prompt-rx))
     (geiser-repl--startup impl address)
     (geiser-repl--autodoc-mode 1)
-    (geiser-company--setup geiser-repl-company-p)
     (geiser-repl--set-up-load-path)
     (add-hook 'comint-output-filter-functions
               'geiser-repl--output-filter
@@ -568,6 +597,10 @@ will be set up using `geiser-connect-local' when a REPL is started.")
               t)
     (set-process-query-on-exit-flag (get-buffer-process (current-buffer))
                                     geiser-repl-query-on-kill-p)
+    (dolist (f geiser-repl-startup-forms)
+      (geiser-log--info "Evaluating startup form %s..." f)
+      (geiser-eval--send/wait `(:eval (:scm ,f))))
+    (run-hooks 'geiser-repl-startup-hook)
     (message "%s up and running!" (geiser-repl--repl-name impl))))
 
 (defvar-local geiser-repl--connection-buffer nil)
@@ -642,7 +675,7 @@ will be set up using `geiser-connect-local' when a REPL is started.")
 
 (defun geiser-repl--connection ()
   (or (geiser-repl--connection*)
-      (error "No Geiser REPL for this buffer (try M-x run-geiser)")))
+      (error "No Geiser REPL for this buffer (try M-x geiser)")))
 
 (setq geiser-eval--default-connection-function 'geiser-repl--connection)
 
@@ -719,7 +752,7 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
                      (equal cb geiser-repl--repl))
             (geiser-repl--set-up-repl geiser-impl--implementation)))))))
 
-(defun geiser-repl--sentinel (proc event)
+(defun geiser-repl--sentinel (proc _event)
   (let ((pb (process-buffer proc)))
     (when (buffer-live-p pb)
       (with-current-buffer pb
@@ -734,7 +767,7 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
           (insert "\nIt's been nice interacting with you!\n")
           (insert
            (substitute-command-keys
-            "Press \\[switch-to-geiser] to bring me back.\n")))))))
+            "Press \\[geiser-repl-switch] to bring me back.\n")))))))
 
 (defun geiser-repl--on-kill ()
   (geiser-repl--on-quit)
@@ -757,6 +790,49 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
   (add-hook 'kill-buffer-hook 'geiser-repl--on-kill nil t)
   (set-process-sentinel (get-buffer-process (current-buffer))
                         'geiser-repl--sentinel))
+
+
+;;; geiser-repl-autoeval-mode minor mode:
+
+(defun geiser-repl--autoeval-paren-function ()
+  (let* ((data (show-paren--default))
+         (here (nth 0 data))
+         (there (nth 2 data))
+         (mismatch (nth 4 data)))
+    (if (and here
+             (eq 0 (geiser-repl--nesting-level))
+             (not mismatch)
+             (> here there))
+        (geiser-repl--send-input))
+    data))
+
+(defvar-local geiser-repl-autoeval-mode-string " E"
+  "Modeline indicator for geiser-repl-autoeval-mode")
+
+(define-minor-mode geiser-repl-autoeval-mode
+  "Toggle the Geiser REPL's Autoeval mode.
+With no argument, this command toggles the mode.
+Non-null prefix argument turns on the mode.
+Null prefix argument turns off the mode.
+
+When Autoeval mode is enabled, balanced S-expressions are automatically
+evaluated without having to press ENTER.
+
+This mode may cause issues with structural editing modes such as paredit."
+  :init-value nil
+  :lighter geiser-repl-autoeval-mode-string
+  :group 'geiser-repl
+
+  (if (boundp 'show-paren-data-function)
+      (if geiser-repl-autoeval-mode
+          (progn (show-paren-local-mode 1)
+                 (setq-local show-paren-delay geiser-repl-autoeval-mode-delay)
+                 (setq-local show-paren-data-function
+                             'geiser-repl--autoeval-paren-function))
+        (setq-local show-paren-data-function 'show-paren--default)))
+  (when (called-interactively-p nil)
+    (message "Geiser Autoeval %s"
+             (if geiser-repl-autoeval-mode "enabled" "disabled"))))
 
 
 ;;; geiser-repl mode:
@@ -807,8 +883,7 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
 
   (let* ((proc (get-buffer-process (current-buffer)))
          (pmark (and proc (process-mark proc)))
-         (intxt (and pmark (buffer-substring pmark (point))))
-         (eob (point-max)))
+         (intxt (and pmark (buffer-substring pmark (point)))))
     (when intxt
       (when geiser-repl-forget-old-errors-p
         (compilation-forget-errors))
@@ -818,7 +893,16 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
         (comint-send-string proc (geiser-eval--scheme-str '(:ge no-values)))
         (comint-send-string proc "\n")))))
 
-(defun geiser-repl--maybe-send ()
+(define-obsolete-function-alias 'geiser-repl--maybe-send
+  #'geiser-repl-maybe-send "0.26")
+
+(defun geiser-repl-maybe-send ()
+  "Handle the current input at the REPL's prompt.
+
+If `geiser-repl-send-on-return-p' is t and the input is a
+complete sexp, send the input to the REPL process; otherwise,
+insert a new line and, if `geiser-repl-auto-indent-p' is t,
+indentation."
   (interactive)
   (let ((p (point)))
     (cond ((< p (geiser-repl--last-prompt-start))
@@ -864,8 +948,8 @@ buffer."
     (set-keymap-parent map comint-mode-map)
 
     (define-key map "\C-d" 'delete-char)
-    (define-key map "\C-m" 'geiser-repl--maybe-send)
-    (define-key map "\r" 'geiser-repl--maybe-send)
+    (define-key map "\C-m" 'geiser-repl-maybe-send)
+    (define-key map "\r" 'geiser-repl-maybe-send)
     (define-key map "\C-j" 'geiser-repl--newline-and-indent)
     (define-key map (kbd "TAB") 'geiser-repl-tab-dwim)
     (define-key map [backtab] 'geiser-repl--previous-error)
@@ -877,12 +961,12 @@ buffer."
       ("Complete symbol" ((kbd "M-TAB"))
        completion-at-point :enable (geiser--symbol-at-point))
       ("Complete module name" ((kbd "C-.") (kbd "M-`"))
-       geiser-completion--complete-module :enable (geiser--symbol-at-point))
+       geiser-capf-complete-module :enable (geiser--symbol-at-point))
       ("Edit symbol" "\M-." geiser-edit-symbol-at-point
        :enable (geiser--symbol-at-point))
       --
       ("Load scheme file..." "\C-c\C-l" geiser-load-file)
-      ("Switch to module..." "\C-c\C-m" switch-to-geiser-module)
+      ("Switch to module..." "\C-c\C-m" geiser-repl-switch-to-module)
       ("Import module..." "\C-c\C-i" geiser-repl-import-module)
       ("Add to load path..." "\C-c\C-r" geiser-add-to-load-path)
       --
@@ -899,6 +983,8 @@ buffer."
        geiser-repl-interrupt)
       --
       (mode "Autodoc mode" ("\C-c\C-da" "\C-c\C-d\C-a") geiser-autodoc-mode)
+      (mode "Autoeval mode" ("\C-c\C-de" "\C-c\C-d\C-e")
+            geiser-repl-autoeval-mode)
       ("Symbol documentation" ("\C-c\C-dd" "\C-c\C-d\C-d")
        geiser-doc-symbol-at-point
        "Documentation for symbol at point" :enable (geiser--symbol-at-point))
@@ -915,7 +1001,8 @@ buffer."
       --
       ("Kill Scheme interpreter" "\C-c\C-q" geiser-repl-exit
        :enable (geiser-repl--live-p))
-      ("Restart" "\C-c\C-z" switch-to-geiser :enable (not (geiser-repl--live-p)))
+      ("Restart" "\C-c\C-z" geiser-repl-switch
+       :enable (not (geiser-repl--live-p)))
 
       --
       (custom "REPL options" geiser-repl))
@@ -927,6 +1014,7 @@ buffer."
   "Major mode for interacting with an inferior scheme repl process.
 \\{geiser-repl-mode-map}"
   (scheme-mode-variables)
+  (hack-dir-local-variables-non-file-buffer)
   (set (make-local-variable 'geiser-repl--last-output-start) (point-marker))
   (set (make-local-variable 'geiser-repl--last-output-end) (point-marker))
   (set (make-local-variable 'face-remapping-alist)
@@ -942,7 +1030,7 @@ buffer."
   (set (make-local-variable 'comint-input-ignoredups)
        geiser-repl-history-no-dups-p)
   (setq geiser-eval--get-module-function 'geiser-repl--module-function)
-  (geiser-completion--setup t)
+  (geiser-capf-setup t)
   (setq geiser-smart-tab-mode-string "")
   (geiser-smart-tab-mode t)
 
@@ -950,6 +1038,9 @@ buffer."
               #'geiser-repl--wrap-fontify-region-function)
   (setq-local font-lock-unfontify-region-function
               #'geiser-repl--wrap-unfontify-region-function)
+  (setq geiser-autodoc-mode-string "/E")
+  (when geiser-repl-autoeval-mode-p
+    (geiser-repl-autoeval-mode 1))
 
   ;; enabling compilation-shell-minor-mode without the annoying highlighter
   (compilation-setup t))
@@ -957,13 +1048,13 @@ buffer."
 
 ;;; User commands
 
-(defun run-geiser (impl)
+(define-obsolete-function-alias 'run-geiser 'geiser "Geiser 0.26")
+
+(defun geiser (impl)
   "Start a new Geiser REPL."
   (interactive
    (list (geiser-repl--get-impl "Start Geiser for scheme implementation: ")))
   (geiser-repl--start-repl impl nil))
-
-(defalias 'geiser 'run-geiser)
 
 (defun geiser-connect (impl &optional host port)
   "Start a new Geiser REPL connected to a remote Scheme process."
@@ -987,10 +1078,6 @@ over a Unix-domain socket."
              (eq major-mode 'geiser-repl-mode))
     (setq geiser-repl--last-scm-buffer buffer)))
 
-(defvar-local geiser-repl--binary nil)
-
-(defvar-local geiser-repl--arglist nil)
-
 (defun geiser-repl--get-binary (impl)
   (or geiser-repl--binary (geiser-repl--binary impl)))
 
@@ -1002,14 +1089,16 @@ over a Unix-domain socket."
     (save-window-excursion
       (with-current-buffer b (funcall cmd)))))
 
-(defun switch-to-geiser (&optional ask impl buffer)
+(define-obsolete-function-alias 'switch-to-geiser 'geiser-repl-switch "0.26")
+
+(defun geiser-repl-switch (&optional ask impl buffer)
   "Switch to running Geiser REPL.
 
 If REPL is the current buffer, switch to the previously used
 scheme buffer.
 
 With prefix argument, ask for which one if more than one is running.
-If no REPL is running, execute `run-geiser' to start a fresh one."
+If no REPL is running, execute `geiser' to start a fresh one."
   (interactive "P")
   (let* ((impl (or impl geiser-impl--implementation))
          (in-repl (eq major-mode 'geiser-repl-mode))
@@ -1022,16 +1111,20 @@ If no REPL is running, execute `run-geiser' to start a fresh one."
            (when (and (not (eq repl buffer))
                       (buffer-live-p geiser-repl--last-scm-buffer))
              (geiser-repl--switch-to-buffer geiser-repl--last-scm-buffer)))
-          (repl (geiser-repl--switch-to-buffer repl))
+          (repl (geiser-repl--set-this-buffer-repl repl)
+                (geiser-repl--switch-to-buffer repl))
           ((geiser-repl--remote-p)
            (geiser-connect impl (geiser-repl--host) (geiser-repl--port)))
           ((geiser-repl--local-p)
            (geiser-connect-local impl geiser-repl--address))
-          (impl (run-geiser impl))
-          (t (call-interactively 'run-geiser)))
+          (impl (geiser impl))
+          (t (call-interactively 'geiser)))
     (geiser-repl--maybe-remember-scm-buffer buffer)))
 
-(defun switch-to-geiser-module (&optional module buffer)
+(define-obsolete-function-alias 'switch-to-geiser-module
+  'geiser-repl-switch-to-module "0.26")
+
+(defun geiser-repl-switch-to-module (&optional module buffer)
   "Switch to running Geiser REPL and try to enter a given module."
   (interactive)
   (let* ((module (or module
@@ -1041,8 +1134,33 @@ If no REPL is running, execute `run-geiser' to start a fresh one."
                    (geiser-repl--enter-cmd geiser-impl--implementation
                                            module))))
     (unless (eq major-mode 'geiser-repl-mode)
-      (switch-to-geiser nil nil (or buffer (current-buffer))))
+      (geiser-repl-switch nil nil (or buffer (current-buffer))))
     (geiser-repl--send cmd)))
+
+(defun geiser-repl--switch-to-repl (&optional and-module)
+  (if and-module
+      (geiser-repl-switch-to-module (geiser-eval--get-module) (current-buffer))
+    (geiser-repl-switch nil nil (current-buffer))))
+
+(defun geiser-repl--ensure-repl-buffer ()
+  (unless (buffer-live-p geiser-repl--repl)
+    (setq geiser-repl--repl
+          (geiser-repl--repl/impl geiser-impl--implementation)))
+  (buffer-live-p geiser-repl--repl))
+
+(defun geiser-repl-restart-repl ()
+  "Restarts the REPL associated with the current buffer."
+  (interactive)
+  (let ((b (current-buffer))
+        (impl geiser-impl--implementation))
+    (when (buffer-live-p geiser-repl--repl)
+      (geiser-repl--switch-to-repl nil)
+      (comint-kill-subjob)
+      (sit-for 0.1)) ;; ugly hack; but i don't care enough to fix it
+    (geiser impl)
+    (sit-for 0.2)
+    (goto-char (point-max))
+    (pop-to-buffer b)))
 
 (defun geiser-repl-import-module (&optional module)
   "Import a given module in the current namespace of the REPL."
@@ -1052,7 +1170,7 @@ If no REPL is running, execute `run-geiser' to start a fresh one."
          (cmd (and module
                    (geiser-repl--import-cmd geiser-impl--implementation
                                             module))))
-    (switch-to-geiser nil nil (current-buffer))
+    (geiser-repl--switch-to-repl)
     (geiser-repl--send cmd)))
 
 (defun geiser-repl-exit (&optional arg)
@@ -1080,6 +1198,15 @@ With a prefix argument, force exit by killing the scheme process."
     (end-of-line 0)
     (when (re-search-backward comint-prompt-regexp nil 'go n)
       (goto-char (match-end 0)))))
+
+(defun geiser-add-to-load-path (path)
+  "Add a new directory to running Scheme's load path.
+When called interactively, this function will ask for the path to
+add, defaulting to the current buffer's directory."
+  (interactive "DDirectory to add: ")
+  (let* ((c `(:eval (:ge add-to-load-path ,(file-local-name (expand-file-name path)))))
+         (r (geiser-eval--send/result c)))
+    (message "%s%s added to load path" path (if r "" " couldn't be"))))
 
 
 ;;; Unload:

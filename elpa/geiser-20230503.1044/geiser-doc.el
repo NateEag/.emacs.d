@@ -1,4 +1,4 @@
-;;; geiser-doc.el -- accessing scheme-provided documentation
+;;; geiser-doc.el -- accessing scheme-provided documentation  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009-2016, 2021-2022 Jose Antonio Ortega Ruiz
 
@@ -24,6 +24,7 @@
 (require 'geiser-base)
 
 (require 'button)
+(eval-when-compile (require 'subr-x))
 
 
 ;;; Customization:
@@ -49,6 +50,18 @@
 help buffer, after collecting the associated signature and
 docstring. You can provide an alternative function for displaying
 help (e.g. browse an HTML page) implementing this method.")
+
+(geiser-impl--define-caller geiser-doc--display-docstring
+    display-docstring (ret)
+  "This method receives the result of calling the geiser scheme
+procedure symbol-documentation and should display it in the
+current buffer.  By default, geiser looks for the value of the
+key docstring in the result, assumed to be an alist, and inserts
+it verbatim at point if it's a string.  Providing an
+implementation of this method may be useful if displaying the
+info returned by the scheme side (display-docstring) needs more
+elaboration on emacs' side.  This method should return a truthy
+value if the default action should be skipped.")
 
 
 ;;; Documentation browser history:
@@ -124,7 +137,7 @@ help (e.g. browse an HTML page) implementing this method.")
       (with--geiser-implementation impl
         (if (null target)
             (geiser-doc-module module impl)
-          (let ((geiser-eval--get-module-function (lambda (x) module)))
+          (let ((geiser-eval--get-module-function (lambda (_) module)))
             (geiser-doc-symbol target module impl)))))))
 
 (defvar-local geiser-doc--buffer-link nil)
@@ -195,9 +208,9 @@ help (e.g. browse an HTML page) implementing this method.")
   (let ((label (if manual "[manual]" "[source]"))
         (help (if manual "Look up in Scheme manual" "Go to definition")))
     (insert-text-button label
-			:type 'geiser-doc--xbutton
-			'help-echo help
-			'x-kind (if manual 'manual 'source))))
+                        :type 'geiser-doc--xbutton
+                        'help-echo help
+                        'x-kind (if manual 'manual 'source))))
 
 (defun geiser-doc--insert-xbuttons (impl)
   (when (geiser-impl--method 'external-help impl)
@@ -291,11 +304,11 @@ help (e.g. browse an HTML page) implementing this method.")
     map)
   "Keymap for `geiser-doc-mode'.")
 
-(declare-function switch-to-geiser "geiser-repl")
+(declare-function geiser-repl--switch-to-repl "geiser-repl")
 
 (defun geiser-doc-switch-to-repl ()
   (interactive)
-  (switch-to-geiser nil nil (current-buffer)))
+  (geiser-repl--switch-to-repl))
 
 (geiser-menu--defmenu doc geiser-doc-mode-map
   ("Next link" ("n") forward-button)
@@ -360,7 +373,8 @@ help (e.g. browse an HTML page) implementing this method.")
   (geiser-doc--insert-title
    (geiser-autodoc--str* (cdr (assoc "signature" docstring))))
   (newline)
-  (insert (or (cdr (assoc "docstring" docstring)) ""))
+  (or (geiser-doc--display-docstring impl docstring)
+      (insert (or (cdr (assoc "docstring" docstring)) "")))
   (geiser-doc--buttonize-modules impl)
   (setq geiser-doc--buffer-link
         (geiser-doc--history-push (geiser-doc--make-link symbol

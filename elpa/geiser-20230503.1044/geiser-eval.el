@@ -1,6 +1,6 @@
 ;;; geiser-eval.el -- sending scheme code for evaluation  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2015, 2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2015, 2021, 2023 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -46,7 +46,12 @@ value.")
  "Function to translate a bare procedure symbol to one executable
 in the Scheme context. Return NULL for unsupported ones; at the
 very least, EVAL, COMPILE, LOAD-FILE and COMPILE-FILE should be
-supported.")
+supported.  Geiser will also invoke, if defined, the following
+procedures, always wrapped in EVAL (with the current module as
+its context): AUTODOC, SYMBOL-DOCUMENTATION, MODULE-EXPORTS,
+SYMBOL-LOCATION, MODULE-LOCATION, COMPLETIONS,
+MODULE-COMPLETIONS, MACRO-EXPAND ADD-TO-LOAD-PATH, METHOD,
+CALLER, CALLEE and NO-VALUES.")
 
 (defvar geiser-eval--unsupported nil)
 (geiser-impl--register-local-variable
@@ -130,7 +135,7 @@ module-exports, autodoc, callers, callees and generic-methods.")
   (and geiser-eval--default-connection-function
        (funcall geiser-eval--default-connection-function)))
 
-(defsubst geiser-eval--log (s)
+(defun geiser-eval--log (s)
   (geiser-log--info "RETORT: %S" s)
   s)
 
@@ -143,25 +148,22 @@ module-exports, autodoc, callers, callees and generic-methods.")
   (geiser-con--send-string (geiser-eval--connection)
                            (geiser-eval--code-str code)
                            (lambda (s)
-                             (setq geiser-eval--async-retort s)
+                             (setq geiser-eval--async-retort (geiser-eval--log s))
                              (funcall cont s))
                            buffer))
 
 (defun geiser-eval--wait (req timeout)
   (or (geiser-con--wait req timeout) geiser-eval--async-retort))
 
-(defvar geiser-eval--sync-retort nil)
-(defun geiser-eval--set-sync-retort (s)
-  (setq geiser-eval--sync-retort (geiser-eval--log s)))
-
 (defun geiser-eval--send/wait (code &optional timeout buffer)
-  (setq geiser-eval--sync-retort nil)
-  (geiser-con--send-string/wait (geiser-eval--connection)
-                                (geiser-eval--code-str code)
-                                'geiser-eval--set-sync-retort
-                                timeout
-                                buffer)
-  geiser-eval--sync-retort)
+  (let ((sync-retort nil))
+    (geiser-con--send-string/wait (geiser-eval--connection)
+                                  (geiser-eval--code-str code)
+                                  (lambda (s)
+                                    (setq sync-retort (geiser-eval--log s)))
+                                  timeout
+                                  buffer)
+    sync-retort))
 
 (defun geiser-eval-interrupt ()
   "Interrupt on-going evaluation, if any."

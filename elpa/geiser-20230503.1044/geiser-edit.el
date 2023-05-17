@@ -1,6 +1,6 @@
-;;; geiser-edit.el -- scheme edit locations
+;;; geiser-edit.el -- scheme edit locations  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2012, 2013, 2019, 2020, 2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2012, 2013, 2019-2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -18,6 +18,7 @@
 (require 'geiser-base)
 
 (require 'etags)
+(eval-when-compile (require 'subr-x))
 
 
 ;;; Customization:
@@ -51,7 +52,9 @@ or following links in error buffers.")
   (cdr (assoc "name" loc)))
 
 (defsubst geiser-edit--location-file (loc)
-  (cdr (assoc "file" loc)))
+  (when-let ((file-name (cdr (assoc "file" loc))))
+    (concat (or (file-remote-p default-directory) "")
+            file-name)))
 
 (defsubst geiser-edit--to-number (x)
   (cond ((numberp x) x)
@@ -63,8 +66,13 @@ or following links in error buffers.")
 (defsubst geiser-edit--location-column (loc)
   (geiser-edit--to-number (cdr (assoc "column" loc))))
 
+(defsubst geiser-edit--location-char (loc)
+  (geiser-edit--to-number (cdr (assoc "char" loc))))
+
 (defsubst geiser-edit--make-location (name file line column)
-  `(("name" . ,name) ("file" . ,file) ("line" . ,line) ("column" . ,column)))
+  (if (equal line "")
+      `(("name" . ,name) ("file" . ,file) ("char" . ,column))
+    `(("name" . ,name) ("file" . ,file) ("line" . ,line) ("column" . ,column))))
 
 (defconst geiser-edit--def-re
   (regexp-opt '("define"
@@ -83,46 +91,67 @@ or following links in error buffers.")
   (regexp-opt '("define-syntaxes" "define-values")))
 
 (defsubst geiser-edit--def-re (thing)
-  (format "(%s +(?%s\\_>"
-          geiser-edit--def-re
-          (regexp-quote (format "%s" thing))))
+  (let ((sx (regexp-quote (format "%s" thing))))
+    (format (concat "(%s[[:space:]]+\\("
+                    "(%s\\_>[^)]*)\\|"
+                    "\\(\\_<%s\\_>\\) *\\([^\n]*?\\)[)\n]"
+                    "\\)")
+            geiser-edit--def-re sx sx)))
 
 (defsubst geiser-edit--def-re* (thing)
   (format "(%s +([^)]*?\\_<%s\\_>"
           geiser-edit--def-re*
           (regexp-quote (format "%s" thing))))
 
+(defun geiser-edit--find-def (symbol &optional args)
+  (save-excursion
+    (goto-char (point-min))
+    (when (or (re-search-forward (geiser-edit--def-re symbol) nil t)
+              (re-search-forward (geiser-edit--def-re* symbol) nil t))
+      (cons (match-beginning 0)
+            (and args
+                 (if (match-string 2)
+                     (let* ((v (or (match-string 3) ""))
+                            (v (and (not (string-blank-p v)) v)))
+                       (concat (match-string 2)
+                               (and v " => ")
+                               v
+                               (and v (string-prefix-p "(" v) " ...")))
+                   (match-string 1)))))))
+
 (defsubst geiser-edit--symbol-re (thing)
   (format "\\_<%s\\_>" (regexp-quote (format "%s" thing))))
 
-(defun geiser-edit--goto-line (symbol line)
-  (goto-char (point-min))
-  (if (numberp line)
-      (forward-line (max 0 (1- line)))
-    (goto-char (point-min))
-    (when (or (re-search-forward (geiser-edit--def-re symbol) nil t)
-              (re-search-forward (geiser-edit--def-re* symbol) nil t)
-              (re-search-forward (geiser-edit--symbol-re symbol) nil t))
-      (goto-char (match-beginning 0)))))
+(defun geiser-edit--goto-location (symbol line col pos)
+  (cond ((numberp line)
+         (goto-char (point-min))
+         (forward-line (max 0 (1- line))))
+        ((numberp pos) (goto-char pos)))
+  (if (not col)
+      (when-let (pos (car (geiser-edit--find-def symbol)))
+        (goto-char pos))
+    (beginning-of-line)
+    (forward-char col)
+    (cons (current-buffer) (point))))
 
-(defun geiser-edit--try-edit-location (symbol loc &optional method)
+(defun geiser-edit--try-edit-location (symbol loc &optional method no-error)
   (let ((symbol (or (geiser-edit--location-name loc) symbol))
         (file (geiser-edit--location-file loc))
         (line (geiser-edit--location-line loc))
-        (col (geiser-edit--location-column loc)))
-    (unless file (error "Couldn't find edit location for %s" symbol))
-    (unless (file-readable-p file) (error "%s is not readable" file))
-    (geiser-edit--visit-file file (or method geiser-edit-symbol-method))
-    (geiser-edit--goto-line symbol line)
-    (when col
-      (beginning-of-line)
-      (forward-char col))
-    (cons (current-buffer) (point))))
+        (col (geiser-edit--location-column loc))
+        (pos (geiser-edit--location-char loc)))
+    (when file
+      (geiser-edit--visit-file file (or method geiser-edit-symbol-method)))
+    (or (geiser-edit--goto-location symbol line col pos)
+        file
+        (unless no-error
+          (error "Couldn't find location for '%s'" symbol)))))
 
-(defsubst geiser-edit--try-edit (symbol ret &optional method)
+(defsubst geiser-edit--try-edit (symbol ret &optional method no-error)
   (geiser-edit--try-edit-location symbol
                                   (geiser-eval--retort-result ret)
-                                  method))
+                                  method
+                                  no-error))
 
 
 ;;; Links
@@ -146,7 +175,7 @@ or following links in error buffers.")
                'help-echo "Go to error location"))
 
 (defconst geiser-edit--default-file-rx
-  "^[ \t]*\\([^<>:\n\"]+\\):\\([0-9]+\\)\\(?:\\([0-9]+\\)\\)?")
+  "^[ \t]*\\([^<>:\n\"]+\\):\\([0-9]+\\)\\(?::\\([0-9]+\\)\\)?")
 
 (defun geiser-edit--buttonize-files (&optional rx no-fill)
   (let ((rx (or rx geiser-edit--default-file-rx))
@@ -159,7 +188,7 @@ or following links in error buffers.")
                                 (match-string 2)
                                 (or (match-string 3) 0)
                                 'window)
-        (unless no-fill (fill-region (match-end 0) (point-at-eol)))))))
+        (unless no-fill (fill-region (match-end 0) (line-end-position)))))))
 
 (defun geiser-edit--open-next (&optional n reset)
   (interactive)
@@ -231,44 +260,43 @@ or following links in error buffers.")
     (when marker (xref-push-marker-stack))))
 
 (defun geiser-edit-symbol-at-point (&optional arg)
-  "Opens a new window visiting the definition of the symbol at point.
-With prefix, asks for the symbol to edit."
+  "Visit the definition of the symbol at point.
+With prefix, asks for the symbol to locate."
   (interactive "P")
   (let* ((symbol (or (and (not arg) (geiser--symbol-at-point))
                      (geiser-completion--read-symbol "Edit symbol: ")))
          (cmd `(:eval (:ge symbol-location ',symbol)))
-         (marker (point-marker)))
-    (condition-case-unless-debug sym-err
-        (progn (geiser-edit--try-edit symbol (geiser-eval--send/wait cmd))
-               (when marker (xref-push-marker-stack marker)))
-      (error (condition-case-unless-debug  mod-err
-                 (geiser-edit-module-at-point)
-               (error
-                (geiser-log--warn "Error in symbol lookup (%s, %s)"
-                                  (error-message-string sym-err)
-                                  (error-message-string mod-err))
-                (error "Symbol not found (%s)" symbol)))))))
+         (marker (point-marker))
+         (ret (ignore-errors (geiser-eval--send/wait cmd))))
+    (if (geiser-edit--try-edit symbol ret nil t)
+        (when marker (xref-push-marker-stack marker))
+      (unless (geiser-edit-module-at-point t)
+        (error "Couldn't find location for '%s'" symbol)))
+    t))
 
 (defun geiser-pop-symbol-stack ()
   "Pop back to where \\[geiser-edit-symbol-at-point] was last invoked."
   (interactive)
-  (condition-case nil
-      (pop-tag-mark)
-    (error "No previous location for find symbol invocation")))
+  (if (fboundp 'xref-go-back)
+      (xref-go-back)
+    (with-no-warnings
+      (xref-pop-marker-stack))))
 
-(defun geiser-edit-module (module &optional method)
+(defun geiser-edit-module (module &optional method no-error)
   "Asks for a module and opens it in a new buffer."
   (interactive (list (geiser-completion--read-module)))
   (let ((cmd `(:eval (:ge module-location '(:module ,module)))))
-    (geiser-edit--try-edit module (geiser-eval--send/wait cmd) method)))
+    (geiser-edit--try-edit module (geiser-eval--send/wait cmd) method no-error)))
 
-(defun geiser-edit-module-at-point ()
+(defun geiser-edit-module-at-point (&optional no-error)
   "Opens a new window visiting the module at point."
   (interactive)
   (let ((marker (point-marker)))
     (geiser-edit-module (or (geiser-completion--module-at-point)
-                            (geiser-completion--read-module)))
-    (when marker (xref-push-marker-stack))))
+                            (geiser-completion--read-module))
+                        nil no-error)
+    (when marker (xref-push-marker-stack marker))
+    t))
 
 (defun geiser-insert-lambda (&optional full)
   "Insert λ at point.  With prefix, inserts (λ ())."
@@ -295,7 +323,7 @@ positive values and backward for negative."
             (let ((p (point))
                   (round (looking-at-p "(")))
               (forward-sexp)
-              (backward-delete-char 1)
+              (delete-char -1)
               (insert (if round "]" ")"))
               (goto-char p)
               (delete-char 1)

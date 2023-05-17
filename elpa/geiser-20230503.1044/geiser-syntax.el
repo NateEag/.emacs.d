@@ -1,4 +1,4 @@
-;;; geiser-syntax.el -- utilities for parsing scheme syntax
+;;; geiser-syntax.el -- utilities for parsing scheme syntax  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009-2016, 2019-2022 Jose Antonio Ortega Ruiz
 
@@ -18,7 +18,9 @@
 
 (require 'scheme)
 
-(eval-when-compile (require 'cl-lib))
+(eval-when-compile
+  (require 'cl-lib)
+  (require 'subr-x))
 
 
 ;;; Indentation:
@@ -213,7 +215,7 @@ implementation-specific entries for font-lock-keywords.")
               (geiser-syntax--read/token 'dot)
             (cons 'atom (geiser-syntax--read/elisp))))
       (?\# (cl-case (geiser-syntax--read/next-char)
-             ('nil '(eob))
+             ((nil quote) '(eob))
              (?| (geiser-syntax--read/skip-comment))
              (?: (if (geiser-syntax--read/next-char)
                      (cons 'kwd (geiser-syntax--read/symbol))
@@ -229,7 +231,7 @@ implementation-specific entries for font-lock-keywords.")
                         (tok (cons 'atom tok))
                         (t (geiser-syntax--read/next-token)))))))
       (?| (cl-case (geiser-syntax--read/next-char) ;; gambit style block comments
-            ('nil '(eob))
+            ((nil quote) '(eob))
             (?# (geiser-syntax--read/skip-comment))
             (t (let ((tok (geiser-syntax--read/symbol)))
                  (cond ((equal (symbol-name tok) "t") '(boolean . :t))
@@ -291,14 +293,17 @@ implementation-specific entries for font-lock-keywords.")
 
 (defun geiser-syntax--read-from-string (string &optional start end)
   (when (stringp string)
-    (let* ((start (or start 0))
-           (end (or end (length string)))
-           (max-lisp-eval-depth (min 20000
-                                     (max max-lisp-eval-depth (- end start))))
-           (max-specpdl-size (* 2 max-lisp-eval-depth)))
-      (with-temp-buffer
-        (save-excursion (insert string))
-        (cons (geiser-syntax--read) (point))))))
+    ;; In Emacs 29 this variable doesn't have an effect
+    ;; anymore and `max-lisp-eval-depth' achieves the same.
+    (with-suppressed-warnings ((obsolete max-specpdl-size))
+      (let* ((start (or start 0))
+             (end (or end (length string)))
+             (max-lisp-eval-depth (min 20000
+                                       (max max-lisp-eval-depth (- end start))))
+             (max-specpdl-size (* 2 max-lisp-eval-depth)))
+        (with-temp-buffer
+          (save-excursion (insert string))
+          (cons (geiser-syntax--read) (point)))))))
 
 (defun geiser-syntax--form-from-string (s)
   (car (geiser-syntax--read-from-string s)))
@@ -362,7 +367,7 @@ implementation-specific entries for font-lock-keywords.")
 (defsubst geiser-syntax--symbol-eq (s0 s1)
   (and (symbolp s0) (symbolp s1) (equal (symbol-name s0) (symbol-name s1))))
 
-(defun geiser-syntax--scan-sexps (&optional begin)
+(defun geiser-syntax--scan-sexps ()
   (let* ((fst (geiser-syntax--symbol-at-point))
          (smth (or fst (not (looking-at-p "[\s \s)\s>\s<\n]"))))
          (path (and fst `((,fst 0)))))
@@ -464,7 +469,7 @@ implementation-specific entries for font-lock-keywords.")
         (let ((boundary (point))
               (nesting (geiser-syntax--nesting-level)))
           (geiser-syntax--pop-to-top)
-          (cl-destructuring-bind (form end)
+          (cl-destructuring-bind (form _end)
               (geiser-syntax--form-after-point boundary)
             (delete sym
                     (geiser-syntax--scan-locals bfs

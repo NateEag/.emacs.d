@@ -28,10 +28,12 @@
   "Symbol naming the default Scheme implementation."
   :type 'symbol)
 
+;;;###autoload (defvar geiser-active-implementations nil)
 (geiser-custom--defcustom geiser-active-implementations ()
   "List of active installed Scheme implementations."
   :type '(repeat symbol))
 
+;;;###autoload (defvar geiser-implementations-alist nil)
 (geiser-custom--defcustom geiser-implementations-alist nil
   "A map from regular expressions or directories to implementations.
 When opening a new file, its full path will be matched against
@@ -140,8 +142,10 @@ in order to determine its scheme flavour."
       (push (cons impl methods) geiser-impl--registry))
     (push (cons impl file) geiser-impl--load-files)))
 
-(defsubst geiser-activate-implementation (impl)
-  (add-to-list 'geiser-active-implementations impl))
+;;;###autoload
+(progn                               ;Copy the whole def to the autoloads file.
+(defun geiser-activate-implementation (impl)
+  (add-to-list 'geiser-active-implementations impl)))
 
 (defsubst geiser-deactivate-implementation (impl)
   (setq geiser-active-implementations
@@ -204,40 +208,45 @@ Here's how a typical call to this macro looks like:
     (keywords geiser-guile--keywords)
     (case-sensitive geiser-guile-case-sensitive-p))
 
-This macro also defines a runner function (run-NAME) and a
-switcher (switch-to-NAME), and provides geiser-NAME."
+This macro also defines a runner function (geiser-NAME) and a
+switcher (geiser-NAME-switch), and provides geiser-NAME."
   (let ((name (if (listp name) (car name) name))
         (parent (and (listp name) (cadr name))))
     (unless (symbolp name)
       (error "Malformed implementation name: %s" name))
-    (let ((runner (intern (format "run-%s" name)))
-          (switcher (intern (format "switch-to-%s" name)))
+    (let ((old-runner (intern (format "run-%s" name)))
+          (runner (intern (format "geiser-%s" name)))
+          (old-switcher (intern (format "switch-to-%s" name)))
+          (switcher (intern (format "geiser-%s-switch" name)))
           (runner-doc (format "Start a new %s REPL." name))
           (switcher-doc (format "Switch to a running %s REPL, or start one."
                                 name))
-          (ask (make-symbol "ask")))
+          (ask (gensym "ask")))
       `(progn
          (geiser-impl--define load-file-name ',name ',parent ',methods)
          (require 'geiser-repl)
          (require 'geiser-menu)
+         (define-obsolete-function-alias ',old-runner ',runner "Geiser 0.26")
          (defun ,runner ()
            ,runner-doc
            (interactive)
-           (run-geiser ',name))
+           (geiser ',name))
+         (define-obsolete-function-alias ',old-switcher ',switcher "Geiser 0.26")
          (defun ,switcher (&optional ,ask)
            ,switcher-doc
            (interactive "P")
-           (switch-to-geiser ,ask ',name))
+           (geiser-repl-switch ,ask ',name))
          (geiser-menu--add-impl ',name ',runner ',switcher)))))
 
 ;;;###autoload
-(defun geiser-impl--add-to-alist (kind what impl &optional append)
-  (add-to-list 'geiser-implementations-alist
-               (list (list kind what) impl) append))
+(progn
+  (defun geiser-impl--add-to-alist (kind what impl &optional append)
+    (add-to-list 'geiser-implementations-alist
+                 (list (list kind what) impl) append))
 
-(defun geiser-implementation-extension (impl ext)
-  "Add to `geiser-implementations-alist' an entry for extension EXT."
-  (geiser-impl--add-to-alist 'regexp (format "\\.%s\\'" ext) impl t))
+  (defun geiser-implementation-extension (impl ext)
+    "Add to `geiser-implementations-alist' an entry for extension EXT."
+    (geiser-impl--add-to-alist 'regexp (format "\\.%s\\'" ext) impl t)))
 
 
 ;;; Trying to guess the scheme implementation:
@@ -270,8 +279,7 @@ buffer contains Scheme code of the given implementation.")
 (defun geiser-impl--guess (&optional prompt)
   (or geiser-impl--implementation
       (progn (hack-local-variables)
-             (and (memq geiser-scheme-implementation
-                        geiser-active-implementations)
+             (and (geiser-impl--active-p geiser-scheme-implementation)
                   geiser-scheme-implementation))
       (and (null (cdr geiser-active-implementations))
            (car geiser-active-implementations))
@@ -282,7 +290,7 @@ buffer contains Scheme code of the given implementation.")
         (let ((bn (buffer-file-name)))
           (when bn
             (dolist (x geiser-implementations-alist)
-              (when (and (memq (cadr x) geiser-active-implementations)
+              (when (and (geiser-impl--active-p (cadr x))
                          (geiser-impl--match-impl (car x) bn))
                 (throw 'impl (cadr x)))))))
       geiser-default-implementation

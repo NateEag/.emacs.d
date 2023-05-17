@@ -1,6 +1,6 @@
-;;; geiser-connection.el -- talking to a scheme process
+;;; geiser-connection.el -- talking to a scheme process  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2013, 2021 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2011, 2013, 2021-2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -23,6 +23,7 @@
 (require 'geiser-impl)
 
 (require 'tq)
+(eval-when-compile (require 'subr-x))
 
 
 ;;; Buffer connections:
@@ -70,8 +71,7 @@
 
 (defun geiser-con--tq-create (process)
   (let ((tq (tq-create process)))
-    (set-process-filter process
-                        `(lambda (p s) (geiser-con--tq-filter ',tq s)))
+    (set-process-filter process (lambda (_p s) (geiser-con--tq-filter tq s)))
     tq))
 
 (defun geiser-con--tq-filter (tq in)
@@ -170,7 +170,7 @@
     (and tq (tq-close tq))))
 
 (defvar geiser-con--startup-prompt nil)
-(defun geiser-con--startup-prompt (p s)
+(defun geiser-con--startup-prompt (_p s)
   (setq geiser-con--startup-prompt
         (concat geiser-con--startup-prompt s))
   nil)
@@ -188,8 +188,7 @@
 
 (defun geiser-con--connection-activate (c)
   (when (not (car c))
-    (let* ((tq (geiser-con--connection-tq c))
-           (proc (geiser-con--connection-process c))
+    (let* ((proc (geiser-con--connection-process c))
            (tq-filter (geiser-con--connection-tq-filter c)))
       (while (accept-process-output proc 0.01))
       (set-process-filter proc tq-filter)
@@ -269,18 +268,19 @@
          (timeout (/ (or timeout geiser-connection-timeout) 1000.0))
          (step (/ timeout 10)))
     (with-timeout (timeout (geiser-con--request-deactivate req))
-      (condition-case e
+      (condition-case nil
           (while (and (geiser-con--connection-process con)
                       (not (geiser-con--connection-completed-p con id)))
             (accept-process-output proc step))
         (error (geiser-con--request-deactivate req))))))
 
 (defun geiser-con--send-string/wait (con str cont &optional timeout sbuf)
-  (save-current-buffer
-    (let ((proc (and con (geiser-con--connection-process con))))
-      (unless proc (error "Geiser connection not active"))
-      (let ((req (geiser-con--send-string con str cont sbuf)))
-        (geiser-con--wait req timeout)))))
+  (when (and (stringp str) (not (string-blank-p str)))
+    (save-current-buffer
+      (let ((proc (and con (geiser-con--connection-process con))))
+        (unless proc (error "Geiser connection not active"))
+        (let ((req (geiser-con--send-string con str cont sbuf)))
+          (geiser-con--wait req timeout))))))
 
 
 (provide 'geiser-connection)

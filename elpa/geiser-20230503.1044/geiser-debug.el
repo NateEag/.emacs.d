@@ -23,7 +23,6 @@
 (require 'geiser-base)
 (require 'geiser-image)
 
-(require 'transient)
 (require 'ansi-color)
 (require 'compile)
 
@@ -36,26 +35,37 @@
   "Debugging and error display options."
   :group 'geiser)
 
-(geiser-custom--defcustom geiser-debug-always-display-sexp-after-p nil
+(define-obsolete-variable-alias 'geiser-debug-always-display-sexp-after-p
+  'geiser-debug-always-display-sexp-after "0.26.2")
+
+(geiser-custom--defcustom geiser-debug-always-display-sexp-after nil
   "Whether to always display the sexp whose evaluation caused an
-error after the error message in the debug pop-up. If nil,
-expressions shorter than `geiser-debug-long-sexp-lines` lines are
-shown before the error message."
+error after the error message in the debug pop-up.
+
+If nil, expressions shorter than `geiser-debug-long-sexp-lines`
+lines are shown before the error message."
   :type 'boolean)
 
 (geiser-custom--defcustom geiser-debug-long-sexp-lines 6
   "Length of an expression in order to be relegated to the bottom
-of the debug pop-up (after the error message). If
-`geiser-debug-always-display-sexp-after-p` is t, this variable
+of the debug pop-up (after the error message).
+
+If `geiser-debug-always-display-sexp-after` is t, this variable
 has no effect."
   :type 'int)
 
-(geiser-custom--defcustom geiser-debug-jump-to-debug-p t
+(define-obsolete-variable-alias 'geiser-debug-jump-to-debug-p
+  'geiser-debug-jump-to-debug "0.26.2")
+
+(geiser-custom--defcustom geiser-debug-jump-to-debug t
   "When set to t (the default), jump to the debug pop-up buffer
 in case of evaluation errors.
 
-See also `geiser-debug-show-debug-p`. "
+See also `geiser-debug-show-debug`. "
   :type 'boolean)
+
+(define-obsolete-variable-alias 'geiser-debug-show-debug-p
+  'geiser-debug-show-debug "0.26.2")
 
 (geiser-custom--defcustom geiser-debug-auto-next-error-p nil
   "When set, automatically invoke `next-error' on of evaluation errors.
@@ -64,15 +74,18 @@ This will make point jump to the location of an error if the output
 of the evaluation contains any."
   :type 'boolean)
 
-(geiser-custom--defcustom geiser-debug-show-debug-p t
+(geiser-custom--defcustom geiser-debug-show-debug t
   "When set to t (the default), show the debug pop-up buffer in
 case of evaluation errors.
 
-This option takes effect even if `geiser-debug-jump-to-debug-p`
+This option takes effect even if `geiser-debug-jump-to-debug`
 is set."
   :type 'boolean)
 
-(geiser-custom--defcustom geiser-debug-auto-display-images-p t
+(define-obsolete-variable-alias 'geiser-debug-auto-display-images-p
+  'geiser-debug-auto-display-images "0.26.2")
+
+(geiser-custom--defcustom geiser-debug-auto-display-images t
   "Whether to automatically invoke the external viewer to display
 images when they're evaluated.
 
@@ -112,24 +125,12 @@ all ANSI sequences."
   (compilation-setup nil)
   (setq buffer-read-only t))
 
-(defvar-local geiser-debug--debugger-active-p nil)
+(defvar-local geiser-debug--debugger-active nil)
 (defvar-local geiser-debug--sender-buffer nil)
 
-(defun geiser-debug--send-dbg (thing)
-  (geiser-eval--send/wait (cons :debug (if (listp thing) thing (list thing)))))
-
-(defun geiser-debug--debugger-display (thing ret)
-  (geiser-debug--display-retort (format ",%s" thing)
-                                ret
-                                (geiser-eval--retort-result-str ret nil)))
-
-(defun geiser-debug--send-to-repl (thing)
-  (unless (and geiser-debug--debugger-active-p geiser-debug--sender-buffer)
-    (error "Debugger not active"))
-  (save-window-excursion
-    (with-current-buffer geiser-debug--sender-buffer
-      (when-let (ret (geiser-debug--send-dbg thing))
-        (geiser-debug--debugger-display thing ret)))))
+(defun geiser-debug-active-p ()
+  "Check whether debugger has been entered by a scheme buffer operation."
+  (and geiser-debug--debugger-active geiser-debug--sender-buffer))
 
 (defun geiser-debug-switch-to-buffer ()
   "Return to the scheme buffer that pooped this debug window."
@@ -137,52 +138,11 @@ all ANSI sequences."
   (when geiser-debug--sender-buffer
     (geiser-repl--switch-to-buffer geiser-debug--sender-buffer)))
 
-(defun geiser-debug-debugger-quit ()
-  "Quit the current debugging session level."
-  (interactive)
-  (geiser-debug--send-to-repl 'quit))
-
-(defun geiser-debug-debugger-backtrace ()
-  "Quit the current debugging session level."
-  (interactive)
-  (geiser-debug--send-to-repl 'backtrace))
-
-(defun geiser-debug-debugger-locals ()
-  "Show local variables."
-  (interactive)
-  (geiser-debug--send-to-repl 'locals))
-
-(defun geiser-debug-debugger-registers ()
-  "Show register values."
-  (interactive)
-  (geiser-debug--send-to-repl 'registers))
-
-(defun geiser-debug-debugger-error ()
-  "Show error message."
-  (interactive)
-  (geiser-debug--send-to-repl 'error))
-
-(transient-define-prefix geiser-debug--debugger-transient ()
-  "Debugging meta-commands."
-  [:description (lambda () (format "%s debugger" (geiser-impl--impl-str)))
-   :if (lambda () geiser-debug--debugger-active-p)
-   ["Display"
-    ("b" "backtrace" geiser-debug-debugger-backtrace)
-    ("e" "error" geiser-debug-debugger-error)
-    ("l" "locals" geiser-debug-debugger-locals)
-    ("r" " registers" geiser-debug-debugger-registers)]
-   ["Go"
-    ("jn" "Jump to next error" next-error)
-    ("jp" "Jump to previous error" previous-error)
-    ("x" "Exit debug level" geiser-debug-debugger-quit)]])
-
 (geiser-menu--defmenu debug geiser-debug-mode-map
   ("Next error" ("n" [?\t]) compilation-next-error)
   ("Previous error" ("p" "\e\t" [backtab]) compilation-previous-error)
   ("Next error location" ((kbd "M-n")) next-error)
   ("Previous error location" ((kbd "M-p")) previous-error)
-  ("Debugger command ..." "," geiser-debug--debugger-transient
-   :enable geiser-debug--debugger-active-p)
   ("Source buffer" ("z" (kbd "C-c C-z")) geiser-debug-switch-to-buffer)
   --
   ("Quit" nil View-quit))
@@ -214,7 +174,7 @@ non-null value.")
 buffer.")
 
 (defun geiser-debug--display-after (what)
-  (or geiser-debug-always-display-sexp-after-p
+  (or geiser-debug-always-display-sexp-after
       (>= (with-temp-buffer
             (insert what)
             (count-lines (point-min) (point-max)))
@@ -225,13 +185,16 @@ buffer.")
     (insert res)
     (let ((end (point)))
       (goto-char begin)
-      (let ((no (geiser-image--replace-images
-                 t geiser-debug-auto-display-images-p)))
+      (let ((no (geiser-image--replace-images t
+                                              geiser-debug-auto-display-images)))
         (goto-char end)
         (newline 2)
         (and no (> no 0))))))
 
-(declare-function switch-to-geiser "geiser-repl")
+(defun geiser-debug--default-display-error (key msg)
+  (insert "\n"
+          (if key (format "Error: %s\n" key) "")
+          (format "%s" (or msg "")) "\n"))
 
 (defun geiser-debug--display-retort (what ret &optional res _auto-p)
   (let* ((err (geiser-eval--retort-error ret))
@@ -250,9 +213,9 @@ buffer.")
          (after (geiser-debug--display-after what)))
     (unless debug-entered
       (geiser-debug--with-buffer
-        (when (and (not debug) geiser-debug--debugger-active-p)
+        (when (and (not debug) geiser-debug--debugger-active)
           (message "Debugger exited"))
-        (setq geiser-debug--debugger-active-p debug
+        (setq geiser-debug--debugger-active debug
               geiser-debug--sender-buffer buffer
               geiser-impl--implementation impl)
         (erase-buffer)
@@ -261,8 +224,12 @@ buffer.")
         (setq img (when (and res (not err) (not debug))
                     (geiser-debug--insert-res res)))
         (when (or err key output)
-          (or (geiser-debug--display-error impl module key output)
-              (insert "\n" (if key (format "%s\n" key) "") output "\n")))
+          (when (fboundp 'next-error-select-buffer)
+            (next-error-select-buffer (current-buffer)))
+          (let ((msg (or (geiser-eval--error-msg err) output "")))
+            (or (geiser-debug--display-error impl module key msg)
+                (geiser-debug--default-display-error key msg))
+            (unless err (geiser-edit--buttonize-files))))
         (when after
           (goto-char (point-max))
           (insert "\nExpression evaluated was:\n\n")
@@ -272,9 +239,9 @@ buffer.")
           (remove (ansi-color-filter-region (point-min) (point-max))))
         (goto-char (point-min)))
       (when (or img err output)
-        (cond (geiser-debug-jump-to-debug-p
+        (cond (geiser-debug-jump-to-debug
                (geiser-debug--pop-to-buffer))
-              (geiser-debug-show-debug-p
+              (geiser-debug-show-debug
                (display-buffer (geiser-debug--buffer))))
         (when (and err geiser-debug-auto-next-error-p)
           (ignore-errors (next-error))
@@ -300,10 +267,9 @@ result in the minibuffer."
          (code `(,(if compile :comp :eval) (:scm ,wrapped)))
          (cont (lambda (ret)
                  (let ((res (geiser-eval--retort-result-str ret nil))
-                       (err (geiser-eval--retort-error ret))
                        (scstr (geiser-syntax--scheme-str str)))
                    (when and-go (funcall and-go))
-                   (when (not err)
+                   (unless (geiser-eval--retort-error ret)
                      (save-excursion
                        (goto-char (/ (+ end start) 2))
                        (geiser-autodoc--clean-cache))

@@ -1,6 +1,6 @@
-;;; geiser-mode.el -- minor mode for scheme buffers
+;;; geiser-mode.el -- minor mode for scheme buffers  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2020, 2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2017, 2020, 2022 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -13,11 +13,11 @@
 ;;; Code:
 
 (require 'geiser-repl)
+(require 'geiser-capf)
 (require 'geiser-menu)
 (require 'geiser-doc)
 (require 'geiser-compile)
 (require 'geiser-completion)
-(require 'geiser-company)
 (require 'geiser-xref)
 (require 'geiser-edit)
 (require 'geiser-autodoc)
@@ -53,11 +53,6 @@ active when `geiser-mode' is activated in a buffer."
   :group 'geiser-autodoc
   :type 'boolean)
 
-(geiser-custom--defcustom geiser-mode-company-p t
-  "Whether to use company-mode for completion, if available."
-  :group 'geiser-mode
-  :type 'boolean)
-
 (geiser-custom--defcustom geiser-mode-smart-tab-p nil
   "Whether `geiser-smart-tab-mode' gets enabled by default in Scheme buffers."
   :group 'geiser-mode
@@ -91,7 +86,7 @@ result is an error msg."
 ;;; Evaluation commands:
 
 (defun geiser--go-to-repl ()
-  (switch-to-geiser nil nil (current-buffer))
+  (geiser-repl--switch-to-repl)
   (push-mark)
   (goto-char (point-max)))
 
@@ -272,9 +267,7 @@ With prefix, recursively macro-expand the resulting expression."
 
 With prefix, try to enter the current buffer's module."
   (interactive "P")
-  (if arg
-      (switch-to-geiser-module (geiser-eval--get-module) (current-buffer))
-    (switch-to-geiser nil nil (current-buffer))))
+  (geiser-repl--switch-to-repl arg))
 
 (defun geiser-mode-switch-to-repl-and-enter ()
   "Switches to Geiser REPL and enters current buffer's module."
@@ -284,12 +277,14 @@ With prefix, try to enter the current buffer's module."
 (defun geiser-restart-repl ()
   "Restarts the REPL associated with the current buffer."
   (interactive)
-  (let ((b (current-buffer)))
-    (geiser-mode-switch-to-repl nil)
-    (comint-kill-subjob)
-    (sit-for 0.1) ;; ugly hack; but i don't care enough to fix it
-    (call-interactively 'run-geiser)
-    (sit-for 0.2) ;; ditto
+  (let ((b (current-buffer))
+        (impl geiser-impl--implementation))
+    (when (buffer-live-p geiser-repl--repl)
+      (geiser-mode-switch-to-repl nil)
+      (comint-kill-subjob)
+      (sit-for 0.1)) ;; ugly hack; but i don't care enough to fix it
+    (geiser impl)
+    (sit-for 0.2)
     (goto-char (point-max))
     (pop-to-buffer b)))
 
@@ -333,6 +328,8 @@ With prefix, try to enter the current buffer's module."
       ("Symbol manual lookup" ("\C-c\C-d\C-i" "\C-c\C-di")
        geiser-doc-look-up-manual :enable (geiser-doc--manual-available-p))
       (mode "Autodoc mode" ("\C-c\C-d\C-a" "\C-c\C-da") geiser-autodoc-mode)
+      (mode "Autoeval mode" ("\C-c\C-d\C-e" "\C-c\C-de")
+            geiser-repl-autoeval-mode)
       --
       ("Compile buffer" "\C-c\C-k" geiser-compile-current-buffer)
       ("Switch to REPL" "\C-c\C-z" geiser-mode-switch-to-repl)
@@ -347,7 +344,7 @@ With prefix, try to enter the current buffer's module."
       ("Complete symbol" ((kbd "M-TAB")) completion-at-point
        :enable (geiser--symbol-at-point))
       ("Complete module name" ((kbd "M-`") (kbd "C-."))
-       geiser-completion--complete-module)
+       geiser-capf-complete-module)
       ("Edit module" ("\C-c\C-e\C-m" "\C-c\C-em") geiser-edit-module)
       ("Add to load path..." ("\C-c\C-e\C-l" "\C-c\C-el") geiser-add-to-load-path)
       ("Toggle ()/[]" ("\C-c\C-e\C-[" "\C-c\C-e[") geiser-squarify)
@@ -391,8 +388,7 @@ interacting with the Geiser REPL is at your disposal.
   (when geiser-mode (geiser-impl--set-buffer-implementation nil t))
   (setq geiser-autodoc-mode-string "/A")
   (setq geiser-smart-tab-mode-string "/T")
-  (geiser-company--setup (and geiser-mode geiser-mode-company-p))
-  (geiser-completion--setup geiser-mode)
+  (geiser-capf-setup geiser-mode)
   (when geiser-mode-autodoc-p
     (geiser-autodoc-mode (if geiser-mode 1 -1)))
   (when geiser-mode-smart-tab-p
@@ -402,7 +398,7 @@ interacting with the Geiser REPL is at your disposal.
              geiser-mode-start-repl-p
              (not (geiser-syntax--font-lock-buffer-p))
              (not (geiser-repl--connection*)))
-    (save-window-excursion (run-geiser geiser-impl--implementation))))
+    (save-window-excursion (geiser geiser-impl--implementation))))
 
 (defun turn-on-geiser-mode ()
   "Enable `geiser-mode' (in a Scheme buffer)."

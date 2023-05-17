@@ -2,6 +2,9 @@
 ;;
 ;;; Code:
 
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
 ;;;### (autoloads nil "vc-msg" "vc-msg.el" (0 0 0 0))
 ;;; Generated autoloads from vc-msg.el
@@ -110,7 +113,6 @@ Format the message to display from INFO.
 
 ;;;***
 
-(provide 'vc-msg-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

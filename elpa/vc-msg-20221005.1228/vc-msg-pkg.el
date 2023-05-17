@@ -1,7 +1,9 @@
-(define-package "vc-msg" "20220526.1435" "Show commit information of current line"
+(define-package "vc-msg" "20221005.1228" "Show commit information of current line"
   '((emacs "24.4")
     (popup "0.5.0"))
-  :commit "720c6f0e699f25463cd37642ee23adb4e23bc60b" :authors
+  :commit "027fefad63868cd7695372510c27922656cf996a" :authors
+  '(("Chen Bin <chenbin DOT sh AT gmail DOT com>"))
+  :maintainers
   '(("Chen Bin <chenbin DOT sh AT gmail DOT com>"))
   :maintainer
   '("Chen Bin <chenbin DOT sh AT gmail DOT com>")

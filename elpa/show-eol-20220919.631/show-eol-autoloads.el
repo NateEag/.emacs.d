@@ -10,7 +10,7 @@
 ;;; Generated autoloads from show-eol.el
 
 (autoload 'show-eol-mode "show-eol" "\
-Minor mode 'show-eol-mode'.
+Minor mode `show-eol-mode'.
 
 This is a minor mode.  If called interactively, toggle the
 `Show-Eol mode' mode.  If the prefix argument is positive, enable
@@ -55,6 +55,12 @@ would do it.
 See `show-eol-mode' for more information on Show-Eol mode.
 
 \(fn &optional ARG)" t nil)
+
+(autoload 'show-eol-get-current-system "show-eol" "\
+Return the current system name." nil nil)
+
+(autoload 'show-eol-get-eol-mark-by-system "show-eol" "\
+Return the EOL mark string by system type." nil nil)
 
 (register-definition-prefixes "show-eol" '("show-eol-"))
 

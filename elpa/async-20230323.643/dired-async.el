@@ -6,7 +6,7 @@
 ;;          Thierry Volpiatto <thievol@posteo.net>
 
 ;; Keywords: dired async network
-;; X-URL: https://github.com/jwiegley/dired-async
+;; X-URL: https://github.com/jwiegley/emacs-async
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -68,6 +68,19 @@ Should take same args as `message'."
   :risky t
   :type 'sexp)
 
+(defcustom dired-async-skip-fast nil
+  "If non-nil, skip async for fast operations.
+Same device renames and copying and renaming files smaller than
+`dired-async-small-file-max' are considered fast."
+  :risky t
+  :type 'boolean)
+
+(defcustom dired-async-small-file-max 5000000
+  "Files smaller than this in bytes are considered fast to copy
+or rename for `dired-async-skip-fast'."
+  :risky t
+  :type 'integer)
+
 (defface dired-async-message
     '((t (:foreground "yellow")))
   "Face used for mode-line message.")
@@ -104,8 +117,7 @@ Should take same args as `message'."
 
 (defun dired-async-processes ()
   (cl-loop for p in (process-list)
-           when (cl-loop for c in (process-command p) thereis
-                         (string= "async-batch-invoke" c))
+           when (process-get p 'dired-async-process)
            collect p))
 
 (defun dired-async-kill-process ()
@@ -173,6 +185,62 @@ Should take same args as `message'."
                                        "\\`\\*ftp.*"
                                        (buffer-name b)) b))))
        (when buf (kill-buffer buf))))))
+
+(defsubst dired-async--directory-p (attributes)
+  "Return non-nil if ATTRIBUTES is for a directory.
+See `file-attributes'."
+  ;; Can also be a string for symlinks, so check for t explicitly.
+  (eq (file-attribute-type attributes) t))
+
+(defsubst dired-async--same-device-p (f1 f2)
+  "Return non-nil if F1 and F2 have the same device number."
+  ;; file-attribute-device-number may be a cons cell, so use equal for
+  ;; testing (See Emacs bug/58446).
+  (equal (file-attribute-device-number (file-attributes f1))
+         (file-attribute-device-number (file-attributes f2))))
+
+(defun dired-async--small-file-p (file)
+  "Return non-nil if FILE is considered small.
+
+File is considered small if it size is smaller than
+`dired-async-small-file-max'."
+  (let ((a (file-attributes file)))
+    ;; Directories are always large since we can't easily figure out
+    ;; their total size.
+    (and (not (dired-async--directory-p a))
+         (< (file-attribute-size a) dired-async-small-file-max))))
+
+(defun dired-async--skip-async-p (file-creator file name-constructor)
+  "Return non-nil if we should skip async for FILE.
+See `dired-create-files' for FILE-CREATOR and NAME-CONSTRUCTOR."
+  ;; Skip async for small files.
+  (or (dired-async--small-file-p file)
+      ;; Also skip async for same device renames.
+      (and (eq file-creator 'dired-rename-file)
+           (let ((new (funcall name-constructor file)))
+             (dired-async--same-device-p file (file-name-directory new))))))
+
+(defun dired-async--smart-create-files (old-func file-creator
+                                        operation fn-list name-constructor
+                                        &optional marker-char)
+  "Around advice for `dired-create-files'.
+Uses async like `dired-async-create-files' but skips certain fast
+cases if `dired-async-skip-fast' is non-nil."
+  (let (async-list quick-list)
+    (if (or (eq file-creator 'backup-file)
+            (null dired-async-skip-fast))
+        (setq async-list fn-list)
+      (dolist (old fn-list)
+        (if (dired-async--skip-async-p file-creator old name-constructor)
+            (push old quick-list)
+          (push old async-list))))
+    (when async-list
+      (dired-async-create-files
+       file-creator operation (nreverse async-list)
+       name-constructor marker-char))
+    (when quick-list
+      (funcall old-func file-creator operation
+               (nreverse quick-list) name-constructor marker-char))))
 
 (defvar overwrite-query)
 (defun dired-async-create-files (file-creator operation fn-list name-constructor
@@ -279,47 +347,49 @@ ESC or `q' to not overwrite any of the remaining files,
                                    (set-visited-file-name to t t))))))))
     ;; Start async process.
     (when async-fn-list
-      (async-start `(lambda ()
-                      (require 'cl-lib) (require 'dired-aux) (require 'dired-x)
-                      ,(async-inject-variables dired-async-env-variables-regexp)
-                      (let ((dired-recursive-copies (quote always))
-                            (dired-copy-preserve-time
-                             ,dired-copy-preserve-time))
-                        (setq overwrite-backup-query nil)
-                        ;; Inline `backup-file' as long as it is not
-                        ;; available in emacs.
-                        (defalias 'backup-file
-                          ;; Same feature as "cp -f --backup=numbered from to"
-                          ;; Symlinks are copied as file from source unlike
-                          ;; `dired-copy-file' which is same as cp -d.
-                          ;; Directories are omitted.
-                          (lambda (from to ok)
-                            (cond ((file-directory-p from) (ignore))
-                                  (t (let ((count 0))
-                                       (while (let ((attrs (file-attributes to)))
-                                                (and attrs (null (nth 0 attrs))))
-                                         (cl-incf count)
-                                         (setq to (concat (file-name-sans-versions to)
-                                                          (format ".~%s~" count)))))
-                                     (condition-case err
-                                         (copy-file from to ok dired-copy-preserve-time)
-                                       (file-date-error
-                                        (dired-log "Can't set date on %s:\n%s\n" from err)))))))
-                        ;; Now run the FILE-CREATOR function on files.
-                        (cl-loop with fn = (quote ,file-creator)
-                                 for (from . dest) in (quote ,async-fn-list)
-                                 do (condition-case err
-                                        (funcall fn from dest t)
-                                      (file-error
-                                       (dired-log "%s: %s\n" (car err) (cdr err))
-                                       nil)))
-                        (when (get-buffer dired-log-buffer)
-                          (dired-log t)
-                          (with-current-buffer dired-log-buffer
-                            (write-region (point-min) (point-max)
-                                          ,dired-async-log-file))))
-                      ,(dired-async-maybe-kill-ftp))
-                   callback)
+      (process-put
+       (async-start `(lambda ()
+                       (require 'cl-lib) (require 'dired-aux) (require 'dired-x)
+                       ,(async-inject-variables dired-async-env-variables-regexp)
+                       (let ((dired-recursive-copies (quote always))
+                             (dired-copy-preserve-time
+                              ,dired-copy-preserve-time))
+                         (setq overwrite-backup-query nil)
+                         ;; Inline `backup-file' as long as it is not
+                         ;; available in emacs.
+                         (defalias 'backup-file
+                           ;; Same feature as "cp -f --backup=numbered from to"
+                           ;; Symlinks are copied as file from source unlike
+                           ;; `dired-copy-file' which is same as cp -d.
+                           ;; Directories are omitted.
+                           (lambda (from to ok)
+                             (cond ((file-directory-p from) (ignore))
+                                   (t (let ((count 0))
+                                        (while (let ((attrs (file-attributes to)))
+                                                 (and attrs (null (nth 0 attrs))))
+                                          (cl-incf count)
+                                          (setq to (concat (file-name-sans-versions to)
+                                                           (format ".~%s~" count)))))
+                                      (condition-case err
+                                          (copy-file from to ok dired-copy-preserve-time)
+                                        (file-date-error
+                                         (dired-log "Can't set date on %s:\n%s\n" from err)))))))
+                         ;; Now run the FILE-CREATOR function on files.
+                         (cl-loop with fn = (quote ,file-creator)
+                                  for (from . dest) in (quote ,async-fn-list)
+                                  do (condition-case err
+                                         (funcall fn from dest t)
+                                       (file-error
+                                        (dired-log "%s: %s\n" (car err) (cdr err))
+                                        nil)))
+                         (when (get-buffer dired-log-buffer)
+                           (dired-log t)
+                           (with-current-buffer dired-log-buffer
+                             (write-region (point-min) (point-max)
+                                           ,dired-async-log-file))))
+                       ,(dired-async-maybe-kill-ftp))
+                    callback)
+       'dired-async-process t)
       ;; Run mode-line notifications while process running.
       (dired-async--modeline-mode 1)
       (message "%s proceeding asynchronously..." operation))))
@@ -340,10 +410,10 @@ ESC or `q' to not overwrite any of the remaining files,
   :global t
   (if dired-async-mode
       (progn
-        (advice-add 'dired-create-files :override #'dired-async-create-files)
+        (advice-add 'dired-create-files :around #'dired-async--smart-create-files)
         (advice-add 'wdired-do-renames :around #'dired-async-wdired-do-renames))
     (progn
-      (advice-remove 'dired-create-files #'dired-async-create-files)
+      (advice-remove 'dired-create-files #'dired-async--smart-create-files)
       (advice-remove 'wdired-do-renames #'dired-async-wdired-do-renames))))
 
 (defmacro dired-async--with-async-create-files (&rest body)

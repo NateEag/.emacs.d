@@ -1,12 +1,12 @@
 ;;; async-bytecomp.el --- Compile elisp files asynchronously -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2019 Free Software Foundation, Inc.
+;; Copyright (C) 2014-2022 Free Software Foundation, Inc.
 
 ;; Authors: John Wiegley <jwiegley@gmail.com>
 ;;          Thierry Volpiatto <thievol@posteo.net>
 
 ;; Keywords: dired async byte-compile
-;; X-URL: https://github.com/jwiegley/dired-async
+;; X-URL: https://github.com/jwiegley/emacs-async
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -38,6 +38,7 @@
 
 (require 'cl-lib)
 (require 'async)
+(require 'bytecomp)
 
 (declare-function package-desc-name "package.el")
 (declare-function package-desc-dir "package.el")

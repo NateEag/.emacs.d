@@ -4,11 +4,11 @@
 
 ;; Authors: dickmao <github id: dickmao>
 ;; Version: 0.1.0
-;; Package-Version: 20220313.1229
-;; Package-Commit: 96936d2bd92c8bbf87f65bc293f3246014bc2764
+;; Package-Version: 20221209.123
+;; Package-Commit: fd259cf6ce270a21df2f00b1e031193c8595a7a9
 ;; Keywords: git tools vc
 ;; URL: https://github.com/dickmao/magit-patch-changelog
-;; Package-Requires: ((emacs "25.1") (magit "3.3.0"))
+;; Package-Requires: ((emacs "28.1") (magit "3.3.0"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -65,10 +65,10 @@
              (eq 'magit-diff-added face)))))
 
 (defsubst magit-patch-changelog--single-property-change (prop x direction limit)
-  "`previous-single-property-change' is off-by-one coming and going.
+  "`previous-single-property-change` is off-by-one coming and going.
 
 Return position preceding character differing in PROP of X in
-direction DIRECTION up to LIMIT.  By 'preceding' we mean positionally
+direction DIRECTION up to LIMIT.  By preceding we mean positionally
 after in the case direction is -1 and before if direction is +1."
   (let ((result
          (funcall (if (< direction 0)
@@ -198,11 +198,11 @@ Write to BUFFER the ChangeLog entry \"* FILE (DEFUN):\"."
             (backward-char)))))))
 
 (easy-mmode-defmap magit-patch-changelog-mode-map
-                   '(("\M-." . magit-patch-changelog-xref)
-                     ([M-down] . magit-patch-changelog-agg-down)
-                     ([M-up] . magit-patch-changelog-agg-up))
-                   "Keymap for the `magit-patch-changelog-mode'."
-                   :group 'magit-patch)
+  '(("\M-." . magit-patch-changelog-xref)
+    ([M-down] . magit-patch-changelog-agg-down)
+    ([M-up] . magit-patch-changelog-agg-up))
+  "Keymap for the `magit-patch-changelog-mode'."
+  :group 'magit-patch)
 
 (defun magit-patch-changelog--goto-ref (direction &optional limit)
   "Move point to next ChangeLog ref in DIRECTION up to LIMIT."
@@ -417,9 +417,9 @@ Move (foo, >b< ar) to (foo)\n(bar)."
            (point) prop nil line-end)))))
 
 (defun magit-patch-changelog-xref (&optional explicit-p)
-  "Jump to diff referenced by text property `magit-patch-changelog-loc'.
+  "Jump to diff referenced by text property magit-patch-changelog-loc.
 
-EXPLICIT-P exploits the 'interactive p' trick to determine if called via [M-.].
+EXPLICIT-P exploits the interactive p trick to determine if called via [M-.].
 Under EXPLICIT-P, jump to definition at point.  Otherwise, jump to definition of
 first function reference on the line."
   (interactive "p")
@@ -606,16 +606,16 @@ Limit patch to FILES, if non-nil."
                    (if diff-buffer
                        (with-current-buffer diff-buffer
                          (goto-char (point-min))
-                         (let* (my-current-defun
-                                (magit-commit-add-log-insert-function
-                                 'magit-patch-changelog-add-log-insert)
-                                (add-log-current-defun-function
-                                 (lambda () my-current-defun))
-                                (magit--refresh-cache (list (cons 0 0))))
+                         (let (my-current-defun
+                               (magit--refresh-cache (list (cons 0 0))))
                            (while (setq my-current-defun
                                         (magit-patch-changelog-next-defun my-current-defun))
                              (cl-destructuring-bind (seconds num-gc seconds-gc)
-                                 (benchmark-run (magit-commit-add-log))
+                                 (let ((magit-commit-add-log-insert-function
+                                        'magit-patch-changelog-add-log-insert)
+                                       (add-log-current-defun-function
+                                        (apply-partially #'identity my-current-defun)))
+                                   (benchmark-run (magit-commit-add-log)))
                                (message (concat "%s: took %s seconds,"
                                                 " with %s gc runs taking %s seconds")
                                         my-current-defun seconds num-gc seconds-gc)))))

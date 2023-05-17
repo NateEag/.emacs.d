@@ -1,4 +1,4 @@
-;;; magit-patch-changelog-autoloads.el --- automatically extracted autoloads
+;;; magit-patch-changelog-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -18,7 +18,7 @@ Limit patch to FILES, if non-nil.
 
 \(fn ARGS FILES)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-patch-changelog" '("magit-patch-changelog-")))
+(register-definition-prefixes "magit-patch-changelog" '("magit-patch-changelog-"))
 
 ;;;***
 

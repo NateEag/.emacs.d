@@ -1,12 +1,12 @@
 ;;; qrencode.el --- QRCode encoder  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
+;; Copyright (C) 2021-2023 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Keywords: qrcode comm
-;; Package-Version: 20211010.1334
-;; Package-Commit: fe3a99ff8cbddcf5391458f356cecf2e8c3a2b84
-;; Version: 1.1
+;; Package-Version: 20230324.2335
+;; Package-Commit: d7896e9594d45d7b2622d4617ff9cb7037378167
+;; Version: 1.2
 ;; Package-Requires: ((emacs "25.1"))
 ;; Package: qrencode
 ;; URL: https://github.com/ruediger/qrencode-el
@@ -525,7 +525,7 @@ The square is initialised with INIT or 0."
     qr))
 
 (defun qrencode--find-best-mask (qr function-pattern)
-  "Return cons of QR with best mask applied and mask number, avoiding FUNCTION-PATTERN."
+  "Return QR with best mask applied and mask number, avoiding FUNCTION-PATTERN."
   (let (bestqr (bestmask 0) (bestpenalty #xFFFFFFFF))
     (dotimes (mask (length qrencode--masks))
       (let* ((newqr (qrencode--apply-mask qr function-pattern mask))
@@ -1009,6 +1009,15 @@ Optionally specify PIXEL-SIZE (default is 3)."
   :type 'integer
   :group 'qrencode)
 
+(defcustom qrencode-post-export-functions nil
+  "Abnormal hook run after QRCode file export.
+FILENAME of the exported file is passed as parameter.  For
+example this can be used to convert the output to a different
+bitmap format."
+  :type 'hook
+  :package-version "1.2-beta1"
+  :group 'qrencode)
+
 (defface qrencode-face
   '((t :foreground "black" :background "white"))
   "Face used for writing QRCodes."
@@ -1025,6 +1034,7 @@ Optionally specify PIXEL-SIZE (default is 3)."
     (let ((qr qrencode--raw-qr))       ; save ref to buffer local var.
       (with-temp-file filename
         (insert (qrencode-format-as-netpbm qr qrencode-export-pixel-size)))
+      (run-hook-with-args 'qrencode-post-export-functions filename)
       (message "Wrote QRCode to file %s" filename))))
 
 (defvar qrencode-mode-map

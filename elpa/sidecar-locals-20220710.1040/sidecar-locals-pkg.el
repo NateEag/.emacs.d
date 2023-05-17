@@ -1,2 +1,0 @@
-;;; Generated package description from sidecar-locals.el  -*- no-byte-compile: t -*-
-(define-package "sidecar-locals" "20220710.1040" "A flexible alternative to built-in dir-locals" '((emacs "27.1")) :commit "3aa9c890ebc38800ab26f5f877da32a79ce87d18" :authors '(("Campbell Barton" . "ideasman42@gmail.com")) :maintainer '("Campbell Barton" . "ideasman42@gmail.com") :keywords '("convenience") :url "https://codeberg.org/ideasman42/emacs-sidecar-locals")

@@ -4,7 +4,7 @@
 ;;
 ;; Author: Wanderson Ferreira <https://github.com/wandersoncferreira>
 ;; Maintainer: Wanderson Ferreira <wand@hey.com>
-;; Version: 0.0.6
+;; Version: 0.0.7
 ;; Homepage: https://github.com/wandersoncferreira/code-review
 ;;
 ;; This file is not part of GNU Emacs.
@@ -53,7 +53,7 @@ An optionally provide a CALLBACK."
   (ghub-request "POST" url
                 nil
                 :forge 'bitbucket
-                :auth 'code-review
+                :auth code-review-auth-login-marker
                 :host code-review-bitbucket-host
                 :payload payload
                 :callback callback
@@ -64,7 +64,7 @@ An optionally provide a CALLBACK."
   (ghub-request "GET" url
                 nil
                 :forge 'bitbucket
-                :auth 'code-review
+                :auth code-review-auth-login-marker
                 :host code-review-bitbucket-host
                 :callback callback))
 
@@ -73,7 +73,7 @@ An optionally provide a CALLBACK."
   (ghub-request "GET" url
                 nil
                 :forge 'bitbucket
-                :auth 'code-review
+                :auth code-review-auth-login-marker
                 :host code-review-bitbucket-host
                 :noerror 'return))
 

@@ -1,4 +1,4 @@
-;;; code-review-autoloads.el --- automatically extracted autoloads
+;;; code-review-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -18,7 +18,7 @@ Start review given PR URL.
 
 \(fn URL)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review" '("code-review-")))
+(register-definition-prefixes "code-review" '("code-review-"))
 
 ;;;***
 
@@ -127,7 +127,7 @@ Go to next comment in the buffer." t nil)
 (autoload 'code-review-comment-jump-previous "code-review-actions" "\
 Go to previous comment in the buffer." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-actions" '("code-review-")))
+(register-definition-prefixes "code-review-actions" '("code-review-"))
 
 ;;;***
 
@@ -135,7 +135,7 @@ Go to previous comment in the buffer." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from code-review-bitbucket.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-bitbucket" '("code-review-")))
+(register-definition-prefixes "code-review-bitbucket" '("code-review-"))
 
 ;;;***
 
@@ -158,7 +158,7 @@ Insert @USERNAME at current point to mention an user." t nil)
 (autoload 'code-review-comment-quit "code-review-comment" "\
 Quit the comment window." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-comment" '("code-review-")))
+(register-definition-prefixes "code-review-comment" '("code-review-"))
 
 ;;;***
 
@@ -166,7 +166,7 @@ Quit the comment window." t nil)
 ;;;;;;  0))
 ;;; Generated autoloads from code-review-db.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-db" '("code-review-")))
+(register-definition-prefixes "code-review-db" '("code-review-"))
 
 ;;;***
 
@@ -174,7 +174,7 @@ Quit the comment window." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from code-review-github.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-github" '("code-review-")))
+(register-definition-prefixes "code-review-github" '("code-review-"))
 
 ;;;***
 
@@ -182,7 +182,7 @@ Quit the comment window." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from code-review-gitlab.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-gitlab" '("code-review-")))
+(register-definition-prefixes "code-review-gitlab" '("code-review-"))
 
 ;;;***
 
@@ -190,7 +190,7 @@ Quit the comment window." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from code-review-parse-hunk.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-parse-hunk" '("code-review-parse-")))
+(register-definition-prefixes "code-review-parse-hunk" '("code-review-parse-"))
 
 ;;;***
 
@@ -201,7 +201,7 @@ Quit the comment window." t nil)
 (autoload 'code-review-section-delete-comment "code-review-section" "\
 Delete a local comment." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-section" '("code-review-")))
+(register-definition-prefixes "code-review-section" '("code-review-"))
 
 ;;;***
 
@@ -209,7 +209,7 @@ Delete a local comment." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from code-review-utils.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "code-review-utils" '("code-review-")))
+(register-definition-prefixes "code-review-utils" '("code-review-"))
 
 ;;;***
 

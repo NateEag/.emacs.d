@@ -4,7 +4,7 @@
 ;;
 ;; Author: Wanderson Ferreira <https://github.com/wandersoncferreira>
 ;; Maintainer: Wanderson Ferreira <wand@hey.com>
-;; Version: 0.0.6
+;; Version: 0.0.7
 ;; Homepage: https://github.com/wandersoncferreira/code-review
 ;;
 ;; This file is not part of GNU Emacs.
@@ -206,7 +206,7 @@ Optionally define a MSG."
                          (t
                           "UNCHANGED")))
              (suggestion
-              (format "%s\n\n```suggestion\n %s\n"
+              (format "%s\n\n```suggestion\n%s\n```\n"
                       code-review-comment-suggestion-msg
                       (substring line 1)))
              (amount-loc nil))
@@ -356,7 +356,10 @@ Inform if a SUGGESTION-CODE? is being proposed."
                                 (buffer-substring-no-properties (point-min) (point-max))))))
              (pr (code-review-db-get-pullreq)))
 
-        (kill-buffer-and-window)
+        (kill-buffer (current-buffer))
+        (if (= 1 (length (window-list (window-frame (selected-window)))))
+            (delete-frame (window-frame (selected-window)))
+          (delete-window (selected-window)))
 
         (cond
 
@@ -445,7 +448,10 @@ Inform if a SUGGESTION-CODE? is being proposed."
 (defun code-review-comment-quit ()
   "Quit the comment window."
   (interactive)
-  (kill-buffer-and-window)
+  (kill-buffer (current-buffer))
+  (if (= 1 (length (window-list (window-frame (selected-window)))))
+      (delete-frame (window-frame (selected-window)))
+    (delete-window (selected-window)))
   (with-current-buffer (get-buffer code-review-buffer-name)
     (goto-char code-review-comment-cursor-pos)
     (code-review-comment-reset-global-vars)))

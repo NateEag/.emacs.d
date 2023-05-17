@@ -4,7 +4,7 @@
 ;;
 ;; Author: Wanderson Ferreira <https://github.com/wandersoncferreira>
 ;; Maintainer: Wanderson Ferreira <wand@hey.com>
-;; Version: 0.0.6
+;; Version: 0.0.7
 ;; Homepage: https://github.com/wandersoncferreira/code-review
 ;;
 ;; This file is not part of GNU Emacs.
@@ -540,7 +540,7 @@ Very Bad Performance!."
        (let* ((comments (oref path comments))
               (comment (if (eieio-object-p comments) comments (-first-item comments))))
          (if written?
-             written?
+             t
            (when comment
              (-contains-p (oref comment identifiers) identifier)))))
      nil

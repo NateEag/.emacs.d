@@ -5,10 +5,10 @@
 ;; Author: Wanderson Ferreira <https://github.com/wandersoncferreira>
 ;; Maintainer: Wanderson Ferreira <wand@hey.com>
 ;; Created: October 14, 2021
-;; Version: 0.0.6
+;; Version: 0.0.7
 ;; Keywords: git, tools, vc
 ;; Homepage: https://github.com/wandersoncferreira/code-review
-;; Package-Requires: ((emacs "25.1") (closql "1.2.0") (magit "3.0.0") (a "1.0.0") (ghub "3.5.1") (uuidgen "1.2") (deferred "0.5.1") (markdown-mode "2.4") (forge "0.3.0") (emojify "1.2"))
+;; Package-Requires: ((emacs "25.1") (closql "1.2.0") (magit "3.0.0") (transient "0.3.7") (a "1.0.0") (ghub "3.5.1") (uuidgen "1.2") (deferred "0.5.1") (markdown-mode "2.4") (forge "0.3.0") (emojify "1.2"))
 
 ;; This file is not part of GNU Emacs
 
@@ -87,6 +87,16 @@
 (defun code-review-auth-source-debug ()
   "Do not warn on auth source search because it messes with progress reporter."
   (setq-local auth-source-debug (lambda (&rest _))))
+
+(defcustom code-review-auth-login-marker
+  'code-review
+  "Symbol for looking up the github, gitlab and bitbucket login
+data in auth-sources (e.g. ~/.authinfo.gpg). By default, it is
+set to 'code-review, but if you have already configured the
+logins for magit forge, you can use these by setting this option
+to 'forge."
+  :group 'code-review
+  :type 'symbol)
 
 ;;; Entrypoint
 

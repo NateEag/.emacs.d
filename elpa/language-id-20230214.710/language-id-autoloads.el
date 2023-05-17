@@ -1,4 +1,4 @@
-;;; language-id-autoloads.el --- automatically extracted autoloads
+;;; language-id-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "language-id" "language-id.el" (0 0 0 0))
 ;;; Generated autoloads from language-id.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "language-id" '("language-id-")))
+(register-definition-prefixes "language-id" '("language-id-"))
 
 ;;;***
 

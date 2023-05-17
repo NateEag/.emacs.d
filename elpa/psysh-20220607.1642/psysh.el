@@ -1,14 +1,15 @@
 ;;; psysh.el --- PsySH, PHP interactive shell (REPL) -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018  Friends of Emacs-PHP development
+;; Copyright (C) 2022  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 22 Jan 2016
-;; Version: 0.0.5
-;; Package-Version: 20190709.106
-;; Package-Requires: ((emacs "24.3") (s "1.9.0") (f "0.17") (php-runtime "0.2"))
+;; Version: 0.1.1
+;; Package-Version: 20220607.1642
+;; Package-Commit: 796b26a5cd75df9d2ecb206718b310ff21787063
+;; Package-Requires: ((emacs "24.3") (s "1.9.0") (php-runtime "0.2"))
 ;; Keywords: processes php
-;; URL: https://github.com/zonuexe/psysh.el
+;; URL: https://github.com/emacs-php/psysh.el
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -43,54 +44,18 @@
 ;;
 ;;     $ composer g require psy/psysh:@stable
 ;;
-;;
-;; ### C: Project local REPL
-;;
-;; Set `psysh-comint-buffer-process' (buffer local variable).
-;;
-;;     (setq psysh-comint-buffer-process "path/to/shell.php")
-;;
-;; `shell.php' is for example:
-;;
-;;     #!/usr/bin/env php
-;;     <?php
-;;     // ↓Namespace for your project
-;;     namespace Nyaan;
-;;     
-;;     // load Composer autoload file
-;;     require_once __DIR__ . '/vendor/autoload.php';
-;;     // load other initialize PHP files
-;;     // require_once …
-;;     
-;;     echo __NAMESPACE__ . " shell\n";
-;;     
-;;     $sh = new \Psy\Shell();
-;;     
-;;     // Set project namespace in REPL
-;;     if (defined('__NAMESPACE__') && __NAMESPACE__ !== '') {
-;;         $sh->addCode(sprintf("namespace %s;", __NAMESPACE__));
-;;     }
-;;     
-;;     $sh->run();
-;;     
-;;     // Termination message
-;;     echo "Bye.\n";
-;;
-;; See also https://cho-phper.hateblo.jp/entry/2015/11/10/031000 *(Japanese)*
-;;
 
 ;;; Code:
 (require 'cc-mode)
 (require 'comint)
 (require 'thingatpt)
 (require 's)
-(require 'f)
 (require 'php-runtime)
-;; (require 'xdg) ; Emacs 25.3?
-
+(eval-and-compile
+  (require 'xdg nil t))
 
 (defgroup psysh nil
-  "PsySH"
+  "PsySH: PHP interactive shell."
   :tag "PsySH"
   :prefix "psysh-"
   :group 'php
@@ -151,20 +116,20 @@ unbalanced they will not break the rest of the buffer.")
 
 See `psysh-mode-output-syntax-table'."
   (put-text-property (or (point-min)
-                         (previous-single-property-change (point) 'field)) (point)
+                         (previous-single-property-change (point) 'field))
+                     (point)
                      'syntax-table psysh-mode-output-syntax-table))
 
 (define-derived-mode psysh-mode comint-mode "PsySH"
   "Major-mode for PsySH REPL."
   :syntax-table psysh-mode-input-syntax-table
   (when (featurep 'php-mode)
-    (set (make-local-variable 'font-lock-defaults)
-         '(php-font-lock-keywords nil nil)))
-  (set (make-local-variable 'parse-sexp-lookup-properties) t)
+    (setq-local font-lock-defaults '(php-font-lock-keywords nil nil)))
+  (setq-local parse-sexp-lookup-properties t)
   (add-hook 'comint-output-filter-functions 'psysh--output-filter-remove-syntax 'append 'local)
   (setq-local comint-process-echoes t)
-
-  (let ((history-path (or psysh-history-file-path (f-join (psysh--config-dir-path) "psysh_history"))))
+  (let ((history-path (or psysh-history-file-path
+                          (expand-file-name "psysh_history" (psysh--config-dir-path)))))
     (when (and psysh-inherit-history (file-regular-p history-path))
       (psysh--insertion-history-lines
        (psysh--load-history history-path (ring-size comint-input-ring))))))
@@ -197,10 +162,9 @@ See `psysh-mode-output-syntax-table'."
         (php-mode)
 
         (when (boundp 'psysh-enable-eldoc)
-          (setq psysh-enable-eldoc (and (boundp 'eldoc-mode) eldoc-mode)))
+          (setq psysh-enable-eldoc (bound-and-true-p eldoc-mode)))
 
-        (if (and (boundp 'auto-complete-mode)
-                 auto-complete-mode
+        (if (and (bound-and-true-p auto-complete-mode)
                  (boundp 'ac-sources))
             (progn
               (setq php-mode-ac-sources ac-sources)
@@ -225,20 +189,22 @@ See `psysh-mode-output-syntax-table'."
   (interactive)
   (when (eq major-mode 'psysh-mode)
     (delete-process (get-buffer-process (current-buffer)))
-    (psysh)))
-
+    (call-interactively 'psysh)))
 
 ;; History
 (defun psysh--config-dir-path ()
   "Return path to PsySH config dir."
   ;; TODO: maybe next version Emacs bundles xdg.el?
   (if (eq system-type 'windows-nt)
-      (f-join (s-replace-all '(("\\" . "/"))
-                             (or (getenv "APPDATA")
-                                 (f-join (getenv "HOME") "AppData"))) "PsySH")
-    (f-join (or (getenv "XDG_CONFIG_HOME")
-                (f-join (getenv "HOME") ".config"))
-            "psysh")))
+      (expand-file-name "PsySH"
+                        (s-replace-all '(("\\" . "/"))
+                                       (or (getenv "APPDATA")
+                                           (expand-file-name "AppData" (getenv "HOME")))))
+    (expand-file-name "psysh"
+                      (if (eval-when-compile (fboundp 'xdg-config-home))
+                          (xdg-config-home)
+                        (or (getenv "XDG_CONFIG_HOME")
+                            (expand-file-name "~/.config"))))))
 
 (defun psysh--load-history (path n)
   "Load input history from PATH and return N elements."
@@ -255,7 +221,7 @@ See `psysh-mode-output-syntax-table'."
               do (forward-line -1)))))
 
 (defun psysh--insertion-history-lines (history)
-  "Insert `HISTORY' lines to `comint-input-ring'."
+  "Insert HISTORY lines to `comint-input-ring'."
   (cl-loop for line in history
            unless (string= "" line)
            do (comint-add-to-input-history line)))
@@ -291,7 +257,7 @@ See `psysh-mode-output-syntax-table'."
                     (setq psysh-doc--do-not-ask-install-php-manial t))))
 
 (defun psysh-doc--download-php-manual (url save-path)
-  "Download PHP Manual database by `URL' to `SAVE-PATH'."
+  "Download PHP Manual database by URL to SAVE-PATH."
   (let ((dir (file-name-directory save-path)))
     (unless (file-directory-p dir)
       (mkdir dir t)))
@@ -302,7 +268,7 @@ See `psysh-mode-output-syntax-table'."
   (message "Download complete."))
 
 (defun psysh-doc-install-php-manual (url)
-  "Install PHP Manual database by `URL' to user local directory."
+  "Install PHP Manual database by URL to user local directory."
   (interactive
    (list (assoc-default
           (completing-read "Select language of PHP manual: "
@@ -311,30 +277,30 @@ See `psysh-mode-output-syntax-table'."
   (psysh-doc--download-php-manual url (psysh-doc--php-manual-user-local-path)))
 
 ;;;###autoload
-(defun psysh-doc-buffer (target &optional buf)
-  "Execute PsySH Doc `TARGET' and Return PsySH buffer `BUF'."
-  (if (null buf) (setq buf (get-buffer-create psysh-doc-buffer-name)))
-  (with-current-buffer buf
-    (read-only-mode -1)
-    (erase-buffer)
-    (insert "doc " target)
-    (message "%s %s" (nth 1 (psysh--detect-buffer)) (buffer-substring (point-min) (point-max)))
-    (apply 'call-process-region (point-min) (point-max) (nth 1 (psysh--detect-buffer)) t t nil
-           (if (memq psysh-doc-buffer-color '(none only-emacs))
-               '("--no-color")
-             '("--color")))
-    (unless (memq psysh-doc-buffer-color '(none only-emacs))
-      (ansi-color-apply-on-region (point-min) (point-max)))
-    (goto-char (point-min))
-    (when (search-forward-regexp psysh--re-prompt nil t)
-      (delete-region (point-min) (match-beginning 0)))
-    (goto-char (point-max))
-    (when (search-backward-regexp (concat psysh--re-prompt "$") nil t)
-      (delete-region (match-beginning 0) (point-max)))
-    (goto-char (point-min))
-    (unless (eq major-mode 'psysh-doc-mode)
-      (psysh-doc-mode)))
-  buf)
+(defun psysh-doc-buffer (target &optional buffer)
+  "Execute PsySH Doc TARGET and Return PsySH BUFFER."
+  (unless buffer
+    (setq buffer (get-buffer-create psysh-doc-buffer-name)))
+  (with-current-buffer buffer
+    (psysh-doc-mode)
+    (let ((buffer-read-only nil))
+      (erase-buffer)
+      (insert "doc " target)
+      (message "%s %s" (nth 1 (psysh--detect-buffer)) (buffer-substring (point-min) (point-max)))
+      (apply #'call-process-region (point-min) (point-max) (nth 1 (psysh--detect-buffer)) t t nil
+             (if (memq psysh-doc-buffer-color '(none only-emacs))
+                 '("--no-color")
+               '("--color")))
+      (unless (memq psysh-doc-buffer-color '(none only-emacs))
+        (ansi-color-apply-on-region (point-min) (point-max)))
+      (goto-char (point-min))
+      (when (search-forward-regexp psysh--re-prompt nil t)
+        (delete-region (point-min) (match-beginning 0)))
+      (goto-char (point-max))
+      (when (search-backward-regexp (concat psysh--re-prompt "$") nil t)
+        (delete-region (match-beginning 0) (point-max)))
+      (goto-char (point-min))))
+  buffer)
 
 ;;;###autoload
 (define-derived-mode psysh-doc-mode prog-mode "PsySH-doc"
@@ -344,14 +310,14 @@ See `psysh-mode-output-syntax-table'."
 
 ;;;###autoload
 (defun psysh-doc-string (target)
-  "Return string of PsySH Doc `TARGET'."
+  "Return string of PsySH doc TARGET."
   (let ((psysh-doc-buffer-color nil))
     (with-current-buffer (psysh-doc-buffer target (current-buffer))
       (buffer-substring-no-properties (point-min) (point-max)))))
 
 ;;;###autoload
 (defun psysh-doc (target)
-  "Display PsySH doc `TARGET'."
+  "Display PsySH doc TARGET."
   (interactive
    (list (read-string
           "Input class or function name: "
@@ -361,10 +327,9 @@ See `psysh-mode-output-syntax-table'."
   (when (and psysh-doc-install-local-php-manual
              (not psysh-doc--do-not-ask-install-php-manial)
              (null (psysh-doc--installed-php-manual-path))
-             (yes-or-no-p "PHP manual database has not been installed. Download it? "))
+             (yes-or-no-p "PHP manual database has not been installed.  Download it? "))
     (call-interactively #'psysh-doc-install-php-manual))
   (funcall psysh-doc-display-function (psysh-doc-buffer target)))
-
 
 ;; PsySH Command
 
@@ -374,10 +339,10 @@ See `psysh-mode-output-syntax-table'."
   (interactive)
   (switch-to-buffer (psysh--make-process))
 
-  (set (make-local-variable 'psysh-enable-eldoc) nil)
+  (setq-local psysh-enable-eldoc nil)
   (psysh--copy-variables-from-php-mode)
 
-  (when (and (boundp 'psysh-enable-eldoc) psysh-enable-eldoc)
+  (when (bound-and-true-p psysh-enable-eldoc)
     (add-hook 'psysh-mode-hook #'psysh--enable-eldoc))
 
   (psysh-mode)
@@ -386,7 +351,7 @@ See `psysh-mode-output-syntax-table'."
 
 ;;;###autoload
 (defun psysh-run (buffer-name process)
-  "Run PsySH interactive-shell in `BUFFER-NAME' and `PROCESS'."
+  "Run PsySH interactive-shell in BUFFER-NAME and PROCESS."
   (let ((psysh-comint-buffer-process (list buffer-name process)))
     (call-interactively 'psysh)))
 

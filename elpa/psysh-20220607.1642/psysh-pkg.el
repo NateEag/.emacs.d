@@ -1,0 +1,2 @@
+;;; Generated package description from psysh.el  -*- no-byte-compile: t -*-
+(define-package "psysh" "20220607.1642" "PsySH, PHP interactive shell (REPL)" '((emacs "24.3") (s "1.9.0") (php-runtime "0.2")) :commit "796b26a5cd75df9d2ecb206718b310ff21787063" :authors '(("USAMI Kenta" . "tadsan@zonu.me")) :maintainers '(("USAMI Kenta" . "tadsan@zonu.me")) :maintainer '("USAMI Kenta" . "tadsan@zonu.me") :keywords '("processes" "php") :url "https://github.com/emacs-php/psysh.el")

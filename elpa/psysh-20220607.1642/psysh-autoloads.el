@@ -1,4 +1,4 @@
-;;; psysh-autoloads.el --- automatically extracted autoloads
+;;; psysh-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,9 +10,9 @@
 ;;; Generated autoloads from psysh.el
 
 (autoload 'psysh-doc-buffer "psysh" "\
-Execute PsySH Doc `TARGET' and Return PsySH buffer `BUF'.
+Execute PsySH Doc TARGET and Return PsySH BUFFER.
 
-\(fn TARGET &optional BUF)" nil nil)
+\(fn TARGET &optional BUFFER)" nil nil)
 
 (autoload 'psysh-doc-mode "psysh" "\
 Major mode for viewing PsySH Doc.
@@ -20,26 +20,24 @@ Major mode for viewing PsySH Doc.
 \(fn)" t nil)
 
 (autoload 'psysh-doc-string "psysh" "\
-Return string of PsySH Doc `TARGET'.
+Return string of PsySH doc TARGET.
 
 \(fn TARGET)" nil nil)
 
 (autoload 'psysh-doc "psysh" "\
-Display PsySH doc `TARGET'.
+Display PsySH doc TARGET.
 
 \(fn TARGET)" t nil)
 
 (autoload 'psysh "psysh" "\
-Run PsySH interactive shell.
-
-\(fn)" t nil)
+Run PsySH interactive shell." t nil)
 
 (autoload 'psysh-run "psysh" "\
-Run PsySH interactive-shell in `BUFFER-NAME' and `PROCESS'.
+Run PsySH interactive-shell in BUFFER-NAME and PROCESS.
 
 \(fn BUFFER-NAME PROCESS)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "psysh" '("psysh-")))
+(register-definition-prefixes "psysh" '("psysh-"))
 
 ;;;***
 

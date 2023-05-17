@@ -6,10 +6,10 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
-;;;### (autoloads nil "compat-help" "compat-help.el" (0 0 0 0))
-;;; Generated autoloads from compat-help.el
+;;;### (autoloads nil "compat" "compat.el" (0 0 0 0))
+;;; Generated autoloads from compat.el
 
-(register-definition-prefixes "compat-help" '("compat---describe"))
+(register-definition-prefixes "compat" '("compat-"))
 
 ;;;***
 
@@ -20,9 +20,8 @@
 
 ;;;***
 
-;;;### (autoloads nil nil ("compat-24.el" "compat-25.el" "compat-26.el"
-;;;;;;  "compat-27.el" "compat-28.el" "compat-font-lock.el" "compat-pkg.el"
-;;;;;;  "compat.el") (0 0 0 0))
+;;;### (autoloads nil nil ("compat-25.el" "compat-26.el" "compat-27.el"
+;;;;;;  "compat-28.el" "compat-29.el" "compat-pkg.el") (0 0 0 0))
 
 ;;;***
 

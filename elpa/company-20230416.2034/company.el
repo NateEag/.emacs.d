@@ -309,6 +309,16 @@ This doesn't include the margins and the scroll bar."
   :type 'boolean
   :package-version '(company . "0.8.1"))
 
+(defcustom company-tooltip-annotation-padding nil
+  "Non-nil to specify the padding before annotation.
+
+Depending on the value of `company-tooltip-align-annotations', the default
+padding is either 0 or 1 space.  This variable allows to override that
+value to increase the padding.  When annotations are right-aligned, it sets
+the minimum padding, and otherwise just the constant one."
+  :type 'number
+  :package-version '(company "0.9.14"))
+
 (defvar company-safe-backends
   '((company-abbrev . "Abbrev")
     (company-bbdb . "BBDB")
@@ -513,7 +523,7 @@ without duplicates."
                  (company-sort-by-backend-importance))
           (const :tag "Prefer case sensitive prefix"
                  (company-sort-prefer-same-case-prefix))
-          (repeat :tag "User defined" (function))))
+          (repeat :tag "User defined" function)))
 
 (defcustom company-completion-started-hook nil
   "Hook run when company starts completing.
@@ -571,7 +581,7 @@ this."
   :type '(choice (const :tag "Off" nil)
                  (function :tag "Predicate function")
                  (const :tag "On, if user interaction took place"
-                        'company-explicit-action-p)
+                        company-explicit-action-p)
                  (const :tag "On" t)))
 
 (define-obsolete-variable-alias
@@ -594,7 +604,7 @@ triggers."
   :type '(choice (const :tag "Off" nil)
                  (function :tag "Predicate function")
                  (const :tag "On, if user interaction took place"
-                        'company-explicit-action-p)
+                        company-explicit-action-p)
                  (const :tag "On" t))
   :package-version '(company . "0.9.14"))
 
@@ -670,7 +680,7 @@ pre-defined list.  See `company-idle-delay'.
 Alternatively, any command with a non-nil `company-begin' property is
 treated as if it was on this list."
   :type '(choice (const :tag "Any command" t)
-                 (const :tag "Self insert command" '(self-insert-command))
+                 (const :tag "Self insert command" (self-insert-command))
                  (repeat :tag "Commands" function))
   :package-version '(company . "0.8.4"))
 
@@ -1075,7 +1085,7 @@ If EXPRESSION is non-nil, return the match string for the respective
 parenthesized expression in REGEXP.
 Matching is limited to the current line."
   (let ((inhibit-field-text-motion t))
-    (company-grab regexp expression (point-at-bol))))
+    (company-grab regexp expression (line-beginning-position))))
 
 (defun company-grab-symbol ()
   "If point is at the end of a symbol, return it.
@@ -1340,7 +1350,15 @@ can retrieve meta-data for them."
             (and (symbolp this-command)
                  (string-match-p "\\`company-" (symbol-name this-command)))))))
 
+(defvar company-auto-update-doc nil
+  "If non-nil, update the documentation buffer on each selection change.
+To toggle the value of this variable, call `company-show-doc-buffer' with a
+prefix argument.")
+
 (defun company-call-frontends (command)
+  (when (and company-auto-update-doc
+             (memq command '(update show)))
+    (company-show-doc-buffer))
   (cl-loop for frontend in company-frontends collect
            (condition-case-unless-debug err
                (funcall frontend command)
@@ -1440,7 +1458,9 @@ update if FORCE-UPDATE."
   (and candidates
        (not (cdr candidates))
        (eq t (compare-strings (car candidates) nil nil
-                              prefix nil nil ignore-case))))
+                              prefix nil nil ignore-case))
+       (not (eq (company-call-backend 'kind (car candidates))
+                'snippet))))
 
 (defun company--fetch-candidates (prefix)
   (let* ((non-essential (not (company-explicit-action-p)))
@@ -1612,7 +1632,7 @@ end of the match."
                           (let ((base-size (cdr company-icon-size))
                                 (dfh (default-font-height)))
                             (min
-                             (if (> dfh (* 2 base-size))
+                             (if (>= dfh (* 2 base-size))
                                  (* 2 base-size)
                                base-size)
                              (* company-icon-margin dfw))))))
@@ -1625,10 +1645,21 @@ end of the match."
                          :background (unless (eq bkg 'unspecified)
                                        bkg)))
              (spacer-px-width (- (* company-icon-margin dfw) icon-size)))
-        (concat
-         (propertize " " 'display spec)
-         (propertize (company-space-string (1- company-icon-margin))
-                     'display `(space . (:width (,spacer-px-width))))))
+        (cond
+         ((<= company-icon-margin 2)
+          (concat
+           (propertize " " 'display spec)
+           (propertize (company-space-string (1- company-icon-margin))
+                       'display `(space . (:width (,spacer-px-width))))))
+         (t
+          (let* ((spacer-left (/ spacer-px-width 2))
+                 (spacer-right (- spacer-px-width spacer-left)))
+            (concat
+             (propertize (company-space-string 1)
+                         'display `(space . (:width (,spacer-left))))
+             (propertize " " 'display spec)
+             (propertize (company-space-string (- company-icon-margin 2))
+                         'display `(space . (:width (,spacer-right)))))))))
     nil))
 
 (defun company-vscode-dark-icons-margin (candidate selected)
@@ -1689,14 +1720,14 @@ fields without issue.
 When BG is omitted and `company-text-icons-add-background' is non-nil, a BG
 color is generated using a gradient between the active tooltip color and
 the FG color."
-  :type 'list)
+  :type '(repeat sexp))
 
 (defcustom company-text-face-extra-attributes '(:weight bold)
   "Additional attributes to add to text/dot icons faces.
 If non-nil, an anonymous face is generated.
 
 Affects `company-text-icons-margin' and `company-dot-icons-margin'."
-  :type 'list)
+  :type '(plist :tag "Face property list"))
 
 (defcustom company-text-icons-format " %s "
   "Format string for printing the text icons."
@@ -1787,7 +1818,7 @@ PROPERTY return nil."
   (if (and (display-graphic-p)
            (image-type-available-p 'svg))
       (cl-case (frame-parameter nil 'background-mode)
-        ('light (company-vscode-light-icons-margin candidate selected))
+        (light (company-vscode-light-icons-margin candidate selected))
         (t (company-vscode-dark-icons-margin candidate selected)))
     (company-text-icons-margin candidate selected)))
 
@@ -2821,22 +2852,37 @@ from the candidates list.")
                                  unread-command-events))
     (clear-this-command-keys t)))
 
-(defun company-show-doc-buffer ()
-  "Temporarily show the documentation buffer for the selection."
-  (interactive)
+(defun company--show-doc-buffer ()
+  "Show the documentation buffer for the selection."
   (let ((other-window-scroll-buffer)
         (selection (or company-selection 0)))
-    (company--electric-do
       (let* ((selected (nth selection company-candidates))
              (doc-buffer (or (company-call-backend 'doc-buffer selected)
-                             (user-error "No documentation available")))
+                             (if company-auto-update-doc
+                                 (company-doc-buffer
+                                  (format "%s: No documentation available"
+                                          selected))
+                               (user-error "No documentation available"))))
              start)
         (when (consp doc-buffer)
           (setq start (cdr doc-buffer)
                 doc-buffer (car doc-buffer)))
         (setq other-window-scroll-buffer (get-buffer doc-buffer))
         (let ((win (display-buffer doc-buffer t)))
-          (set-window-start win (if start start (point-min))))))))
+          (set-window-start win (if start start (point-min)))))))
+
+(defun company-show-doc-buffer (&optional toggle-auto-update)
+  "Show the documentation buffer for the selection.
+With a prefix argument TOGGLE-AUTO-UPDATE, toggle the value of
+`company-auto-update-doc'.  When `company-auto-update-doc' is non-nil,
+automatically show the documentation buffer for each selection."
+  (interactive "P")
+  (when toggle-auto-update
+    (setq company-auto-update-doc (not company-auto-update-doc)))
+  (if company-auto-update-doc
+      (company--show-doc-buffer)
+    (company--electric-do
+      (company--show-doc-buffer))))
 (put 'company-show-doc-buffer 'company-keep t)
 
 (defun company-show-location ()
@@ -2864,7 +2910,7 @@ from the candidates list.")
 
 (defvar-local company-callback nil)
 
-(defun company-remove-callback (&optional ignored)
+(defun company-remove-callback (&optional _ignored)
   (remove-hook 'company-completion-finished-hook company-callback t)
   (remove-hook 'company-completion-cancelled-hook 'company-remove-callback t)
   (remove-hook 'company-completion-finished-hook 'company-remove-callback t))
@@ -2898,7 +2944,7 @@ successfully completes the input.
 Example: \(company-begin-with \\='\(\"foo\" \"foobar\" \"foobarbaz\"\)\)"
   (let ((begin-marker (copy-marker (point) t)))
     (company-begin-backend
-     (lambda (command &optional arg &rest ignored)
+     (lambda (command &optional arg &rest _ignored)
        (pcase command
          (`prefix
           (when (equal (point) (marker-position begin-marker))
@@ -3049,21 +3095,23 @@ If SHOW-VERSION is non-nil, show the version in the echo area."
          (_ (setq value (company-reformat (company--pre-render value))
                   annotation (and annotation (company--pre-render annotation t))))
          (ann-ralign company-tooltip-align-annotations)
+         (ann-padding (or company-tooltip-annotation-padding 0))
          (ann-truncate (< width
                           (+ (length value) (length annotation)
-                             (if ann-ralign 1 0))))
+                             ann-padding)))
          (ann-start (+ margin
                        (if ann-ralign
                            (if ann-truncate
-                               (1+ (length value))
+                               (+ (length value) ann-padding)
                              (- width (length annotation)))
-                         (length value))))
+                         (+ (length value) ann-padding))))
          (ann-end (min (+ ann-start (length annotation)) (+ margin width)))
          (line (concat left
                        (if (or ann-truncate (not ann-ralign))
                            (company-safe-substring
                             (concat value
-                                    (when (and annotation ann-ralign) " ")
+                                    (when annotation
+                                      (company-space-string ann-padding))
                                     annotation)
                             0 width)
                          (concat
@@ -3291,6 +3339,9 @@ but adjust the expected values appropriately."
 (defun company--create-lines (selection limit)
   (let ((len company-candidates-length)
         (window-width (company--window-width))
+        (company-tooltip-annotation-padding
+         (or company-tooltip-annotation-padding
+             (if company-tooltip-align-annotations 1 0)))
         left-margins
         left-margin-size
         lines
@@ -3363,8 +3414,9 @@ but adjust the expected values appropriately."
             (setq annotation (string-trim-left annotation))))
         (push (list value annotation left) items)
         (setq width (max (+ (length value)
-                            (if (and annotation company-tooltip-align-annotations)
-                                (1+ (length annotation))
+                            (if annotation
+                                (+ (length annotation)
+                                   company-tooltip-annotation-padding)
                               (length annotation)))
                          width))))
 
@@ -3707,6 +3759,10 @@ Delay is determined by `company-tooltip-idle-delay'."
                          (company-strip-prefix completion)
                        completion))
 
+    (when (string-prefix-p "\n" completion)
+      (setq completion (concat (propertize " " 'face 'company-preview) "\n"
+                               (substring completion 1))))
+
     (and (equal pos (point))
          (not (equal completion ""))
          (add-text-properties 0 1 '(cursor 1) completion))
@@ -3806,13 +3862,18 @@ Delay is determined by `company-tooltip-idle-delay'."
   :package-version '(company . "0.9.3"))
 
 (defun company-echo-show (&optional getter)
-  (when getter
-    (setq company-echo-last-msg (funcall getter)))
-  (let ((message-log-max nil)
+  (let ((last-msg company-echo-last-msg)
+        (message-log-max nil)
         (message-truncate-lines company-echo-truncate-lines))
-    (if company-echo-last-msg
+    (when getter
+      (setq company-echo-last-msg (funcall getter)))
+    ;; Avoid modifying the echo area if we don't have anything to say, and we
+    ;; didn't put the previous message there (thus there's nothing to clear),
+    ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=62816#20
+    (if (not (member company-echo-last-msg '(nil "")))
         (message "%s" company-echo-last-msg)
-      (message ""))))
+      (unless (member last-msg '(nil ""))
+        (message "")))))
 
 (defun company-echo-show-soon (&optional getter delay)
   (company-echo-cancel)

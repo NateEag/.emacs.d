@@ -1,9 +1,9 @@
 This is company.info, produced by makeinfo version 6.7 from
 company.texi.
 
-This user manual is for Company version 0.9.14snapshot (8 January 2022).
+This user manual is for Company version 0.9.14snapshot (16 April 2023).
 
-Copyright © 2021-2022 Free Software Foundation, Inc.
+Copyright © 2021-2023 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -26,9 +26,9 @@ The goal of this document is to lay out the foundational knowledge of
 the package, so that the readers of the manual could competently start
 adapting Company to their needs and preferences.
 
-This user manual is for Company version 0.9.14snapshot (8 January 2022).
+This user manual is for Company version 0.9.14snapshot (16 April 2023).
 
-Copyright © 2021-2022 Free Software Foundation, Inc.
+Copyright © 2021-2023 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -206,8 +206,8 @@ shown according to the typed characters and the default (until a user
 specifies otherwise) configurations.
 
 To have Company always enabled for the following sessions, add the line
-‘(global-company-mode)’ to the Emacs configuration file
-(*note (emacs)Init File::).
+‘(global-company-mode)’ to the Emacs configuration file (*note
+(emacs)Init File::).
 
 
 File: company.info,  Node: Usage Basics,  Next: Commands,  Prev: Initial Setup,  Up: Getting Started
@@ -264,9 +264,12 @@ commands of the out-of-the-box Company.
      Cancel _company-mode_ activity (‘company-abort’).
 
 ‘C-h’
-‘<f1>’
+‘<F1>’
      Display a buffer with the documentation for the selected candidate
-     (‘company-show-doc-buffer’).
+     (‘company-show-doc-buffer’).  With a prefix argument (‘C-u C-h’,
+     ‘C-u <F1>’), this command toggles between temporary showing the
+     documentation and keeping the documentation buffer up-to-date
+     whenever the selection changes.
 
 ‘C-w’
      Display a buffer with the definition of the selected candidate
@@ -315,9 +318,9 @@ File: company.info,  Node: Customization,  Next: Frontends,  Prev: Getting Start
 
 Emacs provides two equally acceptable ways for user preferences
 configuration: via customization interface (for more details, *note
-(emacs)Easy Customization::) and a configuration file
-(*note (emacs)Init File::).  Naturally, Company can be configured by
-both of these approaches.
+(emacs)Easy Customization::) and a configuration file (*note (emacs)Init
+File::).  Naturally, Company can be configured by both of these
+approaches.
 
 * Menu:
 
@@ -527,6 +530,14 @@ user options.
           (setq company-tooltip-align-annotations t)
 
           [image src="./images/small/tooltip-annotations.png" ]
+
+ -- User Option: company-tooltip-annotation-padding
+     Adds left padding to the candidates’ annotations.  It is disabled
+     by default.  If ‘company-tooltip-align-annotations’ is enabled,
+     ‘company-tooltip-annotation-padding’ defines the minimum spacing
+     between a candidate and annotation, with the default value of 1.
+
+          (setq company-tooltip-annotation-padding 1)
 
  -- User Option: company-tooltip-limit
      Controls the maximum number of the candidates shown simultaneously
@@ -1330,7 +1341,7 @@ Key Index
 * C-p:                                   Usage Basics.         (line 12)
 * C-p <1>:                               Commands.             (line 16)
 * C-s:                                   Candidates Search.    (line  6)
-* C-w:                                   Commands.             (line 39)
+* C-w:                                   Commands.             (line 42)
 * M-<digit>:                             Quick Access a Candidate.
                                                                (line  6)
 * RET:                                   Usage Basics.         (line 15)
@@ -1360,17 +1371,17 @@ Variable Index
 * company-dabbrev-ignore-case:           Text Completion.     (line  47)
 * company-dabbrev-minimum-length:        Text Completion.     (line  13)
 * company-dabbrev-other-buffers:         Text Completion.     (line  23)
-* company-dot-icons-format:              Tooltip Frontends.   (line 179)
+* company-dot-icons-format:              Tooltip Frontends.   (line 187)
 * company-echo-truncate-lines:           Echo Frontends.      (line  33)
 * company-files-chop-trailing-slash:     File Name Completion.
                                                               (line  19)
 * company-files-exclusions:              File Name Completion.
                                                               (line  12)
-* company-format-margin-function:        Tooltip Frontends.   (line 153)
+* company-format-margin-function:        Tooltip Frontends.   (line 161)
 * company-frontends:                     Frontends.           (line   6)
 * company-global-modes:                  Configuration File.  (line  31)
-* company-icon-margin:                   Tooltip Frontends.   (line 164)
-* company-icon-size:                     Tooltip Frontends.   (line 164)
+* company-icon-margin:                   Tooltip Frontends.   (line 172)
+* company-icon-size:                     Tooltip Frontends.   (line 172)
 * company-idle-delay:                    Configuration File.  (line  17)
 * company-insertion-on-trigger:          Configuration File.  (line  64)
 * company-insertion-triggers:            Configuration File.  (line  72)
@@ -1385,20 +1396,21 @@ Variable Index
 * company-selection-wrap-around:         Configuration File.  (line  43)
 * company-show-quick-access:             Quick Access a Candidate.
                                                               (line  14)
-* company-text-face-extra-attributes:    Tooltip Frontends.   (line 192)
-* company-text-icons-add-background:     Tooltip Frontends.   (line 200)
-* company-text-icons-format:             Tooltip Frontends.   (line 171)
-* company-text-icons-mapping:            Tooltip Frontends.   (line 188)
+* company-text-face-extra-attributes:    Tooltip Frontends.   (line 200)
+* company-text-icons-add-background:     Tooltip Frontends.   (line 208)
+* company-text-icons-format:             Tooltip Frontends.   (line 179)
+* company-text-icons-mapping:            Tooltip Frontends.   (line 196)
 * company-tooltip-align-annotations:     Tooltip Frontends.   (line  52)
-* company-tooltip-flip-when-above:       Tooltip Frontends.   (line  99)
+* company-tooltip-annotation-padding:    Tooltip Frontends.   (line  64)
+* company-tooltip-flip-when-above:       Tooltip Frontends.   (line 107)
 * company-tooltip-idle-delay:            Tooltip Frontends.   (line  22)
-* company-tooltip-limit:                 Tooltip Frontends.   (line  64)
-* company-tooltip-margin:                Tooltip Frontends.   (line 133)
-* company-tooltip-maximum-width:         Tooltip Frontends.   (line 126)
-* company-tooltip-minimum:               Tooltip Frontends.   (line  84)
-* company-tooltip-minimum-width:         Tooltip Frontends.   (line 111)
-* company-tooltip-offset-display:        Tooltip Frontends.   (line  74)
-* company-tooltip-width-grow-only:       Tooltip Frontends.   (line 121)
+* company-tooltip-limit:                 Tooltip Frontends.   (line  72)
+* company-tooltip-margin:                Tooltip Frontends.   (line 141)
+* company-tooltip-maximum-width:         Tooltip Frontends.   (line 134)
+* company-tooltip-minimum:               Tooltip Frontends.   (line  92)
+* company-tooltip-minimum-width:         Tooltip Frontends.   (line 119)
+* company-tooltip-offset-display:        Tooltip Frontends.   (line  82)
+* company-tooltip-width-grow-only:       Tooltip Frontends.   (line 129)
 * company-transformers:                  Candidates Post-Processing.
                                                               (line   6)
 
@@ -1422,11 +1434,11 @@ Function Index
 * company-complete-selection:            Commands.            (line  21)
 * company-dabbrev:                       Text Completion.     (line   6)
 * company-dabbrev-code:                  Code Completion.     (line  25)
-* company-detect-icons-margin:           Tooltip Frontends.   (line 209)
+* company-detect-icons-margin:           Tooltip Frontends.   (line 217)
 * company-diag:                          Backends Usage Basics.
                                                               (line  11)
 * company-diag <1>:                      Troubleshooting.     (line   6)
-* company-dot-icons-margin:              Tooltip Frontends.   (line 178)
+* company-dot-icons-margin:              Tooltip Frontends.   (line 186)
 * company-echo-frontend:                 Echo Frontends.      (line  21)
 * company-echo-metadata-frontend:        Echo Frontends.      (line   9)
 * company-echo-strip-common-frontend:    Echo Frontends.      (line  27)
@@ -1456,7 +1468,7 @@ Function Index
 * company-select-previous-or-abort:      Commands.            (line  16)
 * company-semantic:                      Code Completion.     (line  41)
 * company-show-doc-buffer:               Commands.            (line  34)
-* company-show-location:                 Commands.            (line  39)
+* company-show-location:                 Commands.            (line  42)
 * company-sort-by-backend-importance:    Candidates Post-Processing.
                                                               (line  28)
 * company-sort-by-occurrence:            Candidates Post-Processing.
@@ -1464,11 +1476,11 @@ Function Index
 * company-sort-prefer-same-case-prefix:  Candidates Post-Processing.
                                                               (line  34)
 * company-tempo:                         Template Expansion.  (line  11)
-* company-text-icons-margin:             Tooltip Frontends.   (line 170)
+* company-text-icons-margin:             Tooltip Frontends.   (line 178)
 * company-tng-frontend:                  Structure.           (line  26)
 * company-tng-mode:                      Structure.           (line  26)
-* company-vscode-dark-icons-margin:      Tooltip Frontends.   (line 162)
-* company-vscode-light-icons-margin:     Tooltip Frontends.   (line 163)
+* company-vscode-dark-icons-margin:      Tooltip Frontends.   (line 170)
+* company-vscode-light-icons-margin:     Tooltip Frontends.   (line 171)
 * company-yasnippet:                     Template Expansion.  (line  16)
 * global-company-mode:                   Initial Setup.       (line  18)
 
@@ -1512,7 +1524,7 @@ Concept Index
 * candidate <1>:                         Usage Basics.        (line  12)
 * candidate <2>:                         Usage Basics.        (line  15)
 * candidate <3>:                         Preview Frontends.   (line   6)
-* color:                                 Tooltip Frontends.   (line 219)
+* color:                                 Tooltip Frontends.   (line 227)
 * color <1>:                             Quick Access a Candidate.
                                                               (line  37)
 * common part:                           Usage Basics.        (line  17)
@@ -1521,7 +1533,7 @@ Concept Index
 * company-echo:                          Echo Frontends.      (line   6)
 * company-preview:                       Preview Frontends.   (line   6)
 * company-tng:                           Structure.           (line  26)
-* company-tooltip:                       Tooltip Frontends.   (line 219)
+* company-tooltip:                       Tooltip Frontends.   (line 227)
 * company-tooltip-search:                Candidates Search.   (line   6)
 * complete:                              Terminology.         (line   6)
 * complete <1>:                          Usage Basics.        (line  12)
@@ -1538,7 +1550,7 @@ Concept Index
                                                               (line   6)
 * configure <2>:                         Configuration File.  (line   6)
 * configure <3>:                         Tooltip Frontends.   (line  49)
-* configure <4>:                         Tooltip Frontends.   (line 219)
+* configure <4>:                         Tooltip Frontends.   (line 227)
 * configure <5>:                         Preview Frontends.   (line  25)
 * configure <6>:                         Echo Frontends.      (line  38)
 * configure <7>:                         Candidates Search.   (line  30)
@@ -1551,7 +1563,7 @@ Concept Index
                                                               (line   6)
 * custom <2>:                            Configuration File.  (line   6)
 * custom <3>:                            Tooltip Frontends.   (line  49)
-* custom <4>:                            Tooltip Frontends.   (line 219)
+* custom <4>:                            Tooltip Frontends.   (line 227)
 * custom <5>:                            Preview Frontends.   (line  25)
 * custom <6>:                            Echo Frontends.      (line  38)
 * custom <7>:                            Candidates Search.   (line  30)
@@ -1559,7 +1571,7 @@ Concept Index
                                                               (line  28)
 * custom <9>:                            Quick Access a Candidate.
                                                               (line  37)
-* definition:                            Commands.            (line  39)
+* definition:                            Commands.            (line  42)
 * distribution:                          Installation.        (line   6)
 * doc:                                   Commands.            (line  34)
 * duplicate:                             Candidates Post-Processing.
@@ -1570,7 +1582,7 @@ Concept Index
 * error <1>:                             Troubleshooting.     (line  27)
 * expansion:                             Template Expansion.  (line   6)
 * extensible:                            Structure.           (line   6)
-* face:                                  Tooltip Frontends.   (line 219)
+* face:                                  Tooltip Frontends.   (line 227)
 * face <1>:                              Preview Frontends.   (line   6)
 * face <2>:                              Preview Frontends.   (line  25)
 * face <3>:                              Echo Frontends.      (line   6)
@@ -1583,17 +1595,17 @@ Concept Index
 * filter:                                Filter Candidates.   (line   6)
 * finish:                                Usage Basics.        (line  20)
 * finish <1>:                            Commands.            (line  30)
-* font:                                  Tooltip Frontends.   (line 219)
+* font:                                  Tooltip Frontends.   (line 227)
 * font <1>:                              Quick Access a Candidate.
                                                               (line  37)
 * frontend:                              Structure.           (line   6)
 * frontend <1>:                          Structure.           (line  10)
 * frontends:                             Frontends.           (line   6)
 * grouped backends:                      Grouped Backends.    (line   6)
-* icon:                                  Tooltip Frontends.   (line 145)
+* icon:                                  Tooltip Frontends.   (line 153)
 * install:                               Installation.        (line   6)
 * interface:                             Tooltip Frontends.   (line  49)
-* interface <1>:                         Tooltip Frontends.   (line 219)
+* interface <1>:                         Tooltip Frontends.   (line 227)
 * interface <2>:                         Preview Frontends.   (line  25)
 * interface <3>:                         Echo Frontends.      (line  38)
 * interface <4>:                         Candidates Search.   (line  30)
@@ -1602,12 +1614,12 @@ Concept Index
 * intro:                                 Initial Setup.       (line   6)
 * issue:                                 Troubleshooting.     (line   6)
 * issue tracker:                         Troubleshooting.     (line  27)
-* kind:                                  Tooltip Frontends.   (line 145)
-* location:                              Commands.            (line  39)
+* kind:                                  Tooltip Frontends.   (line 153)
+* location:                              Commands.            (line  42)
 * manual:                                Initial Setup.       (line   8)
 * manual <1>:                            Usage Basics.        (line  10)
-* margin:                                Tooltip Frontends.   (line 134)
-* margin <1>:                            Tooltip Frontends.   (line 154)
+* margin:                                Tooltip Frontends.   (line 142)
+* margin <1>:                            Tooltip Frontends.   (line 162)
 * minor-mode:                            Initial Setup.       (line   6)
 * module:                                Structure.           (line   6)
 * module <1>:                            Structure.           (line  10)
@@ -1647,45 +1659,45 @@ Concept Index
 
 
 Tag Table:
-Node: Top572
-Node: Overview2000
-Node: Terminology2408
-Ref: Terminology-Footnote-13395
-Node: Structure3601
-Node: Getting Started5097
-Node: Installation5375
-Node: Initial Setup5758
-Node: Usage Basics6604
-Node: Commands7367
-Ref: Commands-Footnote-19585
-Node: Customization9752
-Node: Customization Interface10224
-Node: Configuration File10757
-Node: Frontends15423
-Node: Tooltip Frontends16392
-Ref: Tooltip Frontends-Footnote-126761
-Node: Preview Frontends26998
-Ref: Preview Frontends-Footnote-128254
-Node: Echo Frontends28381
-Node: Candidates Search29914
-Node: Filter Candidates31248
-Node: Quick Access a Candidate32028
-Node: Backends33646
-Node: Backends Usage Basics34744
-Ref: Backends Usage Basics-Footnote-135959
-Node: Grouped Backends36043
-Node: Package Backends37672
-Node: Code Completion38601
-Node: Text Completion40970
-Node: File Name Completion45404
-Node: Template Expansion46952
-Node: Candidates Post-Processing47671
-Node: Troubleshooting49148
-Node: Index50821
-Node: Key Index50984
-Node: Variable Index52483
-Node: Function Index56533
-Node: Concept Index61014
+Node: Top571
+Node: Overview1998
+Node: Terminology2406
+Ref: Terminology-Footnote-13393
+Node: Structure3599
+Node: Getting Started5095
+Node: Installation5373
+Node: Initial Setup5756
+Node: Usage Basics6602
+Node: Commands7365
+Ref: Commands-Footnote-19800
+Node: Customization9967
+Node: Customization Interface10439
+Node: Configuration File10972
+Node: Frontends15638
+Node: Tooltip Frontends16607
+Ref: Tooltip Frontends-Footnote-127374
+Node: Preview Frontends27611
+Ref: Preview Frontends-Footnote-128867
+Node: Echo Frontends28994
+Node: Candidates Search30527
+Node: Filter Candidates31861
+Node: Quick Access a Candidate32641
+Node: Backends34259
+Node: Backends Usage Basics35357
+Ref: Backends Usage Basics-Footnote-136572
+Node: Grouped Backends36656
+Node: Package Backends38285
+Node: Code Completion39214
+Node: Text Completion41583
+Node: File Name Completion46017
+Node: Template Expansion47565
+Node: Candidates Post-Processing48284
+Node: Troubleshooting49761
+Node: Index51434
+Node: Key Index51597
+Node: Variable Index53096
+Node: Function Index57219
+Node: Concept Index61700
 
 End Tag Table
 

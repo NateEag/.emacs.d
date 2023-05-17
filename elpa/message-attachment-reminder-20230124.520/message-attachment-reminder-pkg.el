@@ -1,0 +1,2 @@
+;;; Generated package description from message-attachment-reminder.el  -*- no-byte-compile: t -*-
+(define-package "message-attachment-reminder" "20230124.520" "Remind if missing attachment" '((emacs "24.1")) :commit "975381d6e7c6771c462e73abd3398a4ed2a9b86b" :authors '(("Alex Murray" . "murray.alex@gmail.com")) :maintainers '(("Alex Murray" . "murray.alex@gmail.com")) :maintainer '("Alex Murray" . "murray.alex@gmail.com") :url "https://github.com/alexmurray/message-attachment-reminder")

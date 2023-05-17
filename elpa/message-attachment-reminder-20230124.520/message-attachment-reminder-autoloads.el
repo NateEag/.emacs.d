@@ -1,4 +1,4 @@
-;;; message-attachment-reminder-autoloads.el --- automatically extracted autoloads
+;;; message-attachment-reminder-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -10,7 +10,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from message-attachment-reminder.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "message-attachment-reminder" '("message-attachment-reminder-")))
+(register-definition-prefixes "message-attachment-reminder" '("message-attachment-reminder-"))
 
 ;;;***
 

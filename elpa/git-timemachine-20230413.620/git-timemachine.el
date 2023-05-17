@@ -4,8 +4,8 @@
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
 ;; Version: 4.12
-;; Package-Version: 20220324.1057
-;; Package-Commit: ca09684e94767cc0b2339b77b778b4de4f9d104f
+;; Package-Version: 20230413.620
+;; Package-Commit: 13769fb603ae88c64566529eae4525ce88026e86
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -36,6 +36,11 @@
 (require 'cl-lib)
 (require 'transient)
 
+(defgroup git-timemachine nil
+  "Walk through git revisions of a file."
+  :link '(url-link "https://codeberg.org/pidu/git-timemachine")
+  :group 'tools)
+
 (defcustom git-timemachine-abbreviation-length 12
   "Number of chars from the full sha1 hash to use for abbreviation."
   :type 'integer
@@ -49,23 +54,23 @@ will be shown in the minibuffer while navigating commits."
 
 (defface git-timemachine-commit
   '((default :weight bold))
-  "Face for git timemachine commit sha"
+  "Face for git timemachine commit sha."
   :group 'git-timemachine)
 
 (defface git-timemachine-minibuffer-detail-face
   '((((class color) (background dark))
-     :foreground "yellow")
-    (((class color) (background light))
-     :foreground "yellow4"))
-  "How to display the minibuffer detail"
+      :foreground "yellow")
+     (((class color) (background light))
+       :foreground "yellow4"))
+  "How to display the minibuffer detail."
   :group 'git-timemachine)
 
 (defface git-timemachine-minibuffer-author-face
   '((((class color) (background dark))
-     :foreground "orange")
-    (((class color) (background light))
-     :foreground "DarkOrange4"))
-  "How to display the author in minibuffer"
+      :foreground "orange")
+     (((class color) (background light))
+       :foreground "DarkOrange4"))
+  "How to display the author in minibuffer."
   :group 'git-timemachine)
 
 (defcustom git-timemachine-minibuffer-detail
@@ -91,7 +96,7 @@ Available values are:
 
 (defcustom git-timemachine-quit-to-invoking-buffer
   t
-  "Switch to invoking buffer on ‘git-timemachine-quit’."
+  "Switch to invoking buffer on `git-timemachine-quit`."
   :type 'boolean
   :group 'git-timemachine)
 
@@ -100,15 +105,8 @@ Available values are:
 (defvar-local git-timemachine-file nil)
 (defvar-local git-timemachine--revisions-cache nil)
 
-(defun git-timemachine-completing-read-fn (&rest args)
-  "Apply ARGS to `ido-completing-read' if available and fall back to `completing-read'."
-  (cond
-   ((fboundp 'ivy-read) (apply 'ivy-read args))
-   ((fboundp 'ido-completing-read) (apply 'ido-completing-read args))
-   (t (apply 'completing-read args))))
-
 (defun git-timemachine--process-file (&rest args)
-  "Run ‘process-file’ with ARGS and ‘git-timemachine-global-git-arguments’ applied."
+  "Run `process-file` with ARGS and `git-timemachine-global-git-arguments` applied."
   (apply #'process-file vc-git-program nil t nil (append git-timemachine-global-git-arguments args)))
 
 (defun git-timemachine--revisions (&optional git-branch)
@@ -116,37 +114,37 @@ Available values are:
 
 When passed a GIT-BRANCH, lists revisions from that branch."
   (if git-timemachine--revisions-cache
-      git-timemachine--revisions-cache
+    git-timemachine--revisions-cache
     (setq git-timemachine--revisions-cache
-	  (prog2
+      (prog2
 	      (message "Fetching Revisions...")
 	      (let ((default-directory git-timemachine-directory)
-		    (file git-timemachine-file))
-		(with-temp-buffer
+               (file git-timemachine-file))
+          (with-temp-buffer
 
-		  (unless (zerop (if git-branch
-				     (git-timemachine--process-file "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)
-				   (git-timemachine--process-file "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)))
-		    (error "Git log command exited with non-zero exit status for file: %s" file))
+            (unless (zerop (if git-branch
+                             (git-timemachine--process-file "log" git-branch "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)
+                             (git-timemachine--process-file "log" "--name-only" "--follow" "--pretty=format:%H%x00%ar%x00%ad%x00%s%x00%an" "--" file)))
+              (error "Git log command exited with non-zero exit status for file: %s" file))
 
-		  (goto-char (point-min))
-		  (let ((lines)
-			(commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
-		    (while (not (eobp))
-		      (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-			(string-match "\\([^\0]*\\)\0\\([^\0]*\\)\0\\([^\0]*\\)\0\\(.*\\)\0\\(.*\\)" line)
-			(let ((commit (match-string 1 line))
-			      (date-relative (match-string 2 line))
-			      (date-full (match-string 3 line))
-			      (subject (match-string 4 line))
-			      (author (match-string 5 line)))
-			  (forward-line 1)
-			  (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
-			    (push (list commit file-name commit-number date-relative date-full subject author) lines))))
-		      (setq commit-number (1- commit-number))
-		      (forward-line 2))
-		    (nreverse lines))))
-	    (message "Fetching Revisions...done")))))
+            (goto-char (point-min))
+            (let ((lines)
+                   (commit-number (/ (1+ (count-lines (point-min) (point-max))) 3)))
+              (while (not (eobp))
+                (let ((line (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                  (string-match "\\([^\0]*\\)\0\\([^\0]*\\)\0\\([^\0]*\\)\0\\(.*\\)\0\\(.*\\)" line)
+                  (let ((commit (match-string 1 line))
+                         (date-relative (match-string 2 line))
+                         (date-full (match-string 3 line))
+                         (subject (match-string 4 line))
+                         (author (match-string 5 line)))
+                    (forward-line 1)
+                    (let ((file-name (buffer-substring-no-properties (line-beginning-position) (line-end-position))))
+                      (push (list commit file-name commit-number date-relative date-full subject author) lines))))
+                (setq commit-number (1- commit-number))
+                (forward-line 2))
+              (nreverse lines))))
+        (message "Fetching Revisions...done")))))
 
 (defun git-timemachine-show-current-revision ()
   "Show last (current) revision of file."
@@ -161,15 +159,15 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 (defun git-timemachine--next-revision (revisions)
   "Return the revision following the current revision in REVISIONS."
   (or (cadr (cl-member (car git-timemachine-revision) revisions :key #'car :test #'string=))
-      (car (reverse revisions))))
+    (car (reverse revisions))))
 
 (defun git-timemachine-show-previous-revision ()
   "Show previous revision of file."
   (interactive)
   (let ((new-line nil)
-	(curr-revision git-timemachine-revision)
-	(new-revision (git-timemachine--next-revision (git-timemachine--revisions)))
-	(cursor-win-pos (git-timemachine--get-cursor-position)))
+         (curr-revision git-timemachine-revision)
+         (new-revision (git-timemachine--next-revision (git-timemachine--revisions)))
+         (cursor-win-pos (git-timemachine--get-cursor-position)))
     (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
     (git-timemachine-show-revision new-revision)
     (forward-line (- new-line (line-number-at-pos)))
@@ -179,9 +177,9 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   "Show next revision of file."
   (interactive)
   (let ((new-line nil)
-	(curr-revision git-timemachine-revision)
-	(new-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions))))
-	(cursor-win-pos (git-timemachine--get-cursor-position)))
+         (curr-revision git-timemachine-revision)
+         (new-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions))))
+         (cursor-win-pos (git-timemachine--get-cursor-position)))
     (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
     (git-timemachine-show-revision new-revision)
     (forward-line (- new-line (line-number-at-pos)))
@@ -191,11 +189,11 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   "Show the revision with the chosen commit message."
   (interactive)
   (let* ((revisions (git-timemachine--revisions))
-	 (wanted
-	  (funcall #'git-timemachine-completing-read-fn "Commit message: "
-		   (mapcar (apply-partially #'nth 5) revisions))))
+          (wanted
+            (funcall #'completing-read "Commit message: "
+              (mapcar (apply-partially #'nth 5) revisions))))
     (git-timemachine-show-revision
-     (cl-find wanted revisions
+      (cl-find wanted revisions
 	      :key (apply-partially #'nth 5)
 	      :test #'equal))))
 
@@ -203,13 +201,13 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   "Show the REV-NUMBER revision."
   (interactive "nEnter revision number: ")
   (let* ((revisions (reverse (git-timemachine--revisions)))
-	 (num-revisions (length revisions))
-	 (curr-revision git-timemachine-revision)
-	 (new-revision (nth (1- rev-number) revisions))
-	 (new-line nil)
-	 (cursor-win-pos (git-timemachine--get-cursor-position)))
+          (num-revisions (length revisions))
+          (curr-revision git-timemachine-revision)
+          (new-revision (nth (1- rev-number) revisions))
+          (new-line nil)
+          (cursor-win-pos (git-timemachine--get-cursor-position)))
     (if (not new-revision)
-	(message "Only %d revisions exist." num-revisions)
+      (message "Only %d revisions exist." num-revisions)
       (setq new-line (git-timemachine--find-new-current-line curr-revision new-revision (line-number-at-pos)))
       (git-timemachine-show-revision new-revision)
       (forward-line (- new-line (line-number-at-pos)))
@@ -219,28 +217,28 @@ When passed a GIT-BRANCH, lists revisions from that branch."
   "Show a REVISION (commit hash) of the current file."
   (when revision
     (let ((current-position (point))
-	  (commit (car revision))
-	  (revision-file-name (nth 1 revision))
-	  (commit-index (nth 2 revision))
-	  (date-relative (nth 3 revision))
-	  (date-full (nth 4 revision))
-	  (subject (nth 5 revision)))
+           (commit (car revision))
+           (revision-file-name (nth 1 revision))
+           (commit-index (nth 2 revision))
+           (date-relative (nth 3 revision))
+           (date-full (nth 4 revision))
+           (subject (nth 5 revision)))
       (setq buffer-read-only nil)
       (erase-buffer)
       (let ((default-directory git-timemachine-directory)
-	    (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
-	(git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
+             (process-coding-system-alist (list (cons "" (cons buffer-file-coding-system default-process-coding-system)))))
+        (git-timemachine--process-file "show" (concat commit ":" revision-file-name)))
       (setq buffer-read-only t)
       (set-buffer-modified-p nil)
       (let* ((revisions (git-timemachine--revisions))
-	     (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
-	(setq mode-line-buffer-identification
-	      (list (propertized-buffer-identification "%12b") "@"
-		    (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
+              (n-of-m (format "(%d/%d %s)" commit-index (length revisions) date-relative)))
+        (setq mode-line-buffer-identification
+          (list (propertized-buffer-identification "%12b") "@"
+            (propertize (git-timemachine-abbreviate commit) 'face 'git-timemachine-commit) " name:" revision-file-name" " n-of-m)))
       (setq git-timemachine-revision revision)
       (goto-char current-position)
       (when git-timemachine-show-minibuffer-details
-	(git-timemachine--show-minibuffer-details revision))
+        (git-timemachine--show-minibuffer-details revision))
       (git-timemachine--erm-workaround))))
 
 (declare-function erm-reset-buffer "ext:enh-ruby-mode")
@@ -253,57 +251,58 @@ When passed a GIT-BRANCH, lists revisions from that branch."
 (defun git-timemachine--show-minibuffer-details (revision)
   "Show details for REVISION in minibuffer."
   (let* ((date-relative (nth 3 revision))
-	 (date-full (nth 4 revision))
-	 (author (if git-timemachine-show-author (concat (nth 6 revision) ": ") ""))
-	 (sha-or-subject (if (eq git-timemachine-minibuffer-detail 'commit) (car revision) (nth 5 revision))))
+          (date-full (nth 4 revision))
+          (author (if git-timemachine-show-author (concat (nth 6 revision) ": ") ""))
+          (sha-or-subject (if (eq git-timemachine-minibuffer-detail 'commit) (car revision) (nth 5 revision))))
     (message "%s%s [%s (%s)]"
-	     (propertize author 'face 'git-timemachine-minibuffer-author-face)
-	     (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
+      (propertize author 'face 'git-timemachine-minibuffer-author-face)
+      (propertize sha-or-subject 'face 'git-timemachine-minibuffer-detail-face) date-full date-relative)))
 
 (defun git-timemachine--find-new-current-line (curr-revision new-revision current-line)
   "Return the new current line after a revision jump.
 
-Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LINE."
+Given CURR-REVISION and NEW-REVISION determine if we need to
+updated CURRENT-LINE."
   (let* ((revisions (reverse (git-timemachine--revisions)))
-	 (current-commit (car curr-revision))
-	 (curr-rev-number (+ (or (cl-position curr-revision revisions) 0) 1))
-	 (new-commit (car new-revision))
-	 (new-rev-number (+ (or (cl-position new-revision revisions) 0) 1))
-	 (new-line nil)
-	 (file git-timemachine-file)
-	 (reverse (< curr-rev-number new-rev-number)))
+          (current-commit (car curr-revision))
+          (curr-rev-number (+ (or (cl-position curr-revision revisions) 0) 1))
+          (new-commit (car new-revision))
+          (new-rev-number (+ (or (cl-position new-revision revisions) 0) 1))
+          (new-line nil)
+          (file git-timemachine-file)
+          (reverse (< curr-rev-number new-rev-number)))
     ;; If no commit change, do nothing
     (if (= curr-rev-number new-rev-number)
-	current-line
+      current-line
       ;; Get new current line number using `git-blame`
       (with-temp-buffer
-	(if reverse
-	    (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
-	  (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
-	(goto-char (point-min))
-	;; If end-of-buffer problem
-	(when (search-forward-regexp "^fatal: file .+ has only .+ lines" nil t)
-	  (setq current-line (- current-line 1))
-	  (erase-buffer)
-	  (if reverse
-	      (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
-	    (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
-	(goto-char (point-min))
-	(search-forward-regexp "^[^ ]+ \\([^ ]+\\)")
-	(setq new-line (string-to-number (match-string 1)))
-	;; In case git blame doesn't give what we expect
-	(when (= new-line 0) (setq new-line current-line))
-	new-line))))
+        (if reverse
+          (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+          (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit)))
+        (goto-char (point-min))
+        ;; If end-of-buffer problem
+        (when (search-forward-regexp "^fatal: file .+ has only .+ lines" nil t)
+          (setq current-line (- current-line 1))
+          (erase-buffer)
+          (if reverse
+            (git-timemachine--process-file "blame" "--reverse" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" current-commit new-commit))
+            (git-timemachine--process-file "blame" "-n" (format "-L %s,%s" current-line current-line) file (format "%s..%s" new-commit current-commit))))
+        (goto-char (point-min))
+        (search-forward-regexp "^[^ ]+ \\([^ ]+\\)")
+        (setq new-line (string-to-number (match-string 1)))
+        ;; In case git blame doesn't give what we expect
+        (when (= new-line 0) (setq new-line current-line))
+        new-line))))
 
 (defun git-timemachine--get-cursor-position ()
-  "Return the cursor visual line number with respect to the current window first line."
-  (let* ((win-point-min (save-excursion (move-to-window-line 0) (point)))
-	 (cur-pos (count-screen-lines win-point-min (point))))
-    cur-pos))
+ "Return the cursor visual line number with respect to the current window first line."
+ (let* ((win-point-min (save-excursion (move-to-window-line 0) (point)))
+        (cur-pos (count-screen-lines win-point-min (point))))
+  cur-pos))
 
 (defun git-timemachine--set-cursor-position (POS)
-  "Set the cursor position to the POS visual line with respect to the window first line."
-  (recenter POS))
+ "Set the cursor position to the POS visual line with respect to the window first line."
+ (recenter POS))
 
 (defun git-timemachine-abbreviate (revision)
   "Return REVISION abbreviated to `git-timemachine-abbreviation-length' chars."
@@ -316,14 +315,14 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
     (kill-buffer)
     (let ((parent-buffer (find-buffer-visiting parent-buffer-name)))
       (when (and parent-buffer git-timemachine-quit-to-invoking-buffer)
-	(switch-to-buffer parent-buffer nil t)))))
+        (switch-to-buffer parent-buffer nil t)))))
 
 (defun git-timemachine-blame ()
-  "Call ‘magit-blame’ on current revision."
+  "Call `magit-blame` on current revision."
   (interactive)
   (if (fboundp 'magit-blame)
-      (let ((magit-buffer-revision (car git-timemachine-revision)))
-	(magit-blame))
+    (let ((magit-buffer-revision (car git-timemachine-revision)))
+      (magit-blame))
     (message "You need to install magit for blame capabilities")))
 
 (defun git-timemachine-kill-revision ()
@@ -345,24 +344,24 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
   (interactive)
   (let ((rev (car git-timemachine-revision)))
     (if (fboundp 'magit-show-commit)
-	(magit-show-commit rev)
+      (magit-show-commit rev)
       (message "You need to install magit to show commit"))))
 
 (transient-define-prefix git-timemachine-help ()
   "Show online help."
   ["Navigate"
-   [("p" "show previous revision" git-timemachine-show-previous-revision)
-    ("n" "show next revision" git-timemachine-show-next-revision)
-    ("g" "show nth revision" git-timemachine-show-nth-revision)
-    ("t" "show fuzzy revision" git-timemachine-show-revision-fuzzy)]]
+    [("p" "show previous revision" git-timemachine-show-previous-revision)
+      ("n" "show next revision" git-timemachine-show-next-revision)
+      ("g" "show nth revision" git-timemachine-show-nth-revision)
+      ("t" "show fuzzy revision" git-timemachine-show-revision-fuzzy)]]
   ["Kill current revision"
-   [("w" "kill abbreviated revision" git-timemachine-kill-abbreviated-revision)
-    ("W" "kill revision" git-timemachine-kill-revision)]]
+    [("w" "kill abbreviated revision" git-timemachine-kill-abbreviated-revision)
+      ("W" "kill revision" git-timemachine-kill-revision)]]
   ["Misc"
-   [("b" "blame current revision" git-timemachine-blame)
-    ("c" "show commit" git-timemachine-show-commit)
-    ("?" "show help" git-timemachine-help)
-    ("q" "quit" git-timemachine-quit)]])
+    [("b" "blame current revision" git-timemachine-blame)
+      ("c" "show commit" git-timemachine-show-commit)
+      ("?" "show help" git-timemachine-help)
+      ("q" "quit" git-timemachine-quit)]])
 
 (define-minor-mode git-timemachine-mode
   "Git Timemachine, feel the wings of history."
@@ -370,15 +369,15 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
   :lighter " Timemachine"
   :keymap
   '(("p" . git-timemachine-show-previous-revision)
-    ("n" . git-timemachine-show-next-revision)
-    ("g" . git-timemachine-show-nth-revision)
-    ("t" . git-timemachine-show-revision-fuzzy)
-    ("q" . git-timemachine-quit)
-    ("w" . git-timemachine-kill-abbreviated-revision)
-    ("W" . git-timemachine-kill-revision)
-    ("b" . git-timemachine-blame)
-    ("c" . git-timemachine-show-commit)
-    ("?" . git-timemachine-help))
+     ("n" . git-timemachine-show-next-revision)
+     ("g" . git-timemachine-show-nth-revision)
+     ("t" . git-timemachine-show-revision-fuzzy)
+     ("q" . git-timemachine-quit)
+     ("w" . git-timemachine-kill-abbreviated-revision)
+     ("W" . git-timemachine-kill-revision)
+     ("b" . git-timemachine-blame)
+     ("c" . git-timemachine-show-commit)
+     ("?" . git-timemachine-help))
   :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)
@@ -394,21 +393,21 @@ Call with the value of 'buffer-file-name."
   (setq git-timemachine--revisions-cache nil)
   (git-timemachine-validate (buffer-file-name))
   (let ((git-directory (expand-file-name (vc-git-root (buffer-file-name))))
-	(file-name (buffer-file-name))
-	(timemachine-buffer (format "timemachine:%s" (buffer-name)))
-	(cur-line (line-number-at-pos))
-	(cursor-position (git-timemachine--get-cursor-position))
-	(new-line nil)
-	(mode major-mode)
-	(coding-system buffer-file-coding-system))
+         (file-name (buffer-file-name))
+         (timemachine-buffer (format "timemachine:%s" (buffer-name)))
+         (cur-line (line-number-at-pos))
+         (cursor-position (git-timemachine--get-cursor-position))
+         (new-line nil)
+         (mode major-mode)
+         (coding-system buffer-file-coding-system))
     (with-current-buffer (get-buffer-create timemachine-buffer)
       (switch-to-buffer timemachine-buffer)
       (setq buffer-file-name file-name)
       (setq buffer-file-coding-system coding-system)
       (delay-mode-hooks (funcall mode))
       (setq git-timemachine-directory git-directory
-	    git-timemachine-file (file-relative-name file-name git-directory)
-	    git-timemachine-revision nil)
+        git-timemachine-file (file-relative-name file-name git-directory)
+        git-timemachine-revision nil)
       (funcall get-revision-fn)
       (setq new-line (git-timemachine--find-new-current-line git-timemachine-revision (list "HEAD" "" 0 "" "" "" "") cur-line)) ;; Allow to stay on the same line
       (goto-char (point-min))
@@ -421,7 +420,7 @@ Call with the value of 'buffer-file-name."
   "Toggle git timemachine mode."
   (interactive)
   (if (bound-and-true-p git-timemachine-mode)
-      (git-timemachine-quit)
+    (git-timemachine-quit)
     (git-timemachine)))
 
 ;;;###autoload
@@ -433,7 +432,7 @@ Call with the value of 'buffer-file-name."
 ;;;###autoload
 (defun git-timemachine-switch-branch (git-branch)
   "Enable git timemachine for current buffer, switching to GIT-BRANCH."
-  (interactive (list (git-timemachine-completing-read-fn "Branch to switch to: "(vc-git-branches))))
+  (interactive (list (completing-read "Branch to switch to: "(vc-git-branches))))
   (git-timemachine--start (lambda () (git-timemachine-show-latest-revision-in-branch git-branch))))
 
 (provide 'git-timemachine)

@@ -1,4 +1,4 @@
-;;; git-timemachine-autoloads.el --- automatically extracted autoloads
+;;; git-timemachine-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -21,7 +21,7 @@ Enable git timemachine for current buffer, switching to GIT-BRANCH.
 
 \(fn GIT-BRANCH)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "git-timemachine" '("git-timemachine-")))
+(register-definition-prefixes "git-timemachine" '("git-timemachine-"))
 
 ;;;***
 

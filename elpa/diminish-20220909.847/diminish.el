@@ -5,8 +5,8 @@
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; Maintainer: Martin Yrjölä <martin.yrjola@gmail.com>
 ;; URL: https://github.com/myrjola/diminish.el
-;; Package-Version: 20220104.1539
-;; Package-Commit: 6b7e837b0cf0129e9d7d6abae48093cf599bb9e8
+;; Package-Version: 20220909.847
+;; Package-Commit: fbd5d846611bad828e336b25d2e131d1bc06b83d
 ;; Created: Th 19 Feb 98
 ;; Version: 0.46
 ;; Package-Requires: ((emacs "24.3"))
@@ -159,7 +159,7 @@ Interactively, enter (with completion) the name of any minor mode, followed
 on the next line by what you want it diminished to (default empty string).
 The response to neither prompt should be quoted.  However, in Lisp code,
 both args must be quoted, the first as a symbol, the second as a string,
-as in (diminish 'jiggle-mode \" Jgl\").
+as in (diminish \\='jiggle-mode \" Jgl\").
 
 The mode-line displays of minor modes usually begin with a space, so
 the modes' names appear as separate words on the mode line.  However, if
@@ -212,7 +212,7 @@ Interactively, enter (with completion) the name of any diminished mode (a
 mode that was formerly a minor mode on which you invoked \\[diminish]).
 To restore all diminished modes to minor status, answer `diminished-modes'.
 The response to the prompt shouldn't be quoted.  However, in Lisp code,
-the arg must be quoted as a symbol, as in (diminish-undo 'diminished-modes)."
+the arg must be quoted as a symbol, as in (diminish-undo \\='diminished-modes)."
   (interactive
    (list (read (completing-read
                 "Restore what diminished mode: "

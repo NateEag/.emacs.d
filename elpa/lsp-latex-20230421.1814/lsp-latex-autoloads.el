@@ -1,4 +1,4 @@
-;;; lsp-latex-autoloads.el --- automatically extracted autoloads
+;;; lsp-latex-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -16,7 +16,7 @@ This function is partially copied from
 
 \(fn TEX-FILE PDF-FILE LINE)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-latex" '("lsp-latex-")))
+(register-definition-prefixes "lsp-latex" '("lsp-latex-"))
 
 ;;;***
 

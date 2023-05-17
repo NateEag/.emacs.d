@@ -1,4 +1,4 @@
-;;; closql-autoloads.el --- automatically extracted autoloads
+;;; closql-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "closql" "closql.el" (0 0 0 0))
 ;;; Generated autoloads from closql.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "closql" '("closql-" "eieio-")))
+(register-definition-prefixes "closql" '("closql-" "eieio-"))
 
 ;;;***
 

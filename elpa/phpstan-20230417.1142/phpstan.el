@@ -1,15 +1,13 @@
 ;;; phpstan.el --- Interface to PHPStan              -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021  Friends of Emacs-PHP development
+;; Copyright (C) 2023  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.6.0
-;; Package-Version: 20210714.1805
-;; Package-Commit: 0869b152f82a76138daa53e953285936b9d558bd
+;; Version: 0.7.2
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
-;; Package-Requires: ((emacs "24.3") (php-mode "1.22.3"))
+;; Package-Requires: ((emacs "24.3") (compat "29") (php-mode "1.22.3") (php-runtime "0.2"))
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -57,12 +55,16 @@
 ;;; Code:
 (require 'cl-lib)
 (require 'php-project)
+(require 'php-runtime)
 
+(eval-when-compile
+  (require 'compat nil t)
+  (require 'php)
+  (require 'json))
 
 ;; Variables:
-
 (defgroup phpstan nil
-  "Interaface to PHPStan"
+  "Interaface to PHPStan."
   :tag "PHPStan"
   :prefix "phpstan-"
   :group 'tools
@@ -76,14 +78,16 @@
   :group 'phpstan)
 
 (defcustom phpstan-enable-on-no-config-file t
-  "If T, activate configuration from composer even when `phpstan.neon' is not found."
+  "If T, activate config from composer even when `phpstan.neon' is not found."
   :type 'boolean
   :group 'phpstan)
 
 (defcustom phpstan-memory-limit nil
   "Set --memory-limit option."
-  :type '(choice (string :tag "Specifies the memory limit in the same format php.ini accepts.")
+  :type '(choice (string :tag "A memory limit number in php.ini format.")
                  (const :tag "Not set --memory-limit option" nil))
+  :link '(url-link :tag "PHP Manual"
+                   "https://www.php.net/manual/ini.core.php#ini.memory-limit")
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'phpstan)
 
@@ -92,12 +96,40 @@
   :type '(choice
           (string :tag "URL or image name of Docker Hub.")
           (const :tag "Official Docker container" "ghcr.io/phpstan/phpstan")
-          (const :tag "No specify Docker image"))
+          (const :tag "No specify Docker image" nil))
   :link '(url-link :tag "PHPStan Documentation" "https://phpstan.org/user-guide/docker")
   :link '(url-link :tag "GitHub Container Registry"
                    "https://github.com/orgs/phpstan/packages/container/package/phpstan")
   :safe (lambda (v) (or (null v) (stringp v)))
   :group 'phpstan)
+
+(defcustom phpstan-use-xdebug-option nil
+  "Set --xdebug option."
+  :type '(choice (const :tag "Set --xdebug option dynamically" auto)
+                 (const :tag "Add --xdebug option" t)
+                 (const :tag "No --xdebug option" nil))
+  :safe #'symbolp
+  :group 'phpstan)
+
+(defcustom phpstan-generate-baseline-options '("--generate-baseline" "--allow-empty-baseline")
+  "Command line options for generating PHPStan baseline."
+  :type '(repeat string)
+  :safe #'listp
+  :group 'phpstan)
+
+(defcustom phpstan-baseline-file "phpstan-baseline.neon"
+  "File name of PHPStan baseline file."
+  :type 'string
+  :safe #'stringp
+  :group 'phpstan)
+
+(defcustom phpstan-tip-message-prefix "💡 "
+  "Prefix of PHPStan tip message."
+  :type 'string
+  :safe #'stringp
+  :group 'phpstan)
+
+(defvar-local phpstan--use-xdebug-option nil)
 
 ;;;###autoload
 (progn
@@ -151,7 +183,8 @@ STRING
      Relative path to `phpstan' configuration file from project root directory.
 
 NIL
-     If `phpstan-enable-on-no-config-file', search \"vendor/autoload.php\" in (phpstan-get-working-dir).")
+     If `phpstan-enable-on-no-config-file', search \"vendor/autoload.php\"
+     in (phpstan-get-working-dir).")
   (put 'phpstan-autoload-file 'safe-local-variable
        #'(lambda (v) (if (consp v)
                          (and (eq 'root (car v)) (stringp (cdr v)))
@@ -231,7 +264,7 @@ NIL
                 (php-project-get-root-dir)))))
 
 (defun phpstan-get-config-file ()
-  "Return path to phpstan configure file or `NIL'."
+  "Return path to phpstan configure file or NIL."
   (if phpstan-config-file
       (if (and (consp phpstan-config-file)
                (eq 'root (car phpstan-config-file)))
@@ -240,8 +273,8 @@ NIL
         phpstan-config-file)
     (let ((working-directory (phpstan-get-working-dir)))
       (when working-directory
-        (cl-loop for name in '("phpstan.neon" "phpstan.neon.dist")
-                 for dir  = (locate-dominating-file working-directory name)
+        (cl-loop for name in '("phpstan.neon" "phpstan.neon.dist" "phpstan.dist.neon")
+                 for dir = (locate-dominating-file working-directory name)
                  if dir
                  return (expand-file-name name dir))))))
 
@@ -254,7 +287,7 @@ NIL
       phpstan-autoload-file)))
 
 (defun phpstan-normalize-path (source-original &optional source)
-  "Return normalized source file path to pass by `SOURCE-ORIGINAL' OR `SOURCE'.
+  "Return normalized source file path to pass by SOURCE-ORIGINAL or SOURCE.
 
 If neither `phpstan-replace-path-prefix' nor executable docker is set,
 it returns the value of `SOURCE' as it is."
@@ -274,7 +307,7 @@ it returns the value of `SOURCE' as it is."
       (or source source-original))))
 
 (defun phpstan-get-level ()
-  "Return path to phpstan configure file or `NIL'."
+  "Return path to phpstan configure file or NIL."
   (cond
    ((null phpstan-level) nil)
    ((integerp phpstan-level) (int-to-string phpstan-level))
@@ -285,10 +318,71 @@ it returns the value of `SOURCE' as it is."
   "Return --memory-limit value."
   phpstan-memory-limit)
 
+(defun phpstan--parse-json (buffer)
+  "Read JSON string from BUFFER."
+  (with-current-buffer buffer
+    (goto-char (point-min))
+    ;; Ignore STDERR
+    (save-match-data
+      (when (search-forward-regexp "^{" nil t)
+        (backward-char 1)
+        (delete-region (point-min) (point))))
+    (if (eval-when-compile (and (fboundp 'json-serialize)
+                                (fboundp 'json-parse-buffer)))
+        (with-no-warnings
+          (json-parse-buffer :object-type 'plist :array-type 'list))
+      (let ((json-object-type 'plist) (json-array-type 'list))
+        (json-read-object)))))
+
+;;;###autoload
+(defun phpstan-analyze-this-file ()
+  "Analyze current buffer-file using PHPStan."
+  (interactive)
+  (let ((file (expand-file-name (or buffer-file-name
+                                    (read-file-name "Choose a PHP script: ")))))
+    (compile (mapconcat #'shell-quote-argument
+                        (phpstan-get-command-args :include-executable t :args (list file)) " "))))
+
+;;;###autoload
 (defun phpstan-analyze-file (file)
-  "Analyze a PHPScript FILE using PHPStan."
+  "Analyze a PHP script FILE using PHPStan."
   (interactive (list (expand-file-name (read-file-name "Choose a PHP script: "))))
-  (compile (mapconcat #'shell-quote-argument (append (phpstan-get-command-args t) (list file)) " ")))
+  (compile (mapconcat #'shell-quote-argument
+                      (phpstan-get-command-args :include-executable t :args (list file)) " ")))
+
+;;;###autoload
+(defun phpstan-analyze-project ()
+  "Analyze a PHP project using PHPStan."
+  (interactive)
+  (let ((default-directory (or (php-project-get-root-dir) default-directory)))
+    (compile (mapconcat #'shell-quote-argument (phpstan-get-command-args :include-executable t) " "))))
+
+;;;###autoload
+(defun phpstan-generate-baseline ()
+  "Generate PHPStan baseline file."
+  (interactive)
+  (let ((default-directory (or (locate-dominating-file default-directory phpstan-baseline-file)
+                               (php-project-get-root-dir)
+                               default-directory)))
+    (compile (mapconcat #'shell-quote-argument
+                        (phpstan-get-command-args :include-executable t :options phpstan-generate-baseline-options) " "))))
+
+;;;###autoload
+(defun phpstan-find-baseline-file ()
+  "Find PHPStan baseline file of current project."
+  (interactive)
+  (if-let ((path (locate-dominating-file default-directory phpstan-baseline-file)))
+      (find-file (expand-file-name phpstan-baseline-file path))
+    (user-error "Baseline file not found.  Try running M-x phpstan-generate-baseline")))
+
+;;;###autoload
+(defun phpstan-pro ()
+  "Analyze current PHP project using PHPStan Pro."
+  (interactive)
+  (let ((compilation-buffer-name-function (lambda (_) "*PHPStan Pro*"))
+        (command (mapconcat #'shell-quote-argument
+                            (phpstan-get-command-args :include-executable t :use-pro t) " ")))
+    (compile command t)))
 
 (defun phpstan-get-executable-and-args ()
   "Return PHPStan excutable file and arguments."
@@ -327,21 +421,33 @@ it returns the value of `SOURCE' as it is."
        ((executable-find "phpstan") (list (executable-find "phpstan")))
        (t (error "PHPStan executable not found")))))))
 
-(defun phpstan-get-command-args (&optional include-executable)
+(cl-defun phpstan-get-command-args (&key include-executable use-pro args format options config)
   "Return command line argument for PHPStan."
   (let ((executable-and-args (phpstan-get-executable-and-args))
-        (path (phpstan-normalize-path (phpstan-get-config-file)))
+        (config (or config (phpstan-normalize-path (phpstan-get-config-file))))
         (autoload (phpstan-get-autoload-file))
         (memory-limit (phpstan-get-memory-limit))
         (level (phpstan-get-level)))
-    (append (if include-executable (list (car executable-and-args)) nil)
-            (cdr executable-and-args)
-            (list "analyze" "--error-format=raw" "--no-progress" "--no-interaction")
-            (and path (list "-c" path))
-            (and autoload (list "-a" autoload))
-            (and memory-limit (list "--memory-limit" memory-limit))
-            (and level (list "-l" level))
-            (list "--"))))
+    (nconc (if include-executable (list (car executable-and-args)) nil)
+           (cdr executable-and-args)
+           (list "analyze"
+                 (format "--error-format=%s" (or format "raw"))
+                 "--no-progress" "--no-interaction")
+           (and use-pro (list "--pro" "--no-ansi"))
+           (and config (list "-c" config))
+           (and autoload (list "-a" autoload))
+           (and memory-limit (list "--memory-limit" memory-limit))
+           (and level (list "-l" level))
+           (cond
+            (phpstan--use-xdebug-option (list phpstan--use-xdebug-option))
+            ((eq phpstan-use-xdebug-option 'auto)
+             (setq-local phpstan--use-xdebug-option
+                         (when (string= "1" (php-runtime-expr "extension_loaded('xdebug')"))
+                           "--xdebug"))
+             (list phpstan--use-xdebug-option))
+            (phpstan-use-xdebug-option (list "--xdebug")))
+           options
+           (and args (cons "--" args)))))
 
 (provide 'phpstan)
 ;;; phpstan.el ends here

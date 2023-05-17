@@ -1,4 +1,4 @@
-;;; phpstan-autoloads.el --- automatically extracted autoloads
+;;; phpstan-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -53,7 +53,8 @@ STRING
      Relative path to `phpstan' configuration file from project root directory.
 
 NIL
-     If `phpstan-enable-on-no-config-file', search \"vendor/autoload.php\" in (phpstan-get-working-dir).")
+     If `phpstan-enable-on-no-config-file', search \"vendor/autoload.php\"
+     in (phpstan-get-working-dir).")
 
 (put 'phpstan-autoload-file 'safe-local-variable #'(lambda (v) (if (consp v) (and (eq 'root (car v)) (stringp (cdr v))) (null v) (stringp v))))
 
@@ -99,7 +100,27 @@ NIL
 
 (put 'phpstan-executable 'safe-local-variable #'(lambda (v) (if (consp v) (or (and (eq 'root (car v)) (stringp (cdr v))) (and (stringp (car v)) (listp (cdr v)))) (or (eq 'docker v) (null v) (stringp v)))))
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "phpstan" '("phpstan-")))
+(autoload 'phpstan-analyze-this-file "phpstan" "\
+Analyze current buffer-file using PHPStan." t nil)
+
+(autoload 'phpstan-analyze-file "phpstan" "\
+Analyze a PHP script FILE using PHPStan.
+
+\(fn FILE)" t nil)
+
+(autoload 'phpstan-analyze-project "phpstan" "\
+Analyze a PHP project using PHPStan." t nil)
+
+(autoload 'phpstan-generate-baseline "phpstan" "\
+Generate PHPStan baseline file." t nil)
+
+(autoload 'phpstan-find-baseline-file "phpstan" "\
+Find PHPStan baseline file of current project." t nil)
+
+(autoload 'phpstan-pro "phpstan" "\
+Analyze current PHP project using PHPStan Pro." t nil)
+
+(register-definition-prefixes "phpstan" '("phpstan-"))
 
 ;;;***
 

@@ -1,4 +1,4 @@
-;;; reveal-in-folder-autoloads.el --- automatically extracted autoloads
+;;; reveal-in-folder-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -19,7 +19,7 @@ Reveal the current buffer in folder." t nil)
 (autoload 'reveal-in-folder "reveal-in-folder" "\
 Reveal buffer/path depends on cursor condition." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "reveal-in-folder" '("reveal-in-folder-")))
+(register-definition-prefixes "reveal-in-folder" '("reveal-in-folder-"))
 
 ;;;***
 

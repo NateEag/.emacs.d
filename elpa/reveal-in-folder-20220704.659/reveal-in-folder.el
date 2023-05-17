@@ -4,13 +4,12 @@
 ;; Created date 2019-11-06 23:14:19
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
-;; Description: Reveal current file in folder.
-;; Keyword: folder finder reveal file explorer
-;; Version: 0.1.2
-;; Package-Version: 20220110.1821
-;; Package-Commit: 8d4dd03f8c12ea4b40fea90d0ae1de122caa5451
-;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
 ;; URL: https://github.com/jcs-elpa/reveal-in-folder
+;; Package-Version: 20220704.659
+;; Package-Commit: 7b2b02356b75e224a0414995af95d45786ee6f7d
+;; Version: 0.1.2
+;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
+;; Keywords: convenience folder finder reveal file explorer
 
 ;; This file is NOT part of GNU Emacs.
 

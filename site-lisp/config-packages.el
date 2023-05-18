@@ -629,7 +629,14 @@ The shell command lives in my dotfiles repo."
   (add-hook 'json-mode-hook '(lambda ()
                                (setq-local js2-concat-multiline-strings
                                            nil))))
+(use-package js-jsx-mode
+  ;; There's a whole lot to be said for working jump-to-definition from
+  ;; templates, and this actually got me that with no extra work in a project
+  ;; where I already had tsserver running via LSP.
+  :mode ".\\(t\\|j\\)sx\\'")
 
+;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
+;; modes should be way better in several respects.
 (use-package typescript
   ;; FIXME Get comment-auto-fill to Just Work in typescript-mode.
   ;;

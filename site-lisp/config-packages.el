@@ -675,7 +675,7 @@ The shell command lives in my dotfiles repo."
   :hook ((terraform-mode . lsp)))
 
 (use-package poly-argocd-template-mode
-  :mode "/argo/.*\.tpl\\'")
+  :mode "/argo/\\(cd\\)?/.*/*.tpl")
 
 (use-package hcl-mode
   :mode "\\.hcl.tpl")

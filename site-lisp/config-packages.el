@@ -655,7 +655,8 @@ The shell command lives in my dotfiles repo."
               ("RET" . default-indent-new-line))
   :hook ((typescript-mode . lsp)
          (typescript-mode . (lambda () (setq-local comment-style
-                                                   'extra-line)))))
+                                                   'extra-line))))
+  :delight "TS")
 
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)

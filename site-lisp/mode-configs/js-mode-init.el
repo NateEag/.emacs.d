@@ -29,4 +29,4 @@
 
   (setq ac-sources '(ac-source-yasnippet))
 
-  (tern-mode t))
+  (lsp))

@@ -54,7 +54,11 @@ in the gutter.")
                                 (number-to-string my-font-size))))
 
 (defun my-set-default-font (&optional size)
-  "Set my default font, if possible, optionally at point size `size`."
+  "Set my default font, if possible, optionally at point size `SIZE'."
+  ;; When I use this interactively, it's usually because I'm screensharing. in
+  ;; which case I'll want a larger font size.
+  (interactive (list (read-number "Default font size: " 18)))
+
   ;; Do not set a font if it is not available - keeps us from crashing in a
   ;; font-free setting.
   (if (member (my-get-default-font-name) (font-family-list))

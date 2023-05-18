@@ -539,6 +539,8 @@ The shell command lives in my dotfiles repo."
          ;; interactive configuration for a given machine or project. If
          ;; there's a better name for these files I'd love to know.
          ("bashrc\\.local" . sh-mode)
+         ;; Ditto with etc/bashrc (most common as /etc/bashrc)
+         ("etc/bashrc" . sh-mode)
          ;; Bash completions are often named for the command that they modify
          ;; without any filename extension, sometimes with no hint that they're
          ;; a bash file other than living inside a completions/ directory.

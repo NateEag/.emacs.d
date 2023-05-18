@@ -526,6 +526,9 @@ The shell command lives in my dotfiles repo."
   :hook ((smart-dash-mode . (lambda () (when (equal major-mode 'sh-mode)
                                          (ne-smart-dash-hacks-sh-mode-install))))))
 
+(use-package lsp-mode
+  :diminish "LS")
+
 (use-package sh-script
   :config (defun ne-sh-mode-maybe-insert-equals ()
             (interactive)

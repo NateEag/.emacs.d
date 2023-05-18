@@ -647,6 +647,8 @@ The shell command lives in my dotfiles repo."
 ;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
 ;; modes should be way better in several respects.
 (use-package typescript
+  ;; use-package does not seem to support delighting major modes.
+  :init (delight 'typescript-mode "TS" :major)
   ;; FIXME Get comment-auto-fill to Just Work in typescript-mode.
   ;;
   ;; The below binding gives me reasonable behavior in /* */ comment blocks but
@@ -660,8 +662,7 @@ The shell command lives in my dotfiles repo."
               ("RET" . default-indent-new-line))
   :hook ((typescript-mode . lsp)
          (typescript-mode . (lambda () (setq-local comment-style
-                                                   'extra-line))))
-  :delight "TS")
+                                                   'extra-line)))))
 
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)

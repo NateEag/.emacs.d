@@ -701,8 +701,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package lua-mode
   :mode "\\.lua\\'"
-  :config (setq lsp-clients-lua-language-server-bin
-                "~/.nix-profile/bin/lua-language-server")
+  :config (setq lsp-clients-lua-language-server-bin (executable-find "lua-language-server"))
   :hook ((lua-mode . lsp)))
 
 (use-package nxml-mode

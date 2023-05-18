@@ -529,6 +529,11 @@ The shell command lives in my dotfiles repo."
 (use-package lsp-mode
   :diminish "LS")
 
+;; I have a long history with the semi-abandoned auto-complete.el, but this is
+;; what's built-in to lsp-mode. :/
+(use-package company
+  :diminish)
+
 (use-package sh-script
   :config (defun ne-sh-mode-maybe-insert-equals ()
             (interactive)

@@ -63,6 +63,7 @@
 ;; Enter the dashman.
 (use-package dash-docs
   :init (setq dash-docs-docsets-path (expand-file-name "~/Reference/.docsets"))
+        (make-directory dash-docs-docsets-path t)
   :config (cl-map 'list #'dash-docs-ensure-docset-installed '("JavaScript"
                                                               "NodeJS"
                                                               "TypeScript"

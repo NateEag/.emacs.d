@@ -192,6 +192,64 @@ the results to be displayed in a different window."
            (ns (completing-read "Find namespace: " namespaces)))
       (cider--find-ns ns (cider--open-other-window-p arg)))))
 
+(defun cider--find-keyword-in-buffer (buffer kw)
+  "Returns the point where `KW' is found in `BUFFER'.
+Returns nil of no matching keyword is found.
+Occurrences of `KW' as (or within) strings, comments, #_ forms, symbols, etc
+are disregarded."
+  (with-current-buffer buffer
+    (save-excursion
+      (goto-char (point-min))
+      (font-lock-ensure) ;; make the forthcoming `text-properties-at` call useful
+      (let ((found nil)
+            (continue t)
+            (current-point (point)))
+        (while continue
+          (setq found (and (search-forward-regexp kw nil 'noerror)
+                           (member 'clojure-keyword-face (text-properties-at (1- (point))))))
+          (setq continue (and (not found)
+                              ;; if we haven't moved, there's nothing left to search:
+                              (not (equal current-point (point)))))
+          (setq current-point (point)))
+        (when found
+          current-point)))))
+
+(defun cider--find-keyword-loc (kw)
+  "Given `KW', returns an nrepl-dict with url, dest, dest-point.
+
+Returns the dict in all cases.  `dest-point' indicates success:
+integer on successful finds, nil otherwise."
+  (let* ((simple-ns-qualifier (and
+                               (string-match "^:\\(.+\\)/.+$" kw)
+                               (match-string 1 kw)))
+         (auto-resolved-ns-qualifier (and
+                                      (string-match "^::\\(.+\\)/.+$" kw)
+                                      (match-string 1 kw)))
+         (kw-ns (or (and auto-resolved-ns-qualifier
+                         (or (cider-resolve-alias (cider-current-ns) auto-resolved-ns-qualifier)
+                             (user-error "Could not resolve alias: %S" auto-resolved-ns-qualifier)))
+                    (and (string-match "^::" kw)
+                         (cider-current-ns :no-default))
+                    simple-ns-qualifier
+                    (user-error "Not a ns-qualified keyword: %S" kw)))
+         (kw-name (replace-regexp-in-string "^:+\\(.+/\\)?" "" kw))
+         (beginning-of-symbol "\\_<")
+         (end-of-symbol "\\_>") ;; important: if searching for foo, we don't want to match foobar (a larger symbol)
+         (kw-to-find (concat beginning-of-symbol
+                             "\\("
+                             (concat "::" kw-name)
+                             "\\|"
+                             (concat ":" kw-ns "/" kw-name)
+                             "\\)"
+                             end-of-symbol)))
+    (let* ((url (when kw-ns
+                  (cider-sync-request:ns-path kw-ns t)))
+           (dest (when url
+                   (cider-find-file url)))
+           (dest-point (when dest
+                         (cider--find-keyword-in-buffer dest kw-to-find))))
+      (nrepl-dict "url" url "dest" dest "dest-point" dest-point))))
+
 ;;;###autoload
 (defun cider-find-keyword (&optional arg)
   "Find the namespace of the keyword at point and its first occurrence there.
@@ -213,91 +271,15 @@ thing at point."
                     (format "Keyword (default %s): " kw-at-point)
                     nil nil kw-at-point)
                  kw-at-point)))
-         (ns-qualifier (and
-                        (string-match "^:+\\(.+\\)/.+$" kw)
-                        (match-string 1 kw)))
-         (kw-ns (if ns-qualifier
-                    (cider-resolve-alias (cider-current-ns) ns-qualifier)
-                  (cider-current-ns)))
-         (kw-to-find (concat "::" (replace-regexp-in-string "^:+\\(.+/\\)?" "" kw))))
-
-    (when (and ns-qualifier (string= kw-ns (cider-current-ns)))
-      (error "Could not resolve alias `%s' in `%s'" ns-qualifier (cider-current-ns)))
-    (cider--find-ns kw-ns arg)
-    (search-forward-regexp kw-to-find nil 'noerror)))
-
-;;; xref integration
-;;
-;; xref.el was introduced in Emacs 25.1.
-;; CIDER's xref backend was added in CIDER 1.2.
-(defun cider--xref-backend ()
-  "Used for xref integration."
-  ;; Check if `cider-nrepl` middleware is loaded. Allows fallback to other xref
-  ;; backends, if cider-nrepl is not loaded.
-  (when (cider-nrepl-op-supported-p "ns-path" nil 'skip-ensure)
-    'cider))
-
-(cl-defmethod xref-backend-identifier-at-point ((_backend (eql cider)))
-  "Return the relevant identifier at point."
-  (cider-symbol-at-point 'look-back))
-
-(defun cider--var-to-xref-location (var)
-  "Get location of definition of VAR."
-  (when-let* ((info (cider-var-info var))
-              (line (nrepl-dict-get info "line"))
-              (file (nrepl-dict-get info "file"))
-              (buf (cider--find-buffer-for-file file)))
-    (xref-make-buffer-location
-     buf
-     (with-current-buffer buf
-       (save-excursion
-         (goto-char 0)
-         (forward-line (1- line))
-         (back-to-indentation)
-         (point))))))
-
-(cl-defmethod xref-backend-definitions ((_backend (eql cider)) var)
-  "Find definitions of VAR."
-  (cider-ensure-connected)
-  (cider-ensure-op-supported "ns-path")
-  (when-let* ((loc (cider--var-to-xref-location var)))
-    (list (xref-make var loc))))
-
-(cl-defmethod xref-backend-identifier-completion-table ((_backend (eql cider)))
-  "Return the completion table for identifiers."
-  (cider-ensure-connected)
-  (when-let* ((ns (cider-current-ns))
-              (results (cider-sync-request:ns-vars ns)))
-    results))
-
-(cl-defmethod xref-backend-references ((_backend (eql cider)) var)
-  "Find references of VAR."
-  (cider-ensure-connected)
-  (cider-ensure-op-supported "fn-refs")
-  (when-let* ((ns (cider-current-ns))
-              (results (cider-sync-request:fn-refs ns var)))
-    (mapcar (lambda (info)
-              (let* ((filename (nrepl-dict-get info "file"))
-                     (column (nrepl-dict-get info "column"))
-                     (line (nrepl-dict-get info "line"))
-                     (loc (xref-make-file-location filename line column)))
-                (xref-make filename loc)))
-            results)))
-
-(cl-defmethod xref-backend-apropos ((_backend (eql cider)) pattern)
-  "Find all symbols that match regexp PATTERN."
-  (cider-ensure-connected)
-  (cider-ensure-op-supported "apropos")
-  (when-let* ((ns (cider-current-ns))
-              (results (cider-sync-request:apropos pattern ns t t completion-ignore-case)))
-    (mapcar (lambda (info)
-              (let* ((symbol (nrepl-dict-get info "name"))
-                     (loc (cider--var-to-xref-location symbol))
-                     (type (nrepl-dict-get info "type"))
-                     (doc (nrepl-dict-get info "doc")))
-                (xref-make (format "[%s] %s\n  %s" (propertize symbol 'face 'bold) (capitalize type) doc)
-                           loc)))
-            results)))
+         (before (buffer-list))
+         (result (cider--find-keyword-loc kw)))
+    (nrepl-dbind-response result (dest dest-point)
+      (if dest-point
+          (cider-jump-to dest dest-point arg)
+        (progn
+          (unless (memq dest before)
+            (kill-buffer dest))
+          (user-error "Couldn't find a definition for %S" kw))))))
 
 (provide 'cider-find)
 ;;; cider-find.el ends here

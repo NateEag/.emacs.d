@@ -120,16 +120,19 @@ Useful for special buffers (e.g. REPL, doc buffers) that have to keep track
 of a namespace.  This should never be set in Clojure buffers, as there the
 namespace should be extracted from the buffer's ns form.")
 
-(defun cider-current-ns (&optional no-default)
+(defun cider-current-ns (&optional no-default no-repl-check)
   "Return the current ns.
 The ns is extracted from the ns form for Clojure buffers and from
 `cider-buffer-ns' for all other buffers.  If it's missing, use the current
-REPL's ns, otherwise fall back to \"user\".  When NO-DEFAULT is non-nil, it
-will return nil instead of \"user\"."
+REPL's ns, otherwise fall back to \"user\".
+When NO-DEFAULT is non-nil, it will return nil instead of \"user\".
+When NO-REPL-CHECK is non-nil, `cider-current-repl' will not be queried,
+improving performance (at the possible cost of accuracy)."
   (or cider-buffer-ns
-      (clojure-find-ns)
-      (when-let* ((repl (cider-current-repl)))
-        (buffer-local-value 'cider-buffer-ns repl))
+      (cider-get-ns-name)
+      (unless no-repl-check
+        (when-let* ((repl (cider-current-repl)))
+          (buffer-local-value 'cider-buffer-ns repl)))
       (if no-default nil "user")))
 
 (defun cider-path-to-ns (relpath)
@@ -729,12 +732,29 @@ returned."
                 (cider-nrepl-send-sync-request)
                 (nrepl-dict-get "ns-vars")))
 
-(defun cider-sync-request:ns-path (ns)
-  "Get the path to the file containing NS."
-  (thread-first `("op" "ns-path"
-                  "ns" ,ns)
-                (cider-nrepl-send-sync-request)
-                (nrepl-dict-get "path")))
+(defun cider-sync-request:ns-path (ns &optional favor-url)
+  "Get the path to the file containing NS, FAVOR-URL if specified.
+
+FAVOR-URL ensures a Java URL is returned.
+
+* This always is the case if the underlying runtime is JVM Clojure.
+* For ClojureScript, the default is a resource name.
+  * This often cannot be open by `cider-find-file'
+    (unless there was already a buffer opening that file)
+
+Generally, you always want to FAVOR-URL.
+The option is kept for backwards compatibility.
+
+Note that even when favoring a url, the url itself might be nil,
+in which case we'll fall back to the resource name."
+  (unless ns
+    (error "No ns provided"))
+  (let ((response (cider-nrepl-send-sync-request `("op" "ns-path"
+                                                   "ns" ,ns))))
+    (nrepl-dbind-response response (path url)
+      (if (and favor-url url)
+          url
+        path))))
 
 (defun cider-sync-request:ns-vars-with-meta (ns)
   "Get a map of the vars in NS to its metadata information."

@@ -66,33 +66,35 @@ the symbol found by the xref search as argument."
                                    'action #'cider-xref-doc
                                    'help-echo "Display doc")
       (insert-text-button var-name 'type 'apropos-symbol))
-    (insert "\n  ")
-    (insert-text-button "Function" 'type 'apropos-function)
-    (insert ": ")
-    (let ((beg (point)))
-      (insert (nrepl-dict-get result "doc"))
-      (fill-region beg (point)))
+    (when-let ((doc (nrepl-dict-get result "doc")))
+      (when (not (string-equal "(not documented)" doc))
+        (insert "\n  ")
+        (let ((beg (point)))
+          (insert (propertize doc 'font-lock-face 'font-lock-doc-face))
+          (fill-region beg (point)))))
     (insert "\n")
-    (if-let* ((file (nrepl-dict-get result "file"))
+    (if-let* ((file-url (cider--xref-extract-file result))
+              (friendly-file (cider--xref-extract-friendly-file-name result))
               (line (nrepl-dict-get result "line")))
         (progn
-          (insert (propertize var-name
+          (insert "  "
+                  (propertize var-name
                               'font-lock-face 'font-lock-function-name-face)
                   " is defined in ")
-          (insert-text-button (cider--abbreviate-file-protocol file)
+          (insert-text-button friendly-file
                               'follow-link t
                               'action (lambda (_x)
-                                        (cider-xref-source file line var-name)))
+                                        (cider-xref-source file-url line var-name)))
           (insert "."))
       (insert "Definition location unavailable."))
     (insert "\n")))
 
-(defun cider-xref-source (file line name)
-  "Find source for FILE, LINE and NAME."
+(defun cider-xref-source (file-url line name)
+  "Find source for FILE-URL, LINE and NAME."
   (interactive)
-  (if file
-      (if-let* ((buffer (and (not (cider--tooling-file-p file))
-                             (cider-find-file file))))
+  (if file-url
+      (if-let* ((buffer (and (not (cider--tooling-file-p file-url))
+                             (cider-find-file file-url))))
           (cider-jump-to buffer (if line
                                     (cons line nil)
                                   name)

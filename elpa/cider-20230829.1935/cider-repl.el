@@ -236,8 +236,11 @@ This cache is stored in the connection buffer.")
   "Handle server state contained in RESPONSE."
   (with-demoted-errors "Error in `cider-repl--state-handler': %s"
     (when (member "state" (nrepl-dict-get response "status"))
-      (nrepl-dbind-response response (repl-type changed-namespaces)
-        (when (and repl-type cider-repl-auto-detect-type)
+      (nrepl-dbind-response response (repl-type changed-namespaces session)
+        (when (and repl-type
+                   cider-repl-auto-detect-type
+                   ;; tooling sessions always run on the JVM so they are not a valid criterion:
+                   (not (equal session nrepl-tooling-session)))
           (cider-set-repl-type repl-type))
         (when (eq (cider-maybe-intern repl-type) 'cljs)
           (setq cider-repl-cljs-upgrade-pending nil))
@@ -983,6 +986,67 @@ t, as the content-type response is (currently) an alternative to the
 value response.  However for handlers which themselves issue subsequent
 nREPL ops, it may be convenient to prevent inserting a prompt.")
 
+(defun cider--maybe-get-state-cljs ()
+  "Invokes `cider/get-state' when it's possible to do so."
+  (when-let ((conn (cider-current-repl 'cljs)))
+    (when (nrepl-op-supported-p "cider/get-state" conn)
+      (nrepl-send-request '("op" "cider/get-state")
+                          (lambda (_response)
+                            ;; No action is necessary: this request results in `cider-repl--state-handler` being called.
+                            )
+                          conn))))
+
+(defun cider--maybe-get-state-for-shadow-cljs (buffer &optional err)
+  "Refresh the changed namespaces metadata given BUFFER and ERR (stderr string).
+
+This is particularly necessary for shadow-cljs because:
+
+* it has a particular nREPL implementation; and
+* one may have saved files (which triggers recompilation,
+  and therefore the need for recomputing changed namespaces)
+  without sending a nREPL message (this can particularly happen
+  if the file was edited outside Emacs)."
+  (with-current-buffer buffer
+    (when (and (eq cider-repl-type 'cljs)
+               (eq cider-cljs-repl-type 'shadow)
+               (not cider-repl-cljs-upgrade-pending)
+               (if err
+                   (string-match-p "Build completed\\." err)
+                 t))
+      (cider--maybe-get-state-cljs))))
+
+(defun cider--maybe-get-state-for-figwheel-main (buffer out)
+  "Refresh the changed namespaces metadata given BUFFER and OUT (stdout string)."
+  (with-current-buffer buffer
+    (when (and (eq cider-repl-type 'cljs)
+               (eq cider-cljs-repl-type 'figwheel-main)
+               (not cider-repl-cljs-upgrade-pending)
+               (string-match-p "Successfully compiled build" out))
+      (cider--maybe-get-state-cljs))))
+
+(defun cider--shadow-cljs-handle-stderr (buffer err)
+  "Refresh the changed namespaces metadata given BUFFER and ERR."
+  (cider--maybe-get-state-for-shadow-cljs buffer err))
+
+(defun cider--shadow-cljs-handle-done (buffer)
+  "Refresh the changed namespaces metadata given BUFFER."
+  (cider--maybe-get-state-for-shadow-cljs buffer))
+
+(defvar cider--repl-stdout-functions (list #'cider--maybe-get-state-for-figwheel-main)
+  "Functions to be invoked each time new stdout is received on a repl buffer.
+
+Good for, for instance, monitoring specific strings that may be logged,
+and responding to them.")
+
+(defvar cider--repl-stderr-functions (list #'cider--shadow-cljs-handle-stderr)
+  "Functions to be invoked each time new stderr is received on a repl buffer.
+
+Good for, for instance, monitoring specific strings that may be logged,
+and responding to them.")
+
+(defvar cider--repl-done-functions (list #'cider--shadow-cljs-handle-done)
+  "Functions to be invoked each time a given REPL interaction is complete.")
+
 (defun cider-repl-handler (buffer)
   "Make an nREPL evaluation handler for the REPL BUFFER."
   (let ((show-prompt t))
@@ -991,14 +1055,20 @@ nREPL ops, it may be convenient to prevent inserting a prompt.")
      (lambda (buffer value)
        (cider-repl-emit-result buffer value t))
      (lambda (buffer out)
+       (dolist (f cider--repl-stdout-functions)
+         (funcall f buffer out))
        (cider-repl-emit-stdout buffer out))
      (lambda (buffer err)
+       (dolist (f cider--repl-stderr-functions)
+         (funcall f buffer err))
        (cider-repl-emit-stderr buffer err))
      (lambda (buffer)
        (when show-prompt
          (cider-repl-emit-prompt buffer))
        (when cider-repl-buffer-size-limit
-         (cider-repl-maybe-trim-buffer buffer)))
+         (cider-repl-maybe-trim-buffer buffer))
+       (dolist (f cider--repl-done-functions)
+         (funcall f buffer)))
      nrepl-err-handler
      (lambda (buffer value content-type)
        (if-let* ((content-attrs (cadr content-type))
@@ -1680,6 +1750,90 @@ constructs."
                      (mapconcat #'identity (cider-repl--available-shortcuts) ", "))))
         (error "No command selected")))))
 
+(defun cider--sesman-friendly-session-p (session &optional debug)
+  "Check if SESSION is a friendly session, DEBUG optionally.
+
+The checking is done as follows:
+
+* Consider if the buffer belongs to `cider-ancillary-buffers`
+* Consider the buffer's filename, strip any Docker/TRAMP details from it
+* Check if that filename belongs to the classpath,
+  or to the classpath roots (e.g. the project root dir)
+* As a fallback, check if the buffer's ns form
+  matches any of the loaded namespaces."
+  (setcdr session (seq-filter #'buffer-live-p (cdr session)))
+  (or (member (buffer-name) cider-ancillary-buffers)
+      (when-let* ((repl (cadr session))
+                  (proc (get-buffer-process repl))
+                  (file (file-truename (or (buffer-file-name) default-directory))))
+        ;; With avfs paths look like /path/to/.avfs/path/to/some.jar#uzip/path/to/file.clj
+        (when (string-match-p "#uzip" file)
+          (let ((avfs-path (directory-file-name (expand-file-name (or (getenv "AVFSBASE")  "~/.avfs/")))))
+            (setq file (replace-regexp-in-string avfs-path "" file t t))))
+        (when-let ((tp (cider-tramp-prefix (current-buffer))))
+          (setq file (string-remove-prefix tp file)))
+        (when (process-live-p proc)
+          (let* ((classpath (or (process-get proc :cached-classpath)
+                                (let ((cp (with-current-buffer repl
+                                            (cider-classpath-entries))))
+                                  (process-put proc :cached-classpath cp)
+                                  cp)))
+                 (ns-list (or (process-get proc :all-namespaces)
+                              (let ((ns-list (with-current-buffer repl
+                                               (cider-sync-request:ns-list))))
+                                (process-put proc :all-namespaces ns-list)
+                                ns-list)))
+                 (classpath-roots (or (process-get proc :cached-classpath-roots)
+                                      (let ((cp (thread-last classpath
+                                                             (seq-filter (lambda (path) (not (string-match-p "\\.jar$" path))))
+                                                             (mapcar #'file-name-directory)
+                                                             (seq-remove  #'null)
+                                                             (seq-uniq))))
+                                        (process-put proc :cached-classpath-roots cp)
+                                        cp))))
+            (or (seq-find (lambda (path) (string-prefix-p path file))
+                          classpath)
+                (seq-find (lambda (path) (string-prefix-p path file))
+                          classpath-roots)
+                (when-let* ((cider-path-translations (cider--all-path-translations))
+                            (translated (cider--translate-path file 'to-nrepl :return-all)))
+                  (seq-find (lambda (translated-path)
+                              (or (seq-find (lambda (path)
+                                              (string-prefix-p path translated-path))
+                                            classpath)
+                                  (seq-find (lambda (path)
+                                              (string-prefix-p path translated-path))
+                                            classpath-roots)))
+                            translated))
+                (when-let ((ns (condition-case nil
+                                   (substring-no-properties (cider-current-ns :no-default
+                                                                              ;; important - don't query the repl,
+                                                                              ;; avoiding a recursive invocation of `cider--sesman-friendly-session-p`:
+                                                                              :no-repl-check))
+                                 (error nil))))
+                  ;; if the ns form matches with a ns of all runtime namespaces, we can consider the buffer to match
+                  ;; (this is a bit lax, but also quite useful)
+                  (with-current-buffer repl
+                    (or (when cider-repl-ns-cache ;; may be nil on repl startup
+                          (member ns (nrepl-dict-keys cider-repl-ns-cache)))
+                        (member ns ns-list))))
+                (when debug
+                  (list file "was not determined to belong to classpath:" classpath "or classpath-roots:" classpath-roots))))))))
+
+(defun cider-debug-sesman-friendly-session-p ()
+  "`message's debugging information relative to friendly sessions.
+
+This is useful for when one sees 'No linked CIDER sessions'
+in an unexpected place."
+  (interactive)
+  (message (prin1-to-string (mapcar (lambda (session)
+                                      (cider--sesman-friendly-session-p session t))
+                                    (sesman--all-system-sessions 'CIDER)))))
+
+(cl-defmethod sesman-friendly-session-p ((_system (eql CIDER)) session)
+  "Check if SESSION is a friendly session."
+  (cider--sesman-friendly-session-p session))
+
 
 ;;;;; CIDER REPL mode
 (defvar cider-repl-mode-hook nil
@@ -1871,7 +2025,10 @@ constructs."
   ;; apply dir-local variables to REPL buffers
   (hack-dir-local-variables-non-file-buffer)
   (when cider-repl-history-file
-    (cider-repl-history-load cider-repl-history-file)
+    (condition-case nil
+        (cider-repl-history-load cider-repl-history-file)
+      (error
+       (message "Malformed cider-repl-history-file: %s" cider-repl-history-file)))
     (add-hook 'kill-buffer-hook #'cider-repl-history-just-save t t)
     (add-hook 'kill-emacs-hook #'cider-repl-history-just-save))
   (add-hook 'completion-at-point-functions #'cider-complete-at-point nil t)

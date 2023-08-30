@@ -55,13 +55,19 @@ available) and the matching REPL buffer."
   :package-version '(cider . "0.17.0"))
 
 (defcustom cider-auto-mode t
-  "When non-nil, automatically enable cider mode for all Clojure buffers."
+  "When non-nil, automatically enable and disable CIDER in all Clojure buffers.
+
+After an initial connection, `cider-mode' is added to `clojure-mode-hook' and
+automatically enabled on all existing Clojure buffers.  After the last
+connection has been closed, `cider-mode' is disabled in all Clojure buffers, and
+has to be manually re-enabled via \\[cider-mode].
+
+Useful for switching between alternative minor modes like `inf-clojure-mode'."
   :type 'boolean
   :group 'cider
   :safe #'booleanp
   :package-version '(cider . "0.9.0"))
 
-;;;###autoload
 (defcustom cider-merge-sessions nil
   "Controls session combination behaviour.
 
@@ -69,15 +75,44 @@ Symbol `host' combines all sessions of a project associated with the same host.
 Symbol `project' combines all sessions of a project.
 
 All other values do not combine any sessions."
-  :type 'symbol
+  :type '(choice (const :tag "Combine all sessions with the same host" host)
+                 (const :tag "Combine all sessions from the same project" project)
+                 (other :tag "Do not combine any sessions"))
   :group 'cider
   :safe #'symbolp
   :package-version '(cider . "1.5"))
 
+(defcustom cider-reuse-dead-repls 'prompt
+  "How to deal with existing dead REPL buffers when initializing a connection.
+
+Possible choices are `prompt', `auto', `any', and nil.
+- `prompt' means to always ask the user for a decision.
+- `auto' means to automatically reuse a dead REPL without prompting the user
+  if it is the only available option.  When there are multiple buffers to
+  choose from, the user is is prompted for a choice.
+- `any' (or any other non-nil value) means to reuse any dead REPL buffer
+  available, by default the most relevant according to various heuristics,
+  and never prompt the user.
+- nil means to start a new REPL each time, ignoring existing buffers."
+  :type '(choice (const :tag "Always prompt for what to do with dead REPLs" prompt)
+                 (const :tag "Reuse dead REPL, prompting only for multiple choice" auto)
+                 (const :tag "Reuse any available dead REPL and never prompt" any)
+                 (const :tag "Never reuse dead REPLs" nil))
+  :group 'cider
+  :safe #'symbolp
+  :package-version '(cider . "1.8"))
+
 (defconst cider-required-nrepl-version "0.6.0"
   "The minimum nREPL version that's known to work properly with CIDER.")
 
-
+(defcustom cider-clojurec-eval-destination 'multi
+  "The REPL type to be chosen in .cljc buffers."
+  :type '(choice (const :tag "Clojure" clj)
+                 (const :tag "ClojureScript" cljs)
+                 (const :tag "Multi (evaluate in Clojure and ClojureScript simultaneously)" multi))
+  :group 'cider
+  :package-version '(cider . "1.8"))
+
 ;;; Connect
 
 (defun cider-nrepl-connect (params)
@@ -268,6 +303,7 @@ message in the REPL area."
   (cider-nrepl-send-request '("op" "out-subscribe")
                             (cider-interactive-eval-handler (current-buffer))))
 
+(defvar cider-mode)
 (declare-function cider-mode "cider-mode")
 (defun cider-enable-on-existing-clojure-buffers ()
   "Enable CIDER's minor mode on existing Clojure buffers.
@@ -276,18 +312,19 @@ See command `cider-mode'."
   (add-hook 'clojure-mode-hook #'cider-mode)
   (dolist (buffer (cider-util--clojure-buffers))
     (with-current-buffer buffer
-      (cider-mode +1)
-      ;; In global-eldoc-mode, a new file-visiting buffer calls
-      ;; `turn-on-eldoc-mode' which enables eldoc-mode if it's supported in that
-      ;; buffer as determined by `eldoc--supported-p'.  Cider's eldoc support
-      ;; allows new buffers in cider-mode to enable eldoc-mode.  As of 2021-04,
-      ;; however, clojure-mode itself has no eldoc support, so old clojure
-      ;; buffers opened before cider started aren't necessarily in eldoc-mode.
-      ;; Here, we've enabled cider-mode for this old clojure buffer, and now, if
-      ;; global-eldoc-mode is enabled, try to enable eldoc-mode as if the buffer
-      ;; had just been created with cider-mode.
-      (when global-eldoc-mode
-        (turn-on-eldoc-mode)))))
+      (unless cider-mode
+        (cider-mode +1)
+        ;; In global-eldoc-mode, a new file-visiting buffer calls
+        ;; `turn-on-eldoc-mode' which enables eldoc-mode if it's supported in that
+        ;; buffer as determined by `eldoc--supported-p'.  Cider's eldoc support
+        ;; allows new buffers in cider-mode to enable eldoc-mode.  As of 2021-04,
+        ;; however, clojure-mode itself has no eldoc support, so old clojure
+        ;; buffers opened before cider started aren't necessarily in eldoc-mode.
+        ;; Here, we've enabled cider-mode for this old clojure buffer, and now, if
+        ;; global-eldoc-mode is enabled, try to enable eldoc-mode as if the buffer
+        ;; had just been created with cider-mode.
+        (when global-eldoc-mode
+          (turn-on-eldoc-mode))))))
 
 (declare-function cider--debug-mode "cider-debug")
 (defun cider-disable-on-existing-clojure-buffers ()
@@ -374,7 +411,8 @@ buffer."
 This function is appended to `nrepl-disconnected-hook' in the client
 process buffer."
   ;; `nrepl-connected-hook' is run in the connection buffer
-  (cider-possibly-disable-on-existing-clojure-buffers)
+  (when cider-auto-mode
+    (cider-possibly-disable-on-existing-clojure-buffers))
   (run-hooks 'cider-disconnected-hook))
 
 
@@ -576,35 +614,6 @@ REPL defaults to the current REPL."
   (sesman-more-recent-p (cdr session1) (cdr session2)))
 
 (declare-function cider-classpath-entries "cider-client")
-(cl-defmethod sesman-friendly-session-p ((_system (eql CIDER)) session)
-  "Check if SESSION is a friendly session."
-  (setcdr session (seq-filter #'buffer-live-p (cdr session)))
-  (when-let* ((repl (cadr session))
-              (proc (get-buffer-process repl))
-              (file (file-truename (or (buffer-file-name) default-directory))))
-    ;; With avfs paths look like /path/to/.avfs/path/to/some.jar#uzip/path/to/file.clj
-    (when (string-match-p "#uzip" file)
-      (let ((avfs-path (directory-file-name (expand-file-name (or (getenv "AVFSBASE")  "~/.avfs/")))))
-        (setq file (replace-regexp-in-string avfs-path "" file t t))))
-    (when (process-live-p proc)
-      (let* ((classpath (or (process-get proc :cached-classpath)
-                            (let ((cp (with-current-buffer repl
-                                        (cider-classpath-entries))))
-                              (process-put proc :cached-classpath cp)
-                              cp)))
-             (classpath-roots (or (process-get proc :cached-classpath-roots)
-                                  (let ((cp (thread-last
-                                              classpath
-                                              (seq-filter (lambda (path) (not (string-match-p "\\.jar$" path))))
-                                              (mapcar #'file-name-directory)
-                                              (seq-remove  #'null)
-                                              (seq-uniq))))
-                                    (process-put proc :cached-classpath-roots cp)
-                                    cp))))
-        (or (seq-find (lambda (path) (string-prefix-p path file))
-                      classpath)
-            (seq-find (lambda (path) (string-prefix-p path file))
-                      classpath-roots))))))
 
 (defvar cider-sesman-browser-map
   (let ((map (make-sparse-keymap)))
@@ -682,6 +691,19 @@ Fallback on `cider' command."
            (plist-put :session-name ses-name)
            (plist-put :repl-buffer r)))))))
 
+(defun cider--ensure-spec-is-not-invokable (spec)
+  "Ensures SPEC cannot be invoked as a function.
+
+Invokeable specs are an Emacs 29 feature
+that we don't intend to use in this context."
+  (let ((spec-char (car spec))
+        (spec-value (cdr spec)))
+    `(,spec-char
+      .
+      ,(if (symbolp spec-value)
+           (prin1-to-string spec-value)
+         spec-value))))
+
 (defun cider-format-connection-params (template params)
   "Format PARAMS with TEMPLATE string.
 The following formats can be used in TEMPLATE string:
@@ -733,7 +755,8 @@ removed."
                   (?S . ,cljs-repl-type)))
          (ses-name (or (plist-get params :session-name)
                        (format-spec cider-session-name-template specs)))
-         (specs (append `((?s . ,ses-name)) specs)))
+         (specs (append `((?s . ,ses-name)) specs))
+         (specs (mapcar #'cider--ensure-spec-is-not-invokable specs)))
     (thread-last
       (format-spec template specs)
       ;; remove extraneous separators
@@ -757,7 +780,7 @@ Session name can be customized with `cider-session-name-template'."
 ;;; REPL Buffer Init
 
 (defvar-local cider-cljs-repl-type nil
-  "The type of the ClojureScript runtime (Browser, Node, Figwheel, etc.).")
+  "The type of the ClojureScript runtime ('browser, 'node, 'figwheel, etc.).")
 
 (defvar-local cider-repl-type nil
   "The type of this REPL buffer, usually either clj or cljs.")
@@ -781,7 +804,7 @@ For the REPL type use the function `cider-repl-type'."
   (with-current-buffer (or buffer (current-buffer))
     (cond
      ((derived-mode-p 'clojurescript-mode) 'cljs)
-     ((derived-mode-p 'clojurec-mode) 'multi)
+     ((derived-mode-p 'clojurec-mode) cider-clojurec-eval-destination)
      ((derived-mode-p 'clojure-mode) 'clj)
      (cider-repl-type))))
 
@@ -819,28 +842,35 @@ PARAMS is a plist as received by `cider-repl-create'."
     (let* ((proj-dir (plist-get params :project-dir))
            (host (plist-get params :host))
            (port (plist-get params :port))
-           (cljsp (eq (plist-get params :repl-type) 'cljs))
+           (type (plist-get params :repl-type))
            (scored-repls
-            (delq nil
-                  (mapcar (lambda (b)
-                            (let ((bparams (cider--gather-connect-params nil b)))
-                              (when (and cljsp
-                                         (eq (plist-get bparams :repl-type)
-                                             'cljs))
-                                (cons (buffer-name b)
-                                      (+
-                                       (if (equal proj-dir (plist-get bparams :project-dir)) 8 0)
-                                       (if (equal host (plist-get bparams :host)) 4 0)
-                                       (if (equal port (plist-get bparams :port)) 2 0))))))
-                          repls))))
-      (when scored-repls
-        (if (> (length scored-repls) 1)
-            (when (y-or-n-p "Dead REPLs exist.  Reuse? ")
-              (let ((sorted-repls (seq-sort (lambda (a b) (> (cdr a) (cdr b))) scored-repls)))
-                (get-buffer (completing-read "REPL to reuse: "
-                                             (mapcar #'car sorted-repls) nil t nil nil (caar sorted-repls)))))
-          (when (y-or-n-p (format "A dead REPL %s exists.  Reuse? " (caar scored-repls)))
-            (get-buffer (caar scored-repls))))))))
+            (mapcar (lambda (b)
+                      (let ((bparams (ignore-errors (cider--gather-connect-params nil b))))
+                        (when (eq type (plist-get bparams :repl-type))
+                          (cons b (+
+                                   (if (equal proj-dir (plist-get bparams :project-dir)) 8 0)
+                                   (if (equal host (plist-get bparams :host)) 4 0)
+                                   (if (equal port (plist-get bparams :port)) 2 0))))))
+                    repls))
+           (sorted-repls (mapcar #'car (seq-sort-by #'cdr #'> (delq nil scored-repls)))))
+      (cond ((null sorted-repls) nil)
+            ((and (= 1 (length sorted-repls))
+                  (eq cider-reuse-dead-repls 'prompt))
+             (if (y-or-n-p (format "A dead REPL %s exists.  Reuse buffer? " (car sorted-repls)))
+                 (car sorted-repls)
+               (and (y-or-n-p "Kill dead REPL buffer?")
+                    (kill-buffer (car sorted-repls))
+                    nil)))
+            ((and (< 1 (length sorted-repls))
+                  (memq cider-reuse-dead-repls '(prompt auto)))
+             (if (y-or-n-p "Dead REPL buffers exist.  Select one to reuse? ")
+                 (get-buffer (completing-read "REPL buffer to reuse: " (mapcar #'buffer-name sorted-repls)
+                                              nil t nil nil (car sorted-repls)))
+               (and (y-or-n-p "Kill all dead REPL buffers?")
+                    (mapc #'kill-buffer sorted-repls)
+                    nil)))
+            (cider-reuse-dead-repls ;; fallthrough for 'auto / 'any / other non-nil values
+             (car sorted-repls))))))
 
 (declare-function cider-default-err-handler "cider-eval")
 (declare-function cider-repl-mode "cider-repl")
@@ -858,7 +888,8 @@ function with the repl buffer set as current."
   ;; Connection might not have been set as yet. Please don't send requests in
   ;; this function, but use cider--connected-handler instead.
   (let ((buffer (or (plist-get params :repl-buffer)
-                    (cider--choose-reusable-repl-buffer params)
+                    (and cider-reuse-dead-repls
+                         (cider--choose-reusable-repl-buffer params))
                     (get-buffer-create (generate-new-buffer-name "*cider-uninitialized-repl*"))))
         (ses-name (or (plist-get params :session-name)
                       (cider-make-session-name params))))
@@ -880,6 +911,8 @@ function with the repl buffer set as current."
             ;; ran at the end of cider--connected-handler
             cider-repl-init-function (plist-get params :repl-init-function)
             cider-launch-params params)
+      (when-let ((type (plist-get params :cljs-repl-type)))
+        (setq cider-cljs-repl-type type))
       (cider-repl-reset-markers)
       (add-hook 'nrepl-response-handler-functions #'cider-repl--state-handler nil 'local)
       (add-hook 'nrepl-connected-hook #'cider--connected-handler nil 'local)

@@ -230,6 +230,22 @@ arglists.  ELDOC-INFO is a p-list containing the eldoc information."
             (cider-eldoc-format-thing ns symbol thing 'fn)
             (cider-eldoc-format-arglist arglists pos))))
 
+(defun cider-eldoc-format-special-form (thing pos eldoc-info)
+  "Return the formatted eldoc string for a special-form.
+THING is the special form's name.  POS is the argument index of the
+special-form's arglists.  ELDOC-INFO is a p-list containing the eldoc
+information."
+  (let* ((ns (lax-plist-get eldoc-info "ns"))
+         (special-form-symbol (lax-plist-get eldoc-info "symbol"))
+         (arglists (mapcar (lambda (arglist)
+                             (if (equal (car arglist) special-form-symbol)
+                                 (cdr arglist)
+                               arglist))
+                           (lax-plist-get eldoc-info "arglists"))))
+    (format "%s: %s"
+            (cider-eldoc-format-thing ns special-form-symbol thing 'fn)
+            (cider-eldoc-format-arglist arglists pos))))
+
 (defun cider-highlight-args (arglist pos)
   "Format the the function ARGLIST for eldoc.
 POS is the index of the currently highlighted argument."
@@ -307,12 +323,13 @@ if the maximum number of sexps to skip is exceeded."
 (defun cider-eldoc-thing-type (eldoc-info)
   "Return the type of the ELDOC-INFO being displayed by eldoc.
 It can be a function or var now."
-  (pcase (lax-plist-get eldoc-info "type")
-    ("function" 'fn)
-    ("special-form" 'special-form)
-    ("macro" 'macro)
-    ("method" 'method)
-    ("variable" 'var)))
+  (or (pcase (lax-plist-get eldoc-info "type")
+        ("function" 'fn)
+        ("special-form" 'special-form)
+        ("macro" 'macro)
+        ("method" 'method)
+        ("variable" 'var))
+      'fn))
 
 (defun cider-eldoc-info-at-point ()
   "Return eldoc info at point.
@@ -470,9 +487,12 @@ Only useful for interop forms.  Clojure forms would be returned unchanged."
            (pos (lax-plist-get sexp-eldoc-info "pos"))
            (thing (lax-plist-get sexp-eldoc-info "thing")))
       (when eldoc-info
-        (if (eq (cider-eldoc-thing-type eldoc-info) 'var)
-            (cider-eldoc-format-variable thing eldoc-info)
-          (cider-eldoc-format-function thing pos eldoc-info))))))
+        (cond
+         ((eq (cider-eldoc-thing-type eldoc-info) 'var)
+          (cider-eldoc-format-variable thing eldoc-info))
+         ((eq (cider-eldoc-thing-type eldoc-info) 'special-form)
+          (cider-eldoc-format-special-form thing pos eldoc-info))
+         (t (cider-eldoc-format-function thing pos eldoc-info)))))))
 
 (defun cider-eldoc-setup ()
   "Setup eldoc in the current buffer.

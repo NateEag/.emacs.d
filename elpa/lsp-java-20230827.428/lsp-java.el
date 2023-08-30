@@ -2,7 +2,7 @@
 
 ;; Version: 3.0
 
-;; Package-Requires: ((emacs "25.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.18.0") (f "0.20.0") (ht "2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
+;; Package-Requires: ((emacs "27.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.18.0") (f "0.20.0") (ht "2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
 ;; Keywords: languague, tools
 ;; URL: https://github.com/emacs-lsp/lsp-java
 
@@ -46,10 +46,20 @@ The slash is expected at the end."
   :risky t
   :type 'directory)
 
-(defcustom lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.22.0/jdt-language-server-1.22.0-202304131553.tar.gz"
+(defcustom lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.23.0/jdt-language-server-1.23.0-202304271346.tar.gz"
   "JDT JS download url.
 Use https://download.eclipse.org/jdtls/milestones/1.12.0/jdt-language-server-1.12.0-202206011637.tar.gz if you want to use older java version."
   :type 'string)
+
+(defcustom lsp-java-server-config-dir nil
+  "Path to your platform's configuration directory.
+
+This path has to be writable. This configuration is specifically
+created for systems like NixOS where the default configuration
+directory inferred by lsp-java is not writable."
+  :group 'lsp-java
+  :risky t
+  :type 'directory)
 
 (defcustom lsp-java-java-path "java"
   "Path of the java executable."
@@ -641,7 +651,9 @@ FULL specify whether full or incremental build will be performed."
 (defun lsp-java--ls-command ()
   "LS startup command."
   (let ((server-jar (lsp-file-local-name (lsp-java--locate-server-jar)))
-        (server-config (lsp-file-local-name (lsp-java--locate-server-config)))
+        (server-config (if lsp-java-server-config-dir
+			   lsp-java-server-config-dir
+			 (lsp-file-local-name (lsp-java--locate-server-config))))
         (java-9-args (when (lsp-java--java-9-plus-p)
                        lsp-java-9-args)))
     (lsp-java--ensure-dir lsp-java-workspace-dir)
@@ -1574,7 +1586,7 @@ postfix snippets are sorted."
   :type '(choice (:const "auto") (:const "firstLetter") (:const "off"))
   :lsp-path "java.completion.matchCase")
 
-(lsp-defcustom lsp-java-completion-lazy-resolve-text-edit-enabled t
+(lsp-defcustom lsp-java-completion-lazy-resolve-text-edit-enabled nil
   "[Experimental] Enable/disable lazily resolving text edits for
 code completion."
   :type 'boolean

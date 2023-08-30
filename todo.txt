@@ -44,6 +44,11 @@
 - Find some good tools for interacting with MongoDB. ob-mongo looks useful for
   doing one-off analyses: https://github.com/krisajenkins/ob-mongo
 
+- Add do-at-point package and configure my programming modes to use it for
+  "grab hyperlink to file in git forge" / "grab hyperlink to commit in git
+  forge", as well as "follow hyperlink", "find file", maybe "jump to def", etc?
+  Might be trying to overkill - just seemed like an interesting thought.
+
 - Find k8s/Helm tooling for Emacs. Need a language server and/or yaml-lsp
   plugin for Helm/k8s files. https://github.com/TxGVNN/emacs-k8s-mode, maybe
   parts of https://github.com/techniumlabs/ecloud, possibly adapt

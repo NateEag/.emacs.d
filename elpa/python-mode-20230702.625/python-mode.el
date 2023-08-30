@@ -1415,18 +1415,18 @@ variable section, e.g.:
   :tag "py-pychecker-command-args"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command "pyflakes"
-  "Shell command used to run Pyflakes."
+(defcustom py-pyflakes3-command "pyflakes3"
+  "Shell command used to run Pyflakes3."
   :type 'string
-  :tag "py-pyflakes-command"
+  :tag "py-pyflakes3-command"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command-args ""
-  "String arguments to be passed to pyflakes.
+(defcustom py-pyflakes3-command-args ""
+  "String arguments to be passed to pyflakes3.
 
 Default is \"\""
   :type 'string
-  :tag "py-pyflakes-command-args"
+  :tag "py-pyflakes3-command-args"
   :group 'python-mode)
 
 (defcustom py-pep8-command "pep8"
@@ -2109,10 +2109,8 @@ If ‘py-use-local-default’ is non-nil."
   :tag "py-shell-local-path"
   :group 'python-mode)
 
-(defcustom py-python-edit-version ""
-  "When not empty, fontify according to Python version specified.
-
-Default is the empty string, a useful value \"python3\" maybe.
+(defcustom py-python-edit-version "python3"
+  "Default is \"python3\".
 
 When empty, version is guessed via ‘py-choose-shell’."
 
@@ -2538,7 +2536,7 @@ or `py-ipython0.11-completion-command-string'.
   "Detecting the shell in head of file.")
 
 (defvar py-temp-directory
-  (let ((ok '(lambda (x)
+  (let ((ok #'(lambda (x)
                (and x
                     (setq x (expand-file-name x)) ; always true
                     (file-directory-p x)
@@ -2586,7 +2584,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-pychecker-history nil)
 
-(defvar py-pyflakes-history nil)
+(defvar py-pyflakes3-history nil)
 
 (defvar py-pep8-history nil)
 
@@ -3305,6 +3303,57 @@ to paths in Emacs."
 (defvar py--docend nil
   "Internally used by ‘py--write-edit’.")
 
+(defvar py-completion-setup-code  "def __PYTHON_EL_get_completions(text):
+    completions = []
+    completer = None
+
+    try:
+        import readline
+
+        try:
+            import __builtin__
+        except ImportError:
+            # Python 3
+            import builtins as __builtin__
+        builtins = dir(__builtin__)
+
+        is_ipython = ('__IPYTHON__' in builtins or
+                      '__IPYTHON__active' in builtins)
+        splits = text.split()
+        is_module = splits and splits[0] in ('from', 'import')
+
+        if is_ipython and is_module:
+            from IPython.core.completerlib import module_completion
+            completions = module_completion(text.strip())
+        elif is_ipython and '__IP' in builtins:
+            completions = __IP.complete(text)
+        elif is_ipython and 'get_ipython' in builtins:
+            completions = get_ipython().Completer.all_completions(text)
+        else:
+            # Try to reuse current completer.
+            completer = readline.get_completer()
+            if not completer:
+                # importing rlcompleter sets the completer, use it as a
+                # last resort to avoid breaking customizations.
+                import rlcompleter
+                completer = readline.get_completer()
+            if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+                completer.print_mode = False
+            i = 0
+            while True:
+                completion = completer(text, i)
+                if not completion:
+                    break
+                i += 1
+                completions.append(completion)
+    except:
+        pass
+    finally:
+        if getattr(completer, 'PYTHON_EL_WRAPPED', False):
+            completer.print_mode = True
+    return completions"
+  "Code used to setup completion in inferior Python processes.")
+
 (defcustom py-completion-setup-code
   "
 def __PYTHON_EL_get_completions(text):
@@ -3437,8 +3486,8 @@ commonly \"cls\" and \"self\""
 
 (defface py-def-face
   '((t (:inherit font-lock-function-name-face)))
-  "Face for classes."
-  :tag "py-class-name-face"
+  "Face for definitions."
+  :tag "py-def-face"
   :group 'python-mode)
 
 (defface py-exception-name-face
@@ -4723,7 +4772,7 @@ REGEXP: a symbol"
 
 Argument REGEXP: a symbol.
 
-Return a list, whose car is indentation, cdr position.
+Return a list if found, whose car holds indentation, cdr position in buffer.
 
 Keyword detected from REGEXP
 Honor MAXINDENT if provided
@@ -5364,13 +5413,17 @@ Avoids ‘recenter’ calls until OUTPUT is completely sent."
 (defmacro py-shell--add-to-path-with-priority (pathvar paths)
   "Modify PATHVAR and ensure PATHS are added only once at beginning."
   `(dolist (path (reverse ,paths))
-     (cl-delete path ,pathvar :test #'string=)
-     (cl-pushnew path ,pathvar :test #'string=)))
+     (setq ,pathvar (cons path (cl-delete path ,pathvar :test #'string=)))))
 
 (defun py-shell-tramp-refresh-remote-path (vec paths)
   "Update VEC's remote-path giving PATHS priority."
+  (cl-assert (featurep 'tramp))
+  (declare-function tramp-set-remote-path "tramp-sh")
+  (declare-function tramp-set-connection-property "tramp-cache")
+  (declare-function tramp-get-connection-property "tramp-cache")
   (let ((remote-path (tramp-get-connection-property vec "remote-path" nil)))
     (when remote-path
+      ;; FIXME: This part of the Tramp code still knows about Python!
       (py-shell--add-to-path-with-priority remote-path paths)
       (tramp-set-connection-property vec "remote-path" remote-path)
       (tramp-set-remote-path vec))))
@@ -5407,13 +5460,13 @@ Avoids ‘recenter’ calls until OUTPUT is completely sent."
        vec (format "unset %s" (mapconcat 'identity unset " ")) t))))
 
 (defun py-shell-calculate-pythonpath ()
-  "Calculate the PYTHONPATH using ‘py-shell-extra-pythonpaths’."
+  "Calculate the PYTHONPATH using `python-shell-extra-pythonpaths'."
   (let ((pythonpath
          (split-string
           (or (getenv "PYTHONPATH") "") path-separator 'omit)))
     (py-shell--add-to-path-with-priority
      pythonpath py-shell-extra-pythonpaths)
-    (mapconcat 'identity pythonpath path-separator)))
+    (mapconcat #'identity pythonpath path-separator)))
 
 (defun py-shell-calculate-exec-path ()
   "Calculate ‘exec-path’.
@@ -7680,7 +7733,8 @@ completion."
 	       (format
 		(concat py-completion-setup-code
 			"\nprint (" py-shell-completion-string-code ")")
-		input) process (buffer-name (current-buffer)))))))
+		input)
+               process (buffer-name (current-buffer)))))))
       (when (> (length completions) 2)
         (split-string completions
                       "^'\\|^\"\\|;\\|'$\\|\"$" t)))))
@@ -9268,8 +9322,7 @@ Unless DIRECTION is symbol \\='forward, go backward first"
 
 (defun py--execute-buffer-finally (strg proc procbuf origline filename fast wholebuf)
   (if (and filename wholebuf (not (buffer-modified-p)))
-      (unwind-protect
-	  (py--execute-file-base filename proc nil procbuf origline fast))
+      (py--execute-file-base filename proc nil procbuf origline fast)
     (let* ((tempfile (concat (expand-file-name py-temp-directory) py-separator-char "temp" (md5 (format "%s" (nth 3 (current-time)))) ".py")))
       (with-temp-buffer
 	(insert strg)
@@ -10553,9 +10606,12 @@ If already at the beginning of a block, move these form upward."
       (while (nth 8 pps)
         (goto-char (nth 8 pps))
         (setq last (point))
+        (when py-debug-p (message "last: %s" (point)))
         (skip-chars-backward " \t\r\n\f")
         (setq pps (parse-partial-sexp (point-min) (point))))
-      (when last (goto-char last)))
+      (when last (goto-char last))
+      (when py-debug-p (message "last-pos-reached: %s" (point)))
+      )
      ((nth 1 pps)
       (goto-char (nth 1 pps)))
      (t (py-backward-statement)))))
@@ -13239,12 +13295,6 @@ LIEP stores line-end-position at point-of-interest
                            (+ (or indent-offset (and py-smart-indentation (py-guess-indent-offset)) py-indent-offset) (current-indentation)))
                           (t
                            (current-indentation))))
-                   ;; (cond ((eq liep (line-end-position))
-                   ;;        0)
-                   ;;       ((looking-at py-outdent-re)
-                   ;;        (+ (or indent-offset (and py-smart-indentation (py-guess-indent-offset)) py-indent-offset) (current-indentation)))
-                   ;;       (t
-                   ;;        (current-indentation)))
 		   ;; in string
 		   ((and (nth 3 pps) (nth 8 pps))
 		    (cond
@@ -13262,6 +13312,16 @@ LIEP stores line-end-position at point-of-interest
 			  (skip-chars-backward " \t\r\n\f")
 			  (back-to-indentation)
 			  (current-indentation))))
+                     ;; string in list
+                     ((save-excursion (goto-char (nth 8 pps))(nth 0 (parse-partial-sexp (point-min) (point))))
+                      (if
+                          (or line (save-excursion (goto-char (nth 8 pps))(< (py-count-lines (point-min) (point)) origline)))
+                          (progn
+                            (goto-char (nth 8 pps)) (current-column))
+                      (goto-char (nth 8 pps))
+                      (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep)))
+                     ((or line (< (py-count-lines (point-min) (point)) origline))
+                      (goto-char (nth 8 pps))(current-indentation))
 		     (t 0)))
 		   ((and (looking-at "\"\"\"\\|'''") (not (bobp)))
 		    (py-backward-statement)
@@ -13301,7 +13361,7 @@ LIEP stores line-end-position at point-of-interest
 			    py-backslashed-lines-indent-offset
                           (if (< 20 (line-end-position))
                               8
-                          (+ (current-indentation) py-continuation-offset))))))
+                            (+ (current-indentation) py-continuation-offset))))))
 		   ((and (looking-at py-block-closing-keywords-re)
                          (eq liep (line-end-position)))
 		    (skip-chars-backward "[ \t\r\n\f]")
@@ -13397,9 +13457,9 @@ LIEP stores line-end-position at point-of-interest
 				(not (bobp))
 				(if (and (not indent-offset) py-smart-indentation) (setq indent-offset (py-guess-indent-offset)) t)
 				(ignore-errors (< orig (or (py-forward-block-or-clause) (point)))))))
-		    (+ (car erg) (if py-smart-indentation
-				     (or indent-offset (py-guess-indent-offset))
-				   (or indent-offset py-indent-offset))))
+		    (+ (or (car erg) 0)(if py-smart-indentation
+				           (or indent-offset (py-guess-indent-offset))
+				         (or indent-offset py-indent-offset))))
 		   ((and (not line)
                          (eq liep (line-end-position))
                          (py--beginning-of-statement-p))
@@ -16552,20 +16612,20 @@ If IACT is provided, message result"
 
 ;;  Guess indent offset
 
-(defun py--comment-indent-function ()
-  "Python version of ‘comment-indent-function’."
-  ;; This is required when filladapt is turned off.  Without it, when
-  ;; filladapt is not used, comments which start in column zero
-  ;; cascade one character to the right
-  (save-excursion
-    (beginning-of-line)
-    (let ((eol (line-end-position)))
-      (and comment-start-skip
-           (re-search-forward comment-start-skip eol t)
-           (setq eol (match-beginning 0)))
-      (goto-char eol)
-      (skip-chars-backward " \t")
-      (max comment-column (+ (current-column) (if (bolp) 0 1))))))
+;; (defun py--comment-indent-function ()
+;;   "Python version of ‘comment-indent-function’."
+;;   ;; This is required when filladapt is turned off.  Without it, when
+;;   ;; filladapt is not used, comments which start in column zero
+;;   ;; cascade one character to the right
+;;   (save-excursion
+;;     (beginning-of-line)
+;;     (let ((eol (line-end-position)))
+;;       (and comment-start-skip
+;;            (re-search-forward comment-start-skip eol t)
+;;            (setq eol (match-beginning 0)))
+;;       (goto-char eol)
+;;       (skip-chars-backward " \t")
+;;       (max comment-column (+ (current-column) (if (bolp) 0 1))))))
 
 ;; ;
 
@@ -18716,9 +18776,6 @@ Execute statement running pdb."]
 	:help " ‘pdb’
 Run pdb on program FILE in buffer `*gud-FILE*'."])
       ("Checks"
-       ["Pychecker run" py-pychecker-run
-	:help " ‘py-pychecker-run’
-*Run pychecker (default on the file currently visited)."]
        ("Pylint"
 	["Pylint run" py-pylint-run
 	 :help " ‘py-pylint-run’
@@ -18743,16 +18800,16 @@ Display pep8 command line help messages."]
 	["Pep8 flymake mode" pep8-flymake-mode
 	 :help " `pep8-flymake-mode'
 Toggle `pep8’ ‘flymake-mode’."])
-       ("Pyflakes"
-	["Pyflakes run" py-pyflakes-run
-	 :help " ‘py-pyflakes-run’
+       ("Pyflakes3"
+	["Pyflakes3 run" py-pyflakes3-run
+	 :help " ‘py-pyflakes3-run’
 *Run pyflakes (default on the file currently visited)."]
 
-	["Pyflakes help" py-pyflakes-help
-	 :help " ‘py-pyflakes-help’
-Display Pyflakes command line help messages."]
+	["Pyflakes3 help" py-pyflakes3-help
+	 :help " ‘py-pyflakes3-help’
+Display Pyflakes3 command line help messages."]
 
-	["Pyflakes flymake mode" pyflakes-flymake-mode
+	["Pyflakes3 flymake mode" pyflakes-flymake-mode
 	 :help " ‘pyflakes-flymake-mode’
 Toggle ‘pyflakes’ ‘flymake-mode’."])
        ("Flake8"
@@ -18764,14 +18821,15 @@ Flake8 is a wrapper around these tools:"]
 	 :help " `py-flake8-help'
 Display flake8 command line help messages."]
 	("Pyflakes-pep8"
-	 ["Pyflakes pep8 run" py-pyflakes-pep8-run
+	 ["Pyflakes pep8 run" py-pyflakes3-pep8-run
 	  :help " `py-pyflakes-pep8-run'"]
 
 	 ["Pyflakes pep8 help" py-pyflakes-pep8-help
 	  :help " `py-pyflakes-pep8-help'"]
 
 	 ["Pyflakes pep8 flymake mode" pyflakes-pep8-flymake-mode
-	  :help " `pyflakes-pep8-flymake-mode'"])))
+	  :help " `pyflakes-pep8-flymake-mode'"])
+        ))
       ("Customize"
 
        ["Python-mode customize group" (customize-group 'python-mode)
@@ -23043,7 +23101,7 @@ Home-page: http://www.logilab.org/project/pylint"
     (save-some-buffers (not py-ask-about-save))
   (set-buffer (get-buffer-create "*Pylint*"))
   (erase-buffer)
-  (unless (file-readable-p (car (cddr (split-string command))))
+  (unless (file-readable-p (car (reverse (split-string command))))
     (message "Warning: %s" "pylint needs a file"))
   (shell-command command "*Pylint*"))
 
@@ -23053,9 +23111,8 @@ Home-page: http://www.logilab.org/project/pylint"
 
 Let's have this until more Emacs-like help is prepared"
   (interactive)
-  (set-buffer (get-buffer-create "*Pylint-Help*"))
-  (erase-buffer)
-  (shell-command "pylint --long-help" "*Pylint-Help*"))
+  (with-help-window "*Pylint-Help*"
+    (shell-command "pylint --long-help" "*Pylint-Help*")))
 
 (defalias 'pylint-doku 'py-pylint-doku)
 (defun py-pylint-doku ()
@@ -23067,41 +23124,42 @@ Calls `pylint --full-documentation'"
   (erase-buffer)
   (shell-command "pylint --full-documentation" "*Pylint-Documentation*"))
 
-;;  Pyflakes
-(defalias 'pyflakes 'py-pyflakes-run)
-(defun py-pyflakes-run (command)
-  "*Run pyflakes on COMMAND.
-
-Default on the file currently visited.
-
-For help see \\[pyflakes-help] resp. \\[pyflakes-long-help].
-Home-page: http://www.logilab.org/project/pyflakes"
+;;  Pyflakes3
+(defalias 'pyflakes 'py-pyflakes3-run)
+(defun py-pyflakes3-run (command)
+  "Check Python source files for errors."
   (interactive
-   (let ((default
-           (if (py--buffer-filename-remote-maybe)
-               (format "%s %s %s" py-pyflakes-command
-                       (mapconcat 'identity py-pyflakes-command-args " ")
-                       (py--buffer-filename-remote-maybe))
-             (format "%s %s" py-pyflakes-command
-                     (mapconcat 'identity py-pyflakes-command-args " "))))
-         (last (when py-pyflakes-history
-                 (let* ((lastcmd (car py-pyflakes-history))
-                        (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
-                   (mapconcat 'identity newcmd " ")))))
-
+   (let* ((py-pyflakes3-command
+           (if (string= "" py-pyflakes3-command)
+               (or (executable-find "pyflakes3")
+                   (error "Don't see \"pyflakes3\" on your system.
+Consider \"pip install pyflakes3\" resp. visit \"pypi.python.org\""))
+             py-pyflakes3-command))
+          (default
+            (if (py--buffer-filename-remote-maybe)
+                (format "%s %s %s" py-pyflakes3-command
+                        py-pyflakes3-command-args
+                        (py--buffer-filename-remote-maybe))
+              (format "%s %s" py-pyflakes3-command
+                      py-pyflakes3-command-args)))
+          (last
+           (when py-pyflakes3-history
+             (let* ((lastcmd (car py-pyflakes3-history))
+                    (cmd (cdr (reverse (split-string lastcmd))))
+                    (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
+               (mapconcat 'identity newcmd " ")))))
      (list
       (if (fboundp 'read-shell-command)
-          (read-shell-command "Run pyflakes like this: "
-                              (if last
-                                  last
-                                default)
-                              'py-pyflakes-history)
-        (read-string "Run pyflakes like this: "
+          (read-shell-command "Run pyflakes3 like this: "
+                              ;; (if last
+                              ;; last
+                              default
+                              'py-pyflakes3-history1)
+        (read-string "Run pyflakes3 like this: "
                      (if last
                          last
                        default)
-                     'py-pyflakes-history)))))
+                     'py-pyflakes3-history)))))
   (save-some-buffers (not py-ask-about-save) nil)
   (if (fboundp 'compilation-start)
       ;; Emacs.
@@ -23110,39 +23168,12 @@ Home-page: http://www.logilab.org/project/pyflakes"
     (when (featurep 'xemacs)
       (compile-internal command "No more errors"))))
 
-(defalias 'pyflakes-help 'py-pyflakes-help)
-(defun py-pyflakes-help ()
-  "Display Pyflakes command line help messages."
+(defalias 'pyflakes-help 'py-pyflakes3-help)
+(defun py-pyflakes3-help ()
+  "Display Pyflakes3 command line help messages."
   (interactive)
-  ;; (set-buffer (get-buffer-create "*Pyflakes-Help*"))
-  ;; (erase-buffer)
-  (with-help-window "*Pyflakes-Help*"
-    (with-current-buffer standard-output
-      (insert "       pyflakes [file-or-directory ...]
-
-       Pyflakes is a simple program which checks Python
-       source files for errors. It is similar to
-       PyChecker in scope, but differs in that it does
-       not execute the modules to check them. This is
-       both safer and faster, although it does not
-       perform as many checks. Unlike PyLint, Pyflakes
-       checks only for logical errors in programs; it
-       does not perform any checks on style.
-
-       All commandline arguments are checked, which
-       have to be either regular files or directories.
-       If a directory is given, every .py file within
-       will be checked.
-
-       When no commandline arguments are given, data
-       will be read from standard input.
-
-       The exit status is 0 when no warnings or errors
-       are found. When errors are found the exit status
-       is 2. When warnings (but no errors) are found
-       the exit status is 1.
-
-Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))))
+  (with-help-window "*pyflakes3-Help*"
+    (shell-command "pyflakes3 --help" "*pyflakes3-Help*")))
 
 ;;  Pyflakes-pep8
 (defalias 'pyflakespep8 'py-pyflakespep8-run)
@@ -23252,7 +23283,7 @@ See ‘py-check-command’ for the default."
 
 ;;  flake8
 (defalias 'flake8 'py-flake8-run)
-(defun py-flake8-run (command)
+ (defun py-flake8-run (command)
   "COMMAND Flake8 is a wrapper around these tools:
 - PyFlakes
         - pep8
@@ -23308,9 +23339,8 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
 (defun py-flake8-help ()
   "Display flake8 command line help messages."
   (interactive)
-  (set-buffer (get-buffer-create "*flake8-Help*"))
-  (erase-buffer)
-  (shell-command "flake8 --help" "*flake8-Help*"))
+  (with-help-window "*flake8-Help*"
+    (shell-command "flake8 --help" "*flake8-Help*")))
 
 ;;  from string-strip.el --- Strip CHARS from STRING
 
@@ -24312,7 +24342,7 @@ At no-whitespace character, delete one before point.
        ;; 	       (delete-char 1))
 
        ((bolp)
-	(backward-delete-char 1))
+	(delete-char -1))
        (t
 	(py-indent-line nil t))))))
 
@@ -25712,6 +25742,17 @@ Optional File: execute through running a temp-file"
   (set (make-local-variable 'indent-tabs-mode) py-indent-tabs-mode)
   )
 
+(defun py--update-version-dependent-keywords ()
+  (let ((kw-py2 '(("\\<print\\>" . 'font-lock-keyword-face)
+                  ("\\<file\\>" . 'py-builtins-face)))
+        (kw-py3 '(("\\<print\\>" . 'py-builtins-face))))
+    (font-lock-remove-keywords 'python-mode kw-py3)
+    (font-lock-remove-keywords 'python-mode kw-py2)
+    ;; avoid to run py-choose-shell again from ‘py--fix-start’
+    (cond ((string-match "ython3" py-python-edit-version)
+           (font-lock-add-keywords 'python-mode kw-py3 t))
+          (t (font-lock-add-keywords 'python-mode kw-py2 t)))))
+
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
@@ -25765,14 +25806,14 @@ VARIABLES
            '(python-font-lock-keywords nil nil nil nil
 				       (font-lock-syntactic-keywords
 					. py-font-lock-syntactic-keywords)))))
-  ;; avoid to run py-choose-shell again from ‘py--fix-start’
-  (cond ((string-match "ython3" py-python-edit-version)
-	 (font-lock-add-keywords 'python-mode
-				 '(("\\<print\\>" . 'py-builtins-face)
-				   ("\\<file\\>" . nil))))
-	(t (font-lock-add-keywords 'python-mode
-				   '(("\\<print\\>" . 'font-lock-keyword-face)
-				     ("\\<file\\>" . 'py-builtins-face)))))
+  (py--update-version-dependent-keywords)
+  ;; (cond ((string-match "ython3" py-python-edit-version)
+  ;;        (font-lock-add-keywords 'python-mode
+  ;;       			 '(("\\<print\\>" . 'py-builtins-face)
+  ;;       			   ("\\<file\\>" . nil))))
+  ;;       (t (font-lock-add-keywords 'python-mode
+  ;;       			   '(("\\<print\\>" . 'font-lock-keyword-face)
+  ;;       			     ("\\<file\\>" . 'py-builtins-face)))))
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'comment-use-syntax) t)
@@ -25789,7 +25830,7 @@ VARIABLES
     (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[\t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
     (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[\t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
   (set (make-local-variable 'comment-column) 40)
-  (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
+  ;; (set (make-local-variable 'comment-indent-function) #'py--comment-indent-function)
   (set (make-local-variable 'indent-region-function) 'py-indent-region)
   (set (make-local-variable 'indent-line-function) 'py-indent-line)
   ;; introduced to silence compiler warning, no real setting

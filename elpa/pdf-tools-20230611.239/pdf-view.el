@@ -195,7 +195,8 @@ loaded."
 
 (defcustom pdf-view-incompatible-modes
   '(linum-mode linum-relative-mode helm-linum-relative-mode
-	       nlinum-mode nlinum-hl-mode nlinum-relative-mode yalinum-mode)
+	           nlinum-mode nlinum-hl-mode nlinum-relative-mode yalinum-mode
+               display-line-numbers-mode)
   "A list of modes incompatible with `pdf-view-mode'.
 
 Issue a warning, if one of them is active in a PDF buffer."
@@ -332,6 +333,7 @@ regarding display of the region in the later function.")
     map)
   "Keymap used by `pdf-view-mode' when displaying a doc as a set of images.")
 
+(defvar pdf-tools-enabled-modes)
 (define-derived-mode pdf-view-mode special-mode "PDFView"
   "Major mode in PDF buffers.
 
@@ -367,6 +369,15 @@ PNG images in Emacs buffers."
       (set (make-local-variable 'pixel-scroll-precision-mode) nil))
   (if (boundp 'mwheel-coalesce-scroll-events)
       (setq-local mwheel-coalesce-scroll-events t))
+
+  ;; If the Emacs theme is dark, add `pdf-view-dark-minor-mode' to the
+  ;; list of `pdf-tools-enabled-modes'. See an interesting discussion
+  ;; at: https://github.com/vedang/pdf-tools/issues/166 about how this
+  ;; avoids a segfault crash in MacOS Ventura. IF you know why this
+  ;; happens, please get in touch via the linked issue.
+
+  (when (eq 'dark (frame-parameter nil 'background-mode))
+    (add-to-list 'pdf-tools-enabled-modes 'pdf-view-dark-minor-mode))
 
   ;; Clearing overlays
   (add-hook 'change-major-mode-hook
@@ -1624,6 +1635,20 @@ the `convert' program is used."
       (dolist (f (cons result images))
         (when (file-exists-p f)
           (delete-file f))))))
+
+(defun pdf-view-set-selection-style (&optional style)
+  "Set `pdf-view-selection-style' to STYLE in the current buffer.
+
+When called interactively or without an argument, cycle between
+the selection styles."
+  (interactive)
+  (unless style
+    (setq style (or (cadr (memq pdf-view-selection-style '(glyph word line)))
+                    'glyph))
+    (message "Setting selection style to `%s'." style))
+  (pdf-view-deactivate-region)
+  (setq-local pdf-view-selection-style style))
+
 
 ;; * ================================================================== *
 ;; * Bookmark + Register Integration

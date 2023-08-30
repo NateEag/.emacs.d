@@ -7,7 +7,7 @@
 ;; URL: http://github.com/vedang/pdf-tools/
 ;; Keywords: files, multimedia
 ;; Package: pdf-tools
-;; Version: 1.0.0
+;; Version: 1.1.0
 ;; Package-Requires: ((emacs "26.3") (tablist "1.0") (let-alist "1.0.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -145,9 +145,7 @@ In order to customize dark and light colors use
     pdf-sync-minor-mode
     pdf-misc-context-menu-minor-mode
     pdf-cache-prefetch-minor-mode
-    pdf-occur-global-minor-mode
-    ;; pdf-virtual-global-minor-mode
-    )
+    pdf-occur-global-minor-mode)
   "A list of automatically enabled minor-modes.
 
 PDF Tools is build as a series of minor-modes.  This variable and

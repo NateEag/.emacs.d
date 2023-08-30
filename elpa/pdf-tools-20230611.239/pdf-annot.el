@@ -1053,9 +1053,12 @@ Return the new annotation."
              (> (length edges) 1))
     (error "Edges argument should be a single edge-list for text annotations"))
   (let* ((selection-style pdf-view-selection-style)
+         (non-markup (pcase type
+                       ('text t)
+                       ('highlight pdf-view--have-rectangle-region)))
          (a (apply #'pdf-info-addannot
                    page
-                   (if (eq type 'text)
+                   (if non-markup
                        (car edges)
                      (apply #'pdf-util-edges-union
                             (apply #'append
@@ -1066,7 +1069,7 @@ Return the new annotation."
                    type
                    selection-style
                    nil
-                   (if (not (eq type 'text)) edges)))
+                   (unless non-markup edges)))
          (id (pdf-annot-get-id a)))
     (when property-alist
       (condition-case err
@@ -1447,15 +1450,16 @@ annotation's contents and otherwise `org-mode'."
     (set-keymap-parent kmap text-mode-map)
     (define-key kmap (kbd "C-c C-c") #'pdf-annot-edit-contents-commit)
     (define-key kmap (kbd "C-c C-q") #'pdf-annot-edit-contents-abort)
+    (define-key kmap (kbd "C-c C-k") #'pdf-annot-edit-contents-abort)
     kmap))
 
 (define-minor-mode pdf-annot-edit-contents-minor-mode
   "Active when editing the contents of annotations."
   :group 'pdf-annot
   (when pdf-annot-edit-contents-minor-mode
-    (message "%s"
-             (substitute-command-keys
-              "Press \\[pdf-annot-edit-contents-commit] to commit your changes, \\[pdf-annot-edit-contents-abort] to abandon them."))))
+    (setq-local header-line-format
+                (substitute-command-keys "\
+Press \\[pdf-annot-edit-contents-commit] to commit your changes, \\[pdf-annot-edit-contents-abort] to abandon them."))))
 
 (put 'pdf-annot-edit-contents-minor-mode 'permanent-local t)
 
@@ -1510,11 +1514,8 @@ At any given point of time, only one annotation can be in edit mode."
         (pdf-annot-edit-contents-finalize 'ask)))
     (unless (buffer-live-p pdf-annot-edit-contents--buffer)
       (setq pdf-annot-edit-contents--buffer
-            (with-current-buffer (get-buffer-create
-                                  (format "*Edit Annotation %s*"
-                                          (buffer-name)))
-              (pdf-annot-edit-contents-minor-mode 1)
-              (current-buffer))))
+            (get-buffer-create
+             (format "*Edit Annotation %s*" (buffer-name)))))
     (with-current-buffer pdf-annot-edit-contents--buffer
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -1522,6 +1523,7 @@ At any given point of time, only one annotation can be in edit mode."
         (set-buffer-modified-p nil))
       (setq pdf-annot-edit-contents--annotation a)
       (funcall pdf-annot-edit-contents-setup-function a)
+      (pdf-annot-edit-contents-minor-mode 1)
       (current-buffer))))
 
 (defun pdf-annot-edit-contents (a)
@@ -1720,16 +1722,19 @@ pretty-printed output."
 \\{pdf-annot-list-mode-map}"
   (interactive)
   (pdf-util-assert-pdf-buffer)
-  (let ((buffer (current-buffer)))
-    (with-current-buffer (get-buffer-create
-                          (format "*%s's annots*"
-                                  (file-name-sans-extension
-                                   (buffer-name))))
+  (let* ((buffer (current-buffer))
+         (name (format "*%s's annots*"
+                       (file-name-sans-extension
+                        (buffer-name))))
+         (annots-existed (and (get-buffer name)
+                              pdf-annot-list-buffer)))
+    (with-current-buffer (get-buffer-create name)
       (delay-mode-hooks
         (unless (derived-mode-p 'pdf-annot-list-mode)
           (pdf-annot-list-mode))
         (setq pdf-annot-list-document-buffer buffer)
-        (tabulated-list-print)
+        (unless annots-existed
+          (tabulated-list-print))
         (setq tablist-context-window-function
               (lambda (id) (pdf-annot-list-context-function id buffer))
               tablist-operations-function #'pdf-annot-list-operation-function)

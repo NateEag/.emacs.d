@@ -1,8 +1,8 @@
-(define-package "pdf-tools" "20230404.327" "Support library for PDF documents"
+(define-package "pdf-tools" "20230611.239" "Support library for PDF documents"
   '((emacs "26.3")
     (tablist "1.0")
     (let-alist "1.0.4"))
-  :commit "7ff6293a25baaae65651b3e1c54b61208279a7ef" :authors
+  :commit "c69e7656a4678fe25afbd29f3503dd19ee7f9896" :authors
   '(("Andreas Politz" . "mail@andreas-politz.de"))
   :maintainers
   '(("Vedang Manerikar" . "vedang.manerikar@gmail.com"))

@@ -1,7 +1,7 @@
 This is haskell-mode.info, produced by makeinfo version 6.7 from
 haskell-mode.texi.
 
-This manual is for Haskell mode, version 17.2-git
+This manual is for Haskell mode, version 17.4
 
    Copyright © 2013-2017 Haskell Mode contributors.
 
@@ -2428,32 +2428,32 @@ Variable index
 
 
 Tag Table:
-Node: Top683
-Node: Introduction2588
-Node: Installation4173
-Node: Editing Haskell Code6536
-Node: Syntax highlighting10296
-Node: Completion support12556
-Node: Unicode support14600
-Node: Indentation19272
-Node: External indentation22748
-Node: Autoformatting23477
-Node: Module templates24106
-Node: Declaration scanning24537
-Node: Compilation27825
-Node: Interactive Haskell32131
-Ref: printing mode51555
-Node: Editing Cabal files64319
-Node: Browsing Haddocks65066
-Node: Spell checking strings and comments67891
-Node: Aligning code68997
-Node: Rectangular commands70742
-Node: REPL72262
-Node: Collapsing Haskell code77011
-Node: Getting Help and Reporting Bugs79619
-Node: Concept index80663
-Node: Function index81921
-Node: Variable index82716
+Node: Top679
+Node: Introduction2584
+Node: Installation4169
+Node: Editing Haskell Code6532
+Node: Syntax highlighting10292
+Node: Completion support12552
+Node: Unicode support14596
+Node: Indentation19268
+Node: External indentation22744
+Node: Autoformatting23473
+Node: Module templates24102
+Node: Declaration scanning24533
+Node: Compilation27821
+Node: Interactive Haskell32127
+Ref: printing mode51551
+Node: Editing Cabal files64315
+Node: Browsing Haddocks65062
+Node: Spell checking strings and comments67887
+Node: Aligning code68993
+Node: Rectangular commands70738
+Node: REPL72258
+Node: Collapsing Haskell code77007
+Node: Getting Help and Reporting Bugs79615
+Node: Concept index80659
+Node: Function index81917
+Node: Variable index82712
 
 End Tag Table
 

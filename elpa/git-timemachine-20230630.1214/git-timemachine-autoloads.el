@@ -25,6 +25,10 @@ Enable git timemachine for current buffer, switching to GIT-BRANCH.
 
 ;;;***
 
+;;;### (autoloads nil nil ("git-timemachine-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

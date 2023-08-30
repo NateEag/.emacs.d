@@ -3,9 +3,7 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.12
-;; Package-Version: 20230413.620
-;; Package-Commit: 13769fb603ae88c64566529eae4525ce88026e86
+;; Version: 4.13
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -326,14 +324,14 @@ updated CURRENT-LINE."
     (message "You need to install magit for blame capabilities")))
 
 (defun git-timemachine-kill-revision ()
-  "Kill the current revisions abbreviated commit hash."
+  "Kill the current revision's full commit hash."
   (interactive)
   (let ((revision (car git-timemachine-revision)))
     (message revision)
     (kill-new revision)))
 
 (defun git-timemachine-kill-abbreviated-revision ()
-  "Kill the current revisions full commit hash."
+  "Kill the current revision's abbreviated commit hash."
   (interactive)
   (let ((revision (git-timemachine-abbreviate (car git-timemachine-revision))))
     (message revision)

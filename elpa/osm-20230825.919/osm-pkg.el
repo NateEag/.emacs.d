@@ -1,7 +1,7 @@
-(define-package "osm" "20230501.1739" "OpenStreetMap viewer"
+(define-package "osm" "20230825.919" "OpenStreetMap viewer"
   '((emacs "27.1")
     (compat "29.1.4.0"))
-  :commit "f08f03860021fa334708829d705370614e383880" :authors
+  :commit "7961f5bf615a994a6ca756218c809bb998790946" :authors
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))
   :maintainers
   '(("Daniel Mendler" . "mail@daniel-mendler.de"))

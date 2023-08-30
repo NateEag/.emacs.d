@@ -8,6 +8,7 @@
 
 ;;;### (autoloads nil "osm" "osm.el" (0 0 0 0))
 ;;; Generated autoloads from osm.el
+ (autoload 'osm-prefix-map "osm" nil t 'keymap)
 
 (autoload 'osm-home "osm" "\
 Go to home coordinates." t nil)
@@ -39,10 +40,10 @@ Rename osm bookmark OLD-NAME.
 \(fn OLD-NAME)" t nil)
 
 (autoload 'osm-search "osm" "\
-Search for SEARCH and display the map.
+Globally search for NEEDLE and display the map.
 If the prefix argument LUCKY is non-nil take the first result and jump there.
 
-\(fn SEARCH &optional LUCKY)" t nil)
+\(fn NEEDLE &optional LUCKY)" t nil)
 
 (autoload 'osm-gpx-show "osm" "\
 Show the tracks of gpx FILE in an `osm-mode' buffer.

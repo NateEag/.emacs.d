@@ -5,7 +5,7 @@
 ;; Author: Daniel Mendler <mail@daniel-mendler.de>
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
-;; Version: 0.12
+;; Version: 0.13
 ;; Package-Requires: ((emacs "27.1") (compat "29.1.4.0"))
 ;; Homepage: https://github.com/minad/osm
 ;; Keywords: network, multimedia, hypermedia, mouse
@@ -164,7 +164,11 @@ A comma-separated specifies descending order of preference.  See also
      :group "Artistic"
      :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
                  "Map style © {Stamen Design|http://maps.stamen.com/} ({CC-BY|https://creativecommons.org/licenses/by/3.0/})")))
-  "List of tile servers."
+  "List of tile servers.
+The :url of each server should specify %x, %y and %z placeholders
+for the map coordinates.  It can optionally use an %s placeholder
+for the subdomain and a %k placeholder for an api-key, which will
+be retrieved via `auth-source-search'."
   :type '(alist :key-type symbol :value-type plist))
 
 (defcustom osm-copyright t
@@ -245,8 +249,21 @@ Should be at least 7 days according to the server usage policies."
           menu)
         name))))
 
+(defvar-keymap osm-prefix-map
+  :doc "Global prefix map of OSM entry points."
+  "h" #'osm-home
+  "s" #'osm-search
+  "v" #'osm-server
+  "t" #'osm-goto
+  "x" #'osm-gpx-show
+  "j" #'osm-bookmark-jump)
+
+;;;###autoload (autoload 'osm-prefix-map "osm" nil t 'keymap)
+(defalias 'osm-prefix-map osm-prefix-map)
+
 (defvar-keymap osm-mode-map
   :doc "Keymap used by `osm-mode'."
+  :parent (make-composed-keymap osm-prefix-map special-mode-map)
   "<osm-home>" #'ignore
   "<osm-link>" #'ignore
   "<osm-transient>" #'ignore
@@ -289,15 +306,9 @@ Should be at least 7 days according to the server usage policies."
   "DEL" #'osm-bookmark-delete
   "c" #'osm-center
   "o" #'clone-buffer
-  "h" #'osm-home
-  "t" #'osm-goto
-  "s" #'osm-search
-  "v" #'osm-server
   "u" #'osm-save-url
   "l" 'org-store-link
   "b" #'osm-bookmark-set
-  "j" #'osm-bookmark-jump
-  "x" #'osm-gpx-show
   "X" #'osm-gpx-hide
   "<remap> <scroll-down-command>" #'osm-down
   "<remap> <scroll-up-command>" #'osm-up
@@ -473,8 +484,25 @@ Should be at least 7 days according to the server usage policies."
 (defun osm--tile-url (x y zoom)
   "Return tile url for coordinate X, Y and ZOOM."
   (let ((url (osm--server-property :url))
-        (sub (osm--server-property :subdomains)))
+        (sub (osm--server-property :subdomains))
+        (key (osm--server-property :key)))
+    (when (and (string-search "%k" url) (not key))
+      (require 'auth-source)
+      (declare-function auth-source-search "auth-source")
+      (let ((host (string-join
+                   (last (split-string (cadr (split-string url "/" t)) "\\.") 2)
+                   ".")))
+        (setq key (plist-get
+                   (car (auth-source-search :require '(:user :host :secret)
+                                            :host host
+                                            :user "apikey"))
+                   :secret))
+        (unless key
+          (warn "No auth source secret found for apikey@%s" host)
+          (setq key ""))
+        (setf (plist-get (alist-get osm-server osm-server-list) :key) key)))
     (format-spec url `((?z . ,zoom) (?x . ,x) (?y . ,y)
+                       (?k . ,(if (functionp key) (funcall key) key))
                        (?s . ,(nth (mod osm--subdomain-index (length sub)) sub))))))
 
 (defun osm--tile-file (x y zoom)
@@ -794,7 +822,7 @@ Should be at least 7 days according to the server usage policies."
               bookmark-make-record-function #'osm--bookmark-record-default)
   (when (boundp 'mwheel-coalesce-scroll-events)
     (setq-local mwheel-coalesce-scroll-events t))
-  (when (bound-and-true-p pixel-scroll-precision-mode)
+  (when (boundp 'pixel-scroll-precision-mode)
     (setq-local pixel-scroll-precision-mode nil))
   (add-hook 'change-major-mode-hook #'osm--barf-change-mode nil 'local)
   (add-hook 'write-contents-functions #'osm--barf-write nil 'local)
@@ -1425,9 +1453,25 @@ When called interactively, call the function `osm-home'."
    :array-type 'list
    :object-type 'alist))
 
+(defun osm--search (needle)
+  "Globally search for NEEDLE and return the list of results."
+  (mapcar
+   (lambda (x)
+     (let ((lat (string-to-number (alist-get 'lat x)))
+           (lon (string-to-number (alist-get 'lon x))))
+       `(,(format "%s (%.6f° %.6f°)"
+                  (alist-get 'display_name x)
+                  lat lon)
+         ,lat ,lon
+         ,@(mapcar #'string-to-number (alist-get 'boundingbox x)))))
+   (or
+    (osm--fetch-json
+     (format "https://nominatim.openstreetmap.org/search?format=json&accept-language=%s&q=%s"
+             osm-search-language (url-encode-url needle))))))
+
 ;;;###autoload
-(defun osm-search (search &optional lucky)
-  "Search for SEARCH and display the map.
+(defun osm-search (needle &optional lucky)
+  "Globally search for NEEDLE and display the map.
 If the prefix argument LUCKY is non-nil take the first result and jump there."
   (interactive
    (list (completing-read "Location: "
@@ -1435,25 +1479,12 @@ If the prefix argument LUCKY is non-nil take the first result and jump there."
                           nil nil nil 'osm--search-history)
          current-prefix-arg))
   ;; TODO add search bounded to current viewbox, bounded=1, viewbox=x1,y1,x2,y2
-  (let* ((results (mapcar
-                   (lambda (x)
-                     (let ((lat (string-to-number (alist-get 'lat x)))
-                           (lon (string-to-number (alist-get 'lon x))))
-                       `(,(format "%s (%.6f° %.6f°)"
-                                  (alist-get 'display_name x)
-                                  lat lon)
-                         ,lat ,lon
-                         ,@(mapcar #'string-to-number (alist-get 'boundingbox x)))))
-                   (or
-                    (osm--fetch-json
-                     (format "https://nominatim.openstreetmap.org/search?format=json&accept-language=%s&q=%s"
-                             osm-search-language (url-encode-url search)))
-                    (error "No results"))))
+  (let* ((results (or (osm--search needle) (error "No results")))
          (selected (or
                     (and (or lucky (not (cdr results))) (car results))
                     (assoc
                      (completing-read
-                      (format "Matches for '%s': " search)
+                      (format "Matches for '%s': " needle)
                       (osm--sorted-table results)
                       nil t)
                      results)

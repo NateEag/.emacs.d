@@ -8,8 +8,6 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.6.0
-;; Package-Version: 20221228.1706
-;; Package-Commit: 166dfb1e090233c4609a50c2ec9f57f113c1da72
 ;; Keywords: languages go
 ;; Package-Requires: ((emacs "26.1"))
 ;; URL: https://github.com/dominikh/go-mode.el
@@ -99,9 +97,10 @@ constant is changed.")
 (defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
 
 (defconst go-builtins
-  '("append" "cap"   "close"   "complex" "copy"
-    "delete" "imag"  "len"     "make"    "new"
-    "panic"  "print" "println" "real"    "recover")
+  '("append"  "cap"    "clear"   "close" "complex"
+    "copy"    "delete" "imag"    "len"   "make"
+    "max"     "min"    "new"     "panic" "print"
+    "println" "real"   "recover")
   "All built-in functions in the Go language.  Used for font locking.")
 
 (defconst go-mode-keywords
@@ -2842,7 +2841,7 @@ If BUFFER, return the number of characters in that buffer instead."
   "Syntax table for `go-dot-mod-mode'.")
 
 (defconst go-dot-mod-mode-keywords
-  '("module" "go" "require" "replace" "exclude")
+  '("module" "go" "toolchain" "require" "exclude" "replace" "retract")
   "All keywords for go.mod files.  Used for font locking.")
 
 (defgroup go-dot-mod nil
@@ -2892,7 +2891,7 @@ If BUFFER, return the number of characters in that buffer instead."
 (add-to-list 'auto-mode-alist '("go\\.mod\\'" . go-dot-mod-mode))
 
 (defconst go-dot-work-mode-keywords
-  '("go" "replace" "use")
+  '("go" "toolchain" "use" "replace")
   "All keywords for go.work files.  Used for font locking.")
 
 ;;;###autoload

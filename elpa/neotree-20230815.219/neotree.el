@@ -4,7 +4,7 @@
 
 ;; Author: jaypei <jaypei97159@gmail.com>
 ;; URL: https://github.com/jaypei/emacs-neotree
-;; Version: 0.5.1
+;; Version: 0.6.0
 ;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -1589,7 +1589,9 @@ If there is no button in current line, then return DEFAULT."
       (if buffer
           (with-current-buffer buffer
             (set-visited-file-name to-path nil t)))
-      (rename-file current-path to-path 1)
+      (if (vc-registered current-path)
+          (vc-rename-file current-path to-path)
+          (rename-file current-path to-path 1))
       (neo-buffer--refresh t)
       (message "Rename successful."))))
 

@@ -256,6 +256,13 @@ it is disabled.
 
 ;;;***
 
+;;;### (autoloads nil "dap-ocaml" "dap-ocaml.el" (0 0 0 0))
+;;; Generated autoloads from dap-ocaml.el
+
+(register-definition-prefixes "dap-ocaml" '("dap-ocaml-"))
+
+;;;***
+
 ;;;### (autoloads nil "dap-overlays" "dap-overlays.el" (0 0 0 0))
 ;;; Generated autoloads from dap-overlays.el
 

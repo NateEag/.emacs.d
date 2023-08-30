@@ -1,5 +1,5 @@
-(define-package "dap-mode" "20230510.1424" "Debug Adapter Protocol mode"
-  '((emacs "26.1")
+(define-package "dap-mode" "20230822.603" "Debug Adapter Protocol mode"
+  '((emacs "27.1")
     (dash "2.18.0")
     (lsp-mode "6.0")
     (bui "1.1.0")
@@ -9,7 +9,7 @@
     (posframe "0.7.0")
     (ht "2.3")
     (lsp-docker "1.0.0"))
-  :commit "374fd0511ef5349f7621c15f5ce2e22f307f6e68" :authors
+  :commit "096070aacff875a09c13e596e5d60a55e0f07ab1" :authors
   '(("Ivan Yonchovski" . "yyoncho@gmail.com"))
   :maintainers
   '(("Ivan Yonchovski" . "yyoncho@gmail.com"))

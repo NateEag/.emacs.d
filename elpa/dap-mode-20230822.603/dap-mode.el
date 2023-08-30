@@ -18,7 +18,7 @@
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/dap-mode
-;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3") (lsp-docker "1.0.0"))
+;; Package-Requires: ((emacs "27.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3") (lsp-docker "1.0.0"))
 ;; Version: 0.7
 
 ;;; Commentary:
@@ -956,8 +956,9 @@ PARAMS are the event params.")
                                                             breakpoints)))
                                                  (cl-first))))
                       (when (eq debug-session (dap--cur-session))
-                        (with-current-buffer (find-file file-name)
-                          (run-hooks 'dap-breakpoints-changed-hook)))))
+                        (when-let (buffer (find-buffer-visiting file-name))
+                          (with-current-buffer buffer
+                            (run-hooks 'dap-breakpoints-changed-hook))))))
       ("thread" (-let [(&hash "threadId" id "reason") body]
                   (puthash id reason (dap--debug-session-thread-states debug-session))
                   (run-hooks 'dap-session-changed-hook)

@@ -31,6 +31,10 @@ When called interactively, switch to the process buffer.
 
 ;;;***
 
+;;;### (autoloads nil nil ("lua-mode-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

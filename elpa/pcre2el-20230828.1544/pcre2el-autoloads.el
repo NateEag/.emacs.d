@@ -232,6 +232,10 @@ See `rxt-mode' for more information on Rxt mode.
 
 ;;;***
 
+;;;### (autoloads nil nil ("pcre2el-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

@@ -41,7 +41,7 @@ See also `helpful-macro', `helpful-function' and `helpful-command'.
 \(fn SYMBOL)" t nil)
 
 (autoload 'helpful-symbol "helpful" "\
-Show help for SYMBOL, a variable, function or macro.
+Show help for SYMBOL, a variable, function, macro, or face.
 
 See also `helpful-callable' and `helpful-variable'.
 
@@ -56,6 +56,10 @@ Show help for variable named SYMBOL.
 Show help for the symbol at point." t nil)
 
 (register-definition-prefixes "helpful" '("helpful-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("helpful-pkg.el") (0 0 0 0))
 
 ;;;***
 

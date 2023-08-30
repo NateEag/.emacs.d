@@ -5,8 +5,8 @@
 ;; Author: Hanno Perrey <http://gitlab.com/hperrey>
 ;; Maintainer: Hanno Perrey <hanno@hoowl.se>
 ;; Created: september 10, 2021
-;; Modified: september 4, 2021
-;; Version: 0.1.9
+;; Modified: january 22, 2023
+;; Version: 0.1.10
 ;; Keywords: event, calendar, ics, khal
 ;; Homepage: https://gitlab.com/hperrey/khalel
 ;; Package-Requires: ((emacs "27.1"))
@@ -316,6 +316,11 @@ Return t on success and nil otherwise."
         ((org-icalendar-store-UID 't)
          ;; create events from non-TODO entries with scheduled time
          (org-icalendar-use-scheduled '(event-if-not-todo))
+         ;; work around a bug in org-element-cache-map in some Org mode versions
+         ;; by disabling cache; for details see
+         ;; https://orgmode.org/list/87pmau4fi3.fsf@hoowl.se
+         (org-element-use-cache (and (version<= "9.6.1" (org-version))
+                                     (bound-and-true-p org-element-use-cache)))
          (capturefn (buffer-file-name
                  (buffer-base-buffer)))
          (path (file-name-directory capturefn))
@@ -503,17 +508,19 @@ To be added as hook to `org-capture-before-finalize-hook'."
     (when (and
            (not org-note-abort)
            (equal key khalel-capture-key))
-      (if
-          (not (khalel-export-org-subtree-to-calendar))
-          ;; export finished with non-zero exit status,
-          ;; do not clean up buffer/wconf to leave error msg intact and visible
-          (progn
-            (org-capture-put :new-buffer nil)
-            (org-capture-put :kill-buffer nil)
-            (org-capture-put :return-to-wconf (current-window-configuration)))
-        (when
-            khalel-import-events-after-capture
-          (khalel-import-events))))))
+      (save-excursion
+        (goto-char (point-min))
+        (if
+            (not (khalel-export-org-subtree-to-calendar))
+            ;; export finished with non-zero exit status,
+            ;; do not clean up buffer/wconf to leave error msg intact and visible
+            (progn
+              (org-capture-put :new-buffer nil)
+              (org-capture-put :kill-buffer nil)
+              (org-capture-put :return-to-wconf (current-window-configuration)))
+          (when
+              khalel-import-events-after-capture
+            (khalel-import-events)))))))
 
 (defun khalel--sanitize-ics (ics)
   "Remove some modifications to data fields in ICS file.

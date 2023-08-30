@@ -1,6 +1,6 @@
-(define-package "khalel" "20230122.1139" "Import, edit and create calendar events through khal"
+(define-package "khalel" "20230606.1909" "Import, edit and create calendar events through khal"
   '((emacs "27.1"))
-  :commit "fbd4b4d6ae8f152140674e843ed7d82d223d52fe" :authors
+  :commit "85df973fe2785caee08d4ef5b23bdaae424a8d98" :authors
   '(("Hanno Perrey <http://gitlab.com/hperrey>"))
   :maintainers
   '(("Hanno Perrey" . "hanno@hoowl.se"))

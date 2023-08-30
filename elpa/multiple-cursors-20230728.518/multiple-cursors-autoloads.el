@@ -341,7 +341,7 @@ it is disabled.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "multiple-cursors-core" '("deactivate-cursor-after-undo" "multiple-cursors-mode" "unsupported-cmd"))
+(register-definition-prefixes "multiple-cursors-core" '("deactivate-cursor-after-undo" "mc--" "mc/" "unsupported-cmd"))
 
 ;;;***
 

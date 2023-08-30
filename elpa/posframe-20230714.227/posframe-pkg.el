@@ -1,6 +1,6 @@
-(define-package "posframe" "20230423.927" "Pop a posframe (just a frame) at point"
+(define-package "posframe" "20230714.227" "Pop a posframe (just a frame) at point"
   '((emacs "26.1"))
-  :commit "3b97dc180b03498103cfcc7f44e64150df440bf0" :authors
+  :commit "017deece88360c7297265680d78a0bb316470716" :authors
   '(("Feng Shu" . "tumashu@163.com"))
   :maintainers
   '(("Feng Shu" . "tumashu@163.com"))

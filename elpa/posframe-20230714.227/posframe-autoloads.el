@@ -64,21 +64,22 @@ The builtin poshandler functions are listed below:
 2.  `posframe-poshandler-frame-top-center'
 3.  `posframe-poshandler-frame-top-left-corner'
 4.  `posframe-poshandler-frame-top-right-corner'
-5.  `posframe-poshandler-frame-bottom-center'
-6.  `posframe-poshandler-frame-bottom-left-corner'
-7.  `posframe-poshandler-frame-bottom-right-corner'
-8.  `posframe-poshandler-window-center'
-9.  `posframe-poshandler-window-top-center'
-10. `posframe-poshandler-window-top-left-corner'
-11. `posframe-poshandler-window-top-right-corner'
-12. `posframe-poshandler-window-bottom-center'
-13. `posframe-poshandler-window-bottom-left-corner'
-14. `posframe-poshandler-window-bottom-right-corner'
-15. `posframe-poshandler-point-top-left-corner'
-16. `posframe-poshandler-point-bottom-left-corner'
-17. `posframe-poshandler-point-bottom-left-corner-upward'
-18. `posframe-poshandler-point-window-center'
-19. `posframe-poshandler-point-frame-center'
+5.  `posframe-poshandler-frame-top-left-or-right-other-corner'
+6.  `posframe-poshandler-frame-bottom-center'
+7.  `posframe-poshandler-frame-bottom-left-corner'
+8.  `posframe-poshandler-frame-bottom-right-corner'
+9.  `posframe-poshandler-window-center'
+10.  `posframe-poshandler-window-top-center'
+11. `posframe-poshandler-window-top-left-corner'
+12. `posframe-poshandler-window-top-right-corner'
+13. `posframe-poshandler-window-bottom-center'
+14. `posframe-poshandler-window-bottom-left-corner'
+15. `posframe-poshandler-window-bottom-right-corner'
+16. `posframe-poshandler-point-top-left-corner'
+17. `posframe-poshandler-point-bottom-left-corner'
+18. `posframe-poshandler-point-bottom-left-corner-upward'
+19. `posframe-poshandler-point-window-center'
+20. `posframe-poshandler-point-frame-center'
 
  (3) POSHANDLER-EXTRA-INFO
 
@@ -202,7 +203,7 @@ when it is nil or it return nil, child-frame feature will be used
 and reference position will be deal with in Emacs.
 
 The user case I know at the moment is let ivy-posframe work well
-in EXWM environment (let posframe show on the other appliction
+in EXWM environment (let posframe show on the other application
 window).
 
          DO NOT USE UNLESS NECESSARY!!!

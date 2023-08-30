@@ -1,6 +1,8 @@
-(define-package "evil-commentary" "20210210.1702" "Comment stuff out. A port of vim-commentary."
+(define-package "evil-commentary" "20230610.1006" "Comment stuff out. A port of vim-commentary."
   '((evil "1.0.0"))
-  :commit "2dab6ac34d1617971768ad219d73af48f7473fec" :authors
+  :commit "c5945f28ce47644c828aac1f5f6ec335478d17fb" :authors
+  '(("Quang Linh LE" . "linktohack@gmail.com"))
+  :maintainers
   '(("Quang Linh LE" . "linktohack@gmail.com"))
   :maintainer
   '("Quang Linh LE" . "linktohack@gmail.com")

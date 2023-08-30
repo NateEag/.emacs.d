@@ -5,7 +5,7 @@
 ;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
 ;; Keywords: languages tools parsers tree-sitter
 ;; Homepage: https://github.com/emacs-tree-sitter/tree-sitter-langs
-;; Version: 0.12.18
+;; Version: 0.12.29
 ;; Package-Requires: ((emacs "25.1") (tree-sitter "0.15.0"))
 ;; SPDX-License-Identifier: MIT
 
@@ -100,15 +100,19 @@ See `tree-sitter-langs-repos'."
       (entry (reverse
               '((agda2-mode      . agda)
                 (sh-mode         . bash)
+                (beancount-mode  . beancount)
+                (bibtex-mode     . bibtex)
                 (c-mode          . c)
                 (caml-mode       . ocaml)
                 (clojure-mode    . clojure)
                 (csharp-mode     . c-sharp)
                 (c++-mode        . cpp)
                 (d-mode          . d)
+                (dart-mode       . dart)
                 (css-mode        . css)
                 (elm-mode        . elm)
                 (elixir-mode     . elixir)
+                (emacs-lisp-mode . elisp)
                 (erlang-mode     . erlang)
                 (ess-r-mode      . r)
                 (fennel-mode     . fennel)
@@ -129,7 +133,9 @@ See `tree-sitter-langs-repos'."
                 (jsonc-mode      . json)
                 (julia-mode      . julia)
                 (lua-mode        . lua)
+                (matlab-mode     . matlab)
                 (meson-mode      . meson)
+                (noir-mode       . noir)
                 (ocaml-mode      . ocaml)
                 (perl-mode       . perl)
                 (php-mode        . php)
@@ -144,6 +150,7 @@ See `tree-sitter-langs-repos'."
                 (scheme-mode     . scheme)
                 (swift-mode      . swift)
                 (toml-mode       . toml)
+                (conf-toml-mode  . toml)
                 (tuareg-mode     . ocaml)
                 (typescript-mode . typescript)
                 (verilog-mode    . verilog)

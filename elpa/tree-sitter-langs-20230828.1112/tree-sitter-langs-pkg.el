@@ -1,7 +1,7 @@
-(define-package "tree-sitter-langs" "20230311.1456" "Grammar bundle for tree-sitter"
+(define-package "tree-sitter-langs" "20230828.1112" "Grammar bundle for tree-sitter"
   '((emacs "25.1")
     (tree-sitter "0.15.0"))
-  :commit "ffe9ab0c8ec9e37e70e31d296df3b85bcfc73c5e" :authors
+  :commit "5fe32b5ed92e3e84fc99a917111133e537732847" :authors
   '(("Tuấn-Anh Nguyễn" . "ubolonton@gmail.com"))
   :maintainers
   '(("Tuấn-Anh Nguyễn" . "ubolonton@gmail.com"))

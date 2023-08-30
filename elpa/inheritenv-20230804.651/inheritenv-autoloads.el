@@ -1,4 +1,4 @@
-;;; inheritenv-autoloads.el --- automatically extracted autoloads
+;;; inheritenv-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -21,7 +21,11 @@ ARGS is as for ORIG.
 
 \(fn FUNC &rest ARGS)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inheritenv" '("inheritenv")))
+(register-definition-prefixes "inheritenv" '("inheritenv"))
+
+;;;***
+
+;;;### (autoloads nil nil ("inheritenv-pkg.el") (0 0 0 0))
 
 ;;;***
 

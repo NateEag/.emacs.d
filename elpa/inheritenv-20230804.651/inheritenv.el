@@ -4,10 +4,8 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; URL: https://github.com/purcell/inheritenv
-;; Package-Version: 20210204.354
-;; Package-Commit: 13c0135ddd96519ddeb993ee21163d6e11b4f464
 ;; Package-Requires: ((emacs "24.4"))
-;; Version: 0.1-pre
+;; Version: 0.2
 ;; Keywords: unix
 
 ;; This program is free software; you can redistribute it and/or modify

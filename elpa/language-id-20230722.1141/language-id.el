@@ -2,8 +2,6 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Package-Version: 20230214.710
-;; Package-Commit: 302533245972d9bc7722328742247d2b2b225e01
 ;; Version: 0.19
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: languages util
@@ -227,6 +225,7 @@
     ("Literate Haskell" literate-haskell-mode)
     ("Lua" lua-mode)
     ("Markdown" gfm-mode markdown-mode)
+    ("Meson" meson-mode)
     ("Nix" nix-mode)
     ("Objective-C" objc-mode)
     ("OCaml" caml-mode tuareg-mode)
@@ -271,6 +270,7 @@
                        (if (boundp symbol) (symbol-value symbol) nil))))
             variables)))))
 
+;;;###autoload
 (defun language-id-buffer ()
   "Get GitHub Linguist language name for current buffer.
 
@@ -290,13 +290,20 @@ are updated in new releases of the library.
 
 If the language is not unambiguously recognized, the function
 returns nil."
-  (let ((language-id--file-name-extension
-         (downcase (file-name-extension (or (buffer-file-name) "") t))))
-    (cl-some (lambda (definition)
-               (cl-destructuring-bind (language-id &rest modes) definition
-                 (when (cl-some #'language-id--mode-match-p modes)
-                   language-id)))
-             language-id--definitions)))
+  (interactive)
+  (let ((language-id
+         (let ((language-id--file-name-extension
+                (downcase (file-name-extension (or (buffer-file-name) "")
+                                               t))))
+           (cl-some (lambda (definition)
+                      (cl-destructuring-bind (language-id &rest modes)
+                          definition
+                        (when (cl-some #'language-id--mode-match-p modes)
+                          language-id)))
+                    language-id--definitions))))
+    (when (called-interactively-p 'interactive)
+      (message "%s" (or language-id "Unknown")))
+    language-id))
 
 (provide 'language-id)
 

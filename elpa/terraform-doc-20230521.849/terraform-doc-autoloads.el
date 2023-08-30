@@ -18,6 +18,10 @@ Look up PROVIDER.
 
 ;;;***
 
+;;;### (autoloads nil nil ("terraform-doc-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

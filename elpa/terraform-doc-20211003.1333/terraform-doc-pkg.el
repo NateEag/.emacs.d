@@ -1,2 +1,0 @@
-;;; Generated package description from terraform-doc.el  -*- no-byte-compile: t -*-
-(define-package "terraform-doc" "20211003.1333" "Look up terraform documentation on the fly" '((emacs "24.4")) :commit "16179e57ce290190c222b27961900657a1981330" :authors '(("Giap Tran" . "txgvnn@gmail.com")) :maintainer '("Giap Tran" . "txgvnn@gmail.com") :keywords '("comm") :url "https://github.com/TxGVNN/terraform-doc")

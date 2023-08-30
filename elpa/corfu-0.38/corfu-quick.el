@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1") (corfu "0.36"))
+;; Package-Requires: ((emacs "27.1") (corfu "0.38"))
 ;; Homepage: https://github.com/minad/corfu
 
 ;; This file is part of GNU Emacs.
@@ -117,7 +117,8 @@ TWO is non-nil if two keys should be displayed."
                 (cons t cands)))
              ;; Increase minimum width to avoid odd jumping
              (corfu-min-width (+ 3 corfu-min-width)))
-    (corfu--candidates-popup (car completion-in-region--data))
+    (corfu--candidates-popup
+     (posn-at-point (+ (car completion-in-region--data) (length corfu--base))))
     (alist-get (read-key) list)))
 
 ;;;###autoload

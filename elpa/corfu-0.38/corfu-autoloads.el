@@ -10,7 +10,7 @@
 ;;; Generated autoloads from corfu.el
 
 (autoload 'corfu-mode "corfu" "\
-Completion Overlay Region FUnction.
+COmpletion in Region FUnction.
 
 This is a minor mode.  If called interactively, toggle the `Corfu
 mode' mode.  If the prefix argument is positive, enable the mode,
@@ -55,7 +55,7 @@ See `corfu-mode' for more information on Corfu mode.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "corfu" '("corfu-"))
+(register-definition-prefixes "corfu" '("corfu-" "global-corfu-modes"))
 
 ;;;***
 
@@ -165,12 +165,18 @@ it is disabled.
 ;;; Generated autoloads from corfu-info.el
 
 (autoload 'corfu-info-documentation "corfu-info" "\
-Show documentation of current candidate." t nil)
+Show documentation of current candidate.
+If called with a prefix ARG, the buffer is persistent.
+
+\(fn &optional ARG)" t nil)
 
 (autoload 'corfu-info-location "corfu-info" "\
-Show location of current candidate." t nil)
+Show location of current candidate.
+If called with a prefix ARG, the buffer is persistent.
 
-(register-definition-prefixes "corfu-info" '("corfu-info--restore-on-next-command"))
+\(fn &optional ARG)" t nil)
+
+(register-definition-prefixes "corfu-info" '("corfu-info--"))
 
 ;;;***
 

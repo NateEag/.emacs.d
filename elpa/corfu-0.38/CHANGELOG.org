@@ -2,6 +2,24 @@
 #+author: Daniel Mendler
 #+language: en
 
+* Version 0.38 (2023-08-14)
+
+- =corfu-quick=: Bugfix.
+- =corfu-mode-map=: Add mode map.
+- Replace =corfu-excluded-modes= with =global-corfu-modes=, the Emacs 28 convention
+  for globalized minor modes.
+
+* Version 0.37 (2023-07-02)
+
+- Bugfixes.
+- Improve child frame display code, =corfu--popup-show= takes a =posn= argument.
+- Ensure that the popup font matches the font of the parent frame.
+- Close popup when window selection changes.
+- Remove =corfu-history-length=. Instead set the =history-length= property of
+  =corfu-history= variable.
+- =corfu-info-documentation=, =corfu-info-location=: Make buffer and window
+  persistent if called with prefix argument.
+
 * Version 0.36 (2023-03-27)
 
 - Drop obsolete =corfu-preselect-first=.

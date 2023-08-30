@@ -1,23 +1,25 @@
-	    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-	     CORFU.EL - COMPLETION OVERLAY REGION FUNCTION
-	    ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+                CORFU.EL - COMPLETION IN REGION FUNCTION
+               ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 
-Corfu enhances completion at point with a small completion popup. The
-current candidates are shown in a popup below or above the point. Corfu
-is the minimalistic `completion-in-region' counterpart of the [Vertico]
+Corfu enhances in-buffer completion with a small completion popup. The
+current candidates are shown in a popup below or above the point. The
+candidates can be selected by moving up and down. Corfu is the
+minimalistic in-buffer completion counterpart of the [Vertico]
 minibuffer UI.
 
 Corfu is a small package, which relies on the Emacs completion
 facilities and concentrates on providing a polished completion
-UI. Completions are either provided by commands like
+UI. In-buffer completion UIs in Emacs can hook into
+`completion-in-region', which implements the interaction with the
+user. Completions at point are either provided by commands like
 `dabbrev-completion' or by pluggable backends
-(`completion-at-point-functions', Capfs). Most programming language
-major modes implement a Capf. Furthermore the language server packages,
-Eglot and Lsp-mode, use Capfs which talk to the LSP server to retrieve
-the completions. Corfu does not include its own completion backends. The
-Emacs built-in Capfs and the Capfs provided by other programming
-language packages are usually sufficient. A few additional Capfs and
+(`completion-at-point-functions', Capfs) and are then passed to
+`completion-in-region'. Many programming, text and shell major modes
+implement a Capf. Corfu does not include its own completion
+backends. The Emacs built-in Capfs and the Capfs provided by third-party
+programming language packages are often sufficient. Additional Capfs and
 completion utilities are provided by the [Cape] package.
 
 *NOTE*: Corfu uses child frames to show the popup and falls back to the
@@ -34,13 +36,15 @@ Table of Contents
 .. 2. Completing in the minibuffer
 .. 3. Completing in the Eshell or Shell
 .. 4. Orderless completion
-.. 5. TAB-and-Go completion
-.. 6. Transfer completion to the minibuffer
+.. 5. TAB-only completion
+.. 6. TAB-and-Go completion
+.. 7. Transfer completion to the minibuffer
 3. Key bindings
 4. Extensions
 5. Complementary packages
 6. Alternatives
-7. Contributions
+7. Debugging Corfu
+8. Contributions
 
 
 [Vertico] <https://github.com/minad/vertico>
@@ -93,8 +97,8 @@ Table of Contents
   requirements. However in order to quickly try out the Corfu completion
   package, it should be sufficient to activate `global-corfu-mode'. You
   can experiment with manual completion for example in an Elisp buffer
-  or in an Eshell or Shell buffer. For auto completion, set
-  `corfu-auto=t' before turning on `global-corfu-mode'.
+  or in an Eshell or Shell buffer. For auto completion, set `corfu-auto'
+  to t before turning on `global-corfu-mode'.
 
   Here is an example configuration:
 
@@ -119,7 +123,7 @@ Table of Contents
   │ 
   │   ;; Recommended: Enable Corfu globally.
   │   ;; This is recommended since Dabbrev can be used globally (M-/).
-  │   ;; See also `corfu-exclude-modes'.
+  │   ;; See also `global-corfu-modes'.
   │   :init
   │   (global-corfu-mode))
   │ 
@@ -171,7 +175,7 @@ Table of Contents
   │   ;;       orderless-component-separator #'orderless-escapable-split-on-space)
   │   (setq completion-styles '(orderless basic)
   │ 	completion-category-defaults nil
-  │ 	completion-category-overrides '((file (styles . (partial-completion))))))
+  │ 	completion-category-overrides '((file (styles partial-completion)))))
   └────
 
   The `basic' completion style is specified as fallback in addition to
@@ -186,8 +190,8 @@ Table of Contents
   try.
 
   See also the [Corfu Wiki] and the [Cape manual] for additional Capf
-  configuration tips. The Eglot and Lsp-mode configurations are
-  documented in the wiki. For more general documentation read the
+  configuration tips. The language server protocol (LSP) configurations
+  are documented in the wiki. For more general documentation read the
   chapter about completion in the [Emacs manual]. If you want to create
   your own Capfs, you can find documentation about completion in the
   [Elisp manual].
@@ -213,7 +217,7 @@ Table of Contents
 ───────────────────
 
   Auto completion is disabled by default, but can be enabled by setting
-  `corfu-auto=t'. Furthermore you may want to configure Corfu to quit
+  `corfu-auto' to t. Furthermore you may want to configure Corfu to quit
   completion eagerly, such that the completion popup stays out of your
   way when it appeared unexpectedly.
 
@@ -247,8 +251,8 @@ Table of Contents
   If you want to combine fast prefix filtering and Orderless filtering
   you can still do that by defining a custom Orderless completion style
   via `orderless-define-completion-style'. We use a custom style
-  dispatcher, which enables prefix filtering for input shorter than 4
-  characters. Note that such a setup is quite advanced. Please refer to
+  dispatcher, which enables efficient prefix filtering for input shorter
+  than 4 characters. Note that such a setup is advanced. Please refer to
   the Orderless documentation and source code for further details.
 
   ┌────
@@ -262,8 +266,8 @@ Table of Contents
   │ 
   │ (setq-local corfu-auto t
   │ 	    corfu-auto-delay 0
-  │ 	    corfu-auto-prefix 0
-  │ 	    completion-styles '(orderless-fast))
+  │ 	    corfu-auto-prefix 1
+  │ 	    completion-styles '(orderless-fast basic))
   └────
 
 
@@ -327,7 +331,7 @@ Table of Contents
   When pressing `RET' while the Corfu popup is visible, the
   `corfu-insert' command will be invoked. This command does inserts the
   currently selected candidate, but it does not send the prompt input to
-  Eshell or the comint process. Therefore you often have to press `RET'
+  Eshell or the Comint process. Therefore you often have to press `RET'
   twice which feels like an unnecessary double confirmation. Fortunately
   it is easy to improve this! In my configuration I define the advice
   `corfu-send-shell' which sends the candidate after insertion.
@@ -346,23 +350,29 @@ Table of Contents
 
   Shell completion uses the flexible Pcomplete mechanism internally,
   which allows you to program the completions per shell command. If you
-  want to know more, look into the [blog post], which shows how to
-  configure Pcomplete for git commands.  Since Emacs 29, Pcomplete
-  offers the `pcomplete-from-help' function which parses the `--help'
-  output of a command and produces completions. This functionality is
-  similar to the Fish shell, which also takes advantage of `--help' to
-  dynamically generate completions.
+  want to know more, look into this [blog post], which shows how to
+  configure Pcomplete for git commands.
 
-  Unfortunately Pcomplete had a few technical issues on Emacs 28 and
-  older. We can work around the issues with the [Cape] library
-  (Completion at point extensions).  Cape provides wrappers which
-  sanitize the Pcomplete function. If you use Emacs 28 or older
-  installing these advices is strongly recommend such that Pcomplete
-  works properly. On Emacs 29 the advices are not necessary anymore,
-  since almost all of the related bugs have been fixed. I therefore
-  recommend to remove the advices on Emacs 29 and eventually report any
-  remaining Pcomplete issues upstream, such that they can be fixed at
-  the root.
+  I recommend the [pcmpl-args] package which extends Pcomplete with
+  completion support and helpful annotation support for more
+  commands. Similar to the Fish shell, `pcmpl-args' uses man page
+  parsing and `--help' output parsing to dynamically generate
+  completions. This package brings Eshell completion to another level!
+  Since Emacs 29, Pcomplete offers the `pcomplete-from-help' function
+  which parses the `--help' output of a command and produces
+  completions. This Emacs 29 functionality is not completely
+  equivalent. For example it does not display annotations in Eshell, but
+  this may get fixed in Emacs 30.
+
+  Pcomplete has a few bugs on Emacs 28 and older. We can work around the
+  issues with the [Cape] library (Completion at point extensions). Cape
+  provides wrappers which sanitize the Pcomplete function. If you use
+  Emacs 28 or older installing these advices is recommended such that
+  Pcomplete works properly. On Emacs 29 the advices should not be
+  necessary anymore, since most of the relevant bugs have been fixed. I
+  therefore recommend to remove the advices on Emacs 29 and eventually
+  report any remaining Pcomplete issues upstream, such that they can be
+  fixed.
 
   ┌────
   │ ;; The advices are only needed on Emacs 28 and older.
@@ -378,6 +388,8 @@ Table of Contents
 
 [blog post]
 <https://www.masteringemacs.org/article/pcomplete-context-sensitive-completion-emacs>
+
+[pcmpl-args] <https://github.com/JonWaltman/pcmpl-args.el>
 
 [Cape] <https://github.com/minad/cape>
 
@@ -399,18 +411,17 @@ Table of Contents
   your orderless component separator.
 
   Then, when a new orderless component is desired, use `M-SPC'
-  (`corfu-insert-separator') to enter the /first/ component separator in
+  (`corfu-insert-separator') to enter the first component separator in
   the input, and arbitrary orderless search terms and new separators can
   be entered thereafter.
 
   To treat the entire input as Orderless input, you can set the
-  customization option `corfu-quit-at-boundary=t'. This disables the
+  customization option `corfu-quit-at-boundary' to t. This disables the
   predicate which checks if the current completion boundary has been
-  left. In contrast, if you /always/ want to quit at the boundary,
-  simply set `corfu-quit-at-boundary=nil'. By default
-  `corfu-quit-at-boundary' is set to `separator' which quits at
-  completion boundaries as long as no separator has been inserted with
-  `corfu-insert-separator'.
+  left. In contrast, if you always want to quit at the boundary, set
+  `corfu-quit-at-boundary' to `nil'. By default `corfu-quit-at-boundary'
+  is set to `separator' which quits at completion boundaries as long as
+  no separator has been inserted with `corfu-insert-separator'.
 
   Finally, there exists the user option `corfu-quit-no-match' which is
   set to `separator' by default. With this setting Corfu stays alive as
@@ -452,7 +463,46 @@ Table of Contents
 [Orderless] <https://github.com/oantolin/orderless>
 
 
-2.5 TAB-and-Go completion
+2.5 TAB-only completion
+───────────────────────
+
+  By default, Corfu steals both the `RET' and `TAB' keys, when the Corfu
+  popup is open. This can feel intrusive, in particular in combination
+  with auto completion. `RET' may accidentally commit an automatically
+  selected candidate, while you actually wanted to start a new line. As
+  an alternative we can unbind the `RET' key completely from `corfu-map'
+  or reserve the `RET' key only in shell modes.
+
+  ┌────
+  │ ;; TAB-only configuration
+  │ (use-package corfu
+  │   :custom
+  │   (corfu-auto t)               ;; Enable auto completion
+  │   (corfu-preselect 'directory) ;; Select the first candidate, except for directories
+  │ 
+  │   ;; Free the RET key for less intrusive behavior.
+  │   :bind
+  │   (:map corfu-map
+  │ 	;; Option 1: Unbind RET completely
+  │ 	;;; ("RET" . nil)
+  │ 	;; Option 2: Use RET only in shell modes
+  │ 	("RET" . (menu-item "" nil :filter corfu-insert-shell-filter)))
+  │ 
+  │   :init
+  │   (global-corfu-mode))
+  │ 
+  │ (defun corfu-insert-shell-filter (&optional _)
+  │   "Insert completion candidate and send when inside comint/eshell."
+  │   (when (derived-mode-p 'eshell-mode 'comint-mode)
+  │     (lambda ()
+  │       (interactive)
+  │       (corfu-insert)
+  │       ;; `corfu-send-shell' was defined above
+  │       (corfu-send-shell))))
+  └────
+
+
+2.6 TAB-and-Go completion
 ─────────────────────────
 
   You may be interested in configuring Corfu in TAB-and-Go
@@ -482,7 +532,7 @@ Table of Contents
   └────
 
 
-2.6 Transfer completion to the minibuffer
+2.7 Transfer completion to the minibuffer
 ─────────────────────────────────────────
 
   Sometimes it is useful to transfer the Corfu completion session to the
@@ -502,10 +552,12 @@ Table of Contents
   ┌────
   │ (defun corfu-move-to-minibuffer ()
   │   (interactive)
-  │   (let ((completion-extra-properties corfu--extra)
-  │ 	completion-cycle-threshold completion-cycling)
-  │     (apply #'consult-completion-in-region completion-in-region--data)))
+  │   (when completion-in-region--data
+  │     (let ((completion-extra-properties corfu--extra)
+  │ 	  completion-cycle-threshold completion-cycling)
+  │       (apply #'consult-completion-in-region completion-in-region--data))))
   │ (keymap-set corfu-map "M-m" #'corfu-move-to-minibuffer)
+  │ (add-to-list 'corfu-continue-commands #'corfu-move-to-minibuffer)
   └────
 
 
@@ -595,38 +647,50 @@ Table of Contents
     overlay-based display for Corfu, such that you can use Corfu in
     terminal Emacs.
 
+  • [corfu-candidate-overlay]: Shows as-you-type auto-suggestion
+    candidate overlay with a visual indication of whether there are many
+    or exactly one candidate available (works only with `corfu-auto'
+    disabled).
+
   • [Orderless]: Corfu supports completion styles, including the
-    advanced [Orderless] completion style, where the filtering
+    advanced `orderless' completion style, where the filtering
     expressions are separated by spaces or another character (see
     `corfu-separator').
 
-  • [Cape]: Additional Capf backends and `completion-in-region' commands
-    are provided by the [Cape] package. Among others, the package
-    supplies a file path and a Dabbrev completion backend. Cape provides
-    the `cape-company-to-capf' adapter to reuse Company backends in
-    Corfu. Furthermore the function `cape-super-capf' can merge multiple
-    Capfs, such that the candidates of multiple Capfs are displayed
-    together at the same time.
+  • [Cape]: Provides additional Capf backends and `completion-in-region'
+    commands.  Among others, the package supplies the file completion
+    backend `cape-file' and the Dabbrev backend `cape-dabbrev'. Cape
+    provides the `cape-company-to-capf' adapter to reuse Company
+    backends in Corfu.
 
-  • [kind-icon]: Icons are supported by Corfu via an external
-    package. For example the [kind-icon] package provides beautifully
-    styled SVG icons based on monochromatic icon sets like material
-    design.
+  • [kind-icon]: Icons are supported by Corfu via external packages. The
+    kind-icon package provides beautifully styled SVG icons based on
+    monochromatic icon sets.
+
+  • [pcmpl-args]: Extend the Eshell/Shell Pcomplete mechanism with
+    support for many commands. Similar to the Fish shell, pcmpl-args
+    uses man page parsing to dynamically retrieve the completions and
+    helpful annotations.
 
   • [Tempel]: Tiny template/snippet package with templates in Lisp
     syntax, which can be used in conjunction with Corfu.
 
-  • [Vertico]: You may also want to look into my [Vertico]
+  • [Vertico]: You may also want to look into my Vertico
     package. Vertico is the minibuffer completion counterpart of Corfu.
 
 
 [corfu-terminal] <https://codeberg.org/akib/emacs-corfu-terminal>
+
+[corfu-candidate-overlay]
+<https://code.bsdgeek.org/adam/corfu-candidate-overlay>
 
 [Orderless] <https://github.com/oantolin/orderless>
 
 [Cape] <https://github.com/minad/cape>
 
 [kind-icon] <https://github.com/jdtsmith/kind-icon>
+
+[pcmpl-args] <https://github.com/JonWaltman/pcmpl-args.el>
 
 [Tempel] <https://github.com/minad/tempel>
 
@@ -637,12 +701,13 @@ Table of Contents
 ══════════════
 
   • [Company]: Company is a widely used and mature completion package,
-    which implements a similar interaction model and popup UI as
-    Corfu. While Corfu relies exclusively on the standard Emacs
-    completion API (Capfs), Company defines its own API for the
-    backends. Company includes its completion backends, which are
-    incompatible with the Emacs completion infrastructure. As a result
-    of this design, Company is a more complex package than
+    which implements a similar UI as Corfu. While Corfu relies
+    exclusively on the standard Emacs completion API (Capfs), Company
+    defines its own API for the backends. Company includes its own
+    completion backends, following its own API, which are incompatible
+    with the Emacs completion infrastructure. Company provides an
+    adapter `company-capf' to handle Capfs as a Company backend. As a
+    result of this design, Company is a more complex package than
     Corfu. Company by default uses overlays for the popup in contrast to
     the child frames used by Corfu. Overall both packages work well, but
     Company integrates less tightly with Emacs. The `completion-styles'
@@ -666,7 +731,29 @@ Table of Contents
 [Vertico] <https://github.com/minad/vertico>
 
 
-7 Contributions
+7 Debugging Corfu
+═════════════════
+
+  When you observe an error in the `corfu--post-command' post command
+  hook, you should install an advice to enforce debugging. This allows
+  you to obtain a stack trace in order to narrow down the location of
+  the error. The reason is that post command hooks are automatically
+  disabled (and not debugged) by Emacs. Otherwise Emacs would become
+  unusable, given that the hooks are executed after every command.
+
+  ┌────
+  │ (setq debug-on-error t)
+  │ 
+  │ (defun force-debug (func &rest args)
+  │   (condition-case e
+  │       (apply func args)
+  │     ((debug error) (signal (car e) (cdr e)))))
+  │ 
+  │ (advice-add #'corfu--post-command :around #'force-debug)
+  └────
+
+
+8 Contributions
 ═══════════════
 
   Since this package is part of [GNU ELPA] contributions require a

@@ -6,7 +6,7 @@
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
 ;; Version: 0.1
-;; Package-Requires: ((emacs "27.1") (corfu "0.36"))
+;; Package-Requires: ((emacs "27.1") (corfu "0.38"))
 ;; Homepage: https://github.com/minad/corfu
 
 ;; This file is part of GNU Emacs.
@@ -103,7 +103,7 @@ documentation is usually expensive."
   :group 'corfu)
 
 (defcustom corfu-popupinfo-direction '(right left vertical)
-  "Preferred directionse for the popup in order."
+  "Preferred directions for the popup in order."
   :type '(repeat
           (choice
            (const left)
@@ -354,8 +354,8 @@ form (X Y WIDTH HEIGHT DIR)."
                 (goto-char (point-min)))
               (dolist (var corfu-popupinfo--buffer-parameters)
                 (set (make-local-variable (car var)) (cdr var)))
-              (setf face-remapping-alist (copy-tree face-remapping-alist)
-                    (alist-get 'default face-remapping-alist) 'corfu-popupinfo))
+              (when-let ((m (memq 'corfu-default (alist-get 'default face-remapping-alist))))
+                (setcar m 'corfu-popupinfo)))
           (unless (eq corfu-popupinfo--toggle 'init)
             (message "No %s available for `%s'"
                      (car (last (split-string (symbol-name corfu-popupinfo--function) "-+")))

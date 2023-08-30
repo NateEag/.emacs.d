@@ -73,7 +73,7 @@ will discard all the preceeding arguments and make this absolute
 path the new root of the generated path."
   (let (path
         (relative (f-relative-p (car args))))
-    (-map
+    (mapc
      (lambda (arg)
        (setq path (cond ((not path) arg)
                         ((f-absolute-p arg)
@@ -454,8 +454,15 @@ The extension, in a file name, is the part that follows the last
 (defun f-descendant-of-p (path-a path-b)
   "Return t if PATH-A is desendant of PATH-B."
   (unless (f-same-p path-a path-b)
-    (string-prefix-p (f-full path-b)
-                     (f-full path-a))))
+    (let ((path-a (f-split (f-full path-a)))
+          (path-b (f-split (f-full path-b)))
+          (parent-p t))
+      (while (and path-b parent-p)
+        (if (string= (car path-a) (car path-b))
+            (setq path-a (cdr path-a)
+                  path-b (cdr path-b))
+          (setq parent-p nil)))
+      parent-p)))
 
 (defalias 'f-descendant-of? 'f-descendant-of-p)
 
@@ -626,8 +633,6 @@ their last access time when METHOD is \\='access."
          (date-file (apply fn-method (list file)))
          (date-other (apply fn-method (list other)))
          (dates      (-zip-pair date-file date-other)))
-    (message "[DEBUG]: file: %s\t\tother: %s" file other)
-    (message "[DEBUG]: dates: %S" dates)
     (-reduce-from (lambda (acc elt)
                     (if (= acc 0)
                         (f--three-way-compare (car elt) (cdr elt))
@@ -691,7 +696,7 @@ For more info on METHOD, see `f--date-compare'."
             (member (f-filename file) '("." "..")))
           (directory-files path t))))
     (cond (recursive
-           (-map
+           (mapc
             (lambda (entry)
               (if (f-file-p entry)
                   (setq result (cons entry result))

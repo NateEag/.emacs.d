@@ -1,13 +1,11 @@
 ;;; websocket.el --- Emacs WebSocket client and server  -*- lexical-binding:t -*-
 
-;; Copyright (c) 2013, 2016-2017  Free Software Foundation, Inc.
+;; Copyright (c) 2013, 2016-2023  Free Software Foundation, Inc.
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Homepage: https://github.com/ahyatt/emacs-websocket
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20230305.410
-;; Package-Commit: 1a08093b122d8cf20366a1cba5faddf7a53d08ed
-;; Version: 1.14
+;; Version: 1.15
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;
 ;; This program is free software; you can redistribute it and/or
@@ -100,6 +98,7 @@ same for the protocols."
   (conn (cl-assert nil) :read-only t)
   ;; Only populated for servers, this is the server connection.
   server-conn
+  origin
   accept-string
   (inflight-input nil))
 
@@ -201,9 +200,9 @@ approximately 537M long."
       (let* ((32-bit-parts
               (bindat-get-field (bindat-unpack '((:val vec 2 u32)) s) :val))
              (cval
-              (logior (lsh (aref 32-bit-parts 0) 32) (aref 32-bit-parts 1))))
+              (logior (ash (aref 32-bit-parts 0) 32) (aref 32-bit-parts 1))))
         (if (and (= (aref 32-bit-parts 0) 0)
-                 (= (lsh (aref 32-bit-parts 1) -29) 0))
+                 (= (ash (aref 32-bit-parts 1) -29) 0))
             cval
           (signal 'websocket-unparseable-frame
                   (list "Frame value found too large to parse!"))))
@@ -238,10 +237,10 @@ approximately 537M long."
            val nbytes))
   (if (= nbytes 8)
       (progn
-        (let* ((hi-32bits (lsh val -32))
+        (let* ((hi-32bits (ash val -32))
                ;; This is just VAL on systems that don't have >= 32 bits.
-               (low-32bits (- val (lsh hi-32bits 32))))
-          (when (or (> hi-32bits 0) (> (lsh low-32bits -29) 0))
+               (low-32bits (- val (ash hi-32bits 32))))
+          (when (or (> hi-32bits 0) (> (ash low-32bits -29) 0))
             (signal 'websocket-frame-too-large (list val)))
           (bindat-pack `((:val vec 2 u32))
                        `((:val . [,hi-32bits ,low-32bits])))))
@@ -999,6 +998,7 @@ All these parameters are defined as in `websocket-open'."
                                     ws (plist-get header-info :protocols)
                                     (plist-get header-info :extensions)))
                                   (setf (websocket-ready-state ws) 'open)
+                                  (setf (websocket-origin ws) (plist-get header-info :origin))
                                   (websocket-try-callback 'websocket-on-open
                                                           'on-open ws))
                          (message "Invalid client headers found in: %s" output)
@@ -1047,6 +1047,8 @@ messages and a plist containing `:key', the websocket key,
         (setq plist (plist-put plist :extensions (websocket-parse-repeated-field
                                                   output
                                                   "Sec-Websocket-Extensions"))))
+      (when (string-match "^Origin: \\(.+\\)\r\n" output)
+        (setq plist (plist-put plist :origin (match-string 1 output))))
       plist)))
 
 (provide 'websocket)

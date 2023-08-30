@@ -20,6 +20,10 @@ Display inline docs FORMAT-STRING under point with extra ARGS.
 
 ;;;***
 
+;;;### (autoloads nil nil ("inline-docs-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

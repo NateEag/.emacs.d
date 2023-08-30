@@ -2,8 +2,6 @@
 
 ;; Author: stardiviner <numbchild@gmail.com>
 ;; Keywords: inline docs overlay
-;; Package-Version: 20230406.1002
-;; Package-Commit: 8eb1c43b53a7f51cf74cb85529d108b5ce5efff5
 ;; URL: https://repo.or.cz/inline-docs.git
 ;; Created: 20th Jan 2017
 ;; Version: 1.0.1
@@ -89,7 +87,11 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
 
 (defun inline-docs--string-display (string apply-face)
   "Show STRING contents below point line until next command with APPLY-FACE."
-  (let* ((border-line (make-string (- (window-body-width) 2) inline-docs-border-symbol))
+  ;; note that `display-line-numbers-mode' takes 2 + `line-number-display-width' columns
+  (let* ((total-column-number (if display-line-numbers-mode
+                                  (- (window-body-width) (+ 2 (line-number-display-width)))
+                                (window-body-width)))
+         (border-line (make-string total-column-number inline-docs-border-symbol))
          (offset (make-string
                   (if (= (current-indentation) 0) ; fix (wrong-type-argument wholenump -1) when current indentation is 0 minus 1 will caused wholenump exception.
                       (current-indentation)
@@ -114,8 +116,8 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
           (inline-docs--clear-overlay)
           ;; decide overlay positions
           (cl-case inline-docs-position
-            ('above (forward-line 0))
-            ('below (forward-line)))
+            (above (forward-line 0))
+            (below (forward-line)))
           (setq start-pos (point))
           (end-of-line)
           (setq end-pos (point))

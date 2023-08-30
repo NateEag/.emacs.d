@@ -13,6 +13,10 @@
 
 ;;;***
 
+;;;### (autoloads nil nil ("lsp-haskell-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

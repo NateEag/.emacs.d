@@ -9,6 +9,15 @@
 ;;;### (autoloads nil "format-all" "format-all.el" (0 0 0 0))
 ;;; Generated autoloads from format-all.el
 
+(autoload 'format-all-region-or-buffer "format-all" "\
+Auto-format the source code in the current region or buffer.
+In Transient Mark mode when the mark is active, call `format-all-region'.
+Otherwise, call `format-all-buffer'.
+
+The PROMPT argument works as for `format-all-buffer'.
+
+\(fn &optional PROMPT)" t nil)
+
 (autoload 'format-all-buffer "format-all" "\
 Auto-format the source code in the current buffer.
 
@@ -77,7 +86,11 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(register-definition-prefixes "format-all" '("alejandra" "atsfmt" "auctex" "beautysh" "black" "brittany" "bsrefmt" "buildifier" "cmake-format" "crystal" "csharpier" "dart" "dfmt" "dhall" "dockfmt" "efmt" "elm-format" "emacs-" "erb-format" "fantomas" "fish-indent" "fprettify" "gawk" "gleam" "hindent" "html-tidy" "isort" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nginxfmt" "nix" "ormolu" "perltidy" "pgformatter" "prettier" "pur" "raco-fmt" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "taplo-fmt" "terraform-fmt" "ts-standard" "v-fmt" "verible" "yapf" "zig" "zprint"))
+(register-definition-prefixes "format-all" '("alejandra" "atsfmt" "auctex" "bea" "black" "brittany" "bsrefmt" "buildifier" "cmake-format" "crystal" "csharpier" "dart" "dfmt" "dhall" "dockfmt" "efmt" "elm-format" "emacs-" "erb-format" "fantomas" "fish-indent" "fprettify" "gawk" "gleam" "hindent" "html-tidy" "isort" "istyle-verilog" "jsonnetfmt" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "muon-fmt" "nginxfmt" "nix" "ormolu" "perltidy" "pgformatter" "prettier" "pur" "raco-fmt" "rescript" "scalafmt" "shfmt" "snakefmt" "sqlformat" "swiftformat" "taplo-fmt" "terraform-fmt" "ts-standard" "v-fmt" "verible" "yapf" "zig" "zprint"))
+
+;;;***
+
+;;;### (autoloads nil nil ("format-all-pkg.el") (0 0 0 0))
 
 ;;;***
 

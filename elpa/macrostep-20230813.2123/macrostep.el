@@ -1,12 +1,13 @@
 ;;; macrostep.el --- Interactive macro expander  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2012-2015 Jon Oddie
+;; Copyright (C) 2020-2023 Free Software Foundation, Inc.
 
 ;; Author: Jon Oddie <j.j.oddie@gmail.com>
 ;; Url: https://github.com/emacsorphanage/macrostep
 ;; Keywords: lisp, languages, macro, debugging
 
-;; Package-Version: 0.9.1.50-git
+;; Package-Version: 0.9.2
 ;; Package-Requires: ((cl-lib "0.5"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -237,6 +238,10 @@
 ;; 8 Changelog
 ;; ===========
 
+;;   - v0.9.2, 2023-05-12:
+;;     - name the keymap macrostep-mode-map, fixing a regression in v0.9.1
+;;   - v0.9.1, 2023-03-12:
+;;     - bug fixes, cleanup and modernization
 ;;   - v0.9, 2015-10-01:
 ;;     - separate into Elisp-specific and generic components
 ;;     - highlight and expand compiler macros
@@ -457,8 +462,9 @@ The default value, `macrostep-macro-form-p', is specific to Emacs Lisp.")
 
 
 ;;; Define keymap and minor mode
-(define-obsolete-variable-alias 'macrostep-keymap 'macrostep-mode-keymap "2022")
-(defvar macrostep-mode-keymap
+(define-obsolete-variable-alias 'macrostep-mode-keymap 'macrostep-mode-map "2023")
+(define-obsolete-variable-alias 'macrostep-keymap 'macrostep-mode-map "2022")
+(defvar macrostep-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "RET") #'macrostep-expand)
     (define-key map "=" #'macrostep-expand)
@@ -482,12 +488,13 @@ The default value, `macrostep-macro-form-p', is specific to Emacs Lisp.")
 (define-minor-mode macrostep-mode
   "Minor mode for inline expansion of macros in Emacs Lisp source buffers.
 
-\\<macrostep-keymap>Progressively expand macro forms with \\[macrostep-expand], collapse them with \\[macrostep-collapse],
-and move back and forth with \\[macrostep-next-macro] and \\[macrostep-prev-macro].
-Use \\[macrostep-collapse-all] or collapse all visible expansions to
-quit and return to normal editing.
+\\<macrostep-mode-map>Progressively expand macro forms with \
+\\[macrostep-expand], collapse them with \\[macrostep-collapse],
+and move back and forth with \\[macrostep-next-macro] and \
+\\[macrostep-prev-macro].  Use \\[macrostep-collapse-all] or collapse all
+visible expansions to quit and return to normal editing.
 
-\\{macrostep-keymap}"
+\\{macrostep-mode-map}"
   :lighter " Macro-Stepper"
   :group 'macrostep
   (if macrostep-mode
@@ -500,9 +507,10 @@ quit and return to normal editing.
               buffer-read-only t)
         ;; Set up post-command hook to bail out on leaving read-only
         (add-hook 'post-command-hook #'macrostep-command-hook nil t)
-        (message
-         (substitute-command-keys
-          "\\<macrostep-keymap>Entering macro stepper mode. Use \\[macrostep-expand] to expand, \\[macrostep-collapse] to collapse, \\[macrostep-collapse-all] to exit.")))
+        (message (substitute-command-keys "\
+\\<macrostep-mode-map>Entering macro stepper mode. \
+Use \\[macrostep-expand] to expand, \\[macrostep-collapse] to collapse, \
+\\[macrostep-collapse-all] to exit.")))
 
     ;; Exiting mode
     (if macrostep-expansion-buffer
@@ -934,28 +942,36 @@ corresponding local environments are collected for these.
 Forms and environments are extracted from FORM by instrumenting
 Emacs's builtin `macroexpand' function and calling
 `macroexpand-all'."
-  (let ((real-macroexpand (indirect-function #'macroexpand))
-        (macro-form-alist '())
-        (compiler-macro-forms '()))
-    (cl-letf
-        (((symbol-function #'macroexpand)
-          (lambda (form environment &rest args)
-            (let ((expansion
-                   (apply real-macroexpand form environment args)))
-              (cond ((not (eq expansion form))
-                     (setq macro-form-alist
-                           (cons (cons form environment)
-                                 macro-form-alist)))
-                    ((and (consp form)
-                          (symbolp (car form))
-                          macrostep-expand-compiler-macros
-                          (not (eq form
-                                   (cl-compiler-macroexpand form))))
-                     (setq compiler-macro-forms
-                           (cons form compiler-macro-forms))))
-              expansion))))
-      (ignore-errors
-        (macroexpand-all form environment)))
+  (let* ((macro-form-alist '())
+         (compiler-macro-forms '())
+         (override (lambda (real-macroexpand form environment &rest args)
+                     (let ((expansion
+                            (apply real-macroexpand form environment args)))
+                       (cond ((not (eq expansion form))
+                              (setq macro-form-alist
+                                    (cons (cons form environment)
+                                          macro-form-alist)))
+                             ((and (consp form)
+                                   (symbolp (car form))
+                                   macrostep-expand-compiler-macros
+                                   (not (eq form
+                                            (cl-compiler-macroexpand form))))
+                              (setq compiler-macro-forms
+                                    (cons form compiler-macro-forms))))
+                       expansion))))
+    (cl-macrolet ((with-override (fn &rest body)
+                    `(cl-letf (((symbol-function ,fn)
+                                (apply-partially override (indirect-function ,fn))))
+                       ,@body))
+                  (with-macroexpand-1 (&rest body)
+                    (if (< emacs-major-version 30)
+                        `(progn ,@body) `(with-override #'macroexpand-1 ,@body)))
+                  (with-macroexpand (&rest body)
+                    `(with-override #'macroexpand ,@body)))
+      (with-macroexpand-1
+       (with-macroexpand
+        (ignore-errors
+          (macroexpand-all form environment)))))
     (list macro-form-alist compiler-macro-forms)))
 
 (defvar macrostep-collected-macro-form-alist nil

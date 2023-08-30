@@ -1,6 +1,6 @@
-(define-package "macrostep" "20230316.3" "Interactive macro expander"
+(define-package "macrostep" "20230813.2123" "Interactive macro expander"
   '((cl-lib "0.5"))
-  :commit "cdaa3a5e8235b6edd2e862eb272710471a82039d" :authors
+  :commit "0b04a89f698c335c9ea492553470a8d45c113edd" :authors
   '(("Jon Oddie" . "j.j.oddie@gmail.com"))
   :maintainers
   '(("Jon Oddie" . "j.j.oddie@gmail.com"))

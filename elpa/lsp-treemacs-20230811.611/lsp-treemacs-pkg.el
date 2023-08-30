@@ -1,11 +1,11 @@
-(define-package "lsp-treemacs" "20230504.516" "LSP treemacs"
-  '((emacs "26.1")
+(define-package "lsp-treemacs" "20230811.611" "LSP treemacs"
+  '((emacs "27.1")
     (dash "2.18.0")
     (f "0.20.0")
     (ht "2.0")
     (treemacs "2.5")
     (lsp-mode "6.0"))
-  :commit "eeb96b05e677147cf40292b86a1e5e8f73a8a586" :authors
+  :commit "e66ae2196503d4e84334519e56b4388feffa5060" :authors
   '(("Ivan Yonchovski"))
   :maintainers
   '(("Ivan Yonchovski"))

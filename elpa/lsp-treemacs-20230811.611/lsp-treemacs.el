@@ -4,7 +4,7 @@
 
 ;; Author: Ivan Yonchovski
 ;; Keywords: languages
-;; Package-Requires: ((emacs "26.1") (dash "2.18.0") (f "0.20.0") (ht "2.0") (treemacs "2.5") (lsp-mode "6.0"))
+;; Package-Requires: ((emacs "27.1") (dash "2.18.0") (f "0.20.0") (ht "2.0") (treemacs "2.5") (lsp-mode "6.0"))
 ;; Homepage: https://github.com/emacs-lsp/lsp-treemacs
 ;; Version: 0.4
 
@@ -233,7 +233,7 @@ this hook will be run after having jumped to the target."
        ,(if (stringp docstring) docstring (format "Code action %s." name))
        (interactive)
        (ignore args)
-       (if-let (node (treemacs-node-at-point))
+       (-if-let (node (treemacs-node-at-point))
            (-let [,(cons '&plist keys) (button-get node :item)]
              ,@body)
          (treemacs-pulse-on-failure "No node at point")))))

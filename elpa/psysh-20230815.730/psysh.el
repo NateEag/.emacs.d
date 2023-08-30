@@ -5,8 +5,6 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 22 Jan 2016
 ;; Version: 0.1.1
-;; Package-Version: 20220607.1642
-;; Package-Commit: 796b26a5cd75df9d2ecb206718b310ff21787063
 ;; Package-Requires: ((emacs "24.3") (s "1.9.0") (php-runtime "0.2"))
 ;; Keywords: processes php
 ;; URL: https://github.com/emacs-php/psysh.el
@@ -232,11 +230,11 @@ See `psysh-mode-output-syntax-table'."
 
 (defcustom psysh-doc-buffer-color 'auto
   "Coloring PsySH buffer."
-  :type '(choice (const :tag "Auto detect color mode." 'auto)
-                 (const :tag "Use only PsySH original coloring." 'only-psysh)
-                 (const :tag "Use only Emacs font-lock coloring." 'only-emacs)
-                 (const :tag "Use multiple coloring mechanism." 'mixed)
-                 (const :tag "No coloring." 'none)))
+  :type '(choice (const :tag "Auto detect color mode." auto)
+                 (const :tag "Use only PsySH original coloring." only-psysh)
+                 (const :tag "Use only Emacs font-lock coloring." only-emacs)
+                 (const :tag "Use multiple coloring mechanism." mixed)
+                 (const :tag "No coloring." none)))
 
 (defcustom psysh-doc-display-function #'view-buffer-other-window
   "Function to display PsySH doc buffer."

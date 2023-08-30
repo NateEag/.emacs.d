@@ -41,6 +41,10 @@ Run PsySH interactive-shell in BUFFER-NAME and PROCESS.
 
 ;;;***
 
+;;;### (autoloads nil nil ("psysh-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

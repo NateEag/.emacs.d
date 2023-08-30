@@ -1,4 +1,4 @@
-;;; term-manager-autoloads.el --- automatically extracted autoloads
+;;; term-manager-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "term-manager" "term-manager.el" (0 0 0 0))
 ;;; Generated autoloads from term-manager.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "term-manager" '("term-manager")))
+(register-definition-prefixes "term-manager" '("term-manager"))
 
 ;;;***
 
@@ -17,7 +17,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from term-manager-indexed-mapping.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "term-manager-indexed-mapping" '("term-manager-")))
+(register-definition-prefixes "term-manager-indexed-mapping" '("term-manager-"))
 
 ;;;***
 

@@ -310,11 +310,6 @@ Path to php executable file.")
 
 (put 'php-project-php-executable 'safe-local-variable #'(lambda (v) (and (stringp v) (file-executable-p v))))
 
-(defvar-local php-project-phan-executable nil "\
-Path to phan executable file.")
-
-(put 'php-project-phan-executable 'safe-local-variable #'php-project--eval-bootstrap-scripts)
-
 (defvar-local php-project-coding-style nil "\
 Symbol value of the coding style of the project that PHP major mode refers to.
 

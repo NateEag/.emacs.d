@@ -9,13 +9,13 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.24.3
+;; Version: 1.25.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; License: GPL-3.0-or-later
 
 (eval-and-compile
   (make-obsolete-variable
-   (defconst php-mode-version-number "1.24.3" "PHP Mode version number.")
+   (defconst php-mode-version-number "1.25.0" "PHP Mode version number.")
    "Please call (php-mode-version :as-number t) for compatibility." "1.24.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -73,6 +73,7 @@
 (require 'custom)
 (require 'speedbar)
 (require 'imenu)
+(require 'consult-imenu nil t)
 (require 'package)
 (require 'nadvice)
 (require 'mode-local)
@@ -714,7 +715,8 @@ a backward search limit."
  '("php"
    (c-basic-offset . 4)
    (c-offsets-alist . ((case-label . 0)))
-   (tab-width . 4)))
+   (tab-width . 4)
+   (php-mode-lineup-cascaded-calls . nil)))
 
 (defun php-enable-pear-coding-style ()
   "Set up `php-mode' to use the coding styles preferred for PEAR code and modules."
@@ -1156,7 +1158,7 @@ After setting the stylevars run hook `php-mode-STYLENAME-hook'."
   ;; (setq abbrev-mode t)
 
   (unless (string= php-mode-cc-version c-version)
-    (php-mode-debug-reinstall))
+    (php-mode-debug-reinstall nil))
 
   (if php-mode-disable-c-mode-hook
       (php-mode-neutralize-cc-mode-effect)
@@ -1265,6 +1267,16 @@ After setting the stylevars run hook `php-mode-STYLENAME-hook'."
     (require 'semantic/imenu)
     #'semantic-create-imenu-index)
   "Imenu index function for PHP.")
+
+(when (bound-and-true-p consult-imenu-config)
+  (add-to-list 'consult-imenu-config '(php-mode :toplevel "Namespace"
+                                                :types ((?n "Namespace" font-lock-function-name-face)
+                                                        (?p "Properties" font-lock-type-face)
+                                                        (?o "Constants" font-lock-type-face)
+                                                        (?c "Classes"    font-lock-type-face)
+                                                        (?f "Functions" font-lock-function-name-face)
+                                                        (?i "Imports" font-lock-type-face)
+                                                        (?m "Methods"  font-lock-function-name-face)))))
 
 (autoload 'php-local-manual-complete-function "php-local-manual")
 

@@ -5,7 +5,7 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 5 Dec 2018
-;; Version: 1.24.3
+;; Version: 1.25.0
 ;; Keywords: languages, php
 ;; Homepage: https://github.com/emacs-php/php-mode
 ;; License: GPL-3.0-or-later
@@ -206,7 +206,8 @@ a completion list."
 
 ;;; PHP Keywords
 (defconst php-magical-constants
-  (list "__LINE__" "__FILE__" "__FUNCTION__" "__CLASS__" "__TRAIT__" "__METHOD__" "__NAMESPACE__")
+  '("__CLASS__" "__DIR__" "__FILE__" "__FUNCTION__" "__LINE__"
+    "__METHOD__" "__NAMESPACE__" "__TRAIT__")
   "Magical keyword that is expanded at compile time.
 
 These are different from \"constants\" in strict terms.

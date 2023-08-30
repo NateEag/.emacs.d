@@ -1,6 +1,6 @@
-(define-package "php-mode" "20230423.1446" "Major mode for editing PHP code"
+(define-package "php-mode" "20230815.1051" "Major mode for editing PHP code"
   '((emacs "26.1"))
-  :commit "37b2b883300e396d250d49c8d0f5a3abe6effa7f" :authors
+  :commit "c421658d7049a2b1dfe04e75c1e8a9e4a9e5e21e" :authors
   '(("Eric James Michael Ritz"))
   :maintainers
   '(("USAMI Kenta" . "tadsan@zonu.me"))

@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/markdown-changelog-20200120.2253/markdown-changelog.el  -*- no-byte-compile: t -*-
-(define-package "markdown-changelog" "20200120.2253" "Maintain changelog entries" '((emacs "26") (dash "2.13.0")) :commit "1a2c3a4c3e4196f2b5dbb145b01b4bc435a93a96" :keywords '("markdown" "changelog" "files") :authors '(("Paul Landes")) :maintainer '("Paul Landes") :url "https://github.com/plandes/markdown-changelog")

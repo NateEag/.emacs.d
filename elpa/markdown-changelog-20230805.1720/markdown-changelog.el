@@ -1,9 +1,8 @@
 ;;; markdown-changelog.el --- Maintain changelog entries  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019 - 2020 Paul Landes
+;; Copyright (C) 2019 - 2023 Paul Landes
 
-;; Version: 0.1
-;; Package-Version: 20200120.2253
+;; Version: 0.2
 ;; Author: Paul Landes
 ;; Maintainer: Paul Landes
 ;; Keywords: markdown changelog files

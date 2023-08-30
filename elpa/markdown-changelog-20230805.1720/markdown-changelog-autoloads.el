@@ -1,4 +1,4 @@
-;;; markdown-changelog-autoloads.el --- automatically extracted autoloads
+;;; markdown-changelog-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -18,7 +18,11 @@ Create a new changelog buffer with project URL.
 (autoload 'markdown-changelog-insert-release "markdown-changelog" "\
 Add a new release to the change log." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "markdown-changelog" '("markdown-changelog-")))
+(register-definition-prefixes "markdown-changelog" '("markdown-changelog-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("markdown-changelog-pkg.el") (0 0 0 0))
 
 ;;;***
 

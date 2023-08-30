@@ -34,6 +34,10 @@ but users can also manually select it by pressing `C-u \\[separedit]'.
 
 ;;;***
 
+;;;### (autoloads nil nil ("separedit-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

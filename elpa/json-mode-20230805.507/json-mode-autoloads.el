@@ -1,4 +1,4 @@
-;;; json-mode-autoloads.el --- automatically extracted autoloads
+;;; json-mode-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -30,12 +30,12 @@ won’t be affected.")
 Regexp generated from the `json-mode-auto-mode-list'.")
 
 (autoload 'json-mode "json-mode" "\
-Major mode for editing JSON files
+Major mode for editing JSON files.
 
 \(fn)" t nil)
 
 (autoload 'jsonc-mode "json-mode" "\
-Major mode for editing JSON files with comments
+Major mode for editing JSON files with comments.
 
 \(fn)" t nil)
 
@@ -48,11 +48,17 @@ Print the path to the node at point to the minibuffer." t nil)
 Save JSON path to object at point to kill ring." t nil)
 
 (autoload 'json-mode-beautify "json-mode" "\
-Beautify / pretty-print the active region (or the entire buffer if no active region).
+Beautify/pretty-print from BEGIN to END.
+
+If the region is not active, beautify the entire buffer .
 
 \(fn BEGIN END)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "json-mode" '("json")))
+(register-definition-prefixes "json-mode" '("json"))
+
+;;;***
+
+;;;### (autoloads nil nil ("json-mode-pkg.el") (0 0 0 0))
 
 ;;;***
 

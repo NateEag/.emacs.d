@@ -1,4 +1,4 @@
-;;; eval-in-repl-autoloads.el --- automatically extracted autoloads
+;;; eval-in-repl-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "eval-in-repl" "eval-in-repl.el" (0 0 0 0))
 ;;; Generated autoloads from eval-in-repl.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl" '("eir-")))
+(register-definition-prefixes "eval-in-repl" '("eir-"))
 
 ;;;***
 
@@ -20,7 +20,7 @@
 (autoload 'eir-eval-in-cider "eval-in-repl-cider" "\
 eval-in-repl for cider." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-cider" '("eir-")))
+(register-definition-prefixes "eval-in-repl-cider" '("eir-"))
 
 ;;;***
 
@@ -31,7 +31,7 @@ eval-in-repl for cider." t nil)
 (autoload 'eir-eval-in-elm "eval-in-repl-elm" "\
 Provides eval-in-repl for Elm." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-elm" '("eir-send-to-elm")))
+(register-definition-prefixes "eval-in-repl-elm" '("eir-send-to-elm"))
 
 ;;;***
 
@@ -42,7 +42,7 @@ Provides eval-in-repl for Elm." t nil)
 (autoload 'eir-eval-in-erlang "eval-in-repl-erlang" "\
 Provides eval-in-repl for Erlang." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-erlang" '("eir-send-to-erlang")))
+(register-definition-prefixes "eval-in-repl-erlang" '("eir-send-to-erlang"))
 
 ;;;***
 
@@ -53,7 +53,7 @@ Provides eval-in-repl for Erlang." t nil)
 (autoload 'eir-eval-in-geiser "eval-in-repl-geiser" "\
 eval-in-repl for Geiser." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-geiser" '("eir-send-to-geiser")))
+(register-definition-prefixes "eval-in-repl-geiser" '("eir-"))
 
 ;;;***
 
@@ -64,7 +64,7 @@ eval-in-repl for Geiser." t nil)
 (autoload 'eir-eval-in-hy "eval-in-repl-hy" "\
 eval-in-repl for Hy." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-hy" '("eir-")))
+(register-definition-prefixes "eval-in-repl-hy" '("eir-"))
 
 ;;;***
 
@@ -75,7 +75,7 @@ eval-in-repl for Hy." t nil)
 (autoload 'eir-eval-in-ielm "eval-in-repl-ielm" "\
 eval-in-repl for IELM." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ielm" '("eir-")))
+(register-definition-prefixes "eval-in-repl-ielm" '("eir-"))
 
 ;;;***
 
@@ -86,7 +86,7 @@ eval-in-repl for IELM." t nil)
 (autoload 'eir-eval-in-iex "eval-in-repl-iex" "\
 Provides eval-in-repl for Elixir." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-iex" '("eir-send-to-iex")))
+(register-definition-prefixes "eval-in-repl-iex" '("eir-send-to-iex"))
 
 ;;;***
 
@@ -97,7 +97,7 @@ Provides eval-in-repl for Elixir." t nil)
 (autoload 'eir-eval-in-javascript "eval-in-repl-javascript" "\
 eval-in-repl for Javascript." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-javascript" '("eir-send-to-javascript")))
+(register-definition-prefixes "eval-in-repl-javascript" '("eir-send-to-javascript"))
 
 ;;;***
 
@@ -108,7 +108,7 @@ eval-in-repl for Javascript." t nil)
 (autoload 'eir-eval-in-lua "eval-in-repl-lua" "\
 eval-in-repl for Lua." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-lua" '("eir-send-to-lua" "eval-in-repl-run-lua")))
+(register-definition-prefixes "eval-in-repl-lua" '("eir-send-to-lua" "eval-in-repl-run-lua"))
 
 ;;;***
 
@@ -119,7 +119,7 @@ eval-in-repl for Lua." t nil)
 (autoload 'eir-eval-in-ocaml "eval-in-repl-ocaml" "\
 eval-in-repl for OCaml." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ocaml" '("eir-send-to-ocaml")))
+(register-definition-prefixes "eval-in-repl-ocaml" '("eir-send-to-ocaml"))
 
 ;;;***
 
@@ -130,7 +130,7 @@ eval-in-repl for OCaml." t nil)
 (autoload 'eir-eval-in-prolog "eval-in-repl-prolog" "\
 eval-in-repl for SWI Prolog." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-prolog" '("eir-send-to-prolog")))
+(register-definition-prefixes "eval-in-repl-prolog" '("eir-send-to-prolog"))
 
 ;;;***
 
@@ -141,7 +141,7 @@ eval-in-repl for SWI Prolog." t nil)
 (autoload 'eir-eval-in-python "eval-in-repl-python" "\
 eval-in-repl for Python." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-python" '("eir-")))
+(register-definition-prefixes "eval-in-repl-python" '("eir-"))
 
 ;;;***
 
@@ -152,7 +152,7 @@ eval-in-repl for Python." t nil)
 (autoload 'eir-eval-in-racket "eval-in-repl-racket" "\
 eval-in-repl for Racket." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-racket" '("eir-send-to-racket")))
+(register-definition-prefixes "eval-in-repl-racket" '("eir-send-to-racket"))
 
 ;;;***
 
@@ -163,7 +163,7 @@ eval-in-repl for Racket." t nil)
 (autoload 'eir-eval-in-ruby "eval-in-repl-ruby" "\
 eval-in-repl for Ruby." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-ruby" '("eir-send-to-ruby")))
+(register-definition-prefixes "eval-in-repl-ruby" '("eir-send-to-ruby"))
 
 ;;;***
 
@@ -174,7 +174,7 @@ eval-in-repl for Ruby." t nil)
 (autoload 'eir-eval-in-scheme "eval-in-repl-scheme" "\
 eval-in-repl for Scheme." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-scheme" '("eir-send-to-scheme")))
+(register-definition-prefixes "eval-in-repl-scheme" '("eir-send-to-scheme"))
 
 ;;;***
 
@@ -185,7 +185,7 @@ eval-in-repl for Scheme." t nil)
 (autoload 'eir-eval-in-shell "eval-in-repl-shell" "\
 eval-in-repl for shell." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-shell" '("eir-")))
+(register-definition-prefixes "eval-in-repl-shell" '("eir-"))
 
 ;;;***
 
@@ -196,7 +196,7 @@ eval-in-repl for shell." t nil)
 (autoload 'eir-eval-in-slime "eval-in-repl-slime" "\
 eval-in-repl for SLIME." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-slime" '("eir-send-to-slime")))
+(register-definition-prefixes "eval-in-repl-slime" '("eir-send-to-slime"))
 
 ;;;***
 
@@ -207,7 +207,7 @@ eval-in-repl for SLIME." t nil)
 (autoload 'eir-eval-in-sly "eval-in-repl-sly" "\
 eval-in-repl for Sly." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-sly" '("eir-send-to-sly")))
+(register-definition-prefixes "eval-in-repl-sly" '("eir-send-to-sly"))
 
 ;;;***
 
@@ -218,7 +218,7 @@ eval-in-repl for Sly." t nil)
 (autoload 'eir-eval-in-sml "eval-in-repl-sml" "\
 eval-in-repl for Standard ML." t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eval-in-repl-sml" '("eir-send-to-sml")))
+(register-definition-prefixes "eval-in-repl-sml" '("eir-send-to-sml"))
 
 ;;;***
 

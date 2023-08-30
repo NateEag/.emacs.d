@@ -39,7 +39,15 @@
 ;;;### (autoloads nil "evil-digraphs" "evil-digraphs.el" (0 0 0 0))
 ;;; Generated autoloads from evil-digraphs.el
 
-(register-definition-prefixes "evil-digraphs" '("evil-digraph"))
+(autoload 'evil-digraph "evil-digraphs" "\
+Convert DIGRAPH to character or list representation.
+If DIGRAPH is a list (CHAR1 CHAR2), return the corresponding character;
+if DIGRAPH is a character, return the corresponding list.
+Searches in `evil-digraphs-table-user' and `evil-digraphs-table'.
+
+\(fn DIGRAPH)" nil nil)
+
+(register-definition-prefixes "evil-digraphs" '("evil-digraphs-table"))
 
 ;;;***
 

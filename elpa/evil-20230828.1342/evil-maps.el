@@ -25,13 +25,13 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
+;;; Code:
+
 (require 'evil-states)
 (require 'evil-ex)
 (require 'evil-commands)
 (require 'evil-command-window)
 (require 'evil-common)
-
-;;; Code:
 
 ;;; Normal state
 
@@ -189,8 +189,8 @@
 (define-key evil-window-map [C-right] 'evil-window-right)
 
 (when (featurep 'tab-bar)
-  (define-key evil-motion-state-map "gt" 'tab-bar-switch-to-next-tab)
-  (define-key evil-window-map "gt" 'tab-bar-switch-to-next-tab)
+  (define-key evil-motion-state-map "gt" 'evil-tab-next)
+  (define-key evil-window-map "gt" 'evil-tab-next)
   (define-key evil-motion-state-map "gT" 'tab-bar-switch-to-prev-tab)
   (define-key evil-window-map "gT" 'tab-bar-switch-to-prev-tab))
 
@@ -552,6 +552,7 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "&&" 'evil-ex-repeat-substitute-with-flags)
 (evil-ex-define-cmd "~" 'evil-ex-repeat-substitute-with-search)
 (evil-ex-define-cmd "~&" 'evil-ex-repeat-substitute-with-search-and-flags)
+(evil-ex-define-cmd "mat[ch]" 'evil-ex-match)
 (evil-ex-define-cmd "registers" 'evil-show-registers)
 (evil-ex-define-cmd "di[splay]" "registers")
 (evil-ex-define-cmd "ma[rk]" 'evil-set-col-0-mark)
@@ -577,60 +578,55 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
 (evil-ex-define-cmd "u[ndo]" 'evil-undo)
 (evil-ex-define-cmd "red[o]" 'evil-redo)
+(evil-ex-define-cmd "p[rint]" 'evil-ex-print)
+(evil-ex-define-cmd "P[rint]" 'evil-ex-print)
+(evil-ex-define-cmd "nu[mber]" 'evil-ex-numbered-print)
+(evil-ex-define-cmd "#" 'evil-ex-numbered-print)
+(evil-ex-define-cmd "z" 'evil-ex-z)
 
 (when (featurep 'tab-bar)
   (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
   (evil-ex-define-cmd "tabc[lose]" 'tab-bar-close-tab)
   (evil-ex-define-cmd "tabo[nly]" 'tab-bar-close-other-tabs)
-  (evil-ex-define-cmd "tabn[ext]" 'tab-bar-switch-to-next-tab)
+  (evil-ex-define-cmd "tabn[ext]" 'evil-tab-next)
   (evil-ex-define-cmd "tabp[revious]" 'tab-bar-switch-to-prev-tab))
 
+;; Command-line editing
+(define-key evil-command-line-map "\d" #'evil-ex-delete-backward-char)
+(define-key evil-command-line-map "\t" #'completion-at-point)
+(define-key evil-command-line-map [tab] #'completion-at-point)
+(define-key evil-command-line-map "\C-a" #'completion-at-point)
+(define-key evil-command-line-map "\C-b" #'move-beginning-of-line)
+(define-key evil-command-line-map "\C-c" #'abort-recursive-edit)
+(define-key evil-command-line-map "\C-d" #'completion-at-point)
+(define-key evil-command-line-map "\C-f" 'evil-command-window)
+(define-key evil-command-line-map "\C-g" #'abort-minibuffers)
+(define-key evil-command-line-map "\C-k" 'evil-insert-digraph)
+(define-key evil-command-line-map "\C-l" #'completion-at-point)
+(define-key evil-command-line-map "\C-n" #'next-history-element)
+(define-key evil-command-line-map "\C-p" #'previous-history-element)
+(define-key evil-command-line-map "\C-r" 'evil-paste-from-register)
+(define-key evil-command-line-map "\C-u" 'evil-delete-whole-line)
+(define-key evil-command-line-map "\C-v" #'quoted-insert)
+(when evil-want-C-w-delete
+  (define-key evil-command-line-map "\C-w" #'backward-kill-word))
+(define-key evil-command-line-map [escape] #'abort-recursive-edit)
+(define-key evil-command-line-map [S-left] #'backward-word)
+(define-key evil-command-line-map [S-right] #'forward-word)
+(define-key evil-command-line-map [up] #'previous-complete-history-element)
+(define-key evil-command-line-map [down] #'next-complete-history-element)
+(define-key evil-command-line-map [prior] #'previous-history-element)
+(define-key evil-command-line-map [next] #'next-history-element)
+(define-key evil-command-line-map [return] #'exit-minibuffer)
+(define-key evil-command-line-map (kbd "RET") #'exit-minibuffer)
+
 ;; search command line
-(define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)
-(define-key evil-ex-search-keymap "\C-b" 'move-beginning-of-line)
-(define-key evil-ex-search-keymap "\C-c" 'abort-recursive-edit)
-(define-key evil-ex-search-keymap "\C-g" 'abort-recursive-edit)
-(define-key evil-ex-search-keymap "\C-k" 'evil-insert-digraph)
-(define-key evil-ex-search-keymap "\C-f" 'evil-ex-search-command-window)
-(define-key evil-ex-search-keymap "\C-r" 'evil-paste-from-register)
-(define-key evil-ex-search-keymap "\C-n" 'next-history-element)
-(define-key evil-ex-search-keymap "\C-p" 'previous-history-element)
-(define-key evil-ex-search-keymap "\C-u" 'evil-delete-whole-line)
-(define-key evil-ex-search-keymap "\C-v" #'quoted-insert)
-(if evil-want-C-w-delete
-    (define-key evil-ex-search-keymap "\C-w" 'backward-kill-word)
+(set-keymap-parent evil-ex-search-keymap evil-command-line-map)
+(unless evil-want-C-w-delete
   (define-key evil-ex-search-keymap "\C-w" 'evil-search-yank-word))
 
-;; ex command line
-(define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
-(define-key evil-ex-completion-map "\t" #'evil-ex-completion)
-(define-key evil-ex-completion-map [tab] #'evil-ex-completion)
-(define-key evil-ex-completion-map [remap completion-at-point] #'evil-ex-completion)
-(define-key evil-ex-completion-map "\C-a" 'evil-ex-completion)
-(define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
-(define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)
-(define-key evil-ex-completion-map "\C-d" 'evil-ex-completion)
-(define-key evil-ex-completion-map "\C-f" 'evil-ex-command-window)
-(define-key evil-ex-completion-map "\C-g" 'abort-recursive-edit)
-(define-key evil-ex-completion-map "\C-k" 'evil-insert-digraph)
-(define-key evil-ex-completion-map "\C-l" 'evil-ex-completion)
-(define-key evil-ex-completion-map "\C-p" #'previous-complete-history-element)
-(define-key evil-ex-completion-map "\C-r" 'evil-paste-from-register)
-(define-key evil-ex-completion-map "\C-n" #'next-complete-history-element)
-(define-key evil-ex-completion-map "\C-u" 'evil-delete-whole-line)
-(define-key evil-ex-completion-map "\C-v" #'quoted-insert)
-(if evil-want-C-w-delete
-    (define-key evil-ex-completion-map "\C-w" 'backward-kill-word)
-    (define-key evil-ex-completion-map "\C-w" nil))
-(define-key evil-ex-completion-map [escape] 'abort-recursive-edit)
-(define-key evil-ex-completion-map [S-left] 'backward-word)
-(define-key evil-ex-completion-map [S-right] 'forward-word)
-(define-key evil-ex-completion-map [up] 'previous-complete-history-element)
-(define-key evil-ex-completion-map [down] 'next-complete-history-element)
-(define-key evil-ex-completion-map [prior] 'previous-history-element)
-(define-key evil-ex-completion-map [next] 'next-history-element)
-(define-key evil-ex-completion-map [return] 'exit-minibuffer)
-(define-key evil-ex-completion-map (kbd "RET") 'exit-minibuffer)
+;; Ex command line
+(set-keymap-parent evil-ex-completion-map evil-command-line-map)
 
 ;; eval prompt (the `=' register)
 (define-key evil-eval-map "\C-b" 'move-beginning-of-line)
@@ -663,10 +659,8 @@ included in `evil-insert-state-bindings' by default."
 (define-key evil-read-key-map "\r" "\n")
 
 ;; command line window
-(evil-define-key 'normal
-  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
-(evil-define-key 'insert
-  evil-command-window-mode-map (kbd "RET") 'evil-command-window-execute)
+(evil-define-key* '(normal insert) evil-command-window-mode-map
+  (kbd "RET") 'evil-command-window-execute)
 
 (provide 'evil-maps)
 

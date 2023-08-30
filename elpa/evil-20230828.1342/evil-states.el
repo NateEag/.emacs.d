@@ -25,9 +25,9 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
 
-(require 'evil-core)
-
 ;;; Code:
+
+(require 'evil-core)
 
 ;;; Normal state
 
@@ -36,7 +36,6 @@
 AKA \"Command\" state."
   :tag " <N> "
   :enable (motion)
-  :exit-hook (evil-repeat-start-hook)
   (cond
    ((evil-normal-state-p)
     (overwrite-mode -1)
@@ -139,6 +138,7 @@ commands opening a new line."
   (remove-hook 'pre-command-hook #'evil-insert-repeat-hook))
 (put 'evil-insert-repeat-hook 'permanent-local-hook t)
 
+(declare-function evil-execute-repeat-info "evil-repeat")
 (defun evil-cleanup-insert-state ()
   "Called when Insert or Replace state is about to be exited.
 Handles the repeat-count of the insertion command."
@@ -148,22 +148,15 @@ Handles the repeat-count of the insertion command."
         (evil-insert-newline-below)
         (when evil-auto-indent
           (indent-according-to-mode)))
-      (when (fboundp 'evil-execute-repeat-info)
-        (evil-execute-repeat-info
-         (cdr evil-insert-repeat-info)))))
+      (evil-execute-repeat-info (cdr evil-insert-repeat-info))))
   (when evil-insert-vcount
-    (let ((buffer-invisibility-spec buffer-invisibility-spec))
-      ;; make all lines hidden by hideshow temporarily visible
-      (when (listp buffer-invisibility-spec)
-        (setq buffer-invisibility-spec
-              (evil-filter-list
-               #'(lambda (x)
-                   (or (eq x 'hs)
-                       (eq (car-safe x) 'hs)))
-               buffer-invisibility-spec)))
-      (let ((line (nth 0 evil-insert-vcount))
-            (col (nth 1 evil-insert-vcount))
-            (vcount (nth 2 evil-insert-vcount)))
+    (let ((buffer-invisibility-spec
+           (if (listp buffer-invisibility-spec)
+               ;; make all lines hidden by hideshow temporarily visible
+               (cl-remove-if (lambda (x) (eq (or (car-safe x) x) 'hs))
+                             buffer-invisibility-spec)
+             buffer-invisibility-spec)))
+      (cl-destructuring-bind (line col vcount) evil-insert-vcount
         (save-excursion
           (dotimes (v (1- vcount))
             (goto-char (point-min))
@@ -177,9 +170,7 @@ Handles the repeat-count of the insertion command."
                   (move-to-column col t)
                 (funcall col))
               (dotimes (_ (or evil-insert-count 1))
-                (when (fboundp 'evil-execute-repeat-info)
-                  (evil-execute-repeat-info
-                   (cdr evil-insert-repeat-info)))))))))))
+                (evil-execute-repeat-info (cdr evil-insert-repeat-info))))))))))
 
 ;;; Visual state
 
@@ -390,17 +381,16 @@ otherwise exit Visual state."
 (defun evil-visual-activate-hook (&optional _command)
   "Enable Visual state if the region is activated."
   (unless (evil-visual-state-p)
-    (evil-delay nil
-        ;; the activation may only be momentary, so re-check
-        ;; in `post-command-hook' before entering Visual state
-        '(unless (or (evil-visual-state-p)
-                     (evil-insert-state-p)
-                     (evil-emacs-state-p))
-           (when (and (region-active-p)
-                      (not deactivate-mark))
-             (evil-visual-state)))
-      'post-command-hook nil t
-      "evil-activate-visual-state")))
+    (evil-with-delay nil
+        (post-command-hook nil t "evil-activate-visual-state")
+      ;; the activation may only be momentary, so re-check
+      ;; in `post-command-hook' before entering Visual state
+      (unless (or (evil-visual-state-p)
+                  (evil-insert-state-p)
+                  (evil-emacs-state-p))
+        (when (and (region-active-p)
+                   (not deactivate-mark))
+          (evil-visual-state))))))
 (put 'evil-visual-activate-hook 'permanent-local-hook t)
 
 (defun evil-visual-deactivate-hook (&optional command)
@@ -759,10 +749,9 @@ the direction of the last selection."
 (defun evil-visual-type (&optional selection)
   "Return the type of the Visual selection.
 If SELECTION is specified, return the type of that instead."
-  (if (and (null selection) (evil-visual-state-p))
-      (or evil-this-type (evil-visual-type evil-visual-selection))
-    (setq selection (or selection evil-visual-selection))
-    (symbol-value (cdr-safe (assq selection evil-visual-alist)))))
+  (or (and (null selection) (evil-visual-state-p) evil-this-type)
+      (symbol-value (cdr (assq (or selection evil-visual-selection)
+                               evil-visual-alist)))))
 
 (defun evil-visual-goto-end ()
   "Go to the last line of the Visual selection.
@@ -806,14 +795,15 @@ CORNER defaults to `upper-left'."
   (let* ((point (or point (point)))
          (mark (or mark (mark t)))
          (corner (or corner
-                     (when (overlayp evil-visual-overlay)
+                     (when evil-visual-overlay
                        (overlay-get evil-visual-overlay :corner))
                      'upper-left))
          (point-col (evil-column point))
          (mark-col (evil-column mark))
-         (upperp (if (= (line-number-at-pos point) (line-number-at-pos mark))
-                     (memq corner '(upper-left upper-right))
-                   (< point mark)))
+         (upperp (if (save-excursion (goto-char (min point mark))
+                                     (search-forward "\n" (max point mark) t))
+                     (< point mark)
+                   (memq corner '(upper-left upper-right))))
          (leftp (if (= point-col mark-col)
                     (memq corner '(upper-left lower-left))
                   (< point-col mark-col))))

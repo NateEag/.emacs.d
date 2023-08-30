@@ -129,38 +129,30 @@
 ;;; Undo tree
 (eval-after-load 'undo-tree
   '(with-no-warnings
-     (defadvice undo-tree-visualize (after evil activate)
-       "Initialize Evil in the visualization buffer."
-       (when evil-local-mode
-         (evil-initialize-state)))
+     (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
+     (evil-ex-define-cmd "ul" 'undo-tree-visualize)
 
-     (when (fboundp 'undo-tree-visualize)
-       (evil-ex-define-cmd "undol[ist]" 'undo-tree-visualize)
-       (evil-ex-define-cmd "ul" 'undo-tree-visualize))
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-backward-char] 'undo-tree-visualize-switch-branch-left)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-forward-char] 'undo-tree-visualize-switch-branch-right)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-next-line] 'undo-tree-visualize-redo)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-previous-line] 'undo-tree-visualize-undo)
+     (define-key undo-tree-visualizer-mode-map
+       [remap evil-ret] 'undo-tree-visualizer-set)
 
-     (when (boundp 'undo-tree-visualizer-mode-map)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-backward-char] 'undo-tree-visualize-switch-branch-left)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-forward-char] 'undo-tree-visualize-switch-branch-right)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-next-line] 'undo-tree-visualize-redo)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-previous-line] 'undo-tree-visualize-undo)
-       (define-key undo-tree-visualizer-mode-map
-         [remap evil-ret] 'undo-tree-visualizer-set))
-
-     (when (boundp 'undo-tree-visualizer-selection-mode-map)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-backward-char] 'undo-tree-visualizer-select-left)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-forward-char] 'undo-tree-visualizer-select-right)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-next-line] 'undo-tree-visualizer-select-next)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-previous-line] 'undo-tree-visualizer-select-previous)
-       (define-key undo-tree-visualizer-selection-mode-map
-         [remap evil-ret] 'undo-tree-visualizer-set))))
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-backward-char] 'undo-tree-visualizer-select-left)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-forward-char] 'undo-tree-visualizer-select-right)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-next-line] 'undo-tree-visualizer-select-next)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-previous-line] 'undo-tree-visualizer-select-previous)
+     (define-key undo-tree-visualizer-selection-mode-map
+       [remap evil-ret] 'undo-tree-visualizer-set)))
 
 ;;; Auto-complete
 (eval-after-load 'auto-complete
@@ -248,7 +240,8 @@
       (apply command args)))
 
   (advice-add 'elisp--preceding-sexp :around 'evil--preceding-sexp '((name . evil)))
-  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))))
+  (advice-add 'pp-last-sexp          :around 'evil--preceding-sexp '((name . evil)))
+  (advice-add 'lisp-eval-last-sexp   :around 'evil--preceding-sexp '((name . evil)))))
 
 ;; Show key
 (defadvice quail-show-key (around evil activate)
@@ -315,7 +308,7 @@ the mark and entering `recursive-edit'."
     (remove-hook 'post-command-hook #'evil-ace-jump-exit-recursive-edit)
     (exit-recursive-edit))))
 
-(evil-define-motion evil-ace-jump-char-mode (count)
+(evil-define-motion evil-ace-jump-char-mode (_count)
   "Jump visually directly to a char using ace-jump."
   :type inclusive
   (evil-without-repeat
@@ -332,7 +325,7 @@ the mark and entering `recursive-edit'."
                ((eq evil-this-type 'exclusive) 'inclusive)
                ((eq evil-this-type 'inclusive) 'exclusive)))))))
 
-(evil-define-motion evil-ace-jump-char-to-mode (count)
+(evil-define-motion evil-ace-jump-char-to-mode (_count)
   "Jump visually to the char in front of a char using ace-jump."
   :type inclusive
   (evil-without-repeat
@@ -350,7 +343,7 @@ the mark and entering `recursive-edit'."
                    ((eq evil-this-type 'inclusive) 'exclusive))))
         (backward-char)))))
 
-(evil-define-motion evil-ace-jump-line-mode (count)
+(evil-define-motion evil-ace-jump-line-mode (_count)
   "Jump visually to the beginning of a line using ace-jump."
   :type line
   :repeat abort
@@ -358,7 +351,7 @@ the mark and entering `recursive-edit'."
     (evil-enclose-ace-jump-for-motion
       (call-interactively 'ace-jump-line-mode))))
 
-(evil-define-motion evil-ace-jump-word-mode (count)
+(evil-define-motion evil-ace-jump-word-mode (_count)
   "Jump visually to the beginning of a word using ace-jump."
   :type exclusive
   :repeat abort
@@ -403,7 +396,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
   (declare (indent defun)
            (debug t))
   (let ((name (intern (format "evil-%s" command))))
-    `(evil-define-motion ,name (count)
+    `(evil-define-motion ,name (_count)
        ,(format "Evil motion for `%s'." command)
        :type ,type
        :jump t
@@ -481,7 +474,7 @@ Based on `evil-enclose-ace-jump-for-motion'."
     (expand-abbrev)))
 
 (eval-after-load 'abbrev
-  '(add-hook 'evil-insert-state-exit-hook 'evil-maybe-expand-abbrev))
+  '(add-hook 'evil-insert-state-exit-hook #'evil-maybe-expand-abbrev))
 
 ;;; ElDoc
 (eval-after-load 'eldoc

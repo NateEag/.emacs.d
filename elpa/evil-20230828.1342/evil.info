@@ -102,7 +102,7 @@ Evil is extensible in Emacs Lisp.
    (1) (1) Vim is the most popular version of `vi', a modal text editor
 with many implementations.  Vim also adds some functions of its own,
 like visual selection and text objects.  For more information see the
-official Vim website (https://vim.org).
+official Vim website (https://www.vim.org).
 
 
 File: evil.info,  Node: Installation via package el,  Next: Manual installation,  Up: Overview
@@ -1981,251 +1981,251 @@ Ref: 461518
 Ref: overview overview1518
 Ref: 471518
 Ref: Overview-Footnote-11871
-Node: Installation via package el2123
-Ref: overview installation-via-package-el2221
-Ref: 482221
-Ref: Installation via package el-Footnote-13156
-Node: Manual installation3200
-Ref: overview manual-installation3323
-Ref: 493323
-Node: Modes and states3861
-Ref: overview modes-and-states3948
-Ref: 4a3948
-Node: Settings5699
-Ref: settings doc5778
-Ref: 4b5778
-Ref: settings settings5778
-Ref: 4c5778
-Ref: Settings-Footnote-16537
-Node: The initial state6678
-Ref: settings the-initial-state6778
-Ref: 4d6778
-Ref: settings elispobj-evil-set-initial-state7053
-Ref: 307053
-Ref: settings elispobj-evil-default-state7292
-Ref: d7292
-Ref: settings elispobj-evil-buffer-regexps7903
-Ref: 57903
-Node: Keybindings and other behaviour8396
-Ref: settings keybindings-and-other-behaviour8511
-Ref: 4e8511
-Ref: settings elispobj-evil-toggle-key8733
-Ref: 378733
-Ref: settings elispobj-evil-want-C-i-jump8933
-Ref: 3c8933
-Ref: settings elispobj-evil-want-C-u-delete9123
-Ref: 3d9123
-Ref: settings elispobj-evil-want-C-u-scroll9442
-Ref: 3e9442
-Ref: settings elispobj-evil-want-C-d-scroll9735
-Ref: 3b9735
-Ref: settings elispobj-evil-want-C-w-delete9858
-Ref: 3f9858
-Ref: settings elispobj-evil-want-C-w-in-emacs-state9988
-Ref: 409988
-Ref: settings elispobj-evil-want-Y-yank-to-eol10138
-Ref: 4310138
-Ref: settings elispobj-evil-disable-insert-state-bindings10333
-Ref: 1510333
-Node: Search10661
-Ref: settings search10770
-Ref: 5010770
-Ref: settings elispobj-evil-search-module10793
-Ref: 2a10793
-Ref: settings elispobj-evil-regexp-search11178
-Ref: 2711178
-Ref: settings elispobj-evil-search-wrap11329
-Ref: 2b11329
-Ref: settings elispobj-evil-flash-delay11535
-Ref: 1911535
-Ref: settings elispobj-evil-ex-hl-update-delay11678
-Ref: 1811678
-Node: Indentation11951
-Ref: settings indentation12044
-Ref: 5112044
-Ref: settings elispobj-evil-auto-indent12077
-Ref: 212077
-Ref: settings elispobj-evil-shift-width12235
-Ref: 3312235
-Ref: settings elispobj-evil-shift-round12441
-Ref: 3212441
-Ref: settings elispobj-evil-indent-convert-tabs12702
-Ref: 1e12702
-Node: Cursor movement12971
-Ref: settings cursor-movement13072
-Ref: 5213072
-Ref: settings elispobj-evil-repeat-move-cursor13651
-Ref: 2813651
-Ref: settings elispobj-evil-move-cursor-back13915
-Ref: 2613915
-Ref: settings elispobj-evil-move-beyond-eol14260
-Ref: 2514260
-Ref: settings elispobj-evil-cross-lines14502
-Ref: 714502
-Ref: settings elispobj-evil-respect-visual-line-mode14897
-Ref: 2914897
-Ref: settings elispobj-evil-track-eol15412
-Ref: 3815412
-Ref: settings elispobj-evil-start-of-line15780
-Ref: 3615780
-Node: Cursor display16034
-Ref: settings cursor-display16141
-Ref: 5316141
-Ref: settings elispobj-evil-default-cursor16485
-Ref: c16485
-Node: Window management16768
-Ref: settings window-management16884
-Ref: 5416884
-Ref: settings elispobj-evil-auto-balance-windows16929
-Ref: 116929
-Ref: settings elispobj-evil-split-window-below17075
-Ref: 3517075
-Ref: settings elispobj-evil-vsplit-window-right17204
-Ref: 3a17204
-Node: Parenthesis highlighting17357
-Ref: settings parenthesis-highlighting17472
-Ref: 5517472
-Ref: settings elispobj-evil-show-paren-range17661
-Ref: 3417661
-Ref: settings elispobj-evil-highlight-closing-paren-at-point-states17848
-Ref: 1d17848
-Node: Miscellaneous18434
-Ref: settings miscellaneous18523
-Ref: 5618523
-Ref: settings elispobj-evil-want-fine-undo18560
-Ref: 4218560
-Ref: settings elispobj-evil-undo-system19199
-Ref: 3919199
-Ref: settings elispobj-evil-backspace-join-lines19558
-Ref: 319558
-Ref: settings elispobj-evil-kbd-macro-suppress-motion-error19699
-Ref: 2019699
-Ref: settings elispobj-evil-mode-line-format20454
-Ref: 2320454
-Ref: settings elispobj-evil-mouse-word20986
-Ref: 2420986
-Ref: settings elispobj-evil-bigword21327
-Ref: 421327
-Ref: settings elispobj-evil-esc-delay21631
-Ref: 1721631
-Ref: settings elispobj-evil-intercept-esc22037
-Ref: 1f22037
-Ref: settings elispobj-evil-kill-on-visual-paste22663
-Ref: 2122663
-Ref: settings elispobj-evil-echo-state22924
-Ref: 1622924
-Ref: settings elispobj-evil-complete-all-buffers23053
-Ref: 623053
-Ref: settings elispobj-evil-want-empty-ex-last-command23254
-Ref: 4123254
-Node: Keymaps23412
-Ref: keymaps doc23488
-Ref: 5723488
-Ref: keymaps chapter-keymaps23488
-Ref: 4f23488
-Ref: keymaps keymaps23488
-Ref: 5823488
-Ref: keymaps elispobj-evil-global-set-key25140
-Ref: 1c25140
-Ref: keymaps elispobj-evil-local-set-key25244
-Ref: 2225244
-Node: evil-define-key25673
-Ref: keymaps evil-define-key25750
-Ref: 5925750
-Ref: keymaps elispobj-evil-define-key26004
-Ref: f26004
-Node: Leader keys29201
-Ref: keymaps leader-keys29278
-Ref: 5a29278
-Ref: keymaps elispobj-evil-set-leader29805
-Ref: 3129805
-Node: Hooks30258
-Ref: hooks doc30335
-Ref: 5b30335
-Ref: hooks hooks30335
-Ref: 5c30335
-Node: Extension30987
-Ref: extension doc31083
-Ref: 5d31083
-Ref: extension extension31083
-Ref: 5e31083
-Node: Motions31319
-Ref: extension motions31388
-Ref: 5f31388
-Ref: extension elispobj-evil-declare-motion31641
-Ref: 931641
-Ref: extension elispobj-evil-define-motion31814
-Ref: 1031814
-Node: Operators33205
-Ref: extension operators33295
-Ref: 6033295
-Ref: extension elispobj-evil-define-operator33543
-Ref: 1133543
-Node: Text objects35148
-Ref: extension text-objects35242
-Ref: 6135242
-Ref: extension elispobj-evil-define-text-object35782
-Ref: 1335782
-Ref: extension elispobj-evil-select-inner-object37286
-Ref: 2d37286
-Ref: extension elispobj-evil-select-an-object37856
-Ref: 2c37856
-Ref: extension elispobj-evil-select-paren38423
-Ref: 2e38423
-Ref: Text objects-Footnote-139345
-Node: Range types39511
-Ref: extension range-types39602
-Ref: 6239602
-Ref: extension elispobj-evil-define-type39905
-Ref: 1439905
-Node: States41074
-Ref: extension states41144
-Ref: 6341144
-Ref: extension elispobj-evil-define-state41444
-Ref: 1241444
-Node: Frequently Asked Questions42873
-Ref: faq doc42973
-Ref: 6442973
-Ref: faq frequently-asked-questions42973
-Ref: 6542973
-Node: Problems with the escape key in the terminal43130
-Ref: faq problems-with-the-escape-key-in-the-terminal43278
-Ref: 6643278
-Node: Underscore is not a word character45772
-Ref: faq underscore-is-not-a-word-character45920
-Ref: 6745920
-Ref: Underscore is not a word character-Footnote-148518
-Node: Internals48829
-Ref: internals doc48954
-Ref: 6848954
-Ref: internals internals48954
-Ref: 6948954
-Node: Command properties49012
-Ref: internals command-properties49074
-Ref: 6a49074
-Ref: internals elispobj-evil-add-command-properties49329
-Ref: 049329
-Ref: internals elispobj-evil-set-command-properties49589
-Ref: 2f49589
-Ref: internals elispobj-evil-get-command-properties49902
-Ref: 1a49902
-Ref: internals elispobj-evil-get-command-property50068
-Ref: 1b50068
-Ref: internals elispobj-evil-define-command50338
-Ref: e50338
-Ref: internals elispobj-evil-declare-repeat50542
-Ref: b50542
-Ref: internals elispobj-evil-declare-not-repeat50644
-Ref: a50644
-Ref: internals elispobj-evil-declare-change-repeat50753
-Ref: 850753
-Ref: Command properties-Footnote-150944
-Node: The GNU Free Documentation License51121
-Ref: license doc51254
-Ref: 6b51254
-Ref: license the-gnu-free-documentation-license51254
-Ref: 6c51254
-Node: Emacs lisp functions and variables75062
+Node: Installation via package el2127
+Ref: overview installation-via-package-el2225
+Ref: 482225
+Ref: Installation via package el-Footnote-13160
+Node: Manual installation3204
+Ref: overview manual-installation3327
+Ref: 493327
+Node: Modes and states3865
+Ref: overview modes-and-states3952
+Ref: 4a3952
+Node: Settings5703
+Ref: settings doc5782
+Ref: 4b5782
+Ref: settings settings5782
+Ref: 4c5782
+Ref: Settings-Footnote-16541
+Node: The initial state6682
+Ref: settings the-initial-state6782
+Ref: 4d6782
+Ref: settings elispobj-evil-set-initial-state7057
+Ref: 307057
+Ref: settings elispobj-evil-default-state7296
+Ref: d7296
+Ref: settings elispobj-evil-buffer-regexps7907
+Ref: 57907
+Node: Keybindings and other behaviour8400
+Ref: settings keybindings-and-other-behaviour8515
+Ref: 4e8515
+Ref: settings elispobj-evil-toggle-key8737
+Ref: 378737
+Ref: settings elispobj-evil-want-C-i-jump8937
+Ref: 3c8937
+Ref: settings elispobj-evil-want-C-u-delete9127
+Ref: 3d9127
+Ref: settings elispobj-evil-want-C-u-scroll9446
+Ref: 3e9446
+Ref: settings elispobj-evil-want-C-d-scroll9739
+Ref: 3b9739
+Ref: settings elispobj-evil-want-C-w-delete9862
+Ref: 3f9862
+Ref: settings elispobj-evil-want-C-w-in-emacs-state9992
+Ref: 409992
+Ref: settings elispobj-evil-want-Y-yank-to-eol10142
+Ref: 4310142
+Ref: settings elispobj-evil-disable-insert-state-bindings10337
+Ref: 1510337
+Node: Search10665
+Ref: settings search10774
+Ref: 5010774
+Ref: settings elispobj-evil-search-module10797
+Ref: 2a10797
+Ref: settings elispobj-evil-regexp-search11182
+Ref: 2711182
+Ref: settings elispobj-evil-search-wrap11333
+Ref: 2b11333
+Ref: settings elispobj-evil-flash-delay11539
+Ref: 1911539
+Ref: settings elispobj-evil-ex-hl-update-delay11682
+Ref: 1811682
+Node: Indentation11955
+Ref: settings indentation12048
+Ref: 5112048
+Ref: settings elispobj-evil-auto-indent12081
+Ref: 212081
+Ref: settings elispobj-evil-shift-width12239
+Ref: 3312239
+Ref: settings elispobj-evil-shift-round12445
+Ref: 3212445
+Ref: settings elispobj-evil-indent-convert-tabs12706
+Ref: 1e12706
+Node: Cursor movement12975
+Ref: settings cursor-movement13076
+Ref: 5213076
+Ref: settings elispobj-evil-repeat-move-cursor13655
+Ref: 2813655
+Ref: settings elispobj-evil-move-cursor-back13919
+Ref: 2613919
+Ref: settings elispobj-evil-move-beyond-eol14264
+Ref: 2514264
+Ref: settings elispobj-evil-cross-lines14506
+Ref: 714506
+Ref: settings elispobj-evil-respect-visual-line-mode14901
+Ref: 2914901
+Ref: settings elispobj-evil-track-eol15416
+Ref: 3815416
+Ref: settings elispobj-evil-start-of-line15784
+Ref: 3615784
+Node: Cursor display16038
+Ref: settings cursor-display16145
+Ref: 5316145
+Ref: settings elispobj-evil-default-cursor16489
+Ref: c16489
+Node: Window management16772
+Ref: settings window-management16888
+Ref: 5416888
+Ref: settings elispobj-evil-auto-balance-windows16933
+Ref: 116933
+Ref: settings elispobj-evil-split-window-below17079
+Ref: 3517079
+Ref: settings elispobj-evil-vsplit-window-right17208
+Ref: 3a17208
+Node: Parenthesis highlighting17361
+Ref: settings parenthesis-highlighting17476
+Ref: 5517476
+Ref: settings elispobj-evil-show-paren-range17665
+Ref: 3417665
+Ref: settings elispobj-evil-highlight-closing-paren-at-point-states17852
+Ref: 1d17852
+Node: Miscellaneous18438
+Ref: settings miscellaneous18527
+Ref: 5618527
+Ref: settings elispobj-evil-want-fine-undo18564
+Ref: 4218564
+Ref: settings elispobj-evil-undo-system19203
+Ref: 3919203
+Ref: settings elispobj-evil-backspace-join-lines19562
+Ref: 319562
+Ref: settings elispobj-evil-kbd-macro-suppress-motion-error19703
+Ref: 2019703
+Ref: settings elispobj-evil-mode-line-format20458
+Ref: 2320458
+Ref: settings elispobj-evil-mouse-word20990
+Ref: 2420990
+Ref: settings elispobj-evil-bigword21331
+Ref: 421331
+Ref: settings elispobj-evil-esc-delay21635
+Ref: 1721635
+Ref: settings elispobj-evil-intercept-esc22041
+Ref: 1f22041
+Ref: settings elispobj-evil-kill-on-visual-paste22667
+Ref: 2122667
+Ref: settings elispobj-evil-echo-state22928
+Ref: 1622928
+Ref: settings elispobj-evil-complete-all-buffers23057
+Ref: 623057
+Ref: settings elispobj-evil-want-empty-ex-last-command23258
+Ref: 4123258
+Node: Keymaps23416
+Ref: keymaps doc23492
+Ref: 5723492
+Ref: keymaps chapter-keymaps23492
+Ref: 4f23492
+Ref: keymaps keymaps23492
+Ref: 5823492
+Ref: keymaps elispobj-evil-global-set-key25144
+Ref: 1c25144
+Ref: keymaps elispobj-evil-local-set-key25248
+Ref: 2225248
+Node: evil-define-key25677
+Ref: keymaps evil-define-key25754
+Ref: 5925754
+Ref: keymaps elispobj-evil-define-key26008
+Ref: f26008
+Node: Leader keys29205
+Ref: keymaps leader-keys29282
+Ref: 5a29282
+Ref: keymaps elispobj-evil-set-leader29809
+Ref: 3129809
+Node: Hooks30262
+Ref: hooks doc30339
+Ref: 5b30339
+Ref: hooks hooks30339
+Ref: 5c30339
+Node: Extension30991
+Ref: extension doc31087
+Ref: 5d31087
+Ref: extension extension31087
+Ref: 5e31087
+Node: Motions31323
+Ref: extension motions31392
+Ref: 5f31392
+Ref: extension elispobj-evil-declare-motion31645
+Ref: 931645
+Ref: extension elispobj-evil-define-motion31818
+Ref: 1031818
+Node: Operators33209
+Ref: extension operators33299
+Ref: 6033299
+Ref: extension elispobj-evil-define-operator33547
+Ref: 1133547
+Node: Text objects35152
+Ref: extension text-objects35246
+Ref: 6135246
+Ref: extension elispobj-evil-define-text-object35786
+Ref: 1335786
+Ref: extension elispobj-evil-select-inner-object37290
+Ref: 2d37290
+Ref: extension elispobj-evil-select-an-object37860
+Ref: 2c37860
+Ref: extension elispobj-evil-select-paren38427
+Ref: 2e38427
+Ref: Text objects-Footnote-139349
+Node: Range types39515
+Ref: extension range-types39606
+Ref: 6239606
+Ref: extension elispobj-evil-define-type39909
+Ref: 1439909
+Node: States41078
+Ref: extension states41148
+Ref: 6341148
+Ref: extension elispobj-evil-define-state41448
+Ref: 1241448
+Node: Frequently Asked Questions42877
+Ref: faq doc42977
+Ref: 6442977
+Ref: faq frequently-asked-questions42977
+Ref: 6542977
+Node: Problems with the escape key in the terminal43134
+Ref: faq problems-with-the-escape-key-in-the-terminal43282
+Ref: 6643282
+Node: Underscore is not a word character45776
+Ref: faq underscore-is-not-a-word-character45924
+Ref: 6745924
+Ref: Underscore is not a word character-Footnote-148522
+Node: Internals48833
+Ref: internals doc48958
+Ref: 6848958
+Ref: internals internals48958
+Ref: 6948958
+Node: Command properties49016
+Ref: internals command-properties49078
+Ref: 6a49078
+Ref: internals elispobj-evil-add-command-properties49333
+Ref: 049333
+Ref: internals elispobj-evil-set-command-properties49593
+Ref: 2f49593
+Ref: internals elispobj-evil-get-command-properties49906
+Ref: 1a49906
+Ref: internals elispobj-evil-get-command-property50072
+Ref: 1b50072
+Ref: internals elispobj-evil-define-command50342
+Ref: e50342
+Ref: internals elispobj-evil-declare-repeat50546
+Ref: b50546
+Ref: internals elispobj-evil-declare-not-repeat50648
+Ref: a50648
+Ref: internals elispobj-evil-declare-change-repeat50757
+Ref: 850757
+Ref: Command properties-Footnote-150948
+Node: The GNU Free Documentation License51125
+Ref: license doc51258
+Ref: 6b51258
+Ref: license the-gnu-free-documentation-license51258
+Ref: 6c51258
+Node: Emacs lisp functions and variables75066
 
 End Tag Table
 

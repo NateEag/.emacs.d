@@ -10,11 +10,9 @@
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;;       Magnar Sveen <magnars@gmail.com>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.dev>
-;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20230314.758
-;; Package-Commit: 906d6a47a646d1191eaead6f8e1ae0810aa9b626
+;; URL: https://github.com/clojure-emacs/clojure-mode
 ;; Keywords: languages clojure clojurescript lisp
-;; Version: 5.16.0
+;; Version: 5.16.2
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -22,7 +20,7 @@
 ;;; Commentary:
 
 ;; Provides font-lock, indentation, navigation and basic refactoring for the
-;; Clojure programming language (http://clojure.org).
+;; Clojure programming language (https://clojure.org).
 
 ;; Using clojure-mode with paredit or smartparens is highly recommended.
 
@@ -34,10 +32,10 @@
 ;;   ;; require or autoload smartparens
 ;;   (add-hook 'clojure-mode-hook #'smartparens-strict-mode)
 
-;; See inf-clojure (http://github.com/clojure-emacs/inf-clojure) for
+;; See inf-clojure (https://github.com/clojure-emacs/inf-clojure) for
 ;; basic interaction with Clojure subprocesses.
 
-;; See CIDER (http://github.com/clojure-emacs/cider) for
+;; See CIDER (https://github.com/clojure-emacs/cider) for
 ;; better interaction with subprocesses via nREPL.
 
 ;;; License:
@@ -395,12 +393,26 @@ CIDER provides a more complex version which does classpath analysis.")
   "The base URL for official Clojure guides.")
 
 (defconst clojure-guides '(("Getting Started" . "getting_started")
+                           ("Install Clojure" . "install_clojure")
+                           ("Editors" . "editors")
+                           ("Structural Editing" . "structural_editing")
+                           ("REPL Programming" . "repl/introduction")
+                           ("Learn Clojure" . "learn/clojure")
                            ("FAQ" . "faq")
                            ("spec" . "spec")
+                           ("Reading Clojure Characters" . "weird_characters")
                            ("Destructuring" . "destructuring")
                            ("Threading Macros" . "threading_macros")
+                           ("Equality" . "equality")
                            ("Comparators" . "comparators")
-                           ("Reader Conditionals" . "reader_conditionals"))
+                           ("Reader Conditionals" . "reader_conditionals")
+                           ("Higher Order Functions" . "higher_order_functions")
+                           ("Dev Startup Time" . "dev_startup_time")
+                           ("Deps and CLI" . "deps_and_cli")
+                           ("tools.build" . "tools_build")
+                           ("core.async Walkthrough" . "async_walkthrough")
+                           ("Go Block Best Practices" . "core_async_go")
+                           ("test.check" . "test_check_beginner"))
   "A list of all official Clojure guides.")
 
 (defun clojure-view-guide ()
@@ -440,7 +452,8 @@ The command will prompt you to select one of the available guides."
                                        ("Java Interop" . "java_interop")
                                        ("Compilation and Class Generation" . "compilation")
                                        ("Other Libraries" . "other_libraries")
-                                       ("Differences with Lisps" . "lisps")))
+                                       ("Differences with Lisps" . "lisps")
+                                       ("Deps and CLI" . "deps_and_cli")))
 
 (defun clojure-view-reference-section ()
   "Open a Clojure reference section in your default browser.
@@ -810,12 +823,12 @@ Called by `imenu--generic-function'."
 (eval-and-compile
   (defconst clojure--sym-forbidden-rest-chars "][\";@\\^`~\(\)\{\}\\,\s\t\n\r"
     "A list of chars that a Clojure symbol cannot contain.
-See definition of `macros': URL `http://git.io/vRGLD'.")
+See definition of `macros': URL `https://git.io/vRGLD'.")
   (defconst clojure--sym-forbidden-1st-chars (concat clojure--sym-forbidden-rest-chars "0-9:'")
     "A list of chars that a Clojure symbol cannot start with.
-See the for-loop: URL `http://git.io/vRGTj' lines: URL
-`http://git.io/vRGIh', URL `http://git.io/vRGLE' and value
-definition of `macros': URL `http://git.io/vRGLD'.")
+See the for-loop: URL `https://git.io/vRGTj' lines: URL
+`https://git.io/vRGIh', URL `https://git.io/vRGLE' and value
+definition of `macros': URL `https://git.io/vRGLD'.")
   (defconst clojure--sym-regexp
     (concat "[^" clojure--sym-forbidden-1st-chars "][^" clojure--sym-forbidden-rest-chars "]*")
     "A regexp matching a Clojure symbol or namespace alias.
@@ -2032,7 +2045,13 @@ content) are considered part of the preceding sexp."
   (save-restriction
     (narrow-to-region (point) (save-excursion
                                 (up-list)
-                                (1- (point))))
+                                ;; Ignore any comments in the end before sorting
+                                (backward-char)
+                                (forward-sexp -1)
+                                (clojure-forward-logical-sexp)
+                                (unless (looking-at-p ")")
+                                  (search-forward-regexp "$"))
+                                (point)))
     (skip-chars-forward "\r\n[:blank:]")
     (sort-subr nil
                (lambda () (skip-chars-forward "\r\n[:blank:]"))
@@ -2138,23 +2157,30 @@ DIRECTION is `forward' or `backward'."
               (setq candidate (string-remove-prefix "'" (thing-at-point 'symbol))))))))
     candidate))
 
-(defun clojure-find-ns ()
-  "Return the namespace of the current Clojure buffer.
+(defun clojure-find-ns (&optional suppress-errors)
+  "Return the namespace of the current Clojure buffer, honor `SUPPRESS-ERRORS'.
 Return the namespace closest to point and above it.  If there are
 no namespaces above point, return the first one in the buffer.
+
+If `SUPPRESS-ERRORS' is t, errors during ns form parsing will be swallowed,
+and nil will be returned instead of letting this function fail.
 
 The results will be cached if `clojure-cache-ns' is set to t."
   (if (and clojure-cache-ns clojure-cached-ns)
       clojure-cached-ns
-    (let ((ns (save-excursion
-                (save-restriction
-                  (widen)
+    (let* ((f (lambda (direction)
+                (if suppress-errors
+                    (ignore-errors (clojure--find-ns-in-direction direction))
+                  (clojure--find-ns-in-direction direction))))
+           (ns (save-excursion
+                 (save-restriction
+                   (widen)
 
-                  ;; Move to top-level to avoid searching from inside ns
-                  (ignore-errors (while t (up-list nil t t)))
+                   ;; Move to top-level to avoid searching from inside ns
+                   (ignore-errors (while t (up-list nil t t)))
 
-                  (or (clojure--find-ns-in-direction 'backward)
-                      (clojure--find-ns-in-direction 'forward))))))
+                   (or (funcall f 'backward)
+                       (funcall f 'forward))))))
       (setq clojure-cached-ns ns)
       ns)))
 
@@ -2266,8 +2292,11 @@ position before the current position."
           (while (< (point) position)
             (clojure-forward-logical-sexp 1)
             (clojure-backward-logical-sexp 1)
-            (push (point) sexp-positions)
-            (clojure-forward-logical-sexp 1))
+            ;; Needed to prevent infinite recursion when there's only 1 form in buffer.
+            (if (eq (point) (car sexp-positions))
+                (goto-char position)
+              (push (point) sexp-positions)
+              (clojure-forward-logical-sexp 1)))
         (scan-error nil))
       sexp-positions)))
 

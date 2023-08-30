@@ -18,6 +18,11 @@ This saves you from needing to manually escape characters." t nil)
 
 ;;;***
 
+;;;### (autoloads nil nil ("string-edit-at-point-pkg.el") (0 0 0
+;;;;;;  0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

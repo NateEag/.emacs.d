@@ -4,8 +4,6 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 0.1.0
-;; Package-Version: 20220913.712
-;; Package-Commit: e285ada415b975a9eb70a7e065123923d9bf8798
 ;; Package-Requires: ((dash "1.2.0"))
 
 ;; This program is free software; you can redistribute it and/or modify

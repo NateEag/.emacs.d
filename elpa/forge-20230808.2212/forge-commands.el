@@ -94,6 +94,8 @@ Takes the pull-request as only argument and must return a directory."
     ("b r" "remote"        forge-browse-remote)]]
   [["Configure"
     ("a  " "add repository to database" forge-add-repository)
+    ("R  " "add pull-request refspec" forge-add-pullreq-refspec
+     :if-not forge--pullreq-refspec)
     ("r  " "forge.remote"  forge-forge.remote)
     ("t l" "forge.graphqlItemLimit" forge-forge.graphqlItemLimit
      :if (lambda () (forge-github-repository-p (forge-get-repository nil))))
@@ -772,7 +774,8 @@ Please see the manual for more information."
   "Create, configure and checkout a new branch from a pull-request.
 Please see the manual for more information."
   (interactive (list (forge-read-pullreq "Checkout pull request" t)))
-  (magit-checkout (forge--branch-pullreq (forge-get-pullreq pullreq))))
+  (magit--checkout (forge--branch-pullreq (forge-get-pullreq pullreq)))
+  (magit-refresh))
 
 ;;;###autoload
 (defun forge-checkout-worktree (path pullreq)
@@ -969,6 +972,13 @@ upstream remote.  Also fetch from REMOTE."
                       refspec)
       (magit-git-fetch remote (magit-fetch-arguments)))))
 
+(defun forge--pullreq-refspec ()
+  (let* ((repo    (forge-get-repository 'stub))
+         (remote  (oref repo remote))
+         (fetch   (magit-get-all "remote" remote "fetch"))
+         (refspec (oref repo pullreq-refspec)))
+    (car (member refspec fetch))))
+
 ;;;###autoload
 (defun forge-add-repository (url)
   "Add a repository to the database.
@@ -1052,8 +1062,9 @@ as merged."
    (pcase-let ((`(,githost ,owner ,name)
                 (forge-read-repository "Remove repository from db")))
      (if (yes-or-no-p
-          (format "Do you really want to remove \"%s/%s @%s\" from the db? "
-                  owner name githost))
+          (format
+           "Do you really want to remove \"%s/%s @%s\" from the database? "
+           owner name githost))
          (list githost owner name)
        (user-error "Abort"))))
   (closql-delete (forge-get-repository (list host owner name)))

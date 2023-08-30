@@ -82,6 +82,10 @@ See `evil-surround-mode' for more information on Evil-Surround mode.
 
 ;;;***
 
+;;;### (autoloads nil nil ("evil-surround-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

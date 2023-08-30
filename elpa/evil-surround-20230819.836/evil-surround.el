@@ -1,4 +1,4 @@
-;;; evil-surround.el --- emulate surround.vim from Vim
+;;; evil-surround.el --- emulate surround.vim from Vim  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2010 - 2017 Tim Harper
 ;; Copyright (C) 2018 - 2020 The evil-surround.el Contributors
@@ -11,8 +11,6 @@
 ;;
 ;; Created: July 23 2011
 ;; Version: 1.0.4
-;; Package-Version: 20221229.1650
-;; Package-Commit: f273821f575ace519066fb106ee45a5b8577475f
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -117,6 +115,11 @@ Each item is of the form (OPERATOR . OPERATION)."
 (defvar evil-surround-last-deleted-left ""
   "The previously deleted LEFT region.")
 
+(defvar evil-surround-current-pair nil
+  "The current pair.
+
+When non-nil, it can be either a cons or a function returning a cons.")
+
 (defun evil-surround-read-from-minibuffer (&rest args)
   (when (or evil-surround-record-repeat
             (evil-repeat-recording-p))
@@ -165,7 +168,7 @@ function call in prefixed form."
 (defun evil-surround-read-tag ()
   "Read a XML tag from the minibuffer."
   (let* ((input (evil-surround-read-from-minibuffer "<" "" evil-surround-read-tag-map))
-         (match (string-match (concat evil-surround-tag-name-re "\\(.*?\\)\\([>]*\\)$") input))
+         (_ (string-match (concat evil-surround-tag-name-re "\\(.*?\\)\\([>]*\\)$") input))
          (tag  (match-string 1 input))
          (rest (match-string 2 input))
          (keep-attributes (not (string-match-p ">" input)))
@@ -192,13 +195,13 @@ function call in prefixed form."
 (defun evil-surround-pair (char)
   "Return the evil-surround pair of char.
 This is a cons cell (LEFT . RIGHT), both strings."
-  (let ((pair (assoc-default char evil-surround-pairs-alist)))
+  (let ((evil-surround-current-pair (assoc-default char evil-surround-pairs-alist)))
     (cond
-     ((functionp pair)
-      (funcall pair))
+     ((functionp evil-surround-current-pair)
+      (funcall evil-surround-current-pair))
 
-     ((consp pair)
-      pair)
+     ((consp evil-surround-current-pair)
+      evil-surround-current-pair)
 
      (t
       (cons (format "%c" char) (format "%c" char))))))
@@ -211,50 +214,70 @@ This is a cons cell (LEFT . RIGHT), both strings."
   "Buffer-local list of inner text object keymaps that are added to
   evil-surround")
 
-(defun evil-surround-outer-overlay (char)
-  "Return outer overlay for the delimited range represented by CHAR.
-This overlay includes the delimiters.
-See also `evil-surround-inner-overlay'."
-  (let ((outer (lookup-key
-                 (make-composed-keymap
-                   evil-surround-local-outer-text-object-map-list
-                   evil-outer-text-objects-map) (string char))))
-    (when (functionp outer)
-      (setq outer (funcall outer))
-      (when (evil-range-p outer)
-        (evil-surround-trim-whitespace-from-range outer "[[:space:]]")
-        (setq outer (make-overlay (evil-range-beginning outer)
-                                  (evil-range-end outer)
-                                  nil nil t))))))
-
 (defun evil-surround-trim-whitespace-from-range (range &optional regexp)
-  "Given an evil-range, trim whitespace around range by shrinking the range such that it neither begins nor ends with whitespace. Does not modify the buffer."
+  "Given an evil-range, trim whitespace around range by shrinking
+the range such that it neither begins nor ends with whitespace.
+Does not modify the buffer."
   (let ((regexp (or regexp "[ \f\t\n\r\v]")))
     (save-excursion
       (save-match-data
         (goto-char (evil-range-beginning range))
         (while (looking-at regexp) (forward-char))
-        (evil-set-range-beginning range (point))
-        (goto-char (evil-range-end range))
-        (while (looking-back regexp) (backward-char))
-        (evil-set-range-end range (point))))))
+        (let ((new-beg (point)))
+          (evil-set-range-beginning range new-beg)
+          (goto-char (evil-range-end range))
+          (while (looking-back regexp new-beg) (backward-char))
+          (evil-set-range-end range (point)))))))
 
-(defun evil-surround-inner-overlay (char)
-  "Return inner overlay for the delimited range represented by CHAR.
-This overlay excludes the delimiters.
-See also `evil-surround-outer-overlay'."
-  (let ((inner (lookup-key
-                 (make-composed-keymap
-                   evil-surround-local-inner-text-object-map-list
-                   evil-inner-text-objects-map) (string char))))
-    (when (functionp inner)
-      (setq inner (funcall inner))
-      (when (evil-range-p inner)
-        (when (eq (char-syntax char) ?\()
-          (evil-surround-trim-whitespace-from-range inner "[[:space:]]"))
-        (setq inner (make-overlay (evil-range-beginning inner)
-                                  (evil-range-end inner)
-                                  nil nil t))))))
+(defun evil-surround-outer-overlay (delims char)
+  "Return overlay from provided delimiters or character.
+Preferably, use DELIMS to select the correct range.  Otherwise, use CHAR.
+This overlay includes the delimeters."
+  (let ((open (car-safe delims))
+        (close (cdr-safe delims))
+        outer)
+    (if (and (stringp open) (stringp close))
+        (let* ((o (regexp-quote open))
+               (c (regexp-quote close))
+               (p (point)))
+          (setq outer (evil-select-paren o c p p nil 1 t)))
+      (let ((outer-obj (lookup-key
+                        (make-composed-keymap
+                         evil-surround-local-outer-text-object-map-list
+                         evil-outer-text-objects-map)
+                        (string char))))
+        (when (functionp outer-obj) (setq outer (funcall outer-obj)))))
+    (when (evil-range-p outer)
+      (evil-surround-trim-whitespace-from-range outer "[[:space:]]")
+      (make-overlay (evil-range-beginning outer)
+                    (evil-range-end outer)
+                    nil nil t))))
+
+(defun evil-surround-inner-overlay (delims char)
+  "Return overlay from provided delimiters or character.
+Preferably, use DELIMS to select the correct range.  Otherwise, use CHAR.
+This overlay excludes the delimeters."
+  (let ((open (car-safe delims))
+        (close (cdr-safe delims))
+        inner)
+    (if (and (stringp open) (stringp close))
+        (let* ((o (regexp-quote open))
+               (c (regexp-quote close))
+               (p (point)))
+          (setq inner (evil-select-paren o c p p nil 1 nil)))
+      (let ((inner-obj (lookup-key
+                        (make-composed-keymap
+                         evil-surround-local-inner-text-object-map-list
+                         evil-inner-text-objects-map)
+                        (string char))))
+        (when (functionp inner-obj)
+          (setq inner (funcall inner-obj)))))
+    (when (evil-range-p inner)
+      (when (eq (char-syntax char) ?\()
+        (evil-surround-trim-whitespace-from-range inner "[[:space:]]"))
+      (make-overlay (evil-range-beginning inner)
+                    (evil-range-end inner)
+                    nil nil t))))
 
 (evil-define-motion evil-surround-line (count)
   "Move COUNT - 1 lines down but return exclusive character motion."
@@ -283,8 +306,9 @@ between these overlays is what is deleted."
    (t
     ;; no overlays specified: create them on the basis of CHAR
     ;; and delete after use
-    (let* ((outer (evil-surround-outer-overlay char))
-           (inner (evil-surround-inner-overlay char)))
+    (let* ((delims (cdr (assoc char evil-surround-pairs-alist)))
+           (outer (evil-surround-outer-overlay delims char))
+           (inner (evil-surround-inner-overlay delims char)))
       (unwind-protect
           (when (and outer inner)
             (evil-surround-delete char outer inner))
@@ -306,8 +330,9 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
                             (overlay-end outer)
                             nil (if (evil-surround-valid-char-p key) key char))))
    (t
-    (let* ((outer (evil-surround-outer-overlay char))
-           (inner (evil-surround-inner-overlay char)))
+    (let* ((delims (cdr (assoc char evil-surround-pairs-alist)))
+           (outer (evil-surround-outer-overlay delims char))
+           (inner (evil-surround-inner-overlay delims char)))
       (unwind-protect
           (when (and outer inner)
             (evil-surround-change char outer inner))
@@ -405,9 +430,9 @@ Becomes this:
 
   (when (evil-surround-valid-char-p char)
     (let* ((overlay (make-overlay beg end nil nil t))
-           (pair (or (and (boundp 'pair) pair) (evil-surround-pair char)))
-           (open (car pair))
-           (close (cdr pair))
+           (evil-surround-current-pair (or evil-surround-current-pair (evil-surround-pair char)))
+           (open (car evil-surround-current-pair))
+           (close (cdr evil-surround-current-pair))
            (beg-pos (overlay-start overlay)))
       (unwind-protect
           (progn

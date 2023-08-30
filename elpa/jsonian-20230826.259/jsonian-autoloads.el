@@ -34,6 +34,18 @@ The indent is determined by examining the previous line.  The
 number of spaces is determined by `jsonian-indentation' if it is
 set, otherwise it is inferred from the document." t nil)
 
+(autoload 'jsonian-indent-region "jsonian" "\
+Indent the region from START to END.
+
+\(fn START END)" t nil)
+
+(autoload 'jsonian-format-region "jsonian" "\
+Format the region (START . END).
+
+If MINIMIZE is non-nil, minimize the region instead of expanding it.
+
+\(fn START END &optional MINIMIZE)" t nil)
+
 (autoload 'jsonian-c-mode "jsonian" "\
 A major mode for editing JSON documents with comments.
 
@@ -48,6 +60,10 @@ Enable `jsonian-mode' for all checkers where `json-mode' is enabled." t nil)
 Prevent `so-long-mode' from supplanting `jsonian-mode'." t nil)
 
 (register-definition-prefixes "jsonian" '("jsonian-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("jsonian-pkg.el") (0 0 0 0))
 
 ;;;***
 

@@ -4,8 +4,6 @@
 
 ;; Author: Ian Wahbe
 ;; URL: https://github.com/iwahbe/jsonian
-;; Package-Version: 20230414.1851
-;; Package-Commit: e6a6a8452fc84f77bf5644851306c8b8d63a3bc5
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "27.1"))
 
@@ -55,9 +53,9 @@
   :link `(url-link :tag "GitHub" "https://github.com/iwahbe/jsonian"))
 
 (defcustom jsonian-ignore-font-lock (>= emacs-major-version 29)
-  "Prevent `font-lock' based optimizations.
-Don't use `font-lock-string-face' and `font-lock-keyword-face' to
-determine string and key values respectively."
+  "This variable doesn't do anything anymore.
+
+It will be removed in a future version of jsonian."
   :type 'boolean
   :group 'jsonian)
 
@@ -112,119 +110,449 @@ b. leveraging C code whenever possible."
   (with-current-buffer (or buffer (current-buffer))
     (save-excursion
       (when pos (goto-char pos))
-      (jsonian--forward-to-significant-char)
-      (jsonian--correct-starting-point)
-      (let ((result (jsonian--reconstruct-path (jsonian--path t nil))) display)
+      (jsonian--snap-to-node)
+      (let ((result (jsonian--reconstruct-path (jsonian--path))) display)
         (when (called-interactively-p 'interactive)
           (setq display (jsonian--display-path result (not plain)))
           (message "Path: %s" display)
           (kill-new display))
         result))))
 
-(defun jsonian--cached-path (head allow-tags stop-at-valid)
+(defun jsonian--cached-path (point head)
   "Compute `jsonian-path' with assistance from `jsonian--cache'.
-HEAD is the current nearest known path segment at `point'.  See
-the docstring for `jsonian-path' for behavior of ALLOW-TAGS and
-STOP-AT-VALID."
+HEAD is the path segment for POINT."
   (jsonian--ensure-cache)
-  (if (and (not allow-tags) (not stop-at-valid))
-      ;; We are in the tag state where we accept cached values
-      (if-let* ((p (point))
-                (node (gethash p (jsonian--cache-locations jsonian--cache))))
-          ;; We have retrieved a cached value, so return it
-          (reverse (jsonian--cached-node-path node))
-        ;; Else cache the value and return it
-        (let ((r (cons head (jsonian--path allow-tags stop-at-valid))))
-          (jsonian--cache-node p (reverse r))
-          r))
-    ;; Otherwise performed the un-cached compute
-    (cons head (jsonian--path allow-tags stop-at-valid))))
+  (if-let* ((node (gethash point (jsonian--cache-locations jsonian--cache))))
+      ;; We have retrieved a cached value, so return it
+      (reverse (jsonian--cached-node-path node))
+    ;; Else cache the value and return it
+    (let ((r (cons head (jsonian--path))))
+      (jsonian--cache-node point (reverse r))
+      r)))
 
-(defun jsonian--path (allow-tags stop-at-valid)
+(defun jsonian--path ()
   "Helper function for `jsonian-path'.
-Will pick up object level tags at the current level of if
-ALLOW-TAGS is non nil.  When STOP-AT-VALID is non-nil,
-`jsonian-path' will parse back to the enclosing object or array.
-Otherwise it will parse back to the beginning of the file."
+`jsonian--path' will parse back to the beginning of the file,
+assembling the path it traversed as it goes.
+
+The caller is responsible for ensuring that `point' begins on a valid node."
   ;; The number of previously encountered objects in this list (if we
   ;; are in a list).
-  (let ((index 0))
-    ;; We are not in the middle of a string, so we can now safely check for
-    ;; the string property without false positives.
-    (cl-loop 'while (not (bobp))
-             (jsonian--backward-to-significant-char)
-             (cond
-              ;;
-              ;; Enclosing object
-              ((eq (char-before) ?\{)
-               (if stop-at-valid
-                   (cl-return nil)
-                 (backward-char)
-                 (setq index 0
-                       allow-tags t)))
-              ;; Enclosing array
-              ((eq (char-before) ?\[)
-               (cl-return
-                (if stop-at-valid
-                   (list index)
-                  (backward-char)
-                  (jsonian--cached-path index t stop-at-valid))))
-              ;;
-              ;; Skipping over a complete node (either a array or a object)
-              ((or
-                (eq (char-before) ?\])
-                (eq (char-before) ?\}))
-               (backward-char)
-               (let ((close (1- (scan-lists (point) 1 1))))
-                 (when (< close (line-end-position))
-                   (goto-char (1+ close))
-                   (backward-list)))
-               (backward-char))
-              ;;
-              ;; In a list or object
-              ((eq (char-before) ?,)
-               (backward-char)
-               (setq index (1+ index)))
-              ;;
-              ;; Object tag
-              ((eq (char-before) ?:)
-               (backward-char)
-               (jsonian--backward-to-significant-char)
-               (unless (eq (char-before) ?\")
-                 (user-error "Before ':' expected '\"', found '%s'" (if (bobp) "BOB" (char-before))))
-               (let* ((tag-region (jsonian--backward-string 'font-lock-keyword-face))
-                      (tag-text (when tag-region
-                                  (buffer-substring-no-properties (1+ (car tag-region)) (1- (cdr tag-region))))))
-                 (unless tag-region
-                   (error "Could not find tag"))
-                 (when (= (car tag-region) (point-min))
-                   (user-error "Before tag '\"%s\"' expected something, found beginning of buffer" tag-text))
-                 (when allow-tags
-                   ;; To avoid blowing the recursion limit, we only collect tags
-                   ;; (and recurse on them) when we need to.
-                   (cl-return (jsonian--cached-path tag-text nil stop-at-valid)))))
-              ;;
-              ;; Found a string value, ignore
-              ((eq (char-before) ?\")
-               (jsonian--backward-string 'font-lock-string-face))
-              ;; NOTE: I'm making a choice to parse non-string literals instead of ignoring
-              ;; other characters. This ensures the partial parse is strict.
-              ;;
-              ;; Found a number value, ignore
-              ((jsonian--backward-number))
-              ;;
-              ;; Boolean literal: true
-              ((and (eq (char-before) ?e)
-                    (eq (char-before (1- (point))) ?u))
-               (jsonian--backward-true))
-              ;;
-              ;; Boolean literal: false
-              ((eq (char-before) ?e) (jsonian--backward-false))
-              ;;
-              ;; null literal
-              ((eq (char-before) ?l) (jsonian--backward-null))
-              ((bobp) (cl-return nil))
-              (t  (jsonian--unexpected-char :backward "the end of a JSON value"))))))
+  (cond
+   ;; We are at a key
+   ((and (eq (char-after) ?\")
+         (save-excursion
+           (and
+            (jsonian--forward-token)
+            (eq (char-after) ?:))))
+    (when-let ((s (jsonian--string-at-pos (1+ (point)))))
+      ;; If `s' is nil, it means that the string was invalid
+      (jsonian--cached-path (prog1 (point)
+                              (jsonian--up-node))
+                            (buffer-substring-no-properties
+                             (1+ (car s)) (1- (cdr s))))))
+   ;; We are not at a key but we are not at the beginning, so we must be in an array
+   ((save-excursion (jsonian--backward-token))
+    (let ((index 0) done (p (point)))
+      (while (not done)
+        (when-let (back (jsonian--backward-node))
+          (if (eq back 'start)
+              (setq done t)
+            (cl-incf index))))
+      (jsonian--cached-path (prog1 p
+                              (jsonian--up-node))
+                            index)))
+   ;; We are not in a array or object, so we must be at the top level
+   (t nil)))
+
+(defun jsonian--down-node ()
+  "Move `point' into a container node.
+
+Given the example with point at $:
+
+ $\"foo\": {
+    \"bar\": 3
+  }
+
+`jsonian--down-node' will move point so `char-after' is at \"bar\":
+
+  \"foo\": {
+   $\"bar\": 3
+  }
+
+This function assumes we are at the start of a node."
+  (let ((start (point))
+        (ret (pcase (char-after)
+               ((or ?\[ ?\{)
+                (and
+                 (jsonian--forward-token)
+                 ;; Prevent going into containers with no elements
+                 (not (memq (char-after) '(?\] ?\})))))
+               (?\" ;; We might be in a key, so lets check
+                (jsonian--forward-token)
+                (when (equal (char-after) ?:)
+                  (progn
+                    (jsonian--forward-token)
+                    (jsonian--down-node)))))))
+    (unless (eq ret t)
+      (goto-char start))
+    ret))
+
+(defun jsonian--up-node ()
+  "Move `point' to the enclosing node.
+
+Given the example with point at $:
+
+  {
+    \"a\": 1,
+   $\"b\": 2
+  }
+
+`jsonian--up-node' will move point so `char-after' is at the opening {:
+
+ ${
+    \"a\": 1,
+   \"b\": 2
+  }
+
+This function assumes we are at the start of a node."
+  (let* ((start (point))
+         ;; Move to the enclosing container
+         (ret (when-let ((enclosing (nth 1 (syntax-ppss))))
+                (goto-char enclosing)
+                (if (memq (char-after) '(?\{ ?\[))
+                    t
+                  (goto-char start)
+                  nil))))
+    ;; We have found an enclosing container and moved there. We now need only
+    ;; deal with an associated key.
+    (when ret
+      (setq start (point))
+      (unless (and (jsonian--backward-token)
+                   (eq (char-after) ?:)
+                   (jsonian--backward-token))
+        (goto-char start))
+      ret)))
+
+(defun jsonian--forward-node ()
+  "Move `point' forward a node.
+`jsonian--forward-node' will not move up or down within a tree.
+
+This function assumes we are at the start of a node."
+  (let ((start (point))
+        ;; We are starting at a valid node, which means one of:
+        ;; - A plain value
+        ;; - A key in an object
+        (ret (pcase (char-after)
+               ((or ?\[ ?\{) ; We are at the start of a list
+                (forward-list)
+                (jsonian--skip-chars-forward "\s\n\t")
+                (if (eobp) 'eob (jsonian--forward-token-comma)))
+               (?\"
+                (jsonian--forward-token)
+                (if (equal (char-after) ?\:)  ; `equal' to obviate the `eobp' check
+                    ;; We are looking at a key, so traverse the key and the value.
+                    (and (jsonian--forward-token) ; traverse the :
+                         (jsonian--forward-node)) ; traverse the value node
+                  ;; We are just looking at a string
+                  (jsonian--forward-token-comma)))
+               ;; Just a normal scalar value
+               (_
+                (jsonian--forward-token)
+                (jsonian--forward-token-comma)))))
+    (unless (eq ret t)
+      (goto-char start))
+    ret))
+
+(defun jsonian--backward-node ()
+  "Move `point' backward over one node.
+`jsonian--backward-node' will not move up or down within a tree.
+
+This function assumes we are at the start of a node."
+  (let ((start (point))
+        (ret (if (not (jsonian--backward-token))
+                 'bob
+               (pcase (char-after)
+                 ;; This was a valid entry in a list or map, so keep going backwards
+                 (?,
+                  ;; Traverse back over the token
+                  (jsonian--backward-token)
+                  (when (if (memq (char-after) '(?\} ?\]))
+                            (progn
+                              (forward-char)
+                              (backward-list)
+                              t)
+                          t)
+                    (if (save-excursion (and (jsonian--backward-token)
+                                             (eq (char-after) ?:)))
+                        ;; We are at a key in an object, so traverse back the key as well.
+                        (and (jsonian--backward-token) (jsonian--backward-token))
+                      t)))
+                 ((or ?\[ ?\{) 'start)
+                 (_ (jsonian--unexpected-char :backward "one of '[', '{' or ','"))))))
+    (unless (eq ret t)
+      (goto-char start))
+    ret))
+
+(defun jsonian--forward-token-comma ()
+  "Move `point' over a separating ','.
+
+If the end of a container or the buffer is reached, then `eob'
+or `end' will be sent, respectively.
+
+If the JSON is invalid then `jsonian--unexpected-char' will be called."
+  (pcase (char-after)
+    ((or ?\] ?\}) 'end)
+    (?, (jsonian--forward-token))
+    (_ (jsonian--unexpected-char :forward "one of ']', '}' or ','"))))
+
+(defun jsonian--backward-token ()
+  "Move `point' to the previous JSON token.
+
+`jsonian--backward-token' will skip over any whitespace it finds.
+
+It is assumed that `point' starts at a JSON token."
+  (jsonian--skip-chars-backward "\s\n\t")
+  (let* ((needs-seperator t)
+         (v (pcase (char-before)
+              ;; No previous token, so do nothing
+              ((pred null) nil)
+              ;; Found a single char token, so move behind it
+              ((or ?: ?, ?\[ ?\] ?\{ ?\})
+               (setq needs-seperator nil)
+               (backward-char) t)
+              ;; Found a string, so traverse it
+              (?\" (jsonian--backward-string) t)
+              (?l (jsonian--backward-null) t)
+              (?e (pcase (char-before (1- (point)))
+                    (?u (jsonian--backward-true) t)
+                    (?s (jsonian--backward-false) t)
+                    (_ (save-excursion (backward-char)
+                                       (jsonian--unexpected-char :backward "\"u\" or \"s\"")))))
+              ((pred (lambda (c) (and (<= c ?9) (>= c ?0))))
+               (jsonian--backward-number) t)
+              (_ (jsonian--unexpected-char :backward "one of ':,[]{}\"le0123456789'")))))
+    (when (and needs-seperator
+               (not (memq (char-before) '(nil ?: ?, ?\[ ?\] ?\{ ?\} ?\s ?\t ?\n))))
+      (jsonian--unexpected-char :backward "one of ':,[]{}\\s\\t\\n' or BOF"))
+    v))
+
+(defvar-local jsonian--last-token-end nil
+  "The end of the last token that `jsonian--forward-token' parsed.
+
+For example, given the following string with point at the
+?| (`char-after' will be refer to ?,):
+
+  1.2|,   3.4
+
+`jsonian--forward-token' will move point to ?|:
+
+   1.2,   |3.4
+
+It will set the value of `jsonian--last-token-end' to
+
+   1.2,|  3.4
+
+If `jsonian--forward-token' returned nil, the value of
+`jsonian--last-token-end' is undefined.")
+
+(defun jsonian--forward-token (&optional stop-at-comments)
+  "Move `point' to the next JSON token.
+
+`jsonian--forward-token' will skip over any whitespace it finds.
+
+By default, `jsonian--forward-token' skips over comments when in
+`jsonian-c-mode' or errors on comments in plain `jsonian-mode'.
+If STOP-AT-COMMENTS is non-nil and a comment is encountered in
+`jsonian-c-mode', then comments are treated like tokens by
+`jsonian--forward-token'.
+
+It is assumed that `point' starts at a JSON token.
+
+t is returned if `jsonian--forward-token' successfully traversed
+a token, otherwise nil is returned."
+  (let ((needs-seperator t))
+    (pcase (char-after)
+      ;; We are at the end of the buffer, so we can't do anything
+      ((pred null) nil)
+      ;; Found a single char token, so move ahead of it
+      ((or ?: ?, ?\[ ?\] ?\{ ?\})
+       (setq needs-seperator nil)
+       (forward-char))
+      ;; Found a string, so traverse it
+      (?\" (jsonian--forward-string))
+      ;; Otherwise we are looking at a non-string scalar token, so parse forward
+      ;; until we find a separator or whitespace (which implies that the token is
+      ;; over).
+      (?t (jsonian--forward-true))
+      (?f (jsonian--forward-false))
+      (?n (jsonian--forward-null))
+      ((pred (lambda (c) (and stop-at-comments
+                             (derived-mode-p 'jsonian-c-mode)
+                             (eq c ?/)
+                             (memq (char-after (1+ (point))) '(?/ ?*)))))
+            (forward-comment 1))
+      ((pred (lambda (c) (or (and (<= c ?9) (>= c ?0)) (eq c ?-))))
+       (jsonian--forward-number))
+      ;; This is the set of chars that can start a token
+      (_ (jsonian--unexpected-char :forward "one of ':,[]{}\"tfn0123456789-'")))
+    (setq jsonian--last-token-end (point))
+    ;; Skip forward over whitespace and comments
+    (when (and (= (jsonian--skip-chars-forward "\s\n\t" stop-at-comments) 0)
+               needs-seperator
+               (not (memq (char-after) '(nil ?: ?, ?\[ ?\] ?\{ ?\} ?\s ?\t ?\n))))
+      (jsonian--unexpected-char :forward "one of ':,[]{}\\s\\t\\n' or EOF")))
+  (not (eobp)))
+
+(defun jsonian--snap-to-node ()
+  "Position `point' before a node.
+This function moves forward through whitespace but backwards through the node.
+nil is returned if `jsonian--snap-to-node' failed to move `point' to
+before a node."
+  (when (jsonian--snap-to-token)
+    (pcase (char-after)
+      ;; The token indicates that we are the second token within a "key: value"
+      ;; node.
+      (?: (jsonian--backward-token))
+      ;; We are at the end of a node, but its not clear how far from the
+      ;; front. Move back one token and try again.
+      (?,
+       (jsonian--backward-token)
+       (jsonian--snap-to-node))
+      ;; We are at the end of a container, so move back inside the container and
+      ;; try again
+      ((or ?\] ?\})
+       (skip-chars-backward "\s\n\t}]") ; Skip out of enclosing nodes
+       (backward-char)                  ; Skip into the last node being enclosed
+       (jsonian--snap-to-node)) ; Return that node
+      ;; We are either at the front of a node, or prefixed with a key
+      (_  (if (save-excursion (and (jsonian--backward-token) (eq (char-after) ?:)))
+              (progn
+                (jsonian--backward-token)  ;; Move behind the :
+                (jsonian--backward-token)) ;; Move behind the string
+            t)))))
+
+(defun jsonian--skip-chars-backward (chars)
+  "Skip CHARS backwards in a comment aware way."
+  (let ((start (point)))
+    (while (or
+            (> (skip-chars-backward chars) 0)
+            (jsonian--backward-comment)))
+    (- start (point))))
+
+(defun jsonian--skip-chars-forward (chars &optional stop-at-comments)
+  "Skip CHARS forward in a comment aware way.
+
+If STOP-AT-COMMENTS is non-nil, then (comment . traveled) is
+returned when a comment is encountered."
+  (let ((start (point)))
+    (while (or
+            (> (skip-chars-forward chars) 0)
+            (and (not stop-at-comments)
+                 (jsonian--forward-comment))))
+    (- (point) start)))
+
+(defun jsonian--snap-to-token ()
+  "Position `point' at the \"nearest\" token.
+If `point' is within a token, it is moved to point at that token.
+Otherwise, `point' is moved to point at the nearest token on the
+same line.  Otherwise `point' is moved to point to the nearest
+token period.
+
+Nearest is defined to be point that minimizes (abs (- (point)
+previous)).
+
+Consider the following example, with `point' starting at $:
+
+    { \"foo\":    \"fizz $buzz\" }
+
+`jsonian--snap-to-token' will move the point so `char-after' is the ?\"
+that begins \"fizz buzz\".
+
+With the same example and different cursor position, we will see the same
+result:
+
+    { \"foo\": $   \"fizz buzz\" }
+
+The cursor will move so `char-after' will give the ?:.  If we
+move the starting point over:
+
+    { \"foo\":   $ \"fizz buzz\" }
+
+we instead move so that `char-after' gives the ?\" that begins
+\"fizz buzz\"."
+  ;; We are looking for the "nearest" token to position the cursor at.
+  ;;
+  ;; We do this by looking for the nearest token on the left and the right.  If we find
+  ;; tokens on the left and the right, we take whichever is closest to `center', which is
+  ;; where we started looking from.
+  (let* ((center (point))
+         left-end
+         (left
+          ;; Find the left most valid starting token
+          (if-let (start (jsonian--pos-in-stringp))
+              start
+            (when-let (start (jsonian--enclosing-comment-p (point)))
+              (goto-char start))
+
+            (jsonian--skip-chars-backward "\s\t\n")
+            (unless (bobp)
+              (pcase (char-before)
+                ((or ?: ?, ?\{ ?\} ?\[ ?\]) (1- (point)))
+                (?\" (jsonian--backward-string)
+                     (point))
+                (_ (while (not (or (bobp)
+                                   (memq (char-before) '(?: ?, ?\s ?\t ?\n ?\{ ?\} ?\[ ?\]))))
+                     (backward-char))
+                   (unless (bobp)
+                     (point)))))))
+         (right (cond
+                 ;; If left=center, there is no point in trying to calculate `right',
+                 ;; since it cannot be better then left.
+                 ((eq left center) nil)
+                 (left
+                  ;; If we have a left token, we can just traverse forward from the left
+                  ;; token to get the right token.
+                  (goto-char left)
+                  (when (and (jsonian--forward-token)
+                             (>= center (setq left-end jsonian--last-token-end)))
+                    ;; If center is within the node found by left, we take that
+                    ;; token regardless of distance. This is necessary to ensure
+                    ;; idenpotency for tightly packed tokens.
+                    (point)))
+                 (t
+                  ;; We have no left token, so we need to parse to the right token.
+                  (goto-char center)
+                  (when-let (start (jsonian--enclosing-comment-p (point)))
+                    (goto-char start))
+                  (jsonian--skip-chars-forward "\s\t\n")
+                  (unless (eobp)
+                    (point))))))
+    (goto-char
+     (or
+      (if (and left right)
+          ;; If we have both left and right, we look at their line positions.
+          (let ((center-line (line-number-at-pos center))
+                (left-line (line-number-at-pos left))
+                (right-line (line-number-at-pos right)))
+            (cond
+             ;; If `left' ^ `right' is on the same line as `center' we take that token.
+             ((and (= center-line left-line)
+                   (not (= center-line right-line)))
+              left)
+             ((and (= center-line right-line)
+                   (not (= center-line left-line)))
+              right)
+             (t
+              ;; If the tokens are on different lines, we set check against the end of the
+              ;; left token instead of the left token itself.
+              (if (<= (- center (if (and (not (= center-line left-line right-line)) left-end)
+                                    left-end left))
+                      (- right center))
+                  left
+                right))))
+        (or left right))
+      center))))
 
 (defun jsonian--display-path (path &optional pretty)
   "Convert the reconstructed JSON path PATH to a string.
@@ -318,7 +646,7 @@ it traverses existing structures in the buffer JSON.  It does not
 need to be a leaf path."
   (save-excursion
     (goto-char (point-min))
-    (jsonian--forward-to-significant-char)
+    (jsonian--snap-to-token)
     (let (failed leaf current-segment traversed)
       (while (and path (not failed) (not leaf))
         (unless (seq-some
@@ -326,7 +654,7 @@ need to be a leaf path."
                    (when (equal (car x) (car path))
                      (cl-assert (car x) t "Found nil car")
                      (goto-char (cdr x))
-                     (save-excursion (setq leaf (not (jsonian--enter-collection))))
+                     (setq leaf (not (jsonian--at-collection (point))))
                      t))
                  (jsonian--cached-find-children traversed :segment current-segment))
           (setq failed t))
@@ -352,54 +680,11 @@ If ARG is not nil, move to the ARGth enclosing item."
   (if arg
       (cl-assert (wholenump arg) t "Invalid input to `jsonian-enclosing-item'.")
     (setq arg 1))
-  (while (and (> arg 0) (jsonian--enclosing-item))
+  (unless (jsonian--snap-to-node)
+    (user-error "Failed to find a JSON node at point"))
+  (while (and (> arg 0) (jsonian--up-node))
     (cl-decf arg 1))
-  (when (and (= arg 0) (jsonian--after-key (point)))
-    (jsonian--backward-to-significant-char)
-    (backward-char)
-    (jsonian--backward-to-significant-char)
-    (jsonian--backward-string))
   (= arg 0))
-
-(defun jsonian--enclosing-item ()
-  "Move point to the the enclosing item start."
-  (when (jsonian--enclosing-object-or-array)
-    (let ((opening (point)))
-      (when (not (bobp))
-        (backward-char)
-        (jsonian--backward-to-significant-char)
-        (if (not (= (char-after) ?:))
-            (goto-char opening)
-          (when (not (bobp))
-            (backward-char)
-            (jsonian--backward-string)
-            (forward-char)))))
-    t))
-
-(defun jsonian--enclosing-object-or-array ()
-  "Go to the enclosing object/array of `point'."
-  (jsonian--correct-starting-point)
-  (jsonian--path nil t)
-  (when (member (char-before) '(?\[ ?\{))
-    (unless (bobp) (backward-char))
-    t))
-
-(defmacro jsonian--defun-predicate-traversal (name arg-list predicate)
-  "Define `jsonian--forward-NAME' and `jsonian--backward-NAME'.
-NAME is an unquoted symbol.  ARG-LIST defines a single variable
-name which will be bound to the value of the character to
-examine.  PREDICATE is the function body to call.  A non-nil value
-determines that the argument is in the category NAME."
-  (declare (indent defun))
-  `(progn
-     (defun ,(intern (format "jsonian--backward-%s" name)) ()
-       (let ((,@arg-list))
-         (while (and (not (bobp)) (setq ,(car arg-list) (char-before)) ,predicate)
-           (backward-char))))
-     (defun ,(intern (format "jsonian--forward-%s" name)) ()
-       (let ((,@arg-list))
-         (while (and (not (eobp)) (setq ,(car arg-list) (char-after)) ,predicate)
-           (if (eolp) (forward-line) (forward-char)))))))
 
 (defmacro jsonian--defun-literal-traversal (literal)
   "Define `jsonian--forward-LITERAL' and `jsonian--backward-LITERAL'.
@@ -428,34 +713,9 @@ LITERAL is the string literal to be traversed."
              (if (eolp) (forward-line) (forward-char)))
          (jsonian--unexpected-char :forward ,(format "literal value \"%s\"" literal))))))
 
-(defmacro jsonian--defun-traverse (name &optional arg arg2)
-  "Define a functions to traverse literals or predicate defined range.
-Generated functions are `jsonian--forward-NAME' and
-`jsonian--backward-NAME'.  If NAME is a string literal, generate a
-function to parse the literal NAME.  It is illegal to supply ARG
-or ARG2 if NAME is a string literal.  If NAME is a symbol
-generated functions determine that a character (car ARG) is part
-of the parse group by calling ARG with (car ARG) bound to a
-character.  If NAME is a symbol, it is illegal not to supply ARG
-and ARG2."
-  (declare (indent defun))
-  (if (stringp name)
-      (progn
-        (when arg
-          (error "Unnecessary argument ARG"))
-        `(jsonian--defun-literal-traversal ,name))
-    (unless arg (error "Missing ARG"))
-    `(jsonian--defun-predicate-traversal ,name ,arg ,arg2)))
-
-(jsonian--defun-traverse "true")
-(jsonian--defun-traverse "false")
-(jsonian--defun-traverse "null")
-
-(jsonian--defun-traverse whitespace (x)
-  (or (= x ?\ )
-      (= x ?\t)
-      (= x ?\n)
-      (= x ?\r)))
+(jsonian--defun-literal-traversal "true")
+(jsonian--defun-literal-traversal "false")
+(jsonian--defun-literal-traversal "null")
 
 (defun jsonian--forward-number ()
   "Parse a JSON number forward.
@@ -488,9 +748,9 @@ For the definition of a number, see https://www.json.org/json-en.html"
                   (<= (char-after point) ?9))
         (setq point (1+ point))))
     ;; Exponent
-    (when (member (char-after point) '(?e ?E))
+    (when (memq (char-after point) '(?e ?E))
       (setq point (1+ point))
-      (when (member (char-after point) '(?- ?+)) ;; Exponent sign
+      (when (memq (char-after point) '(?- ?+)) ;; Exponent sign
         (setq point (1+ point)))
       (unless (and (char-after point)
                    (>= (char-after point) ?0)
@@ -547,9 +807,9 @@ left."
         (setq point (1- point)
               found-number t)))
     (when found-number ;; We need to see a number for an exponent
-      (when (member (char-before point) '(?+ ?-))
+      (when (memq (char-before point) '(?+ ?-))
         (setq point (1- point)))
-      (when (member (char-before point) '(?e ?E))
+      (when (memq (char-before point) '(?e ?E))
         (or (jsonian--backward-fraction (1- point))
             (jsonian--backward-integer (1- point)))))))
 
@@ -624,67 +884,39 @@ returned."
           (when (nth 4 s)
             (nth 8 s))))))))
 
-(defun jsonian--forward-comment ()
-  "Traverse forward out of a comment."
-  (while (or
-          (jsonian--enclosing-comment-p (point))
-          (jsonian--enclosing-comment-p (1+ (point))))
-    (goto-char (1+ (point)))))
-
 (defun jsonian--backward-comment ()
   "Traverse backward out of a comment."
   ;; In the body of a comment
-  (if-let (start (or (jsonian--enclosing-comment-p (point))
-                     (jsonian--enclosing-comment-p (1- (point)))))
-      (goto-char start)))
+  (when-let (start (or (jsonian--enclosing-comment-p (point))
+                       (jsonian--enclosing-comment-p (1- (point)))))
+    (goto-char start)))
 
-(defun jsonian--forward-to-significant-char ()
-  "Traverse forward to the next significant character."
-  (let (prev)
-    (while (not (eq prev (point)))
-      (setq prev (point))
-      (jsonian--forward-whitespace)
-      (jsonian--forward-comment))))
+(defun jsonian--forward-comment ()
+  "Traverse forward out of a comment.
+Must be at the comment boundary."
+  (when (and
+         (derived-mode-p 'jsonian-c-mode)
+         (eq (char-after) ?/)
+         (memq (char-after (1+ (point))) '(?/ ?*)))
+    (forward-comment 1)))
 
-(defun jsonian--backward-to-significant-char ()
-  "Traverse backward to the previous significant character."
-  (let (prev)
-    (while (not (eq prev (point)))
-      (setq prev (point))
-      (jsonian--backward-whitespace)
-      (jsonian--backward-comment))))
-
-(defun jsonian--backward-string (&optional expected-face)
-  "Move back a string, starting at the ending \".
-If the string is highlighted with the `face' EXPECTED-FACE, then
-use the face to define the scope of the region.  If the string
-does not have face EXPECTED-FACE, the string is manually parsed."
+(defun jsonian--backward-string ()
+  "Move back a string, starting at the ending \"."
   (unless (eq (char-before) ?\")
     (error "`jsonian--backward-string': Expected to start at \""))
-  (let ((match (and expected-face (jsonian--get-font-lock-region nil nil 'face expected-face))))
-    (if match
-        ;; The region is highlighted, so just jump to the beginning of that.
-        (progn (goto-char (1- (car match))) match)
-      ;; The region is not highlighted
-      (setq match (point))
-      (backward-char)
-      (jsonian--string-scan-back)
-      (cons (point) match))))
+  (let ((end (point)))
+    (backward-char) ; Skip over the previous "
+    (jsonian--string-scan-back)
+    (cons (point) end)))
 
-(defun jsonian--forward-string (&optional expected-face)
-  "Move forward a string, starting at the beginning \".
-If the string is highlighted with the `face' EXPECTED-FACE, use
-the face to define the scope of the string.  Otherwise the string
-is manually parsed."
+(defun jsonian--forward-string ()
+  "Move forward a string, starting at the beginning \"."
   (unless (eq (char-after) ?\")
     (error "`jsonian--forward-string': Expected to start at \", instead found %s"
            (if (char-after) (char-to-string (char-after)) "EOF")))
-  (if-let (match (and expected-face (jsonian--get-font-lock-region nil nil 'face expected-face)))
-      (progn (goto-char (cdr match)) match)
-    (setq match (point))
-    (forward-char)
+  (let ((start (point)))
     (when (jsonian--string-scan-forward t)
-      (cons match (point)))))
+      (cons start (point)))))
 
 (defun jsonian--string-scan-back ()
   "Scan backwards from `point' looking for the beginning of a string.
@@ -716,18 +948,19 @@ If AT-BEGINNING is non-nil, `jsonian--string-scan-forward' assumes
 it is at the beginning of the string.  Otherwise it scans
 backwards to ensure that the end of a string is not escaped."
   (let ((start (if at-beginning (point) (jsonian--pos-in-stringp)))
-        escaped
         done)
     (when start
       (goto-char (1+ start))
       (while (not (or done (eolp)))
         (cond
          ((= (char-after) ?\\)
-          (setq escaped (not escaped)))
-         ((and (= (char-after) ?\") (not escaped))
-          (setq done (point)))
-         (t (setq escaped nil)))
-        (forward-char))
+          (forward-char 2))
+         ((= (char-after) ?\")
+          (setq done (point))
+          (forward-char))
+         ;; We are in the string, and not looking at a significant character. Scan forward
+         ;; (in C) for an interesting character.
+         (t (skip-chars-forward "^\"\\\\\n"))))
       (and done (>= done start) done))))
 
 (defun jsonian--pos-in-stringp ()
@@ -755,11 +988,7 @@ the beginning of a string."
   (save-excursion
     (when (jsonian--string-scan-forward at-beginning)
       (let ((end (point)))
-        (while (or (= (char-after) ?\ )
-                   (= (char-after) ?\t)
-                   (= (char-after) ?\n)
-                   (= (char-after) ?\r))
-          (forward-char))
+        (jsonian--skip-chars-forward "\s\t\n")
         (and (= (char-after) ?:) end)))))
 
 (defun jsonian--after-key (pos)
@@ -784,7 +1013,7 @@ returned."
 
 (defun jsonian--string-at-pos (&optional pos)
   "Return (start . end) for a string at POS if it exists.
-Otherwise nil is returned.  POS defaults to `ponit'."
+Otherwise nil is returned.  POS defaults to `point'."
   (save-excursion
     (when pos
       (goto-char pos))
@@ -794,125 +1023,25 @@ Otherwise nil is returned.  POS defaults to `ponit'."
       (when (and start end)
         (cons start (1+ end))))))
 
-(defun jsonian--correct-starting-point ()
-  "Move point to a valid place to start searching for a path.
-It is illegal to start searching for a path inside a string or a tag."
-  (let (match)
-    ;; Move before string values
-    (when (setq match (or
-                       (let ((s (jsonian--get-font-lock-region (point) nil 'face 'font-lock-string-face)))
-                         (and (car-safe s) s))
-                       (let ((s (jsonian--pos-in-valuep)))
-                         (when s (cons s nil)))))
-      (goto-char (car match)))
-    ;; Move after string tags
-    (when (setq match (or
-                       (jsonian--get-font-lock-region (point) nil 'face 'font-lock-keyword-face)
-                       (let ((e (jsonian--pos-in-keyp))) (when e (cons nil e)))))
-      (goto-char (cdr match))))
-  ;; Move before literals
-  (while (and (char-before) (>= (char-before) ?a) (<= (char-before) ?z))
-    (backward-char))
-  ;; Move after : to be sure we see it. Not doing this leads to confusing keys
-  ;; and string values when scanning backwards
-  (when (eq (char-after) ?:)
-    (forward-char)))
-
-(defun jsonian--get-string-region (type &optional pos buffer)
+(defun jsonian--get-string-region (type &optional pos)
   "Find the bounds of the string at POS in BUFFER.
 Valid options for TYPE are `font-lock-string-face' and `font-lock-keyword-face'."
-  (or (jsonian--get-font-lock-region pos buffer 'face type)
-      (save-excursion
-        (when buffer
-          (set-buffer buffer))
-        (when pos
-          (goto-char pos))
-        (cond
-         ((eq type 'font-lock-string-face)
-          (and (jsonian--pos-in-valuep) (jsonian--string-at-pos)))
-         ((eq type 'font-lock-keyword-face)
-          (and (jsonian--pos-in-keyp) (jsonian--string-at-pos)))
-         (t (error "'%s' is not a valid type" type))))))
-
-(defun jsonian--get-font-lock-region (&optional pos buffer property property-value)
-  "Find the bounds of the font-locked region surrounding POS in BUFFER.
-If PROPERTY-VALUE is set, the returned region has that value.  POS
-defaults to `point'.  BUFFER defaults to `current-buffer'.
-PROPERTY defaults to `face'."
-  (when (not jsonian-ignore-font-lock)
-    (let ((pos (or pos (point)))
-          (property (or property 'face))
-          found)
-      (with-current-buffer (or buffer (current-buffer))
-        (setq found (get-text-property pos property))
-        (when (and
-               found
-               (if property-value (equal property-value found) t)
-               ;; We do this check so other font effects like todo highlighting
-               ;; in strings don't break get string. It is a heuristic check, so
-               ;; may be wrong if we find the string/key `"foo\"BAR"'. and BAR
-               ;; is highlighted in another face.
-               (eq (char-before (next-single-property-change pos property)) ?\"))
-          (cons
-           ;; Previous starts looking behind the ", but so we need to include
-           ;; the " in the search. We thus start 1 ahead.
-           (previous-single-property-change (1+ pos) property)
-           (next-single-property-change pos property)))))))
-
-(defun jsonian--traverse-forward (&optional n)
-  "Go forward N elements in an object or array."
-  (let ((n (or n 1)) done)
-    (when (<= n 0) (error "N must be positive"))
-    (jsonian--correct-starting-point)
-    (when (eq (char-after) ?,) (setq n (1+ n)))
-    (while (and (> n 0) (not done))
-      (jsonian--forward-to-significant-char)
-      (cond
-       ((eq (char-after) ?\") (jsonian--forward-string))
-       ((eq (char-after) ?:) (forward-char))
-       ((eq (char-after) ?t) (jsonian--forward-true))
-       ((eq (char-after) ?f) (jsonian--forward-false))
-       ((eq (char-after) ?n) (jsonian--forward-null))
-       ((eq (char-after) ?\{) (forward-list))
-       ((eq (char-after) ?\[) (forward-list))
-       ((jsonian--forward-number))
-       ((eq (char-after) ?,) (setq n (1- n)) (forward-char) (jsonian--forward-to-significant-char))
-       ((or (eq (char-after) ?\]) (eq (char-after) ?\})) (setq done t))
-       (t (jsonian--unexpected-char :forward "the beginning of a JSON value"))))
-    (jsonian--forward-to-significant-char)
-    (not done)))
+  (save-excursion
+    (when pos
+      (goto-char pos))
+    (cond
+     ((eq type 'font-lock-string-face)
+      (and (jsonian--pos-in-valuep) (jsonian--string-at-pos)))
+     ((eq type 'font-lock-keyword-face)
+      (and (jsonian--pos-in-keyp) (jsonian--string-at-pos)))
+     (t (error "'%s' is not a valid type" type)))))
 
 (defun jsonian--at-collection (pos)
-  "Check if POS is before a collection."
+  "Check if POS is before a collection.
+POS must be a valid node location."
   (save-excursion
     (goto-char pos)
-    (jsonian--enter-collection)))
-
-(defun jsonian--enter-collection ()
-  "Move point into the collection after point and return t.
-If there is no collection after point, return nil."
-  (cond
-   ;; Progress into the key
-   ((eq (char-after) ?\")
-    (if-let (end (jsonian--pos-in-keyp t))
-        (progn (goto-char end)
-               (jsonian--forward-to-significant-char)
-               (forward-char) ;; go past the `:'
-               (jsonian--forward-to-significant-char)
-               ;; and then the underlying value
-               (when (or (eq (char-after) ?\[)
-                         (eq (char-after) ?\{))
-                 (forward-char)
-                 t))
-      ;; We have found a string that is not a key, so it must
-      ;; be a value. That means we have hit a leaf.
-      ))
-   ;; Progress into the object
-   ((eq (char-after) ?\[) (forward-char) t)
-   ;; Progress into the array
-   ((eq (char-after) ?\{) (forward-char) t)
-   ;; Anything else must be a leaf
-   ))
+    (jsonian--down-node)))
 
 
 ;; Supporting commands for `jsonian-edit-string'.
@@ -1163,8 +1292,8 @@ If PATH is supplied, navigate to it."
             (or path
                 (completing-read "Select Element: " #'jsonian--find-completion nil t
                                  (save-excursion
-                                   (jsonian--correct-starting-point)
-                                   (when-let* ((path (jsonian--reconstruct-path (jsonian--path t nil)))
+                                   (jsonian--snap-to-node)
+                                   (when-let* ((path (jsonian--reconstruct-path (jsonian--path)))
                                                (display (jsonian--display-path path t)))
                                      display))))))
       ;; We know that the path is valid since we chose it from the list of valid paths presented
@@ -1334,92 +1463,64 @@ Here STR represents the completing string and SUFFIX the string after point."
   "Find the type of the node at POS.
 POS must be at the beginning of a node.  If no type is found, nil
 is returned."
-  (cond
-   ;; At either a key or a string
-   ((eq (char-after pos) ?\")
-    (save-excursion
-      (goto-char pos)
-      (if-let (end (jsonian--pos-in-keyp t))
-          (progn (goto-char end)
-                          (jsonian--forward-to-significant-char)
-                          (forward-char)
-                          (jsonian--forward-to-significant-char)
-                          (jsonian--node-type (point)))
-        "string")))
-   ((or (eq (char-after pos) ?t)
-        (eq (char-after pos) ?f))
-    "boolean")
-   ((eq (char-after pos) ?n) "null")
-   ((eq (char-after pos) ?\[) "array")
-   ((eq (char-after pos) ?\{) "object")
-   ((and (<= (char-after pos) ?9)
-         (>= (char-after pos) ?0))
-    "number")))
+  (save-excursion
+    (goto-char pos)
+    ;; Skip past a key if present
+    (when (eq (char-after) ?\")
+      (unless (and (jsonian--forward-token)
+                   (eq (char-after) ?:)
+                   (jsonian--forward-token))
+        (goto-char pos)))
+    (pcase (char-after)
+      (?\" "string")
+      ((or ?t ?f) "boolean")
+      (?n "null")
+      (?\[ "array")
+      (?\{ "object")
+      ((pred (lambda (n)
+               (and (<= n ?9)
+                    (>= n ?0))))
+       "number"))))
 
 (defun jsonian--node-preview (pos)
-  "Provide a preview of the value of the node at POS."
-  (cond
-   ((eq (char-after pos) ?\")
-    ;; TODO: bound size of string
-    (save-excursion
-      (goto-char pos)
-      (if-let (end (jsonian--pos-in-keyp t))
-          (progn (goto-char end)
-                 (jsonian--forward-to-significant-char)
-                 (forward-char)
-                 (jsonian--forward-to-significant-char)
-                 (jsonian--node-preview (point)))
-        (jsonian--forward-string)
-        (buffer-substring pos (point)))))
-   ((or (eq (char-after pos) ?t)  ; literal: true
-        (eq (char-after pos) ?n)) ; literal: null
-    (buffer-substring pos (+ pos 4)))
-   ((eq (char-after pos) ?f)      ; literal: false
-    (buffer-substring pos (+ pos 5)))
-   ((and (<= (char-after pos) ?9) ; number
-         (>= (char-after pos) ?0))
-    (buffer-substring pos (save-excursion
-                            (goto-char pos)
-                            (jsonian--forward-number)
-                            (point))))
-   ((eq (char-after pos) ?\[)
-    (propertize "[ array ]" 'face 'font-lock-type-face))
-   ((eq (char-after pos) ?\{)
-    (propertize "{ object }" 'face 'font-lock-type-face))))
+  "Provide a preview of the value of the node at POS.
+
+POS must be a valid node."
+  (save-excursion
+    (goto-char pos)
+    ;; Skip past a key if present
+    (when (eq (char-after) ?\")
+      (if (and (jsonian--forward-token) (eq (char-after) ?:))
+          (jsonian--forward-token)
+        (goto-char pos)))
+    (pcase (char-after)
+      ;; We preview arrays and objects specially, since they are often arbitrarily large.
+      (?\[ (propertize "[ array ]" 'face 'font-lock-type-face))
+      (?\{ (propertize "{ object }" 'face 'font-lock-type-face))
+      (_ (buffer-substring (point) (and
+                                    (jsonian--forward-token)
+                                    jsonian--last-token-end))))))
 
 (defun jsonian--find-children ()
   "Return a list of elements in the collection at point.
 nil is returned if the object at point is not a collection."
   (save-excursion
-    (when (jsonian--enter-collection)
-      (jsonian--find-siblings))))
-
-(defun jsonian--find-siblings ()
-  "Return a list of the elements in the enclosing scope.
-Elements are of the form ( key . point ) where key is either a
-string or a integer.  Point is a char location."
-  ;; Go to the beginning of the enclosing item, if we are at the end of the
-  ;; buffer, there is nothing there, so stop.
-  (when (and (jsonian--enclosing-item) (not (eobp)))
-    (forward-char) ;; Go the the beginning of the first element in the enclosing object
-    (jsonian--forward-to-significant-char)
-    ;; If we are at the end of the object, stop
-    (unless (or (eq (char-after) ?\})
-                (eq (char-after) ?\]))
-      (let ((elements
-             (list (cons
-                    (if-let ((end (save-excursion (forward-char) (jsonian--pos-in-keyp t))))
-                        (buffer-substring-no-properties (1+ (point)) (1- end))
-                      0)
-                    (point)))))
-        (while (jsonian--traverse-forward)
+    (when (jsonian--down-node)
+      (let (elements done
+                     (obj-p (save-excursion (and (jsonian--forward-token)
+                                                 (eq (char-after) ?:))))
+                     (count 0))
+        (while (not done)
           (setq elements
                 (cons
-                 (cons (if-let ((end (save-excursion (forward-char) (jsonian--pos-in-keyp))))
-                           (buffer-substring-no-properties (1+ (point)) (1- end))
-                         (length elements))
-                       (point))
-                 elements)))
+                 (cons
+                  (if obj-p
+                      (let ((end (save-excursion (forward-char) (jsonian--pos-in-keyp t))))
+                        (buffer-substring-no-properties (1+ (point)) (1- end)))
+                    (prog1 count (cl-incf count)))
+                  (point))
+                 elements))
+          (setq done (eq (jsonian--forward-node) 'end)))
         elements))))
 
 
@@ -1447,6 +1548,7 @@ string or a integer.  Point is a char location."
     (define-key km (kbd "C-c C-s") #'jsonian-edit-string)
     (define-key km (kbd "C-c C-e") #'jsonian-enclosing-item)
     (define-key km (kbd "C-c C-f") #'jsonian-find)
+    (define-key km (kbd "C-c C-w") #'jsonian-format-region)
     km)
   "The mode-map for `jsonian-mode'.")
 
@@ -1459,6 +1561,8 @@ string or a integer.  Point is a char location."
   (set (make-local-variable 'comment-end) "")
   (set (make-local-variable 'indent-line-function)
        #'jsonian-indent-line)
+  (set (make-local-variable 'indent-region-function)
+       #'jsonian-indent-region)
   (set (make-local-variable 'beginning-of-defun-function)
        #'jsonian-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function)
@@ -1497,35 +1601,59 @@ JSON font lock syntactic face function."
 (defun jsonian--infer-indentation ()
   "Infer the level of indentation at point."
   (save-excursion
-    ;; We examine the line above ours, under the assumption that it is correctly
-    ;; formatted.
-    (forward-line -1)
-    (jsonian--forward-to-significant-char)
-    ;; Find the column we start at
-    (let* ((start (current-column))
-           ;; FInd another column
-           (end (if (jsonian-enclosing-item)
-                    ;; We found an enclosing item, look at its column column
-                    (if (= (current-column) start)
-                        ;; The same as the starting column, We did a jump like from 1 to 2.
-                        ;;   {
-                        ;; -2->"foo": {
-                        ;;       "bar": 3
-                        ;; -1->}
-                        ;;   }
-                        ;; We repeat from 2, ensuring we will return the result of the
-                        ;; next call to `jsonian--infer-indentation'.
-                        (+ (jsonian--infer-indentation)
-                           (current-column))
-                      ;; Not the same as the starting column. This is what we want.
-                      (current-column))
-                  ;; We are not in an item, so we must be at the top level of the document.
-                  ;; Move into the document and see the indentation level of the first item.
-                  (forward-char)
-                  (jsonian--enter-collection)
-                  (jsonian--forward-to-significant-char)
-                  (current-column))))
-      (- (max start end) (min start end)))))
+    (forward-line 0)
+    (let ((indent nil)
+          (origin (point))
+          (done nil)
+          parent-position)
+      (while (not done)
+        (setq parent-position (nth 1 (syntax-ppss)))
+        (if parent-position
+            (progn
+              (setq indent (jsonian--infer-indentation-from-container
+                            parent-position
+                            origin))
+              (if indent
+                  (setq done t)
+                (goto-char parent-position)))
+          (setq done t)))
+      (unless indent
+        (goto-char (point-min))
+        (forward-comment (point-max))
+        (when (memq (char-after) '(?\[ ?{))
+          (setq indent (jsonian--infer-indentation-from-container (point)))))
+      indent)))
+
+(defun jsonian--infer-indentation-from-container
+    (container-position &optional end)
+  "Infer the level of indentation from array/object at CONTAINER-POSITION.
+
+If END is non-nil, inspect only before it."
+  (save-excursion
+    (let (indent)
+      (goto-char container-position)
+      (forward-char)
+      ;; TODO: Should we ignore comments?
+      (skip-chars-forward "\s\t")
+      (when (eolp)
+        (skip-chars-forward "\s\t\n")
+        (when (and (not (memq (char-after) '(?\] ?})))
+                   (or (not end) (< (point) end)))
+          (setq indent (- (current-column)
+                          (progn
+                            (goto-char container-position)
+                            (current-column))))
+          (and (< 0 indent) indent))))))
+
+(defun jsonian--indentation-spaces ()
+  "The number of spaces per indentation level.
+Either set or inferred."
+  (or
+   jsonian-indentation
+   (if-let* ((indent (jsonian--infer-indentation))
+             (not-zero (> indent 0)))
+       indent
+     jsonian-default-indentation)))
 
 ;;;###autoload
 (defun jsonian-indent-line ()
@@ -1534,69 +1662,366 @@ The indent is determined by examining the previous line.  The
 number of spaces is determined by `jsonian-indentation' if it is
 set, otherwise it is inferred from the document."
   (interactive)
-  (indent-line-to
-   (jsonian--get-indent-level (or
-                               jsonian-indentation
-                               (if-let* ((indent (jsonian--infer-indentation))
-                                         (not-zero (> indent 0)))
-                                   indent
-                                 jsonian-default-indentation)))))
+  (let* ((indent (jsonian--indentation-spaces))
+         (indent-level (jsonian--get-indent-level indent))
+         (current-indent
+          (save-excursion (back-to-indentation) (current-column))))
+    (if (<= (current-column) current-indent)
+        ;; The cursor is on the left margin.  Moving to the new indent.
+        (indent-line-to indent-level)
+      ;; Keeps current relative position.
+      (save-excursion (indent-line-to indent-level)))))
 
-(defun jsonian--get-indent-level (indent)
+(defun jsonian--get-indent-level (indent &optional previous-level parent-level)
   "Find the indentation level of the current line.
 The indentation level of the current line is derived from the
 indentation level of the previous line.  INDENT is the number of
-spaces in each indentation level."
-  (if (= (line-number-at-pos) 1)
-      0
-    (let ((level 0))
-      (save-excursion ;; The previous line - end
-        (end-of-line 0) ;;Roll backward to the end of the previous line
-        (jsonian--backward-to-significant-char)
-        (when (or (eq (char-before) ?\{)
-                  (eq (char-before) ?\[))
-          ;; If it is a opening \{ or \[, the next line should be indented by 1
-          ;; unit
-          (cl-incf level indent))
-        (beginning-of-line)
-        (while (or (eq (char-after) ?\ )
-                   (eq (char-after) ?\t))
+spaces in each indentation level.
+
+If PREVIOUS-LEVEL is non-nil, it is used as the indentation column of
+the previous member.
+
+If PARENT-LEVEL is non-nil, it is used as the indentation column of
+the parent member."
+  (save-excursion
+    (forward-line 0)
+    (if (jsonian--enclosing-comment-p (point))
+        ;; Inside comments.  Keep as is.
+        (current-indentation)
+      (skip-chars-forward "\s\t")
+      (let ((next-char (char-after))
+            previous-char)
+        (cond
+         ;; Indenting a close bracket.
+         ((memq next-char '(?\] ?}))
+          (or parent-level
+              (progn
+                (forward-char)
+                (jsonian--current-indentation))))
+
+         ;; Indenting a colon.
+         ((eq next-char ?:)
+          (+ (or previous-level
+                 (jsonian--current-indentation))
+             indent))
+
+         ;; Otherwise.
+         (t
+          (setq previous-char (save-excursion
+                                (forward-comment (- (point)))
+                                (char-before)))
+          (if (eq previous-char ?:)
+              ;; After a colon.
+              ;;
+              ;; {
+              ;;   "aaa":
+              ;;     111
+              ;; }
+              (+ (or previous-level
+                     (jsonian--current-indentation))
+                 indent)
+            ;; Indening a value.
+            (or previous-level
+                (if (progn
+                      (jsonian--backward-member)
+                      (eq (char-before) ?,))
+                    ;; The current member isn't the first member.
+                    ;; Align to the preceding sibling.
+                    (progn
+                      (backward-char)
+                      (jsonian--current-indentation))
+                  (if (memq (char-before) '(?\[ ?{))
+                      ;; The current member is the first member.
+                      ;; Align to the parent.
+                      (+ (or parent-level
+                             (progn
+                               (backward-char)
+                               (jsonian--current-indentation)))
+                         indent)
+                    ;; Beginning of the buffer.
+                    0))))))))))
+
+(defun jsonian--backward-member ()
+  "Move point to the end of the previous member or open bracket.
+
+After returning from this function, `char-before' should return a comma,
+open brackets, or nil (beginning of the buffer)."
+  (let ((done nil))
+    (while (not done)
+      (skip-chars-backward "^,[]{}\"/\n")
+      (cond
+       ;; Found it.
+       ((or (bobp)
+            (memq (char-before) '(?, ?\[ ?{)))
+        (setq done t))
+
+       ;; Close brackets or strings.
+       ((memq (char-before) '(?\] ?} ?\"))
+        (backward-sexp))
+
+       ;; Maybe comments.
+       ((memq (char-before) '(?/ ?\n))
+        (if (jsonian--enclosing-comment-p (1- (point)))
+            (jsonian--backward-comment)
+          (backward-char)))))))
+
+(defun jsonian--current-indentation ()
+  "Return the indentation level of the current member.
+
+It is the indentation level of the current or preceding member which
+is either at the beginning of a line or at the beginning of the
+containing array/object."
+  (save-excursion
+    ;; FIXME: maybe, we should align to comments at the beginning of a
+    ;; line if any.
+    (jsonian--backward-member)
+    (while (and (save-excursion
+                  (forward-comment (point-max))
+                  (skip-chars-backward "\s\t")
+                  (not (bolp)))
+                (eq (char-before) ?,))
+      (backward-char)
+      (jsonian--backward-member))
+    (forward-comment (point-max))
+    (current-column)))
+
+;;;###autoload
+(defun jsonian-indent-region (start end)
+  "Indent the region from START to END."
+  (interactive "r")
+  (save-excursion
+    (let ((indent (jsonian--indentation-spaces))
+          ;; Indent levels of siblings, parent, grand parent, and so on.
+          (levels '())
+          progress
+          next-char
+          parser-state)
+      (setq end (copy-marker end))
+      (goto-char start)
+      (jsonian-indent-line)
+      (when (jsonian--enclosing-comment-p (point))
+        (jsonian--backward-comment))
+      (setq parser-state (syntax-ppss))
+      ;; Exit from a string.
+      (when (nth 3 parser-state)
+        (goto-char (nth 8 parser-state)))
+      (setq progress (make-progress-reporter "Indenting region..." (point) end))
+      ;; Scan forward and indent lines.
+      (while (< (point) end)
+        (progress-reporter-update progress (point))
+        (skip-chars-forward "^[]{}\"/\n")
+        (setq next-char (char-after))
+        (cond
+         ;; Found a new line.  Indent it.  Use cache if available.
+         ;; Otherwise, indent as normal and cache it.
+         ((eq next-char ?\n)
+          (forward-char)
+          (skip-chars-forward "\s\t")
+          ;; Do not indent empty lines.
+          (when (and (not (eolp)) (< (point) end))
+            (if levels
+                (indent-line-to (jsonian--get-indent-level indent
+                                                           (nth 0 levels)
+                                                           (nth 1 levels)))
+              (jsonian-indent-line)
+              (push (jsonian--current-indentation) levels))))
+
+         ;; Open brackets.
+         ((memq next-char '(?\[ ?{))
+          (push
+           ;; If the bracket is at the end of the line, current
+           ;; indentation level + `indent' is the indentation level of
+           ;; children.
+           (if (save-excursion
+                 (forward-char)
+                 (skip-chars-forward "\s\t")
+                 (eolp))
+               (prog1
+                   (+ (if levels
+                          (car levels)
+                        (jsonian--current-indentation))
+                      indent)
+                 (forward-char))
+             ;; Otherwise, this line have the first child, so record
+             ;; its column to the cache.
+             ;;
+             ;; Example:
+             ;; [ 1,
+             ;;   2,
+             ;;   3 ]
+             (forward-char)
+             (skip-chars-forward "\s\t")
+             (current-column))
+           levels))
+
+         ;; Close brackets.
+         ((memq next-char '(?\] ?}))
+          (pop levels)
           (forward-char))
-        (cl-incf level (current-column)))
-      ;; Make sure that we account for any closing brackets in front of (point)
-      (save-excursion
-        (beginning-of-line)
-        ;; We want to be careful here that we only look at this line, and not
-        ;; the next line. Looking at the next line will cause us to go backward
-        ;; when looking at line 2 of the following:
-        ;; 1: {
-        ;; 2:
-        ;; 3: }
-        (while (or
-                (eq (char-after) ? )
-                (eq (char-after) ?\t))
-          (forward-char))
-        (when (or (eq (char-after) ?\})
-                  (eq (char-after) ?\]))
-          (cl-decf level indent)))
-      level)))
+
+         ;; Strings.
+         ((eq next-char ?\")
+          (forward-sexp))
+
+         ;; Maybe comments.
+         ((eq next-char ?/)
+          (if (forward-comment 1)
+              (when (eq (char-before) ?\n)
+                (backward-char))
+            (forward-char)))))
+      (progress-reporter-done progress))
+    (set-marker end nil nil)))
+
+(defmacro jsonian--huge-edit (start end &rest body)
+  "Evaluate form BODY with optimizations for huge edits.
+Run the change hooks just once like `combine-change-calls'.
+Create undo entries as if the contents from START to END are replaced at once.
+BODY must not modify buffer outside the region (START END), nor move any markers
+out of the region."
+  (declare (debug (form form def-body)) (indent 2))
+  (let ((start-value (make-symbol "start"))
+        (end-value (make-symbol "end")))
+    `(let ((,start-value ,start)
+           (,end-value ,end))
+       ;; WORKAROUND: If buffer-undo-list is nil, combine-change-calls shows
+       ;; unnecessary message.
+       ;; https://git.savannah.gnu.org/cgit/emacs.git/commit/?id=977630b5285809a57e50ff5f38d9c34247b549a7
+       (unless buffer-undo-list
+         (push (point) buffer-undo-list))
+       (,(if (fboundp 'combine-change-calls)
+             'combine-change-calls
+           'combine-after-change-calls)
+        ,start-value
+        ,end-value
+        (jsonian--huge-edit-1 ,start-value ,end-value (lambda () ,@body))))))
+
+(defun jsonian--huge-edit-1 (start end body)
+  "Evaluate a function BODY with optimizations for huge edits.
+Create undo entries as if the contents from START to END are replaced at once.
+BODY must not modify buffer outside the region (START END), nor move any markers
+out of the region."
+  (let ((old-undo-list buffer-undo-list)
+        (undo-inhibit-record-point t)
+        deletion-undo-list)
+    ;; Clear the undo list.
+    (buffer-disable-undo)
+    (buffer-enable-undo)
+    (unwind-protect
+        (atomic-change-group
+          (delete-region start end)
+          ;; This contains restoreing the region and markers inside it.
+          (setq deletion-undo-list buffer-undo-list)
+          (primitive-undo (length deletion-undo-list) deletion-undo-list))
+      (setq buffer-undo-list old-undo-list))
+    (setq start (copy-marker start))
+    (setq end (copy-marker end))
+    (buffer-disable-undo)
+    (unwind-protect
+        (funcall body)
+      ;; Note that setting `buffer-undo-list' enables undo again.
+      (setq buffer-undo-list
+            (append (cons
+                     (cons (jsonian--free-marker start)
+                           (jsonian--free-marker end))
+                     deletion-undo-list)
+                    old-undo-list)))))
+
+(defun jsonian--free-marker (marker)
+  "Make MARKER pointing nowhere and return the old position."
+  (prog1 (marker-position marker)
+    (set-marker marker nil nil)))
+
+;;;###autoload
+(defun jsonian-format-region (start end &optional minimize)
+  "Format the region (START . END).
+
+If MINIMIZE is non-nil, minimize the region instead of expanding it."
+  (interactive "*r\nP")
+  (let ((current-point (point-marker)))
+    (jsonian--huge-edit start end
+      (let ((end (progn (goto-char end) (point-marker))))
+        (goto-char start)
+        (jsonian--snap-to-token)
+        (let* ((indent (jsonian--indentation-spaces))
+               (indent-level (jsonian--get-indent-level indent))
+               (undo-inhibit-record-point t)
+               (next-token (make-marker))
+               ;; Don't allocate a new string each time you add indentation.
+               ;;
+               ;; In effect, this is where we intern strings on behalf of elisp.
+               (indent-strings '("\n"))
+               (progress (make-progress-reporter "Formatting region..." start (* (- end start) 1.5))))
+          (set-marker-insertion-type next-token t)
+          (while (and
+                  (<= (point) end)
+                  (jsonian--forward-token t))
+            (progress-reporter-update progress (point))
+            ;; Delete the whitespace between the old token and the next token.
+            (set-marker next-token (point))
+            (delete-region jsonian--last-token-end (point))
+            (unless minimize
+              ;; Unless we are minimizing, insert the appropriate whitespace.
+              (cond
+               ;; A space separates : from the next token
+               ;;
+               ;;    "foo": bar
+               ;;          ^space
+               ((eq (char-before jsonian--last-token-end) ?:)
+                (goto-char jsonian--last-token-end)
+                (insert " ")
+                (goto-char next-token))
+               ;; If the second of the abutting tokens is a ",", then we don't make any
+               ;; adjustments.
+               ((memq (char-after) '(?, ?:)))
+
+               ;; Empty objects and arrays are formatted as {} and [], respectively.
+               ((and (eq (char-before) ?\[) (eq (char-after) ?\])))
+               ((and (eq (char-before) ?\{) (eq (char-after) ?\})))
+
+               ;; All other items are separated by a new line, then the appropriate indentation.
+               (t
+                (when (memq (char-after) '(?\] ?\}))
+                  (cl-decf indent-level indent))
+                (when (memq (char-before jsonian--last-token-end) '(?\[ ?\{))
+                  (cl-incf indent-level indent))
+                (while (<= (length indent-strings) indent-level)
+                  (setq indent-strings
+                        (append indent-strings
+                                (list (concat
+                                       "\n"
+                                       (make-string (length indent-strings)
+                                                    ?\s))))))
+                (insert (nth indent-level indent-strings))
+                (goto-char next-token)))))
+          (progress-reporter-done progress))))
+    (goto-char current-point)))
 
 (defun jsonian-beginning-of-defun (&optional arg)
   "Move to the beginning of the smallest object/array enclosing `POS'.
 ARG is currently ignored."
-  (setq arg (or arg 1)) ;; TODO use ARG correctly
-  (jsonian--correct-starting-point)
-  (jsonian--enclosing-object-or-array)
-  nil)
+  (ignore arg) ;; TODO use ARG correctly
+  (and
+   (jsonian--snap-to-node)
+   (jsonian--up-node)))
 
 (defun jsonian-end-of-defun (&optional arg)
   "Move to the end of the smallest object/array enclosing `POS'.
 ARG is currently ignored."
-  (setq arg (or arg 1))
-  (jsonian--correct-starting-point)
-  (jsonian--enclosing-object-or-array)
-  (forward-list)
-  nil)
+  (ignore arg)
+  (when (and
+         (jsonian--snap-to-node)
+         (jsonian--up-node))
+    (pcase (char-after)
+      ((or ?\[ ?\{)
+       (forward-list))
+      (?\"
+       (and
+        (jsonian--forward-token)
+        (eq (char-after) ?:)
+        (jsonian--forward-token)
+        (when (memq (char-after) '(?\[ ?\{))
+          (forward-list)))))
+    t))
 
 (defun jsonian-narrow-to-defun (&optional arg)
   "Narrows to region for `jsonian-mode'.  ARG is ignored."
@@ -1604,15 +2029,8 @@ ARG is currently ignored."
   ;; Its value is ignored.
   (ignore arg)
   (let (start end)
-    (save-excursion
-      (jsonian--correct-starting-point)
-      (setq end (point))
-      (when (jsonian--enclosing-item)
-        (setq start (point)))
-      (goto-char end)
-      (when (jsonian--enclosing-object-or-array)
-        (forward-list)
-        (setq end (point))))
+    (when (setq start (save-excursion (and (jsonian-beginning-of-defun) (point))))
+      (setq end (save-excursion (and (jsonian-end-of-defun) (point)))))
     (when (and start end)
       (narrow-to-region start end))))
 

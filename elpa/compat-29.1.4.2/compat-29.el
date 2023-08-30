@@ -25,11 +25,17 @@
 (compat-require compat-28 "28.1")
 
 ;; Preloaded in loadup.el
-;; TODO Update to 29.1 as soon as the Emacs emacs-29 branch version bumped
-(compat-require seq "29.0") ;; <compat-tests:seq>
+(compat-require seq "29.1") ;; <compat-tests:seq>
 
-;; TODO Update to 29.1 as soon as the Emacs emacs-29 branch version bumped
-(compat-version "29.0")
+(compat-version "29.1")
+
+;;;; Defined in startup.el
+
+(compat-defvar lisp-directory ;; <compat-tests:lisp-directory>
+    (file-truename
+     (file-name-directory
+      (locate-file "simple" load-path (get-load-suffixes))))
+  "Directory where Emacs's own *.el and *.elc Lisp files are installed.")
 
 ;;;; Defined in xdisp.c
 
@@ -278,7 +284,7 @@ in order to restore the state of the local variables set via this macro.
      (,(if (fboundp 'compat--setq-local) 'compat--setq-local 'setq-local)
       ,@pairs)))
 
-(compat-defun list-of-strings-p (object) ;; <compat-tests:lists-of-strings-p>
+(compat-defun list-of-strings-p (object) ;; <compat-tests:list-of-strings-p>
   "Return t if OBJECT is nil or a list of strings."
   (declare (pure t) (side-effect-free t))
   (while (and (consp object) (stringp (car object)))

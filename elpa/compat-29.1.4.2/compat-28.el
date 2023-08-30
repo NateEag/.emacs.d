@@ -26,6 +26,10 @@
 
 (compat-version "28.1")
 
+;;;; Defined in comp.c
+
+(compat-defalias native-comp-available-p ignore) ;; <compat-tests:native-comp-available-p>
+
 ;;;; Defined in fns.c
 
 ;; FIXME Should handle multibyte regular expressions
@@ -132,7 +136,7 @@ inserted before contatenating."
       (setf (nthcdr count files) nil))
     files))
 
-(compat-defun directory-files-and-attributes (directory &optional full match nosort id-format count) ;; <compat-tests:directory-files-and-attributs>
+(compat-defun directory-files-and-attributes (directory &optional full match nosort id-format count) ;; <compat-tests:directory-files-and-attributes>
   "Handle additional optional argument COUNT."
   :extended t
   (let ((files (directory-files-and-attributes directory full match nosort id-format)))
@@ -221,9 +225,11 @@ and BLUE, is normalized to have its value in [0,65535]."
 (compat-defun make-separator-line (&optional length) ;; <compat-tests:make-separator-line>
   "Make a string appropriate for usage as a visual separator line.
 If LENGTH is nil, use the window width."
-    (concat (propertize (make-string (or length (1- (window-width))) ?-)
-                        'face 'separator-line)
-            "\n"))
+  (if (display-graphic-p)
+      (if length
+          (concat (propertize (make-string length ?\s) 'face '(:underline t)) "\n")
+        (propertize "\n" 'face '(:extend t :height 0.1 :inverse-video t)))
+    (concat (make-string (or length (1- (window-width))) ?-) "\n")))
 
 ;;;; Defined in subr.el
 

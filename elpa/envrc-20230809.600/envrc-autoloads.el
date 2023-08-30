@@ -69,6 +69,10 @@ Major mode for .envrc files as used by direnv.
 
 ;;;***
 
+;;;### (autoloads nil nil ("envrc-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

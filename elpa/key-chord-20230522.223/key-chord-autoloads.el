@@ -1,4 +1,4 @@
-;;; key-chord-autoloads.el --- automatically extracted autoloads
+;;; key-chord-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -22,10 +22,19 @@ or call the function `key-chord-mode'.")
 (autoload 'key-chord-mode "key-chord" "\
 Map pairs of simultaneously pressed keys to commands.
 
-If called interactively, enable Key-Chord mode if ARG is
-positive, and disable it if ARG is zero or negative.  If called
-from Lisp, also enable the mode if ARG is omitted or nil, and
-toggle it if ARG is `toggle'; disable the mode otherwise.
+This is a minor mode.  If called interactively, toggle the
+`Key-Chord mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
+the mode if ARG is nil, omitted, or is a positive number.
+Disable the mode if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate `(default-value \\='key-chord-mode)'.
+
+The mode's hook is called both when the mode is enabled and when
+it is disabled.
 
 See functions `key-chord-define-global', `key-chord-define-local',
 and `key-chord-define' and variables `key-chord-two-keys-delay'
@@ -75,7 +84,11 @@ If COMMAND is nil, the key-chord is removed.
 
 \(fn KEYMAP KEYS COMMAND)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "key-chord" '("key-chord-")))
+(register-definition-prefixes "key-chord" '("key-chord-"))
+
+;;;***
+
+;;;### (autoloads nil nil ("key-chord-pkg.el") (0 0 0 0))
 
 ;;;***
 

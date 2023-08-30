@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/magit/with-editor
 ;; Keywords: processes terminals
 
-;; Package-Version: 3.3.0
+;; Package-Version: 3.3.2
 ;; Package-Requires: ((emacs "25.1") (compat "29.1.4.1"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -117,9 +117,10 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))))
   (let* ((version-lst (cl-subseq (split-string emacs-version "\\.") 0 depth))
          (version-reg (concat "^" (mapconcat #'identity version-lst "\\."))))
     (or (locate-file
-         (if (equal (downcase invocation-name) "remacs")
-             "remacsclient"
-           "emacsclient")
+         (cond ((equal (downcase invocation-name) "remacs")
+                "remacsclient")
+               ((bound-and-true-p emacsclient-program-name))
+               ("emacsclient"))
          path
          (cl-mapcan
           (lambda (v) (cl-mapcar (lambda (e) (concat v e)) exec-suffixes))
@@ -178,7 +179,7 @@ wait $sleep'"
 This fallback is used for asynchronous processes started inside
 the macro `with-editor', when the process runs on a remote machine
 or for local processes when `with-editor-emacsclient-executable'
-is nil (i.e. when no suitable Emacsclient was found, or the user
+is nil (i.e., when no suitable Emacsclient was found, or the user
 decided not to use it).
 
 Where the latter uses a socket to communicate with Emacs' server,
@@ -191,7 +192,7 @@ Some shells do not execute traps immediately when waiting for a
 child process, but by default we do use such a blocking child
 process.
 
-If you use such a shell (e.g. `csh' on FreeBSD, but not Debian),
+If you use such a shell (e.g., `csh' on FreeBSD, but not Debian),
 then you have to edit this option.  You can either replace \"sh\"
 with \"bash\" (and install that), or you can use the older, less
 performant implementation:
@@ -961,7 +962,7 @@ See info node `(with-editor)Debugging' for instructions."
               (format " funcall: %s (%s)\n" fun
                       (and fun (with-editor-emacsclient-version fun)))))
     (insert "path:\n"
-            (format "  $PATH: %S\n" (getenv "PATH"))
+            (format "  $PATH:     %s\n" (split-string (getenv "PATH") ":"))
             (format "  exec-path: %s\n" exec-path))
     (insert (format "  with-editor-emacsclient-path:\n"))
     (dolist (dir (with-editor-emacsclient-path))

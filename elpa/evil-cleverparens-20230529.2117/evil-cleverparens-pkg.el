@@ -1,10 +1,10 @@
-(define-package "evil-cleverparens" "20230508.1710" "Evil friendly minor-mode for editing lisp."
+(define-package "evil-cleverparens" "20230529.2117" "Evil friendly minor-mode for editing lisp."
   '((evil "1.0")
     (paredit "1")
     (smartparens "1.6.1")
     (emacs "24.4")
     (dash "2.12.0"))
-  :commit "5e22de8588a41c6b0aab8c3d97027b8c78613108" :authors
+  :commit "9ee249509281c387500e397df625ccb759804df4" :authors
   '(("Olli Piepponen" . "opieppo@gmail.com"))
   :maintainers
   '(("Olli Piepponen" . "opieppo@gmail.com"))

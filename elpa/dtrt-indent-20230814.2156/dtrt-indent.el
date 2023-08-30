@@ -5,7 +5,7 @@
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
 ;; Maintainer: Reuben Thomas <rrt@sc3d.org>
-;; Version: 1.9
+;; Version: 1.14
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -115,7 +115,7 @@
 ;;
 ;; Configuration settings used at this stage:
 ;; `dtrt-indent-max-merge-deviation'
-;
+;;
 ;; Final Evaluation
 ;;
 ;; Finally, dtrt-indent looks at the highest probability of all
@@ -201,8 +201,6 @@ adjusted transparently."
             (when dtrt-indent-run-after-smie
               (dtrt-indent-try-set-offset)))
         (dtrt-indent-try-set-offset))
-        ;; (unless (and (featurep 'editorconfig) editorconfig-mode)
-        ;;   (dtrt-indent-try-set-offset)))
     (dtrt-indent-undo)))
 
 ;;;###autoload
@@ -328,7 +326,7 @@ prevent an escaped quote from being interpreted as the closing
 quote, for example.")
 
 (defvar dtrt-indent-hook-mapping-list
-;;   Mode            Syntax        Variable
+  ;; Mode            Syntax        Variable
   '((c-mode          c/c++/java    c-basic-offset)       ; C
     (c++-mode        c/c++/java    c-basic-offset)       ; C++
     (d-mode          c/c++/java    c-basic-offset)       ; D
@@ -360,6 +358,11 @@ quote, for example.")
     (cmake-mode      cmake         cmake-tab-width)       ; CMake
     (xquery-mode     sgml          xquery-mode-indent-width) ; XQuery
     (vhdl-mode       default       vhdl-basic-offset) ; VHDL
+    (groovy-mode     c/c++/java    (groovy-indent-offset
+                                    tab-width))          ; Groovy
+    (yaml-mode       default       (yaml-indent-offset
+                                    tab-width))          ; YAML
+    (swift-mode      c/c++/java   swift-mode:basic-offset) ; Swift
 
     ;; Modes that use SMIE if available
     (sh-mode         default       sh-basic-offset)      ; Shell Script
@@ -371,8 +374,20 @@ quote, for example.")
     (rustic-mode     c/c++/java    rustic-indent-offset) ; Rust
     (scala-mode      c/c++/java    scala-indent:step)    ; Scala
 
+    ;; modes with treesitter enabled
+    (c-ts-mode       c/c++/java    c-ts-mode-indent-offset)
+    (c++-ts-mode     c/c++/java    c-ts-mode-indent-offset)
+    (go-ts-mode      c/c++/java    go-ts-mode-indent-offset)
+    (gpr-ts-mode     ada           gpr-ts-mode-indent-offset)
+    (java-ts-mode    c/c++/java    java-ts-mode-indent-offset)
+    (rust-ts-mode    c/c++/java    rust-ts-mode-indent-offset)
+    (json-ts-mode    javascript    json-ts-mode-indent-offset)
+    (cmake-ts-mode   cmake         cmake-ts-mode-indent-offset)
+    (typescript-ts-mode javascript typescript-ts-mode-indent-offset)
+    (ursa-ts-mode    c/c++/java    ursa-ts-mode-indent-offet)
+
     (default         default       standard-indent))     ; default fallback
-   "A mapping from hook variables to language types.")
+  "A mapping from hook variables to language types.")
 
 ;;-----------------------------------------------------------------
 ;; Customization Definitions:
@@ -428,7 +443,7 @@ you should enable this setting."
   :group 'dtrt-indent)
 
 (defcustom dtrt-indent-hook-generic-mapping-list
-;;   Key variable    Value variable
+  ;; Key variable    Value variable
   '((evil-mode       evil-shift-width))  ; evil
   "A mapping from hook variables to indentation variables.
 For each true key variable, its value variable is set to the same
@@ -614,8 +629,8 @@ using more than 8 spaces per indentation level are very rare."
  'dtrt-indent-explicit-tab-mode)
 
 (defun dtrt-indent--replace-in-string (haystack
-                                        needle-regexp
-                                        replacement)
+                                       needle-regexp
+                                       replacement)
   "Replace every match in string by constant replacement.
 Returns HAYSTACK with every match of NEEDLE-REGEXP replaced by
 REPLACEMENT."
@@ -627,9 +642,9 @@ REPLACEMENT."
 
 
 (defun dtrt-indent--skip-to-end-of-match (end-regex
-                                           skip-regex
-                                           syntax-regex-pairs
-                                           multi-line)
+                                          skip-regex
+                                          syntax-regex-pairs
+                                          multi-line)
   "Place point at the end of the current match.
 END-REGEX is a regular expression matching the end.  If
 SKIP-REGEX matches though, END-REGEX is ignored.
@@ -758,8 +773,8 @@ to determine which lines to exclude from the histogram."
             soft-tab-line-count))))
 
 (defun dtrt-indent--analyze-histogram-try-offset (try-offset
-                                                   histogram
-                                                   total-lines)
+                                                  histogram
+                                                  total-lines)
   "Return match information for the given offset.
 TRY-OFFSET is the offset to try, HISTOGRAM is the previously
 calculated indentation histogram, TOTAL-LINES is the total number
@@ -871,17 +886,17 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
              (change-indent-tabs-mode)
              (indent-tabs-mode-setting)
              (rejected
-             (cond
-              ((null best-guess)
-               "no best guess")
-              ((< (* 100.0 (nth 1 best-guess))
-                  dtrt-indent-min-quality)
-               (format "best guess below minimum quality (%f < %f)"
-                       (* 100.0 (nth 1 best-guess))
-                       dtrt-indent-min-quality))
-              ((not enough-relevant-lines)
-               (format "not enough relevant lines (%d required)"
-                       dtrt-indent-min-relevant-lines)))))
+              (cond
+               ((null best-guess)
+                "no best guess")
+               ((< (* 100.0 (nth 1 best-guess))
+                   dtrt-indent-min-quality)
+                (format "best guess below minimum quality (%f < %f)"
+                        (* 100.0 (nth 1 best-guess))
+                        dtrt-indent-min-quality))
+               ((not enough-relevant-lines)
+                (format "not enough relevant lines (%d required)"
+                        dtrt-indent-min-relevant-lines)))))
 
         (cond
          ((not enough-relevant-lines))
@@ -889,15 +904,15 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
               (>= (/ soft-tab-percentage
                      hard-tab-percentage)
                   (+ 1.0 (/ dtrt-indent-min-soft-tab-superiority 100.0))))
-         (setq change-indent-tabs-mode t)
-         (setq indent-tabs-mode-setting nil))
+          (setq change-indent-tabs-mode t)
+          (setq indent-tabs-mode-setting nil))
 
          ((or (= 0 soft-tab-percentage)
               (>= (/ hard-tab-percentage
                      soft-tab-percentage)
                   (+ 1.0 (/ dtrt-indent-min-hard-tab-superiority 100.0))))
-         (setq change-indent-tabs-mode t)
-         (setq indent-tabs-mode-setting t)))
+          (setq change-indent-tabs-mode t)
+          (setq indent-tabs-mode-setting t)))
 
         (list (cons :histogram (car histogram-and-total-lines))
               (cons :total-lines total-lines)
@@ -951,7 +966,7 @@ merged with offset %s (%.2f%% deviation, limit %.2f%%)"
               (mapconcat (lambda (x) (format "%s" x))
                          indent-offset-variables ", ")))
 
-        ; update indent-offset-variable?
+        ;; update indent-offset-variable?
         (cond
          ((and best-guess
                (not rejected))
@@ -991,7 +1006,7 @@ Indentation offset set with file variable; not adjusted")
                          (format ": %s" rejected) "")))
           nil))
 
-        ; update indent-tabs-mode?
+        ;; update indent-tabs-mode?
         (cond
          ((and change-indent-tabs-mode
                (not (eq indent-tabs-mode indent-tabs-mode-setting)))
@@ -1003,13 +1018,13 @@ Indentation offset set with file variable; not adjusted")
                      (format "indent-tabs-mode adjusted to %s"
                              indent-tabs-mode-setting))))
               (message (concat "Note: " tabs-mode-info))))
-          ; backup indent-tabs-mode setting
+          ;; backup indent-tabs-mode setting
           (setq dtrt-indent-original-indent
                 (cons
                  (let ((x 'indent-tabs-mode))
                    (list x (symbol-value x) (local-variable-p x)))
                  dtrt-indent-original-indent))
-          ; actually adapt indent-tabs-mode
+          ;; actually adapt indent-tabs-mode
           (set (make-local-variable 'indent-tabs-mode)
                indent-tabs-mode-setting))
          (t
@@ -1058,7 +1073,7 @@ Indentation offset set with file variable; not adjusted")
 ;; Installation
 
 (defadvice hack-one-local-variable
-  (before dtrt-indent-advise-hack-one-local-variable activate)
+    (before dtrt-indent-advise-hack-one-local-variable activate)
   "Adviced by dtrt-indent.
 
 Disable dtrt-indent if offset explicitly set."

@@ -4,8 +4,6 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20230410.1815
-;; Package-Commit: d28225e86f8dfb3825809ad287f759f95ee9e479
 ;; Version: 0.14.0
 ;; Package-Requires: ((emacs "24.5") (ivy "0.14.0") (swiper "0.14.0"))
 ;; Keywords: convenience, matching, tools
@@ -6127,7 +6125,7 @@ This function always returns its elements in a stable order."
       (when (file-exists-p dir)
         (let ((dir (file-name-as-directory dir)))
           ;; Function `directory-files-recursively' added in Emacs 25.1.
-          (dolist (file (directory-files-recursively dir ".*\\.desktop$"))
+          (dolist (file (directory-files-recursively dir "\\.desktop\\'"))
             (let ((id (subst-char-in-string ?/ ?- (file-relative-name file dir))))
               (when (and (not (gethash id hash)) (file-readable-p file))
                 (push (cons id file) result)

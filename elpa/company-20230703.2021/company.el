@@ -1,6 +1,6 @@
 ;;; company.el --- Modular text completion framework  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2009-2023  Free Software Foundation, Inc.
 
 ;; Author: Nikolaj Schumacher
 ;; Maintainer: Dmitry Gutov <dgutov@yandex.ru>
@@ -1061,6 +1061,10 @@ means that `company-mode' is always turned on except in `message-mode' buffers."
         (row (cdr (or (posn-actual-col-row posn)
                       ;; When position is non-visible for some reason.
                       (posn-col-row posn)))))
+    ;; posn-col-row return value relative to the left
+    (when (eq (current-bidi-paragraph-direction) 'right-to-left)
+      (let ((ww (window-body-width)))
+        (setq col (- ww col))))
     (when (bound-and-true-p display-line-numbers)
       (cl-decf col (+ 2 (line-number-display-width))))
     (cons (+ col (window-hscroll)) row)))

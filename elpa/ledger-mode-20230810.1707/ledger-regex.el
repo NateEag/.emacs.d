@@ -31,10 +31,10 @@
 (defvar ledger-iso-date-regexp)
 
 (defconst ledger-amount-decimal-comma-regex
-  "-?[1-9][0-9.]*[,]?[0-9]*")
+  "-?\\(?:[1-9][0-9.]\\|0\\)*[,]?[0-9]*")
 
 (defconst ledger-amount-decimal-period-regex
-  "-?[1-9][0-9,]*[.]?[0-9]*")
+  "-?\\(?:[1-9][0-9,]*\\|0\\)[.]?[0-9]*")
 
 (defconst ledger-other-entries-regex
   "\\(^[~=A-Za-z].+\\)+")
@@ -344,7 +344,7 @@
   (note end-note))
 
 (defconst ledger-amount-regex
-  (concat "\\(  \\|\t\\| \t\\)[ \t]*-?"
+  (concat "\\(  \\|\t\\| \t\\)[ \t]*[-+=]? *"
           "\\(?:" ledger-commodity-regexp " *\\)?"
           ;; We either match just a number after the commodity with no
           ;; decimal or thousand separators or a number with thousand
@@ -352,7 +352,7 @@
           ;; or `.', because the match is non-greedy, it must leave at
           ;; least one of those symbols for the following capture
           ;; group, which then finishes the decimal part.
-          "\\(-?\\(?:[0-9]+\\|[0-9,.]+?\\)\\)"
+          "\\([-+=]? *\\(?:[0-9]+\\|[0-9,.]+?\\)\\)"
           "\\([,.][0-9)]+\\)?"
           "\\(?: *" ledger-commodity-regexp "\\)?"
           "\\([ \t]*[@={]@?[^\n;]+?\\)?"

@@ -4,7 +4,6 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Package-Version: 20191103.1446
 ;; Version: 1.5.1
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -222,6 +221,7 @@
     ("pdf"  . "application/pdf")
     ("tar"  . "application/x-tar")
     ("zip"  . "application/zip")
+    ("wasm" . "application/wasm")
     ("mp3"  . "audio/mpeg")
     ("wav"  . "audio/x-wav")
     ("flac" . "audio/flac")
@@ -418,7 +418,7 @@ emacs -Q -batch -l simple-httpd.elc -f httpd-batch-start"
 (defun httpd--filter (proc chunk)
   "Runs each time client makes a request."
   (with-current-buffer (process-get proc :request-buffer)
-    (setf (point) (point-max))
+    (goto-char (point-max))
     (insert chunk)
     (let ((request (process-get proc :request)))
       (unless request
@@ -656,21 +656,21 @@ actually serve up files."
   "Parse HTTP header in current buffer into association list.
 Leaves the point at the start of the request content. Returns nil
 if it failed to parse a complete HTTP header."
-  (setf (point) (point-min))
+  (goto-char (point-min))
   (when (looking-at "\\([^ ]+\\) +\\([^ ]+\\) +\\([^\r]+\\)\r\n")
     (let ((method (match-string 1))
           (path (decode-coding-string (match-string 2) 'iso-8859-1))
           (version (match-string 3))
           (headers ()))
-      (setf (point) (match-end 0))
+      (goto-char (match-end 0))
       (while (looking-at "\\([-!#-'*+.0-9A-Z^_`a-z|~]+\\): *\\([^\r]+\\)\r\n")
-        (setf (point) (match-end 0))
+        (goto-char (match-end 0))
         (let ((name (match-string 1))
               (value (match-string 2)))
           (push (list (httpd--normalize-header name)
                       (decode-coding-string value 'iso-8859-1)) headers)))
       (when (looking-at "\r\n")
-        (setf (point) (match-end 0))
+        (goto-char (match-end 0))
         (cons (list method path version) (nreverse headers))))))
 
 (defun httpd-unhex (str)
@@ -700,7 +700,7 @@ element is the fragment."
 
 (defun httpd-escape-html-buffer ()
   "Escape current buffer contents to be safe for inserting into HTML."
-  (setf (point) (point-min))
+  (goto-char (point-min))
   (while (search-forward-regexp "[<>&]" nil t)
     (replace-match
      (cl-case (aref (match-string 0) 0)

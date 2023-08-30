@@ -1,4 +1,4 @@
-;;; simple-httpd-autoloads.el --- automatically extracted autoloads
+;;; simple-httpd-autoloads.el --- automatically extracted autoloads  -*- lexical-binding: t -*-
 ;;
 ;;; Code:
 
@@ -25,7 +25,11 @@ Start the web server with given `directory' as `httpd-root'.
 
 \(fn DIRECTORY)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "simple-httpd" '("defservlet" "httpd" "with-httpd-buffer")))
+(register-definition-prefixes "simple-httpd" '("defservlet" "httpd" "with-httpd-buffer"))
+
+;;;***
+
+;;;### (autoloads nil nil ("simple-httpd-pkg.el") (0 0 0 0))
 
 ;;;***
 

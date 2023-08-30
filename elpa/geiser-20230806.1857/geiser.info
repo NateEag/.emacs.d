@@ -1276,12 +1276,12 @@ buffer: if you prefer to stay in the source buffer, set
 'geiser-debug-jump-to-debug' to nil.
 
    For schemes with good debug support (Guile is one), the debug buffers
-offer a debugging menu, accesible via the ',' (that's a comma) key.  If
+offer a debugging menu, accessible via the ',' (that's a comma) key.  If
 you press it, a transient menu will appear, offering you a variety of
 actions, including showing local variable values or a more detailed
 backtrace or frame display.  This is the same interface you'll encounter
 the in case of interrupted evaluations, either by your explicit 'C-c
-C-i' command or because a breakpoint has been previosuly set.
+C-i' command or because a breakpoint has been previously set.
 
    In addition, Geiser will sometimes report warnings for otherwise
 successful evaluations.  In those cases, it won't enter the debugger,
@@ -1831,14 +1831,14 @@ Ref: doc-browser49569
 Node: To eval or not to eval52296
 Ref: To eval or not to eval-Footnote-157040
 Node: To err perchance to debug57293
-Node: Jumping around58796
-Node: Geiser writes for you60073
-Node: Cheat sheet62577
-Node: Scheme buffers62961
-Node: REPL67399
-Node: Documentation browser69986
-Node: No hacker is an island71054
-Node: Index74506
+Node: Jumping around58797
+Node: Geiser writes for you60074
+Node: Cheat sheet62578
+Node: Scheme buffers62962
+Node: REPL67400
+Node: Documentation browser69987
+Node: No hacker is an island71055
+Node: Index74507
 
 End Tag Table
 

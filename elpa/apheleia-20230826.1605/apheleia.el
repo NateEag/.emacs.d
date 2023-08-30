@@ -4,7 +4,7 @@
 
 ;; Author: Radian LLC <contact+apheleia@radian.codes>
 ;; Created: 7 Jul 2019
-;; Homepage: https://github.com/raxod502/apheleia
+;; Homepage: https://github.com/radian-software/apheleia
 ;; Keywords: tools
 ;; Package-Requires: ((emacs "26"))
 ;; SPDX-License-Identifier: MIT
@@ -19,7 +19,7 @@
 ;; maintains the position of point relative to its surrounding text
 ;; even if the buffer is modified by the reformatting.
 
-;; Please see https://github.com/raxod502/apheleia for more information.
+;; Please see https://github.com/radian-software/apheleia for more information.
 
 ;;; Code:
 
@@ -28,7 +28,7 @@
 (defgroup apheleia nil
   "Reformat buffer without moving point."
   :group 'external
-  :link '(url-link :tag "GitHub" "https://github.com/raxod502/apheleia")
+  :link '(url-link :tag "GitHub" "https://github.com/radian-software/apheleia")
   :link '(emacs-commentary-link :tag "Commentary" "apheleia"))
 
 (defcustom apheleia-formatters
@@ -129,6 +129,8 @@
     (purs-tidy . (npx "purs-tidy" "format"))
     (rubocop . ("rubocop" "--stdin" filepath "--auto-correct"
                 "--stderr" "--format" "quiet" "--fail-level" "fatal"))
+    (ruby-standard . ("standardrb" "--stdin" filepath "--fix" "--stderr"
+                      "--format" "quiet" "--fail-level" "fatal"))
     (shfmt . ("shfmt"
               "-filename" filepath
               "-ln" (cl-case (bound-and-true-p sh-shell)
@@ -144,7 +146,8 @@
     (rufo . ("rufo" "--filename" filepath "--simple-exit"))
     (stylua . ("stylua" "-"))
     (rustfmt . ("rustfmt" "--quiet" "--emit" "stdout"))
-    (terraform . ("terraform" "fmt" "-")))
+    (terraform . ("terraform" "fmt" "-"))
+    (yapf . ("yapf")))
   "Alist of code formatting commands.
 The keys may be any symbols you want, and the values are shell
 commands, lists of strings and symbols, or a function symbol.

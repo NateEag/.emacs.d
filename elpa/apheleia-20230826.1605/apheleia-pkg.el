@@ -1,6 +1,6 @@
-(define-package "apheleia" "20230513.48" "Reformat buffer stably"
+(define-package "apheleia" "20230826.1605" "Reformat buffer stably"
   '((emacs "26"))
-  :commit "d4a5965d299094448b0afe9fbf6bbed5e0c1ab16" :authors
+  :commit "108176abe501c90507f977c5fc857863c3bcf6eb" :authors
   '(("Radian LLC" . "contact+apheleia@radian.codes"))
   :maintainers
   '(("Radian LLC" . "contact+apheleia@radian.codes"))
@@ -8,7 +8,7 @@
   '("Radian LLC" . "contact+apheleia@radian.codes")
   :keywords
   '("tools")
-  :url "https://github.com/raxod502/apheleia")
+  :url "https://github.com/radian-software/apheleia")
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; End:

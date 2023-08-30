@@ -16,6 +16,14 @@
 ;;;### (autoloads nil "apheleia-core" "apheleia-core.el" (0 0 0 0))
 ;;; Generated autoloads from apheleia-core.el
 
+(defvar-local apheleia-formatter nil "\
+Name of formatter to use in current buffer, a symbol or nil.
+If non-nil, then `apheleia-formatters' should have a matching
+entry. This overrides `apheleia-mode-alist'.
+
+The value can also be a list of symbols to apply multiple
+formatters in sequence.")
+
 (autoload 'apheleia-format-buffer "apheleia-core" "\
 Run code formatter asynchronously on current buffer, preserving point.
 

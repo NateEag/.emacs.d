@@ -7,9 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.6-alpha
-;; Package-Version: 20230517.606
-;; Package-Commit: 1535b958a6f55a50a6991c700baa7ce44243c125
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
 
@@ -706,7 +704,7 @@ Group 7 matches the title (optional).
 Group 8 matches the closing parenthesis.")
 
 (defconst markdown-regex-link-reference
-  "\\(?1:!\\)?\\(?2:\\[\\)\\(?3:[^]^][^]]*\\|\\)\\(?4:\\]\\)[ ]?\\(?5:\\[\\)\\(?6:[^]]*?\\)\\(?7:\\]\\)"
+  "\\(?1:!\\)?\\(?2:\\[\\)\\(?3:[^]^][^]]*\\|\\)\\(?4:\\]\\)\\(?5:\\[\\)\\(?6:[^]]*?\\)\\(?7:\\]\\)"
   "Regular expression for a reference link [text][id].
 Group 1 matches the leading exclamation point (optional).
 Group 2 matches the opening square bracket for the link text.
@@ -734,7 +732,7 @@ Group 2 matches only the label, without the surrounding markup.
 Group 3 matches the closing square bracket.")
 
 (defconst markdown-regex-header
-  "^\\(?:\\(?1:[^\r\n\t -].*\\)\n\\(?:\\(?2:=+\\)\\|\\(?3:-+\\)\\)\\|\\(?4:#+[ \t]+\\)\\(?5:.*?\\)\\(?6:[ \t]*#*\\)\\)$"
+  "^\\(?:\\(?1:[^\r\n\t -].*\\)\n\\(?:\\(?2:=+\\)\\|\\(?3:-+\\)\\)\\|\\(?4:#+[ \t]+\\)\\(?5:.*?\\)\\(?6:[ \t]+#+\\)?\\)$"
   "Regexp identifying Markdown headings.
 Group 1 matches the text of a setext heading.
 Group 2 matches the underline of a level-1 setext heading.
@@ -1107,6 +1105,29 @@ Group 4 matches the text inside the delimiters.")
         'markdown-metadata-markup nil)
   "Property list of all Markdown syntactic properties.")
 
+(defvar markdown-literal-faces
+  '(markdown-inline-code-face
+    markdown-pre-face
+    markdown-math-face
+    markdown-url-face
+    markdown-plain-url-face
+    markdown-language-keyword-face
+    markdown-language-info-face
+    markdown-metadata-key-face
+    markdown-metadata-value-face
+    markdown-html-entity-face
+    markdown-html-tag-name-face
+    markdown-html-tag-delimiter-face
+    markdown-html-attr-name-face
+    markdown-html-attr-value-face
+    markdown-reference-face
+    markdown-footnote-marker-face
+    markdown-line-break-face
+    markdown-comment-face)
+  "A list of markdown-mode faces that contain literal text.
+Literal text treats backslashes literally, rather than as an
+escape character (see `markdown-match-escape').")
+
 (defsubst markdown-in-comment-p (&optional pos)
   "Return non-nil if POS is in a comment.
 If POS is not given, use point instead."
@@ -1296,6 +1317,7 @@ giving the bounds of the current and parent list items."
                           (not (eobp)))
                 (forward-line))
               (skip-syntax-backward "-")
+              (forward-line)
               (setq close (point)))
              ;; If current line has a list marker, update levels, move to end of block
              ((looking-at markdown-regex-list)
@@ -2222,7 +2244,7 @@ Depending on your font, some reasonable choices are:
                                      (4 'markdown-highlighting-face)
                                      (5 markdown-markup-properties)))
     (,markdown-regex-line-break . (1 'markdown-line-break-face prepend))
-    (,markdown-regex-escape . ((1 markdown-markup-properties prepend)))
+    (markdown-match-escape . ((1 markdown-markup-properties prepend)))
     (markdown-fontify-sub-superscripts)
     (markdown-match-inline-attributes . ((0 markdown-markup-properties prepend)))
     (markdown-match-leanpub-sections . ((0 markdown-markup-properties)))
@@ -2954,6 +2976,18 @@ When FACELESS is non-nil, do not return matches where faces have been applied."
   (when markdown-enable-highlighting-syntax
     (re-search-forward markdown-regex-highlighting last t)))
 
+(defun markdown-match-escape (last)
+  "Match escape characters (backslashes) from point to LAST.
+Backlashes only count as escape characters outside of literal
+regions (e.g. code blocks). See `markdown-literal-faces'."
+  (catch 'found
+    (while (search-forward-regexp markdown-regex-escape last t)
+      (let* ((face (get-text-property (match-beginning 1) 'face))
+             (face-list (if (listp face) face (list face))))
+        ;; Ignore any backslashes with a literal face.
+        (unless (cl-intersection face-list markdown-literal-faces)
+          (throw 'found t))))))
+
 (defun markdown-match-math-generic (regex last)
   "Match REGEX from point to LAST.
 REGEX is either `markdown-regex-math-inline-single' for matching
@@ -3450,17 +3484,30 @@ SEQ may be an atom or a sequence."
                    (add-text-properties
                     (match-beginning 3) (match-end 3) rule-props)))
         ;; atx heading
-        (if markdown-fontify-whole-heading-line
-            (let ((header-end (min (point-max) (1+ (match-end 0)))))
-              (add-text-properties
-               (match-beginning 0) header-end heading-props))
+        (let ((header-end
+               (if markdown-fontify-whole-heading-line
+                   (min (point-max) (1+ (match-end 0)))
+                 (match-end 0))))
           (add-text-properties
            (match-beginning 4) (match-end 4) left-markup-props)
-          (add-text-properties
-           (match-beginning 5) (match-end 5) heading-props)
-          (when (match-end 6)
+
+          ;; If closing tag is present
+          (if (match-end 6)
+              (progn
+                (if markdown-hide-markup
+                    (progn
+                      (add-text-properties
+                       (match-beginning 5) header-end heading-props)
+                      (add-text-properties
+                       (match-beginning 6) (match-end 6) right-markup-props))
+                  (add-text-properties
+                   (match-beginning 5) (match-end 5) heading-props)
+                  (add-text-properties
+                   (match-beginning 6) header-end right-markup-props)))
+            ;; If closing tag is not present
             (add-text-properties
-             (match-beginning 6) (match-end 6) right-markup-props)))))
+             (match-beginning 5) header-end heading-props))
+          )))
     t))
 
 (defun markdown-fontify-tables (last)
@@ -4559,7 +4606,7 @@ at the beginning of the block."
 (defun markdown-insert-foldable-block ()
   "Insert details disclosure element to make content foldable.
 If a region is active, wrap this region with the disclosure
-element. More detais here https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details."
+element. More details here https://developer.mozilla.org/en-US/docs/Web/HTML/Element/details."
   (interactive)
   (let ((details-open-tag "<details>")
         (details-close-tag "</details>")
@@ -4619,6 +4666,7 @@ element. More detais here https://developer.mozilla.org/en-US/docs/Web/HTML/Elem
   (interactive)
   (let ((fn (markdown-footnote-counter-inc)))
     (insert (format "[^%d]" fn))
+    (push-mark (point) t)
     (markdown-footnote-text-find-new-location)
     (markdown-ensure-blank-line-before)
     (unless (markdown-cur-line-blank-p)
@@ -5020,9 +5068,10 @@ list simply adds a blank line)."
                (setq bounds (markdown-cur-list-item-bounds)))
           (let ((beg (cl-first bounds))
                 (end (cl-second bounds))
-                (length (cl-fourth bounds)))
+                (nonlist-indent (cl-fourth bounds))
+                (checkbox (cl-sixth bounds)))
             ;; Point is in a list item
-            (if (= (- end beg) length)
+            (if (= (- end beg) (+ nonlist-indent (length checkbox)))
                 ;; Delete blank list
                 (progn
                   (delete-region beg end)
@@ -8781,7 +8830,7 @@ mode to use is `tuareg-mode'."
   "Return major mode that should be used for LANG.
 LANG is a string, and the returned major mode is a symbol."
   (cl-find-if
-   'fboundp
+   #'markdown--lang-mode-predicate
    (nconc (list (cdr (assoc lang markdown-code-lang-modes))
                 (cdr (assoc (downcase lang) markdown-code-lang-modes)))
           (and (fboundp 'treesit-language-available-p)
@@ -8792,6 +8841,20 @@ LANG is a string, and the returned major mode is a symbol."
           (list
            (intern (concat lang "-mode"))
            (intern (concat (downcase lang) "-mode"))))))
+
+(defun markdown--lang-mode-predicate (mode)
+  (and mode
+       (fboundp mode)
+       (or
+        ;; https://github.com/jrblevin/markdown-mode/issues/787
+        ;; major-mode-remap-alist was introduced at Emacs 29.1
+        (cl-loop for pair in (bound-and-true-p major-mode-remap-alist)
+                 for func = (cdr pair)
+                 thereis (and (atom func) (eq mode func)))
+        ;; https://github.com/jrblevin/markdown-mode/issues/761
+        (cl-loop for pair in auto-mode-alist
+                 for func = (cdr pair)
+                 thereis (and (atom func) (eq mode func))))))
 
 (defun markdown-fontify-code-blocks-generic (matcher last)
   "Add text properties to next code block from point to LAST.
@@ -9693,8 +9756,8 @@ spaces, or alternatively a TAB should be used as the separator."
 Optional arguments ROWS, COLUMNS, and ALIGN specify number of
 rows and columns and the column alignment."
   (interactive)
-  (let* ((rows (or rows (string-to-number (read-string "Row size: "))))
-         (columns (or columns (string-to-number (read-string "Column size: "))))
+  (let* ((rows (or rows (read-number "Number of Rows: ")))
+         (columns (or columns (read-number "Number of Columns: ")))
          (align (or align (read-string "Alignment ([l]eft, [r]ight, [c]enter, or RET for default): ")))
          (align (cond ((equal align "l") ":--")
                       ((equal align "r") "--:")

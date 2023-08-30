@@ -76,9 +76,11 @@
                (:conc-name treemacs-workspace->)
                (:constructor treemacs-workspace->create!))
   name
-  projects)
+  projects
+  is-disabled?)
 
 (defvar treemacs--workspaces (list (treemacs-workspace->create! :name "Default")))
+(defvar treemacs--disabled-workspaces (list))
 
 (defvar treemacs--find-user-project-functions
   (list #'treemacs--current-builtin-project-function
@@ -122,6 +124,11 @@ To be called whenever a project or workspace changes."
   "Return the list of all workspaces in treemacs."
   (declare (side-effect-free t))
   (inline-quote treemacs--workspaces))
+
+(define-inline treemacs-disabled-workspaces ()
+  "Return the list of all workspaces in treemacs that are disabled."
+  (declare (side-effect-free t))
+  (inline-quote treemacs--disabled-workspaces))
 
 (defun treemacs-current-workspace ()
   "Get the current workspace.
@@ -655,8 +662,12 @@ Return values may be as follows:
      (treemacs-return
       `(success ,new-workspace)))))
 
-(defun treemacs-do-rename-workspace ()
+(defun treemacs-do-rename-workspace (&optional workspace new-name)
   "Rename a workspace.
+
+Takes either a WORKSPACE and a NEW-NAME as arguments or reads them
+interactively.
+
 Return values may be as follows:
 
 * If the given name is invalid:
@@ -667,19 +678,23 @@ Return values may be as follows:
   - the old-name
   - the renamed workspace"
   (treemacs-block
-   (let* ((current-ws (treemacs-current-workspace))
-          (old-name (treemacs-workspace->name current-ws))
-          (name-map (-> (--map (cons (treemacs-workspace->name it) it)  treemacs--workspaces)
-                        (sort (lambda (n _) (string= (car n) old-name)))))
-          (str-to-rename (completing-read "Rename: " name-map))
-          (ws-to-rename (cdr (assoc str-to-rename name-map)))
-          (new-name (treemacs--read-string "New name: ")))
+   (let ((old-name))
+     (unless workspace
+       (let* ((current-ws (treemacs-current-workspace))
+              (old-name (treemacs-workspace->name current-ws))
+              (name-map (-> (--map (cons (treemacs-workspace->name it) it)  treemacs--workspaces)
+                            (sort (lambda (n _) (string= (car n) old-name)))))
+              (str-to-rename (completing-read "Rename: " name-map)))
+         (setf workspace (cdr (assoc str-to-rename name-map)))))
+     (setf old-name (treemacs-workspace->name workspace))
+     (unless new-name
+       (setf new-name (treemacs--read-string "New name: ")))
      (treemacs-return-if (treemacs--is-name-invalid? new-name)
        `(invalid-name ,new-name))
-     (setf (treemacs-workspace->name ws-to-rename) new-name)
+     (setf (treemacs-workspace->name workspace) new-name)
      (treemacs--persist)
-     (run-hook-with-args 'treemacs-rename-workspace-functions ws-to-rename old-name)
-     `(success ,old-name ,ws-to-rename))))
+     (run-hook-with-args 'treemacs-rename-workspace-functions workspace old-name)
+     `(success ,old-name ,workspace))))
 
 (defun treemacs--is-name-invalid? (name)
   "Validate the NAME of a project or workspace.

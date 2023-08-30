@@ -275,7 +275,8 @@ Necessary since root icons are not rectangular."
        ;; NOTE: Disable creation of GUI svg icons without getting in the way of the rest
        ;; of the icon creation process. This is good enough a workaround for Emacs versions
        ;; that don't support svg images for as long as svg icons are a minority.
-       (unless (and (not (image-type-available-p 'svg))
+       (unless (and ,file
+                    (not (image-type-available-p 'svg))
                     (string= (treemacs--file-extension ,file) "svg"))
          (ht-set! gui-icons it gui-icon))
        (ht-set! tui-icons it tui-icon))))
@@ -308,22 +309,22 @@ Necessary since root icons are not rectangular."
     (treemacs-create-icon :file "svgrepo/mail-plus.png" :extensions (mail-plus)   :fallback " ")
 
     ;; custom dir icons
-    (treemacs-create-icon :file "vsc/dir-src-closed.svg"      :extensions ("src-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-src-open.svg"        :extensions ("src-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-test-closed.svg"     :extensions ("test-closed")    :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-test-open.svg"       :extensions ("test-open")      :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-binary-closed.svg"   :extensions ("bin-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-binary-open.svg"     :extensions ("bin-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-services-closed.svg" :extensions ("build-closed")   :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-services-open.svg"   :extensions ("build-open")     :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-git-closed.svg"      :extensions ("git-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-git-open.svg"        :extensions ("git-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-github-closed.svg"   :extensions ("github-closed")  :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-github-open.svg"     :extensions ("github-open")    :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-public-closed.svg"   :extensions ("public-closed")  :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-public-open.svg"     :extensions ("public-open")    :fallback (propertize "- " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-private-closed.svg"  :extensions ("private-closed") :fallback (propertize "+ " 'face 'treemacs-term-node-face))
-    (treemacs-create-icon :file "vsc/dir-private-open.svg"    :extensions ("private-open")   :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-src-closed.svg"    :extensions ("src-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-src-open.svg"      :extensions ("src-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-test-closed.svg"   :extensions ("test-closed")    :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-test-open.svg"     :extensions ("test-open")      :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-binary-closed.svg"     :extensions ("bin-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-binary-open.svg"       :extensions ("bin-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-services-closed.svg"   :extensions ("build-closed")   :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-services-open.svg"     :extensions ("build-open")     :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-git-closed.svg"    :extensions ("git-closed")     :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-git-open.svg"      :extensions ("git-open")       :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-github-closed.svg" :extensions ("github-closed")  :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "svgrepo/dir-github-open.svg"   :extensions ("github-open")    :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-public-closed.svg"     :extensions ("public-closed")  :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-public-open.svg"       :extensions ("public-open")    :fallback (propertize "- " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-private-closed.svg"    :extensions ("private-closed") :fallback (propertize "+ " 'face 'treemacs-term-node-face))
+    (treemacs-create-icon :file "vsc/dir-private-open.svg"      :extensions ("private-open")   :fallback (propertize "- " 'face 'treemacs-term-node-face))
     (treemacs-create-icon
      :file "vsc/dir-temp-closed.svg" :extensions ("temp-closed" "tmp-closed")
      :fallback (propertize "+ " 'face 'treemacs-term-node-face))
@@ -331,10 +332,10 @@ Necessary since root icons are not rectangular."
      :file "vsc/dir-temp-open.svg" :extensions ("temp-open" "tmp-open")
      :fallback (propertize "- " 'face 'treemacs-term-node-face))
     (treemacs-create-icon
-     :file "vsc/dir-docs-closed.svg" :extensions ("readme-closed" "docs-closed")
+     :file "svgrepo/dir-docs-closed.svg" :extensions ("readme-closed" "docs-closed")
      :fallback (propertize "+ " 'face 'treemacs-term-node-face))
     (treemacs-create-icon
-     :file "vsc/dir-docs-open.svg" :extensions ("readme-open" "docs-open")
+     :file "svgrepo/dir-docs-open.svg" :extensions ("readme-open" "docs-open")
      :fallback (propertize "- " 'face 'treemacs-term-node-face))
     (treemacs-create-icon
      :file "vsc/dir-images-closed.svg" :extensions ("screenshots-closed" "icons-closed")
@@ -346,7 +347,7 @@ Necessary since root icons are not rectangular."
     ;; file icons
     (treemacs-create-icon :file "txt.png"           :extensions (fallback))
     (treemacs-create-icon :file "emacs.png"         :extensions ("el" "elc" "eln"))
-    (treemacs-create-icon :file "ledger.png"        :extensions ("ledger"))
+    (treemacs-create-icon :file "ledger.png"        :extensions ("ledger" "beancount"))
     (treemacs-create-icon :file "yaml.png"          :extensions ("yml" "yaml" "travis.yml"))
     (treemacs-create-icon
      :file "shell.png"

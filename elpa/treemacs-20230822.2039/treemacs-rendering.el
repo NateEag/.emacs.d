@@ -125,6 +125,18 @@ the height of treemacs' icons must be taken into account."
   (inline-letevals (f1 f2)
     (inline-quote (string-lessp ,f2 ,f1))))
 
+(define-inline treemacs--sort-alphabetic-numeric-asc (f1 f2)
+  "Sort F1 and F2 alphabetically and numerically ascending."
+  (declare (pure t) (side-effect-free t))
+  (inline-letevals (f1 f2)
+    (inline-quote (string-version-lessp ,f1 ,f2))))
+
+(define-inline treemacs--sort-alphabetic-numeric-desc (f1 f2)
+  "Sort F1 and F2 alphabetically and numerically descending."
+  (declare (pure t) (side-effect-free t))
+  (inline-letevals (f1 f2)
+    (inline-quote (string-version-lessp ,f2 ,f1))))
+
 (define-inline treemacs--sort-alphabetic-case-insensitive-asc (f1 f2)
   "Sort F1 and F2 case insensitive alphabetically ascending."
   (declare (pure t) (side-effect-free t))
@@ -136,6 +148,18 @@ the height of treemacs' icons must be taken into account."
   (declare (pure t) (side-effect-free t))
   (inline-letevals (f1 f2)
     (inline-quote (string-lessp (downcase ,f2) (downcase ,f1)))))
+
+(define-inline treemacs--sort-alphabetic-numeric-case-insensitive-asc (f1 f2)
+  "Sort F1 and F2 case insensitive alphabetically and numerically ascending."
+  (declare (pure t) (side-effect-free t))
+  (inline-letevals (f1 f2)
+    (inline-quote (string-version-lessp (downcase ,f1) (downcase ,f2)))))
+
+(define-inline treemacs--sort-alphabetic-numeric-case-insensitive-desc (f1 f2)
+  "Sort F1 and F2 case insensitive alphabetically and numerically descending."
+  (declare (pure t) (side-effect-free t))
+  (inline-letevals (f1 f2)
+    (inline-quote (string-version-lessp (downcase ,f2) (downcase ,f1)))))
 
 (define-inline treemacs--sort-size-asc (f1 f2)
   "Sort F1 and F2 by size ascending."
@@ -176,8 +200,12 @@ the height of treemacs' icons must be taken into account."
    (pcase treemacs-sorting
      ('alphabetic-asc #'treemacs--sort-alphabetic-asc)
      ('alphabetic-desc #'treemacs--sort-alphabetic-desc)
+     ('alphabetic-numeric-asc #'treemacs--sort-alphabetic-numeric-asc)
+     ('alphabetic-numeric-desc #'treemacs--sort-alphabetic-numeric-desc)
      ('alphabetic-case-insensitive-asc  #'treemacs--sort-alphabetic-case-insensitive-asc)
      ('alphabetic-case-insensitive-desc #'treemacs--sort-alphabetic-case-insensitive-desc)
+     ('alphabetic-numeric-case-insensitive-asc  #'treemacs--sort-alphabetic-numeric-case-insensitive-asc)
+     ('alphabetic-numeric-case-insensitive-desc #'treemacs--sort-alphabetic-numeric-case-insensitive-desc)
      ('size-asc #'treemacs--sort-size-asc)
      ('size-desc #'treemacs--sort-size-desc)
      ('mod-time-asc #'treemacs--sort-mod-time-asc)
@@ -447,7 +475,7 @@ set to PARENT."
                (-let [result nil]
                  (while dir-strings
                    (let* ((prefix (car dir-strings))
-                          (icon (cadr file-strings))
+                          (icon (cadr dir-strings))
                           (dirname (caddr dir-strings))
                           (dirpath (concat ,root "/" dirname)))
                      (unless (--any? (funcall it dirpath git-info) treemacs-pre-file-insert-predicates)
@@ -1173,7 +1201,7 @@ GIT-INFO is passed through from the previous branch build."
     ('file-node-closed (treemacs--expand-file-node btn))
     ('tag-node-closed  (treemacs--expand-tag-node btn))
     ('root-node-closed (treemacs--expand-root-node btn))
-    (other             (funcall (alist-get other treemacs-TAB-actions-config) btn))))
+    (other             (funcall (alist-get other treemacs-TAB-actions-config)))))
 
 (defun treemacs--show-single-project (path name)
   "Show only a project for the given PATH and NAME in the current workspace."

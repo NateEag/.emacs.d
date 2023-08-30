@@ -226,10 +226,15 @@ Will be set by `treemacs--post-command'.")
               ((memq 'moody-mode-line-buffer-identification
                      (default-value 'mode-line-format))
                '(:eval (moody-tab " Treemacs " 10 'down)))
-              ((and (fboundp 'doom-modeline)
-                    (fboundp 'doom-modeline-def-modeline))
-               (doom-modeline-def-modeline 'treemacs '(bar " " major-mode))
-               (doom-modeline 'treemacs))
+              ((featurep 'doom-modeline)
+               (with-no-warnings
+                 (eval-and-compile (require 'doom-modeline nil 'noerror))
+                 (doom-modeline-def-segment treemacs-workspace-name
+                   "Display treemacs."
+                   (propertize (format " %s " (treemacs-workspace->name (treemacs-current-workspace)))
+                               'face (doom-modeline-face 'doom-modeline-buffer-minor-mode)))
+                 (doom-modeline-def-modeline 'treemacs '(bar " " major-mode) '(treemacs-workspace-name))
+                 (doom-modeline 'treemacs)))
               (t
                '(:eval (format " Treemacs: %s"
                                (treemacs-workspace->name (treemacs-current-workspace))))))))
@@ -339,6 +344,8 @@ Will simply return `treemacs--eldoc-msg'."
   (setq-local eldoc-documentation-function #'treemacs--eldoc-function)
   (setq-local eldoc-message-commands treemacs--eldoc-obarray)
   (setq-local imenu-create-index-function #'treemacs--create-imenu-index-function)
+  (setq-local context-menu-functions nil)
+
   ;; integrate with bookmark.el
   (setq-local bookmark-make-record-function #'treemacs--make-bookmark-record)
   (electric-indent-local-mode -1)

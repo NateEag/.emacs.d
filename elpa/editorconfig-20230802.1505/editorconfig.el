@@ -3,7 +3,7 @@
 ;; Copyright (C) 2011-2023 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 0.10.0
+;; Version: 0.10.1
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
 ;; Package-Requires: ((emacs "26.1") (nadvice "0.3"))
 ;; Keywords: convenience editorconfig
@@ -51,8 +51,7 @@
   (defvar tex-indent-basic)
   (defvar tex-indent-item)
   (defvar tex-indent-arg)
-  (defvar evil-shift-width)
-  (defvar python-indent-offset))
+  (defvar evil-shift-width))
 
 (require 'editorconfig-core)
 
@@ -230,6 +229,7 @@ This hook will be run even when there are no matching sections in
                   haskell-indentation-where-pre-offset
                   shm-indent-spaces)
     (haxor-mode haxor-tab-width)
+    (hcl-mode hcl-indent-level)
     (html-ts-mode html-ts-mode-indent-offset)
     (idl-mode c-basic-offset)
     (jade-mode jade-tab-width)
@@ -246,6 +246,7 @@ This hook will be run even when there are no matching sections in
     (json-ts-mode json-ts-mode-indent-offset)
     (julia-mode julia-indent-offset)
     (kotlin-mode kotlin-tab-width)
+    (kotlin-ts-mode kotlin-ts-mode-indent-offset)
     (latex-mode . editorconfig-set-indentation-latex-mode)
     (lisp-mode lisp-indent-offset)
     (livescript-mode livescript-tab-width)
@@ -417,8 +418,9 @@ Make a message by passing ARGS to `format-message'."
 
 (defun editorconfig-set-indentation-python-mode (size)
   "Set `python-mode' indent size to SIZE."
-  (setq-local python-indent-offset size)
-  ;; For https://launchpad.net/python-mode
+  (when (boundp 'python-indent-offset)
+    (setq-local python-indent-offset size))
+  ;; For https://gitlab.com/python-mode-devs/python-mode
   (when (boundp 'py-indent-offset)
     (setq-local py-indent-offset size)))
 
@@ -910,7 +912,7 @@ To disable EditorConfig in some buffers, modify
   "Find the closest .editorconfig file for current file."
   (interactive)
   (eval-and-compile (require 'editorconfig-core))
-  (when-let ((file (editorconfig-core-get-nearest-editorconfig
+  (when-let* ((file (editorconfig-core-get-nearest-editorconfig
                     default-directory)))
     (find-file file)))
 

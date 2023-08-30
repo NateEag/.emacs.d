@@ -1,6 +1,6 @@
-(define-package "evil-matchit" "20230325.618" "Vim matchit ported to Evil"
+(define-package "evil-matchit" "20230625.302" "Vim matchit ported to Evil"
   '((emacs "25.1"))
-  :commit "3b12ed55d67bb70e8957c0c7fdad4ab4ad79eb2f" :authors
+  :commit "f27b2a87bab75e3b8a87c277049a4363cdfcbf61" :authors
   '(("Chen Bin" . "chenbin.sh@gmail.com"))
   :maintainers
   '(("Chen Bin" . "chenbin.sh@gmail.com"))

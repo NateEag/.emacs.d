@@ -1,10 +1,9 @@
 ;;; term-projectile.el --- projectile terminal management -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016 Ivan Malison
+;; Copyright (C) 2016-2023 Ivan Malison
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: projectile tools terminals vc
-;; Package-Version: 20190307.400
 ;; URL: https://www.github.com/IvanMalison/term-manager
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (term-manager "0.1.0") (projectile "0.13.0"))
@@ -59,19 +58,20 @@
 (defconst term-projectile-term-manager (term-projectile))
 
 (defun term-projectile-switch (&rest args)
-  (apply 'term-manager-display-term term-projectile-term-manager args))
+  (apply #'term-manager-display-term term-projectile-term-manager args))
 
 (defun term-projectile-global-switch (&rest args)
   (let ((default-directory term-projectile-global-directory))
-    (term-manager-display-buffer (apply 'term-manager-get-next-global-buffer
+    (term-manager-display-buffer (apply #'term-manager-get-next-global-buffer
                                         term-projectile-term-manager args))))
 
 (defun term-projectile-get-all-buffers ()
+  (term-manager-purge-dead-buffers term-projectile-term-manager)
   (term-manager-get-all-buffers term-projectile-term-manager))
 
 (defun term-projectile-select-existing ()
   (completing-read "Select a term buffer: "
-                   (mapcar 'buffer-name
+                   (mapcar #'buffer-name
                            (term-projectile-get-all-buffers))))
 
 ;;;###autoload
@@ -105,13 +105,13 @@ If directory is nil, use the current projectile project"
 
 ;;;###autoload
 (defun term-projectile-default-directory-forward ()
-  "Switch forward to the next term-projectile ansi-term buffer for `defualt-directory'."
+  "Switch forward to the next term-projectile ansi-term buffer for `default-directory'."
   (interactive)
   (term-projectile-switch :symbol default-directory))
 
 ;;;###autoload
 (defun term-projectile-default-directory-backward ()
-  "Switch backward to the next term-projectile ansi-term buffer for `defualt-directory'."
+  "Switch backward to the next term-projectile ansi-term buffer for `default-directory'."
   (interactive)
   (term-projectile-switch :delta -1 :symbol default-directory))
 

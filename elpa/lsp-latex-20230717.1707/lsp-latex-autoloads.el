@@ -20,6 +20,10 @@ This function is partially copied from
 
 ;;;***
 
+;;;### (autoloads nil nil ("lsp-latex-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

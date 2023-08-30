@@ -4,8 +4,6 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Version: 2.4
-;; Package-Version: 20230214.1632
-;; Package-Commit: 3c1677f1bf2ded2ab07edffb7d17def5d2b5b6f6
 ;; Keywords: hash table, hash map, hash
 ;; Package-Requires: ((dash "2.12.0"))
 
@@ -150,8 +148,8 @@ becomes the new value of KEY."
          (puthash ,key (funcall ,updater v) ,table))))))
 
 (defun ht-merge (&rest tables)
-  "Crete a new tables that includes all the key-value pairs from TABLES.
-If multiple have tables have the same key, the value in the last
+  "Crete a new table that includes all the key-value pairs from TABLES.
+If multiple tables have the same key, the value in the last
 table is used."
   (let ((merged (ht-create)))
     (mapc (lambda (table) (ht-update! merged table)) tables)

@@ -64,6 +64,10 @@ See `activity-watch-mode' for more information on Activity-Watch mode.
 
 ;;;***
 
+;;;### (autoloads nil nil ("activity-watch-mode-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

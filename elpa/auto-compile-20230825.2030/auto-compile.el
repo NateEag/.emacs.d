@@ -5,10 +5,8 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/emacscollective/auto-compile
 ;; Keywords: compile convenience lisp
-;; Package-Commit: 36646df118dbea91e3d00d06ed712c5d05399404
 
-;; Package-Version: 20230511.2120
-;; Package-X-Original-Version: 1.8.0
+;; Package-Version: 1.8.2
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -272,12 +270,12 @@ non-nil."
 
 (defun auto-compile--tree-member (elt tree)
   ;; Also known as keycast--tree-member.
-  (or (member elt tree)
-      (catch 'found
-        (dolist (sub tree)
-          (when-let ((found (and (listp sub)
-                                 (auto-compile--tree-member elt sub))))
-            (throw 'found found))))))
+  (and (listp tree)
+       (or (member elt tree)
+           (catch 'found
+             (dolist (sub tree)
+               (when-let ((found (auto-compile--tree-member elt sub)))
+                 (throw 'found found)))))))
 
 (defun auto-compile-modify-mode-line (after)
   (let ((format (default-value 'mode-line-format)))
@@ -503,7 +501,7 @@ multiple files is toggled as follows:
 
 (defun auto-compile-source-file-p (file)
   "Return non-nil if FILE ends with the suffix \".el\".
-Optionaly that suffix may be followed by one listed in
+Optionally that suffix may be followed by one listed in
 `load-file-rep-suffixes'."
   (string-match-p (format "\\.el%s\\'" (regexp-opt load-file-rep-suffixes))
                   file))

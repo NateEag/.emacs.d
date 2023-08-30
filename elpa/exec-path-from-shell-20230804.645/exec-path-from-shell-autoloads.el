@@ -40,6 +40,11 @@ values used in the user's shell." t nil)
 
 ;;;***
 
+;;;### (autoloads nil nil ("exec-path-from-shell-pkg.el") (0 0 0
+;;;;;;  0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

@@ -4,10 +4,8 @@
 
 ;; Author: Daniel Barreto <daniel.barreto.n@gmail.com>
 ;; Keywords: lisp, maint, tools
-;; Package-Version: 20221205.2224
-;; Package-Commit: 7c4a0d21322506a4d4b2301b4274ec955b429b47
 ;; Created: Mon Jul 10 15:17:36 2017 (+0200)
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Package-Requires: ((emacs "25.1"))
 ;; URL: https://github.com/volrath/treepy.el
 
@@ -272,7 +270,7 @@ Reflect any alterations to the tree."
 
 (defun treepy-right (loc)
   "Return the loc of the right sibling of the node at this LOC.
-nil if there's no more right sibilings."
+nil if there's no more right siblings."
   (treepy--with-loc loc (node context l r)
     (let ((r (if (listp r)
                  r
@@ -304,7 +302,7 @@ If LOC is already the rightmost sibling, return self."
 
 (defun treepy-left (loc)
   "Return the loc of the left sibling of the node at this LOC.
-nil if no more left sibilings."
+nil if no more left siblings."
   (treepy--with-loc loc (node context l r)
     (when (and context l)
       (seq-let [cl &rest lnext] l
@@ -339,7 +337,7 @@ If LOC is already the leftmost sibling, return self."
 
 (defun treepy-insert-left (loc item)
   "Insert as the left sibling of this LOC'S node the ITEM.
-Return same loc with sibilings updated."
+Return same loc with siblings updated."
   (treepy--with-loc loc (node context l)
     (if (not context)
         (error "Insert at top")
@@ -352,7 +350,7 @@ Return same loc with sibilings updated."
 
 (defun treepy-insert-right (loc item)
   "Insert as the right sibling of this LOC's node the ITEM.
-Return same loc with sibilings updated."
+Return same loc with siblings updated."
   (treepy--with-loc loc (node context r)
     (if (not context)
         (error "Insert at top")

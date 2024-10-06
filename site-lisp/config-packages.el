@@ -843,9 +843,9 @@ The shell command lives in my dotfiles repo."
          (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))
 
 (use-package csharp-mode
-  :init (setq lsp-csharp-server-path (executable-find "omnisharp"))
+  :init (setq lsp-csharp-server-path (executable-find "OmniSharp"))
   :config
-  (add-hook 'csharp-mode-hook 'omnisharp-mode))
+  (add-hook 'csharp-mode-hook 'lsp))
 
 (use-package apples-mode
   :mode "\\.scpt\\'"

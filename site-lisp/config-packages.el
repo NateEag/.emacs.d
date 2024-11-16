@@ -839,16 +839,16 @@ The shell command lives in my dotfiles repo."
          (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))
 
 (use-package csharp-mode
+  :after apheleia-mode lsp-mode
   :init (setq lsp-csharp-server-path (executable-find "OmniSharp"))
   :config
   (add-to-list 'apheleia-formatters '(csharpier "dotnet" "csharpier"))
-  (add-hook 'csharp-mode-hook 'lsp)
-  (add-hook 'csharp-mode-hook
-            '(lambda ()
+  :hook ((csharp-mode . lsp)
+         (csharp-mode . (lambda ()
                ;; Make lsp-mode stop spewing noise about something it doesn't understand in
                ;; OmniSharp's output.
                (setq-local warning-minimum-level :error)
-               (setq-local apheleia-formatter 'csharpier))))
+               (setq-local apheleia-formatter 'csharpier)))))
 
 (use-package apples-mode
   :mode "\\.scpt\\'"

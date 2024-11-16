@@ -754,6 +754,8 @@ The shell command lives in my dotfiles repo."
               (setq comment-start "//"
                     comment-end ""))))
 
+(use-package apheleia :diminish)
+
 (use-package lisp-mode
   :mode (("\\.el\\'" . emacs-lisp-mode)
          ("/Cask\\'" . emacs-lisp-mode))

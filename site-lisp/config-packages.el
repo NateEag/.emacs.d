@@ -822,13 +822,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package cc-mode
   :defer t
-  ;; FIXME This should just map cc-mode to lsp-cquery-enable. However, when I
-  ;; do that lsp-cquery-enable runs in PHP files. This is arguably a bug in
-  ;; php-mode, which I have filed an issue for:
-  ;; https://github.com/ejmr/php-mode/issues/407
-  :hook ((c-mode . (lambda ()
-                     (when (equal major-mode 'c-mode)
-                       (lsp-cquery-enable))))
+  :hook ((c-mode . lsp)
          (java-mode . lsp)))
 
 (use-package lsp-java

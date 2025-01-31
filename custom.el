@@ -33,7 +33,7 @@
  '(debug-on-quit nil)
  '(delete-selection-mode t)
  '(elfeed-feeds
-   '("https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rdsupdates.rss" "http://feeds.feedburner.com/blogspot/hsDu" "https://news-web.php.net/group.php?group=php.announce&format=rss" "https://developer.apple.com/news/rss/news.rss"))
+   '("https://www.existentialcomics.com/rss.xml" "https://www.mtjoytwp.org/feed/"))
  '(evil-mode-line-format nil nil nil "Since I use a block cursor in normal mode and a bar for insert, I don't need to see my evil-state in the modeline.")
  '(evil-undo-system 'undo-tree)
  '(evil-want-fine-undo t)

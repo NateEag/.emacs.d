@@ -1,6 +1,6 @@
-;;; company-bbdb.el --- company-mode completion backend for BBDB in message-mode
+;;; company-bbdb.el --- company-mode completion backend for BBDB in message-mode  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2016, 2020  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2016, 2020, 2023  Free Software Foundation, Inc.
 
 ;; Author: Jan Tatarik <jan.tatarik@gmail.com>
 
@@ -23,9 +23,7 @@
 (require 'cl-lib)
 
 (declare-function bbdb-record-get-field "bbdb")
-(declare-function bbdb-records "bbdb")
 (declare-function bbdb-dwim-mail "bbdb-com")
-(declare-function bbdb-search "bbdb-com")
 
 (defgroup company-bbdb nil
   "Completion backend for BBDB."
@@ -40,10 +38,12 @@
   (cl-mapcan (lambda (record)
                (mapcar (lambda (mail) (bbdb-dwim-mail record mail))
                        (bbdb-record-get-field record 'mail)))
-             (eval '(bbdb-search (bbdb-records) arg nil arg))))
+             (eval `(let ((arg ,arg))
+                      (bbdb-search (bbdb-records) :all-names arg :mail arg))
+                   t)))
 
 ;;;###autoload
-(defun company-bbdb (command &optional arg &rest ignore)
+(defun company-bbdb (command &optional arg &rest _ignore)
   "`company-mode' completion backend for BBDB."
   (interactive (list 'interactive))
   (cl-case command

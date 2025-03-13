@@ -1,6 +1,6 @@
-;;; company-semantic.el --- company-mode completion backend using Semantic
+;;; company-semantic.el --- company-mode completion backend using Semantic  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009-2011, 2013-2018  Free Software Foundation, Inc.
+;; Copyright (C) 2009-2011, 2013-2018, 2023  Free Software Foundation, Inc.
 
 ;; Author: Nikolaj Schumacher
 
@@ -126,11 +126,11 @@ and `c-electric-colon', for automatic completion right after \">\" and
 
 (defun company-semantic--prefix ()
   (if company-semantic-begin-after-member-access
-      (company-grab-symbol-cons "\\.\\|->\\|::" 2)
-    (company-grab-symbol)))
+      (company-grab-symbol-parts "\\.\\|->\\|::" 2)
+    (company-grab-symbol-parts)))
 
 ;;;###autoload
-(defun company-semantic (command &optional arg &rest ignored)
+(defun company-semantic (command &optional arg &rest _ignored)
   "`company-mode' completion backend using CEDET Semantic."
   (interactive (list 'interactive))
   (cl-case command
@@ -140,7 +140,7 @@ and `c-electric-colon', for automatic completion right after \">\" and
                  (memq major-mode company-semantic-modes)
                  (not (company-in-string-or-comment))
                  (or (company-semantic--prefix) 'stop)))
-    (candidates (if (and (equal arg "")
+    (candidates (if (and (string-empty-p arg)
                          (not (looking-back "->\\|\\.\\|::" (- (point) 2))))
                     (company-semantic-completions-raw arg)
                   (company-semantic-completions arg)))
@@ -151,7 +151,7 @@ and `c-electric-colon', for automatic completion right after \">\" and
     (doc-buffer (company-semantic-doc-buffer
                  (assoc arg company-semantic--current-tags)))
     ;; Because "" is an empty context and doesn't return local variables.
-    (no-cache (equal arg ""))
+    (no-cache (string-empty-p arg))
     (duplicates t)
     (location (let ((tag (assoc arg company-semantic--current-tags)))
                 (when (buffer-live-p (semantic-tag-buffer tag))

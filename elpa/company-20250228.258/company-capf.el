@@ -1,6 +1,6 @@
 ;;; company-capf.el --- company-mode completion-at-point-functions backend -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2013-2024  Free Software Foundation, Inc.
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
 
@@ -19,7 +19,6 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 
-
 ;;; Commentary:
 ;;
 ;; The CAPF back-end provides a bridge to the standard
@@ -32,19 +31,36 @@
 (require 'company)
 (require 'cl-lib)
 
+(defgroup company-capf nil
+  "Completion backend as adapter for `completion-at-point-functions'."
+  :group 'company)
+
+(defcustom company-capf-disabled-functions '(tags-completion-at-point-function
+                                             ispell-completion-at-point)
+  "List of completion functions which should be ignored in this backend.
+
+By default it contains the functions that duplicate the built-in backends
+but don't support the corresponding configuration options and/or alter the
+intended priority of the default backends' configuration."
+  :type 'hook
+  :package-version '(company . "1.0.0"))
+
 ;; Amortizes several calls to a c-a-p-f from the same position.
 (defvar company--capf-cache nil)
 
 ;; FIXME: Provide a way to save this info once in Company itself
 ;; (https://github.com/company-mode/company-mode/pull/845).
 (defvar-local company-capf--current-completion-data nil
-  "Value last returned by `company-capf' when called with `candidates'.
+  "Value last returned by `company-capf' in response to `candidates'.
 For most properties/actions, this is just what we need: the exact values
 that accompanied the completion table that's currently is use.
 
 `company-capf', however, could be called at some different positions during
 a completion session (most importantly, by `company-sort-by-occurrence'),
 so we can't just use the preceding variable instead.")
+
+(defvar-local company-capf--current-completion-metadata nil
+  "Metadata computed with the current prefix and data above.")
 
 (defun company--capf-data ()
   (let ((cache company--capf-cache))
@@ -57,105 +73,60 @@ so we can't just use the preceding variable instead.")
               (list (current-buffer) (point) (buffer-chars-modified-tick) data))
         data))))
 
-(defun company--contains (elt lst)
-  (when-let ((cur (car lst)))
-    (cond
-     ((symbolp cur)
-      (or (eq elt cur)
-          (company--contains elt (cdr lst))))
-     ((listp cur)
-      (or (company--contains elt cur)
-          (company--contains elt (cdr lst)))))))
-
 (defun company--capf-data-real ()
-  (cl-letf* (((default-value 'completion-at-point-functions)
-              (if (company--contains 'company-etags company-backends)
-                  ;; Ignore tags-completion-at-point-function because it subverts
-                  ;; company-etags in the default value of company-backends, where
-                  ;; the latter comes later.
-                  (remove 'tags-completion-at-point-function
-                          (default-value 'completion-at-point-functions))
-                (default-value 'completion-at-point-functions)))
-             (completion-at-point-functions (company--capf-workaround))
-             (data (run-hook-wrapped 'completion-at-point-functions
-                                     ;; Ignore misbehaving functions.
-                                     #'company--capf-wrapper 'optimist)))
+  (let ((data (run-hook-wrapped 'completion-at-point-functions
+                                ;; Ignore disabled and misbehaving functions.
+                                #'company--capf-wrapper 'optimist)))
     (when (and (consp (cdr data)) (integer-or-marker-p (nth 1 data))) data)))
 
 (defun company--capf-wrapper (fun which)
-  (let ((buffer-read-only t)
-        (inhibit-read-only nil)
-        (completion-in-region-function
-         (lambda (beg end coll pred)
-           (throw 'company--illegal-completion-in-region
-                  (list fun beg end coll :predicate pred)))))
-    (catch 'company--illegal-completion-in-region
-      (condition-case nil
-          (completion--capf-wrapper fun which)
-        (buffer-read-only nil)))))
+  ;; E.g. tags-completion-at-point-function subverts company-etags in the
+  ;; default value of company-backends, where the latter comes later.
+  (unless (memq fun company-capf-disabled-functions)
+    (let ((buffer-read-only t)
+          (inhibit-read-only nil)
+          (completion-in-region-function
+           (lambda (beg end coll pred)
+             (throw 'company--illegal-completion-in-region
+                    (list fun beg end coll :predicate pred)))))
+      (catch 'company--illegal-completion-in-region
+        (condition-case nil
+            (completion--capf-wrapper fun which)
+          (buffer-read-only nil))))))
 
 (declare-function python-shell-get-process "python")
 
-(defun company--capf-workaround ()
-  ;; For http://debbugs.gnu.org/cgi/bugreport.cgi?bug=18067
-  (if (or (not (listp completion-at-point-functions))
-          (not (memq 'python-completion-complete-at-point completion-at-point-functions))
-          (python-shell-get-process))
-      completion-at-point-functions
-    (remq 'python-completion-complete-at-point completion-at-point-functions)))
-
-(defun company-capf--save-current-data (data)
-  (setq company-capf--current-completion-data data)
+(defun company-capf--save-current-data (data metadata)
+  (setq company-capf--current-completion-data data
+        company-capf--current-completion-metadata metadata)
   (add-hook 'company-after-completion-hook
             #'company-capf--clear-current-data nil t))
 
 (defun company-capf--clear-current-data (_ignored)
-  (setq company-capf--current-completion-data nil))
+  (setq company-capf--current-completion-data nil
+        company-capf--current-completion-metadata nil))
 
 (defvar-local company-capf--sorted nil)
+(defvar-local company-capf--current-boundaries nil)
 
-(defun company-capf (command &optional arg &rest _args)
+(defun company-capf (command &optional arg &rest rest)
   "`company-mode' backend using `completion-at-point-functions'."
   (interactive (list 'interactive))
   (pcase command
     (`interactive (company-begin-backend 'company-capf))
     (`prefix
-     (let ((res (company--capf-data)))
-       (when res
-         (let ((length (plist-get (nthcdr 4 res) :company-prefix-length))
-               (prefix (buffer-substring-no-properties (nth 1 res) (point))))
-           (cond
-            ((> (nth 2 res) (point)) 'stop)
-            (length (cons prefix length))
-            (t prefix))))))
+     (company-capf--prefix))
     (`candidates
-     (company-capf--candidates arg))
+     (company-capf--candidates arg (car rest)))
     (`sorted
      company-capf--sorted)
     (`match
      ;; Ask the for the `:company-match' function.  If that doesn't help,
      ;; fallback to sniffing for face changes to get a suitable value.
-     (let ((f (plist-get (nthcdr 4 company-capf--current-completion-data)
-                         :company-match)))
-       (if f (funcall f arg)
-         (let* ((match-start nil) (pos -1)
-                (prop-value nil)  (faces nil)
-                (has-face-p nil)  chunks
-                (limit (length arg)))
-           (while (< pos limit)
-             (setq pos
-                   (if (< pos 0) 0 (next-property-change pos arg limit)))
-             (setq prop-value (or
-                               (get-text-property pos 'face arg)
-                               (get-text-property pos 'font-lock-face arg))
-                   faces (if (listp prop-value) prop-value (list prop-value))
-                   has-face-p (memq 'completions-common-part faces))
-             (cond ((and (not match-start) has-face-p)
-                    (setq match-start pos))
-                   ((and match-start (not has-face-p))
-                    (push (cons match-start pos) chunks)
-                    (setq match-start nil))))
-           (nreverse chunks)))))
+     (let ((f (or (plist-get (nthcdr 4 company-capf--current-completion-data)
+                             :company-match)
+                  #'company--match-from-capf-face)))
+       (funcall f arg)))
     (`duplicates t)
     (`no-cache t)   ;Not much can be done here, as long as we handle
                     ;non-prefix matches.
@@ -185,20 +156,35 @@ so we can't just use the preceding variable instead.")
      (plist-get (nthcdr 4 (company--capf-data)) :company-require-match))
     (`init nil)      ;Don't bother: plenty of other ways to initialize the code.
     (`post-completion
-     (company--capf-post-completion arg))
+     (company-capf--post-completion arg))
+    (`adjust-boundaries
+     (company--capf-boundaries
+      company-capf--current-boundaries))
+    (`expand-common
+     (company-capf--expand-common arg (car rest)))
     ))
+
+(defun company-capf--prefix ()
+  (let ((res (company--capf-data)))
+    (when res
+      (let ((length (plist-get (nthcdr 4 res) :company-prefix-length))
+            (prefix (buffer-substring-no-properties (nth 1 res) (point)))
+            (suffix (buffer-substring-no-properties (point) (nth 2 res))))
+        (list prefix suffix length)))))
+
+(defun company-capf--expand-common (prefix suffix)
+  (let* ((data company-capf--current-completion-data)
+         (table (nth 3 data))
+         (pred (plist-get (nthcdr 4 data) :predicate)))
+    (company--capf-expand-common prefix suffix table pred
+                                 company-capf--current-completion-metadata)))
 
 (defun company-capf--annotation (arg)
   (let* ((f (or (plist-get (nthcdr 4 company-capf--current-completion-data)
                            :annotation-function)
                 ;; FIXME: Add a test.
                 (cdr (assq 'annotation-function
-                           (completion-metadata
-                            (buffer-substring (nth 1 company-capf--current-completion-data)
-                                              (nth 2 company-capf--current-completion-data))
-                            (nth 3 company-capf--current-completion-data)
-                            (plist-get (nthcdr 4 company-capf--current-completion-data)
-                                       :predicate))))))
+                           company-capf--current-completion-metadata))))
          (annotation (when f (funcall f arg))))
     (if (and company-format-margin-function
              (equal annotation " <f>") ; elisp-completion-at-point, pre-icons
@@ -207,49 +193,64 @@ so we can't just use the preceding variable instead.")
         nil
       annotation)))
 
-(defun company-capf--candidates (input)
-  (let ((res (company--capf-data)))
-    (company-capf--save-current-data res)
-    (when res
-      (let* ((table (nth 3 res))
-             (pred (plist-get (nthcdr 4 res) :predicate))
-             (meta (completion-metadata
-                    (buffer-substring (nth 1 res) (nth 2 res))
-                    table pred))
-             (candidates (completion-all-completions input table pred
-                                                     (length input)
-                                                     meta))
+(defun company-capf--candidates (input suffix)
+  (let* ((current-capf (car company-capf--current-completion-data))
+         (res (company--capf-data))
+         (table (nth 3 res))
+         (pred (plist-get (nthcdr 4 res) :predicate))
+         (meta (and res
+                    (completion-metadata
+                     (buffer-substring (nth 1 res) (nth 2 res))
+                     table pred))))
+    (when (and res
+               (or (not current-capf)
+                   (equal current-capf (car res))))
+      (let* ((interrupt (plist-get (nthcdr 4 res) :company-use-while-no-input))
+             (all-result (company-capf--candidates-1 input suffix
+                                                     table pred
+                                                     meta
+                                                     (and non-essential
+                                                          (eq interrupt t))))
              (sortfun (cdr (assq 'display-sort-function meta)))
-             (last (last candidates))
-             (base-size (and (numberp (cdr last)) (cdr last))))
-        (when base-size
-          (setcdr last nil))
+             (candidates (assoc-default :completions all-result)))
         (setq company-capf--sorted (functionp sortfun))
+        (when candidates
+          (company-capf--save-current-data res meta)
+          (setq company-capf--current-boundaries
+                (company--capf-boundaries-markers
+                 (assoc-default :boundaries all-result)
+                 company-capf--current-boundaries)))
         (when sortfun
           (setq candidates (funcall sortfun candidates)))
-        (if (not (zerop (or base-size 0)))
-            (let ((before (substring input 0 base-size)))
-              (mapcar (lambda (candidate)
-                        (concat before candidate))
-                      candidates))
-          candidates)))))
+        candidates))))
 
-(defun company--capf-post-completion (arg)
+(defun company-capf--candidates-1 (prefix suffix table pred meta interrupt-on-input)
+  (if (not interrupt-on-input)
+      (company--capf-completions prefix suffix table pred meta)
+    (let (res)
+      (and (while-no-input
+             (setq res
+                   (company--capf-completions prefix suffix table pred meta))
+             nil)
+           (throw 'interrupted 'new-input))
+      res)))
+
+(defun company-capf--post-completion (arg)
   (let* ((res company-capf--current-completion-data)
          (exit-function (plist-get (nthcdr 4 res) :exit-function))
-         (table (nth 3 res)))
+         (table (nth 3 res))
+         (prefix (nth 0 (company-capf--prefix))))
     (if exit-function
-        ;; We can more or less know when the user is done with completion,
-        ;; so we do something different than `completion--done'.
+        ;; Follow the example of `completion--done'.
         (funcall exit-function arg
                  ;; FIXME: Should probably use an additional heuristic:
                  ;; completion-at-point doesn't know when the user picked a
                  ;; particular candidate explicitly (it only checks whether
                  ;; further completions exist). Whereas company user can press
                  ;; RET (or use implicit completion with company-tng).
-                 (if (= (car (completion-boundaries arg table nil ""))
-                        (length arg))
-                     'sole
+                 (if (= (car (completion-boundaries prefix table nil ""))
+                        (length prefix))
+                     'exact
                    'finished)))))
 
 (provide 'company-capf)

@@ -1,6 +1,6 @@
-;;; company-keywords.el --- A company backend for programming language keywords
+;;; company-keywords.el --- A company backend for programming language keywords  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009-2011, 2013-2018, 2020-2022  Free Software Foundation, Inc.
+;; Copyright (C) 2009-2011, 2013-2018, 2020-2023  Free Software Foundation, Inc.
 
 ;; Author: Nikolaj Schumacher
 
@@ -403,7 +403,21 @@
      "i16" "i32" "i64" "include" "list" "map" "oneway" "optional" "required"
      "service" "set" "string" "struct" "throws" "typedef" "void"
      )
+    (tuareg-mode 
+     ;; ocaml, from https://v2.ocaml.org/manual/lex.html#sss:keywords
+     "and" "as" "asr" "assert" "begin" "class"
+     "constraint" "do" "done" "downto" "else" "end" 
+     "exception" "external" "false" "for" "fun" "function"
+     "functor" "if" "in" "include" "inherit" "initializer"
+     "land" "lazy" "let" "lor" "lsl" "lsr"
+     "lxor" "match" "method" "mod" "module" "mutable"
+     "new" "nonrec" "object" "of" "open" "or"
+     "private" "rec" "sig" "struct" "then" "to" 
+     "true" "try" "type" "val" "virtual" "when" 
+     "while" "with" 
+    )
     ;; aliases
+    (caml-mode . tuareg-mode)
     (js2-mode . javascript-mode)
     (js2-jsx-mode . javascript-mode)
     (espresso-mode . javascript-mode)
@@ -413,6 +427,7 @@
     (cperl-mode . perl-mode)
     (jde-mode . java-mode)
     (ess-julia-mode . julia-mode)
+    (php-ts-mode . php-mode)
     (phps-mode . php-mode)
     (enh-ruby-mode . ruby-mode))
   "Alist mapping major-modes to sorted keywords for `company-keywords'.")
@@ -439,7 +454,7 @@
      (makefile-mode          . makefile-statements))))
 
 ;;;###autoload
-(defun company-keywords (command &optional arg &rest ignored)
+(defun company-keywords (command &optional arg &rest _ignored)
   "`company-mode' backend for programming language keywords."
   (interactive (list 'interactive))
   (cl-case command

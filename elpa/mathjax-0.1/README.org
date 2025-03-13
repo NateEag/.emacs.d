@@ -1,0 +1,49 @@
+#+title: mathjax.el — Emacs interface to MathJax
+
+This package provides a method to display mathematical formulas in
+Emacs.  It is mainly intended as a helper library to be used by other
+packages, but also provides integration with some built-in Emacs
+features.
+
+[[https://www.mathjax.org/][MathJax]] is used as rendering engine.  The [[https://nodejs.org/en][Node]] JavaScript runtime is
+required (package =node= in many package managers), but all other
+dependencies are bundled with mathjax.el.
+
+** For users
+
+As the end user, you can set up math rendering in EWW buffers with
+
+#+begin_src emacs-lisp
+(add-hook 'eww-mode-hook #'mathjax-shr-setup)
+#+end_src
+
+This is how your typical webpage might then look like:
+
+#+html: <img alt="EWW displaying some formulas" src="https://raw.githubusercontent.com/astoff/mathjax.el/images/screenshot.png"/>
+
+A possible future development could be the inclusion of a live preview
+mode for TeX, Org, etc.
+
+** For package authors
+
+If you would like to use this library in your package, you first need
+to communicate to your users that Node is required to make math
+rendering work.
+
+The API is asynchronous, non-blocking and well oiled.  The basic entry
+point is =mathjax-render=, which takes as input a callback function
+and a mathematical formula, which can be in either TeX, MathML or
+AsciiMath format.  MathJax runs in a subprocess and when it finishes,
+the callback is called with an SVG image as argument.
+
+The function =mathjax-display= provides a more high-level interface.
+It takes as argument a formula and a buffer region (which typically
+contains a plain-text rendition of the formula).  When rendering
+completes, an overlay is created in the indicated region to display
+the formula.
+
+Lastly, =mathjax-typeset-region= can be used when you have several
+formulas in a buffer region, delimited by the patterns stipulated in
+the =mathjax-delimiters= variable.
+
+In all cases, see the docstrings for complete details.

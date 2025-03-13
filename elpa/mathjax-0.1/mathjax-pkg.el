@@ -1,0 +1,2 @@
+;; Generated package description from mathjax.el  -*- no-byte-compile: t -*-
+(define-package "mathjax" "0.1" "Render formulas using MathJax" '((emacs "27.1")) :commit "db669451bbee7d2ea9872c28661c4679391b9644" :authors '(("Augusto Stoffel" . "arstoffel@gmail.com")) :maintainer '("Augusto Stoffel" . "arstoffel@gmail.com") :keywords '("tex" "text" "tools") :url "https://github.com/astoff/mathjax.el")

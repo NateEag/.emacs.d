@@ -4,10 +4,11 @@
 
 ;; Author: Gong Qijian <gongqijian@gmail.com>
 ;; Created: 2019/04/06
-;; Version: 0.3.37
-;; Last-Updated: 2023-05-13 10:33:45 +0800
+;; Package-Version: 20241012.125
+;; Package-Revision: 0001d2b4fcc6
+;; Last-Updated: 2024-10-12 09:24:37 +0800
 ;;           by: Gong Qijian
-;; Package-Requires: ((emacs "25.1") (dash "2.18") (edit-indirect "0.1.5"))
+;; Package-Requires: ((emacs "25.1") (dash "2.18") (edit-indirect "0.1.11"))
 ;; URL: https://github.com/twlz0ne/separedit.el
 ;; Keywords: tools languages docs
 
@@ -407,6 +408,7 @@ Taken from `markdown-code-lang-modes'."
     (java-mode          . java-ts-mode)
     (js-mode            . js-ts-mode)
     (lua-mode           . lua-ts-mode)
+    (nix-mode           . nix-ts-mode)
     (python-mode        . python-ts-mode)
     (ruby-mode          . ruby-ts-mode)
     (rust-mode          . rust-ts-mode)
@@ -756,7 +758,7 @@ Each item may be one of the following forms:
 (defun separedit--point-at-string (&optional pos)
   "Determine if point POS at string or not."
   (or (nth 3 (syntax-ppss pos))
-      (and (derived-mode-p 'python-mode 'python-ts-mode)
+      (and (derived-mode-p 'nix-ts-mode 'python-mode 'python-ts-mode)
            (memq (face-at-point) '(font-lock-string-face font-lock-doc-face))
            (unless (bobp)
              (memq (get-char-property (1- (point)) 'face)
@@ -1293,6 +1295,24 @@ LANG is a string, and the returned major mode is a symbol."
     (when (looking-back regexp (line-beginning-position))
       (match-string-no-properties 1))))
 
+(cl-defgeneric separedit--indent-of-straight (_beg _end)
+  "Return the base indent of straight block (e.g. Info-mode) betwen BEG and END.")
+
+(cl-defmethod separedit--indent-of-straight (beg end &context (major-mode
+                                                               Info-mode))
+
+  (save-excursion
+    (goto-char beg)
+    (let (indent)
+      (while (< (point) end)
+        (unless (looking-at-p "[ \t]*$")
+          (back-to-indentation)
+          (setq indent (if indent
+                           (min indent (current-column))
+                         (current-column))))
+        (forward-line))
+      indent)))
+
 (cl-defgeneric separedit--indent-of-string-block-0
     (_quotes _beg _end _str-start _beg-at-newline _end-at-newline)
   "Called by `separedit--indent-of-string-block' in final clause of cond."
@@ -1343,7 +1363,8 @@ Return value is in the form of (indent-length indent-line1)."
              (goto-char end)
              (cons
               (+ (current-column)
-                 (or (cdr (assoc major-mode separedit-string-indent-offset-alist))
+                 (or (let ((rmod (car (rassq major-mode separedit-major-mode-remap-alist))))
+                       (cdr (assoc (or rmod major-mode) separedit-string-indent-offset-alist)))
                      0))
               t))
             ((not (string= str-start ""))
@@ -1677,7 +1698,7 @@ It will override by the key that `separedit' binding in source buffer.")
                (scp (nth 3 separedit--help-variable-edit-info))
                (buf (nth 4 separedit--help-variable-edit-info))
                (val (if (nth 2 separedit--help-variable-edit-info)
-                        (substring-no-properties (buffer-string)) 
+                        (substring-no-properties (buffer-string))
                       (list 'quote (car (read-from-string (buffer-string)))))))
           (cond
            ((and (eq scp 'local) buf) (with-current-buffer buf (eval `(setq-local ,sym ,val))))
@@ -1699,15 +1720,15 @@ It will override by the key that `separedit' binding in source buffer.")
            ;; Clone a buffer to protect the folding of text in edit buffer.
            (clone-buffer (concat (buffer-name) " <clone>")))
           (function-backup
-           ;; Temprary disable the ‘edit-indirect--clean-up’ (but who calls
+           ;; Temprary disable the ‘edit-indirect--abort’ (but who calls
            ;; this function after the clone buffer is killed?)
-           (symbol-function 'edit-indirect--clean-up)))
+           (symbol-function 'edit-indirect--abort)))
       (unwind-protect
           (with-current-buffer edit-buffer-clone
-            (fset 'edit-indirect--clean-up (lambda ()))
+            (fset 'edit-indirect--abort #'ignore)
             (separedit--apply-changes))
         (kill-buffer edit-buffer-clone)
-        (fset 'edit-indirect--clean-up function-backup)
+        (fset 'edit-indirect--abort function-backup)
         (if (and separedit-write-file-when-execute-save
                  (buffer-file-name source-buffer))
             (with-current-buffer source-buffer
@@ -1727,7 +1748,7 @@ It will override by the key that `separedit' binding in source buffer.")
         (mark-beg (overlay-start edit-indirect--overlay))
         (mark-end (overlay-end edit-indirect--overlay)))
     (separedit--apply-changes)
-    (edit-indirect--clean-up) ;; Returned to source buffer
+    (edit-indirect--abort t) ;; Returned to source buffer
     (goto-char
      (save-excursion
        (save-restriction
@@ -1844,7 +1865,7 @@ MAX-WIDTH       maximum width that can be removed"
 (defun separedit--remove-c/c++-macro-delimiter (_ &optional _)
   "Remove c/c++ macro delimiter of each line when etering edit buffer."
   (let ((inhibit-read-only t)
-        ;; Regexp from `separedit-block-regexp-plists' is not working as 
+        ;; Regexp from `separedit-block-regexp-plists' is not working as
         ;; expected when search backward, use the following instead:
         (regexp "\\(?:[^\s\t]\\|^[\s\t]\\)\\([\s\t]*\\\\[\s\t]*\\)"))
     (save-excursion
@@ -2282,11 +2303,19 @@ but users can also manually select it by pressing `C-u \\[separedit]'."
                         :lang-mode 'emacs-lisp-mode))
                 ;; region
                 (when (region-active-p)
-                  (let ((block (if strp (separedit--block-info))))
+                  (let ((block (if strp
+                                   (separedit--block-info)
+                                 (when-let ((indent (separedit--indent-of-straight
+                                                     (region-beginning)
+                                                     (region-end))))
+                                   (list :indent-length indent
+                                         :regexps (list :straight t))))))
                     (plist-put
                      (plist-put block :beginning (region-beginning))
                      :end (if (and (= ?\n (char-before (region-end)))
-                                   (not (= ?\n (char-after (region-end)))))
+                                   (if (char-after (region-end))
+                                       (not (= ?\n (char-after (region-end))))
+                                     t))
                               (1- (region-end))
                             (region-end)))))))))))))
 

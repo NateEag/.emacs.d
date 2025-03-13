@@ -6,7 +6,8 @@
 ;; Hacked additionally by:	opensource at hardakers dot net
 ;; Created:			14 Feb 2012
 ;; Updated:			13 December 2015
-;; Version:                     1.12
+;; Package-Version: 20240629.2322
+;; Package-Revision: b4d846d80ddd
 ;; Url:                         https://github.com/joddie/pcre2el
 ;; Package-Requires:            ((emacs "25.1"))
 
@@ -3124,9 +3125,11 @@ in character classes as outside them."
   (around rxt () activate compile)
   "This function is hacked for emulated PCRE syntax and regexp conversion."
   (if (eq reb-re-syntax 'pcre)
-      (let ((src (if (fboundp #'reb-target-value)
-                     (reb-target-value 'reb-regexp-src)
-                   (reb-target-binding reb-regexp-src))))
+      (let ((src (cond ((fboundp 'reb-target-value)
+                        (reb-target-value 'reb-regexp-src))
+                       ((fboundp 'reb-target-binding)
+                        (reb-target-binding reb-regexp-src))
+                       ((error "BUG")))))
         (if src
             (insert "\n/" (replace-regexp-in-string "/" "\\/" src t t) "/")
           (insert "\n//")))

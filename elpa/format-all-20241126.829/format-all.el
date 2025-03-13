@@ -2,8 +2,9 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Version: 0.5.0
-;; Package-Requires: ((emacs "24.4") (inheritenv "0.1") (language-id "0.19"))
+;; Package-Version: 20241126.829
+;; Package-Revision: fd9c013f5f80
+;; Package-Requires: ((emacs "24.4") (inheritenv "0.1") (language-id "0.20"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: MIT
 
@@ -26,6 +27,7 @@
 ;; - Assembly (asmfmt)
 ;; - ATS (atsfmt)
 ;; - Awk (gawk)
+;; - AZSL (clang-format)
 ;; - Bazel Starlark (buildifier)
 ;; - Beancount (bean-format)
 ;; - BibTeX (Emacs)
@@ -33,7 +35,7 @@
 ;; - C# (clang-format, astyle, csharpier)
 ;; - Cabal (cabal-fmt)
 ;; - Caddyfile (caddy fmt)
-;; - Clojure/ClojureScript (zprint, node-cljfmt)
+;; - Clojure/ClojureScript (cljfmt, zprint)
 ;; - CMake (cmake-format)
 ;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier, prettierd)
@@ -55,8 +57,11 @@
 ;; - Go (gofmt, goimports)
 ;; - GraphQL (prettier, prettierd)
 ;; - Haskell (brittany, fourmolu, hindent, ormolu, stylish-haskell)
+;; - HCL (hclfmt)
+;; - HLSL (clang-format)
 ;; - HTML/XHTML/XML (tidy)
-;; - Java (clang-format, astyle)
+;; - Hy (Emacs)
+;; - Java (astyle, clang-format, google-java-format)
 ;; - JavaScript/JSON/JSX (prettier, standard, prettierd, deno)
 ;; - Jsonnet (jsonnetfmt)
 ;; - Kotlin (ktlint)
@@ -72,7 +77,7 @@
 ;; - PHP (prettier plugin)
 ;; - Protocol Buffers (clang-format)
 ;; - PureScript (purty, purs-tidy)
-;; - Python (black, yapf, isort)
+;; - Python (black, isort, ruff format, yapf)
 ;; - R (styler)
 ;; - Racket (raco-fmt)
 ;; - Reason (bsrefmt)
@@ -152,10 +157,13 @@
     ("Go" gofmt)
     ("GraphQL" prettier)
     ("Haskell" brittany)
+    ("HCL" hclfmt)
+    ("HLSL" clang-format)
     ("HTML" html-tidy)
     ("HTML+EEX" mix-format)
     ("HTML+ERB" erb-format)
-    ("Java" clang-format)
+    ("Hy" emacs-hy)
+    ("Java" google-java-format)
     ("JavaScript" prettier)
     ("JSON" prettier)
     ("JSON5" prettier)
@@ -200,6 +208,7 @@
     ("Zig" zig)
 
     ("_Angular" prettier)
+    ("_AZSL" clang-format)
     ("_Beancount" bean-format)
     ("_Caddyfile" caddy-fmt)
     ("_Flow" prettier)
@@ -735,13 +744,21 @@ Consult the existing formatters for examples of BODY."
   (:features)
   (:format (format-all--buffer-easy executable "fmt" "-")))
 
+(define-format-all-formatter cargo-fmt
+  ;; This is the same formatter as rustfmt, but run via `cargo fmt`.
+  (:executable "cargo")
+  (:install "rustup component add rustfmt")
+  (:languages "Rust")
+  (:features)
+  (:format (format-all--buffer-easy executable "fmt")))
+
 (define-format-all-formatter clang-format
   (:executable "clang-format")
   (:install
    (macos "brew install clang-format")
    (windows "scoop install llvm"))
   (:languages
-   "C" "C#" "C++" "Cuda" "GLSL" "Java" "Objective-C" "Protocol Buffer")
+   "_AZSL" "C" "C#" "C++" "Cuda" "GLSL" "HLSL" "Java" "Objective-C" "Protocol Buffer")
   (:features region)
   (:format
    (format-all--buffer-easy
@@ -763,10 +780,10 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter cljfmt
   (:executable "cljfmt")
-  (:install "npm install --global node-cljfmt")
+  (:install)
   (:languages "Clojure")
   (:features)
-  (:format (format-all--buffer-easy executable)))
+  (:format (format-all--buffer-easy executable "fix" "-")))
 
 (define-format-all-formatter cmake-format
   (:executable "cmake-format")
@@ -884,6 +901,18 @@ Consult the existing formatters for examples of BODY."
   (:features)
   (:format (format-all--buffer-native 'bibtex-mode 'bibtex-sort-buffer)))
 
+(define-format-all-formatter emacs-hy
+  (:executable)
+  (:install)
+  (:languages "Hy")
+  (:features region)
+  (:format
+   (format-all--buffer-native
+    'hy-mode
+    (if region
+        (lambda () (indent-region (car region) (cdr region)))
+      (lambda () (indent-region (point-min) (point-max)))))))
+
 (define-format-all-formatter emacs-lisp
   (:executable)
   (:install)
@@ -965,6 +994,20 @@ Consult the existing formatters for examples of BODY."
   (:features)
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter google-java-format
+  (:executable "google-java-format")
+  (:install)
+  (:languages "Java")
+  (:features)
+  (:format (format-all--buffer-easy executable "-")))
+
+(define-format-all-formatter hclfmt
+  (:executable "hclfmt")
+  (:install "go install github.com/hashicorp/hcl/v2/cmd/hclfmt@latest")
+  (:languages "HCL")
+  (:features)
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter hindent
   (:executable "hindent")
   (:install "stack install hindent")
@@ -1014,7 +1057,7 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install ktlint"))
   (:languages "Kotlin")
   (:features)
-  (:format (format-all--buffer-easy executable "--format" "--stdin")))
+  (:format (format-all--buffer-easy executable "--log-level=none" "--format" "--stdin")))
 
 (define-format-all-formatter latexindent
   (:executable "latexindent")
@@ -1239,6 +1282,17 @@ Consult the existing formatters for examples of BODY."
     "--stderr"
     "--stdin" (or (buffer-file-name) (buffer-name)))))
 
+(define-format-all-formatter ruff
+  (:executable "ruff")
+  (:install "pip install ruff")
+  (:languages "Python")
+  (:features)
+  (:format (format-all--buffer-easy
+            executable "format"
+            "--silent"
+            "--stdin-filename" (or (buffer-file-name) (buffer-name))
+            "-")))
+
 (define-format-all-formatter rufo
   (:executable "rufo")
   (:install "gem install rufo")
@@ -1266,7 +1320,7 @@ Consult the existing formatters for examples of BODY."
   (:features)
   (:format
    (format-all--buffer-easy
-    executable "--stdin" "--non-interactive" "--quiet")))
+    executable "--stdin" "--non-interactive" "--quiet" "--stdout")))
 
 (define-format-all-formatter shfmt
   (:executable "shfmt")
@@ -1477,6 +1531,7 @@ unofficial languages IDs are prefixed with \"_\"."
            (boundp 'flow-minor-mode)
            (not (null (symbol-value 'flow-minor-mode)))
            "_Flow")
+      (and (equal major-mode 'azsl-mode) "_AZSL")
       (and (equal major-mode 'beancount-mode) "_Beancount")
       (and (equal major-mode 'caddyfile-mode) "_Caddyfile")
       (and (equal major-mode 'gleam-mode) "_Gleam")

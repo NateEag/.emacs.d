@@ -1,10 +1,10 @@
 ;;; gitattributes-mode.el --- Major mode for editing .gitattributes files  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2013-2015 Rüdiger Sonderfeld
-;; Copyright (C) 2013-2023 The Magit Project Contributors
+;; Copyright (C) 2013-2024 The Magit Project Contributors
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
-;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
+;; Maintainer: Jonas Bernoulli <emacs.git-modes@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
 
@@ -50,8 +50,8 @@ Alternatively add `turn-on-eldoc-mode' to the mode hook."
 
 (defcustom gitattributes-mode-man-function #'man
   "Function to open the gitattributes(5) manpage."
-  :type '(choice (const :tag "Man" #'man)
-                 (const :tag "Woman" #'woman)
+  :type '(choice (const :tag "Man" man)
+                 (const :tag "Woman" woman)
                  (function :tag "Function"))
   :group 'gitattributes-mode)
 

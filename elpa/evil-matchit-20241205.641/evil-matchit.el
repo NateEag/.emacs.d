@@ -1,12 +1,13 @@
-;;; evil-matchit.el --- Vim matchit ported to Evil
+;;; evil-matchit.el --- Vim matchit ported to Evil -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014-2020 Chen Bin
 
 ;; Author: Chen Bin <chenbin.sh@gmail.com>
 ;; URL: http://github.com/redguardtoo/evil-matchit
-;; Version: 3.0.2
+;; Package-Version: 20241205.641
+;; Package-Revision: 84a6d34c1a12
 ;; Keywords: matchit vim evil
-;; Package-Requires: ((emacs "25.1"))
+;; Package-Requires: ((emacs "27.1"))
 ;;
 ;; This file is not part of GNU Emacs.
 
@@ -81,7 +82,7 @@
   "Hook run before&after jump to the matched tag.
 If the parameter of hook is t, the hook runs before jump.
 Or else, the hook runs after jump.
-Some modes can be toggle on/off in the hook"
+Some modes can be toggle on/off in the hook."
   :group 'evil-matchit
   :type 'hook)
 
@@ -99,7 +100,9 @@ Some modes can be toggle on/off in the hook"
   (let* ((jump-rules (plist-get evilmi-plugins major-mode))
          rlt
          jumped
-         ideal-dest)
+         ideal-dest
+         get-tag-fn
+         jump-tag-fn)
 
     (unless num (setq num 1))
 
@@ -112,17 +115,38 @@ Some modes can be toggle on/off in the hook"
 
     (when jump-rules
       (dolist (rule jump-rules)
-        ;; execute evilmi-xxxx-get-tag
+        ;; execute evilmi-xxxx-get-tag if it's not nil
         ;; every rule should be executed.
         ;; the simple rule might just forward a word
-        (setq rlt (funcall (nth 0 rule)))
-        (when (and rlt (not jumped))
+        (when (setq get-tag-fn (nth 0 rule))
+          (setq rlt (funcall get-tag-fn)))
+
+        (when (and (or rlt (not get-tag-fn)) (not jumped))
           ;; before jump, we may need some operation
           (if func (funcall func rlt))
           ;; jump now, execute evilmi-xxxx-jump
-          (setq ideal-dest (funcall (nth 1 rule) rlt num))
-          ;; jump only once if the jump is successful
-          (setq jumped t))
+          (setq jump-tag-fn (nth 1 rule))
+          (cond
+           (get-tag-fn
+            ;; pass the result of non-nil get-tag-fn into jump-tag-fn
+            (setq ideal-dest (funcall jump-tag-fn rlt num))
+            ;; jump only once if the jump is successful
+            (setq jumped t))
+           (t
+            ;; if get-tag-fn is nil, assume jump-tag-fn is from third parties.
+            ;; So it need NO arguments and returns nil.
+            ;; Also need double check if the cursor is moved.
+            (let ((point-before-jump (point))
+                  point-after-jump)
+              (funcall jump-tag-fn)
+              (setq point-after-jump (point))
+              (cond
+               ((eq point-before-jump point-after-jump)
+                (setq jumped nil))
+               (t
+                (setq ideal-dest point-after-jump)
+                (setq jumped t)))))))
+
         (when (and evilmi-debug rlt)
           (message "rlt=%s rule=%s p=%s jumped=%s idea-dest=%s"
                    rlt
@@ -170,6 +194,30 @@ Some modes can be toggle on/off in the hook"
     (nreverse rlt)))
 
 ;;;###autoload
+(defun evilmi-add-one-plugin-rule (mode jump-tag-fn &optional get-tag-fn append-p)
+  "Add one new plugin rule for specific jor MODE.
+A rule has a non-nil function JUMP-TAG-FN and could-be nil function GET-TAG-FN.
+If APPEND-P is t, new plugin rule is appended into existing rules."
+
+  (let ((rules (plist-get evilmi-plugins mode))
+        (new-rule (list get-tag-fn jump-tag-fn)))
+
+    ;; delete old rule with same jump tag function
+    (setq rules (cl-remove-if (lambda (pair) (eq jump-tag-fn (nth 1 pair)))
+                              rules))
+
+    (cond
+     (append-p
+      ;; append the new rule
+      (setq rules (nreverse rules))
+      (push new-rule rules)
+      (setq rules (nreverse rules)))
+     (t
+      (setq rules (push new-rule rules))))
+
+    (setq evilmi-plugins (plist-put evilmi-plugins mode rules))))
+
+;;;###autoload
 (defun evilmi-load-plugin-rules(modes rules)
   "Load MODES's plugin RULES."
   (dolist (mode modes)
@@ -195,11 +243,13 @@ Some modes can be toggle on/off in the hook"
                               js2-mode
                               js3-mode
                               javascript-mode
+                              js-ts-mode
                               rjsx-mode
                               js2-jsx-mode
                               react-mode
                               typescript-mode
                               typescript-tsx-mode
+                              typescript-ts-mode
                               tsx-ts-mode)
                             '(simple javascript html))
 
@@ -221,7 +271,7 @@ Some modes can be toggle on/off in the hook"
   (evilmi-load-plugin-rules '(markdown-mode) '(markdown))
 
   ;; Latex
-  (evilmi-load-plugin-rules '(latex-mode) '(latex simple))
+  (evilmi-load-plugin-rules '(latex-mode LaTeX-mode) '(latex simple))
 
   ;; Ocaml
   (evilmi-load-plugin-rules '(tuareg-mode) '(simple ocaml))
@@ -325,7 +375,7 @@ If IS-INNER is t, the region is inner text object."
 (defun evilmi-version()
   "Print version."
   (interactive)
-  (message "3.0.2"))
+  (message "4.0.1"))
 
 ;; initialize evilmi-plugins only once
 (evilmi-init-plugins)

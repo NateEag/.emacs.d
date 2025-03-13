@@ -1,4 +1,4 @@
-;;; evil-matchit-yaml.el --- yaml plugin of evil-matchit
+;;; evil-matchit-yaml.el --- yaml plugin of evil-matchit -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014-2020 Chen Bin
 
@@ -34,7 +34,7 @@
 
 ;;;###autoload
 (defun evilmi-yaml-get-tag ()
-  "Return '(start-position tag-type keyword)."
+  "Return a list containing start-position, tag-type, keyword."
   (let* ((evilmi-spaces-per-tab 2)
          (rlt (evilmi-indent-get-tag)))
     (when (and evilmi-debug rlt)

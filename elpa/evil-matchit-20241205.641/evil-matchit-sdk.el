@@ -1,4 +1,4 @@
-;;; evil-matchit-sd.el --- evil-matchit SDK
+;;; evil-matchit-sd.el --- evil-matchit SDK -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2014-2022 Chen Bin
 
@@ -33,6 +33,10 @@
 (require 'semantic/lex)
 
 (defvar evilmi-debug nil "Debug flag.")
+
+(defvar evilmi-raw-scan-sexps-major-modes
+  '(lisp-interaction-mode)
+  "Major modes which using raw algorithm for forward&backward characters.")
 
 (defvar evilmi-forward-chars (string-to-list "[{("))
 (defvar evilmi-backward-chars (string-to-list "]})"))
@@ -150,6 +154,45 @@ If font-face-under-cursor is NOT nil, the quoted string is being processed."
         (forward-word)))
     defun-p))
 
+(defun evilmi-sdk-raw-scan-sexps (is-forward character comment-p)
+  "Get the position of matching tag with CHARACTER at point.
+If IS-FORWARD is t, jump forward; or else jump backward.
+Raw algorithm is implemented, no use of native api.
+If COMMENT-P is t, non-comment is ignored.
+If COMMENT-P is nil, comment is ignored."
+  (when evilmi-debug
+    (message "evilmi-sdk-raw-scan-sexps called => %s %s %s"
+             is-forward character comment-p))
+
+  (let* ((start-pos (point))
+         (lvl 1)
+         (limit (if is-forward (point-max) (point-min)))
+         (dest-ch (cond
+                   ;; {}
+                   ((= character 123) 125)
+                   ((= character 125) 123)
+                   ;; ()
+                   ((= character 40) 41)
+                   ((= character 41) 40)
+                   ;; []
+                   ((= character 91) 93)
+                   ((= character 93) 91)))
+         (arg (if is-forward 1 -1))
+         rlt)
+    (save-excursion
+      (while (and dest-ch (not (= start-pos limit)) (> lvl 0))
+        (goto-char (setq start-pos (+ start-pos arg)))
+        (when (or (and comment-p (evilmi-sdk-comment-p start-pos))
+                  (and (not comment-p) (not (evilmi-sdk-comment-p start-pos))))
+          (cond
+           ((= (following-char) character)
+            (setq lvl (1+ lvl)))
+           ((= (following-char) dest-ch)
+            (setq lvl (1- lvl))))))
+      (when (= lvl 0)
+        (setq rlt (+ start-pos (if is-forward 1 0)))))
+    rlt))
+
 (defun evilmi-sdk-scan-sexps (is-forward character)
   "Get the position of matching tag with CHARACTER at point.
 If IS-FORWARD is t, jump forward; or else jump backward."
@@ -158,17 +201,6 @@ If IS-FORWARD is t, jump forward; or else jump backward."
   (let* ((start-pos (if is-forward (point) (+ 1 (point))))
          (arg (if is-forward 1 -1))
          (limit (if is-forward (point-max) (point-min)))
-         (lvl 1)
-         (dest-ch (cond
-                     ;; {}
-                     ((= character 123) 125)
-                     ((= character 125) 123)
-                     ;; ()
-                     ((= character 40) 41)
-                     ((= character 41) 40)
-                     ;; []
-                     ((= character 91) 93)
-                     ((= character 93) 91)))
          (rlt start-pos))
 
     (cond
@@ -187,18 +219,13 @@ If IS-FORWARD is t, jump forward; or else jump backward."
       ;; Matching tag in comment.
       ;; Use own algorithm instead of `scan-sexps'
       ;; because `scan-sexps' does not work in some major modes
-      (save-excursion
-        (setq start-pos (point))
-        (while (and dest-ch (not (= start-pos limit)) (> lvl 0))
-          (goto-char (setq start-pos (+ start-pos arg)))
-          (when (evilmi-sdk-comment-p start-pos)
-            (cond
-             ((= (following-char) character)
-              (setq lvl (1+ lvl)))
-             ((= (following-char) dest-ch)
-              (setq lvl (1- lvl))))))
-        (when (= lvl 0)
-          (setq rlt (+ start-pos (if is-forward 1 0))))))
+      (setq rlt (evilmi-sdk-raw-scan-sexps is-forward character t)))
+
+     ;; just use raw algorithm to match characters
+     ((and (memq major-mode evilmi-raw-scan-sexps-major-modes)
+           (or (memq character evilmi-forward-chars)
+               (memq character evilmi-backward-chars)))
+      (setq rlt (evilmi-sdk-raw-scan-sexps is-forward character nil)))
 
      (t
       ;; jump inside code and ignore comments
@@ -206,7 +233,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
         (setq rlt (scan-sexps start-pos arg)))))
 
     (when evilmi-debug
-      (message "evilmi-sdk-scan-sexps => rlt=%s lvl=%s is-forward=%s" rlt lvl is-forward))
+      (message "evilmi-sdk-scan-sexps => rlt=%s is-forward=%s" rlt is-forward))
     rlt))
 
 (defmacro evilmi-sdk-visual-state-p ()
@@ -282,22 +309,25 @@ If IS-FORWARD is t, jump forward; or else jump backward."
          (cur-row-idx (nth 0 cur-tag-info))
          (orig-type (nth 1 orig-tag-info))
          (cur-type (nth 1 cur-tag-info)))
+
     ;; handle function exit point
     (when (= 1 level)
-      ;; end tag could be the same
-      (if (and (evilmi-sdk-strictly-type-p cur-tag-info orig-tag-info)
-               (not (evilmi-sdk-exactly-same-type-p cur-tag-info orig-tag-info)))
-          ;; just pass
-          (setq rlt nil)
-        (cond
-         ((and (< orig-type 2) (= cur-type 2))
-          (setq rlt (evilmi-sdk-member cur-keyword (nth 2 (nth orig-row-idx match-tags)))))
+      ;; multiple open tags might share the same end tag
+      (cond
+       ((and (evilmi-sdk-strictly-type-p cur-tag-info orig-tag-info)
+             (not (evilmi-sdk-exactly-same-type-p cur-tag-info orig-tag-info)))
+        ;; just pass
+        (setq rlt nil))
 
-         ((and (< cur-type 2) (= orig-type 2))
-          (setq rlt (evilmi-sdk-member orig-keyword (nth 2 (nth cur-row-idx match-tags)))))
+       ((and (< orig-type 2) (= cur-type 2))
+        (setq rlt (evilmi-sdk-member cur-keyword (nth 2 (nth orig-row-idx match-tags)))))
 
-         (t
-          (setq rlt (= (nth 0 orig-tag-info) (nth 0 cur-tag-info)))))))
+       ((and (< cur-type 2) (= orig-type 2))
+        (setq rlt (evilmi-sdk-member orig-keyword (nth 2 (nth cur-row-idx match-tags)))))
+
+       (t
+        (setq rlt (= (nth 0 orig-tag-info) (nth 0 cur-tag-info))))))
+
     rlt))
 
 ;;;###autoload
@@ -401,12 +431,16 @@ Rule is looked up in HOWTOS."
                                     (line-end-position)))))
 
 (defun evilmi-sdk-monogamy-p (tag-info)
+  "Test TAG-INFO."
+  ;; "MONOGAMY" means open and closed tags are one to one match
   (and (nth 2 tag-info) (string= (nth 2 tag-info) "MONOGAMY")))
 
 (defun evilmi-sdk-exactly-same-type-p (crt orig)
+  "CRT and ORIG is exactly same type."
   (eq (nth 0 crt) (nth 0 orig)))
 
 (defun evilmi-sdk-same-type (crt orig)
+  "Test if CRT and ORIG are same type."
   (when (and crt orig)
     ;; crt and orig should be at same row if either of them is monogamy
     (if (evilmi-sdk-strictly-type-p crt orig)
@@ -414,8 +448,9 @@ Rule is looked up in HOWTOS."
       t)))
 
 ;;;###autoload
+;; Return '(start-point (row column is-function-exit-point keyword))
 (defun evilmi-sdk-get-tag (match-tags howtos)
-  "Return '(start-point ((row column is-function-exit-point keyword))."
+  "Use MATCH-TAGS and HOWTOS to return information for jump."
   (let* ((cur-line (evilmi-sdk-curline))
          (keyword (evilmi--sdk-extract-keyword cur-line match-tags howtos))
          (tag-info (if keyword (evilmi-sdk-get-tag-info keyword match-tags))))
@@ -434,6 +469,7 @@ Rule is looked up in HOWTOS."
   "Use RLT, NUM, MATCH-TAGS and HOWTOS to jump.
 Return nil if no matching tag found.  Please note (point) is changed
 after calling this function."
+  (ignore num)
   (let* ((orig-tag-info (nth 1 rlt))
          (orig-tag-type (nth 1 orig-tag-info))
          cur-tag-type
@@ -661,7 +697,7 @@ The last argument, LENGTH specifies that only LENGTH tokens are returned."
               ;; to work properly.  Lets try and move over
               ;; whatever white space we matched to begin
               ;; with.
-              (skip-syntax-forward "-.'" (point-at-eol)))
+              (skip-syntax-forward "-.'" (line-end-position)))
           (if (eq (point) comment-start-point)
               (error "Strange comment syntax prevents lexical analysis"))
           (setq ep (point))))

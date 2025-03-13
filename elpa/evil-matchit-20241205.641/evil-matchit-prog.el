@@ -1,6 +1,6 @@
-;;; evil-matchit-latex.el --- latex plugin of evil-matchit
+;;; evil-matchit-prog.el --- all programming languages plugin of evil-matchit -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2014-2020 Chen Bin
+;; Copyright (C) 2021 Chen Bin
 
 ;; Author: Chen Bin
 
@@ -22,29 +22,29 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-;;
+
 ;;; Commentary:
+
 ;;
 ;;; Code:
 
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-latex-extract-keyword-howtos
-  '(("\\\\\\([a-zA-Z]+\\(\{[a-zA-Z0-9+*_-]+\}\\)?\\)" 1)))
+(defvar evilmi-prog-extract-keyword-howtos
+  '(("^\\(<<<<<<<\\|=======\\|>>>>>>>\\)" 1)))
 
-(defvar evilmi-latex-match-tags
-  '((("if[a-zA-Z]+" "if") "else" "fi" "MONOGAMY")
-    ("left" nil "right" "MONOGAMY")
-    ("begin[a-z]+" nil "end[a-z]+")
-    ("begin\{[a-zA-Z0-9+*_-]+\}" nil "end\{[a-zA-Z0-9+*_-]+\}")))
+(defvar evilmi-prog-match-tags
+  '((("<<<<<<<") ("=======") (">>>>>>>"))))
 
 ;;;###autoload
-(defun evilmi-latex-get-tag ()
-  (evilmi-sdk-get-tag evilmi-latex-match-tags evilmi-latex-extract-keyword-howtos))
+(defun evilmi-prog-get-tag ()
+  "Get tag at point."
+  (evilmi-sdk-get-tag evilmi-prog-match-tags evilmi-prog-extract-keyword-howtos))
 
 ;;;###autoload
-(defun evilmi-latex-jump (rlt num)
-  (evilmi-sdk-jump rlt num evilmi-latex-match-tags evilmi-latex-extract-keyword-howtos))
+(defun evilmi-prog-jump (info num)
+  "Use INFO to jump NUM times."
+  (evilmi-sdk-jump info num evilmi-prog-match-tags evilmi-prog-extract-keyword-howtos))
 
-(provide 'evil-matchit-latex)
-;;; evil-matchit-latex.el ends here
+(provide 'evil-matchit-prog)
+;;; evil-matchit-prog.el ends here

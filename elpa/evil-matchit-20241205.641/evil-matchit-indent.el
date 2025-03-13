@@ -1,4 +1,4 @@
-;;; evil-matchit-indent.el --- indent algorithm for evil-matchit
+;;; evil-matchit-indent.el --- indent algorithm for evil-matchit -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2021 Chen Bin
 
@@ -51,9 +51,7 @@ It returns regexp to match the line candidate.")
 
 (defun evilmi-indent-next-nonempty-line ()
   "Return next non-empty line content or nil."
-  (let* ((b (line-beginning-position))
-         (e (line-end-position))
-         (cur-pos (point))
+  (let* ((e (line-end-position))
          (continue t)
          line
          rlt)
@@ -63,7 +61,6 @@ It returns regexp to match the line candidate.")
         (setq line (evilmi-sdk-curline))
         (cond
          ((string-blank-p line)
-          (setq b (line-beginning-position))
           (setq e (line-end-position))
           (forward-line))
          (t
@@ -92,7 +89,7 @@ SPACES-PER-TAB defines the number of spaces of one tab character."
 
 ;;;###autoload
 (defun evilmi-indent-get-tag ()
-  "Return '(start-position tag-type keyword)."
+  "Return a list containing start-position, tag-type, keyword."
   (let* (rlt
          (cur-line (evilmi-sdk-curline))
          next-line)

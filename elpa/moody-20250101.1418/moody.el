@@ -1,14 +1,14 @@
 ;;; moody.el --- Tabs and ribbons for the mode line  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2023 Jonas Bernoulli
+;; Copyright (C) 2018-2025 Jonas Bernoulli
 
-;; Author: Jonas Bernoulli <jonas@bernoul.li>
+;; Author: Jonas Bernoulli <emacs.moody@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/tarsius/moody
 ;; Keywords: faces
-;; Package-Version: 20230514.1803
-;; Package-Commit: 888e6fb37eb5122803c70ae60d28fc54589e26c0
 
-;; Package-Requires: ((emacs "25.3") (compat "29.1.4.1"))
+;; Package-Version: 20250101.1418
+;; Package-Revision: 26dd59b300c1
+;; Package-Requires: ((emacs "26.1") (compat "30.0.1.0"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -37,53 +37,11 @@
 ;; becomes in-/active.  Other packages additionally change what
 ;; elements are being displayed and also the appearance of an
 ;; individual element may change completely, which I found highly
-;; distracting when trying out those packages because I never know
+;; distracting when trying out those packages, because I never knew
 ;; what visual clues to look for in order to find a certain piece
 ;; of information.
 
-;; Usage:
-
-;; * Make sure that the face `mode-line' does not set `:box' and
-;;   that `:underline' and `:overline' are the same color or are
-;;   both `undefined'.  If defined, then the line color should be
-;;   different from the `:background' colors of both `mode-line'
-;;   and `default'.  The same rules apply to `mode-line-inactive'.
-;;   The line colors of `mode-line' and `mode-line-inactive' do
-;;   not necessarily have to be identical.  For example:
-;;
-;;     (use-package solarized-theme
-;;       :config
-;;       (load-theme 'solarized-light t)
-;;       (let ((line (face-attribute 'mode-line :underline)))
-;;         (set-face-attribute 'mode-line          nil :overline   line)
-;;         (set-face-attribute 'mode-line-inactive nil :overline   line)
-;;         (set-face-attribute 'mode-line-inactive nil :underline  line)
-;;         (set-face-attribute 'mode-line          nil :box        nil)
-;;         (set-face-attribute 'mode-line-inactive nil :box        nil)
-;;         (set-face-attribute 'mode-line-inactive nil :background "#f9f2d9")))
-
-;; * Note that the above example is for `solarized-theme' and that for
-;;   your theme (face-attribute 'mode-line :underline) may return nil.
-;;   If you want borders, use something like (let ((line "red")) ...),
-;;   in that case.
-
-;; * Add something like this to your init file:
-;;
-;;     (use-package moody
-;;       :config
-;;       (setq x-underline-at-descent-line t)
-;;       (moody-replace-mode-line-buffer-identification)
-;;       (moody-replace-vc-mode)
-;;       (moody-replace-eldoc-minibuffer-message-function))
-
-;; * Such replacement functions are defines as commands, making it
-;;   quicker to try them out without having to add anything to your
-;;   init file.
-
-;; * To undo the call to a `moody-replace-*' function, call the same
-;;   function with t as the value of the optional REVERSE argument.
-;;   You can accomplish the same by interactively calling such a
-;;   function with a prefix argument to do so.
+;; See README.org for setup instructions.
 
 ;;; Code:
 
@@ -92,29 +50,44 @@
 
 ;;; Options
 
-(defcustom moody-mode-line-height
+(defun moody-default-mode-line-height ()
+  "Return two times size of font used by `mode-line' face.
+If that is not possible (see code), return 30."
   (and (fboundp 'font-info)
        (let ((font (face-font 'mode-line)))
-         (if font (* 2 (aref (font-info font) 2)) 30)))
+         (if font (* 2 (aref (font-info font) 2)) 30))))
+
+(defcustom moody-mode-line-height (moody-default-mode-line-height)
   "When using `moody', height of the mode line in pixels.
 
-This should be an even number or nil to leave this unspecified,
-in which case the value of `window-mode-line-height' is used.
+This must be an even number or a function that, when called
+with zero arguments, returns an even number.  Unless you plan
+to change the sizes of fonts at runtime, it is better to use
+a number here.  If you use a function instead, then that ends
+up being called a lot.
 
 Increasing the height of the mode-line triggers a bug in Emacs
 releases before version 29.1, causing only parts of the buffer
-to be displayed in the window even though it would fix exactly.
+to be displayed in the window even though it would fit exactly.
 Moody provides a workaround but that in turn can result in some
 flickering.  If you notice such flickering and it bothers you,
-then either update to the development version of Emacs or do
-not increase the height of the mode-line."
-  :type '(choice (const :tag "unspecified" nil) integer)
+then either update to Emacs 29.1, or do not increase the height
+of the mode-line."
+  :type '(choice (integer :tag "constant value")
+                 (function-item moody-default-mode-line-height)
+                 (function-item window-mode-line-height)
+                 function)
   :group 'mode-line)
 
 (defcustom moody-slant-function 'moody-slant
   "Function used to create tab slants."
   :type 'function
   :group 'mode-line)
+
+(defvar moody-slant-placeholder "|"
+  "Placeholder string, which is replaced with the slant image.
+Must be a non-empty string and is otherwise only relevant when
+the image cannot be displayed.")
 
 (defcustom moody-ribbon-background '(default :background)
   "Indirect specification of the background color used for ribbons.
@@ -194,8 +167,10 @@ not specified, then faces based on `default', `mode-line' and
                   (or face-inactive 'mode-line-inactive)))
          (outer (face-attribute base :background))
          (line  (face-attribute base :underline))
-         (line  (if (listp line) (plist-get line :color) line))
-         (line  (if (eq line 'unspecified) outer line))
+         (line  (cond ((and line (listp line))
+                       (plist-get line :color))
+                      ((eq line 'unspecified) outer)
+                      ((or line outer))))
          (inner (if (eq type 'ribbon)
                     (pcase-let ((`(,face ,attribute) moody-ribbon-background))
                       (face-attribute (if (eq face 'base) base face)
@@ -209,7 +184,9 @@ not specified, then faces based on `default', `mode-line' and
                                       line)
                       :underline (and (or (eq direction 'down)
                                           (eq type 'ribbon))
-                                      line)
+                                      `( :color ,line
+                                         ,@(and (>= emacs-major-version 29)
+                                                '(:position t))))
                       :background inner))
          (pad   (max (- (or width 0) (length string)) 2)))
     (setq string
@@ -218,12 +195,12 @@ not specified, then faces based on `default', `mode-line' and
                   (make-string (floor pad 2) ?\s)))
     (add-face-text-property 0 (length string) face nil string)
     (list
-     (propertize "|" 'face face 'display
+     (propertize moody-slant-placeholder 'face face 'display
                  (apply moody-slant-function
                         (if (eq direction 'down) 'down 'up)
                         slant))
      string
-     (propertize "|" 'face face 'display
+     (propertize moody-slant-placeholder 'face face 'display
                  (apply moody-slant-function
                         (pcase (list type direction)
                           ('(tab    down) (cons 'up   slant))
@@ -235,7 +212,10 @@ not specified, then faces based on `default', `mode-line' and
 
 (defun moody-slant (direction c1 c2 c3 &optional height)
   (unless height
-    (setq height (or moody-mode-line-height (window-mode-line-height))))
+    (setq height (or (if (functionp moody-mode-line-height)
+                         (funcall moody-mode-line-height)
+                       moody-mode-line-height)
+                     (window-mode-line-height))))
   (unless (cl-evenp height)
     (cl-incf height))
   (let ((key (list direction c1 c2 c3 height)))
@@ -467,7 +447,7 @@ to the command loop."
 (defun moody-redisplay (&optional _force &rest _ignored)
   "Call `redisplay' to trigger mode-line height calculations.
 
-Certain functions, including e.g. `fit-window-to-buffer', base
+Certain functions, including e.g., `fit-window-to-buffer', base
 their size calculations on values which are incorrect if the
 mode-line has a height different from that of the `default' face
 and certain other calculations have not yet taken place for the
@@ -490,8 +470,8 @@ be used as an advice to window creation functions."
   (advice-add 'split-window :after #'moody-redisplay))
 
 (declare-function color-srgb-to-xyz "color" (red green blue))
-(declare-function color-rgb-to-hex "color" (red green blue &optional
-                                                digits-per-component))
+(declare-function color-rgb-to-hex "color" ( red green blue
+                                             &optional digits-per-component))
 
 (defun moody-slant-apple-rgb (direction c1 c2 c3 &optional height)
   (require (quote color))

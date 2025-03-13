@@ -4,11 +4,10 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: languages
-;; Package-Version: 20220602.1535
-;; Package-Commit: 279a51defa3e0d97dc40b8a26e078699d4e22e90
 ;; URL: https://github.com/purcell/emacs-shfmt
 ;; Package-Requires: ((emacs "24") (reformatter "0.3"))
-;; Version: 0
+;; Package-Version: 20240104.1218
+;; Package-Revision: 1a747c53eab1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -61,8 +60,12 @@
   :type 'string)
 
 (defcustom shfmt-arguments ()
-  "Arguments passed to shfmt."
-  :type '(list string))
+  "Arguments passed to shfmt.
+Whichever arguments are passed, it is important that shfmt be run
+in reformatting mode: it should output a reformatted version of
+the input text.  This means that you should avoid flags like
+`-d', for example."
+  :type '(repeat string))
 
 
 ;; Commands for reformatting
@@ -73,7 +76,7 @@
 (reformatter-define shfmt
   :program shfmt-command
   ;; Pass the filename to `shfmt` as it may influence the Editorconfig pattern "shfmt" picks up
-  :args (append (list "-filename" (or (buffer-file-name) input-file)) shfmt-arguments)
+  :args (append (list "--filename" (or (buffer-file-name) input-file)) shfmt-arguments)
   :lighter " ShFmt"
   :group 'shfmt)
 

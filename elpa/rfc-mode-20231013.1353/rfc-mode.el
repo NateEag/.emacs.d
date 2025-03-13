@@ -1,25 +1,11 @@
 ;;; rfc-mode.el --- RFC document browser and viewer -*- lexical-binding: t -*-
 
 ;; Author: Nicolas Martyanoff <nicolas@n16f.net>
+;; SPDX-License-Identifier: ISC
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20230307.937
-;; Package-Commit: c938c8134e7434b623ebfd92ad22586205cb1c92
-;; Version: 1.4.0
+;; Package-Version: 20231013.1353
+;; Package-Revision: ab09db78d9d1
 ;; Package-Requires: ((emacs "25.1"))
-
-;; Copyright 2019-2022 Nicolas Martyanoff <nicolas@n16f.net>
-;;
-;; Permission to use, copy, modify, and/or distribute this software for any
-;; purpose with or without fee is hereby granted, provided that the above
-;; copyright notice and this permission notice appear in all copies.
-;;
-;; THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-;; WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-;; MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
-;; SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-;; WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-;; ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR
-;; IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ;;; Commentary:
 
@@ -54,6 +40,10 @@
 (defface rfc-mode-document-header-face
   '((t :inherit font-lock-comment-face))
   "Face used for RFC document page headers.")
+
+(defface rfc-mode-document-footer-face
+  '((t :inherit font-lock-comment-face))
+  "Face used for RFC document page footers.")
 
 (defface rfc-mode-document-section-title-face
   '((t :inherit font-lock-keyword-face))
@@ -157,21 +147,25 @@ If nil (the default) then use e.g. *rfc21*, otherwise use e.g. rfc21.txt."
 
 (defun rfc-mode-recenter ()
   "Do the same as `recenter-top-bottom' would for the `top' position."
+  (rfc-mode-header-start)
   (let ((recenter-positions '(top)))
     (recenter-top-bottom)))
 
 (defun rfc-mode-backward-page ()
   "Scroll to the previous page of the current buffer."
   (interactive)
+  (beginning-of-line)
+  (unless (looking-at "")
+    (backward-page))
   (backward-page)
-  (rfc-mode-previous-header)
+  (beginning-of-line 1)
   (rfc-mode-recenter))
 
 (defun rfc-mode-forward-page ()
   "Scroll to the next page of the current buffer."
   (interactive)
   (forward-page)
-  (rfc-mode-previous-header)
+  (beginning-of-line 1)
   (rfc-mode-recenter))
 
 (defun rfc-mode-goto-section (section)  ;FIXME: Why not use imenu for that?
@@ -298,6 +292,7 @@ Offer the number at point as default."
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("/rfc[0-9]+\\.txt\\'" . rfc-mode))
+(add-to-list 'auto-mode-alist '("\\*rfc[0-9]+\\*\\'" . rfc-mode))
 
 ;;; Syntax utils:
 
@@ -307,17 +302,24 @@ Offer the number at point as default."
   ;; FIXME: Use font-lock!
   (with-silent-modifications
     (let ((inhibit-read-only t))
-      ;; Headers
+      ;; Headers and footers
       (save-excursion
         (goto-char (point-min))
-        (while
-            (let* ((end (rfc-mode-next-header))
-                   (start (point)))
-              (when end
-                (put-text-property start end
-                                   'face 'rfc-mode-document-header-face)
-                (goto-char end)
-                'continue))))
+        (while (search-forward "" nil t)
+          (beginning-of-line)
+          (let ((form-feed (point)))
+            (let* ((footer-end (rfc-mode-previous-footer-start))
+                   (footer-start (point)))
+              (put-text-property
+               footer-start footer-end
+               'face 'rfc-mode-document-footer-face))
+            (goto-char form-feed)
+            (let* ((header-end (rfc-mode-header-start))
+                   (header-start (point)))
+              (put-text-property
+               header-start header-end
+               'face 'rfc-mode-document-header-face)
+              (goto-char header-end)))))
       ;; Section titles
       (save-excursion
         (goto-char (point-min))
@@ -348,34 +350,26 @@ Offer the number at point as default."
 (defun rfc-mode-header-start ()
   "Move to the start of the current header.
 
-When the point is on a linebreak character, move it to the start
+When the point is on a form feed character, move it to the start
 of the current page header and return the position of the end of
 the header."
   (when (looking-at "")
     (forward-line 1)
     (move-end-of-line 1)
-    (let ((end (point)))
-      (forward-line -2)
-      (move-beginning-of-line 1)
-      end)))
+    (prog1 (point)
+      (move-beginning-of-line 1))))
 
-(defun rfc-mode-previous-header ()
-  "Move the the start of the previous header.
+(defun rfc-mode-previous-footer-start ()
+  "Move to the start of the previous footer.
 
-Return the position of the end of the previous header or NIL if
-no previous header is found."
-  (when (search-backward "" nil t)
-    (goto-char (match-beginning 0))
-    (rfc-mode-header-start)))
-
-(defun rfc-mode-next-header ()
-  "Move the end of the previous header.
-
-Return the position of the end of the next header or NIL if
-no next header is found."
-  (when (search-forward "" nil t)
-    (goto-char (match-beginning 0))
-    (rfc-mode-header-start)))
+When the point is on a form feed character, move it to the start
+of the previous page footer and return the position of the end of
+the footer."
+  (when (looking-at "")
+    (forward-line -1)
+    (move-end-of-line 1)
+    (prog1 (point)
+      (move-beginning-of-line 1))))
 
 ;;; Browser utils:
 
@@ -537,10 +531,6 @@ For example: \"RFC3401, RFC3402 ,RFC 3403\"."
   (put-text-property 0 (length string) 'face face string)
   string)
 
-
 (provide 'rfc-mode)
 
-;; Local Variables:
-;; indent-tabs-mode: nil
-;; End:
 ;;; rfc-mode.el ends here

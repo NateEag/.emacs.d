@@ -2,12 +2,11 @@
 
 ;; Copyright (C) 2019-2020 Jordan Besly
 ;;
-;; Version: 0.2.2
-;; Package-Version: 20200828.1218
-;; Package-Commit: 1b1ba2033e59e5968380640280bd853701fbbb21
+;; Package-Version: 20230916.1426
+;; Package-Revision: 5cafa3f6313c
 ;; Keywords: processes, terminals
 ;; URL: https://github.com/p3r7/friendly-shell
-;; Package-Requires: ((emacs "24.1")(cl-lib "0.6.1")(dash "2.17.0")(with-shell-interpreter "0.2.3"))
+;; Package-Requires: ((emacs "24.1")(cl-lib "0.6.1")(dash "2.17.0")(with-shell-interpreter "0.2.5"))
 ;;
 ;; SPDX-License-Identifier: MIT
 

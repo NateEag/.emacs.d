@@ -4,7 +4,8 @@
 ;; Author: Vitalie Spinu
 ;; URL: https://github.com/vspinu/sesman
 ;; Keywords: process
-;; Version: 0.3.3-DEV
+;; Package-Version: 20240417.1723
+;; Package-Revision: 7bca68dbbab0
 ;; Package-Requires: ((emacs "25"))
 ;; Keywords: processes, tools, vc
 ;;
@@ -32,8 +33,8 @@
 ;;; Commentary:
 ;;
 ;; Sesman provides facilities for session management and interactive session
-;; association with the current contexts (project, directory, buffers etc).  See
-;; project's readme for more details.
+;; association with the current contexts (project, directory, buffers etc).
+;; See project's readme for more details.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -86,10 +87,10 @@ When nil, don't follow symlinks. When 'vc, follow symlinks only when
 
 ;; (defcustom sesman-disambiguate-by-relevance t
 ;;   "If t choose most relevant session in ambiguous situations, otherwise ask.
-;; Ambiguity arises when multiple sessions are associated with current context.  By
-;; default only projects could be associated with multiple sessions.  See
-;; `sesman-single-link-contexts' in order to change that.  Relevance is decided by
-;; system's implementation, see `sesman-more-relevant-p'."
+;; Ambiguity arises when multiple sessions are associated with current context.
+;; By default only projects could be associated with multiple sessions.  See
+;; `sesman-single-link-contexts' in order to change that.  Relevance is decided
+;; by system's implementation, see `sesman-more-relevant-p'."
 ;;   :group 'sesman
 ;;   :type 'boolean)
 
@@ -122,9 +123,8 @@ and cxt-type must be symbols.")
 Can be either a symbol, or a function returning a symbol.")
 (put 'sesman-system 'permanent-local 't)
 
-
 
-;; Internal Utilities
+;;; Internal Utilities
 
 (defun sesman--on-C-u-u-sessions (system which)
   (cond
@@ -626,7 +626,8 @@ types to consider. Defaults to the list returned from `sesman-context-types'."
   "Get the most relevant current session for the SYSTEM.
 CXT-TYPES is a list of context types to consider."
   (or (car (sesman--linked-sessions system 'sort cxt-types))
-      (car (sesman--friendly-sessions system 'sort))))
+      (when sesman-use-friendly-sessions
+        (car (sesman--friendly-sessions system 'sort)))))
 
 (defun sesman-ensure-session (system &optional cxt-types)
   "Get the most relevant linked session for SYSTEM or throw if none exists.

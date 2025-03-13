@@ -5,6 +5,8 @@
 ;; Author: Hal Abelson
 ;;	Jerry Sussman
 ;;	Julie Sussman
+;; Package-Version: 20240826.1844
+;; Package-Revision: 552b44fd873b
 ;; Homepage: https://mitpress.mit.edu/sicp
 
 ;; This file is not part of GNU Emacs.

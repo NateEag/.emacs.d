@@ -4,7 +4,8 @@
 
 ;; Author: Anantha kumaran <ananthakumaran@gmail.com>
 ;; URL: http://github.com/ananthakumaran/tide
-;; Version: 5.1.3
+;; Package-Version: 20241019.2101
+;; Package-Revision: 6a35fe355f14
 ;; Keywords: typescript
 ;; Package-Requires: ((emacs "25.1") (dash "2.10.0") (s "1.11.0") (flycheck "27") (cl-lib "0.5"))
 
@@ -935,6 +936,7 @@ Currently, two kinds of cleanups are done:
 (defun tide-current-indentsize ()
   (pcase major-mode
     (`typescript-mode typescript-indent-level)
+    (`typescript-ts-mode typescript-ts-mode-indent-offset)
     (`js2-mode js2-basic-offset)
     (`js-mode js-indent-level)
     (`js3-mode js3-indent-level)

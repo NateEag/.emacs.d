@@ -1,19 +1,19 @@
 ;;; notmuch-transient.el --- Command dispatchers for Notmuch  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
-;; Copyright (C) 2021-2023 Jonas Bernoulli
+;; Copyright (C) 2021-2025 Jonas Bernoulli
 
-;; Author: Jonas Bernoulli <jonas@bernoul.li>
-;; Homepage: https://git.sr.ht/~tarsius/notmuch-transient
+;; Author: Jonas Bernoulli <emacs.notmuch-transient@jonas.bernoulli.dev>
+;; Homepage: https://github.com/tarsius/notmuch-transient
 ;; Keywords: mail
-;; Package-Version: 20230511.2054
-;; Package-Commit: 3eeabdd9c922836d24433786265ef7c25fb599b2
 
+;; Package-Version: 20250117.1241
+;; Package-Revision: 4902879d9340
 ;; Package-Requires: (
-;;     (emacs "27.1")
-;;     (compat "29.1.4.1")
-;;     (notmuch "0.37")
-;;     (transient "0.4.0"))
+;;     (emacs "29.1")
+;;     (compat "30.0.2.0")
+;;     (notmuch "0.38.2")
+;;     (transient "0.8.2"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -32,8 +32,8 @@
 
 ;;; Commentary:
 
-;; This package command provides dispatcher for existing Notmuch
-;; commands, as well as some new commands for dealing with tags.
+;; This package provides dispatcher menus for Notmuch commands,
+;; as well as some commands defined here, which deal with tags.
 
 ;; Everything is still incomplete and very much subject to change.
 
@@ -41,6 +41,7 @@
 
 (require 'compat)
 (require 'let-alist)
+(require 'seq)
 
 (require 'notmuch)
 (require 'transient)
@@ -50,7 +51,7 @@
 (defvar notmuch-transient-add-bindings t
   "Whether loading `notmuch-transient' adds binding to existing keymaps.")
 
-(defvar notmuch-transient-prefix (kbd "C-d")
+(defvar notmuch-transient-prefix "C-d"
   "The prefix key used for various transient commands.")
 
 ;;; Faces
@@ -236,9 +237,9 @@ Repeat a search, which is saved and associated
 with a key in option `notmuch-saved-searches'.
 
 This is a replacement for `notmuch-jump-search'."
-  ["Search"
-   :class transient-row
+  [:class transient-row
    :setup-children notmuch-search-transient--setup
+   :description "Search"
    :pad-keys t]
   (interactive)
   (when (derived-mode-p 'notmuch-tree-mode)
@@ -248,16 +249,16 @@ This is a replacement for `notmuch-jump-search'."
 (defun notmuch-search-transient--setup (_)
   (transient-parse-suffixes
    'notmuch-search-transient
-   (mapcar (lambda (search)
-             (let-alist (transient-plist-to-alist search)
-               (and .key
-                    (list (key-description .key)
-                          .name
-                          (lambda ()
-                            (interactive)
-                            (notmuch-transient--search
-                             .search-type .query .sort-order))))))
-           notmuch-saved-searches)))
+   (seq-keep (lambda (search)
+               (let-alist (notmuch-transient--plist-to-alist search)
+                 (and .key
+                      (list (key-description .key)
+                            .name
+                            (lambda ()
+                              (interactive)
+                              (notmuch-transient--search
+                               .search-type .query .sort-order))))))
+             notmuch-saved-searches)))
 
 ;;;; Compatibility kludges
 
@@ -271,6 +272,18 @@ This is a replacement for `notmuch-jump-search'."
                                   (oldest-first t)
                                   (t notmuch-search-oldest-first))))))
 
+(defun notmuch-transient--plist-to-alist (plist)
+  (let (alist)
+    (while plist
+      (push (cons (let* ((symbol (pop plist))
+                         (name (symbol-name symbol)))
+                    (if (eq (aref name 0) ?:)
+                        (intern (substring name 1))
+                      symbol))
+                  (pop plist))
+            alist))
+    (nreverse alist)))
+
 ;;; Tagging
 
 ;;;###autoload (autoload 'notmuch-tag-transient "notmuch-transient" nil t)
@@ -283,8 +296,9 @@ to `notmuch-transient--tagging-inverse-name'.
 
 This is a replacement for `notmuch-tag-jump'."
   :init-value #'notmuch-tag-transient--init
-  [:description notmuch-tag-transient--description
+  [:class transient-column
    :setup-children notmuch-tag-transient--setup
+   :description notmuch-tag-transient--description
    :pad-keys t]
   (interactive)
   (when (derived-mode-p 'notmuch-tree-mode)
@@ -390,23 +404,23 @@ This is a replacement for `notmuch-tag-jump'."
 
 (when notmuch-transient-add-bindings
 
-  (define-key notmuch-hello-mode-map  notmuch-transient-prefix #'notmuch-hello-mode-transient)
-  (define-key notmuch-tree-mode-map   notmuch-transient-prefix #'notmuch-tree-mode-transient)
-  (define-key notmuch-search-mode-map notmuch-transient-prefix #'notmuch-search-mode-transient)
-  (define-key notmuch-show-mode-map   notmuch-transient-prefix #'notmuch-show-mode-transient)
+  (keymap-set notmuch-hello-mode-map  notmuch-transient-prefix #'notmuch-hello-mode-transient)
+  (keymap-set notmuch-tree-mode-map   notmuch-transient-prefix #'notmuch-tree-mode-transient)
+  (keymap-set notmuch-search-mode-map notmuch-transient-prefix #'notmuch-search-mode-transient)
+  (keymap-set notmuch-show-mode-map   notmuch-transient-prefix #'notmuch-show-mode-transient)
 
-  (define-key notmuch-search-mode-map "c" #'notmuch-search-stash-transient)
-  (define-key notmuch-show-mode-map   "c" #'notmuch-show-stash-transient)
-  (define-key notmuch-tree-mode-map   "c" #'notmuch-show-stash-transient)
+  (keymap-set notmuch-search-mode-map "c" #'notmuch-search-stash-transient)
+  (keymap-set notmuch-show-mode-map   "c" #'notmuch-show-stash-transient)
+  (keymap-set notmuch-tree-mode-map   "c" #'notmuch-show-stash-transient)
 
-  (define-key notmuch-show-mode-map   "." #'notmuch-show-part-transient)
+  (keymap-set notmuch-show-mode-map   "." #'notmuch-show-part-transient)
 
-  (define-key notmuch-common-keymap   "j" #'notmuch-search-transient)
-  (define-key notmuch-tree-mode-map   "j" #'notmuch-search-transient)
+  (keymap-set notmuch-common-keymap   "j" #'notmuch-search-transient)
+  (keymap-set notmuch-tree-mode-map   "j" #'notmuch-search-transient)
 
-  (define-key notmuch-search-mode-map "k" #'notmuch-tag-transient)
-  (define-key notmuch-tree-mode-map   "k" #'notmuch-tag-transient)
-  (define-key notmuch-show-mode-map   "k" #'notmuch-tag-transient))
+  (keymap-set notmuch-search-mode-map "k" #'notmuch-tag-transient)
+  (keymap-set notmuch-tree-mode-map   "k" #'notmuch-tag-transient)
+  (keymap-set notmuch-show-mode-map   "k" #'notmuch-tag-transient))
 
 ;;; _
 (provide 'notmuch-transient)

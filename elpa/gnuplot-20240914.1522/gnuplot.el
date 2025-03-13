@@ -5,7 +5,8 @@
 ;; Author:           Jon Oddie, Bruce Ravel, Phil Type
 ;; Maintainer:       Maxime Tréca <maxime@gmail.com>, Daniel Mendler <mail@daniel-mendler.de>
 ;; Created:          1998
-;; Version:          0.8.1
+;; Package-Version: 20240914.1522
+;; Package-Revision: 235ba76c358d
 ;; Keywords:         data gnuplot plotting
 ;; URL:              https://github.com/emacs-gnuplot/gnuplot
 ;; Package-Requires: ((emacs "25.1"))
@@ -495,7 +496,7 @@ You can also add new items to any of these sub-menus by adding to the
 `with-eval-after-load' blocks in your .emacs file.  Here is an example of
 adding the \"regis\" terminal type to the terminal sub-menu:
 
- (with-eval-after-load 'gnuplot
+ (with-eval-after-load \\='gnuplot
       (setq gnuplot-insertions-terminal
             (append gnuplot-insertions-terminal
                     (list
@@ -1542,7 +1543,7 @@ updates Gnuplot with the appropriate \"set output\" command."
               (gnuplot-send-hiding-output "set output\n") ; Flush output file
               (sit-for 0.1)             ; Hack: wait for Gnuplot IO to finish
               (cl-ecase gnuplot-inline-image-mode
-                (nil nil)
+                ((nil) nil)
                 (inline
                   (ignore-errors
                     (let ((image (create-image filename)))
@@ -2071,9 +2072,9 @@ and then starts `gnuplot-mode'.
 It is convenient to bind this function to a global key sequence.  For
 example, to make the F10 key open a gnuplot script buffer, put the
 following in your .emacs file:
-     (autoload 'gnuplot-make-buffer \"gnuplot\"
+     (autoload \\='gnuplot-make-buffer \"gnuplot\"
                \"open a buffer in gnuplot mode\" t)
-     (global-set-key [(f10)] 'gnuplot-make-buffer)"
+     (global-set-key [(f10)] \\='gnuplot-make-buffer)"
   (interactive)
   (switch-to-buffer gnuplot-gnuplot-buffer)
   (gnuplot-mode))

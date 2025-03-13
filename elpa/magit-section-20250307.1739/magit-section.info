@@ -1,7 +1,8 @@
-This is magit-section.info, produced by makeinfo version 6.5 from
+This is magit-section.info, produced by makeinfo version 6.8 from
 magit-section.texi.
 
-     Copyright (C) 2015-2021 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2025 Jonas Bernoulli
+     <emacs.magit@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -33,10 +34,10 @@ packages that have nothing to do with Magit or Git.
 and user options see *note (magit)Sections::.  This manual documents how
 you can use sections in your own packages.
 
-This manual is for Magit-Section version 2.90.1
-(v2.90.1-1138-gd583ea35d+1).
+This manual is for Magit-Section version 4.3.1.
 
-     Copyright (C) 2015-2021 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2025 Jonas Bernoulli
+     <emacs.magit@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -80,14 +81,13 @@ File: magit-section.info,  Node: Creating Sections,  Next: Core Functions,  Prev
 2 Creating Sections
 *******************
 
- -- Function: magit-insert-section [name] (type &optional value hide)
-          &rest body
-
+ -- Macro: magit-insert-section [name] (type &optional value hide) &rest
+          body
      Create a section object of type CLASS, storing VALUE in its ‘value’
      slot, and insert the section at point.  CLASS is a subclass of
      ‘magit-section’ or has the form ‘(eval FORM)’, in which case FORM
      is evaluated at runtime and should return a subclass.  In other
-     places a sections class is oftern referred to as its "type".
+     places a sections class is often referred to as its "type".
 
      Many commands behave differently depending on the class of the
      current section and sections of a certain class can have their own
@@ -100,7 +100,7 @@ File: magit-section.info,  Node: Creating Sections,  Next: Core Functions,  Prev
      kludges, which are not available to other packages.
 
      When optional HIDE is non-nil collapse the section body by default,
-     i.e.  when first creating the section, but not when refreshing the
+     i.e., when first creating the section, but not when refreshing the
      buffer.  Else expand it by default.  This can be overwritten using
      ‘magit-section-set-visibility-hook’.  When a section is recreated
      during a refresh, then the visibility of predecessor is inherited
@@ -121,8 +121,7 @@ File: magit-section.info,  Node: Creating Sections,  Next: Core Functions,  Prev
      section by washing Git’s output and Git didn’t actually output
      anything this time around.
 
- -- Function: magit-insert-heading &rest args
-
+ -- Function: magit-insert-heading [child-count] &rest args
      Insert the heading for the section currently being inserted.
 
      This function should only be used inside ‘magit-insert-section’.
@@ -150,20 +149,24 @@ File: magit-section.info,  Node: Creating Sections,  Next: Core Functions,  Prev
      right.  The only exception is that this function does insert a
      newline character if necessary.
 
- -- Macro: magit-insert-section-body &rest body
+     If provided, optional CHILD-COUNT must evaluate to an integer or
+     boolean.  If t, then the count is determined once the children have
+     been inserted, using ‘magit-insert-child-count’ (which see).  For
+     historic reasons, if the heading ends with ":", the count is
+     substituted for that, at this time as well.  If
+     ‘magit-section-show-child-count’ is nil, no counts are inserted
 
+ -- Macro: magit-insert-section-body &rest body
      Use BODY to insert the section body, once the section is expanded.
      If the section is expanded when it is created, then this is like
      ‘progn’.  Otherwise BODY isn’t evaluated until the section is
      explicitly expanded.
 
  -- Function: magit-cancel-section
-
      Cancel inserting the section that is currently being inserted.
      Remove all traces of that section.
 
  -- Function: magit-wash-sequence function
-
      Repeatedly call FUNCTION until it returns ‘nil’ or the end of the
      buffer is reached.  FUNCTION has to move point forward or return
      ‘nil’.
@@ -175,16 +178,20 @@ File: magit-section.info,  Node: Core Functions,  Next: Matching Functions,  Pre
 ****************
 
  -- Function: magit-current-section
+     Return the section at point or where the context menu was invoked.
+     When using the context menu, return the section that the user
+     clicked on, provided the current buffer is the buffer in which the
+     click occurred.  Otherwise return the section at point.
 
-     Return the section at point.
+Function magit-section-at &optional position
+     Return the section at POSITION, defaulting to point.  Default to
+     point even when the context menu is used.
 
  -- Function: magit-section-ident section
-
      Return an unique identifier for SECTION.  The return value has the
      form ‘((TYPE . VALUE)...)’.
 
  -- Function: magit-section-ident-value value
-
      Return a constant representation of VALUE.
 
      VALUE is the value of a ‘magit-section’ object.  If that is an
@@ -195,16 +202,41 @@ File: magit-section.info,  Node: Core Functions,  Next: Matching Functions,  Pre
      method is used, which just returns the argument itself.
 
  -- Function: magit-get-section ident &optional root
-
      Return the section identified by IDENT.  IDENT has to be a list as
      returned by ‘magit-section-ident’.  If optional ROOT is non-nil,
      then search in that section tree instead of in the one whose root
      ‘magit-root-section’ is.
 
- -- Function: magit-section-lineage section
+ -- Function: magit-section-lineage section &optional raw
+     Return the lineage of SECTION.  If optional RAW is non-nil, return
+     a list of section objects, beginning with SECTION, otherwise return
+     a list of section types.
 
-     Return the lineage of SECTION.  The return value has the form
-     ‘(TYPE...)’.
+ -- Function: magit-section-content-p section
+     Return non-nil if SECTION has content or an unused washer function.
+
+   The next two functions are replacements for the Emacs functions that
+have the same name except for the ‘magit-’ prefix.  Like
+‘magit-current-section’ they do not act on point, the cursors position,
+but on the position where the user clicked to invoke the context menu.
+
+   If your package provides a context menu and some of its commands act
+on the "thing at point", even if just as a default, then use the
+prefixed functions to teach them to instead use the click location when
+appropriate.
+
+Function magit-point
+     Return point or the position where the context menu was invoked.
+     When using the context menu, return the position the user clicked
+     on, provided the current buffer is the buffer in which the click
+     occurred.  Otherwise return the same value as ‘point’.
+
+Function magit-thing-at-point thing &optional no-properties
+     Return the THING at point or where the context menu was invoked.
+     When using the context menu, return the thing the user clicked on,
+     provided the current buffer is the buffer in which the click
+     occurred.  Otherwise return the same value as ‘thing-at-point’.
+     For the meaning of THING and NO-PROPERTIES see that function.
 
 
 File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up: Top
@@ -214,7 +246,6 @@ File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up:
 
  -- Function: magit-section-match condition &optional (section
           (magit-current-section))
-
      Return t if SECTION matches CONDITION.
 
      SECTION defaults to the section at point.  If SECTION is not
@@ -223,14 +254,12 @@ File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up:
      CONDITION can take the following forms:
 
         • ‘(CONDITION...)’ matches if any of the CONDITIONs matches.
-
         • ‘[CLASS...]’ matches if the section’s class is the same as the
           first CLASS or a subclass of that; the section’s parent class
           matches the second CLASS; and so on.
 
         • ‘[* CLASS...]’ matches sections that match [CLASS...] and also
           recursively all their child sections.
-
         • ‘CLASS’ matches if the section’s class is the same as CLASS or
           a subclass of that; regardless of the classes of the parent
           sections.
@@ -248,7 +277,6 @@ File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up:
      course you want to be that precise.
 
  -- Function: magit-section-value-if condition &optional section
-
      If the section at point matches CONDITION, then return its value.
 
      If optional SECTION is non-nil then test whether that matches
@@ -258,7 +286,6 @@ File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up:
      See ‘magit-section-match’ for the forms CONDITION can take.
 
  -- Macro: magit-section-case &rest clauses
-
      Choose among clauses on the type of the section at point.
 
      Each clause looks like ‘(CONDITION BODY...)’.  The type of the
@@ -276,11 +303,11 @@ File: magit-section.info,  Node: Matching Functions,  Prev: Core Functions,  Up:
 
 
 Tag Table:
-Node: Top788
-Node: Introduction2098
-Node: Creating Sections2868
-Node: Core Functions7385
-Node: Matching Functions8711
+Node: Top808
+Node: Introduction2109
+Node: Creating Sections2879
+Node: Core Functions7812
+Node: Matching Functions10964
 
 End Tag Table
 

@@ -4,6 +4,10 @@
 
 ;; Author: Hans-Peter Deifel <hpd@hpdeifel.de>
 ;; Keywords: wp
+;; Homepage: https://github.com/hpdeifel/synosaurus
+;; Package-Version: 20250113.2057
+;; Package-Revision: 690755ce88a5
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

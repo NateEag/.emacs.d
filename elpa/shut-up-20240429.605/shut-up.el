@@ -6,9 +6,8 @@
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;; Package-Requires: ((cl-lib "0.3") (emacs "24"))
-;; Package-Version: 20210403.1249
-;; Package-Commit: ff6f06f3b080ee833a25a22da8cb5b96e911dc77
-;; Version: 0.3.2
+;; Package-Version: 20240429.605
+;; Package-Revision: ed62a7fefdf0
 ;; URL: http://github.com/rejeep/shut-up.el
 
 ;; This file is NOT part of GNU Emacs.
@@ -123,8 +122,9 @@ have any affect."
                        ((symbol-function 'message)
                         (lambda (fmt &rest args)
                           (when fmt
-                            (let ((text (concat (apply #'format fmt args) "\n")))
-                              (shut-up-insert-to-buffer text shut-up-sink)))))
+                            (let ((text (apply #'format fmt args)))
+                              (shut-up-insert-to-buffer (concat text "\n") shut-up-sink)
+                              text))))
                        ((symbol-function 'write-region) #'shut-up-write-region)
                        ((symbol-function 'load) #'shut-up-load))
                ,@body)

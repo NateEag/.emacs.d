@@ -2,7 +2,8 @@
 
 ;; Copyright (C) 2017-2022 Chen Bin
 ;;
-;; Version: 1.1.1
+;; Package-Version: 20250218.237
+;; Package-Revision: d55a128616a8
 ;; Keywords: git vc svn hg messenger
 ;; Author: Chen Bin <chenbin DOT sh AT gmail DOT com>
 ;; URL: http://github.com/redguardtoo/vc-msg

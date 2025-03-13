@@ -1,13 +1,12 @@
 ;;; treeview.el --- A generic tree navigation library -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018-2022 Tilman Rassy
+;; Copyright (C) 2018-2024 Tilman Rassy
 
 ;; Author: Tilman Rassy <tilman.rassy@googlemail.com>
 ;; URL: https://github.com/tilmanrassy/emacs-treeview
-;; Package-Version: 20220928.43
-;; Package-Commit: d9c10feddf3b959e7b33ce83103e1f0a61162723
-;; Version: 1.1.1
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Version: 20241101.115
+;; Package-Revision: 9a1a16f84fc3
+;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: lisp, tools, internal, convenience
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -262,8 +261,8 @@ If NODE does not have a next sibling, returns nil."
           (eq last-parent-child node)))))
 
 (defun treeview-parent-is-last-child-p (node)
-  "Return non-nil if the parent of NODE is the last child of its parent,
-otherwise nil."
+  "Return non-nil if the parent of NODE is the last child of its parent.
+Otherwise, return nil."
   (let ( (parent (treeview-get-node-parent node)) )
     (if parent (treeview-last-child-p parent) t)))
 
@@ -510,7 +509,7 @@ The default implementation is `treeview-return-nil'.")
 (make-variable-buffer-local 'treeview-get-label-keymap-function)
 
 (defvar treeview-get-label-face-function 'treeview-return-nil
-  "Function to get the mouse face of the label of a node.
+  "Function to get the face of the label of a node.
 Called with one argument, the node.  The return value is passed as the
 MOUSE-FACE argument to `treeview-make-node-component-overlay'.  Thus, the
 return value must be a face or nil.
@@ -581,8 +580,8 @@ node."
     nodes))
 
 (defun treeview-get-node-at-pos (pos)
-  "Return the node at the buffer position POS,
-or nil if there is no node at that position."
+  "Return the node at the buffer position POS.
+If there is no node at that position, return nil."
   (let ( (overlays (overlays-at pos t))
          (node nil) )
     (while (and overlays (not node))
@@ -815,36 +814,36 @@ This is an auxiliary function used in `treeview-display-node'."
     (when indent
       (setq indent-overlay
             (treeview-make-node-component-overlay node indent nil indent-face)))
+    (treeview-set-node-prop node 'indent-overlay indent-overlay)
     ;; Control:
     (treeview-put control-margin-left)
     (when control-content
       (setq control-overlay
             (treeview-make-node-component-overlay node control-content control-keymap control-face control-mouse-face)))
     (treeview-put control-margin-right)
+    (treeview-set-node-prop node 'control-overlay control-overlay)
     ;; Icon:
     (treeview-put icon-margin-left)
     (when icon-content
       (setq icon-overlay
             (treeview-make-node-component-overlay node icon-content icon-keymap icon-face icon-mouse-face)))
     (treeview-put icon-margin-right)
+    (treeview-set-node-prop node 'icon-overlay icon-overlay)
     ;; Label:
     (treeview-put label-margin-left)
     (setq label-overlay
           (treeview-make-node-component-overlay node label-content label-keymap label-face label-mouse-face))
+    (treeview-set-node-prop node 'label-overlay label-overlay)
     ;; Node line:
     (setq node-line-overlay (treeview-make-node-line-overlay node start (point)))
+    (treeview-set-node-prop node 'node-line-overlay node-line-overlay)
     (unless (treeview-node-folded-p node)
       (let ( (children (treeview-get-node-children node)) )
         (if children (newline))
         (while children
           (treeview-render-node (car children) (setq children (cdr children)))) ))
     (treeview-set-node-end node nil nil)
-    (if append-newline-p (newline))
-    (treeview-set-node-prop node 'indent-overlay indent-overlay)
-    (treeview-set-node-prop node 'control-overlay control-overlay)
-    (treeview-set-node-prop node 'icon-overlay icon-overlay)
-    (treeview-set-node-prop node 'label-overlay label-overlay)
-    (treeview-set-node-prop node 'node-line-overlay node-line-overlay) ) )
+    (if append-newline-p (newline))) )
 
 (defun treeview-set-node-end-after-display (node)
   "Set the insertion type of the end marker of NODE and its descendants to t.
@@ -1049,12 +1048,83 @@ See also `treeview-toggle-node-state'."
           (offset (/ (- end start) 2)) )
     (+ start offset)))
 
-(defun treeview-call-for-node-at-point (action-function)
-  "Call ACTION-FUNCTION with the node at point as argument.
-ACTION-FUNCTION is the symbol of the function.  If there is no node at point,
-does nothing."
+(defun treeview-call-for-node (node action &optional highlight retain-point)
+  "Call ACTION for NODE, optionally highlight node and retain point.
+
+ACTION should be the symbol of a function.  ACTION is called with one argument,
+the node at point.  If HIGHLIGHT is non-nil, the node is highlighted before
+ACTION is invoked, and unhighlighted after ACTION has returned.  If RETAIN-POINT
+is non-nil, the initial integer position of the point is saved and restored
+after everything else has been done."
+  (let ( (saved-point (point)) )
+    (if (or highlight retain-point)
+        (progn
+          (when highlight (treeview-highlight-node node))
+          (unwind-protect
+              (funcall action node)
+            (when highlight (treeview-unhighlight-node))
+            (when retain-point (goto-char saved-point))) )
+      (funcall action node)) ))
+
+(defun treeview-call-for-node-at-point (action &optional highlight retain-point)
+  "Call ACTION for the node at point, optionally highlight node and retain point.
+
+ACTION should be the symbol of a function.  ACTION is called with one argument,
+the node at point.  If HIGHLIGHT is non-nil, the node is highlighted before
+ACTION is invoked, and unhighlighted after ACTION has returned.  If RETAIN-POINT
+is non-nil, the initial integer position of the point is saved and restored
+after everything else has been done.
+
+If there is no node at point, does nothing."
   (let ( (node (treeview-get-node-at-pos (point))) )
-    (when node (funcall action-function node))))
+    (when node (treeview-call-for-node node action highlight retain-point))))
+
+;; (defun treeview-call-for-node-at-point (action-function)
+;;   "Call ACTION-FUNCTION with the node at point as argument.
+;; ACTION-FUNCTION is the symbol of the function.  If there is no node at point,
+;; does nothing."
+;;   (let ( (node (treeview-get-node-at-pos (point))) )
+;;     (when node (funcall action-function node))))
+
+;; (defun treeview-highlight-node-and-call (node action-function)
+;;   "Highlight NODE and call ACTION-FUNCTION for it.
+
+;; ACTION-FUNCTION should be the symbol of the function.  It is called with one
+;; argument, the node NODE.  Before ACTION-FUNCTION is invoked, the node is
+;; highlighted be means of `treeview-highlight-node'.  After ACTION-FUNCTION
+;; returns, the node is un-highlighted be means of `treeview-unhighlight-node'."
+;;   (treeview-highlight-node node)
+;;   (unwind-protect
+;;       (funcall action-function node)
+;;     (treeview-unhighlight-node)) )
+
+;; (defun treeview-highlight-node-at-point-and-call (action-function)
+;;   "Highlight node at point and call ACTION-FUNCTION for it.
+
+;; ACTION-FUNCTION should be the symbol of the function.  It is called with one
+;; argument, the node at point.  Before ACTION-FUNCTION is invoked, the node is
+;; highlighted be means of `treeview-highlight-node'.  After ACTION-FUNCTION
+;; returns, the node is un-highlighted be means of `treeview-unhighlight-node'.
+
+;; If there is no node at point, does nothing.
+
+;; Except highlighting, this is the same as `treeview-call-for-node-at-point'."
+;;   (let ( (node (treeview-get-node-at-pos (point))) )
+;;     (when node (treeview-highlight-node-and-call node action-function) )))
+
+;; (defun treeview-highlight-node-at-point-and-call-and-retain-point (action-function)
+;;   "Highlight node at point, call ACTION-FUNCTION for it, and retain point.
+
+;; Same as `treeview-highlight-node-at-point-and-call', but in addition, the point
+;; is preserved.  To be exact, the integer position of the point after execution
+;; is the same as before execution."
+;;   (let ( (node (treeview-get-node-at-pos (point))) (saved-point (point)) )
+;;     (when node
+;;       (treeview-highlight-node node)
+;;       (unwind-protect
+;;           (funcall action-function node)
+;;         (treeview-unhighlight-node)
+;;         (goto-char saved-point)) )))
 
 (defun treeview-refresh-node (node)
   "Update and redisplay NODE.
@@ -1116,24 +1186,24 @@ argument.  Otherwise, point is placed at the beginning of the label."
     (overlay-start (treeview-get-node-prop node 'label-overlay)))))
 
 (defun treeview-next-line ()
-  "Move point one line down,
-and, if there is a node in that line, move point to the node."
+  "Move point one line down, and, if there is a node in that line, to the node.
+If the point is in the last line, do nothing."
   (interactive)
-  (forward-line)
-  (let ( (node (treeview-get-node-at-point)) )
-    (if node (treeview-place-point-in-node node))))
+  (unless (equal (line-end-position) (point-max)) ;; If in the last line, do nothing
+    (forward-line)
+    (let ( (node (treeview-get-node-at-point)) )
+      (if node (treeview-place-point-in-node node)))))
 
 (defun treeview-previous-line ()
-  "Move point one line up,
-and, if there is a node in that line, move point to the node."
+  "Move point one line up, and, if there is a node in that line, to the node.
+If the point is in the first line, do nothing."
   (interactive)
   (forward-line -1)
   (let ( (node (treeview-get-node-at-point)) )
     (if node (treeview-place-point-in-node node))))
 
 (defun treeview-goto-parent ()
-  "Move the point to the parent of node at point.
-If there is no node at point, or if the node has no parent, does nothing."
+  "Move the point to the parent of node at point."
   (interactive)
   (let ( (node (treeview-find-node-in-current-line)) )
     (when node
@@ -1169,6 +1239,11 @@ has no next sibling, does nothing."
         (when parent
           (let ( (sibling (treeview-get-next-sibling parent)) )
             (when sibling (treeview-place-point-in-node sibling))))))))
+
+(defun treeview-goto-root ()
+  "Move the point to the root node."
+  (interactive)
+  (treeview-place-point-in-node (treeview-get-root-node)))
 
 (defun treeview-node-selected-p (node)
   "Return non-nil if NODE is selected, otherwise nil.

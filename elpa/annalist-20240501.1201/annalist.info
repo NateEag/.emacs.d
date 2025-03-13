@@ -1,4 +1,4 @@
-This is annalist.info, produced by makeinfo version 6.5 from
+This is annalist.info, produced by makeinfo version 6.8 from
 annalist.texi.
 
 INFO-DIR-SECTION Emacs
@@ -38,6 +38,7 @@ other packages like ‘general’ and ‘evil-collection’, but it can also be
 used directly in a user’s configuration.
 
 [https://user-images.githubusercontent.com/4250696/63480582-64e2cb00-c460-11e9-9571-706b5b96992c]
+
 * Menu:
 
 * Usage::
@@ -476,6 +477,7 @@ File: annalist.info,  Node: Formatting Helpers,  Next: Sorting Helpers,  Prev: L
      Here is an example of what this looks like:
 
 [https://user-images.githubusercontent.com/4250696/62338313-1025e300-b4a6-11e9-845f-179c02abef35]
+
 
 File: annalist.info,  Node: Sorting Helpers,  Prev: Formatting Helpers,  Up: Helper Functions
 
@@ -516,25 +518,25 @@ keybindings that are currently active.
 
 Tag Table:
 Node: Top217
-Node: Usage2195
-Node: Disabling Annalist2443
-Node: Terminology3226
-Node: Settings3855
-Node: Defining New Types4239
-Node: Type Top-level Settings5272
-Node: Type Item Settings6987
-Node: record-update preprocess and postprocess Settings Argument7641
-Node: Defining Views8601
-Node: View Top-level Settings9596
-Node: View Item Settings11236
-Node: Recording13459
-Node: Describing15400
-Node: Helper Functions16437
-Node: List Helpers16651
-Node: Formatting Helpers17431
-Node: Sorting Helpers18619
-Node: Builtin Types18881
-Node: Keybindings Type19031
+Node: Usage2196
+Node: Disabling Annalist2444
+Node: Terminology3227
+Node: Settings3856
+Node: Defining New Types4240
+Node: Type Top-level Settings5273
+Node: Type Item Settings6988
+Node: record-update preprocess and postprocess Settings Argument7642
+Node: Defining Views8602
+Node: View Top-level Settings9597
+Node: View Item Settings11237
+Node: Recording13460
+Node: Describing15401
+Node: Helper Functions16438
+Node: List Helpers16652
+Node: Formatting Helpers17432
+Node: Sorting Helpers18621
+Node: Builtin Types18883
+Node: Keybindings Type19033
 
 End Tag Table
 

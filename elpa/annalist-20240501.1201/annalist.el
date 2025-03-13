@@ -4,7 +4,8 @@
 ;; URL: https://github.com/noctuid/annalist.el
 ;; Keywords: convenience, tools, keybindings, org
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
-;; Version: 1.0
+;; Package-Version: 20240501.1201
+;; Package-Revision: e1ef5dad75fa
 
 ;; This file is not part of GNU Emacs.
 
@@ -558,6 +559,9 @@ one."
 (declare-function org-table-align "org-table")
 (declare-function outline-next-heading "outline")
 (defvar org-startup-folded)
+(defvar org-startup-align-all-tables)
+(defvar org-startup-shrink-all-tables)
+
 ;;;###autoload
 (defun annalist-describe (annalist type &optional view)
   "Describe information recorded by ANNALIST for TYPE.
@@ -586,18 +590,15 @@ those settings for displaying recorded information instead of the defaults."
           (princ "* Global\n"))
         (annalist--print-headings name-store 0 settings local-name-store)))
     (when (or local-name-store name-store)
+      (require 'org)
       (with-current-buffer output-buffer-name
-        (let ((org-startup-folded annalist-org-startup-folded))
-          (org-mode))
         (read-only-mode -1)
+        (let ((org-startup-folded annalist-org-startup-folded)
+              (org-startup-align-all-tables t)
+              (org-startup-shrink-all-tables nil))
+          (org-mode))
         ;; TODO delete empty tables then headings (e.g. if predicate for row
         ;; fails but predicate for headings didn't)
-        (while (progn
-                 (while (progn
-                          (forward-line)
-                          (org-at-heading-p)))
-                 (org-table-align)
-                 (outline-next-heading)))
         (goto-char (point-min))
         (dolist (view-hook view-hooks)
           (funcall view-hook))

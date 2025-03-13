@@ -1,0 +1,6 @@
+# name : Manage systemd units
+# key : systemd_service
+# condition: ansible
+# --
+- name: ${1:Manage systemd units}
+  systemd_service: $0

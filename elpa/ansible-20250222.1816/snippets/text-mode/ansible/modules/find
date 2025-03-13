@@ -1,0 +1,6 @@
+# name : Return a list of files based on specific criteria
+# key : find
+# condition: ansible
+# --
+- name: ${1:Return a list of files based on specific criteria}
+  find: paths=$2 $0

@@ -1,0 +1,6 @@
+# name : Insert/update/remove a text block surrounded by marker lines
+# key : blockinfile
+# condition: ansible
+# --
+- name: ${1:Insert/update/remove a text block surrounded by marker lines}
+  blockinfile: path=$2 $0

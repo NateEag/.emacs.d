@@ -1,0 +1,6 @@
+# name : Dynamically include a task list
+# key : include_tasks
+# condition: ansible
+# --
+- name: ${1:Dynamically include a task list}
+  include_tasks: $0

@@ -1,0 +1,6 @@
+# name : Try to connect to host, verify a usable python and return V(pong) on success
+# key : ping
+# condition: ansible
+# --
+- name: ${1:Try to connect to host, verify a usable python and return V(pong) on success}
+  ping: $0

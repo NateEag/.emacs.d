@@ -1,0 +1,6 @@
+# name : Load and execute a role
+# key : include_role
+# condition: ansible
+# --
+- name: ${1:Load and execute a role}
+  include_role: name=$2 $0

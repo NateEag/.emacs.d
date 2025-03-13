@@ -1,0 +1,6 @@
+# name : Modify iptables rules
+# key : iptables
+# condition: ansible
+# --
+- name: ${1:Modify iptables rules}
+  iptables: $0

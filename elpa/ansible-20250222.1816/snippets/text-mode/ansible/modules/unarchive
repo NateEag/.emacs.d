@@ -1,0 +1,6 @@
+# name : Unpacks an archive after (optionally) copying it from the local machine
+# key : unarchive
+# condition: ansible
+# --
+- name: ${1:Unpacks an archive after (optionally) copying it from the local machine}
+  unarchive: src=$2 dest=$3 $0

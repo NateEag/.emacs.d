@@ -1,0 +1,6 @@
+# name : Generic OS package manager
+# key : package
+# condition: ansible
+# --
+- name: ${1:Generic OS package manager}
+  package: name=$2 state=$3 $0

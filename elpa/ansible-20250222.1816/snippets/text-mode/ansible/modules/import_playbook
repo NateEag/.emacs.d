@@ -1,0 +1,6 @@
+# name : Import a playbook
+# key : import_playbook
+# condition: ansible
+# --
+- name: ${1:Import a playbook}
+  import_playbook: $0

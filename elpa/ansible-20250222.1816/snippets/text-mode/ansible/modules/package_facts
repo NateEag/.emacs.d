@@ -1,0 +1,6 @@
+# name : Package information as facts
+# key : package_facts
+# condition: ansible
+# --
+- name: ${1:Package information as facts}
+  package_facts: $0

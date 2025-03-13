@@ -1,0 +1,6 @@
+# name : Template a file out to a target host
+# key : template
+# condition: ansible
+# --
+- name: ${1:Template a file out to a target host}
+  template: $0

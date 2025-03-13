@@ -1,0 +1,6 @@
+# name : Executes a command and responds to prompts
+# key : expect
+# condition: ansible
+# --
+- name: ${1:Executes a command and responds to prompts}
+  expect: command=$2 responses=$3 $0

@@ -1,0 +1,6 @@
+# name : Import a role into a play
+# key : import_role
+# condition: ansible
+# --
+- name: ${1:Import a role into a play}
+  import_role: name=$2 $0

@@ -1,0 +1,6 @@
+# name : Execute Ansible 'actions'
+# key : meta
+# condition: ansible
+# --
+- name: ${1:Execute Ansible 'actions'}
+  meta: free_form=$2 $0

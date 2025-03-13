@@ -1,0 +1,6 @@
+# name : Import a task list
+# key : import_tasks
+# condition: ansible
+# --
+- name: ${1:Import a task list}
+  import_tasks: $0

@@ -1,0 +1,6 @@
+# name : Dpkg package selection selections
+# key : dpkg_selections
+# condition: ansible
+# --
+- name: ${1:Dpkg package selection selections}
+  dpkg_selections: name=$2 selection=$3 $0

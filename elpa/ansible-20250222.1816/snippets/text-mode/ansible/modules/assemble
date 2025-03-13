@@ -1,0 +1,6 @@
+# name : Assemble configuration files from fragments
+# key : assemble
+# condition: ansible
+# --
+- name: ${1:Assemble configuration files from fragments}
+  assemble: src=$2 dest=$3 $0

@@ -1,0 +1,6 @@
+# name : Define and display stats for the current ansible run
+# key : set_stats
+# condition: ansible
+# --
+- name: ${1:Define and display stats for the current ansible run}
+  set_stats: data=$2 $0

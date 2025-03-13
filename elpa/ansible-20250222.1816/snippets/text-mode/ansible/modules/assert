@@ -1,0 +1,6 @@
+# name : Asserts given expressions are true
+# key : assert
+# condition: ansible
+# --
+- name: ${1:Asserts given expressions are true}
+  assert: that=$2 $0

@@ -1,0 +1,6 @@
+# name : Validate role argument specs.
+# key : validate_argument_spec
+# condition: ansible
+# --
+- name: ${1:Validate role argument specs.}
+  validate_argument_spec: argument_spec=$2 $0

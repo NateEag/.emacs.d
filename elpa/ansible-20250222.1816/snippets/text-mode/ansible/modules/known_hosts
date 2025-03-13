@@ -1,0 +1,6 @@
+# name : Add or remove a host from the C(known_hosts) file
+# key : known_hosts
+# condition: ansible
+# --
+- name: ${1:Add or remove a host from the C(known_hosts) file}
+  known_hosts: name=$2 $0

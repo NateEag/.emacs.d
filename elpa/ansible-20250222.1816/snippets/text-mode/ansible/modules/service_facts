@@ -1,0 +1,6 @@
+# name : Return service state information as fact data
+# key : service_facts
+# condition: ansible
+# --
+- name: ${1:Return service state information as fact data}
+  service_facts: $2 $0

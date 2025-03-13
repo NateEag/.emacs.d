@@ -1,0 +1,6 @@
+# name : Manage files and file properties
+# key : file
+# condition: ansible
+# --
+- name: ${1:Manage files and file properties}
+  file: path=$2 $0

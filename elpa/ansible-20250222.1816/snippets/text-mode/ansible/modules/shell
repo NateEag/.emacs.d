@@ -1,0 +1,6 @@
+# name : Execute shell commands on targets
+# key : shell
+# condition: ansible
+# --
+- name: ${1:Execute shell commands on targets}
+  shell: $0

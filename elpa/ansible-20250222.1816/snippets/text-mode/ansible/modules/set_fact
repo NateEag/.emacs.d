@@ -1,0 +1,6 @@
+# name : Set host variable(s) and fact(s).
+# key : set_fact
+# condition: ansible
+# --
+- name: ${1:Set host variable(s) and fact(s).}
+  set_fact: key_value=$2 $0

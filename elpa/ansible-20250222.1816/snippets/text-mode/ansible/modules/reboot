@@ -1,0 +1,6 @@
+# name : Reboot a machine
+# key : reboot
+# condition: ansible
+# --
+- name: ${1:Reboot a machine}
+  reboot: $0

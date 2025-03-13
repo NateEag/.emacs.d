@@ -1,0 +1,6 @@
+# name : Manages packages with the I(dnf) package manager
+# key : dnf
+# condition: ansible
+# --
+- name: ${1:Manages packages with the I(dnf) package manager}
+  dnf: $0

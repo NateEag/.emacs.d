@@ -1,0 +1,6 @@
+# name : Retrieve mount information.
+# key : mount_facts
+# condition: ansible
+# --
+- name: ${1:Retrieve mount information.}
+  mount_facts: $0

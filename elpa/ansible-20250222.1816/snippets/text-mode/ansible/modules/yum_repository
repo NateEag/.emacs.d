@@ -1,0 +1,6 @@
+# name : Add or remove YUM repositories
+# key : yum_repository
+# condition: ansible
+# --
+- name: ${1:Add or remove YUM repositories}
+  yum_repository: name=$2 $0

@@ -1,0 +1,6 @@
+# name : Creates temporary files and directories
+# key : tempfile
+# condition: ansible
+# --
+- name: ${1:Creates temporary files and directories}
+  tempfile: $0

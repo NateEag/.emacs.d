@@ -1,0 +1,6 @@
+# name : Executes a low-down and dirty command
+# key : raw
+# condition: ansible
+# --
+- name: ${1:Executes a low-down and dirty command}
+  raw: free_form=$2 $0

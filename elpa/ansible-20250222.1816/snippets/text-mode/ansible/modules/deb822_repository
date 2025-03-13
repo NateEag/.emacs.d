@@ -1,0 +1,6 @@
+# name : Add and remove deb822 formatted repositories
+# key : deb822_repository
+# condition: ansible
+# --
+- name: ${1:Add and remove deb822 formatted repositories}
+  deb822_repository: name=$2 $0

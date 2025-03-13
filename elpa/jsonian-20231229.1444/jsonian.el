@@ -4,7 +4,8 @@
 
 ;; Author: Ian Wahbe
 ;; URL: https://github.com/iwahbe/jsonian
-;; Version: 0.1.0
+;; Package-Version: 20231229.1444
+;; Package-Revision: f200035b847d
 ;; Package-Requires: ((emacs "27.1"))
 
 ;; This program is free software; you can redistribute it and/or
@@ -69,6 +70,11 @@ nil means that `jsonian-mode' will infer the correct indentation."
 (defcustom jsonian-default-indentation 4
   "The default number of spaces per indent for when it cannot be inferred."
   :type 'integer
+  :group 'jsonian)
+
+(defcustom jsonian-find-filter-fn #'jsonian--filter-prefix
+  "The function used to filter `jsonian-find' results."
+  :type 'func
   :group 'jsonian)
 
 (defgroup jsonian-c nil
@@ -489,45 +495,49 @@ we instead move so that `char-after' gives the ?\" that begins
   (let* ((center (point))
          left-end
          (left
-          ;; Find the left most valid starting token
-          (if-let (start (jsonian--pos-in-stringp))
-              start
-            (when-let (start (jsonian--enclosing-comment-p (point)))
-              (goto-char start))
+          (jsonian--is-token
+           ;; Find the left most valid starting token
+           (if-let (start (jsonian--pos-in-stringp))
+               start
+             (when-let (start (jsonian--enclosing-comment-p (point)))
+               (goto-char start))
 
-            (jsonian--skip-chars-backward "\s\t\n")
-            (unless (bobp)
-              (pcase (char-before)
-                ((or ?: ?, ?\{ ?\} ?\[ ?\]) (1- (point)))
-                (?\" (jsonian--backward-string)
-                     (point))
-                (_ (while (not (or (bobp)
-                                   (memq (char-before) '(?: ?, ?\s ?\t ?\n ?\{ ?\} ?\[ ?\]))))
-                     (backward-char))
-                   (unless (bobp)
-                     (point)))))))
-         (right (cond
-                 ;; If left=center, there is no point in trying to calculate `right',
-                 ;; since it cannot be better then left.
-                 ((eq left center) nil)
-                 (left
-                  ;; If we have a left token, we can just traverse forward from the left
-                  ;; token to get the right token.
-                  (goto-char left)
-                  (when (and (jsonian--forward-token)
-                             (>= center (setq left-end jsonian--last-token-end)))
-                    ;; If center is within the node found by left, we take that
-                    ;; token regardless of distance. This is necessary to ensure
-                    ;; idenpotency for tightly packed tokens.
-                    (point)))
-                 (t
-                  ;; We have no left token, so we need to parse to the right token.
-                  (goto-char center)
-                  (when-let (start (jsonian--enclosing-comment-p (point)))
-                    (goto-char start))
-                  (jsonian--skip-chars-forward "\s\t\n")
-                  (unless (eobp)
-                    (point))))))
+             (jsonian--skip-chars-backward "\s\t\n")
+             (unless (bobp)
+               (pcase (char-before)
+                 ((or ?: ?, ?\{ ?\} ?\[ ?\]) (1- (point)))
+                 (?\" (jsonian--backward-string)
+                      (point))
+                 (_ (while (not (or (bobp)
+                                    (memq (char-before) '(?: ?, ?\s ?\t ?\n ?\{ ?\} ?\[ ?\]))))
+                      (backward-char))
+                    (unless (bobp)
+                      (point))))))))
+         (right
+          (jsonian--is-token
+           (cond
+            ;; If left=center, there is no point in trying to calculate `right',
+            ;; since it cannot be better then left.
+            ((eq left center) nil)
+            (left
+             ;; If we have a left token, we can just traverse forward from the left
+             ;; token to get the right token.
+             (goto-char left)
+             (when (and (jsonian--forward-token)
+                        (>= center (setq left-end jsonian--last-token-end)))
+               ;; If center is within the node found by left, we take that
+               ;; token regardless of distance. This is necessary to ensure
+               ;; idenpotency for tightly packed tokens.
+               (point)))
+            (t
+             ;; We have no left token, so we need to parse to the right token.
+             (goto-char center)
+             (when-let (start (jsonian--enclosing-comment-p (point)))
+               (goto-char start))
+             (jsonian--skip-chars-forward "\s\t\n")
+             (unless (eobp)
+               (point)))))))
+    ;; Move `point' to the nearest token start: `left' or `right'.
     (goto-char
      (or
       (if (and left right)
@@ -553,6 +563,22 @@ we instead move so that `char-after' gives the ?\" that begins
                 right))))
         (or left right))
       center))))
+
+(defun jsonian--is-token (point)
+  "Return POINT if it is the start of a token.
+Otherwise nil is returned."
+  (when point
+    (condition-case nil
+        (save-excursion
+          (goto-char point)
+          ;; If not at a token, then `jsonian--forward-token' will `signal'.
+          (jsonian--forward-token)
+          ;; If we didn't signal, return `point'.
+          ;;
+          ;; This would be better expressed as a (:success t) case, but that was
+          ;; introduced in Emacs 28.
+          point)
+      (user-error nil))))
 
 (defun jsonian--display-path (path &optional pretty)
   "Convert the reconstructed JSON path PATH to a string.
@@ -1352,6 +1378,10 @@ CACHE is the value of `jsonian--cache' for the buffer being completed against."
                  (or (and node (jsonian--cached-node-preview node)) ""))))
             paths)))
 
+(defun jsonian--filter-prefix (prefix paths)
+  "Filter out entries in PATHS that do not start with PREFIX."
+  (seq-filter (apply-partially #'string-prefix-p prefix) paths))
+
 (defun jsonian--completing-sort (prefix paths)
   "The completing sort function for `jsonian--find-completion'.
 PREFIX is the string to compare against.
@@ -1359,7 +1389,7 @@ PATHS is the list of returned paths."
   (if-let* ((segment (car-safe (last (jsonian--parse-path prefix))))
             (prefix (jsonian--display-segment-end segment)))
       (sort
-       (seq-filter (apply-partially #'string-prefix-p prefix) paths)
+       (funcall jsonian-find-filter-fn prefix paths)
        (if (seq-every-p (apply-partially #'string-match-p "^[0-9]+\]$") paths)
            ;; We are in an array, and indexes are numbers like "42]". We should sort them low to high.
            (lambda (x y) (< (string-to-number x) (string-to-number y)))
@@ -1939,12 +1969,16 @@ If MINIMIZE is non-nil, minimize the region instead of expanding it."
   (interactive "*r\nP")
   (let ((current-point (point-marker)))
     (jsonian--huge-edit start end
-      (let ((end (progn (goto-char end) (point-marker))))
+      ;; Both `inhibit-modification-hooks' and `undo-inhibit-record-point' must be inside
+      ;; `jsonian--huge-edit' to allow `jsonian--huge-edit' to handle changes
+      ;; appropriately.
+      (let ((inhibit-modification-hooks t)
+            (undo-inhibit-record-point t)
+            (end (progn (goto-char end) (point-marker))))
         (goto-char start)
         (jsonian--snap-to-token)
         (let* ((indent (jsonian--indentation-spaces))
                (indent-level (jsonian--get-indent-level indent))
-               (undo-inhibit-record-point t)
                (next-token (make-marker))
                ;; Don't allocate a new string each time you add indentation.
                ;;
@@ -1953,13 +1987,13 @@ If MINIMIZE is non-nil, minimize the region instead of expanding it."
                (progress (make-progress-reporter "Formatting region..." start (* (- end start) 1.5))))
           (set-marker-insertion-type next-token t)
           (while (and
-                  (<= (point) end)
+                  (< (point) end)
                   (jsonian--forward-token t))
             (progress-reporter-update progress (point))
             ;; Delete the whitespace between the old token and the next token.
             (set-marker next-token (point))
             (delete-region jsonian--last-token-end (point))
-            (unless minimize
+            (unless (or minimize (>= (point) end))
               ;; Unless we are minimizing, insert the appropriate whitespace.
               (cond
                ;; A space separates : from the next token

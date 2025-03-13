@@ -5,12 +5,12 @@
 ;; Author:        Kazuo YAGI <kazuo.yagi@gmail.com>
 ;; Maintainer:    Kazuo YAGI <kazuo.yagi@gmail.com>
 ;; URL:           http://github.com/kyagi/shell-pop-el
-;; Package-Version: 20200315.1139
-;; Version:       0.64
+;; Package-Version: 20241207.1539
+;; Package-Revision: 657171f296fc
 ;; Created:       2009-05-31 23:57:08
 ;; Keywords:      shell, terminal, tools
 ;; Compatibility: GNU 24.x
-;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -135,7 +135,9 @@ The value is a list with these items:
   :set 'shell-pop--set-shell-type
   :group 'shell-pop)
 
-(defcustom shell-pop-term-shell shell-file-name
+(defcustom shell-pop-term-shell (or explicit-shell-file-name
+                                    (getenv "ESHELL")
+                                    shell-file-name)
   "Shell used in `term' and `ansi-term'."
   :type 'string
   :group 'shell-pop)
@@ -361,7 +363,7 @@ The input format is the same as that of `kbd'."
     (cond
      (shell-pop-full-span
       (split-window
-       (frame-root-window) ; window
+       (window-main-window) ; window
        (shell-pop--calculate-window-size) ; size
        (shell-pop--translate-position shell-pop-window-position))) ; side
      (t

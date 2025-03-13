@@ -4,10 +4,11 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.7.2
+;; Package-Version: 20241107.408
+;; Package-Revision: b616f5fa5f8a
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
-;; Package-Requires: ((emacs "24.3") (compat "29") (php-mode "1.22.3") (php-runtime "0.2"))
+;; Package-Requires: ((emacs "25.1") (compat "29") (php-mode "1.22.3") (php-runtime "0.2"))
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -56,6 +57,7 @@
 (require 'cl-lib)
 (require 'php-project)
 (require 'php-runtime)
+(require 'seq)
 
 (eval-when-compile
   (require 'compat nil t)
@@ -129,7 +131,43 @@
   :safe #'stringp
   :group 'phpstan)
 
+(defcustom phpstan-identifier-prefix "🪪 "
+  "Prefix of PHPStan error identifier."
+  :type 'string
+  :safe #'stringp
+  :group 'phpstan)
+
+(defcustom phpstan-enable-remote-experimental nil
+  "Enable PHPStan analysis remotely by TRAMP.
+
+When non-nil, PHPStan will be executed on a remote server for code analysis.
+This feature is experimental and should be used with caution as it may
+have unexpected behaviors or performance implications."
+  :type 'boolean
+  :safe #'booleanp
+  :group 'phpstan)
+
+(defconst phpstan-template-dump-type "\\PHPStan\\dumpType();")
+(defconst phpstan-template-dump-phpdoc-type "\\PHPStan\\dumpPhpDocType();")
+
+(defcustom phpstan-intert-dump-type-templates (cons phpstan-template-dump-type
+                                             phpstan-template-dump-phpdoc-type)
+  "Default template of PHPStan dumpType insertion."
+  :type '(cons string string)
+  :group 'phpstan)
+
+(defcustom phpstan-disable-buffer-errors nil
+  "If T, don't keep errors per buffer to save memory."
+  :type 'boolean
+  :group 'phpstan)
+
+(defcustom phpstan-not-ignorable-identifiers '("ignore.parseError")
+  "A list of identifiers that are prohibited from being added to the @phpstan-ignore tag."
+  :type '(repeat string))
+
 (defvar-local phpstan--use-xdebug-option nil)
+
+(defvar-local phpstan--ignorable-errors '())
 
 ;;;###autoload
 (progn
@@ -246,6 +284,18 @@ NIL
                              (and (stringp (car v)) (listp (cdr v))))
                        (or (eq 'docker v) (null v) (stringp v))))))
 
+;; Utilities:
+(defun phpstan--plist-to-alist (plist)
+  "Convert PLIST to association list."
+  (let (alist)
+    (while plist
+      (push (cons (substring-no-properties (symbol-name (pop plist)) 1) (pop plist)) alist))
+    (nreverse alist)))
+
+(defsubst phpstan--current-line ()
+  "Return the current buffer line at point.  The first line is 1."
+  (line-number-at-pos nil t))
+
 ;; Functions:
 (defun phpstan-get-working-dir ()
   "Return path to working directory of PHPStan."
@@ -257,11 +307,12 @@ NIL
 
 (defun phpstan-enabled ()
   "Return non-NIL if PHPStan configured or Composer detected."
-  (and (not (file-remote-p default-directory)) ;; Not support remote filesystem
-       (or (phpstan-get-config-file)
-           (phpstan-get-autoload-file)
-           (and phpstan-enable-on-no-config-file
-                (php-project-get-root-dir)))))
+  (unless (and (not phpstan-enable-remote-experimental)
+               (file-remote-p default-directory)) ;; Not support remote filesystem by default
+    (or (phpstan-get-config-file)
+        (phpstan-get-autoload-file)
+        (and phpstan-enable-on-no-config-file
+             (php-project-get-root-dir)))))
 
 (defun phpstan-get-config-file ()
   "Return path to phpstan configure file or NIL."
@@ -334,21 +385,28 @@ it returns the value of `SOURCE' as it is."
       (let ((json-object-type 'plist) (json-array-type 'list))
         (json-read-object)))))
 
+(defun phpstan--expand-file-name (name)
+  "Expand file name by NAME."
+  (let ((file (expand-file-name name)))
+    (if (file-remote-p name)
+        (tramp-file-name-localname (tramp-dissect-file-name name))
+      (expand-file-name file))))
+
 ;;;###autoload
 (defun phpstan-analyze-this-file ()
   "Analyze current buffer-file using PHPStan."
   (interactive)
-  (let ((file (expand-file-name (or buffer-file-name
-                                    (read-file-name "Choose a PHP script: ")))))
+  (let ((file (phpstan--expand-file-name (or buffer-file-name
+                                      (read-file-name "Choose a PHP script: ")))))
     (compile (mapconcat #'shell-quote-argument
-                        (phpstan-get-command-args :include-executable t :args (list file)) " "))))
+                        (phpstan-get-command-args :include-executable t :args (list file) :verbose 1) " "))))
 
 ;;;###autoload
 (defun phpstan-analyze-file (file)
   "Analyze a PHP script FILE using PHPStan."
-  (interactive (list (expand-file-name (read-file-name "Choose a PHP script: "))))
+  (interactive (list (phpstan--expand-file-name (read-file-name "Choose a PHP script: "))))
   (compile (mapconcat #'shell-quote-argument
-                      (phpstan-get-command-args :include-executable t :args (list file)) " ")))
+                      (phpstan-get-command-args :include-executable t :args (list file) :verbose 1) " ")))
 
 ;;;###autoload
 (defun phpstan-analyze-project ()
@@ -411,17 +469,18 @@ it returns the value of `SOURCE' as it is."
          (listp (cdr phpstan-executable)))
     (cdr phpstan-executable))
    ((null phpstan-executable)
-    (let ((vendor-phpstan (expand-file-name "vendor/bin/phpstan"
-                                            (php-project-get-root-dir))))
+    (let* ((vendor-phpstan (expand-file-name "vendor/bin/phpstan"
+                                             (php-project-get-root-dir)))
+           (expanded-vendor-phpstan (phpstan--expand-file-name vendor-phpstan)))
       (cond
        ((file-exists-p vendor-phpstan)
         (if (file-executable-p vendor-phpstan)
-            (list vendor-phpstan)
-          (list php-executable vendor-phpstan)))
+            (list expanded-vendor-phpstan)
+          (list php-executable expanded-vendor-phpstan)))
        ((executable-find "phpstan") (list (executable-find "phpstan")))
        (t (error "PHPStan executable not found")))))))
 
-(cl-defun phpstan-get-command-args (&key include-executable use-pro args format options config)
+(cl-defun phpstan-get-command-args (&key include-executable use-pro args format options config verbose)
   "Return command line argument for PHPStan."
   (let ((executable-and-args (phpstan-get-executable-and-args))
         (config (or config (phpstan-normalize-path (phpstan-get-config-file))))
@@ -434,10 +493,16 @@ it returns the value of `SOURCE' as it is."
                  (format "--error-format=%s" (or format "raw"))
                  "--no-progress" "--no-interaction")
            (and use-pro (list "--pro" "--no-ansi"))
-           (and config (list "-c" config))
+           (and config (list "-c" (phpstan--expand-file-name config)))
            (and autoload (list "-a" autoload))
            (and memory-limit (list "--memory-limit" memory-limit))
            (and level (list "-l" level))
+           (cond
+            ((null verbose) nil)
+            ((memq verbose '(1 t)) (list "-v"))
+            ((eq verbose 2) (list "-vv"))
+            ((eq verbose 3) (list "-vvv"))
+            ((error ":verbose option should be 1, 2, 3 or `t'")))
            (cond
             (phpstan--use-xdebug-option (list phpstan--use-xdebug-option))
             ((eq phpstan-use-xdebug-option 'auto)
@@ -448,6 +513,104 @@ it returns the value of `SOURCE' as it is."
             (phpstan-use-xdebug-option (list "--xdebug")))
            options
            (and args (cons "--" args)))))
+
+(defun phpstan-update-ignorebale-errors-from-json-buffer (errors)
+  "Update `phpstan--ignorable-errors' variable by ERRORS."
+  (let ((identifiers
+         (cl-loop for (_ . entry) in errors
+                  append (cl-loop for message in (plist-get entry :messages)
+                                  if (plist-get message :ignorable)
+                                  collect (cons (plist-get message :line)
+                                                (plist-get message :identifier))))))
+    (setq phpstan--ignorable-errors
+          (mapcar (lambda (v) (cons (car v) (mapcar #'cdr (cdr v)))) (seq-group-by #'car identifiers)))))
+
+(defconst phpstan--re-ignore-tag
+  (eval-when-compile
+    (rx (* (syntax whitespace)) "//" (* (syntax whitespace))
+        (group "@phpstan-ignore")
+        (* (syntax whitespace))
+        (* (not "("))
+        (group (? (+ (syntax whitespace) "("))))))
+
+(cl-defun phpstan--check-existing-ignore-tag (&key in-previous)
+  "Check existing @phpstan-ignore PHPDoc tag.
+If IN-PREVIOUS is NIL, check the previous line for the tag."
+  (let ((new-position (if in-previous 'previous-line 'this-line))
+        (line-end (line-end-position))
+        new-point append)
+    (save-excursion
+      (save-match-data
+        (if (re-search-forward phpstan--re-ignore-tag line-end t)
+            (progn
+              (setq new-point (match-beginning 2))
+              (goto-char new-point)
+              (when (eq (char-syntax (char-before)) ?\ )
+                (left-char)
+                (setq new-point (point)))
+              (setq append (not (eq (match-end 1) (match-beginning 2))))
+              (cl-values new-position new-point append))
+          (if in-previous
+              (cl-values nil nil nil)
+            (previous-logical-line)
+            (beginning-of-line)
+            (phpstan--check-existing-ignore-tag :in-previous t)))))))
+
+;;;###autoload
+(defun phpstan-insert-ignore (position)
+  "Insert an @phpstan-ignore comment at the specified POSITION.
+
+POSITION determines where to insert the comment and can be either `this-line' or
+`previous-line'.
+
+- If POSITION is `this-line', the comment is inserted at the end of
+  the current line.
+- If POSITION is `previous-line', the comment is inserted on a new line above
+  the current line."
+  (interactive
+   (list (if current-prefix-arg 'this-line 'previous-line)))
+  (save-restriction
+    (widen)
+    (let ((pos (point))
+          (identifiers (cl-set-difference (alist-get (phpstan--current-line) phpstan--ignorable-errors) phpstan-not-ignorable-identifiers :test #'equal))
+          (padding (if (eq position 'this-line) " " ""))
+          new-position new-point delete-region)
+      (cl-multiple-value-setq (new-position new-point append) (phpstan--check-existing-ignore-tag :in-previous nil))
+      (when new-position
+        (setq position new-position))
+      (unless (and append (null identifiers))
+        (if (not new-point)
+            (cond
+             ((eq position 'this-line) (end-of-line))
+             ((eq position 'previous-line) (progn
+                                             (previous-logical-line)
+                                             (end-of-line)
+                                             (newline-and-indent)))
+             ((error "Unexpected position: %s" position)))
+          (setq padding "")
+          (goto-char new-point))
+        (insert (concat padding
+                        (if new-position (if append ", " " ") "// @phpstan-ignore ")
+                        (mapconcat #'identity identifiers ", ")))))))
+
+;;;###autoload
+(defun phpstan-insert-dumptype (&optional expression prefix-num)
+  "Insert PHPStan\\dumpType() expression-statement by EXPRESSION and PREFIX-NUM."
+  (interactive
+   (list
+    (if (region-active-p)
+        (buffer-substring-no-properties (region-beginning) (region-end))
+      (or (thing-at-point 'symbol t) ""))
+    current-prefix-arg))
+  (let ((template (if prefix-num
+                      (cdr phpstan-intert-dump-type-templates)
+                    (car phpstan-intert-dump-type-templates))))
+    (end-of-line)
+    (newline-and-indent)
+    (insert template)
+    (search-backward "(" (line-beginning-position) t)
+    (forward-char)
+    (insert expression)))
 
 (provide 'phpstan)
 ;;; phpstan.el ends here

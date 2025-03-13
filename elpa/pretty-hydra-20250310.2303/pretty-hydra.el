@@ -4,10 +4,9 @@
 
 ;; Author: Jerry Peng <pr2jerry@gmail.com>
 ;; URL: https://github.com/jerrypnz/major-mode-hydra.el
-;; Package-Version: 20230516.2122
-;; Package-Commit: 72bdce649245df276a3f49fb57f890c10fbf0a31
-;; Version: 0.2.2
-;; Package-Requires: ((hydra "0.15.0") (s "1.12.0") (dash "2.18.0") (emacs "24"))
+;; Package-Version: 20250310.2303
+;; Package-Revision: 2494d71e24b6
+;; Package-Requires: ((hydra "0.15.0") (s "1.12.0") (dash "2.18.0") (emacs "24") (compat "29.1.4.1"))
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -33,6 +32,7 @@
 
 ;;; Code:
 
+(require 'compat)
 (require 'dash)
 (require 's)
 (require 'hydra)
@@ -221,34 +221,34 @@ Two heads are considered duplicate if they have the same key."
 The result is a new plist."
   (let ((cols (cl-loop for (key _value) on new by 'cddr collect key)))
     (-reduce-from (lambda (acc x)
-                    (lax-plist-put acc x
-                                   (pretty-hydra--dedupe-heads
-                                    (append (lax-plist-get acc x)
-                                            (lax-plist-get new x)))))
+                    (compat-call plist-put acc x
+                                 (pretty-hydra--dedupe-heads
+                                  (append (compat-call plist-get acc x #'equal)
+                                          (compat-call plist-get new x #'equal)))
+                                 #'equal))
                   old
                   cols)))
 
 (defun pretty-hydra--generate (name body heads-plist)
   "Helper function to generate expressions with given NAME, BODY, HEADS-PLIST.
 See `pretty-hydra-define' and `pretty-hydra-define+'."
-  (let* ((separator (or (plist-get body :separator) "─"))
-         (title     (plist-get body :title))
-         (formatter (or (plist-get body :formatter)
+  (let* ((separator (or (compat-call plist-get body :separator) "─"))
+         (title     (compat-call plist-get body :title))
+         (formatter (or (compat-call plist-get body :formatter)
                         #'identity))
          (title-body-format-spec (plist-get body :title-body-format-spec))
-         (quit-key  (plist-get body :quit-key))
+         (quit-key  (compat-call plist-get body :quit-key))
          (docstring (->> heads-plist
                          (pretty-hydra--gen-body-docstring separator)
                          (pretty-hydra--maybe-add-title title title-body-format-spec)
-                         (funcall formatter)
-                         (s-prepend "\n"))) ;; This is required, otherwise the docstring won't show up correctly
+                         (funcall formatter)))
          (heads (pretty-hydra--get-heads heads-plist))
          (heads (if quit-key
                     (if (listp quit-key)
                         (append heads (--map (list it nil) quit-key))
                       (append heads `((,quit-key nil))))
                   heads))
-         (body (lax-plist-put body :hint nil)))
+         (body (compat-call plist-put body :hint nil #'equal)))
     `(progn
        (eval-and-compile
          (set (defvar ,(intern (format "%S/heads-plist" name))

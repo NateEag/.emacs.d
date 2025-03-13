@@ -1,11 +1,11 @@
 ;;; tree-inspector.el --- Inspector tool for Emacs Lisp object that uses a treeview  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022 Free Software Foundation, Inc.
+;; Copyright (C) 2022 - 2023 Free Software Foundation, Inc.
 
 ;; Author: Mariano Montone <marianomontone@gmail.com>
 ;; URL: https://github.com/mmontone/emacs-inspector
 ;; Keywords: debugging, tool, lisp, development
-;; Version: 0.3
+;; Version: 0.4
 ;; Package-Requires: ((emacs "27.1") (treeview "1.1.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -505,6 +505,17 @@ to specify their children in the tree-inspector.")
         (tree-inspector--make-node (overlay-properties overlay))))
 
 ;;------ api ----------------------------------------------------
+
+(defun tree-inspector-quit ()
+  "Quit the tree inspector."
+  (interactive)
+  (let ((inspector-buffer (get-buffer "*tree-inspector*")))
+    (when inspector-buffer
+      (when tree-inspector--fontification-buffer
+        (kill-buffer tree-inspector--fontification-buffer)
+        (setq tree-inspector--fontification-buffer nil))
+      (kill-buffer inspector-buffer))))
+
 (defun tree-inspector-inspect (data)
   "Inspect DATA with a tree-inspector.
 
@@ -537,13 +548,15 @@ DATA can be any Emacs Lisp object."
         (treeview-expand-node node)
         (treeview-display-node node))
       (setq buffer-read-only t)
-      (local-set-key (kbd "q") #'kill-current-buffer)
+      ;; local-set-key modifies the mode map of the entire buffer's major mode (emacs-lisp-mode-map).
+      ;; to modify the map for this buffer only, we need to use a copy of the mode-map:
+      (use-local-map (copy-keymap emacs-lisp-mode-map))
+      (local-set-key (kbd "q") 'tree-inspector-quit)
 
       (switch-to-buffer buffer)
 
       ;; (tree-inspector-mode)
       buffer)))
-
 
 ;;;###autoload
 (defun tree-inspector-inspect-last-sexp ()

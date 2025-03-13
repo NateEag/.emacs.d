@@ -2,11 +2,9 @@
 
 Inspection tool for Emacs Lisp objects that uses a tree view.
 
-An inspector tool for Emacs Lisp objects that uses a tree view.
-
 ![tree-inspector.png](tree-inspector.png "Tree Inspector")
 
-Works together with the "normal" inspector when it is loaded; when an object label is clicked on the tree, an inspector is opened on that object.
+Works together with the [Emacs Inspector](https://github.com/mmontone/emacs-inspector "Emacs Inspector") when it is loaded; when an object label is clicked on the tree, an inspector is opened on that object.
 
 ## Install and usage
 

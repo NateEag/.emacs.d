@@ -1,0 +1,2 @@
+;; Generated package description from tree-inspector.el  -*- no-byte-compile: t -*-
+(define-package "tree-inspector" "0.4" "Inspector tool for Emacs Lisp object that uses a treeview" '((emacs "27.1") (treeview "1.1.0")) :commit "bbb8d2dfe84fbf857fcc1579de5a1324b09a877e" :authors '(("Mariano Montone" . "marianomontone@gmail.com")) :maintainer '("Mariano Montone" . "marianomontone@gmail.com") :keywords '("debugging" "tool" "lisp" "development") :url "https://github.com/mmontone/emacs-inspector")

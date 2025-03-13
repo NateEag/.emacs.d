@@ -1,13 +1,12 @@
-;;; reveal-in-folder.el --- Reveal current file in folder  -*- lexical-binding: t; -*-
+;;; reveal-in-folder.el --- Reveal current file/directory in folder  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh
 ;; Created date 2019-11-06 23:14:19
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/jcs-elpa/reveal-in-folder
-;; Package-Version: 20220704.659
-;; Package-Commit: 7b2b02356b75e224a0414995af95d45786ee6f7d
-;; Version: 0.1.2
+;; Package-Version: 20250101.1011
+;; Package-Revision: f3b7d1edcf85
 ;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
 ;; Keywords: convenience folder finder reveal file explorer
 
@@ -28,7 +27,7 @@
 
 ;;; Commentary:
 ;;
-;; Reveal current file in folder.
+;; Reveal current file/directory in folder.
 ;;
 
 ;;; Code:
@@ -38,7 +37,7 @@
 (require 's)
 
 (defgroup reveal-in-folder nil
-  "Reveal current file in folder."
+  "Reveal current file/directory in folder."
   :prefix "reveal-in-folder-"
   :group 'tool
   :link '(url-link :tag "Repository" "https://github.com/jcs-elpa/reveal-in-folder"))
@@ -53,10 +52,11 @@
   (let ((inhibit-message t) (message-log-max nil))
     (= 0 (shell-command in-cmd))))
 
-(defun reveal-in-folder--signal-shell (path)
-  "Send the shell command by PATH."
+;;;###autoload
+(defun reveal-in-folder-open (path)
+  "Reveal folder in PATH."
   (let ((default-directory
-          (if path (f-dirname (expand-file-name path)) default-directory))
+         (if path (f-dirname (expand-file-name path)) default-directory))
         (buf-name (if (and reveal-in-folder-select-file path)
                       (shell-quote-argument (expand-file-name path))
                     nil))
@@ -99,13 +99,13 @@
 (defun reveal-in-folder-at-point ()
   "Reveal the current file in folder at point."
   (interactive)
-  (reveal-in-folder--signal-shell (ffap-guesser)))
+  (reveal-in-folder-open (ffap-guesser)))
 
 ;;;###autoload
 (defun reveal-in-folder-this-buffer ()
   "Reveal the current buffer in folder."
   (interactive)
-  (reveal-in-folder--signal-shell (buffer-file-name)))
+  (reveal-in-folder-open (buffer-file-name)))
 
 ;;;###autoload
 (defun reveal-in-folder ()

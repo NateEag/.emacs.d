@@ -1,11 +1,12 @@
 ;;; term-manager.el --- Contextual terminal management -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016-2023 Ivan Malison
+;; Copyright (C) 2016-2024 Ivan Malison
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: terminals tools
 ;; URL: https://www.github.com/IvanMalison/term-manager
-;; Version: 0.1.1
+;; Package-Version: 20240811.2337
+;; Package-Revision: fbf64768902c
 ;; Package-Requires: ((dash "2.12.0") (emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -127,14 +128,23 @@
 (cl-defmethod term-manager-build-term ((tm term-manager) &optional
                                        (symbol (term-manager-get-symbol tm)))
   (unless symbol (setq symbol (term-manager-get-symbol tm)))
+  (when (get-buffer term-manager-temp-buffer-name)
+    (kill-buffer term-manager-temp-buffer-name))
   (let* ((build-term (or (oref tm build-term)
                          'term-manager-default-build-term))
          (buffer (funcall build-term symbol)))
     (term-manager-on-update-context tm buffer)
     buffer))
 
+(defun term-manager-replace-home-with-tilde (path)
+  "Replace the home directory in PATH with ~."
+  (let ((home (expand-file-name "~")))
+    (if (string-prefix-p home path)
+        (concat "~" (substring path (length home)))
+      path)))
+
 (defun term-manager-default-name-buffer (_buffer symbol)
-  (format "term - %s" symbol))
+  (format "term - %s" (term-manager-replace-home-with-tilde (symbol-name symbol))))
 
 (cl-defmethod term-manager-get-buffer-name ((tm term-manager) &optional
                                             (buffer (current-buffer)))

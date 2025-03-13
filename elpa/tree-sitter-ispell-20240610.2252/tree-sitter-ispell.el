@@ -1,12 +1,11 @@
-;;; tree-sitter-ispell.el --- Run ispell on tree-sitter text nodes
+;;; tree-sitter-ispell.el --- Run ispell on tree-sitter text nodes -*- lexical-binding: t -*-
 
 ;; Copyright © 2022 Erick Navarro
 ;; Author: Erick Navarro <erick@navarro.io>
 ;; URL: https://github.com/erickgnavar/tree-sitter-ispell.el
-;; Package-Version: 20230205.533
-;; Package-Commit: d8c33c05f689c2cab36b8a9856811f18a4ab7c59
-;; Version: 0.1.0
-;; SPDX-License-Identifier: GNU General Public License v3.0 or later
+;; Package-Version: 20240610.2252
+;; Package-Revision: a06eff00afff
+;; SPDX-License-Identifier: GPL-3.0-or-later
 ;; Package-Requires: ((emacs "26.1") (tree-sitter "0.15.0"))
 
 ;;; Commentary:

@@ -1,11 +1,12 @@
 ;;; parseclj.el --- Clojure/EDN parser              -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017-2021  Arne Brasseur
+;; Copyright (C) 2017-2023  Arne Brasseur
 
 ;; Author: Arne Brasseur <arne@arnebrasseur.net>
 ;; Keywords: lisp clojure edn parser
 ;; Package-Requires: ((emacs "25"))
-;; Version: 1.1.0
+;; Package-Version: 20231203.1905
+;; Package-Revision: 6af22372e0fe
 
 ;; This file is not part of GNU Emacs.
 

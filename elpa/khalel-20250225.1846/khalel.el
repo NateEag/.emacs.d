@@ -5,8 +5,9 @@
 ;; Author: Hanno Perrey <http://gitlab.com/hperrey>
 ;; Maintainer: Hanno Perrey <hanno@hoowl.se>
 ;; Created: september 10, 2021
-;; Modified: january 22, 2023
-;; Version: 0.1.10
+;; Modified: may 27, 2024
+;; Package-Version: 20250225.1846
+;; Package-Revision: c4548265ee59
 ;; Keywords: event, calendar, ics, khal
 ;; Homepage: https://gitlab.com/hperrey/khalel
 ;; Package-Requires: ((emacs "27.1"))
@@ -139,7 +140,7 @@ Otherwise, ask for confirmation."
   "The format string to pass to khal when importing events.
 
 See the documentation to khal for valid placeholders (in curly
-brackets). The result should be properly formated 'org-mode'
+brackets). The result should be properly formated \\='org-mode\\='
 syntax."
   :group 'khalel-advanced
   :type  'string)
@@ -182,12 +183,37 @@ When set to nil then it will be guessed."
   :group 'khalel
   :type 'string)
 
+(defcustom khalel-vdirsyncer-collections nil
+  "Collections or pairs to pass to vdirsyncer \\='sync\\=' command.
+
+This limits the synchronization to only those specified
+collections or pairs when running `khalel-run-vdirsyncer'.
+Multple collections must be separated by a space. Specify nil to
+synchronize all available collections and pairs.
+
+Examples:
+
+\\='bob frank\\=': synchronize pairs bob and frank
+\\='bob/first_collection\\=': synchronize collection first_collection from pair bob."
+  :group 'khalel-advanced
+  :type 'string)
+
 (define-obsolete-variable-alias 'khalel-update-upcoming-events-after-capture
   'khalel-import-events-after-capture "0.1.8")
 
 (defcustom khalel-import-events-after-capture 't
   "Whether to automatically update the imported events after a new capture."
-  :group 'khalel
+  :group 'khalel-advanced
+  :type 'boolean)
+
+(defcustom khalel-import-events-after-vdirsyncer 't
+  "Whether to automatically update the imported events after synchronization."
+  :group 'khalel-advanced
+  :type 'boolean)
+
+(defcustom khalel-import-events-after-khal-edit 't
+  "Whether to automatically update the imported events after editing an event."
+  :group 'khalel-advanced
   :type 'boolean)
 
 (make-obsolete-variable 'khalel-import-time-delta
@@ -199,7 +225,7 @@ respectively" "0.1.8")
 (defvar khalel--khal-calendar-list nil
   "List of `khal' calendars known to khalel.\
 
-Caches output of 'khal printcalendars' and updated via
+Caches output of \\='khal printcalendars\\=' and updated via
 `khalel-refresh-khal-calendar-list'.")
 
 ;;;; Commands
@@ -259,6 +285,8 @@ alarms or settings for repeating events."
         (goto-char (point-max))
         (insert-file-contents errfn))
       (with-current-buffer dst
+          ;; Make sure org functions work correctly
+          (org-mode)
           ;; cosmetic fix for all-day events w/o start or end times:
           ;; remove spaces after dates
           (goto-char (point-min))
@@ -386,23 +414,22 @@ and immediately exported to khal."
 (defun khalel-run-vdirsyncer ()
   "Run vdirsyncer process to synchronize local calendar entries."
   (interactive)
-  (let ((buf "*VDIRSYNCER-OUTPUT-BUFFER*"))
+  (let ((buf "*VDIRSYNCER-OUTPUT-BUFFER*")
+        (vdirsyncer (or khalel-vdirsyncer-command
+                        (executable-find "vdirsyncer"))))
     (with-output-to-temp-buffer buf
-        (khalel--make-temp-window buf 16)
-        (set-process-sentinel
-         (start-process
-          "khalel-vdirsyncer-process"
-          buf
-          (or khalel-vdirsyncer-command
-              (executable-find "vdirsyncer"))
-          "sync")
-         #'khalel--delete-process-window-when-done)
-        ;; show output
-        (sit-for 1)
-        (with-current-buffer buf
-          (set-window-point
-           (get-buffer-window (current-buffer) 'visible)
-           (point-min))))))
+      (khalel--make-temp-window buf 16)
+      (with-current-buffer buf
+        (insert "Running " vdirsyncer "..\n\n"))
+      (make-process
+       :name "khalel-vdirsyncer-process"
+       :buffer buf
+       :command (remq nil `(,vdirsyncer
+                            "sync"
+                            ,khalel-vdirsyncer-collections))
+       :filter #'khalel--scroll-on-insert-filter
+       :sentinel #'khalel--run-after-process))))
+
 
 (defun khalel-edit-calendar-event ()
   "Edit the event at the cursor position using khal's interactive edit command.
@@ -419,7 +446,7 @@ Works on imported events and used their ID to search for the
                                 "khal-edit" nil
                                 khalel-khal-command nil
                                 "edit" "--show-past" uid))
-           #'khalel--delete-process-window-when-done)
+           #'khalel--run-after-process)
           (pop-to-buffer buf))
       (message "khalel: could not find ID associated with current entry."))))
 
@@ -435,7 +462,11 @@ Works on imported events and used their ID to search for the
                ,@(when khalel-khal-config `("-c" ,khalel-khal-config))
                "printcalendars"))
       (setq khalel--khal-calendar-list
-            (split-string (buffer-substring (point-min) (point-max))))))
+            (split-string
+             (buffer-substring (point-min) (point-max))
+             "[\f\t\n\r\v]+"
+             't
+             "[ ]+"))))
   khalel--khal-calendar-list)
 
 ;;;; Functions
@@ -461,11 +492,11 @@ Works on imported events and used their ID to search for the
                  (buffer-string)))))
 
 (defun khalel--get-calendar()
-  "Return a 'khal' calendar.
+  "Return a \\='khal\\=' calendar.
 
 This is either the default calendar set via
 `khalel-default-calendar' or one of the ones available through
-'khal'."
+\\='khal\\='."
   ;; refresh cached list if needed
   (unless khalel--khal-calendar-list
     (khalel-refresh-khal-calendar-list))
@@ -557,8 +588,9 @@ Return a plist with details of problems or nil if no issues were found."
                :output result))))
 
 (defun khalel--get-buffer-content-list ()
-  "Return the entire content of each subtree of the current buffer asa list."
-  (let ((content-list '())) ; start with empty list
+  "Return the entire content of each subtree of the current buffer as a list."
+  (let ((content-list '()) ; start with empty list
+        (tab-width 8)) ; required for Org mode files
     (org-element-map (org-element-parse-buffer) 'headline
       (lambda (x)
         (let* ((begin (org-element-property :begin x))
@@ -577,6 +609,7 @@ the current import date range."
   (insert (format "*Events scheduled between %s and %s*:\n" sdate edate))
   (insert (format "/(Last import: %s)/\n\n" (current-time-string))))
 
+
 (defun khalel--make-temp-window (buf height)
   "Create a temporary window with HEIGHT at the frame bottom displaying buffer BUF."
   (or (get-buffer-window buf 'visible)
@@ -588,18 +621,58 @@ the current import date range."
         (set-window-dedicated-p win t)
         win)))
 
-(defun khalel--delete-process-window-when-done (process _event)
-  "Check status of PROCESS at each EVENT and delete window after process finished."
-  (let ((buf (process-buffer process)))
-    (when (= 0 (process-exit-status process))
-      (when (get-buffer buf)
-        (with-current-buffer buf
-          (set-window-point
-           (get-buffer-window (current-buffer) 'visible)
-           (point-max)))
-        (sit-for 2)
-        (delete-window (get-buffer-window buf))
-        (kill-buffer buf)))))
+
+(defun khalel--run-after-process (process event)
+  "Check status of PROCESS at each EVENT and run tasks after process finished.
+
+Ensures that process window is closed after successfully
+finishing and runs import of events (if so configured via
+`khalel-import-events-after-vdirsyncer' or
+`khalel-import-events-after-khal-edit' for calls to `vdirsyncer'
+and `khal edit', respectively).
+
+In case of errors, a message with details will be displayed and
+the process window will remain."
+  (let ((exitstat (process-exit-status process))
+        (buf (process-buffer process))
+        (cmd (car (process-command process))))
+    (if (= 0 exitstat)
+        ;; process has finished successfully
+        (progn
+          (message "Process '%s' finished successfully." cmd)
+          ;; close buffer (and window as it is dedicated)
+          (when (get-buffer buf)
+            (sit-for 2)
+            (kill-buffer buf))
+          ;; run import if so configured or this is an edit
+          (when
+              (or
+               (and khalel-import-events-after-vdirsyncer (string-match-p khalel-vdirsyncer-command cmd))
+               (and khalel-import-events-after-khal-edit (string-match-p khalel-khal-command cmd)))
+            (khalel-import-events)))
+      ;; otherwise, there was an issue
+      (progn
+        (message "Process '%s' (%s) failed: '%s' (exit status %d). See buffer '%s' for details."
+                 cmd
+                 (process-name process)
+                 (substring event 0 -1) ;; remove newline character
+                 exitstat
+                 (buffer-name buf))))))
+
+
+(defun khalel--scroll-on-insert-filter (proc string)
+  "Insert output STRING of PROC and scroll respective window unless selected."
+  (let* ((buf (process-buffer proc))
+         (window (get-buffer-window buf 'visible)))
+  (when (buffer-live-p buf)
+    (with-current-buffer buf
+      (let ((inhibit-read-only 't)) ;; temp buffer in help mode, ie. read-only
+        (save-excursion
+          (goto-char (point-max))
+          (insert string))
+        ;; scroll window if not currently selected
+        (when (and window (not (equal (selected-window) window)))
+          (set-window-point window (point-max))))))))
 
 
 ;;;; Footer

@@ -6,7 +6,6 @@
 ;; Maintainer: Hanno Perrey <hanno@hoowl.se>
 ;; Created: november 29, 2022
 ;; Modified: november 29, 2022
-;; Version: 0.0.1
 ;; Keywords: event, calendar, ics, khal, iCalendar, gnus
 ;; Homepage: https://gitlab.com/hperrey/khalel
 ;; Package-Requires: ((emacs "27.1"))

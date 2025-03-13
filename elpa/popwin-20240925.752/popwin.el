@@ -1,12 +1,13 @@
 ;;; popwin.el --- Popup Window Manager
 
 ;; Copyright (C) 2011-2015  Tomohiro Matsuyama
+;; Copyright (C) 2020-2024  Jen-Chieh Shen
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; Keywords: convenience
-;; Package-Version: 20210215.1849
-;; Package-Commit: 1184368d3610bd0d0ca4a3db4068048c562c2b50
-;; Version: 1.0.2
+;; Package-Version: 20240925.752
+;; Package-Revision: 58adcd0ca7c3
 ;; URL: https://github.com/emacsorphanage/popwin
 ;; Package-Requires: ((emacs "24.3"))
 

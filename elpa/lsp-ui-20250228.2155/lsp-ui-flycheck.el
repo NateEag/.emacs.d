@@ -3,7 +3,6 @@
 ;; Copyright (C) 2017  fmdkdd
 ;; URL: https://github.com/emacs-lsp/lsp-ui
 ;; Keywords: languagues, tools
-;; Version: 6.2
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

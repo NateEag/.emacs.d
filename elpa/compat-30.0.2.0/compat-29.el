@@ -1,6 +1,6 @@
 ;;; compat-29.el --- Functionality added in Emacs 29.1 -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -36,6 +36,10 @@
      (file-name-directory
       (locate-file "simple" load-path (get-load-suffixes))))
   "Directory where Emacs's own *.el and *.elc Lisp files are installed.")
+
+;;;; Defined in window.c
+
+(compat-defalias window-configuration-equal-p compare-window-configurations) ;; <compat-tests:window-configuration-equal-p>
 
 ;;;; Defined in xdisp.c
 
@@ -98,38 +102,40 @@ Unibyte strings are converted to multibyte for comparison."
 (compat-defun plist-get (plist prop &optional predicate) ;; <compat-tests:plist-get>
   "Handle optional argument PREDICATE."
   :extended t
-  (if (or (null predicate) (eq predicate 'eq))
-      (plist-get plist prop)
-    (catch 'found
-      (while (consp plist)
-        (when (funcall predicate prop (car plist))
-          (throw 'found (cadr plist)))
-        (setq plist (cddr plist))))))
+  (pcase predicate
+    ((or `nil `eq) (plist-get plist prop))
+    (`equal (lax-plist-get plist prop))
+    (_ (catch 'found
+         (while (consp plist)
+           (when (funcall predicate prop (car plist))
+             (throw 'found (cadr plist)))
+           (setq plist (cddr plist)))))))
 
 (compat-defun plist-put (plist prop val &optional predicate) ;; <compat-tests:plist-get>
   "Handle optional argument PREDICATE."
   :extended t
-  (if (or (null predicate) (eq predicate 'eq))
-      (plist-put plist prop val)
-    (catch 'found
-      (let ((tail plist))
-        (while (consp tail)
-          (when (funcall predicate prop (car tail))
-            (setcar (cdr tail) val)
-            (throw 'found plist))
-          (setq tail (cddr tail))))
-      (nconc plist (list prop val)))))
+  (pcase predicate
+    ((or `nil `eq) (plist-put plist prop val))
+    (`equal (lax-plist-put plist prop val))
+    (_ (catch 'found
+         (let ((tail plist))
+           (while (consp tail)
+             (when (funcall predicate prop (car tail))
+               (setcar (cdr tail) val)
+               (throw 'found plist))
+             (setq tail (cddr tail))))
+         (nconc plist (list prop val))))))
 
 (compat-defun plist-member (plist prop &optional predicate) ;; <compat-tests:plist-get>
   "Handle optional argument PREDICATE."
   :extended t
-  (if (or (null predicate) (eq predicate 'eq))
-      (plist-member plist prop)
-    (catch 'found
-      (while (consp plist)
-        (when (funcall predicate prop (car plist))
-          (throw 'found plist))
-        (setq plist (cddr plist))))))
+  (pcase predicate
+    ((or `nil `eq) (plist-member plist prop))
+    (_ (catch 'found
+         (while (consp plist)
+           (when (funcall predicate prop (car plist))
+             (throw 'found plist))
+           (setq plist (cddr plist)))))))
 
 ;;;; Defined in gv.el
 
@@ -505,6 +511,14 @@ thus overriding the value of the TIMEOUT argument to that function.")
     exitfun))
 
 ;;;; Defined in simple.el
+
+(compat-defun char-uppercase-p (char) ;; <compat-tests:char-uppercase-p>
+  "Return non-nil if CHAR is an upper-case character.
+If the Unicode tables are not yet available, e.g. during bootstrap,
+then gives correct answers only for ASCII characters."
+  (cond ((unicode-property-table-internal 'lowercase)
+         (characterp (get-char-code-property char 'lowercase)))
+        ((and (>= char ?A) (<= char ?Z)))))
 
 (compat-defun use-region-noncontiguous-p () ;; <compat-tests:region-noncontiguous-p>
   "Return non-nil for a non-contiguous region if `use-region-p'."

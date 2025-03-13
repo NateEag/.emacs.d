@@ -2,6 +2,70 @@
 #+link:    compat-gh   https://github.com/emacs-compat/compat/issues/
 #+options: toc:nil num:nil author:nil
 
+* Release of "Compat" Version 30.0.2.0
+
+- compat-30: Rename =trusted-files= to =trusted-content=.
+
+(Release <2025-01-04 Sat>)
+
+* Release of "Compat" Version 30.0.1.0
+
+- compat-30: New variable =untrusted-content=.
+- compat-30: New variable =trusted-files=.
+- compat-30: New function =trusted-content-p=.
+
+(Release <2024-12-15 Sun>)
+
+* Release of "Compat" Version 30.0.0.0
+
+- compat-28: Mark =subr-native-elisp-p= as obsolete (renamed in Emacs 30).
+- compat-30: New function =char-to-name=.
+- compat-30: New function =obarray-clear=.
+- compat-30: New function =interpreted-function-p=.
+- compat-30: New function =primitive-function-p=.
+- compat-30: New function =closurep=.
+- compat-30: Add extended function =sort= with keyword arguments.
+- compat-30: New function =value<=.
+- compat-30: Add extended =copy-tree= with support for copying records with
+  non-nil optional second argument.
+- compat-30: New macro =static-if=.
+- compat-30: New alias =drop=.
+- compat-30: New function =merge-ordered-lists=.
+- compat-30: New variables =completion-lazy-hilit= and =completion-lazy-hilit-fn=
+  and new function =completion-lazy-hilit=.
+- compat-30: New function =require-with-check=.
+- compat-30: New functions =find-buffer= and =get-truename-buffer=.
+- compat-30: Add extended =completion-metadata-get= with support for
+  =completion-category-overrides= and =completion-extra-properties=.
+
+(Release <2024-07-08 Mon>)
+
+* Release of "Compat" Version 29.1.4.5
+
+- Minor optimization of ~plist-get~ and ~plist-put~.
+- Minor compatibility adjustments for the Emacs 30 development version.
+- A minimal version of =compat.el= will be part of Emacs 30. Emacs :core packages
+  can directly ~(require 'compat)~ without the ~NOERROR~ flag. Furthermore Compat
+  will not be installed unnecessarily. If a package depending on Emacs 25.1 and
+  Compat 29.1 is installed on Emacs 30.1, Compat 29.1 will not be installed from
+  ELPA, since Emacs 30.1 already provides the required functionality.
+
+(Release <2024-03-16 Sat>)
+
+* Release of "Compat" Version 29.1.4.4
+
+- Fix ~Package-Requires~ header in compat.el
+- Fix ~Maintainer~ header in compat.el
+
+(Release <2023-11-13 Mon>)
+
+* Release of "Compat" Version 29.1.4.3
+
+- compat-29: Add function =char-uppercase-p=.
+- compat-29: Add function =window-configuration-equal-p=.
+
+(Release <2023-11-04 Sat>)
+
 * Release of "Compat" Version 29.1.4.2
 
 - compat-28: Improve =make-separator-line= visuals on graphic displays.
@@ -265,7 +329,7 @@ directly (see [[compat-srht:2]]).
 * Release of "Compat" Version 28.1.1.0
 
 This release mostly fixes a number of smaller bugs that were not
-identified as of 28.1.0.0.  Nevertheless these warrent a version bump,
+identified as of 28.1.0.0.  Nevertheless these warrant a version bump,
 as some of these changes a functional.  These include:
 
 - The addition of the =file-attribute-*= accessor functions.

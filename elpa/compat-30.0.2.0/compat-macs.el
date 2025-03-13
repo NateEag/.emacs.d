@@ -1,6 +1,6 @@
 ;;; compat-macs.el --- Compatibility Macros -*- lexical-binding: t; no-byte-compile: t; -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,12 +17,13 @@
 
 ;;; Commentary:
 
-;; This file provides *internal* macros, which are used by Compat to
-;; facilitate the definition of compatibility functions, macros and
-;; variables.  The `compat-macs' feature should never be loaded at
-;; runtime in your Emacs and will only be used during byte
-;; compilation.  Every definition provided here should be considered
-;; internal and may change any time between Compat releases.
+;; WARNING: This file provides *internal* macros.  The macros are used
+;; by Compat to facilitate the definition of compatibility functions,
+;; compatibility macros and compatibility variables.  The
+;; `compat-macs' feature should never be loaded at runtime in your
+;; Emacs and will only be used during byte compilation.  Every
+;; definition provided here is internal, may change any time between
+;; Compat releases and must not be used by other packages.
 
 ;;; Code:
 
@@ -141,7 +142,7 @@ REST are attributes and the function BODY."
 (defmacro compat-guard (cond &rest rest)
   "Guard definition with a runtime COND and a version check.
 The runtime condition must make sure that no definition is
-overriden.  REST is an attribute plist followed by the definition
+overridden.  REST is an attribute plist followed by the definition
 body.  The attributes specify the conditions under which the
 definition is generated.
 
@@ -220,6 +221,8 @@ definition is generated.
 
 - :constant :: Mark the variable as constant if t.
 
+- :risky :: Mark the variable as risky if t.
+
 - :local :: Make the variable buffer-local if t.  If the value is
   `permanent' make the variable additionally permanently local.
 
@@ -231,15 +234,18 @@ definition is generated.
            (doc-string 3) (indent 2))
   (compat-macs--guard
       attrs (list :constant #'booleanp
+                  :risky #'booleanp
                   :local (lambda (x) (memq x '(nil t permanent)))
                   :obsolete (lambda (x) (or (booleanp x) (stringp x))))
-    (lambda (constant local obsolete)
+    (lambda (constant risky local obsolete)
       (compat-macs--strict (not (boundp name)) "%s already defined" name)
       (compat-macs--assert (not (and constant local)) "Both :constant and :local")
+      (compat-macs--assert (not (and local risky)) "Both :risky and :local")
       ;; The boundp check is performed at runtime to make sure that we never
       ;; redefine an existing definition if Compat is loaded on a newer Emacs
       ;; version.
-      `((unless (boundp ',name)
+      `((defvar ,name)
+        (unless (boundp ',name)
           (,(if constant 'defconst 'defvar)
            ,name ,initval
            ,(compat-macs--docstring 'variable name docstring))
@@ -248,6 +254,7 @@ definition is generated.
                  ',name ,(if (stringp obsolete) obsolete "No substitute")
                  ,compat-macs--version))))
         ,@(and local `((make-variable-buffer-local ',name)))
+        ,@(and risky `((put ',name 'risky-local-variable t)))
         ,@(and (eq local 'permanent) `((put ',name 'permanent-local t)))))))
 
 (defmacro compat-version (version)

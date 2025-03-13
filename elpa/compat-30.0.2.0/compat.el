@@ -1,12 +1,12 @@
 ;;; compat.el --- Emacs Lisp Compatibility Library -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; Author: Philip Kaludercic <philipk@posteo.net>, Daniel Mendler <mail@daniel-mendler.de>
-;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>, Compat Development <~pkal/compat-devel@lists.sr.ht>
-;; Version: 29.1.4.2
+;; Maintainer: Compat Development <~pkal/compat-devel@lists.sr.ht>
+;; Version: 30.0.2.0
 ;; URL: https://github.com/emacs-compat/compat
-;; Package-Requires: ((emacs "24.4") (seq "2.3"))
+;; Package-Requires: ((emacs "24.4") (seq "2.23"))
 ;; Keywords: lisp, maint
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -49,11 +49,11 @@
 ;; Ensure that the newest compatibility layer is required at compile
 ;; time and runtime, but only if needed.
 (eval-when-compile
-  (defmacro compat--maybe-require-29 ()
-    (when (version< emacs-version "29.1")
-      (require 'compat-29)
-      '(require 'compat-29))))
-(compat--maybe-require-29)
+  (defmacro compat--maybe-require ()
+    (when (version< emacs-version "30.0.50")
+      (require 'compat-30)
+      '(require 'compat-30))))
+(compat--maybe-require)
 
 ;;;; Macros for extended compatibility function calls
 

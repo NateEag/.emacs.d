@@ -1,6 +1,6 @@
 ;;; compat-28.el --- Functionality added in Emacs 28.1 -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,7 +34,7 @@
 
 ;; FIXME Should handle multibyte regular expressions
 (compat-defun string-search (needle haystack &optional start-pos) ;; <compat-tests:string-search>
-  "Search for the string NEEDLE in the strign HAYSTACK.
+  "Search for the string NEEDLE in the string HAYSTACK.
 
 The return value is the position of the first occurrence of
 NEEDLE in HAYSTACK, or nil if no match was found.
@@ -52,9 +52,8 @@ issues are inherited."
   (when (and start-pos (or (< (length haystack) start-pos)
                            (< start-pos 0)))
     (signal 'args-out-of-range (list start-pos)))
-  (save-match-data
-    (let ((case-fold-search nil))
-      (string-match (regexp-quote needle) haystack start-pos))))
+  (let (case-fold-search)
+    (string-match-p (regexp-quote needle) haystack start-pos)))
 
 (compat-defun length= (sequence length) ;; [[compat-tests:length=]]
   "Returns non-nil if SEQUENCE has a length equal to LENGTH."
@@ -66,7 +65,7 @@ issues are inherited."
          t))
    ((arrayp sequence)
     (= (length sequence) length))
-   ((signal 'wrong-type-argument sequence))))
+   (t (signal 'wrong-type-argument (list 'sequencep sequence)))))
 
 (compat-defun length< (sequence length) ;; [[compat-tests:length<]]
   "Returns non-nil if SEQUENCE is shorter than LENGTH."
@@ -76,7 +75,7 @@ issues are inherited."
     (null (nthcdr (1- length) sequence)))
    ((arrayp sequence)
     (< (length sequence) length))
-   ((signal 'wrong-type-argument sequence))))
+   (t (signal 'wrong-type-argument (list 'sequencep sequence)))))
 
 (compat-defun length> (sequence length) ;; [[compat-tests:length>]]
   "Returns non-nil if SEQUENCE is longer than LENGTH."
@@ -85,7 +84,7 @@ issues are inherited."
     (and (nthcdr length sequence) t))
    ((arrayp sequence)
     (> (length sequence) length))
-   ((signal 'wrong-type-argument sequence))))
+   (t (signal 'wrong-type-argument (list 'sequencep sequence)))))
 
 ;;;; Defined in fileio.c
 
@@ -191,7 +190,7 @@ and BLUE, is normalized to have its value in [0,65535]."
        ;; The "RGBi" (RGB Intensity) specification is defined by
        ;; XCMS[0], see [1] for the implementation in Xlib.
        ;;
-       ;; [0] http://www.nic.funet.fi/pub/X11/X11R4/DOCS/color/Xcms.text
+       ;; [0] https://www.nic.funet.fi/pub/X11/X11R4/DOCS/color/Xcms.text
        ;; [1] https://gitlab.freedesktop.org/xorg/lib/libx11/-/blob/master/src/xcms/LRGB.c#L1392
        ((string-match
          ;; (rx bos "rgbi:" (* space)
@@ -355,11 +354,10 @@ REPLACEMENT can use the following special elements:
 (compat-defun buffer-local-boundp (symbol buffer) ;; <compat-tests:buffer-local-boundp>
   "Return non-nil if SYMBOL is bound in BUFFER.
 Also see `local-variable-p'."
-  (catch 'fail
-    (condition-case nil
-        (buffer-local-value symbol buffer)
-      (void-variable nil (throw 'fail nil)))
-    t))
+  (condition-case nil
+      (progn (buffer-local-value symbol buffer)
+             t)
+    (void-variable nil)))
 
 (compat-defmacro with-existing-directory (&rest body) ;; <compat-tests:with-existing-directory>
   "Execute BODY with `default-directory' bound to an existing directory.
@@ -398,7 +396,8 @@ not a list, return a one-element list containing OBJECT."
 
 ;;;; Defined in data.c
 
-(compat-defalias subr-native-elisp-p ignore) ;; <compat-tests:subr-native-elisp-p>
+;; Renamed in Emacs 30 to `native-comp-function-p'.
+(compat-defalias subr-native-elisp-p ignore :obsolete t) ;; <compat-tests:obsolete-subr-native-elisp-p>
 
 ;;;; Defined in subr-x.el
 
@@ -784,7 +783,7 @@ Other uses risk returning non-nil value that point to the wrong file."
 ;;;; Defined in env.el
 
 (compat-defmacro with-environment-variables (variables &rest body) ;; <compat-tests:with-environment-variables>
-  "Set VARIABLES in the environent and execute BODY.
+  "Set VARIABLES in the environment and execute BODY.
 VARIABLES is a list of variable settings of the form (VAR VALUE),
 where VAR is the name of the variable (a string) and VALUE
 is its value (also a string).
@@ -837,7 +836,7 @@ function will never return nil."
 ;;;; Defined in button.el
 
 ;; Obsolete Alias since 29
-(compat-defalias button-buttonize buttonize :obsolete t) ;; <compat-tests:button-buttonize>
+(compat-defalias button-buttonize buttonize :obsolete t) ;; <compat-tests:obsolete-button-buttonize>
 
 ;;;; Defined in wid-edit.el
 

@@ -5,7 +5,8 @@
 ;; Author: Olli Piepponen <opieppo@gmail.com>
 ;; URL: https://github.com/emacs-evil/evil-cleverparens
 ;; Keywords: convenience, emulations
-;; Version: 0.1.0
+;; Package-Version: 20240529.1025
+;; Package-Revision: 6637717af0bd
 ;; Package-Requires: ((evil "1.0") (paredit "1") (smartparens "1.6.1") (emacs "24.4") (dash "2.12.0"))
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -597,17 +598,19 @@ delimiters in the region defined by BEG and END."
           (delete-char diff)
           (setq chars-left (- chars-left diff))))
        ((evil-cp--looking-at-any-opening-p)
-        (let ((other-end (evil-cp--matching-paren-pos)))
+        (let ((p (point))
+              (other-end (evil-cp--matching-paren-pos)))
           ;; matching paren is in the range of the command
-          (if (<= (point) other-end end)
-              (let ((char-count
-                     (evil-cp--guard-point
-                      (sp-get (sp-get-enclosing-sexp)
-                        (- :end :beg)))))
+          (if (<= p other-end end)
+              ;; 1+ makes the char-count inclusive
+              (let ((char-count (1+ (- other-end p))))
                 (delete-char char-count)
                 (setq chars-left (- chars-left char-count)))
             (forward-char)
             (cl-decf chars-left))))
+       ((and (evil-cp--looking-at-escape-p) (< 1 chars-left))
+        (delete-char 2)
+        (cl-decf chars-left 2))
        ((and (evil-cp--looking-at-any-closing-p) (= chars-left 1))
         (cl-decf chars-left))
        ((evil-cp--looking-at-any-closing-p)
@@ -833,6 +836,7 @@ kill-ring is determined by the
 
 (evil-define-motion evil-cp-forward-sexp (count)
   "Motion for moving forward by a sexp via `sp-forward-sexp'."
+  :jump t
   :type exclusive
   (let ((count (or count 1)))
     (when (evil-eolp) (forward-char))
@@ -840,6 +844,7 @@ kill-ring is determined by the
 
 (evil-define-motion evil-cp-backward-sexp (count)
   "Motion for moving backwward by a sexp via `sp-backward-sexp'."
+  :jump t
   :type exclusive
   (let ((count (or count 1)))
     (sp-backward-sexp count)))
@@ -847,12 +852,14 @@ kill-ring is determined by the
 (evil-define-motion evil-cp-beginning-of-defun (count)
   "Motion for moving to the beginning of a defun (i.e. a top
 level sexp)."
+  :jump t
   :type inclusive
   (let ((count (or count 1)))
     (beginning-of-defun count)))
 
 (evil-define-motion evil-cp-end-of-defun (count)
   "Motion for moving to the end of a defun (i.e. a top level sexp)."
+  :jump t
   :type inclusive
   (let ((count (or count 1)))
     (if (evil-cp--looking-at-closing-p)
@@ -930,14 +937,14 @@ evil-motion."
       (sp-backward-up-sexp))))
 
 (evil-define-motion evil-cp-up-sexp (count)
-  "Motion for moving up to the previous level of parenteheses.
+  "Motion for moving up to the previous level of parentheses.
 The same as `sp-up-sexp', but leaves the point on top of the
 closing paren."
   :move-point nil
   :type inclusive
   (let ((count (or count 1))
         success)
-    (when (evil-cp--looking-at-closing-p) (forward-char))
+    (when (evil-cp--looking-at-any-closing-p) (forward-char))
     (dotimes (_ count)
       (and (sp-up-sexp) (setq success t)))
     (and success (backward-char))))
@@ -1164,7 +1171,8 @@ regular forward-barf."
        ((evil-cp--looking-at-any-closing-p)
         (when (not (sp-point-in-empty-sexp))
           (when (not (evil-cp--singleton-list-p))
-            (sp-forward-barf-sexp)
+            (let (sp-barf-move-point-with-delimiter) ; It's not helpful here
+              (sp-forward-barf-sexp))
             (sp-backward-sexp)
             (evil-cp-previous-closing))))
        ((evil-cp--singleton-list-p)
@@ -2085,17 +2093,21 @@ and/or beginning."
     ("M-C" . evil-cp-change-enclosing)
     ("M-q" . sp-indent-defun)
     ("M-o" . evil-cp-open-below-form)
-    ("M-O" . evil-cp-open-above-form)
     ("M-v" . sp-convolute-sexp)
     ("M-(" . evil-cp-wrap-next-round)
     ("M-)" . evil-cp-wrap-previous-round)
-    ("M-[" . evil-cp-wrap-next-square)
-    ("M-]" . evil-cp-wrap-previous-square)
     ("M-{" . evil-cp-wrap-next-curly)
     ("M-}" . evil-cp-wrap-previous-curly))
   "Alist containing additional functionality for
   evil-cleverparens via a modifier key (using the meta-key by
   default). Only enabled in evil's normal mode.")
+
+(defvar evil-cp-additional-bindings-graphical
+  '(("M-[" . evil-cp-wrap-next-square)
+    ("M-]" . evil-cp-wrap-previous-square)
+    ("M-O" . evil-cp-open-above-form))
+  "As with evil-cp-additional-bindings but these bindings are not safe in some
+  terminals.")
 
 (defvar evil-cp-insert-key "i"
   "Key to use to switch to insert mode")
@@ -2148,10 +2160,7 @@ in question."
       evil-cp-append-key 'evil-cp-append)
     (add-hook 'evil-insert-state-exit-hook
               'evil-cp-insert-exit-hook))
-  ;; If evil-snipe is not present or does not want to use s and S bindings,
-  ;; then we can use them. To take effect, evil-snipe must be loaded before us.
-  (when (and evil-cleverparens-use-s-and-S
-             (not (bound-and-true-p evil-snipe-auto-disable-substitute)))
+  (when evil-cleverparens-use-s-and-S
     (evil-define-key 'normal evil-cleverparens-mode-map
       "s" 'evil-cp-substitute
       "S" 'evil-cp-change-whole-line)))
@@ -2177,7 +2186,12 @@ true."
   (evil-cp--populate-mode-bindings-for-state
    evil-cp-additional-bindings
    'normal
-   evil-cleverparens-use-additional-bindings))
+   evil-cleverparens-use-additional-bindings)
+  (when window-system
+    (evil-cp--populate-mode-bindings-for-state
+     evil-cp-additional-bindings-graphical
+     'normal
+     evil-cleverparens-use-additional-bindings)))
 
 (defun evil-cp--enable-C-w-delete ()
   (when evil-want-C-w-delete

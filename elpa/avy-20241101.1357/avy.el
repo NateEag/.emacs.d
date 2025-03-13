@@ -4,9 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20230420.404
-;; Package-Commit: be612110cb116a38b8603df367942e2bb3d9bdbe
-;; Version: 0.5.0
+;; Package-Version: 20241101.1357
+;; Package-Revision: 933d1f36cca0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
 
@@ -28,22 +27,22 @@
 ;;; Commentary:
 ;;
 ;; With Avy, you can move point to any position in Emacs – even in a
-;; different window – using very few keystrokes. For this, you look at
+;; different window – using very few keystrokes.  For this, you look at
 ;; the position where you want point to be, invoke Avy, and then enter
 ;; the sequence of characters displayed at that position.
 ;;
 ;; If the position you want to jump to can be determined after only
 ;; issuing a single keystroke, point is moved to the desired position
-;; immediately after that keystroke. In case this isn't possible, the
+;; immediately after that keystroke.  In case this isn't possible, the
 ;; sequence of keystrokes you need to enter is comprised of more than
-;; one character. Avy uses a decision tree where each candidate position
+;; one character.  Avy uses a decision tree where each candidate position
 ;; is a leaf and each edge is described by a character which is distinct
-;; per level of the tree. By entering those characters, you navigate the
+;; per level of the tree.  By entering those characters, you navigate the
 ;; tree, quickly arriving at the desired candidate position, such that
 ;; Avy can move point to it.
 ;;
 ;; Note that this only makes sense for positions you are able to see
-;; when invoking Avy. These kinds of positions are supported:
+;; when invoking Avy.  These kinds of positions are supported:
 ;;
 ;; * character positions
 ;; * word or subword start positions
@@ -101,7 +100,7 @@ keys different than the following: a, e, i, o, u, y"
     (function :tag "Other command")))
 
 (defcustom avy-keys-alist nil
-  "Alist of avy-jump commands to `avy-keys' overriding the default `avy-keys'."
+  "Alist of `avy-jump' commands to `avy-keys' overriding the default `avy-keys'."
   :type `(alist
           :key-type ,avy--key-type
           :value-type (repeat :tag "Keys" character)))
@@ -158,27 +157,27 @@ Use `avy-styles-alist' to customize this per-command."
           (const :tag "Words" words)))
 
 (defcustom avy-styles-alist nil
-  "Alist of avy-jump commands to the style for each command.
+  "Alist of `avy-jump' commands to the style for each command.
 If the commands isn't on the list, `avy-style' is used."
   :type '(alist
           :key-type (choice :tag "Command"
-                     (const avy-goto-char)
-                     (const avy-goto-char-2)
-                     (const avy-isearch)
-                     (const avy-goto-line)
-                     (const avy-goto-subword-0)
-                     (const avy-goto-subword-1)
-                     (const avy-goto-word-0)
-                     (const avy-goto-word-1)
-                     (const avy-copy-line)
-                     (const avy-copy-region)
-                     (const avy-move-line)
-                     (const avy-move-region)
-                     (const avy-kill-whole-line)
-                     (const avy-kill-region)
-                     (const avy-kill-ring-save-whole-line)
-                     (const avy-kill-ring-save-region)
-                     (function :tag "Other command"))
+                            (const avy-goto-char)
+                            (const avy-goto-char-2)
+                            (const avy-isearch)
+                            (const avy-goto-line)
+                            (const avy-goto-subword-0)
+                            (const avy-goto-subword-1)
+                            (const avy-goto-word-0)
+                            (const avy-goto-word-1)
+                            (const avy-copy-line)
+                            (const avy-copy-region)
+                            (const avy-move-line)
+                            (const avy-move-region)
+                            (const avy-kill-whole-line)
+                            (const avy-kill-region)
+                            (const avy-kill-ring-save-whole-line)
+                            (const avy-kill-ring-save-region)
+                            (function :tag "Other command"))
           :value-type (choice
                        (const :tag "Pre" pre)
                        (const :tag "At" at)

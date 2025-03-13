@@ -1,12 +1,11 @@
-;;; evil-args.el --- Motions and text objects for delimited arguments in Evil.
+;;; evil-args.el --- Motions and text objects for delimited arguments in Evil. -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2014 Connor Smith
 
 ;; Author: Connor Smith <wconnorsmith@gmail.com>
 ;; URL: http://github.com/wcsmith/evil-args
-;; Package-Version: 20220125.1626
-;; Package-Commit: 2671071a4a57eaee7cc8c27b9e4b6fc60fd2ccd3
-;; Version: 1.1
+;; Package-Version: 20240210.504
+;; Package-Revision: a8151556f63c
 ;; Keywords: evil, vim-emulation
 ;; Package-Requires: ((evil "1.0.8"))
 

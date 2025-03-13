@@ -2,15 +2,14 @@
 
 ;; Copyright (C) 2016-2020 Syohei YOSHIDA <syohex@gmail.com>
 ;; Copyright (C) 2020-2022 Neil Okamoto <neil.okamoto+melpa@gmail.com>
-;; Copyright (C) 2020-2022 Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2020-2024 Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; Maintainer: Neil Okamoto <neil.okamoto+melpa@gmail.com>
 ;;             Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacsorphanage/git-gutter
-;; Package-Version: 20220922.256
-;; Package-Commit: ec28e85d237065cb3c28db4b66d129da6d309f9c
-;; Version: 0.92
+;; Package-Version: 20241212.1415
+;; Package-Revision: 3bdead17db7b
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -250,16 +249,16 @@ Argument TEST is the case before BODY execution."
   (apply #'process-file cmd nil output nil args))
 
 (defun git-gutter:in-git-repository-p ()
-  (when (executable-find "git")
+  (when (executable-find "git" t)
     (with-temp-buffer
-      (when-let ((exec-result (git-gutter:execute-command
-                               "git" t "rev-parse" "--is-inside-work-tree")))
+      (when-let* ((exec-result (git-gutter:execute-command
+                                "git" t "rev-parse" "--is-inside-work-tree")))
         (when (zerop exec-result)
           (goto-char (point-min))
           (looking-at-p "true"))))))
 
 (defun git-gutter:in-repository-common-p (cmd check-subcmd repodir)
-  (and (executable-find cmd)
+  (and (executable-find cmd t)
        (locate-dominating-file default-directory repodir)
        (zerop (apply #'git-gutter:execute-command cmd nil check-subcmd))
        (not (string-match-p (regexp-quote (concat "/" repodir "/"))
@@ -1145,7 +1144,7 @@ start revision."
           (delete-file original))))))
 
 ;; for linum-user
-(when (and (bound-and-true-p global-linum-mode) (not (boundp 'git-gutter-fringe)))
+(when (and (and (boundp 'global-linum-mode) global-linum-mode) (not (boundp 'git-gutter-fringe)))
   (git-gutter:linum-setup))
 
 (defun git-gutter:all-hunks ()

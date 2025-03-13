@@ -1,13 +1,13 @@
 ;;; swiper.el --- Isearch with an overview.  Oh, man! -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2025 Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
+;; Maintainer: Basil L. Contovounesios <basil@contovou.net>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20230410.1815
-;; Package-Commit: d28225e86f8dfb3825809ad287f759f95ee9e479
-;; Version: 0.14.0
-;; Package-Requires: ((emacs "24.5") (ivy "0.14.0"))
+;; Package-Version: 20250224.2125
+;; Package-Revision: 7a0d554aaf4e
+;; Package-Requires: ((emacs "24.5") (ivy "0.15.0"))
 ;; Keywords: matching
 
 ;; This file is part of GNU Emacs.
@@ -38,6 +38,16 @@
 
 (require 'cl-lib)
 (require 'ivy)
+
+(eval-when-compile
+  (unless (fboundp 'static-if)
+    (defmacro static-if (condition then-form &rest else-forms)
+      "Expand to THEN-FORM or ELSE-FORMS based on compile-time CONDITION.
+Polyfill for Emacs 30 `static-if'."
+      (declare (debug (sexp sexp &rest sexp)) (indent 2))
+      (if (eval condition lexical-binding)
+          then-form
+        (macroexp-progn else-forms)))))
 
 (defgroup swiper nil
   "`isearch' with an overview."
@@ -281,18 +291,19 @@ If the input is empty, select the previous history element instead."
 (declare-function avy--remove-leading-chars "ext:avy")
 
 (defun swiper--avy-candidates ()
-  (let* (
+  (let* ((visible-overlays
+          (with-ivy-window (overlays-in (window-start) (window-end))))
          ;; We'll have overlapping overlays, so we sort all the
          ;; overlays in the visible region by their start, and then
          ;; throw out non-Swiper overlays or overlapping Swiper
          ;; overlays.
-         (visible-overlays (cl-sort (with-ivy-window
-                                      (overlays-in (window-start)
-                                                   (window-end)))
-                                    #'< :key #'overlay-start))
+         (visible-overlays
+          (static-if (bound-and-true-p ivy--new-sort-p)
+              (sort visible-overlays :key #'overlay-start :in-place t)
+            (cl-sort visible-overlays #'< :key #'overlay-start)))
          (min-overlay-start 0)
          (overlays-for-avy
-          (cl-remove-if-not
+          (cl-delete-if-not
            (lambda (ov)
              (when (and (>= (overlay-start ov)
                             min-overlay-start)
@@ -749,20 +760,21 @@ When capture groups are present in the input, print them instead of lines."
     (evil-set-jump)))
 
 (defun swiper--normalize-regex (re)
-  "Normalize the swiper regex RE.
-Add a space after a leading `^' if needed and apply
-`search-default-mode' if bound."
+  "Normalize the Swiper regexp RE.
+Add a space after a leading `^' for `swiper', and apply
+`search-default-mode' if bound in the original buffer."
   (replace-regexp-in-string
    "^\\(?:\\\\(\\)?\\^"
    (concat "\\&" (if (eq 'swiper (ivy-state-caller ivy-last)) " " ""))
-   (if (functionp (bound-and-true-p search-default-mode))
-       (mapconcat
-        (lambda (x)
-          (if (string-match-p "\\`[^$\\^]+\\'" x)
-              (funcall search-default-mode x)
-            x))
-        (split-string re "\\b") "")
-     re)
+   (let ((mode (with-ivy-window (bound-and-true-p search-default-mode))))
+     (if (functionp mode)
+         (mapconcat
+          (lambda (x)
+            (if (string-match-p "\\`[^$\\^]+\\'" x)
+                (funcall mode x)
+              x))
+          (split-string re "\\b") "")
+       re))
    t))
 
 (defun swiper--re-builder (str)
@@ -770,7 +782,7 @@ Add a space after a leading `^' if needed and apply
 This is the regex used in the minibuffer where candidates have
 line numbers.  For the buffer, use `ivy--regex' instead."
   (let* ((re-builder (ivy-alist-setting ivy-re-builders-alist))
-         (str (replace-regexp-in-string "\\\\n" "\n" str))
+         (str (ivy--string-replace "\\n" "\n" str))
          (re (funcall re-builder str)))
     (if (consp re)
         (mapcar
@@ -937,24 +949,17 @@ the face, window and priority of the overlay."
   (or (display-graphic-p)
       (not recenter-redisplay)))
 
-(defun swiper--positive-regexps ()
-  (if (listp ivy-regex)
-      (mapcar #'car (cl-remove-if-not #'cdr ivy-regex))
-    (list ivy-regex)))
-
 (defun swiper--update-input-ivy ()
   "Called when `ivy' input is updated."
   (with-ivy-window
     (swiper--cleanup)
     (when (> (length (ivy-state-current ivy-last)) 0)
-      (let ((regexps (swiper--positive-regexps))
+      (let ((regexps (ivy--positive-regexps))
             (re-idx -1)
             (case-fold-search (ivy--case-fold-p ivy-text)))
         (dolist (re regexps)
           (setq re-idx (1+ re-idx))
-          (let* ((re (replace-regexp-in-string
-                      "    " "\t"
-                      re))
+          (let* ((re (ivy--string-replace "    " "\t" re))
                  (num (swiper--line-number (ivy-state-current ivy-last))))
             (unless (memq this-command '(ivy-yank-word
                                          ivy-yank-symbol
@@ -1261,7 +1266,7 @@ otherwise continue prompting for buffers."
   "Search in all open buffers for STR."
   (or
    (ivy-more-chars)
-   (let* ((buffers (cl-remove-if-not #'swiper-all-buffer-p (buffer-list)))
+   (let* ((buffers (cl-delete-if-not #'swiper-all-buffer-p (buffer-list)))
           (re-full ivy-regex)
           re re-tail
           cands match
@@ -1483,7 +1488,7 @@ that we search only for one character."
              (lambda ()
                (with-ivy-window
                  (swiper--add-overlays (ivy--regex ivy-text))))))
-    (dolist (re (swiper--positive-regexps))
+    (dolist (re (ivy--positive-regexps))
       (swiper--add-overlays re))))
 
 (defun swiper--isearch-candidate-pos (cand)

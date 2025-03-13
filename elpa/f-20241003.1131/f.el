@@ -4,7 +4,8 @@
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.20.0
+;; Package-Version: 20241003.1131
+;; Package-Revision: 931b6d0667fe
 ;; Package-Requires: ((emacs "24.1") (s "1.7.0") (dash "2.2.0"))
 ;; Keywords: files, directories
 ;; Homepage: http://github.com/rejeep/f.el
@@ -40,7 +41,8 @@
 (require 's)
 (require 'dash)
 (when (version<= "28.1" emacs-version)
-  (require 'f-shortdoc))
+  (when (< emacs-major-version 29)
+   (require 'f-shortdoc nil t)))
 
 (put 'f-guard-error 'error-conditions '(error f-guard-error))
 (put 'f-guard-error 'error-message "Destructive operation outside sandbox")

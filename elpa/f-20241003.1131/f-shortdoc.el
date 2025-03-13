@@ -2,7 +2,6 @@
 
 ;; Author: Lucien Cartier-Tilet <lucien@phundrak.com>
 ;; Maintainer: Lucien Cartier-Tilet <lucien@phundrak.com>
-;; Version: 0.1.0
 ;; Package-Requires: ((emacs "28.1"))
 ;; Homepage: https://github.com/rejeep/f.el
 
@@ -29,8 +28,7 @@
 ;;; Code:
 
 (when (version<= "28.1" emacs-version)
-  (when (< emacs-major-version 29)
-    (require 'shortdoc))
+  (require 'shortdoc)
 
   (define-short-documentation-group f
     "Paths"
@@ -306,27 +304,27 @@
      :result nil)
 
     (f-older-p
-     :noeval (f-older-p "older-file.txt" "newer-file.txt")
+     :no-eval (f-older-p "older-file.txt" "newer-file.txt")
      :result t
-     :noeval (f-older-p "newer-file.txt" "older-file.txt")
+     :no-eval (f-older-p "newer-file.txt" "older-file.txt")
      :result nil
-     :noeval (f-older-p "same-time1.txt" "same-time2.txt")
+     :no-eval (f-older-p "same-time1.txt" "same-time2.txt")
      :result nil)
 
     (f-newer-p
-     :noeval (f-newer-p "newer-file.txt" "older-file.txt")
+     :no-eval (f-newer-p "newer-file.txt" "older-file.txt")
      :result t
-     :noeval (f-newer-p "older-file.txt" "newer-file.txt")
+     :no-eval (f-newer-p "older-file.txt" "newer-file.txt")
      :result nil
-     :noeval (f-newer-p "same-time1.txt" "same-time2.txt")
+     :no-eval (f-newer-p "same-time1.txt" "same-time2.txt")
      :result nil)
 
     (f-same-time-p
-     :noeval (f-same-time-p "same-time1.txt" "same-time2.txt")
+     :no-eval (f-same-time-p "same-time1.txt" "same-time2.txt")
      :result t
-     :noeval (f-same-time-p "newer-file.txt" "older-file.txt")
+     :no-eval (f-same-time-p "newer-file.txt" "older-file.txt")
      :result nil
-     :noeval (f-same-time-p "older-file.txt" "newer-file.txt")
+     :no-eval (f-same-time-p "older-file.txt" "newer-file.txt")
      :result nil)
 
     "Stats"

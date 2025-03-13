@@ -3,9 +3,8 @@
 ;; Copyright (C) James Ferguson
 ;;
 ;; Author: James Ferguson <james@faff.org>
-;; Version: 3.0
-;; Package-Version: 20220427.1445
-;; Package-Commit: df91392c3c928d7841631f5809716b9cf0f7309e
+;; Package-Version: 20231005.1335
+;; Package-Revision: d61fd65d823b
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience
 ;; URL: https://github.com/WJCFerguson/textsize
@@ -25,8 +24,6 @@
 ;; `textsize-mode' on initialization.  e.g.:
 ;;
 ;;     (use-package textsize
-;;       :ensure nil
-;;       :commands textsize-mode
 ;;       :init (textsize-mode))
 ;;
 ;; Alternatively, the adjustment may be manually triggered by calling
@@ -74,7 +71,7 @@ text for anything smaller than 350mm, and enlarge it for >500mm"
   "List of (px-pitch-threshold . font-point-offset).
 
 As with `textsize-monitor-size-thresholds', an offset will be
-selected from the monitor's pixel pitch from `textsize--pixel-pitch'."
+selected from the monitor's pixel pitch in mm, from `textsize--pixel-pitch'."
   :type '(list (cons integer integer)))
 
 ;; =============================================================================

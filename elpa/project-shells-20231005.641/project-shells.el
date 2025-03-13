@@ -5,10 +5,8 @@
 ;; Author: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
-;; Package-Commit: 900369828f1a213c60a2207a71d46bc43fd5405c
-;; Version: 20170311
-;; Package-Version: 20210625.647
-;; Package-X-Original-Version: 20171107.851
+;; Package-Version: 20231005.641
+;; Package-Revision: 15f70d99b6d5
 ;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
 ;; Keywords: processes, terminals
@@ -258,25 +256,9 @@ used in shell initialized function."
 	     (funcall project-shells-project-root-func))
 	"~/")))
 
-(cl-defun project-shells--setenv (env val)
-  (when env
-    (prog1
-	(list (list env (getenv env)))
-      (setenv env val))))
-
 (cl-defun project-shells--histfile-name (session-dir)
   (when project-shells-histfile-name
     (expand-file-name project-shells-histfile-name session-dir)))
-
-(cl-defun project-shells--set-shell-env (session-dir)
-  (when project-shells-histfile-name
-    (project-shells--setenv project-shells-histfile-env
-			    (project-shells--histfile-name session-dir))))
-
-(cl-defun project-shells--restore-shell-env (saved-env)
-  (cl-loop
-   for env-val in (reverse saved-env)
-   do (apply #'setenv env-val)))
 
 (cl-defun project-shells--command-string (args)
   (mapconcat
@@ -303,51 +285,51 @@ name, and the project root directory."
 	 (name (or (cl-first shell-info) project-shells-default-shell-name))
 	 (shell-name (format "*%s.%s.%s*" key name proj)))
     (unless (project-shells--switch shell-name t)
-      (let* ((proj-root (or proj-root (project-shells--project-root proj)))
-	     (type (cond
-		    ((cl-third shell-info))
-		    ((member key project-shells-term-keys) 'term)
-		    ((member key project-shells-eshell-keys) 'eshell)
-		    ((member key project-shells-vterm-keys) 'vterm)
-		    (t 'shell)))
-	     (dir (or (cl-second shell-info) proj-root))
-	     (func (cl-fourth shell-info))
-	     (session-dir (expand-file-name (format "%s/%s" proj key)
-					    project-shells-session-root))
-	     (saved-env nil))
-	(when (eq dir 'ask)
-	  (let* ((dest (completing-read
-			"Destination: "
-			project-shells--dest-history
-			nil nil nil 'project-shells--dest-history)))
-	    (setf dir (if (or (string-prefix-p "/" dest)
-			      (string-prefix-p "~" dest))
-			  dest
-			(format "/ssh:%s:" dest)))))
-	(setf saved-env (project-shells--set-shell-env session-dir))
-	(unwind-protect
-	    (progn
-	      (mkdir session-dir t)
-	      (project-shells--create shell-name dir type)
-	      (cl-case type
-		(term
-		 (term-send-raw-string (project-shells--term-command-string)))
-		(eshell
-		 (setq-local eshell-history-file-name
-			     (project-shells--histfile-name session-dir))
-		 (eshell-read-history)))
-	      (when (or (string-prefix-p "/ssh:" dir)
-			(string-prefix-p "/sudo:" dir))
-		(set-process-sentinel (get-buffer-process (current-buffer))
-				      #'shell-write-history-on-exit))
-	      (setf project-shells-project-name proj
-		    project-shells-project-root proj-root)
-	      (when project-shells-default-init-func
-		(funcall project-shells-default-init-func session-dir type))
-	      (project-shells-mode)
-	      (when func
-		(funcall func session-dir)))
-	  (project-shells--restore-shell-env saved-env))))))
+      (with-temp-buffer
+	(let* ((proj-root (or proj-root (project-shells--project-root proj)))
+	       (type (cond
+		      ((cl-third shell-info))
+		      ((member key project-shells-term-keys) 'term)
+		      ((member key project-shells-eshell-keys) 'eshell)
+		      ((member key project-shells-vterm-keys) 'vterm)
+		      (t 'shell)))
+	       (dir (or (cl-second shell-info) proj-root))
+	       (func (cl-fourth shell-info))
+	       (session-dir (expand-file-name (format "%s/%s" proj key)
+					      project-shells-session-root)))
+	  (when (eq dir 'ask)
+	    (let* ((dest (completing-read
+			  "Destination: "
+			  project-shells--dest-history
+			  nil nil nil 'project-shells--dest-history)))
+	      (setf dir (if (or (string-prefix-p "/" dest)
+				(string-prefix-p "~" dest))
+			    dest
+			  (format "/ssh:%s:" dest)))))
+	  (with-environment-variables
+	      ((project-shells-histfile-env
+		(when project-shells-histfile-name
+		  (project-shells--histfile-name session-dir))))
+	    (mkdir session-dir t)
+	    (project-shells--create shell-name dir type)
+	    (cl-case type
+	      (term
+	       (term-send-raw-string (project-shells--term-command-string)))
+	      (eshell
+	       (setq-local eshell-history-file-name
+			   (project-shells--histfile-name session-dir))
+	       (eshell-read-history)))
+	    (when (or (string-prefix-p "/ssh:" dir)
+		      (string-prefix-p "/sudo:" dir))
+	      (set-process-sentinel (get-buffer-process (current-buffer))
+				    #'shell-write-history-on-exit))
+	    (setf project-shells-project-name proj
+		  project-shells-project-root proj-root)
+	    (when project-shells-default-init-func
+	      (funcall project-shells-default-init-func session-dir type))
+	    (project-shells-mode)
+	    (when func
+	      (funcall func session-dir))))))))
 
 ;;;###autoload
 (cl-defun project-shells-activate (p)

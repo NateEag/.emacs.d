@@ -1,6 +1,6 @@
-This is ivy.info, produced by makeinfo version 6.7 from ivy.texi.
+This is ivy.info, produced by makeinfo version 6.8 from ivy.texi.
 
-Ivy manual, version 0.14.0
+Ivy manual, version 0.15.0
 
    Ivy is an interactive interface for completion in Emacs.  Emacs uses
 completion mechanism in a variety of contexts: code, menus, commands,
@@ -11,7 +11,7 @@ available choices while previewing in the minibuffer.  Selecting the
 final candidate is either through simple keyboard character inputs or
 through powerful regular expressions.
 
-   Copyright (C) 2015–2023 Free Software Foundation, Inc.
+   Copyright (C) 2015–2025 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -206,7 +206,7 @@ File: ivy.info,  Node: Installing from Emacs Package Manager,  Next: Installing 
    Ivy is installed alongside the ‘counsel’ package, which is available
 from two different package archives, GNU ELPA and MELPA.  For the latest
 stable version, use the GNU ELPA archive.  For the latest development
-snaphshot, use the GNU-devel ELPA archive.
+snapshot, use the GNU-devel ELPA archive.
 
    Ivy is split into three packages: ‘ivy’, ‘swiper’ and ‘counsel’; by
 installing ‘counsel’, the other two are brought in as dependencies.  If
@@ -243,12 +243,12 @@ Configuration steps
 
      First clone the Swiper repository with:
 
-          cd ~/git && git clone https://github.com/abo-abo/swiper
-          cd swiper && make compile
+          cd ~/git && git clone 'https://github.com/abo-abo/swiper.git'
+          cd swiper && make deps compile
 
      Second, add these lines to the Emacs init file:
 
-          (add-to-list 'load-path "~/git/swiper/")
+          (add-to-list 'load-path "~/git/swiper")
           (require 'ivy)
 
      Then, update the code with:
@@ -1920,49 +1920,49 @@ Node: Top1192
 Node: Introduction3103
 Node: Installation5626
 Node: Installing from Emacs Package Manager6002
-Node: Installing from the Git repository7250
-Node: Getting started8070
-Node: Basic customization8377
-Node: Key bindings8972
-Node: Global key bindings9164
-Node: Minibuffer key bindings11638
-Node: Key bindings for navigation12870
-Node: Key bindings for single selection action then exit minibuffer14077
-Node: Key bindings for multiple selections and actions keep minibuffer open16761
-Node: Key bindings that alter the minibuffer input19382
-Node: Other key bindings21329
-Node: Hydra in the minibuffer21707
-Node: Saving the current completion session to a buffer24125
-Node: Completion Styles25537
-Node: ivy--regex-plus27295
-Node: ivy--regex-ignore-order28781
-Node: ivy--regex-fuzzy29149
-Node: Customization29646
-Node: Faces29832
-Node: Defcustoms32261
-Node: Actions33587
-Node: What are actions?33913
-Node: How can different actions be called?34731
-Node: How to modify the actions list?35302
-Node: Example - add two actions to each command35962
-Node: How to undo adding the two actions36921
-Node: How to add actions to a specific command37373
-Node: Example - define a new command with several actions37789
-Node: Test the above function with ivy-occur38726
-Node: Packages39568
-Node: Commands40533
-Node: File Name Completion40718
-Node: Using TRAMP42675
-Node: Buffer Name Completion44177
-Node: Counsel commands44792
-Node: API45439
-Node: Required arguments for ivy-read46037
-Node: Optional arguments for ivy-read46556
-Node: Example - counsel-describe-function49982
-Node: Example - counsel-locate52966
-Node: Example - ivy-read-with-extra-properties56835
-Node: Variable Index58113
-Node: Keystroke Index65237
+Node: Installing from the Git repository7249
+Node: Getting started8079
+Node: Basic customization8386
+Node: Key bindings8981
+Node: Global key bindings9173
+Node: Minibuffer key bindings11647
+Node: Key bindings for navigation12879
+Node: Key bindings for single selection action then exit minibuffer14086
+Node: Key bindings for multiple selections and actions keep minibuffer open16770
+Node: Key bindings that alter the minibuffer input19391
+Node: Other key bindings21338
+Node: Hydra in the minibuffer21716
+Node: Saving the current completion session to a buffer24134
+Node: Completion Styles25546
+Node: ivy--regex-plus27304
+Node: ivy--regex-ignore-order28790
+Node: ivy--regex-fuzzy29158
+Node: Customization29655
+Node: Faces29841
+Node: Defcustoms32270
+Node: Actions33596
+Node: What are actions?33922
+Node: How can different actions be called?34740
+Node: How to modify the actions list?35311
+Node: Example - add two actions to each command35971
+Node: How to undo adding the two actions36930
+Node: How to add actions to a specific command37382
+Node: Example - define a new command with several actions37798
+Node: Test the above function with ivy-occur38735
+Node: Packages39577
+Node: Commands40542
+Node: File Name Completion40727
+Node: Using TRAMP42684
+Node: Buffer Name Completion44186
+Node: Counsel commands44801
+Node: API45448
+Node: Required arguments for ivy-read46046
+Node: Optional arguments for ivy-read46565
+Node: Example - counsel-describe-function49991
+Node: Example - counsel-locate52975
+Node: Example - ivy-read-with-extra-properties56844
+Node: Variable Index58122
+Node: Keystroke Index65246
 
 End Tag Table
 

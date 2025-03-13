@@ -1,2 +1,0 @@
-;;; Generated package description from show-eol.el  -*- no-byte-compile: t -*-
-(define-package "show-eol" "20220919.631" "Show end of line symbol in buffer" '((emacs "24.4")) :commit "ad3aa8f4fa0d1b20f8526536f0ac35386f521372" :authors '(("Shen, Jen-Chieh" . "jcs090218@gmail.com")) :maintainers '(("Shen, Jen-Chieh" . "jcs090218@gmail.com")) :maintainer '("Shen, Jen-Chieh" . "jcs090218@gmail.com") :keywords '("convenience" "end" "eol" "line") :url "https://github.com/jcs-elpa/show-eol")

@@ -1,13 +1,12 @@
 ;;; show-eol.el --- Show end of line symbol in buffer  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Shen, Jen-Chieh
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh
 ;; Created date 2019-04-28 22:34:40
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/jcs-elpa/show-eol
-;; Package-Version: 20220919.631
-;; Package-Commit: ad3aa8f4fa0d1b20f8526536f0ac35386f521372
-;; Version: 0.0.5
+;; Package-Version: 20250101.1011
+;; Package-Revision: 117060c077dc
 ;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: convenience end eol line
 

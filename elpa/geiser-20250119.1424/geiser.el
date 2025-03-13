@@ -1,6 +1,6 @@
 ;;; geiser.el --- GNU Emacs and Scheme talk to each other -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2013, 2015, 2018, 2021-2023 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2013, 2015, 2018, 2021-2024 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -13,7 +13,8 @@
 ;; Homepage: https://gitlab.com/emacs-geiser/
 ;; Package-Requires: ((emacs "27.1") (project "0.8.1"))
 ;; SPDX-License-Identifier: BSD-3-Clause
-;; Version: 0.29.1
+;; Package-Version: 20250119.1424
+;; Package-Revision: c1c27072a46a
 
 ;;; Commentary:
 
@@ -54,14 +55,12 @@
 ;;; Locations:
 
 ;;;###autoload
-(defconst geiser-elisp-dir (file-name-directory load-file-name)
+(defconst geiser-elisp-dir
+  (file-name-directory (or load-file-name buffer-file-name))
   "Directory containing Geiser's Elisp files.")
 
 
 ;;; Autoloads:
-
-;;;###autoload
-(autoload 'geiser-version "geiser-version" "Echo Geiser's version." t)
 
 ;;;###autoload
 (autoload 'geiser-unload "geiser-reload" "Unload all Geiser code." t)
@@ -111,6 +110,7 @@
         (custom-add-load group (symbol-name group))
         (custom-add-load 'geiser (symbol-name group)))
       '(geiser
+        geiser-edit
         geiser-repl
         geiser-autodoc
         geiser-doc

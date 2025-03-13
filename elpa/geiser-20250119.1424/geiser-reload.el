@@ -1,6 +1,6 @@
-;;; geiser-reload.el -- unload/load geiser packages  -*- lexical-binding: t; -*-
+;;; geiser-reload.el --- Unload/load geiser packages  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2012, 2020, 2021, 2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2012, 2020, 2021, 2022, 2024 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -21,37 +21,36 @@
 
 ;;; Reload:
 
-(defmacro geiser--features-list ()
-  (quote '(
-           geiser-mode
-           geiser-repl
-           geiser-capf
-           geiser-doc
-           geiser-xref
-           geiser-compile
-           geiser-debug
-           geiser-completion
-           geiser-autodoc
-           geiser-edit
-           geiser-eval
-           geiser-connection
-           geiser-syntax
-           geiser-menu
-           geiser-inf
-           geiser-impl
-           geiser-image
-           geiser-custom
-           geiser-log
-           geiser-popup
-           geiser-base
-           geiser-version
-           geiser
-           )))
+(defconst geiser--features-list
+  '(
+    geiser-mode
+    geiser-repl
+    geiser-capf
+    geiser-doc
+    geiser-xref
+    geiser-compile
+    geiser-debug
+    geiser-edit
+    geiser-completion
+    geiser-autodoc
+    geiser-eval
+    geiser-connection
+    geiser-syntax
+    geiser-menu
+    geiser-inf
+    geiser-impl
+    geiser-image
+    geiser-custom
+    geiser-log
+    geiser-popup
+    geiser-base
+    geiser
+    ))
 
 (defun geiser-unload ()
   "Unload all Geiser modules."
   (interactive)
-  (let ((fs (geiser--features-list)))
+  (let ((fs geiser--features-list))
     (unload-feature 'geiser-reload t)
     (dolist (f fs)
       (when (featurep f) (unload-feature f t)))

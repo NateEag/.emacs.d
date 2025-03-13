@@ -1,4 +1,4 @@
-;;; geiser-xref.el -- utilities for cross-referencing  -*- lexical-binding: t; -*-
+;;; geiser-xref.el --- Utilities for cross-referencing  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2009, 2010, 2012, 2022 Jose Antonio Ortega Ruiz
 
@@ -24,6 +24,7 @@
 
 
 ;;; Customization:
+
 (defgroup geiser-xref nil
   "Options for cross-referencing commands."
   :group 'geiser)
@@ -60,7 +61,7 @@
 
 ;;; Ref button:
 
-(define-button-type 'geiser-xref--button
+(define-button-type 'geiser-xref
   'action 'geiser-xref--button-action
   'face 'geiser-font-lock-xref-link
   'follow-link t)
@@ -84,7 +85,7 @@
       (insert "   - ")
       (if (stringp file)
           (insert-text-button signature-txt
-                              :type 'geiser-xref--button
+                              :type 'geiser-xref
                               'location location
                               'name (car signature)
                               'help-echo (format "%s in %s"

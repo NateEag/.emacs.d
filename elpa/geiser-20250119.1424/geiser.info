@@ -1,4 +1,4 @@
-This is geiser.info, produced by makeinfo version 6.7 from geiser.texi.
+This is geiser.info, produced by makeinfo version 6.8 from geiser.texi.
 
 This manual documents Geiser, an Emacs environment to hack in Scheme.
 
@@ -201,25 +201,25 @@ If Geiser came with any guarantees, you'd break all of them by not using
 GNU Emacs 24.4 (or better: i regularly use it with a recent Emacs
 snapshot) and at least one of the supported Schemes, namely:
 
-   * Chez (9.4) 9.4 or better, via geiser-chez
+   * Chez (http://www.scheme.com) 9.4 or better, via geiser-chez
      (https://gitlab.com/emacs-geiser/chez)
-   * Chibi (0.7.3) 0.7.3 or better, via geiser-chibi
-     (https://gitlab.com/emacs-geiser/chibi)
-   * Chicken (4.8.0) 4.8.0 or better, via geiser-chicken
+   * Chibi (http://synthcode.com/scheme/chibi) 0.7.3 or better, via
+     geiser-chibi (https://gitlab.com/emacs-geiser/chibi)
+   * Chicken (http://call-cc.org) 4.8.0 or better, via geiser-chicken
      (https://gitlab.com/emacs-geiser/chicken)
-   * Gambit (4.9.3) 4.9.3 or better, via geiser-gambit
-     (https://gitlab.com/emacs-geiser/gambit)
-   * Gauche (0.9.6) 0.9.6 or better, via geiser-gauche
-     (https://gitlab.com/emacs-geiser/gauche)
-   * Guile (2.2) 2.2 or better, via geiser-guile
-     (https://gitlab.com/emacs-geiser/guile)
-   * GNU Kawa (3.1) 3.1 or better, via geiser-kawa
-     (https://gitlab.com/emacs-geiser/kawa)
-   * MIT/GNU Scheme (9.0) 9.0 or better, via geiser-mit
-     (https://gitlab.com/emacs-geiser/mit)
-   * Racket (7.0) 7.0 or better, via geiser-racket
-     (https://gitlab.com/emacs-geiser/racket)
-   * Stklos (1.50) 1.50 or better, via geiser-stklos
+   * Gambit (http://gambitscheme.org/wiki/index.php/Main_Page) 4.9.3 or
+     better, via geiser-gambit (https://gitlab.com/emacs-geiser/gambit)
+   * Gauche (http://practical-scheme.net/gauche/) 0.9.6 or better, via
+     geiser-gauche (https://gitlab.com/emacs-geiser/gauche)
+   * Guile (http://www.gnu.org/software/guile) 2.2 or better, via
+     geiser-guile (https://gitlab.com/emacs-geiser/guile)
+   * GNU Kawa (http://www.gnu.org/software/kawa/index.html) 3.1 or
+     better, via geiser-kawa (https://gitlab.com/emacs-geiser/kawa)
+   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme) 9.0 or
+     better, via geiser-mit (https://gitlab.com/emacs-geiser/mit)
+   * Racket (http://www.racket-lang.org) 7.0 or better, via
+     geiser-racket (https://gitlab.com/emacs-geiser/racket)
+   * Stklos (https://stklos.net/) 1.50 or better, via geiser-stklos
      (https://gitlab.com/emacs-geiser/stklos)
 
    Since Geiser supports multiple REPLs, having all of them will just
@@ -1801,44 +1801,44 @@ Ref: current-module3657
 Node: Showing off5122
 Node: Installation6400
 Node: Must needs6613
-Node: The quick and easy way8295
-Ref: The quick and easy way-Footnote-19773
-Node: From the source's mouth9928
-Node: Friends10713
-Ref: paredit10987
-Node: The REPL12124
-Ref: quick-start12243
-Node: Starting the REPL12634
-Node: First aids17013
-Node: Switching context18846
-Node: Completion and error handling20776
-Ref: completion-caveat22484
-Node: Autodoc and friends24398
-Ref: repl-mod26468
-Node: Seeing is believing27474
-Node: Customization and tips28486
-Ref: choosing-impl29215
-Ref: active-implementations29446
-Ref: impl-binary29828
-Node: Between the parens34239
-Node: Activating Geiser35301
-Node: The source and the REPL37911
-Ref: repl-association38951
-Ref: repl-per-project42199
-Ref: switching-repl-buff43612
-Node: Documentation helpers45301
-Ref: doc-browser49569
-Node: To eval or not to eval52296
-Ref: To eval or not to eval-Footnote-157040
-Node: To err perchance to debug57293
-Node: Jumping around58797
-Node: Geiser writes for you60074
-Node: Cheat sheet62578
-Node: Scheme buffers62962
-Node: REPL67400
-Node: Documentation browser69987
-Node: No hacker is an island71055
-Node: Index74507
+Node: The quick and easy way8571
+Ref: The quick and easy way-Footnote-110049
+Node: From the source's mouth10204
+Node: Friends10989
+Ref: paredit11263
+Node: The REPL12400
+Ref: quick-start12519
+Node: Starting the REPL12910
+Node: First aids17289
+Node: Switching context19122
+Node: Completion and error handling21052
+Ref: completion-caveat22760
+Node: Autodoc and friends24674
+Ref: repl-mod26744
+Node: Seeing is believing27750
+Node: Customization and tips28762
+Ref: choosing-impl29491
+Ref: active-implementations29722
+Ref: impl-binary30104
+Node: Between the parens34515
+Node: Activating Geiser35577
+Node: The source and the REPL38187
+Ref: repl-association39227
+Ref: repl-per-project42475
+Ref: switching-repl-buff43888
+Node: Documentation helpers45577
+Ref: doc-browser49845
+Node: To eval or not to eval52572
+Ref: To eval or not to eval-Footnote-157316
+Node: To err perchance to debug57569
+Node: Jumping around59073
+Node: Geiser writes for you60350
+Node: Cheat sheet62854
+Node: Scheme buffers63238
+Node: REPL67676
+Node: Documentation browser70263
+Node: No hacker is an island71331
+Node: Index74783
 
 End Tag Table
 

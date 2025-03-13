@@ -1,6 +1,6 @@
-;;; geiser-edit.el -- scheme edit locations  -*- lexical-binding: t; -*-
+;;; geiser-edit.el --- Scheme edit locations  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009, 2010, 2012, 2013, 2019-2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2012, 2013, 2019-2024 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -36,8 +36,16 @@
  "How the new buffer is opened when invoking \\[geiser-edit-symbol-at-point]
 or following links in error buffers.")
 
+(defgroup geiser-edit nil
+  "Customizations for scheme buffers and information about them."
+  :group 'geiser)
+
 (geiser-custom--defface error-link
-  'link geiser-debug "links in error buffers")
+  'link geiser-edit "links in error buffers")
+
+(geiser-custom--defcustom geiser-insert-actual-lambda t
+  "Whether geiser-insert-lambda should insert \"λ\" or \"lambda\"."
+  :type 'boolean)
 
 
 ;;; Auxiliary functions:
@@ -148,15 +156,15 @@ or following links in error buffers.")
           (error "Couldn't find location for '%s'" symbol)))))
 
 (defsubst geiser-edit--try-edit (symbol ret &optional method no-error)
-  (geiser-edit--try-edit-location symbol
-                                  (geiser-eval--retort-result ret)
-                                  method
-                                  no-error))
+  (let ((res (geiser-eval--retort-result ret)))
+    (if (listp res)
+        (geiser-edit--try-edit-location symbol res method no-error)
+      (unless no-error (error "Couldn't find location for '%s'" symbol)))))
 
 
 ;;; Links
 
-(define-button-type 'geiser-edit--button
+(define-button-type 'geiser-edit
   'action 'geiser-edit--button-action
   'face 'geiser-font-lock-error-link
   'follow-link t)
@@ -168,7 +176,7 @@ or following links in error buffers.")
 
 (defun geiser-edit--make-link (beg end file line col &optional method)
   (make-button beg end
-               :type 'geiser-edit--button
+               :type 'geiser-edit
                'geiser-method method
                'geiser-location
                (geiser-edit--make-location 'error file line col)
@@ -202,7 +210,7 @@ or following links in error buffers.")
     (while (> n 0)
       (let ((b (ignore-errors (funcall nxt 1))))
         (unless b (setq n 0))
-        (when (and b (eq (button-type b) 'geiser-edit--button))
+        (when (and b (eq (button-type b) 'geiser-edit))
           (setq n (- n 1))
           (when (<= n 0)
             (setq found t)
@@ -292,19 +300,24 @@ With prefix, asks for the symbol to locate."
   "Opens a new window visiting the module at point."
   (interactive)
   (let ((marker (point-marker)))
-    (geiser-edit-module (or (geiser-completion--module-at-point)
-                            (geiser-completion--read-module))
-                        nil no-error)
-    (when marker (xref-push-marker-stack marker))
-    t))
+    (when (geiser-edit-module (or (geiser-completion--module-at-point)
+                                  (geiser-completion--read-module))
+                              nil no-error)
+      (when marker (xref-push-marker-stack marker))
+      t)))
 
 (defun geiser-insert-lambda (&optional full)
-  "Insert λ at point.  With prefix, inserts (λ ())."
+  "Insert λ or lambda at point.  With prefix, inserts (λ ()) or (lambda ()).
+
+See also `geiser-insert-actual-lambda'."
   (interactive "P")
-  (if (not full)
-      (insert (make-char 'greek-iso8859-7 107))
-    (insert "(" (make-char 'greek-iso8859-7 107) " ())")
-    (backward-char 2)))
+  (let ((sym (if geiser-insert-actual-lambda
+                 (make-char 'greek-iso8859-7 107)
+               "lambda")))
+    (if (not full)
+        (insert sym)
+      (insert "(" sym " ())")
+      (backward-char 2))))
 
 (defun geiser-squarify (n)
   "Toggle between () and [] for current form.

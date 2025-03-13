@@ -1,6 +1,6 @@
-;;; geiser-connection.el -- talking to a scheme process  -*- lexical-binding: t; -*-
+;;; geiser-connection.el --- Talking to a scheme process  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2011, 2013, 2021-2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2011, 2013, 2021-2022, 2025 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -202,7 +202,20 @@
          (debugging (geiser-con--has-entered-debugger con answer)))
     (condition-case err
         (let ((start (string-match "((\\(?:result)?\\|error\\) " answer)))
-          (or (and start (car (read-from-string answer start)))
+          (or (and start
+                   (progn
+                     (let ((extra-output (substring answer 0 start)))
+                       (unless (string-blank-p extra-output)
+                         (geiser-log--warn "Extra output (before): %s"
+                                           (string-trim extra-output))))
+                     (let* ((ret (read-from-string answer start))
+                            (extra-output (substring answer (cdr ret))))
+                       (unless (string-blank-p extra-output)
+                         ;; Usually, the extra output is just the return value
+                         ;; being echoed by the REPL, and not worth noting.
+                         (geiser-log--debug "Extra output (after): %s"
+                                            (string-trim extra-output)))
+                       (car ret))))
               `((error (key . retort-syntax))
                 (output . ,answer)
                 (debug . ,debugging))))

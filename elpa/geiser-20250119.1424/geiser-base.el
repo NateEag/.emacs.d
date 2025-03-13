@@ -1,14 +1,16 @@
-;;; geiser-base.el --- shared bits
+;;; geiser-base.el --- Shared bits  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009, 2010, 2012, 2013, 2015, 2016, 2019  Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009, 2010, 2012, 2013, 2015, 2016, 2019, 2024  Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
 ;; have received a copy of the license along with this program. If
 ;; not, see <http://www.xfree86.org/3.3.6/COPYRIGHT2.html#5>.
 
-;; Settings and vars shared by all geiser modules, including little
-;; utilities and emacsen compatibility bits.
+;;; Commentary:
+
+;; Settings and variables shared by all geiser modules, including
+;; little utilities and emacsen compatibility bits.
 
 
 ;;; Code:
@@ -16,15 +18,14 @@
 
 (require 'ring)
 
-(eval-after-load "ring"
-  '(when (not (fboundp 'ring-member))
-     (defun ring-member (ring item)
-       (catch 'found
-         (dotimes (ind (ring-length ring) nil)
-           (when (equal item (ring-ref ring ind))
-             (throw 'found ind)))))))
+(unless (fboundp 'ring-member)
+  (defun ring-member (ring item)
+    (catch 'found
+      (dotimes (ind (ring-length ring))
+        (when (equal item (ring-ref ring ind))
+          (throw 'found ind))))))
 
-(when (not (fboundp 'looking-at-p))
+(unless (fboundp 'looking-at-p)
   (defsubst looking-at-p (regexp)
     (with-no-warnings
       (let ((inhibit-changing-match-data t))
@@ -66,12 +67,11 @@
     (insert str)
     (put-text-property p (point) 'face face)))
 
-
 (defmacro geiser--save-msg (&rest body)
   (let ((msg (make-symbol "msg")))
     `(let ((,msg (current-message)))
        ,@body
-       (message ,msg))))
+       (message "%s" ,msg))))
 
 (put 'geiser--save-msg 'lisp-indent-function 0)
 

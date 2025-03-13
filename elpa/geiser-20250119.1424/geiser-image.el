@@ -1,4 +1,4 @@
-;;; geiser-image.el -- support for image display
+;;; geiser-image.el --- Support for image display  -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2012, 2015 Jose Antonio Ortega Ruiz
 
@@ -76,13 +76,13 @@ images in `geiser-image--cache-dir'."
   (let ((file (button-get button 'geiser-image-file)))
     (when (file-exists-p file) (geiser-image--display file))))
 
-(define-button-type 'geiser-image--button
+(define-button-type 'geiser-image
   'action 'geiser-image--button-action
   'follow-link t)
 
 (defun geiser-image--insert-button (file)
   (insert-text-button "[image]"
-                      :type 'geiser-image--button
+                      :type 'geiser-image
                       'face 'geiser-font-lock-image-button
                       'geiser-image-file file
                       'help-echo "Click to display image"))

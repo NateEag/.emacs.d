@@ -227,6 +227,14 @@ See also `geiser-repl-startup-hook'."
   "Whether `geiser-repl-autoeval-mode' gets enabled by default in REPL buffers."
   :type 'boolean)
 
+(geiser-custom--defcustom geiser-repl-superparen-mode-p nil
+  "Whether `geiser-repl-superparen-mode' gets enabled by default in REPL buffers."
+  :type 'boolean)
+
+(geiser-custom--defcustom geiser-repl-superparen-character ?\]
+  "The character that represents a closing super parentheses."
+  :type 'character)
+
 (geiser-custom--defface repl-input
   'comint-highlight-input geiser-repl "evaluated input highlighting")
 
@@ -513,7 +521,7 @@ will be set up using `geiser-connect-local' when a REPL is started.")
         (forward-line)
         (when (> (point) geiser-repl--last-output-start)
           (set-marker geiser-repl--last-output-start (point)))))
-    (> (- geiser-repl--last-output-end geiser-repl--last-output-start) 2)))
+    (>= (- geiser-repl--last-output-end geiser-repl--last-output-start) 2)))
 
 (defun geiser-repl--treat-output-region ()
   (with-silent-modifications
@@ -622,7 +630,8 @@ will be set up using `geiser-connect-local' when a REPL is started.")
     (let ((proc (make-network-process :name (buffer-name buff)
                                       :buffer buff
                                       :family 'local
-                                      :remote address)))
+                                      :remote address
+                                      :service nil)))
       ;; brittleness warning: this is stuff
       ;; make-comint-in-buffer sets up, via comint-exec, when
       ;; it creates its own process, something we're doing
@@ -794,17 +803,21 @@ If SAVE-HISTORY is non-nil, save CMD in the REPL history."
 
 ;;; geiser-repl-autoeval-mode minor mode:
 
-(defun geiser-repl--autoeval-paren-function ()
-  (let* ((data (show-paren--default))
-         (here (nth 0 data))
-         (there (nth 2 data))
-         (mismatch (nth 4 data)))
-    (if (and here
-             (eq 0 (geiser-repl--nesting-level))
-             (not mismatch)
-             (> here there))
-        (geiser-repl--send-input))
-    data))
+(defun geiser-repl--autoeval-paren-function (show-paren-enabled)
+  (lambda ()
+    (let* ((data (show-paren--default))
+           (here (nth 0 data))
+           (there (nth 2 data))
+           (mismatch (nth 4 data)))
+      (if (and (= (point) (point-max))
+               here
+               (eq 0 (geiser-repl--nesting-level))
+               (not mismatch)
+               (> here there))
+          (progn (geiser-repl--send-input)
+                 ;; Don't highlight if we're doing an autoeval.
+                 nil)
+        (and show-paren-enabled data)))))
 
 (defvar-local geiser-repl-autoeval-mode-string " E"
   "Modeline indicator for geiser-repl-autoeval-mode")
@@ -816,23 +829,64 @@ Non-null prefix argument turns on the mode.
 Null prefix argument turns off the mode.
 
 When Autoeval mode is enabled, balanced S-expressions are automatically
-evaluated without having to press ENTER.
-
-This mode may cause issues with structural editing modes such as paredit."
+evaluated without having to press ENTER."
   :init-value nil
   :lighter geiser-repl-autoeval-mode-string
   :group 'geiser-repl
 
-  (if (boundp 'show-paren-data-function)
-      (if geiser-repl-autoeval-mode
-          (progn (show-paren-local-mode 1)
-                 (setq-local show-paren-delay geiser-repl-autoeval-mode-delay)
-                 (setq-local show-paren-data-function
-                             'geiser-repl--autoeval-paren-function))
-        (setq-local show-paren-data-function 'show-paren--default)))
+  (if geiser-repl-autoeval-mode
+      (let ((show-paren-enabled show-paren-mode))
+        (progn (show-paren-local-mode 1)
+               (setq-local show-paren-delay geiser-repl-autoeval-mode-delay)
+               (setq-local show-paren-data-function
+                           (geiser-repl--autoeval-paren-function
+                            show-paren-enabled))))
+    (setq-local show-paren-data-function 'show-paren--default))
   (when (called-interactively-p nil)
     (message "Geiser Autoeval %s"
              (if geiser-repl-autoeval-mode "enabled" "disabled"))))
+
+
+;;; geiser-repl-superparen-mode minor mode:
+
+(defun geiser-repl--superparen-function ()
+  (when (char-equal (char-before) geiser-repl-superparen-character)
+    (delete-char -1)
+    (let ((level (geiser-repl--nesting-level)))
+      (if (memq nil (mapcar (lambda (idx)
+                              (= (char-after idx) ?\)))
+                            (number-sequence (point) (- (+ (point) level) 1))))
+          (insert-char ?\) level)
+        (forward-char level)))))
+
+(defvar-local geiser-repl-superparen-mode-string " S"
+  "Modeline indicator for geiser-repl-superparen-mode")
+
+(define-minor-mode geiser-repl-superparen-mode
+  "Toggle the Geiser REPL's Superparen mode.
+With no argument, this command toggles the mode.
+Non-null prefix argument turns on the mode.
+Null prefix argument turns off the mode.
+
+When Superparen mode is enabled, entering the
+`geiser-repl-superparen-char' character, which is ']' by default,
+will close all parentheses of the expression currently being
+typed.
+
+This mode may cause issues with structural editing modes such as
+paredit."
+  :init-value nil
+  :lighter geiser-repl-superparen-mode-string
+  :group 'geiser-repl
+
+  (if geiser-repl-superparen-mode
+      (add-hook 'post-self-insert-hook #'geiser-repl--superparen-function nil t)
+    (remove-hook 'post-self-insert-hook #'geiser-repl--superparen-function t))
+  (when (called-interactively-p nil)
+    (if geiser-repl-superparen-mode
+        (message "Geiser Superparen enabled, using the %c character."
+                 geiser-repl-superparen-character)
+      (message "Geiser Superparen disabled."))))
 
 
 ;;; geiser-repl mode:
@@ -889,7 +943,8 @@ This mode may cause issues with structural editing modes such as paredit."
         (compilation-forget-errors))
       (geiser-repl--prepare-send)
       (comint-send-input)
-      (when (string-match "^\\s-*$" intxt)
+      ;; match if `intxt' is lines of whitespace
+      (when (string-match "\\`\\(\\s-\\|\n\\)*\\'" intxt)
         (comint-send-string proc (geiser-eval--scheme-str '(:ge no-values)))
         (comint-send-string proc "\n")))))
 
@@ -985,6 +1040,8 @@ buffer."
       (mode "Autodoc mode" ("\C-c\C-da" "\C-c\C-d\C-a") geiser-autodoc-mode)
       (mode "Autoeval mode" ("\C-c\C-de" "\C-c\C-d\C-e")
             geiser-repl-autoeval-mode)
+      (mode "Superparen mode" ("\C-c\C-ds" "\C-c\C-d\C-s")
+            geiser-repl-superparen-mode)
       ("Symbol documentation" ("\C-c\C-dd" "\C-c\C-d\C-d")
        geiser-doc-symbol-at-point
        "Documentation for symbol at point" :enable (geiser--symbol-at-point))
@@ -1041,6 +1098,8 @@ buffer."
   (setq geiser-autodoc-mode-string "/E")
   (when geiser-repl-autoeval-mode-p
     (geiser-repl-autoeval-mode 1))
+  (when geiser-repl-superparen-mode-p
+    (geiser-repl-superparen-mode 1))
 
   ;; enabling compilation-shell-minor-mode without the annoying highlighter
   (compilation-setup t))

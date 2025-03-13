@@ -1,6 +1,6 @@
-;;; geiser-doc.el -- accessing scheme-provided documentation  -*- lexical-binding: t; -*-
+;;; geiser-doc.el --- Accessing scheme-provided documentation  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2016, 2021-2022 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2016, 2021-2022, 2024 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -149,14 +149,14 @@ value if the default action should be skipped.")
   (let ((link (button-get button 'geiser-link)))
     (when link (geiser-doc--follow-link link))))
 
-(define-button-type 'geiser-doc--button
+(define-button-type 'geiser-doc
   'action 'geiser-doc--button-action
   'follow-link t)
 
 (defun geiser-doc--make-module-button (beg end module impl)
   (let ((link (geiser-doc--make-link nil module impl))
         (help (format "Help for module %s" module)))
-    (make-text-button beg end :type 'geiser-doc--button
+    (make-text-button beg end :type 'geiser-doc
                       'face 'geiser-font-lock-doc-link
                       'geiser-link link
                       'help-echo help)))
@@ -171,12 +171,18 @@ value if the default action should be skipped.")
                        (if target (format "%s in " target) "")
                        (or module "<unknown>"))))
     (insert-text-button text
-                        :type 'geiser-doc--button
+                        :type 'geiser-doc
                         'face 'geiser-font-lock-doc-link
                         'geiser-link link
                         'help-echo help)))
 
-(defun geiser-doc-goto-source ()
+(define-button-type 'geiser-doc-source
+  'action 'geiser-doc-goto-source
+  'face 'geiser-font-lock-doc-button
+  'help-echo "Go to definition"
+  'follow-link t)
+
+(defun geiser-doc-goto-source (&rest _)
   "Go to the definition of this item."
   (interactive)
   (when-let (link geiser-doc--buffer-link)
@@ -185,7 +191,13 @@ value if the default action should be skipped.")
           (geiser-edit-symbol target nil (point-marker))
         (geiser-edit-module (geiser-doc--link-module link))))))
 
-(defun geiser-doc-goto-manual ()
+(define-button-type 'geiser-doc-manual
+  'action 'geiser-doc-goto-manual
+  'face 'geiser-font-lock-doc-button
+  'help-echo "Look up in Scheme manual"
+  'follow-link t)
+
+(defun geiser-doc-goto-manual (&rest _)
   "Go to the manual for this item."
   (interactive)
   (when-let (link geiser-doc--buffer-link)
@@ -194,29 +206,11 @@ value if the default action should be skipped.")
           (impl (geiser-doc--link-impl link)))
       (geiser-doc--external-help impl (or tm mod) mod))))
 
-(defun geiser-doc--xbutton-action (button)
-  (let ((k (button-get button 'x-kind)))
-    (cond ((eq 'source k) (geiser-doc-goto-source))
-          ((eq 'manual k) (geiser-doc-goto-manual)))))
-
-(define-button-type 'geiser-doc--xbutton
-  'action 'geiser-doc--xbutton-action
-  'face 'geiser-font-lock-doc-button
-  'follow-link t)
-
-(defun geiser-doc--insert-xbutton (&optional manual)
-  (let ((label (if manual "[manual]" "[source]"))
-        (help (if manual "Look up in Scheme manual" "Go to definition")))
-    (insert-text-button label
-                        :type 'geiser-doc--xbutton
-                        'help-echo help
-                        'x-kind (if manual 'manual 'source))))
-
-(defun geiser-doc--insert-xbuttons (impl)
+(defun geiser-doc--insert-doc-buttons (impl)
   (when (geiser-impl--method 'external-help impl)
-    (geiser-doc--insert-xbutton t)
+    (insert-text-button "[manual]" :type 'geiser-doc-manual)
     (insert " "))
-  (geiser-doc--insert-xbutton))
+  (insert-text-button "[source]" :type 'geiser-doc-source))
 
 (defun geiser-doc--insert-nav-button (next)
   (let* ((lnk (if next (geiser-doc--history-next-link)
@@ -269,7 +263,7 @@ value if the default action should be skipped.")
 
 (defun geiser-doc--insert-footer (impl)
   (newline 2)
-  (geiser-doc--insert-xbuttons impl)
+  (geiser-doc--insert-doc-buttons impl)
   (let* ((prev (and (geiser-doc--history-previous-p) 8))
          (nxt (and (geiser-doc--history-next-p) 10))
          (len (max 1 (- (window-width)

@@ -5,7 +5,6 @@
 ;; Author: Bjarte Johansen
 ;; Keywords: literate programming, reproducible research
 ;; Homepage: http://www.github.com/ljos/jq-mode
-;; Version: 0.1.0
 
 ;;; License:
 
@@ -112,7 +111,7 @@ called by `org-babel-execute-src-block'"
                                      (when compact "--compact-output")
                                      cmd-line
                                      vars
-                                     in-file))
+                                     (when in-file (shell-quote-argument (expand-file-name in-file)))))
                          " ")))
     (org-babel-reassemble-table
      (let ((results

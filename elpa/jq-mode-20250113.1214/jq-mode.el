@@ -5,7 +5,8 @@
 ;; Author: Bjarte Johansen <Bjarte dot Johansen at gmail dot com>
 ;; Homepage: https://github.com/ljos/jq-mode
 ;; Package-Requires: ((emacs "25.1"))
-;; Version: 0.4.1
+;; Package-Version: 20250113.1214
+;; Package-Revision: eeb86b4d5ad8
 
 ;; This file is not part of GNU Emacs.
 
@@ -60,10 +61,14 @@
       (insts (insts ";" inst)
              (insts "|" inst)
              (inst))
+      (keyval (id ":" id))
+      (keyvals (keyval "," keyval)
+               (keyval))
+      (dict ("{" keyvals "}"))
       (branches (insts "elif" insts)
                 (insts "else" inst)))
     '((assoc "end" "elif" "else" "then"))
-    '((assoc "|" ";" ":")))))
+    '((assoc "|" ";" ":" ",")))))
 
 (defun jq-smie-rules (kind token)
   (pcase (list kind token)
@@ -152,6 +157,15 @@
     ;; Comments
     (modify-syntax-entry ?# "<" syntax-table)
     (modify-syntax-entry ?\n ">" syntax-table)
+
+    ;; Parenthesis
+    (modify-syntax-entry ?\( "(" syntax-table)
+    (modify-syntax-entry ?\) ")" syntax-table)
+    (modify-syntax-entry ?\{ "(" syntax-table)
+    (modify-syntax-entry ?\} ")" syntax-table)
+    (modify-syntax-entry ?\[ "(" syntax-table)
+    (modify-syntax-entry ?\] ")" syntax-table)
+
     ;; Operators
     (modify-syntax-entry ?+ "." syntax-table)
     (modify-syntax-entry ?- "." syntax-table)
@@ -187,6 +201,11 @@
   (add-hook 'completion-at-point-functions #'jq-completion-at-point nil t)
   (smie-setup jq-smie-grammar #'jq-smie-rules))
 
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.jq\\'" . jq-mode))
+;;;###autoload
+(add-to-list 'interpreter-mode-alist '("jq" . jq-mode))
+
 ;;; jq-interactively
 (defgroup jq-interactive nil
   "Major mode for editing json with jq."
@@ -212,6 +231,11 @@
   :group 'jq-interactive
   :type 'function)
 
+(defcustom jq-interactive-delay 0.4
+  "The time to wait for minibuffer input before jq command is fired."
+  :group 'jq-interactive
+  :type 'number)
+
 (defvar jq-interactive-history nil)
 
 (defvar jq-interactive--last-minibuffer-contents "")
@@ -219,6 +243,7 @@
 (defvar jq-interactive--buffer nil)
 (defvar jq-interactive--overlay nil)
 (defvar jq-interactive--is-raw nil)
+(defvar jq-interactive--timer nil)
 
 (defun jq-interactive--run-command ()
   (with-temp-buffer
@@ -271,8 +296,12 @@
                   (and (string= "" contents)
                        (equal last-command 'previous-history-element))
                   (string= contents jq-interactive--last-minibuffer-contents))
+        (when jq-interactive--timer
+          (cancel-timer jq-interactive--timer)
+          (setq jq-interactive--timer nil))
         (setq jq-interactive--last-minibuffer-contents contents)
-        (jq-interactive--feedback)))))
+        (setq jq-interactive--timer
+              (run-at-time jq-interactive-delay nil #'jq-interactive--feedback))))))
 
 (defun jq-interactive-indent-line ()
   "Indents a jq expression in the jq-interactive mini-buffer."
@@ -320,7 +349,7 @@
          (deactivate-mark)
          (read-from-minibuffer
           jq-interactive-default-prompt
-          nil
+          "."
           jq-interactive-map
           nil
           'jq-interactive-history))

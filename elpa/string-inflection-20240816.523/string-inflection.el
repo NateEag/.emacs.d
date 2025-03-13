@@ -1,12 +1,11 @@
 ;;; string-inflection.el --- underscore -> UPCASE -> CamelCase -> lowerCamelCase conversion of names -*- lexical-binding: t -*-
 
-;; Copyright (C) 2004,2014,2016,2017,2018,2020,2021 Free Software Foundation, Inc.
+;; Copyright (C) 2004,2014,2016,2017,2018,2020,2021,2022,2023,2024 Free Software Foundation, Inc.
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20220910.1306
-;; Package-Commit: 50ad54970b3cc79b6b83979bde9889ad9a9e1a9c
-;; Version: 1.0.16
+;; Package-Version: 20240816.523
+;; Package-Revision: 4cc92e1ecd3d
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -89,8 +88,16 @@
 ;;             '(lambda ()
 ;;                (local-set-key (kbd "C-c C-u") 'string-inflection-java-style-cycle)))
 ;;
-;; You can also set `string-inflection-skip-backward-when-done' to `t' if
-;; you don't like `string-inflect' moving your point to the end of the word.
+;; You can configure where the cursor should end up after the inflection using the
+;; `string-inflection-final-position' option.
+;;
+;; When a region is active during the inflect operation there are two effects:
+;;
+;; * If the region marks a part of a symbol the operation is only performed on that
+;;   part.
+;; * If the region contains more than one symbols, the operation is performed on all
+;;   the symbols in the region.
+;; * The region is preserved after the operation.
 
 ;;; Code:
 
@@ -98,26 +105,13 @@
   "Change the casing of words."
   :group 'convenience)
 
-(defcustom string-inflection-skip-backward-when-done nil
-  "Controls the position of the cursor after an inflection.
-
-If nil remain at the end of the string after inflecting, else move backward to
-the beginning."
+(defcustom string-inflection-final-position 'remain
+  "Where to finish after the inflection.
+This can be `remain' – remain at the initial position but not beyond the end of the inflected string –,
+`beginning' – jump to the beginning of the inflection – or
+`end' – jump to the end of the inflection."
   :group 'string-inflection
-  :type 'boolean)
-
-(defconst string-inflection-word-chars "a-zA-Z0-9_-")
-
-(defcustom string-inflection-erase-chars-when-region "./"
-  "When selected in the region, this character is included in the transformation
-as part of the string.
-
-Exactly assume that the underscore exists.
-For example, when you select `Foo/Bar', it is considered that `Foo_Bar' is
-selected. If include `:', select `FOO::VERSION' to run
-`M-x\ string-inflection-underscore' to `foo_version'."
-  :group 'string-inflection
-  :type 'string)
+  :type '(choice (const remain) (const beginning) (const end)))
 
 ;; --------------------------------------------------------------------------------
 
@@ -125,8 +119,7 @@ selected. If include `:', select `FOO::VERSION' to run
 (defun string-inflection-ruby-style-cycle ()
   "foo_bar => FOO_BAR => FooBar => foo_bar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-ruby-style-cycle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-ruby-style-cycle-function))
 
 (fset 'string-inflection-cycle 'string-inflection-ruby-style-cycle)
 
@@ -134,130 +127,141 @@ selected. If include `:', select `FOO::VERSION' to run
 (defun string-inflection-elixir-style-cycle ()
   "foo_bar => FooBar => foo_bar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-elixir-style-cycle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-elixir-style-cycle-function))
 
 ;;;###autoload
 (defun string-inflection-python-style-cycle ()
   "foo_bar => FOO_BAR => FooBar => foo_bar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-python-style-cycle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-python-style-cycle-function))
 
 ;;;###autoload
 (defun string-inflection-java-style-cycle ()
   "fooBar => FOO_BAR => FooBar => fooBar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-java-style-cycle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-java-style-cycle-function))
 
 ;;;###autoload
 (defun string-inflection-all-cycle ()
   "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-all-cycle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-all-cycle-function))
 
 ;;;###autoload
 (defun string-inflection-toggle ()
   "toggle foo_bar <=> FooBar"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-toggle-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-toggle-function))
 
 ;;;###autoload
 (defun string-inflection-camelcase ()
   "FooBar format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-pascal-case-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-pascal-case-function))
 
 ;;;###autoload
 (defun string-inflection-lower-camelcase ()
   "fooBar format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-camelcase-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-camelcase-function))
 
 ;;;###autoload
 (defun string-inflection-underscore ()
   "foo_bar format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-underscore-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-underscore-function))
 
 ;;;###autoload
 (defun string-inflection-capital-underscore ()
   "Foo_Bar format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-capital-underscore-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-capital-underscore-function))
 
 ;;;###autoload
 (defun string-inflection-upcase ()
   "FOO_BAR format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-upcase-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-upcase-function))
 
 ;;;###autoload
 (defun string-inflection-kebab-case ()
   "foo-bar format"
   (interactive)
-  (string-inflection-insert
-   (string-inflection-kebab-case-function (string-inflection-get-current-word))))
+  (string-inflection--single-or-region #'string-inflection-kebab-case-function))
 
 (fset 'string-inflection-lisp 'string-inflection-kebab-case)
 
 ;; --------------------------------------------------------------------------------
 
-(defun string-inflection-insert (s)
-  (insert s)
-  (when string-inflection-skip-backward-when-done (skip-chars-backward string-inflection-word-chars)))
+(defun string-inflection--count-symbols-between-start-and-end (start end)
+  "Count the symbols between START and END."
+  (let ((symbol-num 0))
+    (goto-char start)
+    (save-excursion
+      (while (< (point) end)
+        (setq symbol-num (1+ symbol-num))
+        (forward-symbol 1)))
+    symbol-num))
 
-(defun string-inflection-non-word-chars ()
-  (concat "^" string-inflection-word-chars))
+(defun string-inflection--single-or-region (inflect-func)
+  "Perform INFLECT-FUNC depending on if in region or single."
+  (if (use-region-p)
+      (string-inflection--region inflect-func)
+    (string-inflection--single inflect-func)))
+
+(defun string-inflection--single (inflect-func)
+  "Perform INFLECT-FUNC for a  single occurrence."
+  (let ((orig-point (point)))
+    (insert (funcall inflect-func (string-inflection-get-current-word)))
+    (pcase string-inflection-final-position
+      ('remain (goto-char (min orig-point (cdr (bounds-of-thing-at-point 'symbol)))))
+      ('beginning (goto-char (car (bounds-of-thing-at-point 'symbol)))))))
+
+(defun string-inflection--region (inflect-func)
+  "Perform INFLECT-FUNC for all occurrences in the region."
+  (let ((orig-point (point))
+        (start (region-beginning))
+        (end (region-end)))
+    (dotimes (_ (string-inflection--count-symbols-between-start-and-end start end))
+      (let ((orig-length (length (symbol-name (symbol-at-point)))))
+        (insert (funcall inflect-func (string-inflection-get-current-word-limited-by start end)))
+        (setq end (+ end (- (length (symbol-name (symbol-at-point))) orig-length)))
+        (forward-symbol 1)
+        (if-let* ((bounds (bounds-of-thing-at-point 'symbol)))
+            (goto-char (car bounds)))))
+    (let ((new-region
+           (pcase string-inflection-final-position
+             ('remain (if (/= orig-point start) (cons start end) (cons end start)))
+             ('beginning (cons end start))
+             ('end (cons start end)))))
+      (set-mark (car new-region))
+      (goto-char (cdr new-region)))
+    (activate-mark)
+    (setq deactivate-mark nil)))
 
 (defun string-inflection-get-current-word ()
   "Gets the symbol near the cursor"
   (interactive)
-  (let* ((start (if (use-region-p)
-                    (region-end)
-                  (progn
-                    (skip-chars-forward string-inflection-word-chars)
+  (if-let* ((bounds (bounds-of-thing-at-point 'symbol))
+            (start (car bounds))
+            (end (cdr bounds))
+            (str (buffer-substring start end)))
+      (progn
+        (delete-region start end)
+        str)
+    ""))
 
-                    ;; https://github.com/akicho8/string-inflection/issues/30
-                    ;;
-                    ;;   objectName->method --> "objectName-" NG
-                    ;;                      --> "objectName"  OK
-                    (when (and (not (eobp)) (not (bobp)))
-                      (when (string= (buffer-substring (1- (point)) (1+ (point))) "->")
-                        (forward-char -1)))
-
-                    (point))))
-         (end (if (use-region-p)
-                  (region-beginning)
-                (progn
-                  (skip-chars-backward string-inflection-word-chars)
-                  (point))))
-         (str (buffer-substring start end)))
-    (prog1
-        (progn
-          (when (use-region-p)
-            ;; https://github.com/akicho8/string-inflection/issues/31
-            ;; Multiple lines will be one line because [:space:] are included to line breaks
-            (setq str (replace-regexp-in-string (concat "[" string-inflection-erase-chars-when-region "]+") "_" str)) ; 'aa::bb.cc dd/ee' => 'aa_bb_cc dd_ee'
-
-            ;; kebabing a region can insert an unexpected hyphen
-            ;; https://github.com/akicho8/string-inflection/issues/34
-            (with-syntax-table (copy-syntax-table)
-              (modify-syntax-entry ?_ "w")
-              (setq str (replace-regexp-in-string "_+\\b" "" str)) ; '__aA__ __aA__' => '__aA __aA'
-              (setq str (replace-regexp-in-string "\\b_+" "" str)) ; '__aA __aA'     => 'aA aA'
-              )
-            )
-          str)
-      (delete-region start end))))
+(defun string-inflection-get-current-word-limited-by (reg-start reg-end)
+  "Gets the symbol near the cursor limited by REG-START and REG-END."
+  (interactive)
+  (if-let* ((bounds (bounds-of-thing-at-point 'symbol))
+            (start (max (car bounds) reg-start))
+            (end (min (cdr bounds) reg-end))
+            (str (buffer-substring start end)))
+      (progn
+        (delete-region start end)
+        str)
+    ""))
 
 ;; --------------------------------------------------------------------------------
 
@@ -283,8 +287,8 @@ selected. If include `:', select `FOO::VERSION' to run
 (defun string-inflection-underscore-function (str)
   "FooBar => foo_bar"
   (let ((case-fold-search nil))
-    (setq str (replace-regexp-in-string "\\([a-z0-9]\\)\\([A-Z]\\)" "\\1_\\2" str))
-    (setq str (replace-regexp-in-string "\\([A-Z]+\\)\\([A-Z][a-z]\\)" "\\1_\\2" str))
+    (setq str (replace-regexp-in-string "\\([[:lower:][:digit:]]\\)\\([[:upper:]]\\)" "\\1_\\2" str))
+    (setq str (replace-regexp-in-string "\\([[:upper:]]+\\)\\([[:upper:]][[:lower:]]\\)" "\\1_\\2" str))
     (setq str (replace-regexp-in-string "-" "_" str)) ; FOO-BAR => FOO_BAR
     (setq str (replace-regexp-in-string "_+" "_" str))
     (downcase str)))
@@ -376,24 +380,24 @@ selected. If include `:', select `FOO::VERSION' to run
 (defun string-inflection-word-p (str)
   "if foo => t"
   (let ((case-fold-search nil))
-    (string-match "\\`[a-z0-9]+\\'" str)))
+    (string-match "\\`[[:lower:][:digit:]]+\\'" str)))
 
 (defun string-inflection-underscore-p (str)
   "if foo_bar => t"
   (let ((case-fold-search nil))
-    (string-match "\\`[a-z0-9_]+\\'" str)))
+    (string-match "\\`[[:lower:][:digit:]_]+\\'" str)))
 
 (defun string-inflection-upcase-p (str)
   "if FOO_BAR => t"
   (let ((case-fold-search nil))
-    (string-match "\\`[A-Z0-9_]+\\'" str)))
+    (string-match "\\`[[:upper:][:digit:]_]+\\'" str)))
 
 (defun string-inflection-pascal-case-p (str)
   "if FooBar => t"
   (let ((case-fold-search nil))
     (and
-     (string-match "[a-z]" str)
-     (string-match "\\`[A-Z][a-zA-Z0-9]+\\'" str))))
+     (string-match "[[:lower:]]" str)
+     (string-match "\\`[[:upper:]][[:lower:][:upper:][:digit:]]+\\'" str))))
 
 (fset 'string-inflection-upper-camelcase-p 'string-inflection-pascal-case-p)
 
@@ -401,8 +405,8 @@ selected. If include `:', select `FOO::VERSION' to run
   "if fooBar => t"
   (let ((case-fold-search nil))
     (and
-     (string-match "[A-Z]" str)
-     (string-match "\\`[a-z][a-zA-Z0-9]+\\'" str))))
+     (string-match "[[:upper:]]" str)
+     (string-match "\\`[[:lower:]][[:lower:][:upper:][:digit:]]+\\'" str))))
 
 (fset 'string-inflection-lower-camelcase-p 'string-inflection-camelcase-p)
 
@@ -414,9 +418,8 @@ selected. If include `:', select `FOO::VERSION' to run
   "if Foo_Bar => t"
   (let ((case-fold-search nil))
     (and
-     (string-match "[A-Z]" str)
      (string-match "_" str)
-     (string-match "\\`[A-Z][a-zA-Z0-9_]+\\'" str))))
+     (string-match "\\`[[:upper:]][[:lower:][:upper:][:digit:]_]+\\'" str))))
 
 (provide 'string-inflection)
 ;;; string-inflection.el ends here

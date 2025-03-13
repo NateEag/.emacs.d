@@ -1,6 +1,6 @@
 ;;; consult-register.el --- Consult commands for registers -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -136,10 +136,11 @@ SHOW-EMPTY must be t if the window should be shown for an empty register list."
                     mode-line-format nil
                     truncate-lines t
                     window-min-height 1
-                    window-resize-pixelwise t)
+                    window-resize-pixelwise t
+                    scroll-margin 0)
         (insert (mapconcat
                  (lambda (reg)
-                   (concat (funcall register-preview-function reg) separator))
+                   (concat (consult-register-format reg) separator))
                  regs nil))))))
 
 ;;;###autoload
@@ -153,8 +154,7 @@ If COMPLETION is non-nil format the register for completion."
                (`(,str . ,props) (consult-register--describe val)))
     (when (string-search "\n" str)
       (let* ((lines (seq-take (seq-remove #'string-blank-p (split-string str "\n")) 3))
-             (space (apply #'min most-positive-fixnum
-                           (mapcar (lambda (x) (string-match-p "[^ ]" x)) lines))))
+             (space (cl-loop for x in lines minimize (string-match-p "[^ ]" x))))
         (setq str (mapconcat (lambda (x) (substring x space))
                              lines (concat "\n" (make-string (1+ key-len) ?\s))))))
     (setq str (concat
@@ -171,11 +171,14 @@ If COMPLETION is non-nil format the register for completion."
 (defun consult-register--alist (&optional noerror filter)
   "Return register list, sorted and filtered with FILTER.
 Raise an error if the list is empty and NOERROR is nil."
-  (or (sort (seq-filter
-             ;; Sometimes, registers are made without a `cdr'.
-             ;; Such registers don't do anything, and can be ignored.
-             (lambda (x) (and (cdr x) (or (not filter) (funcall filter x))))
-             register-alist)
+  (or (sort (cl-loop for reg in register-alist
+                     ;; Sometimes, registers are made without a `cdr' or with
+                     ;; invalid markers.  Such registers don't do anything, and
+                     ;; can be ignored.
+                     if (and (cdr reg)
+                             (or (not (markerp (cdr reg))) (marker-buffer (cdr reg)))
+                             (or (not filter) (funcall filter reg)))
+                     collect reg)
             #'car-less-than-car)
       (and (not noerror) (user-error "All registers are empty"))))
 
@@ -282,7 +285,7 @@ This function is derived from `register-read-with-preview'."
             (setq action (logxor #x8000000 key)))
            ((characterp key)
             (setq reg key))
-           (t (error "Non-character input"))))
+           (t (user-error "Non-character input"))))
       (when (timerp timer)
         (cancel-timer timer))
       (let ((w (get-buffer-window buffer)))

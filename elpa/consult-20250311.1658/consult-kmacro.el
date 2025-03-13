@@ -1,6 +1,6 @@
 ;;; consult-kmacro.el --- Provides the command `consult-kmacro' -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2023 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -27,6 +27,7 @@
 
 (require 'consult)
 (require 'kmacro)
+(eval-when-compile (require 'subr-x))
 
 (defvar consult-kmacro--history nil)
 
@@ -38,7 +39,7 @@
     ;; Emacs 29 uses OClosures.  I like OClosures but it would have been better
     ;; if public APIs wouldn't change like that.
     (mapcar (lambda (x)
-              (if (eval-when-compile (> emacs-major-version 28))
+              (static-if (> emacs-major-version 28)
                   (list (kmacro--keys x) (kmacro--counter x) (kmacro--format x) x)
                 `(,@x ,x))))
     ;; Filter mouse clicks
@@ -80,13 +81,11 @@ Macros containing mouse clicks are omitted."
              (lambda (cand)
                (get-text-property 0 'consult-kmacro--annotation cand))
              :lookup #'consult--lookup-candidate)))
-    (unless km (user-error "No kmacro selected"))
-    (funcall
-     ;; Kmacros are lambdas (oclosures) on Emacs 29
-     (if (eval-when-compile (> emacs-major-version 28))
-         km
-       (kmacro-lambda-form km))
-     arg)))
+    ;; Kmacros are lambdas (oclosures) on Emacs 29
+    (funcall (static-if (> emacs-major-version 28)
+                 km
+               (kmacro-lambda-form km))
+             arg)))
 
 (provide 'consult-kmacro)
 ;;; consult-kmacro.el ends here

@@ -2,7 +2,8 @@
 
 ;; Copyright (C) 2013-2022 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Version: 0.9.0
+;; Package-Version: 20250214.1240
+;; Package-Revision: 8d0f98cf36f6
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, aws, azure, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -35,6 +36,14 @@
 
 ;;; Change Log:
 
+;; 2024-06-29 - v0.9.2
+;; * Add git-link-add-to-kill-ring to not add to kill ring (thanks Michael Hauser-Raspe)
+;; * Add prefix arg to open in browser when calling git-link-homepage (thanks Sibi Prabakaran)
+;;
+;; 2024-03-03 - v0.9.1
+;; * Add support for remote host resolution via ssh config (thanks Sibi Prabakaran)
+;; * Regexp escape parts when extracting host from scp-like URLs (thanks Sibi Prabakaran)
+;;
 ;; 2023-02-15 - v0.9.0
 ;; * Add support for GoogleSource (thanks Peter Becich)
 ;; * Add plain=1 to force showing a non rendered GitHub links (thanks Erick Navarro)
@@ -199,6 +208,11 @@ function set to that function's symbol."
   :type '(choice boolean function)
   :group 'git-link)
 
+(defcustom git-link-add-to-kill-ring t
+  "if t also add the link to the kill-ring"
+  :type 'boolean
+  :group 'git-link)
+
 (defcustom git-link-use-commit nil
   "If non-nil use the latest commit's hash in the link instead of the branch name."
   :type 'boolean
@@ -211,6 +225,11 @@ more than 1 line.
 
 Note that `git-link' can exclude line numbers on a per invocation basis.
 See its docs."
+  :type 'boolean
+  :group 'git-link)
+
+(defcustom git-link-consider-ssh-config nil
+  "Consider ssh configuration file for resolving the remote's hostname."
   :type 'boolean
   :group 'git-link)
 
@@ -284,6 +303,31 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 Github, Gitlab, etc show a rendered version by default, for these extensions
 we can prevent that behaviour."
   :type 'list
+  :group 'git-link)
+
+;; https://support.atlassian.com/bitbucket-cloud/docs/readme-content/#Extensions-and-Languages
+(defcustom git-link-extensions-rendered-via-bitbucket-annotate '("org" "md" "mkd" "mkdn" "mdown"
+                                                                 "markdown" "text" "rst" "textile"
+                                                                 "asciidoc")
+  "List of extensions that should be rendered via annotate else
+they will actually be rendered. We can prevent that behaviour."
+  :type 'list
+  :group 'git-link)
+
+(defcustom git-link-web-host-alist nil
+  "Mapping from Git host names to web host names.
+
+Elements have the form (GIT-HOST-REGEXP . WEB-HOST), where
+GIT-HOST-REGEXP is a regexp matching the host name used by Git
+and WEB-HOST is the name of the host serving the corresponding
+web interface.
+
+This can be used when custom deployments serve SSH access and the
+web interface under different host names. For example, if Git
+uses \"ssh.gitlab.company.com\" but the web interface is at
+\"gitlab.company.com\", add
+`(\"ssh\\\\.gitlab\\\\.company\\\\.com\" . \"gitlab.company.com\")'."
+  :type '(alist :key-type string :value-type string)
   :group 'git-link)
 
 (defun git-link--exec(&rest args)
@@ -431,9 +475,15 @@ return (FILENAME . REVISION) otherwise nil."
       (when (string-match ":" host)
         (let ((parts (split-string host ":" t))
               (case-fold-search t))
-          (string-match (concat (car parts) ":\\(" (cadr parts) "\\)/") url)
+          (string-match (concat (regexp-quote (car parts)) ":\\(" (cadr parts) "\\)/") url)
           (setq host (car parts)
                 path (concat (match-string 1 url) "/" path))))
+
+
+      (when git-link-consider-ssh-config
+	(let* ((ssh-resolved-host (git-link--ssh-resolve-hostname host)))
+	  (when ssh-resolved-host
+	    (setq host ssh-resolved-host))))
 
       ;; Fix-up Azure SSH URLs
       (when (string= "ssh.dev.azure.com" host)
@@ -470,6 +520,15 @@ return (FILENAME . REVISION) otherwise nil."
                              (substring path 9)))))
 
       (list host path))))
+
+(defun git-link--ssh-resolve-hostname (hostname)
+  "Resolve HOSTNAME using ssh client."
+  (let ((output (shell-command-to-string (format "ssh -G %s" hostname)))
+	(host nil))
+    (dolist (line (split-string output "\n"))
+      (when (string-match "^hostname \\(.*\\)" line)
+	(setq host (match-string 1 line))))
+    host))
 
 (defun git-link--using-git-timemachine ()
   (and (boundp 'git-timemachine-revision)
@@ -517,14 +576,18 @@ return (FILENAME . REVISION) otherwise nil."
         (list line-start line-end)))))
 
 (defun git-link--new (link)
-  (kill-new link)
+  (if git-link-add-to-kill-ring
+      (kill-new link))
+
   ;; prevent URL escapes from being interpreted as format strings
   (message (replace-regexp-in-string "%" "%%" link t t))
   (setq deactivate-mark t)
   (when git-link-open-in-browser
     (if (fboundp git-link-open-in-browser)
         (funcall git-link-open-in-browser link)
-      (browse-url link))))
+      (browse-url link)))
+  link
+  )
 
 (defun git-link-codeberg (hostname dirname filename branch commit start end)
     (format "https://%s/%s/src/%s/%s"
@@ -562,7 +625,7 @@ return (FILENAME . REVISION) otherwise nil."
                                 (format "L%s-L%s" start end)
                               (format "L%s" start)))))))
 
-(defun git-link-googlesource (hostname dirname filename branch commit start end)
+(defun git-link-googlesource (hostname dirname filename branch commit start _end)
   (format "https://%s/%s/+/%s/%s"
 	  hostname
 	  dirname
@@ -641,9 +704,10 @@ return (FILENAME . REVISION) otherwise nil."
 
 (defun git-link-bitbucket (hostname dirname filename _branch commit start end)
   ;; ?at=branch-name
-  (format "https://%s/%s/src/%s/%s"
+  (format "https://%s/%s/%s/%s/%s"
           hostname
           dirname
+          (git-link--should-render-via-bitbucket-annotate filename)
           commit
           (if (string= "" (file-name-nondirectory filename))
               filename
@@ -748,6 +812,9 @@ return (FILENAME . REVISION) otherwise nil."
 (define-obsolete-function-alias
   'git-link-homepage-svannah 'git-link-homepage-savannah "cf947f9")
 
+(defalias 'git-link-gitea 'git-link-codeberg)
+(defalias 'git-link-commit-gitea 'git-link-commit-codeberg)
+
 (defun git-link--select-remote ()
   (if (equal '(4) current-prefix-arg)
       (git-link--read-remote)
@@ -759,6 +826,15 @@ to the list of extensions which generated link should be
 shown as a plain file"
   (let ((extension (or (file-name-extension filename) "")))
     (member (downcase extension) git-link-extensions-rendered-plain)))
+
+(defun git-link--should-render-via-bitbucket-annotate (filename)
+  "Check if the extension of the given filename belongs
+to the list of extensions which generated link should be
+shown via annotate in bitbucket."
+  (let ((extension (or (file-name-extension filename) "")))
+    (if (member (downcase extension) git-link-extensions-rendered-via-bitbucket-annotate)
+        "annotate"
+      "src")))
 
 ;;;###autoload
 (defun git-link (remote start end)
@@ -786,22 +862,26 @@ With a double prefix argument invert the value of
            (list remote nil nil)
          (list remote (car region) (cadr region))))))
 
-  (let (filename branch commit handler remote-info (remote-url (git-link--remote-url remote)))
+  (let ((remote-url (git-link--remote-url remote))
+        filename branch commit handler remote-info git-host web-host)
     (if (null remote-url)
         (message "Remote `%s' not found" remote)
 
       (setq remote-info (git-link--parse-remote remote-url)
+            git-host    (car remote-info)
             filename    (git-link--relative-filename)
             branch      (git-link--branch)
             commit      (git-link--commit)
-            handler     (git-link--handler git-link-remote-alist (car remote-info)))
+            handler     (git-link--handler git-link-remote-alist git-host)
+            web-host    (or (assoc-default git-host git-link-web-host-alist #'string-match-p)
+                            git-host))
 
       (cond ((null filename)
              (message "Can't figure out what to link to"))
-            ((null (car remote-info))
+            ((null git-host)
              (message "Remote `%s' contains an unsupported URL" remote))
             ((not (functionp handler))
-             (message "No handler found for %s" (car remote-info)))
+             (message "No handler found for %s" git-host))
             ;; TODO: null ret val
             (t
              (let ((vc-revison (git-link--parse-vc-revision filename)))
@@ -811,7 +891,7 @@ With a double prefix argument invert the value of
 
                (git-link--new
                 (funcall handler
-                         (car remote-info)
+                         web-host
                          (cadr remote-info)
                          (url-hexify-string filename (url--allowed-chars (cons ?/ url-unreserved-chars)))
                          (if (or (git-link--using-git-timemachine)
@@ -821,7 +901,9 @@ With a double prefix argument invert the value of
                                      (not git-link-use-commit)
                                    git-link-use-commit))
                              nil
-                           (url-hexify-string branch))
+                           (if branch
+                               (url-hexify-string branch)
+                             nil))
                          commit
                          start
                          end))))))))
@@ -860,14 +942,20 @@ Defaults to \"origin\"."
 ;;;###autoload
 (defun git-link-homepage (remote)
   "Create a URL representing the homepage of the current
-buffer's GitHub/Bitbucket/GitLab/... repository. The
-URL will be added to the kill ring.
+buffer's GitHub/Bitbucket/GitLab/... repository.  The URL will be
+added to the kill ring.  If `git-link-open-in-browser' is non-nil
+or if you pass the double prefix (Ctrl-u Ctrl-u), then also call
+`browse-url'.
 
 With a prefix argument prompt for the remote's name.
 Defaults to \"origin\"."
 
   (interactive (list (git-link--select-remote)))
-  (let* (handler remote-info (remote-url (git-link--remote-url remote)))
+
+  (let* (handler remote-info
+		 (remote-url (git-link--remote-url remote))
+		 (git-link-open-in-browser (or git-link-open-in-browser (equal (list 16) current-prefix-arg))))
+
     (if (null remote-url)
         (message "Remote `%s' not found" remote)
 

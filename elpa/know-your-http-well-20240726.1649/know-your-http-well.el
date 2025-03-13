@@ -1,4 +1,7 @@
 ;;; know-your-http-well.el --- Look up the meaning of HTTP headers, methods, relations, status codes
+;; Package-Version: 20240726.1649
+;; Package-Revision: 2ff1548a6d59
+
 ;;; Commentary:
 ;;; Code:
 

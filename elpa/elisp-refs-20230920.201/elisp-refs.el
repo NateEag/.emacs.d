@@ -3,9 +3,8 @@
 ;; Copyright (C) 2016-2020  Wilfred Hughes <me@wilfred.me.uk>
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
-;; Version: 1.6
-;; Package-Version: 20230419.405
-;; Package-Commit: bf3cca8f74065b1b31036f461e3a093b162311bd
+;; Package-Version: 20230920.201
+;; Package-Revision: 541a064c3ce2
 ;; Keywords: lisp
 ;; Package-Requires: ((dash "2.12.0") (s "1.11.0"))
 
@@ -400,6 +399,7 @@ visiting the same file."
         (file-name-handler-alist
          '(("\\(?:\\.dz\\|\\.txz\\|\\.xz\\|\\.lzma\\|\\.lz\\|\\.g?z\\|\\.\\(?:tgz\\|svgz\\|sifz\\)\\|\\.tbz2?\\|\\.bz2\\|\\.Z\\)\\(?:~\\|\\.~[-[:alnum:]:#@^._]+\\(?:~[[:digit:]]+\\)?~\\)?\\'" .
             jka-compr-handler)
+           ("\\(?:^/\\)\\(\\(?:\\(?:\\(-\\|[[:alnum:]]\\{2,\\}\\)\\(?::\\)\\(?:\\([^/:|[:blank:]]+\\)\\(?:@\\)\\)?\\(\\(?:[%._[:alnum:]-]+\\|\\(?:\\[\\)\\(?:\\(?:[[:alnum:]]*:\\)+[.[:alnum:]]*\\)?\\(?:]\\)\\)\\(?:\\(?:#\\)\\(?:[[:digit:]]+\\)\\)?\\)?\\)\\(?:|\\)\\)+\\)?\\(?:\\(-\\|[[:alnum:]]\\{2,\\}\\)\\(?::\\)\\(?:\\([^/:|[:blank:]]+\\)\\(?:@\\)\\)?\\(\\(?:[%._[:alnum:]-]+\\|\\(?:\\[\\)\\(?:\\(?:[[:alnum:]]*:\\)+[.[:alnum:]]*\\)?\\(?:]\\)\\)\\(?:\\(?:#\\)\\(?:[[:digit:]]+\\)\\)?\\)?\\)\\(?::\\)\\([^\n]*\\'\\)" . tramp-file-name-handler)
            ("\\`/:" . file-name-non-special))))
     (with-current-buffer fresh-buffer
       (setq-local elisp-refs--path path)
@@ -815,7 +815,6 @@ search."
     (define-key map (kbd "<backtab>") #'elisp-refs-prev-match)
     (define-key map (kbd "n") #'elisp-refs-next-match)
     (define-key map (kbd "p") #'elisp-refs-prev-match)
-    (define-key map (kbd "q") #'kill-this-buffer)
     (define-key map (kbd "RET") #'elisp-refs-visit-match)
     map)
   "Keymap for `elisp-refs-mode'.")

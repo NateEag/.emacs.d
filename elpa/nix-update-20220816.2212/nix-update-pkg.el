@@ -1,2 +1,0 @@
-;;; Generated package description from nix-update.el  -*- no-byte-compile: t -*-
-(define-package "nix-update" "20220816.2212" "Update \"fetch\" blocks in .nix expressions" '((emacs "25")) :commit "aab70a38165575a9cb41726f1cc67df60fbf2832" :authors '(("John Wiegley" . "johnw@newartisans.com")) :maintainers '(("John Wiegley" . "johnw@newartisans.com")) :maintainer '("John Wiegley" . "johnw@newartisans.com") :keywords '("nix") :url "https://github.com/jwiegley/nix-update-el")

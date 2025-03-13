@@ -5,9 +5,8 @@
 ;; Author: John Wiegley <johnw@newartisans.com>
 ;; Maintainer: John Wiegley <johnw@newartisans.com>
 ;; Created: 1 Feb 2018
-;; Version: 1.0
-;; Package-Version: 20220816.2212
-;; Package-Commit: aab70a38165575a9cb41726f1cc67df60fbf2832
+;; Package-Version: 20241123.2159
+;; Package-Revision: 77022ccd918d
 ;; Package-Requires: ((emacs "25"))
 ;; Keywords: nix
 ;; URL: https://github.com/jwiegley/nix-update-el
@@ -61,39 +60,39 @@
         (save-restriction
           (narrow-to-region begin (point))
           (cl-flet ((get-field
-                     (field)
-                     (goto-char (point-min))
-                     (let ((field-re (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;"))
-                           (res))
-                       (cond
-                        ((re-search-forward field-re nil t)
-                         (match-string 1))
-                        ((and (re-search-forward
-                               (concat "inherit\\s-+.*" field ".*;")
-                               nil
-                               t)
-                              (save-restriction
-                                (widen)
-                                (backward-up-list) (backward-up-list)
-                                (prog1
-                                    (re-search-forward field-re nil t)
-                                  (setq res (match-string 1)))))
-                         res))))
+                      (field)
+                      (goto-char (point-min))
+                      (let ((field-re (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;"))
+                            (res))
+                        (cond
+                         ((re-search-forward field-re nil t)
+                          (match-string 1))
+                         ((and (re-search-forward
+                                (concat "inherit\\s-+.*" field ".*;")
+                                nil
+                                t)
+                               (save-restriction
+                                 (widen)
+                                 (backward-up-list) (backward-up-list)
+                                 (prog1
+                                     (re-search-forward field-re nil t)
+                                   (setq res (match-string 1)))))
+                          res))))
                     (set-field
-                     (field value)
-                     (goto-char (point-min))
-                     (if (re-search-forward
-                          (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;")
-                          nil t)
-                         (replace-match value nil t nil 1)
-                       (goto-char (point-max))
-                       (search-backward ";")
-                       (goto-char (line-beginning-position))
-                       (let ((leader "    "))
-                         (when (looking-at "^\\(\\s-+\\)")
-                           (setq leader (match-string 1)))
-                         (goto-char (line-end-position))
-                         (insert ?\n leader field " = \"" value "\";")))))
+                      (field value)
+                      (goto-char (point-min))
+                      (if (re-search-forward
+                           (concat field "\\s-+=\\s-+\"?\\(.+?\\)\"?\\s-*;")
+                           nil t)
+                          (replace-match value nil t nil 1)
+                        (goto-char (point-max))
+                        (search-backward ";")
+                        (goto-char (line-beginning-position))
+                        (let ((leader "    "))
+                          (when (looking-at "^\\(\\s-+\\)")
+                            (setq leader (match-string 1)))
+                          (goto-char (line-end-position))
+                          (insert ?\n leader field " = \"" value "\";")))))
             (let ((data
                    (pcase type
                      (`"fetchFromGitHub"

@@ -3,11 +3,12 @@
 ;; Copyright (c) 2018-present Julian Scheid
 
 ;; Author: Julian Scheid <julians37@gmail.com>
-;; Version: 1.3.0
+;; Package-Version: 20240902.1516
+;; Package-Revision: 9e202f129835
 ;; Created: 7 Nov 2018
 ;; Keywords: convenience, languages, files
 ;; Homepage: https://github.com/jscheid/prettier.el
-;; Package-Requires: ((emacs "26.1") (iter2 "0.9") (nvm "0.2") (editorconfig "0.8"))
+;; Package-Requires: ((emacs "26.1") (iter2 "0.9") (nvm "0.2") (editorconfig "0.9"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -1179,12 +1180,19 @@ post-formatting as possible."
           t))
        (prettier--backup-buffer-local-values
         (lambda ()
-          (editorconfig-set-indentation
-           (if (eq (plist-get options :useTabs) t) "tab" "space")
-           (number-to-string (plist-get options :tabWidth))
-           nil)
-          (editorconfig-set-line-length
-           (number-to-string (plist-get options :printWidth)))
+          (let ((props (make-hash-table)))
+            (puthash 'indent_style
+                     (if (eq (plist-get options :useTabs) t)
+                         "tab"
+                       "space")
+                     props)
+            (puthash 'indent_size
+                     (number-to-string (plist-get options :tabWidth))
+                     props)
+            (puthash 'max_line_length
+                     (number-to-string (plist-get options :printWidth))
+                     props)
+            (editorconfig-set-local-variables props))
 
           (mapc (lambda (setting)
                   (let* ((vars (nth 0 setting))

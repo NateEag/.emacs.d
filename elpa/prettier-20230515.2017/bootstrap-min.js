@@ -1,1 +1,0 @@
-6>Number(process.version.split(/[v.]/)[1])&&process.exit(3);for(var a=require,b=a("zlib").gunzipSync,c=a("vm"),d=a("fs"),e=c.Script,f=Buffer,g=f.from,h=Number(process.argv[1]),k=Buffer.alloc(h),l=0;l<h;){var m=d.readSync(0,k,l,h-l,null);if(0>=m)throw Error("EOF");l+=m}var n=new e(b(g.call(f,k.toString("ascii"),"base64")).toString("utf-8"));n.runInThisContext()(n);

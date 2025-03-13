@@ -6,9 +6,8 @@
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; Maintainer: Steve Purcell <steve@sanityinc.com>
 ;; URL: https://github.com/purcell/emacs-hcl-mode
-;; Package-Version: 20230302.1029
-;; Package-Commit: 35784854efd29fa8c9fe827654d747a2ace5cb19
-;; Version: 0.03
+;; Package-Version: 20240220.1534
+;; Package-Revision: b2a03a446c1f
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -104,6 +103,14 @@
                    (forward-line -1))))))
       (current-indentation))))
 
+(defun hcl-calculate-indentation ()
+  (let ((block-indentation (hcl--block-indentation)))
+    (if block-indentation
+        (if (looking-at "[]}]")
+            block-indentation
+          (+ block-indentation hcl-indent-level))
+      (hcl--previous-indentation))))
+
 (defun hcl-indent-line ()
   "Indent current line as Hcl configuration."
   (interactive)
@@ -112,15 +119,9 @@
     (back-to-indentation)
     (if (hcl--in-string-or-comment-p)
         (goto-char curpoint)
-      (let ((block-indentation (hcl--block-indentation)))
-        (delete-region (line-beginning-position) (point))
-        (if block-indentation
-            (if (looking-at "[]}]")
-                (indent-to block-indentation)
-              (indent-to (+ block-indentation hcl-indent-level)))
-          (indent-to (hcl--previous-indentation)))
-        (when (> (- (point-max) pos) (point))
-          (goto-char (- (point-max) pos)))))))
+      (indent-line-to (hcl-calculate-indentation))
+      (when (> (- (point-max) pos) (point))
+        (goto-char (- (point-max) pos))))))
 
 (defun hcl-beginning-of-defun (&optional count)
   (interactive "p")

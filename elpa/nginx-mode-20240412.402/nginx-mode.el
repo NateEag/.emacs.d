@@ -5,8 +5,8 @@
 ;; Author: Andrew J Cosgriff <andrew@cosgriff.name>
 ;; Maintainer: Andrew J Cosgriff <andrew@cosgriff.name>
 ;; Created: 15 Oct 2010
-;; Version: 1.1.9
-;; Package-Version: 20170612.437
+;; Package-Version: 20240412.402
+;; Package-Revision: c4ac5de975d6
 ;; Keywords: languages, nginx
 
 ;; available from http://github.com/ajc/nginx-mode
@@ -34,6 +34,10 @@
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
 ;;   (require 'nginx-mode)
+;;
+;; Now that nginx-mode is available via NonGNU ELPA, you could also:
+;; (use-package nginx-mode
+;;  :commands nginx-mode)
 
 ;;; Code:
 
@@ -77,24 +81,8 @@
   "If point is in a block, return the indentation of the first line of that
 block (the line containing the opening brace).  Used to set the indentation
 of the closing brace of a block."
-  (save-excursion
-    (save-match-data
-      (let ((opoint (point))
-            (apoint (search-backward "{" nil t)))
-        (when apoint
-          ;; This is a bit of a hack and doesn't allow for strings.  We really
-          ;; want to parse by sexps at some point.
-          (let ((close-braces (count-matches "}" apoint opoint))
-                (open-braces 0))
-            (while (and apoint (> close-braces open-braces))
-              (setq apoint (search-backward "{" nil t))
-              (when apoint
-                (setq close-braces (count-matches "}" apoint opoint))
-                (setq open-braces (1+ open-braces)))))
-          (if apoint
-              (current-indentation)
-            nil))))))
-
+  (* (syntax-ppss-depth (syntax-ppss))
+     nginx-indent-level))
 
 (defun nginx-comment-line-p ()
   "Return non-nil iff this line is a comment."
@@ -113,11 +101,11 @@ of the closing brace of a block."
           (block-indent (nginx-block-indent))
           cur-indent)
       (cond
-       ((and (looking-at "^\\s-*}\\s-*$") block-indent)
+       ((and (looking-at "^\\s-*}") block-indent)
         ;; This line contains a closing brace and we're at the inner
         ;; block, so we should indent it matching the indentation of
         ;; the opening brace of the block.
-        (setq cur-indent block-indent))
+        (setq cur-indent (- block-indent nginx-indent-level)))
        (t
         ;; Otherwise, we did not start on a block-ending-only line.
         (save-excursion

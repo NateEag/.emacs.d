@@ -6,7 +6,8 @@
 ;; Keywords: convenience, tools
 ;; Homepage: https://github.com/purcell/emacs-reformatter
 ;; Package-Requires: ((emacs "24.3"))
-;; Package-Version: 0.7
+;; Package-Version: 20241204.1051
+;; Package-Revision: f2cb59466b1c
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -83,12 +84,12 @@ otherwise as it cannot create intermediate directories."
   (make-temp-file
    (replace-regexp-in-string "/" "_" (symbol-name sym))))
 
-(defun reformatter--do-region (name beg end program args stdin stdout input-file exit-code-success-p display-errors)
+(defun reformatter--do-region (name beg end program args stdin stdout input-file exit-code-success-p display-errors &optional working-directory)
   "Do the work of reformatter called NAME.
-Reformats the current buffer's region from BEG to END using
-PROGRAM and ARGS.  For args STDIN, STDOUT, INPUT-FILE,
-EXIT-CODE-SUCCESS-P and DISPLAY-ERRORS see the documentation of
-the `reformatter-define' macro."
+Reformats the current buffer's region from BEG to END using PROGRAM and
+ARGS. When DISPLAY-ERRORS is non-nil, shows a buffer if the formatting
+fails. For args STDIN, STDOUT, INPUT-FILE, EXIT-CODE-SUCCESS-P and
+WORKING-DIRECTORY see the documentation of the `reformatter-define' macro."
   (cl-assert input-file)
   (cl-assert (functionp exit-code-success-p))
   (when (and input-file
@@ -103,7 +104,8 @@ the `reformatter-define' macro."
          ;; some hand-rolled reformatter functions that this
          ;; library was written to replace.
          (coding-system-for-read 'utf-8)
-         (coding-system-for-write 'utf-8))
+         (coding-system-for-write 'utf-8)
+         (default-directory (or working-directory default-directory)))
     (unwind-protect
         (progn
           (write-region beg end input-file nil :quiet)
@@ -142,7 +144,7 @@ the `reformatter-define' macro."
       (delete-file stdout-file))))
 
 ;;;###autoload
-(cl-defmacro reformatter-define (name &key program args (mode t) (stdin t) (stdout t) input-file lighter keymap group (exit-code-success-p 'zerop))
+(cl-defmacro reformatter-define (name &key program args (mode t) (stdin t) (stdout t) input-file lighter keymap group (exit-code-success-p 'zerop) working-directory interactive-modes)
   "Define a reformatter command with NAME.
 
 When called, the reformatter will use PROGRAM and any ARGS to
@@ -199,8 +201,9 @@ INPUT-FILE
   It must not produce the same path as the current buffer's file
   if that is set: you shouldn't be operating directly on the
   buffer's backing file.  The temporary input file will be
-  deleted automatically.  You might find the function
-  `reformatter-temp-file-in-current-directory' helpful.
+  deleted automatically.  You might find the functions
+  `reformatter-temp-file-in-current-directory' and
+  `reformatter-temp-file' helpful.
 
 MODE
 
@@ -233,7 +236,22 @@ EXIT-CODE-SUCCESS-P
   which accepts an integer process exit code, and returns non-nil
   if that exit code is considered successful.  This could be a
   lambda, quoted symbol or sharp-quoted symbol.  If not supplied,
-  the code is considered successful if it is `zerop'."
+  the code is considered successful if it is `zerop'.
+
+WORKING-DIRECTORY
+
+  Directory where your reformatter program is started. If provided, this
+  should be a form that evaluates to a string at runtime. Default is the
+  value of `default-directory' in the buffer.
+
+INTERACTIVE-MODES
+
+  If provided, this is a list of mode names (as unquoted
+  symbols).  The created commands for formatting regions and
+  buffers are then tagged for interactive use in these modes,
+  making them compatible with some built-in predicate functions
+  for `read-extended-command-predicate', like
+  `command-completion-default-include-p'."
   (declare (indent defun))
   (cl-assert (symbolp name))
   (cl-assert (functionp exit-code-success-p))
@@ -274,7 +292,7 @@ might use:
          "Reformats the region from BEG to END.
 When called interactively, or with prefix argument
 DISPLAY-ERRORS, shows a buffer if the formatting fails."
-         (interactive "rp")
+         (interactive "rp" ,@interactive-modes)
          (let ((input-file ,(if input-file
                                 input-file
                               `(reformatter--make-temp-file ',name))))
@@ -284,7 +302,7 @@ DISPLAY-ERRORS, shows a buffer if the formatting fails."
                  (reformatter--do-region
                   ',name beg end
                   ,program ,args ,stdin ,stdout input-file
-                  #',exit-code-success-p display-errors))
+                  #',exit-code-success-p display-errors ,working-directory))
              (when (file-exists-p input-file)
                (delete-file input-file)))))
 
@@ -292,7 +310,7 @@ DISPLAY-ERRORS, shows a buffer if the formatting fails."
          "Reformats the current buffer.
 When called interactively, or with prefix argument
 DISPLAY-ERRORS, shows a buffer if the formatting fails."
-         (interactive "p")
+         (interactive "p" ,@interactive-modes)
          (message "Formatting buffer")
          (,region-fn-name (point-min) (point-max) display-errors))
 
@@ -308,18 +326,26 @@ DISPLAY-ERRORS, shows a buffer if the formatting fails."
   ;; degree.
   (insert-file-contents file nil nil nil t))
 
-
-(defun reformatter-temp-file-in-current-directory (&optional default-extension)
-  "Make a temp file in the current directory re-using the current extension.
+(defun reformatter-temp-file (&optional default-extension)
+  "Make a temp file re-using the current extension.
 If the current file is not backed by a file, then use
-DEFAULT-EXTENSION, which should not contain a leading dot."
-  (let ((temporary-file-directory default-directory)
-        (extension (if buffer-file-name
+DEFAULT-EXTENSION, which should not contain a leading dot.
+
+The working directory for the command will always be the
+`default-directory' of the calling buffer."
+  (let ((extension (if buffer-file-name
                        (file-name-extension buffer-file-name)
                      default-extension)))
     (make-temp-file "reformatter" nil
                     (when extension
                       (concat "." extension)))))
+
+(defun reformatter-temp-file-in-current-directory (&optional default-extension)
+  "Make a temp file in the current directory re-using the current extension.
+If the current file is not backed by a file, then use
+DEFAULT-EXTENSION, which should not contain a leading dot."
+  (let ((temporary-file-directory default-directory))
+    (reformatter-temp-file default-extension)))
 
 (provide 'reformatter)
 ;;; reformatter.el ends here

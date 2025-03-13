@@ -105,6 +105,16 @@ search."
   :group 'notmuch-search)
 (make-variable-buffer-local 'notmuch-search-oldest-first)
 
+(defcustom notmuch-search-hide-excluded t
+  "Hide mail tagged with a excluded tag.
+
+Excluded tags are defined in the users configuration file under
+the search section. When this variable is true, any mail with
+such a tag will not be shown in the search output."
+  :type 'boolean
+  :group 'notmuch-search)
+(make-variable-buffer-local 'notmuch-search-hide-excluded)
+
 (defcustom notmuch-poll-script nil
   "[Deprecated] Command to run to incorporate new mail into the notmuch database.
 
@@ -414,9 +424,9 @@ This is similar to `describe-function' for the current major
 mode, but bindings tables are shown with documentation strings
 rather than command names.  By default, this uses the first line
 of each command's documentation string.  A command can override
-this by setting the 'notmuch-doc property of its command symbol.
+this by setting the \\='notmuch-doc property of its command symbol.
 A command that supports a prefix argument can explicitly document
-its prefixed behavior by setting the 'notmuch-prefix-doc property
+its prefixed behavior by setting the \\='notmuch-prefix-doc property
 of its command symbol."
   (interactive)
   (let ((doc (substitute-command-keys
@@ -703,6 +713,7 @@ current buffer, if possible."
 	  (when (mm-inlinable-p handle)
 	    (set-buffer display-buffer)
 	    (mm-display-part handle)
+	    (plist-put part :undisplayer (mm-handle-undisplayer handle))
 	    t))))))
 
 ;;; Generic Utilities
@@ -725,7 +736,7 @@ single element face list."
     (list face)))
 
 (defun notmuch-apply-face (object face &optional below start end)
-  "Combine FACE into the 'face text property of OBJECT between START and END.
+  "Combine FACE into the \\='face text property of OBJECT between START and END.
 
 This function combines FACE with any existing faces between START
 and END in OBJECT.  Attributes specified by FACE take precedence

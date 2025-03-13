@@ -142,6 +142,16 @@ to `notmuch-mua-send-hook'."
   :type 'regexp
   :group 'notmuch-send)
 
+(defcustom notmuch-mua-subject-regexp
+  "[[:blank:]]*$"
+  "Message subject indicating that something may be amiss.
+By default, this checks for empty subject lines.
+
+This is not used unless `notmuch-mua-subject-check' is added to
+`notmuch-mua-send-hook'."
+  :type 'regexp
+  :group 'notmuch-send)
+
 ;;; Various functions
 
 (defun notmuch-mua-attachment-check ()
@@ -178,6 +188,19 @@ Typically this is added to `notmuch-mua-send-hook'."
 	 (not (y-or-n-p "Attachment mentioned, but no attachment - is that okay?")))
     ;; ...signal an error.
     (error "Missing attachment")))
+
+(defun notmuch-mua-subject-check ()
+  "Signal an error if the subject seems amiss.
+More precisely, if the subject conforms to
+`notmuch-mua-subject-regexp'.
+
+Typically this is added to `notmuch-mua-send-hook'."
+  (or (save-excursion
+        (message-goto-subject)
+        (message-beginning-of-header t)
+        (not (looking-at-p notmuch-mua-subject-regexp)))
+      (y-or-n-p "Subject may be erroneous – is that okay?")
+      (error "Erroneous subject")))
 
 (defun notmuch-mua-get-switch-function ()
   "Get a switch function according to `notmuch-mua-compose-in'."
@@ -401,9 +424,10 @@ instead of `message-mode' and SWITCH-FUNCTION is mandatory."
 	       (addr (and good-tokens (mapconcat #'identity good-tokens ", "))))
 	  (message-replace-header header addr))))))
 
+;;;###autoload
 (defun notmuch-mua-mail (&optional to subject other-headers _continue
 				   switch-function yank-action send-actions
-				   return-action &rest ignored)
+				   return-action &rest _ignored)
   "Invoke the notmuch mail composition window.
 
 The position of point when the function returns differs depending
@@ -622,20 +646,24 @@ unencrypted.  Really send? "))))
 	  (message-send-and-exit arg)
 	(message-send arg)))))
 
+;;;###autoload
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
   (notmuch-mua-send-common arg t))
 
+;;;###autoload
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
   (notmuch-mua-send-common arg))
 
+;;;###autoload
 (defun notmuch-mua-kill-buffer ()
   (interactive)
   (message-kill-buffer))
 
 ;;; _
 
+;;;###autoload
 (define-mail-user-agent 'notmuch-user-agent
   'notmuch-mua-mail
   'notmuch-mua-send-and-exit

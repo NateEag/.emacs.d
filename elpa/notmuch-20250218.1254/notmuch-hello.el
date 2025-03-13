@@ -33,10 +33,11 @@
 (declare-function notmuch-poll "notmuch-lib" ())
 (declare-function notmuch-tree "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target unthreaded parent-buffer oldest-first))
+			     open-target unthreaded parent-buffer
+			     oldest-first hide-excluded))
 (declare-function notmuch-unthreaded "notmuch-tree"
 		  (&optional query query-context target buffer-name
-			     open-target))
+			     open-target oldest-first hide-excluded))
 
 
 ;;; Options
@@ -116,6 +117,12 @@ searches so they still work in customize."
 				    (const :tag "Oldest-first" oldest-first)
 				    (const :tag "Newest-first" newest-first)))
 		     (group :format "%v" :inline t
+			    (const :format "" :excluded)
+			    (choice :tag " Hide Excluded"
+				    (const :tag "Default" nil)
+				    (const :tag "Hide" hide)
+				    (const :tag "Show" show)))
+		     (group :format "%v" :inline t
 			    (const :format "" :search-type)
 			    (choice :tag " Search Type"
 				    (const :tag "Search mode" nil)
@@ -143,9 +150,13 @@ a plist. Supported properties are
   :sort-order      Specify the sort order to be used for the search.
                    Possible values are `oldest-first', `newest-first'
                    or nil. Nil means use the default sort order.
+  :excluded        Whether to show mail with excluded tags in the
+                   search. Possible values are `hide', `show',
+                   or nil. Nil means use the default value of
+                   `notmuch-search-hide-excluded'.
   :search-type     Specify whether to run the search in search-mode,
                    tree mode or unthreaded mode. Set to `tree' to
-                   specify tree mode, 'unthreaded to specify
+                   specify tree mode, \\='unthreaded to specify
                    unthreaded mode, and set to nil (or anything
                    except tree and unthreaded) to specify search
                    mode.
@@ -484,19 +495,19 @@ diagonal."
 	     append (notmuch-hello-reflect-generate-row ncols nrows row list))))
 
 (defun notmuch-hello-widget-search (widget &rest _ignore)
-  (cl-case (widget-get widget :notmuch-search-type)
-   (tree
-    (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
-      (notmuch-tree (widget-get widget :notmuch-search-terms)
-		    nil nil n nil nil nil
-		    (widget-get widget :notmuch-search-oldest-first))))
-   (unthreaded
-    (let ((n (notmuch-search-format-buffer-name (widget-value widget)
-						"unthreaded" t)))
-      (notmuch-unthreaded (widget-get widget :notmuch-search-terms) nil nil n)))
-   (t
-    (notmuch-search (widget-get widget :notmuch-search-terms)
-		    (widget-get widget :notmuch-search-oldest-first)))))
+  (let ((search-terms (widget-get widget :notmuch-search-terms))
+	(oldest-first (widget-get widget :notmuch-search-oldest-first))
+	(exclude (widget-get widget :notmuch-search-hide-excluded)))
+    (cl-case (widget-get widget :notmuch-search-type)
+      (tree
+       (let ((n (notmuch-search-format-buffer-name (widget-value widget) "tree" t)))
+	 (notmuch-tree search-terms nil nil n nil nil nil oldest-first exclude)))
+      (unthreaded
+       (let ((n (notmuch-search-format-buffer-name (widget-value widget)
+						   "unthreaded" t)))
+	 (notmuch-unthreaded search-terms nil nil n nil oldest-first exclude)))
+      (t
+       (notmuch-search search-terms oldest-first exclude)))))
 
 (defun notmuch-saved-search-count (search)
   (car (notmuch--process-lines notmuch-command "count" search)))
@@ -643,6 +654,10 @@ with `notmuch-hello-query-counts'."
 				     (newest-first nil)
 				     (oldest-first t)
 				     (otherwise notmuch-search-oldest-first)))
+		     (exclude (cl-case (plist-get elem :excluded)
+				(hide t)
+				(show nil)
+				(otherwise notmuch-search-hide-excluded)))
 		     (search-type (plist-get elem :search-type))
 		     (msg-count (plist-get elem :count)))
 		(widget-insert (format "%8s "
@@ -652,6 +667,7 @@ with `notmuch-hello-query-counts'."
 			       :notmuch-search-terms query
 			       :notmuch-search-oldest-first oldest-first
 			       :notmuch-search-type search-type
+			       :notmuch-search-hide-excluded exclude
 			       name)
 		(setq column-indent
 		      (1+ (max 0 (- column-width (length name)))))))
@@ -694,11 +710,7 @@ with `notmuch-hello-query-counts'."
 	    ;; configuration change, and this is not a new window)
 	    (setq do-refresh t)))))
     (when (and do-refresh notmuch-hello-auto-refresh)
-      ;; Refresh hello as soon as we get back to redisplay.  On Emacs
-      ;; 24, we can't do it right here because something in this
-      ;; hook's call stack overrides hello's point placement.
-      ;; FIXME And on Emacs releases that we still support?
-      (run-at-time nil nil #'notmuch-hello t))
+      (notmuch-hello t))
     (unless hello-buf
       ;; Clean up hook
       (remove-hook 'window-configuration-change-hook
@@ -717,7 +729,8 @@ with `notmuch-hello-query-counts'."
   "Keymap for \"notmuch hello\" buffers.")
 
 (define-derived-mode notmuch-hello-mode fundamental-mode "notmuch-hello"
-  "Major mode for convenient notmuch navigation. This is your entry portal into notmuch.
+  "Major mode for convenient notmuch navigation. This is your entry
+portal into notmuch.
 
 Saved searches are \"bookmarks\" for arbitrary queries. Hit RET
 or click on a saved search to view matching threads. Edit saved
@@ -853,7 +866,8 @@ Complete list of currently available key bindings:
 	(widget-create 'notmuch-search-item :value search :size width)))))
 
 (defun notmuch-hello-insert-searches (title query-list &rest options)
-  "Insert a section with TITLE showing a list of buttons made from QUERY-LIST.
+  "Insert a section with TITLE showing a list of buttons made from
+QUERY-LIST.
 
 QUERY-LIST should ideally be a plist but for backwards
 compatibility other forms are also accepted (see
@@ -867,13 +881,16 @@ Supports the following entries in OPTIONS as a plist:
 :show-empty-searches - show buttons with no matching messages
 :hide-if-empty - hide if no buttons would be shown
    (only makes sense without :show-empty-searches)
-:filter - This can be a function that takes the search query as its argument and
-   returns a filter to be used in conjunction with the query for that search or nil
-   to hide the element. This can also be a string that is used as a combined with
-   each query using \"and\".
-:filter-count - Separate filter to generate the count displayed each search. Accepts
-   the same values as :filter. If :filter and :filter-count are specified, this
-   will be used instead of :filter, not in conjunction with it."
+:filter - This can be a function that takes the search query as
+   its argument and returns a filter to be used in conjunction
+   with the query for that search or nil to hide the
+   element. This can also be a string that is used as a combined
+   with each query using \"and\".
+:filter-count - Separate filter to generate the count displayed
+   each search. Accepts the same values as :filter. If :filter
+   and :filter-count are specified, this will be used instead of
+   :filter, not in conjunction with it."
+
   (widget-insert title ": ")
   (when (and notmuch-hello-first-run (plist-get options :initially-hidden))
     (add-to-list 'notmuch-hello-hidden-sections title))

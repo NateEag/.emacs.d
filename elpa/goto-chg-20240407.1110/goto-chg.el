@@ -1,4 +1,4 @@
-;;; goto-chg.el --- Go to last change
+;;; goto-chg.el --- Go to last change -*- lexical-binding: t -*-
 ;;--------------------------------------------------------------------
 ;;
 ;; Copyright (C) 2002-2008,2013 David Andersson
@@ -21,9 +21,8 @@
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Maintainer: Vasilij Schneidermann <mail@vasilij.de>
 ;; Created: 16 May 2002
-;; Version: 1.7.5
-;; Package-Version: 20220107.1733
-;; Package-Commit: 278cd3e6d5107693aa2bb33189ca503f22f227d0
+;; Package-Version: 20240407.1110
+;; Package-Revision: 72f556524b88
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: convenience, matching
 ;; URL: https://github.com/emacs-evil/goto-chg

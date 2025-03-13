@@ -4,7 +4,6 @@
 
 ;; Author: Matúš Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
-;; Version: 0.0.1
 ;; Created: 15th January 2017
 ;; Keywords: languages
 

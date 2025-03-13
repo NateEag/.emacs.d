@@ -56,14 +56,14 @@
 (defun sp-ruby-forward-sexp ()
   "Wrapper for `ruby-forward-sexp' based on `enh-ruby-mode'."
   (interactive)
-  (if (boundp 'enh-ruby-forward-sexp)
+  (if (fboundp 'enh-ruby-forward-sexp)
       (enh-ruby-forward-sexp)
     (ruby-forward-sexp)))
 
 (defun sp-ruby-backward-sexp ()
   "Wrapper for `ruby-backward-sexp' based on `enh-ruby-mode'."
   (interactive)
-  (if (boundp 'enh-ruby-backward-sexp)
+  (if (fboundp 'enh-ruby-backward-sexp)
       (enh-ruby-backward-sexp)
     (ruby-backward-sexp)))
 
@@ -142,8 +142,8 @@ ID, ACTION, CONTEXT."
     (sp-get enc
       (let ((beg-line (line-number-at-pos :beg-in))
             (end-line (line-number-at-pos :end-in)))
-
         (when (equal action 'slurp-backward)
+          (setq end-line (- end-line :op-l))
           (save-excursion
             (sp-forward-sexp)
             (when (looking-at-p ";") (forward-char))
@@ -293,12 +293,12 @@ MS, ME, MB."
         (sp-ruby-method-p "end"))))
 
 (add-to-list 'sp-navigate-skip-match
-             '((ruby-mode enh-ruby-mode motion-mode) . sp--ruby-skip-match))
+             '((ruby-mode ruby-ts-mode enh-ruby-mode motion-mode) . sp--ruby-skip-match))
 
-(dolist (mode '(ruby-mode motion-mode))
+(dolist (mode '(ruby-mode ruby-ts-mode motion-mode))
   (add-to-list 'sp-sexp-suffix `(,mode syntax "")))
 
-(sp-with-modes '(ruby-mode enh-ruby-mode motion-mode)
+(sp-with-modes '(ruby-mode ruby-ts-mode enh-ruby-mode motion-mode)
   (sp-local-pair "do" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
                  :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)

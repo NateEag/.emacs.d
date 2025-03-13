@@ -6,7 +6,6 @@
 ;; Maintainer: Bernhard Pröll
 ;; URL: https://github.com/Fuco1/smartparens
 ;; Created: 2015-02-26
-;; Version: 0.2
 ;; Keywords: abbrev convenience editing
 
 ;; This file is NOT part of GNU Emacs.

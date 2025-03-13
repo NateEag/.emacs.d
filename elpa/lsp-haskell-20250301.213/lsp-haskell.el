@@ -1,7 +1,8 @@
-;;; lsp-haskell.el --- Haskell support for lsp-mode
+;;; lsp-haskell.el --- Haskell support for lsp-mode -*- lexical-binding: t; -*-
 
-;; Version: 1.1
-;; Package-Requires: ((emacs "27.1") (lsp-mode "3.0") (haskell-mode "16.1"))
+;; Package-Version: 20250301.213
+;; Package-Revision: cd0f5d251c14
+;; Package-Requires: ((emacs "28.1") (lsp-mode "3.0"))
 ;; Keywords: haskell
 ;; URL: https://github.com/emacs-lsp/lsp-haskell
 
@@ -29,7 +30,6 @@
 ;;; Code:
 
 (require 'lsp-mode)
-(require 'haskell-mode)
 
 ;; ---------------------------------------------------------------------
 ;; Configuration
@@ -65,6 +65,16 @@ It could lead to bad perfomance in large projects."
   :group 'lsp-haskell
   :type 'number
   :lsp-path "haskell.maxCompletions")
+(defcustom-lsp lsp-haskell-session-loading
+  "singleComponent"
+  "Preferred approach for loading package components. Setting this
+to 'multipleComponents' (EXPERIMENTAL) allows the build
+tool (such as `cabal` or `stack`) to load multiple components at
+once `https://github.com/haskell/cabal/pull/8726', which is a
+significant improvement."
+  :group 'lsp-haskell
+  :type '(choice (const "singleComponent") (const "multipleComponents"))
+  :lsp-path "haskell.sessionLoading")
 
 ;; ---------------------------------------------------------------------
 ;; Plugin-specific configuration
@@ -374,6 +384,13 @@ but will take exponentially more time."
   :package-version '(lsp-mode . "8.0.1")
   :lsp-path "haskell.plugin.ghcide-hover-and-symbols.symbolsOn")
 
+(lsp-defcustom lsp-haskell-plugin-ormolu-config-external nil
+  "Call out to an external 'ormolu' executable, rather than using the bundled library"
+  :type 'boolean
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "8.0.1")
+  :lsp-path "haskell.plugin.ormolu.config.external")
+
 (lsp-defcustom lsp-haskell-plugin-overloaded-record-dot-global-on t
   "Enables overloaded-record-dot plugin"
   :type 'boolean
@@ -416,6 +433,212 @@ but will take exponentially more time."
   :package-version '(lsp-mode . "8.0.1")
   :lsp-path "haskell.plugin.rename.globalOn")
 
+;; Updated for haskell-language-server 2.9.0.1
+
+(lsp-defcustom lsp-haskell-plugin-cabal-fmt-config-path "cabal-fmt"
+  "Set path to 'cabal-fmt' executable"
+  :type 'string
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.cabal-fmt.config.path")
+
+(lsp-defcustom lsp-haskell-plugin-cabal-gild-config-path "cabal-gild"
+  "Set path to 'cabal-gild' executable"
+  :type 'string
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.cabal-gild.config.path")
+
+(lsp-defcustom lsp-haskell-plugin-cabal-diagnostics-on t
+  "Enables cabal diagnostics"
+  :type 'boolean
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.cabal.diagnosticsOn")
+
+(lsp-defcustom lsp-haskell-plugin-fourmolu-config-path "fourmolu"
+  "Set path to executable (for \"external\" mode)."
+  :type 'string
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.fourmolu.config.path")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-class-method-token
+  "method"
+  "LSP semantic token type to use for typeclass methods"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.classMethodToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-class-token
+  "class"
+  "LSP semantic token type to use for typeclasses"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.classToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-data-constructor-token
+  "enumMember"
+  "LSP semantic token type to use for data constructors"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.dataConstructorToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-function-token
+  "function"
+  "LSP semantic token type to use for functions"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.functionToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-module-token
+  "namespace"
+  "LSP semantic token type to use for modules"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.moduleToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-operator-token
+  "operator"
+  "LSP semantic token type to use for operators"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.operatorToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-pattern-synonym-token
+  "macro"
+  "LSP semantic token type to use for pattern synonyms"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.patternSynonymToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-record-field-token
+  "property"
+  "LSP semantic token type to use for record fields"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.recordFieldToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-type-constructor-token
+  "enum"
+  "LSP semantic token type to use for type constructors"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.typeConstructorToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-type-family-token
+  "interface"
+  "LSP semantic token type to use for type families"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.typeFamilyToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-type-synonym-token
+  "type"
+  "LSP semantic token type to use for type synonyms"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.typeSynonymToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-type-variable-token
+  "typeParameter"
+  "LSP semantic token type to use for type variables"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.typeVariableToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-config-variable-token
+  "variable"
+  "LSP semantic token type to use for variables"
+  :type '(choice (const "namespace") (const "type") (const "class") (const "enum")
+          (const "interface") (const "struct") (const "typeParameter")
+          (const "parameter") (const "variable") (const "property") (const "enumMember")
+          (const "event") (const "function") (const "method") (const "macro")
+          (const "keyword") (const "modifier") (const "comment") (const "string")
+          (const "number") (const "regexp") (const "operator") (const "decorator"))
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.config.variableToken")
+
+(lsp-defcustom lsp-haskell-plugin-semantic-tokens-global-on nil
+  "Enables semanticTokens plugin"
+  :type 'boolean
+  :group 'lsp-haskell-plugins
+  :package-version '(lsp-mode . "9.0.0")
+  :lsp-path "haskell.plugin.semanticTokens.globalOn")
+
 ;; ---------------------------------------------------------------------
 ;; Non-language server options
 
@@ -435,7 +658,7 @@ you override that setting then this one will have no effect."
   :type 'string)
 
 (defcustom lsp-haskell-server-args
-  `("-d" "-l" ,lsp-haskell-server-log-file)
+  `("-l" ,lsp-haskell-server-log-file)
   "The arguments for starting the language server.
 For a debug log when using haskell-language-server, use `-d -l /tmp/hls.log'."
   :group 'lsp-haskell
@@ -477,6 +700,13 @@ These are assembled from the customizable variables `lsp-haskell-server-path'
 and `lsp-haskell-server-args' and `lsp-haskell-server-wrapper-function'."
   (funcall lsp-haskell-server-wrapper-function (append (list lsp-haskell-server-path "--lsp") lsp-haskell-server-args) ))
 
+(defun lsp-haskell--action-filter (command)
+  "lsp-mode transforms JSON false values in code action
+arguments to JSON null values when sending the requests back to
+the server. We need to explicitly tell it which code action
+arguments are non-nullable booleans."
+  (lsp-fix-code-action-booleans command '(:restrictToOriginatingFile :withSig)))
+
 ;; This mapping is set for 'haskell-mode -> haskell' in the lsp-mode repo itself. If we move
 ;; it there, then delete it from here.
 ;; It also isn't *too* important: it only sets the language ID, see
@@ -484,26 +714,22 @@ and `lsp-haskell-server-args' and `lsp-haskell-server-wrapper-function'."
 (add-to-list 'lsp-language-id-configuration '(haskell-literate-mode . "haskell"))
 (add-to-list 'lsp-language-id-configuration '(haskell-tng-mode . "haskell"))
 (add-to-list 'lsp-language-id-configuration '(haskell-cabal-mode . "haskell"))
+(add-to-list 'lsp-language-id-configuration '(haskell-ts-mode . "haskell"))
 
 ;; Register the client itself
 (lsp-register-client
   (make-lsp--client
     :new-connection (lsp-stdio-connection (lambda () (lsp-haskell--server-command)))
     ;; Should run under haskell-mode, haskell-literate-mode and haskell-tng-mode. We need to list haskell-literate-mode even though it's a derived mode of haskell-mode.
-    :major-modes '(haskell-mode haskell-literate-mode haskell-tng-mode haskell-cabal-mode)
+    :major-modes '(haskell-mode haskell-literate-mode haskell-tng-mode haskell-cabal-mode haskell-ts-mode)
     ;; This is arbitrary.
     :server-id 'lsp-haskell
-    ;; HLS does not currently send 'workspace/configuration' on startup (https://github.com/haskell/haskell-language-server/issues/2762),
-    ;; so we need to push the configuration to it manually on startup. We should be able to
-    ;; get rid of this once the issue is fixed in HLS.
-    :initialized-fn (lambda (workspace)
-                      (with-lsp-workspace workspace
-                        (lsp--set-configuration (lsp-configuration-section "haskell"))))
     :synchronize-sections '("haskell")
     ;; This is somewhat irrelevant, but it is listed in lsp-language-id-configuration, so
     ;; we should set something consistent here.
     :language-id "haskell"
     :completion-in-comments? lsp-haskell-completion-in-comments
+    :action-filter #'lsp-haskell--action-filter
     ))
 
 ;; ---------------------------------------------------------------------

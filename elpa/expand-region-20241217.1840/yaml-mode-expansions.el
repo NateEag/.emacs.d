@@ -1,6 +1,6 @@
-;;; yaml-mode-expansions.el --- expansions for yaml mode
+;;; yaml-mode-expansions.el --- expansions for yaml mode  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2021 Aaron Gonzales
+;; Copyright (C) 2021-2023  Free Software Foundation, Inc.
 
 ;; Author: Aaron Gonzales
 ;; Keywords: marking region yaml YAML expand
@@ -35,7 +35,7 @@
 (defconst yaml-indent 2)
 
 (unless (fboundp 'yaml-indent-offset)
-  (defalias 'yaml-indent-offset 'yaml-indent))
+  (defalias 'yaml-indent-offset #'yaml-indent))
 
 (defvar er--yaml-key-value-regex
   (rx (one-or-more
@@ -61,7 +61,7 @@
   "Return the indentation level of the code with respect to the REGEX passed."
   (when (looking-at regex)
     ;; Block start means that the next level is deeper.
-    (+ (current-indentation) yaml-indent-offset)
+    (+ (current-indentation) yaml-indent-offset) ;FIXME: Unused?
     ;; Assuming we're inside the block that we want to mark
     (current-indentation)))
 
@@ -72,7 +72,7 @@
     (set-mark (line-end-position))))
 
 (defun er/mark-yaml-block-static-base (regex)
-  "Mark yaml block based on REGEX passed.  NEXT-INDENT-LEVEL can be used to search outer blocks when necessary."
+  "Mark yaml block based on REGEX passed."
   ;; go bac to indentation so always can get regexp
   (back-to-indentation)
   ;; make sure the cursor is set inside the block
@@ -85,7 +85,7 @@
             ;; No need to go beyond the end of the buffer. Can't use
             ;; eobp as the loop places the point at the beginning of
             ;; line, but eob might be at the end of the line.
-            (not (= (point-max) (point-at-eol)))
+            (not (= (point-max) (line-end-position)))
             ;; Proceed if: indentation is too deep
             (or (> (current-indentation) block-indentation)
                 ;; Looking at an empty line
@@ -102,7 +102,8 @@
   (back-to-indentation))
 
 (defun er/mark-yaml-block-base (regex &optional next-indent-level)
-  "Mark yaml block based on REGEX passed.  NEXT-INDENT-LEVEL can be used to search outer blocks when necessary."
+  "Mark yaml block based on REGEX passed.
+NEXT-INDENT-LEVEL can be used to search outer blocks when necessary."
   ;; go bac to indentation so always can get regexp
   (back-to-indentation)
   ;; make sure the cursor is set inside the block
@@ -128,7 +129,7 @@
               ;; No need to go beyond the end of the buffer. Can't use
               ;; eobp as the loop places the point at the beginning of
               ;; line, but eob might be at the end of the line.
-              (not (= (point-max) (point-at-eol)))
+              (not (= (point-max) (line-end-position)))
               ;; Proceed if: indentation is too deep
               (or (> (current-indentation) block-indentation)
                   ;; Looking at an empty line
@@ -155,19 +156,22 @@
   (er/mark-yaml-line-base er--yaml-list-item-regex))
 
 (defun er/mark-yaml-inner-block ()
-  "Mark the yaml contents of the block at point.  Command that wraps `er/mark-yaml-block-base'."
+  "Mark the yaml contents of the block at point.
+Command that wraps `er/mark-yaml-block-base'."
   (interactive)
   (er/mark-yaml-block-base er--yaml-block-regex (current-indentation))
   (forward-line)
   (back-to-indentation))
 
 (defun er/mark-yaml-block ()
-  "Mark the yaml block that point is currently at the top of.  Command that wraps `er/mark-yaml-block-base'."
+  "Mark the yaml block that point is currently at the top of.
+Command that wraps `er/mark-yaml-block-base'."
   (interactive)
   (er/mark-yaml-block-static-base er--yaml-block-regex))
 
 (defun er/mark-yaml-outer-block ()
-  "Mark the outer yaml block that surrounds the block around point.  Command that wraps `er/mark-yaml-block-base'."
+  "Mark the outer yaml block that surrounds the block around point.
+Command that wraps `er/mark-yaml-block-base'."
   (interactive)
   (er/mark-yaml-block-base er--yaml-block-regex (current-indentation)))
 
@@ -183,7 +187,7 @@
     (set (make-local-variable 'expand-region-skip-whitespace) nil)
     (set (make-local-variable 'er/try-expand-list) try-expand-list-additions)))
 
-(er/enable-mode-expansions 'yaml-mode 'er/add-yaml-mode-expansions)
+(er/enable-mode-expansions 'yaml-mode #'er/add-yaml-mode-expansions)
 
 (provide 'yaml-mode-expansions)
 

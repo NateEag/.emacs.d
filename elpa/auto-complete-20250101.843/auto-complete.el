@@ -1,13 +1,14 @@
 ;;; auto-complete.el --- Auto Completion for GNU Emacs
 
 ;; Copyright (C) 2008-2015  Tomohiro Matsuyama
-;; Copyright (C) 2020-2023  Jen-Chieh Shen
+;; Copyright (C) 2020-2025  Jen-Chieh Shen
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; URL: https://github.com/auto-complete/auto-complete
 ;; Keywords: completion, convenience
-;; Version: 1.5.1
+;; Package-Version: 20250101.843
+;; Package-Revision: 01bbfdf12b34
 ;; Package-Requires: ((emacs "25.1") (popup "0.5.8"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -62,7 +63,7 @@ Use `version-to-list' to get version component.")
 ;;;; Global stuff
 
 (defun ac-error (&optional var)
-  "Report an error and disable 'auto-complete-mode'.
+  "Report an error and disable `auto-complete-mode'.
 
 An optional argument VAR is the message related to the current error."
   (ignore-errors
@@ -112,7 +113,8 @@ An optional argument VAR is the message related to the current error."
   :group 'auto-complete)
 
 (defcustom ac-flycheck-poll-completion-end-interval 0.5
-  "Polling interval to restart automatically flycheck's checking after completion is end."
+  "Polling interval to restart automatically flycheck's checking after completion
+is end."
   :type 'float
   :group 'auto-complete)
 
@@ -150,11 +152,11 @@ An optional argument VAR is the message related to the current error."
   :type '(repeat string)
   :group 'auto-complete)
 
+(defvaralias 'ac-user-dictionary-files 'ac-dictionary-files)
 (defcustom ac-dictionary-files '("~/.dict")
   "Dictionary files."
   :type '(repeat string)
   :group 'auto-complete)
-(defvaralias 'ac-user-dictionary-files 'ac-dictionary-files)
 
 (defcustom ac-dictionary-directories
   (ignore-errors
@@ -178,28 +180,28 @@ An optional argument VAR is the message related to the current error."
   :type 'float
   :group 'auto-complete)
 
+(defvaralias 'ac-candidate-menu-height 'ac-menu-height)
 (defcustom ac-menu-height 10
   "Max height of candidate menu."
   :type 'integer
   :group 'auto-complete)
-(defvaralias 'ac-candidate-menu-height 'ac-menu-height)
 
 (defcustom ac-quick-help-height 20
   "Max height of quick help."
   :type 'integer
   :group 'auto-complete)
 
+(defvaralias 'ac-quick-help-prefer-x 'ac-quick-help-prefer-pos-tip)
 (defcustom ac-quick-help-prefer-pos-tip t
   "Prefer native tooltip with pos-tip than overlay popup for displaying quick help."
   :type 'boolean
   :group 'auto-complete)
-(defvaralias 'ac-quick-help-prefer-x 'ac-quick-help-prefer-pos-tip)
 
+(defvaralias 'ac-candidate-max 'ac-candidate-limit)
 (defcustom ac-candidate-limit nil
   "Limit number of candidates.  Non-integer means no limit."
   :type 'integer
   :group 'auto-complete)
-(defvaralias 'ac-candidate-max 'ac-candidate-limit)
 
 (defcustom ac-modes
   (append
@@ -220,7 +222,7 @@ An optional argument VAR is the message related to the current error."
    '(verilog-mode)
    '(qml-mode)
    '(apples-mode))
-  "Major modes 'auto-complete-mode' can run on."
+  "Major modes `auto-complete-mode' can run on."
   :type '(repeat symbol)
   :group 'auto-complete)
 
@@ -273,17 +275,17 @@ and if there is no completions, an original command will be fallbacked."
   "Non-nil means completion will be started automatically.
 Positive integer means if a length of a word you entered is larger than
 the value, completion will be started automatically.
-If you specify 'nil', never be started automatically."
+If you specify nil, never be started automatically."
   :type '(choice (const :tag "Yes" t)
                  (const :tag "Never" nil)
                  (integer :tag "Require"))
   :group 'auto-complete)
 
+(defvaralias 'ac-ignores 'ac-stop-words)
 (defcustom ac-stop-words nil
   "List of string to stop completion."
   :type '(repeat string)
   :group 'auto-complete)
-(defvaralias 'ac-ignores 'ac-stop-words)
 
 (defcustom ac-use-dictionary-as-stop-words t
   "Non-nil means a buffer related dictionary will be thought of as stop words."
@@ -310,7 +312,8 @@ a prefix doesn't contain any upper case letters."
   :group 'auto-complete)
 
 (defcustom ac-use-overriding-local-map nil
-  "Non-nil means `overriding-local-map' will be used to hack for overriding key events on auto-completion."
+  "Non-nil means `overriding-local-map' will be used to hack for overriding key
+events on auto-completion."
   :type 'boolean
   :group 'auto-complete)
 
@@ -352,7 +355,7 @@ a prefix doesn't contain any upper case letters."
   :group 'auto-complete)
 
 (defvar auto-complete-mode-hook nil
-  "Hook for 'auto-complete-mode'.")
+  "Hook for `auto-complete-mode'.")
 
 
 
@@ -380,7 +383,7 @@ a prefix doesn't contain any upper case letters."
   "Quick help instance.")
 
 (defvar ac-completing nil
-  "Non-nil means 'auto-complete-mode' is now working on completion.")
+  "Non-nil means `auto-complete-mode' is now working on completion.")
 
 (defvar ac-buffer nil
   "Buffer where `auto-complete' is started.")
@@ -391,9 +394,9 @@ a prefix doesn't contain any upper case letters."
 (defvar ac-last-point nil
   "Last point of updating pattern.")
 
+(defvaralias 'ac-target 'ac-prefix)
 (defvar ac-prefix nil
   "Prefix string.")
-(defvaralias 'ac-target 'ac-prefix)
 
 (defvar ac-selected-candidate nil
   "Last selected candidate.")
@@ -440,6 +443,7 @@ If there is no common part, this will be nil.")
   "Auto-complete mode map.  It is also used for trigger key command.
 See also `ac-trigger-key'.")
 
+(defvaralias 'ac-complete-mode-map 'ac-completing-map)
 (defvar ac-completing-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\t" 'ac-expand)
@@ -476,7 +480,6 @@ See also `ac-trigger-key'.")
 
     map)
   "Keymap for completion.")
-(defvaralias 'ac-complete-mode-map 'ac-completing-map)
 
 (defvar ac-menu-map
   (let ((map (make-sparse-keymap)))
@@ -521,7 +524,7 @@ See also `ac-trigger-key'.")
   "Compiled source of `ac-sources'.")
 
 (defvar ac-current-sources nil
-  "Current working sources.  This is sublist of 'ac-compiled-sources'.")
+  "Current working sources.  This is sublist of `ac-compiled-sources'.")
 
 (defvar ac-omni-completion-sources nil
   "Do not use this anymore.")
@@ -1171,7 +1174,7 @@ You can not use it in source definition like (PREFIX . `NAME')."
                candidates))))
 
 (defun ac-update-candidates (cursor scroll-top)
-  "Update candidates of menu to 'ac-candidates' and redraw it.
+  "Update candidates of menu to `ac-candidates' and redraw it.
 
 TODO Missing documentation CURSOR, SCROLL-TOP."
   (setf (popup-cursor ac-menu) cursor
@@ -1193,7 +1196,7 @@ TODO Missing documentation CURSOR, SCROLL-TOP."
       (popup-draw ac-menu))))
 
 (defun ac-reposition ()
-  "Force to redraw candidate menu with current 'ac-candidates'."
+  "Force to redraw candidate menu with current `ac-candidates'."
   (let ((cursor (popup-cursor ac-menu))
         (scroll-top (popup-scroll-top ac-menu))
         (height (popup-height ac-menu)))
@@ -1252,7 +1255,7 @@ TODO Missing documentation CURSOR, SCROLL-TOP."
   (ac-cleanup))
 
 (defun ac-extend-region-to-delete (string)
-  "Determine the boundary of the region to delete before inserting the \
+  "Determine the boundary of the region to delete before inserting the
 completed string.  This will be either the position of current point, or
 the end of the symbol at point, if the text from point to end of symbol
 is the right part of the completed STRING."
@@ -1267,11 +1270,11 @@ is the right part of the completed STRING."
       (point))))
 
 (defun ac-expand-string (string &optional remove-undo-boundary)
-  "Expand `STRING' into the buffer and update 'ac-prefix' to `STRING'.
+  "Expand `STRING' into the buffer and update `ac-prefix' to `STRING'.
 This function records deletion and insertion sequences by `undo-boundary'.
 If REMOVE-UNDO-BOUNDARY is non-nil, this function also removes `undo-boundary'
-that have been made before in this function.  When `buffer-undo-list' is
-'t', REMOVE-UNDO-BOUNDARY has no effect."
+that have been made before in this function.  When `buffer-undo-list' is t,
+REMOVE-UNDO-BOUNDARY has no effect."
   (when (eq buffer-undo-list t)
     (setq remove-undo-boundary nil))
   (when (not (equal string (buffer-substring ac-point (point))))
@@ -1301,7 +1304,8 @@ that have been made before in this function.  When `buffer-undo-list' is
     (setq ac-prefix string)))
 
 (defun ac-set-trigger-key (key)
-  "Set `ac-trigger-key' to `KEY'.  It is recommemded to use this function instead of calling `setq'."
+  "Set `ac-trigger-key' to `KEY'.
+It is recommemded to use this function instead of calling `setq'."
   ;; Remove old mapping
   (when ac-trigger-key
     (define-key ac-mode-map (read-kbd-macro ac-trigger-key) nil))
@@ -2202,13 +2206,12 @@ completion menu. This workaround stops that annoying behavior."
                                                    if (string-match suffix file)
                                                    collect (substring file 0 (match-beginning 0))))))))))
 
+(defvaralias 'ac-source-emacs-lisp-features 'ac-source-features)
 (ac-define-source features
   '((depends find-func)
     (candidates . ac-emacs-lisp-feature-candidates)
     (prefix . "require +'\\(\\(?:\\sw\\|\\s_\\)*\\)")
     (requires . 0)))
-
-(defvaralias 'ac-source-emacs-lisp-features 'ac-source-features)
 
 ;; Abbrev source
 (ac-define-source abbrev

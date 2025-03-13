@@ -6,6 +6,9 @@
 ;; Author: Magnar Sveen <magnars@gmail.com>,
 ;;         Nicolas Petton <nicolas@petton.fr>
 ;; Keywords: conveniences
+;; Package-Version: 20250210.1811
+;; Package-Revision: e1177c728ae5
+;; Package-Requires: ((js2-mode "20101228") (s "1.9.0") (multiple-cursors "1.0.0") (dash "1.0.0") (s "1.0.0") (yasnippet "0.9.0.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

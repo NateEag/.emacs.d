@@ -4,9 +4,8 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 31 Mar 2020
-;; Version: 0.7.2
-;; Package-Version: 20230417.1142
-;; Package-Commit: 2dc25cb2f3d83484ea0eb063c9ffca8148828a2b
+;; Package-Version: 20231114.1120
+;; Package-Revision: 495e22f98e30
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "26.1") (phpstan "0.7.2"))
@@ -92,15 +91,19 @@
 
 (defun flymake-phpstan (report-fn &rest _ignored-args)
   "Flymake backend for PHPStan report using REPORT-FN."
-  (let ((command-args (phpstan-get-command-args t)))
+  (let ((command-args (phpstan-get-command-args :include-executable t)))
     (unless (car command-args)
       (user-error "Cannot find a phpstan executable command"))
     (when (process-live-p flymake-phpstan--proc)
       (kill-process flymake-phpstan--proc))
-    (let ((source (current-buffer)))
+    (let ((source (current-buffer))
+          (target-path (if (or (buffer-modified-p) (not buffer-file-name))
+                           (phpstan-normalize-path
+                            (flycheck-save-buffer-to-temp #'flycheck-temp-file-inplace))
+                         buffer-file-name)))
       (save-restriction
         (widen)
-        (setq flymake-phpstan--proc (flymake-phpstan-make-process (php-project-get-root-dir) command-args report-fn source))
+        (setq flymake-phpstan--proc (flymake-phpstan-make-process (php-project-get-root-dir) (append command-args (list "--" target-path)) report-fn source))
         (process-send-region flymake-phpstan--proc (point-min) (point-max))
         (process-send-eof flymake-phpstan--proc)))))
 

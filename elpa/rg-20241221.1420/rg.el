@@ -6,7 +6,8 @@
 ;;
 ;; Author: David Landell <david.landell@sunnyhill.email>
 ;;         Roland McGrath <roland@gnu.org>
-;; Version: 2.3.0
+;; Package-Version: 20241221.1420
+;; Package-Revision: 50d42b1395d6
 ;; URL: https://github.com/dajva/rg.el
 ;; Package-Requires: ((emacs "26.1") (transient "0.3.0") (wgrep "2.1.10"))
 ;; Keywords: matching, tools
@@ -69,7 +70,7 @@
 
 (defcustom rg-custom-type-aliases
   '()
-  "A list of file type aliases that are added to the 'rg' built in aliases.
+  "A list of file type aliases that are added to the ripgrep built in aliases.
 Each list element may be a (string . string) cons containing the name of the
 type alias and the file patterns, or a lambda returning a similar cons cell.
 A lambda should return nil if it currently has no type aliases to contribute."
@@ -81,12 +82,12 @@ A lambda should return nil if it currently has no type aliases to contribute."
 When detecting the file type from the current buffer these aliases are selected
 if there are conflicting aliases for a file type.  Contains only the alias names
 and need to match alias names of ripgrep's built in aliases.  The order of the
-list is not significant."
+list decides the priority among the types in the list."
   :type '(repeat string)
   :group 'rg)
 
 (defcustom rg-executable (executable-find "rg")
-  "'rg' executable."
+  "Ripgrep executable."
   :type 'string
   :group 'rg)
 
@@ -144,6 +145,19 @@ Disabling this setting can break functionality of this package."
   :type 'boolean
   :group 'rg)
 
+(defcustom rg-w32-unicode nil
+  "Enable Unicode support on Windows.
+A workaround for NTEmacs subprocess not supporting Unicode arguments."
+  :type 'boolean
+  :group 'rg)
+
+(defcustom rg-w32-ripgrep-proxy
+  (expand-file-name "rg-w32-ripgrep-proxy.bat" user-emacs-directory)
+  "An automatically generated temporary batch file.
+Used to proxy ripgrep Unicode arguments."
+  :type 'string
+  :group 'rg)
+
 ;;;###autoload
 (defvar rg-command-line-flags-function 'identity
   "Function to modify command line flags of a search.
@@ -153,8 +167,11 @@ line flags to use.")
 
 
 ;; Internal vars and structs
-(defvar rg-builtin-type-aliases nil
-  "Cache for 'rg --type-list'.")
+(defvar rg-builtin-type-aliases-cache nil
+  "Cache for \"rg --type-list\".")
+
+(defvar rg-prioritized-type-aliases-cache nil
+  "Cache for `rg-prioritized-type-aliases'.")
 
 (defvar rg-initial-toggle-flags nil
   "List of command line flags set by default by `rg-define-toggle' macro.")
@@ -177,7 +194,7 @@ line flags to use.")
   '(("all" . "all defined type aliases") ; rg --type=all
     ("everything" . "*")) ; rg without '--type' arg
   "Internal type aliases for special purposes.
-These are not produced by 'rg --type-list' but we need them anyway.")
+These are not produced by \"rg --type-list\" but we need them anyway.")
 
 (defvar rg-global-map
   (let ((map (make-sparse-keymap)))
@@ -228,7 +245,7 @@ These are not produced by 'rg --type-list' but we need them anyway.")
       (default-value 'rg-executable))))
 
 (defun rg-executable ()
-  "Return the 'rg' executable.
+  "Return the \"rg\" executable.
 Raises an error if it can not be found."
   (let ((executable (rg-find-executable)))
     (if executable
@@ -251,7 +268,7 @@ NAME-OF-MODE is needed to pass this function to `compilation-start'."
     (format "*%s*" (rg--buffer-name))))
 
 (defun rg-build-type-add-args ()
-  "Build a list of --type-add: 'foo:*.foo' flags.
+  "Build a list of --type-add: \"foo:*.foo\" flags.
 Do this for each type in `rg-custom-type-aliases'."
   (mapcar
    (lambda (typedef)
@@ -297,10 +314,19 @@ are command line flags to use for the search."
           (when (member system-type '(darwin windows-nt))
             (list ".")))))
 
-    (grep-expand-template
-     (mapconcat 'identity (cons (rg-executable) (delete-dups command-line)) " ")
-     pattern
-     (if (rg-is-custom-file-pattern files) "custom" files))))
+    (let ((command (grep-expand-template
+                    (mapconcat 'identity (cons (rg-executable) (delete-dups command-line)) " ")
+                    pattern
+                    (if (rg-is-custom-file-pattern files) "custom" files))))
+      (cond ((and (eq system-type 'windows-nt) rg-w32-unicode)
+             (with-temp-file rg-w32-ripgrep-proxy
+               (set-buffer-multibyte t)
+               (setq buffer-file-coding-system 'utf-8-dos)
+               (insert (format "@echo off\n"))
+               (insert (format "chcp 65001 > nul\n"))
+               (insert (format "%s\n" command)))
+             rg-w32-ripgrep-proxy)
+            (t command)))))
 
 (defun rg-invoke-rg-type-list ()
   "Invokes rg --type-list and return the result."
@@ -332,16 +358,34 @@ filtered out."
   "Return supported type aliases.
 If SKIP-INTERNAL is non nil the `rg-internal-type-aliases' will be
 excluded."
-  (unless rg-builtin-type-aliases
+  ;; Read from ripgrep once or if prioritized aliases changed.
+  (unless (and rg-builtin-type-aliases-cache
+               (equal rg-prioritized-type-aliases
+                      (mapcar #'car rg-prioritized-type-aliases-cache)))
     (let ((builtin-aliases (rg-list-builtin-type-aliases)))
-      (setq rg-builtin-type-aliases
-            (delete-dups
-             (append
-              (seq-filter (lambda (item)
-                            (member (car item) rg-prioritized-type-aliases))
-                          builtin-aliases)
-              builtin-aliases)))))
-  (append (rg-get-custom-type-aliases) rg-builtin-type-aliases
+      (if rg-prioritized-type-aliases
+          (progn
+            (let ((prioritized-type-aliases
+                   (seq-filter (lambda (item)
+                                 (member (car item) rg-prioritized-type-aliases))
+                               builtin-aliases)))
+              ;; Reorder the the found aliases to the same order as rg-prioritized-type-aliases
+              (setq rg-prioritized-type-aliases-cache
+                    (seq-map (lambda (item)
+                               (assoc item prioritized-type-aliases))
+                             rg-prioritized-type-aliases))
+              ;; Remove the prioritzed aliases from the builtin cache
+              ;; to avoid duplicates.
+              (setq rg-builtin-type-aliases-cache
+                    (seq-remove (lambda (item)
+                                  (member (car item) rg-prioritized-type-aliases))
+                                builtin-aliases))))
+        ;; Simple case, just assign
+        (setq rg-builtin-type-aliases-cache builtin-aliases)
+        (setq rg-prioritized-type-aliases-cache nil))))
+  (append (rg-get-custom-type-aliases)
+          rg-prioritized-type-aliases-cache
+          rg-builtin-type-aliases-cache
           (unless skip-internal rg-internal-type-aliases)))
 
 (defun rg-default-alias ()
@@ -545,11 +589,11 @@ reports."
 (defmacro rg-define-toggle (flag &optional key default)
   "Define a command line flag that can be toggled from the rg result buffer.
 
-This will create a function with prefix 'rg-custom-toggle-flag-'
+This will create a function with prefix \"rg-custom-toggle-flag-\"
 concatenated with the FLAG name, stripped of any leading dashes.  Flag
 must be a form that will be evaluated to a string at macro expansion
-time.  For instance, if FLAG is '--invert-match' the function name
-will be 'rg-custom-toggle-flag-invert-match.  If the flag contains a
+time.  For instance, if FLAG is \"--invert-match\" the function name
+will be `rg-custom-toggle-flag-invert-match'.  If the flag contains a
 value that will be excluded from the function name.
 
 Optional KEY is a key binding that is added to `rg-mode-map'.  If the

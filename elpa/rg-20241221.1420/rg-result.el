@@ -189,6 +189,10 @@ Becomes buffer local in `rg-mode' buffers.")
 (defvar-local rg-hit-count 0
   "Stores number of hits in a search.")
 
+(defvar-local rg-match-positions nil
+  "Stores position of matches in a search.
+Each element is consists by (match-beginning-marker . match-string-length).")
+
 (defvar-local rg-recompile nil
   "Is `recompile' in progress or `compile-start'.")
 
@@ -213,7 +217,9 @@ Becomes buffer local in `rg-mode' buffers.")
      (0 rg-command-line-properties)
      (1 (rg-hidden-command-line-properties)))
     ("^-\\*- mode: rg; default-directory: \"\\(.*\\)\" -\\*-$"
-     (1 rg-directory-properties))))
+     (1 rg-directory-properties))
+    ("\\[\\.\\.\\. [0-9]+ more match\\(es\\)*\\]$"
+     (0 'rg-info-face nil t))))
 
 (defvar rg-menu-map
   (let ((map (make-sparse-keymap "RipGrep")))
@@ -440,7 +446,7 @@ Set up `compilation-exit-message-function'."
 This function is called from `compilation-filter-hook'."
   (save-excursion
     (forward-line 0)
-    (let ((end (point)) beg)
+    (let ((end (point)) beg temp-positions)
       (goto-char compilation-filter-start)
       (forward-line 0)
       (setq beg (point))
@@ -469,8 +475,10 @@ This function is called from `compilation-filter-hook'."
           (replace-match (propertize (match-string 1)
                                      'face nil 'font-lock-face 'rg-match-face)
                          t t)
+          (push (cons (copy-marker (match-beginning 0))
+                      (length (match-string 0)))
+                temp-positions)
           (cl-incf rg-hit-count))
-
         (rg-format-line-and-column-numbers beg end)
 
         ;; Delete all remaining escape sequences
@@ -479,6 +487,9 @@ This function is called from `compilation-filter-hook'."
           (replace-match "" t t))
 
         (goto-char beg)
+
+        (setq rg-match-positions (nconc rg-match-positions (nreverse temp-positions)))
+
         (run-hooks 'rg-filter-hook)))))
 
 ;; The regexp and filter functions below were taken from ag.el
@@ -787,6 +798,10 @@ previous file with grouped matches."
                   (setq filepath (buffer-substring-no-properties (point) (line-end-position))))
                 (push (cons filepath nextfile) elements))
               (nreverse elements))))))
+
+(defun rg-cur-search-pattern ()
+  "Get the current search pattern."
+  (rg-search-pattern rg-cur-search))
 
 (provide 'rg-result)
 

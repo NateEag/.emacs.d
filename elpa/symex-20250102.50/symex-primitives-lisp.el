@@ -110,6 +110,8 @@
                 (or (bolp)                          ; ^|.
                     (looking-back "[[:space:]]"     ; _|.
                                   (line-beginning-position))
+                    (save-excursion (backward-char)
+                                    (symex-string-p))
                     (looking-back lispy-left        ; (*|.
                                   (line-beginning-position)))))))
 
@@ -194,7 +196,7 @@
   (looking-at (concat "#" lispy-left)))
 
 (defun symex--special-left-p ()
-  "Check if point is at a 'special' opening delimiter.
+  "Check if point is at a \"special\" opening delimiter.
 
 This includes any special cases that should be treated as lists for
 the purpose of movement, such as quoted lists and Lisp flavor-specific
@@ -211,7 +213,7 @@ as special cases here."
       (symex--clojure-literal-lambda-p)))
 
 (defun symex--special-empty-list-p ()
-  "Check if we're looking at a 'special' empty list."
+  "Check if we're looking at a \"special\" empty list."
   (or (save-excursion
         (and (symex--racket-splicing-unsyntax-p)
              (progn (forward-char 5)
@@ -261,6 +263,10 @@ as special cases here."
               (save-excursion (forward-char) (lispy-right-p))) ; |)
          (forward-char)
          (lispy-different))
+        ((condition-case nil  ; (thing-at-point string) raises error at EOB
+             (thing-at-point 'string)
+           (error nil))       ; "som|e string"
+         (beginning-of-thing 'string))
         ((thing-at-point 'sexp)       ; som|ething
          (beginning-of-thing 'sexp))
         (t (symex-lisp--if-stuck (symex-lisp--backward)

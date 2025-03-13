@@ -1,6 +1,7 @@
 ;;; symex-interface-racket.el --- An evil way to edit Lisp symbolic expressions as trees -*- lexical-binding: t -*-
 
-;; URL: https://github.com/countvajhula/symex.el
+;; URL: https://github.com/drym-org/symex.el
+
 
 ;; This program is "part of the world," in the sense described at
 ;; https://drym.org.  From your perspective, this is no different than
@@ -29,6 +30,7 @@
 (require 'subr-x)
 (require 'symex-interop)
 (require 'symex-primitives)
+(require 'symex-interface)
 
 ;; from racket-mode - avoid byte-compile warnings
 (defvar racket-repl-buffer-name)
@@ -44,47 +46,42 @@
 (declare-function racket-run "ext:racket-mode")
 
 (defun symex--racket-send-to-repl (code)
-  "Internal function to send CODE to the Racket REPL for evaluation.
+   "Send CODE to the current buffer's REPL for evaluation.
 
-Before sending the code (in string form), calls `racket-repl' and
-`racket--repl-forget-errors'.  Also inserts a ?\n at the process
-mark so that output goes on a fresh line, not on the same line as
-the prompt.
-
-Afterwards call `racket--repl-show-and-move-to-end'.
-
-This function is based on code from an old version of the
-`racket-mode` Emacs package."
-  (racket-repl t)
-  (racket--repl-forget-errors)
-  (let ((proc (get-buffer-process racket-repl-buffer-name)))
+Based on `racket--send-region-to-repl' from `racket-mode'."
+  (unless (racket--repl-session-id)
+    (user-error "No REPL session available; run the file first"))
+  ;; Capture source buffer in case something changes; see e.g. #407.
+  (let ((source-buffer (current-buffer)))
+    (racket--repl-forget-errors)
     (with-racket-repl-buffer
       (save-excursion
-        (goto-char (process-mark proc))
+        (racket--repl-delete-prompt-mark nil)
+        (goto-char (point-max))
         (insert ?\n)
-        (set-marker (process-mark proc) (point))))
-    (comint-send-string proc code)
-    (comint-send-string proc "\n"))
-  (when (fboundp 'racket--repl-show-and-move-to-end)
-    (racket--repl-show-and-move-to-end)))
+        (when t
+          (insert code)
+          (insert (propertize "\n=>\n"
+                              'font-lock-face 'racket-repl-message)))
+        (add-text-properties racket--repl-output-mark (point)
+                             (list 'field 'send
+                                   'read-only t))
+        (set-marker racket--repl-output-mark (point))))
+    (racket--cmd/async (racket--repl-session-id)
+                       `(repl-submit ,code))
+    (display-buffer racket-repl-buffer-name)))
 
 (defun symex-eval-racket ()
   "Eval last sexp.
 
 Accounts for different point location in evil vs Emacs mode."
-  (interactive)
   (save-excursion
     (when (equal evil-state 'normal)
       (forward-char))
     (racket-send-last-sexp)))
 
-(defun symex-eval-definition-racket ()
-  "Eval entire containing definition."
-  (racket-send-definition))
-
 (defun symex-eval-pretty-racket ()
   "Evaluate symex and render the result in a useful string form."
-  (interactive)
   (let ((pretty-code (string-join
                       `("(let ([result "
                         ,(buffer-substring (symex--get-starting-point)
@@ -96,23 +93,16 @@ Accounts for different point location in evil vs Emacs mode."
     (symex--racket-send-to-repl pretty-code)))
 
 (defun symex-eval-thunk-racket ()
-  "Evaluate symex as a 'thunk,' i.e. as a function taking no arguments."
-  (interactive)
+  "Evaluate symex as a \"thunk,\" i.e. as a function taking no arguments."
   (let ((thunk-code (string-join
-                      `("("
-                        ,(buffer-substring (symex--get-starting-point)
-                                           (point))
-                        ")"))))
+                     `("("
+                       ,(buffer-substring (symex--get-starting-point)
+                                          (point))
+                       ")"))))
     (symex--racket-send-to-repl thunk-code)))
-
-(defun symex-eval-print-racket ()
-  "Eval symex and print result in buffer."
-  (interactive)
-  nil)
 
 (defun symex-describe-symbol-racket ()
   "Describe symbol at point."
-  (interactive)
   (let ((original-window (selected-window)))
     (cond (racket-xp-mode (racket-xp-describe))
           ((eq major-mode 'racket-repl-mode) (racket-repl-describe))
@@ -122,17 +112,35 @@ Accounts for different point location in evil vs Emacs mode."
 (defun symex-repl-racket ()
   "Go to REPL."
   (let ((original-window (selected-window)))
-    (racket-repl)
+    (racket-edit-switch-to-repl)
     (unless (eq original-window (selected-window))
       ;; if the REPL window is currently being created
       ;; then don't attempt to go to the bottom
       (goto-char (point-max))
       (symex-enter-lowest))))
 
-(defun symex-run-racket ()
-  "Evaluate buffer."
-  (racket-run))
+(defun symex-switch-to-scratch-buffer-racket ()
+  "Switch to scratch buffer."
+  (let ((buffer-name "*scratch - Racket*"))
+    (switch-to-buffer (or (get-buffer buffer-name)
+                          (symex--new-scratch-buffer buffer-name)))))
 
+(defvar symex-racket-modes (list 'racket-mode
+                                 'racket-repl-mode))
+
+(defun symex-interface-register-racket ()
+  "Register the Racket runtime interface."
+  (symex-interface-extend
+   symex-racket-modes
+   (list
+    :eval #'symex-eval-racket
+    :eval-definition #'racket-send-definition
+    :eval-pretty #'symex-eval-pretty-racket
+    :eval-thunk #'symex-eval-thunk-racket
+    :describe-symbol #'symex-describe-symbol-racket
+    :repl #'symex-repl-racket
+    :run #'racket-run
+    :switch-to-scratch-buffer #'symex-switch-to-scratch-buffer-racket)))
 
 (provide 'symex-interface-racket)
 ;;; symex-interface-racket.el ends here

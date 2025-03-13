@@ -2,7 +2,8 @@
 
 ;; Author: Siddhartha Kasivajhula <sid@countvajhula.com>
 ;; URL: https://github.com/countvajhula/symex.el
-;; Version: 1.0
+;; Package-Version: 20250102.50
+;; Package-Revision: 94e5040f0c24
 ;; Package-Requires: ((emacs "25.1") (tsc "0.15.2") (tree-sitter "0.15.2") (lispy "0.26.0") (paredit "24") (evil-cleverparens "20170718.413") (evil "1.2.14") (evil-surround "1.0.4") (hydra "0.15.0") (seq "2.22"))
 ;; Keywords: lisp, convenience, languages
 
@@ -47,6 +48,7 @@
 (require 'symex-evil)
 (require 'symex-interop)
 (require 'symex-misc)
+(require 'symex-interface)
 (require 'symex-primitives)
 (require 'symex-custom)
 (require 'tree-sitter)
@@ -113,7 +115,8 @@
 
 (defun symex-enter-mode ()
   "Take necessary action upon symex mode entry."
-  (symex--ensure-minor-mode)
+  (when (member major-mode (symex-get-lisp-modes))
+    (symex--ensure-minor-mode))
   (symex--adjust-point-on-entry)
   (when symex-remember-branch-positions-p
     (symex--clear-branch-memory))
@@ -124,28 +127,10 @@
     (symex--set-scroll-margin))
   (symex--enter-mode))
 
-;;; Major modes in which symex should be active.
-(defvar symex-elisp-modes (list 'lisp-interaction-mode
-                                'emacs-lisp-mode
-                                'inferior-emacs-lisp-mode))
-
-(defvar symex-racket-modes (list 'racket-mode
-                                 'racket-repl-mode))
-
-(defvar symex-clojure-modes (list 'clojure-mode
-                                  'clojurescript-mode
-                                  'clojurec-mode))
-
-(defvar symex-common-lisp-modes (list 'lisp-mode
-                                      'slime-repl-mode
-                                      'sly-mrepl-mode))
-
-(defvar symex-lisp-modes (append symex-elisp-modes
-                                 symex-racket-modes
-                                 symex-clojure-modes
-                                 symex-common-lisp-modes
-                                 (list 'scheme-mode
-                                       'arc-mode)))
+;;; List major modes in which symex should be active.
+(defun symex-get-lisp-modes ()
+  "List modes that implement the symex interface."
+  (mapcar #'car symex-interfaces))
 
 ;;;###autoload
 (defun symex-initialize ()
@@ -153,8 +138,10 @@
 
 This registers symex mode for use in all recognized Lisp modes, and also
 advises functions to enable or disable features based on user configuration."
+
+  (symex-register-builtin-interfaces)
   ;; enable the symex minor mode in all recognized lisp modes
-  (dolist (mode-name symex-lisp-modes)
+  (dolist (mode-name (symex-get-lisp-modes))
     (let ((mode-hook (intern (concat (symbol-name mode-name)
                                      "-hook"))))
       (add-hook mode-hook 'symex-mode)))
@@ -185,7 +172,7 @@ If you are changing symex customizations to enable or disable certain
 features, you may need to call this function after making such changes
 and prior to calling `symex-initialize` again, in order for the former
 configuration to be disabled and the new one adopted."
-  (dolist (mode-name symex-lisp-modes)
+  (dolist (mode-name (symex-get-lisp-modes))
     (let ((mode-hook (intern (concat (symbol-name mode-name)
                                      "-hook"))))
       (remove-hook mode-hook 'symex-mode)))

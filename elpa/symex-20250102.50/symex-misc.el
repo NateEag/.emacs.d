@@ -31,12 +31,8 @@
 (require 'symex-primitives)
 (require 'symex-evaluator)
 (require 'symex-traversals)
-(require 'symex-interface-elisp)
-(require 'symex-interface-racket)
-(require 'symex-interface-scheme)
-(require 'symex-interface-clojure)
-(require 'symex-interface-common-lisp)
-(require 'symex-interface-arc)
+(require 'symex-interface)
+(require 'symex-interface-builtins)
 (require 'symex-interop)
 (require 'symex-ui)
 
@@ -44,10 +40,6 @@
 ;; explicitly indicating them here to avoid byte compile warnings
 (defvar symex-refocus-p)
 (defvar symex-highlight-p)
-(defvar symex-racket-modes)
-(defvar symex-elisp-modes)
-(defvar symex-clojure-modes)
-(defvar symex-common-lisp-modes)
 
 ;; buffer-local branch memory stack
 (defvar-local symex--branch-memory nil)
@@ -81,19 +73,7 @@
           ;; merely as an implementation detail of this operation
           (evil-emacslike-state)
           (forward-sexp) ; selected symexes will have the cursor on the starting paren
-          (cond ((member major-mode symex-racket-modes)
-                 (symex-eval-racket))
-                ((member major-mode symex-elisp-modes)
-                 (symex-eval-elisp))
-                ((equal major-mode 'scheme-mode)
-                 (symex-eval-scheme))
-                ((member major-mode symex-clojure-modes)
-                 (symex-eval-clojure))
-                ((member major-mode symex-common-lisp-modes)
-                 (symex-eval-common-lisp))
-                ((equal major-mode 'arc-mode)
-                 (symex-eval-arc))
-                (t (error "Symex mode: Lisp flavor not recognized!"))))
+          (funcall (symex-interface-get-method :eval)))
       ;; enter a "normal-like" state here momentarily, to prevent entry
       ;; into symex mode from being treated as if it was in an "emacs" context
       ;; since the entry into emacs state is done here as an implementation
@@ -124,7 +104,7 @@
 
 Eval starting at the leaves and proceed down to the root, similarly
 to how the Lisp interpreter does it (when it is following
-'applicative-order evaluation')."
+\"applicative-order evaluation\")."
   (interactive)
   (save-excursion
     (symex-execute-traversal (symex-traversal
@@ -148,57 +128,21 @@ to how the Lisp interpreter does it (when it is following
 (defun symex-evaluate-definition ()
   "Evaluate entire containing symex definition."
   (interactive)
-  (cond ((member major-mode symex-racket-modes)
-         (symex-eval-definition-racket))
-        ((member major-mode symex-elisp-modes)
-         (symex-eval-definition-elisp))
-        ((equal major-mode 'scheme-mode)
-         (symex-eval-definition-scheme))
-        ((member major-mode symex-clojure-modes)
-         (symex-eval-definition-clojure))
-        ((member major-mode symex-common-lisp-modes)
-         (symex-eval-definition-common-lisp))
-        ((equal major-mode 'arc-mode)
-         (symex-eval-definition-arc))
-        (t (error "Symex mode: Lisp flavor not recognized!"))))
+  (funcall (symex-interface-get-method :eval-definition)))
 
 (defun symex-evaluate-pretty ()
   "Evaluate Symex and transform output into a useful string representation."
   (interactive)
   (save-excursion
     (forward-sexp)  ; selected symexes will have the cursor on the starting paren
-    (cond ((member major-mode symex-racket-modes)
-           (symex-eval-pretty-racket))
-          ((member major-mode symex-elisp-modes)
-           (symex-eval-pretty-elisp))
-          ((equal major-mode 'scheme-mode)
-           (symex-eval-pretty-scheme))
-          ((member major-mode symex-clojure-modes)
-           (symex-eval-pretty-clojure))
-          ((member major-mode symex-common-lisp-modes)
-           (symex-eval-pretty-common-lisp))
-          ((equal major-mode 'arc-mode)
-           (symex-eval-pretty-arc))
-          (t (error "Symex mode: Lisp flavor not recognized!")))))
+    (funcall (symex-interface-get-method :eval-pretty))))
 
 (defun symex-eval-print ()
   "Eval symex and print result in buffer."
   (interactive)
   (save-excursion
     (forward-sexp)
-    (cond ((member major-mode symex-racket-modes)
-           (symex-eval-print-racket))
-          ((member major-mode symex-elisp-modes)
-           (symex-eval-print-elisp))
-          ((equal major-mode 'scheme-mode)
-           (symex-eval-print-scheme))
-          ((member major-mode symex-clojure-modes)
-           (symex-eval-print-clojure))
-          ((member major-mode symex-common-lisp-modes)
-           (symex-eval-print-common-lisp))
-          ((equal major-mode 'arc-mode)
-           (symex-eval-print-arc))
-          (t (error "Symex mode: Lisp flavor not recognized!")))))
+    (funcall (symex-interface-get-method :eval-print))))
 
 (defun symex-evaluate-thunk ()
   "Evaluate symex as a thunk.
@@ -209,70 +153,24 @@ executing it."
   (interactive)
   (save-excursion
     (forward-sexp)  ; selected symexes will have the cursor on the starting paren
-    (cond ((member major-mode symex-racket-modes)
-           (symex-eval-thunk-racket))
-          ((member major-mode symex-elisp-modes)
-           (symex-eval-thunk-elisp))
-          ((equal major-mode 'scheme-mode)
-           (symex-eval-thunk-scheme))
-          ((member major-mode symex-clojure-modes)
-           (symex-eval-thunk-clojure))
-          ((member major-mode symex-common-lisp-modes)
-           (symex-eval-thunk-common-lisp))
-          ((equal major-mode 'arc-mode)
-           (symex-eval-thunk-arc))
-          (t (error "Symex mode: Lisp flavor not recognized!")))))
+    (funcall (symex-interface-get-method :eval-thunk))))
 
 (defun symex-describe ()
   "Lookup doc on symex."
   (interactive)
   (save-excursion
     (forward-sexp)  ; selected symexes will have the cursor on the starting paren
-    (cond ((member major-mode symex-racket-modes)
-           (symex-describe-symbol-racket))
-          ((member major-mode symex-elisp-modes)
-           (symex-describe-symbol-elisp))
-          ((equal major-mode 'scheme-mode)
-           (symex-describe-symbol-scheme))
-          ((member major-mode symex-clojure-modes)
-           (symex-describe-symbol-clojure))
-          ((member major-mode symex-common-lisp-modes)
-           (symex-describe-symbol-common-lisp))
-          ((equal major-mode 'arc-mode)
-           (symex-describe-symbol-arc))
-          (t (error "Symex mode: Lisp flavor not recognized!")))))
+    (funcall (symex-interface-get-method :describe-symbol))))
 
 (defun symex-repl ()
   "Go to REPL."
   (interactive)
-  (cond ((member major-mode symex-racket-modes)
-         (symex-repl-racket))
-        ((member major-mode symex-elisp-modes)
-         (symex-repl-elisp))
-        ((equal major-mode 'scheme-mode)
-         (symex-repl-scheme))
-        ((member major-mode symex-clojure-modes)
-         (symex-repl-clojure))
-        ((member major-mode symex-common-lisp-modes)
-         (symex-repl-common-lisp))
-        ((equal major-mode 'arc-mode)
-         (symex-repl-arc))
-        (t (error "Symex mode: Lisp flavor not recognized!"))))
+  (funcall (symex-interface-get-method :repl)))
 
 (defun symex-run ()
   "Send to REPL."
   (interactive)
-  (cond ((member major-mode symex-racket-modes)
-         (symex-run-racket))
-        ((member major-mode symex-elisp-modes)
-         (symex-run-elisp))
-        ((equal major-mode 'scheme-mode)
-         (symex-run-scheme))
-        ((member major-mode symex-clojure-modes)
-         (symex-run-clojure))
-        ((member major-mode symex-common-lisp-modes)
-         (symex-run-common-lisp))
-        (t (error "Symex mode: Lisp flavor not recognized!"))))
+  (funcall (symex-interface-get-method :run)))
 
 (cl-defun symex--new-scratch-buffer (buffer-name)
   "Create a new empty buffer.
@@ -297,20 +195,7 @@ Version 2017-11-01"
 (defun symex-switch-to-scratch-buffer ()
   "Switch to scratch buffer."
   (interactive)
-  (let* ((buffer-name (cond ((member major-mode symex-racket-modes)
-                             "*scratch - Racket*")
-                            ((member major-mode symex-elisp-modes)
-                             "*scratch*")
-                            ((equal major-mode 'scheme-mode)
-                             "*scratch - Scheme*")
-                            ((member major-mode symex-clojure-modes)
-                             "*scratch - Clojure*")
-                            ((member major-mode symex-common-lisp-modes)
-                             "*scratch - Common Lisp*")
-                            (t (error "Symex mode: Lisp flavor not recognized!"))))
-         (buf (get-buffer buffer-name)))
-    (let ((buf (or buf (symex--new-scratch-buffer buffer-name))))
-      (switch-to-buffer buf))))
+  (funcall (symex-interface-get-method :switch-to-scratch-buffer)))
 
 (defun symex-switch-to-messages-buffer ()
   "Switch to messages buffer while retaining focus in original window."
@@ -431,19 +316,19 @@ the height at every step of the traversal which itself is logarithmic
 in the size of the tree, making the cost O(nlog(n)).
 
 There are at least two possible ways in which we could implement this
-'leap' feature: first, as a \"local\" traversal from the starting
+\"leap\" feature: first, as a \"local\" traversal from the starting
 position, keeping track of changes to the height while traversing and
 stopping when a suitable destination point is reached.  This would be
 efficient since we would only need to determine the height once, at the
 start, making it O(n).  However, this approach would require some
-notion of 'memory' to be built into the DSL semantics, which at
+notion of \"memory\" to be built into the DSL semantics, which at
 present it lacks (representing a theoretical limitation on the types
 of traversals expressible in the DSL in its present form).
 
 A second way to do it is in \"global\" terms -- rather than keeping
 track of changing height in the course of the traversal, instead,
 determine always from a common reference point (the root) the current
-height. This allows us to circumvent the need for 'memory' since this
+height. This allows us to circumvent the need for \"memory\" since this
 information could be computed afresh at each step.  This latter
 approach is the one employed here."
   (let ((traverse (if soar

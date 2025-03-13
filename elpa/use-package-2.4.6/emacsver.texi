@@ -1,0 +1,2 @@
+@set USEP_DIST from GNU ELPA
+@set EMACSVER

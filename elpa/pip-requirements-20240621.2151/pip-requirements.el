@@ -4,8 +4,8 @@
 ;;
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
-;; Version: 0.6
-;; Package-Version: 20181027.1629
+;; Package-Version: 20240621.2151
+;; Package-Revision: 31e0dc62abb2
 ;; Package-Requires: ((dash "2.8.0"))
 
 ;;; License:

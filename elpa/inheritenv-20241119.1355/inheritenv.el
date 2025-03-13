@@ -5,7 +5,8 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; URL: https://github.com/purcell/inheritenv
 ;; Package-Requires: ((emacs "24.4"))
-;; Version: 0.2
+;; Package-Version: 20241119.1355
+;; Package-Revision: b9e67cc20c06
 ;; Keywords: unix
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -49,9 +50,14 @@
 ;; 2. End users can modify commands like `shell-command-to-string' using
 ;;    the `inheritenv-add-advice' macro.
 
+;; Any buffer-local values for TRAMP's corresponding vars
+;; (`tramp-remote-path' and `tramp-remote-process-environment') are
+;; also propagated.
+
 ;;; Code:
 
 (require 'cl-lib)
+
 
 ;;;###autoload
 (defun inheritenv-apply (func &rest args)
@@ -65,7 +71,12 @@ This function is designed for convenient use as an \"around\" advice.
 ARGS is as for ORIG."
   (cl-letf* (((default-value 'process-environment) process-environment)
              ((default-value 'exec-path) exec-path))
-    (apply func args)))
+    ;; Don't force tramp to be loaded, but propagate its env/path vars if it is
+    (if (and (boundp 'tramp-remote-path) (boundp 'tramp-remote-process-environment))
+        (cl-letf* (((default-value 'tramp-remote-path) tramp-remote-path)
+                   ((default-value 'tramp-remote-process-environment) tramp-remote-process-environment))
+          (apply func args))
+      (apply func args))))
 
 
 (defmacro inheritenv (&rest body)

@@ -1,13 +1,14 @@
 ;;; lsp-latex.el --- LSP-mode client for LaTeX, on texlab     -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2023  ROCKTAKEY
+;; Copyright (C) 2019-2024  ROCKTAKEY
 
 ;; Author: ROCKTAKEY <rocktakey@gmail.com>
 ;; Keywords: languages, tex
 
-;; Version: 3.6.2
+;; Package-Version: 20250126.1416
+;; Package-Revision: 07741fe9a959
 
-;; Package-Requires: ((emacs "27.1") (lsp-mode "6.0") (consult "0.35"))
+;; Package-Requires: ((emacs "28.1") (lsp-mode "6.0") (consult "0.35"))
 ;; URL: https://github.com/ROCKTAKEY/lsp-latex
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -84,7 +85,8 @@
 ;; =============================
 
 ;;   While `lsp-tex.el', included by [lsp-mode], provides minimal setting
-;;   for [Texlab], `lsp-latex.el' provides full features of [Texlab]!
+;;   for [Texlab], `lsp-latex.el' provides full features of [Texlab]
+;;   v5.21.0.
 
 
 ;; [lsp-mode] <https://github.com/emacs-lsp/lsp-mode>
@@ -147,33 +149,46 @@
 
 ;;   These variables are connected to Texlab configuration variables.  See
 ;;   also [Texlab official wiki].
-;;    Custom variable in Emacs                      Configuration provided by Texlab
-;;   ----------------------------------------------------------------------------------------
-;;    lsp-latex-root-directory                      texlab.rootDirectory
-;;    lsp-latex-build-executable                    texlab.build.executable
-;;    lsp-latex-build-args                          texlab.build.args
-;;    lsp-latex-build-forward-search-after          texlab.build.forwardSearchAfter
-;;    lsp-latex-build-on-save                       texlab.build.onSave
-;;    lsp-latex-build-aux-directory                 texlab.auxDirectory
-;;    lsp-latex-forward-search-executable           texlab.forwardSearch.executable
-;;    lsp-latex-forward-search-args                 texlab.forwardSearch.args
-;;    lsp-latex-chktex-on-open-and-save             texlab.chktex.onOpenAndSave
-;;    lsp-latex-chktex-on-edit                      texlab.chktex.onEdit
-;;    lsp-latex-diagnostics-delay                   texlab.diagnosticsDelay
-;;    lsp-latex-diagnostics-allowed-patterns        texlab.diagnostics.allowedPatterns
-;;    lsp-latex-diagnostics-ignored-patterns        texlab.diagnostics.ignoredPatterns
-;;    lsp-latex-symbol-allowed-patterns             texlab.symbol.allowedPatterns
-;;    lsp-latex-symbol-ignored-patterns             texlab.symbol.ignoredPatterns
-;;    lsp-latex-bibtex-formatter-line-length        texlab.formatterLineLength
-;;    lsp-latex-bibtex-formatter                    texlab.bibtexFormatter
-;;    lsp-latex-latex-formatter                     texlab.latexFormatter
-;;    lsp-latex-latexindent-local                   texlab.latexindent.local
-;;    lsp-latex-latexindent-modify-line-breaks      texlab.latexindent.modifyLineBreaks
-;;    lsp-latex-completion-matcher                  texlab.completion.matcher
-;;    lsp-latex-experimental-math-environments      texlab.experimental.mathEnvironments
-;;    lsp-latex-experimental-enum-environments      texlab.experimental.enumEnvironments
-;;    lsp-latex-experimental-verbatim-environments  texlab.experimental.verbatimEnvironments
-;;    lsp-latex-experimental-citation-commands      texlab.experimental.citationCommands
+;;    Custom variable in Emacs                               Configuration provided by Texlab
+;;   --------------------------------------------------------------------------------------------------------
+;;    lsp-latex-build-executable                             texlab.build.executable
+;;    lsp-latex-build-args                                   texlab.build.args
+;;    lsp-latex-build-forward-search-after                   texlab.build.forwardSearchAfter
+;;    lsp-latex-build-on-save                                texlab.build.onSave
+;;    lsp-latex-build-use-file-list                          texlab.build.useFileList
+;;    lsp-latex-build-aux-directory                          texlab.build.auxDirectory
+;;    lsp-latex-build-log-directory                          texlab.build.logDirectory
+;;    lsp-latex-build-pdf-directory                          texlab.build.pdfDirectory
+;;    lsp-latex-forward-search-executable                    texlab.forwardSearch.executable
+;;    lsp-latex-forward-search-args                          texlab.forwardSearch.args
+;;    lsp-latex-chktex-additional-args                       texlab.chktex.additionalArgs
+;;    lsp-latex-chktex-on-open-and-save                      texlab.chktex.onOpenAndSave
+;;    lsp-latex-chktex-on-edit                               texlab.chktex.onEdit
+;;    lsp-latex-diagnostics-delay                            texlab.diagnosticsDelay
+;;    lsp-latex-diagnostics-allowed-patterns                 texlab.diagnostics.allowedPatterns
+;;    lsp-latex-diagnostics-ignored-patterns                 texlab.diagnostics.ignoredPatterns
+;;    lsp-latex-symbols-custom-environments                  texlab.symbols.customEnvironments
+;;    lsp-latex-symbols-allowed-patterns                     texlab.symbol.allowedPatterns
+;;    lsp-latex-symbols-ignored-patterns                     texlab.symbol.ignoredPatterns
+;;    lsp-latex-bibtex-formatter-line-length                 texlab.formatterLineLength
+;;    lsp-latex-bibtex-formatter                             texlab.bibtexFormatter
+;;    lsp-latex-latex-formatter                              texlab.latexFormatter
+;;    lsp-latex-latexindent-local                            texlab.latexindent.local
+;;    lsp-latex-latexindent-modify-line-breaks               texlab.latexindent.modifyLineBreaks
+;;    lsp-latex-latexindent-replacement                      texlab.latexindent.replacement
+;;    lsp-latex-completion-matcher                           texlab.completion.matcher
+;;    lsp-latex-inlay-hints-label-definitions                texlab.inlayHints.labelDefinitions
+;;    lsp-latex-inlay-hints-label-references                 texlab.inlayHints.labelReferences
+;;    lsp-latex-inlay-hints-max-length                       texlab.inlayHints.maxLength
+;;    lsp-latex-experimental-math-environments               texlab.experimental.mathEnvironments
+;;    lsp-latex-experimental-enum-environments               texlab.experimental.enumEnvironments
+;;    lsp-latex-experimental-verbatim-environments           texlab.experimental.verbatimEnvironments
+;;    lsp-latex-experimental-citation-commands               texlab.experimental.citationCommands
+;;    lsp-latex-experimental-label-reference-commands        texlab.experimental.labelReferenceCommands
+;;    lsp-latex-experimental-label-reference-range-commands  texlab.experimental.labelReferenceRangeCommands
+;;    lsp-latex-experimental-label-definition-commands       texlab.experimental.labelReferenceCommands
+;;    lsp-latex-experimental-label-reference-prefixes        texlab.experimental.labelReferencePrefixes
+;;    lsp-latex-experimental-label-definition-prefixes       texlab.experimental.labelDefinitionPrefixes
 
 
 ;; [Texlab official wiki]
@@ -652,6 +667,7 @@ See also `lsp-completion-sort-initial-results'."
   :risky t
   :type '(choice string
                  (const nil)))
+(make-obsolete-variable 'lsp-latex-root-directory "Texlab 5.16.1 and more ignore this variable." "3.8.0")
 
 (defcustom lsp-latex-build-executable "latexmk"
   "Build command used on `lsp-latex-build'."
@@ -670,7 +686,7 @@ Value is used on `lsp-latex-build'.
 
 (define-obsolete-variable-alias 'lsp-latex-forward-search-after
   'lsp-latex-build-forward-search-after
-   "3.0.0")
+  "3.0.0")
 
 (defcustom lsp-latex-build-forward-search-after nil
   "Execute forward-research after building."
@@ -693,14 +709,40 @@ If you use latexmk, use \"-outdir\" flag.
 
 This variable is obsoleted since Texlab 3.0.0.")
 
+(defcustom lsp-latex-build-use-file-list nil
+  "Whether to use \".fls\" file for project detection or not."
+  :group 'lsp-latex
+  :type 'boolean
+  :version "3.8.0")
+
 (defcustom lsp-latex-build-aux-directory "."
   "Directory to which built file is put.
 Note that you should change `lsp-latex-build-args' to change output directory.
-If you use latexmk, use \"-outdir\" flag."
+
+If you use latexmk, it is automatically determined by Texlab."
   :group 'lsp-latex
   :type 'string
   :risky t
   :version "2.0.0")
+
+(defcustom lsp-latex-build-log-directory "."
+  "Directory containing log for build without latexmk.
+
+If you use latexmk, it is automatically determined by Texlab."
+  :group 'lsp-latex
+  :type 'string
+  :risky t
+  :version "3.7.0")
+
+(defcustom lsp-latex-build-pdf-directory "."
+  "Directory containing PDF for build without latexmk.
+Note that you should change `lsp-latex-build-args' to change output directory.
+
+If you use latexmk, it is automatically determined by Texlab."
+  :group 'lsp-latex
+  :type 'string
+  :risky t
+  :version "3.7.0")
 
 (make-obsolete-variable
  'lsp-latex-build-is-continuous
@@ -729,10 +771,18 @@ Placeholders
 
 (define-obsolete-variable-alias 'lsp-latex-lint-on-save
   'lsp-latex-chktex-on-open-and-save
-   "2.0.0"
-   "Lint using chktex after saving a file.
+  "2.0.0"
+  "Lint using chktex after saving a file.
 
 This variable is obsoleted since Texlab 3.0.0.")
+
+(defcustom lsp-latex-chktex-additional-args nil
+  "Additional arguments passed to ChkTeX.
+Note that redefining -I and -f flags is not allowed.
+These are set by Texlab server."
+  :group 'lsp-latex
+  :type '(repeat string)
+  :version "3.7.0")
 
 (defcustom lsp-latex-chktex-on-open-and-save nil
   "Lint using chktex after opening and saving a file."
@@ -782,27 +832,46 @@ so this variable is priored."
   :type '(repeat string)
   :version "3.0.0")
 
-(defcustom lsp-latex-symbol-allowed-patterns '()
+(define-obsolete-variable-alias 'lsp-latex-symbol-allowed-patterns
+  'lsp-latex-symbols-allowed-patterns
+  "lsp-latex 3.10.0")
+
+(defcustom lsp-latex-symbols-allowed-patterns '()
   "Regexp whitelist for document symbol.
 It should be a list of regular expression.
 Only document symbol that match at least one of the elemnt is shown.
 
-Note that this is applied before `lsp-latex-symbol-ignored-patterns',
+Note that this is applied before `lsp-latex-symbols-ignored-patterns',
 so `lsp-latex-symbol-ignored-patterns' is priored."
   :group 'lsp-latex
   :type '(repeat string)
   :version "3.5.0")
+
+(define-obsolete-variable-alias 'lsp-latex-symbol-ignored-patterns
+  'lsp-latex-symbols-ignored-patterns
+  "lsp-latex 3.10.0")
 
 (defcustom lsp-latex-symbol-ignored-patterns '()
   "Regexp blacklist for document symbol.
 It should be a list of regular expression.
 Only document symbol that do NOT match at least one of the elemnt is shown.
 
-Note that this is applied after `lsp-latex-symbol-allowed-patterns',
+Note that this is applied after `lsp-latex-symbols-allowed-patterns',
 so this variable is priored."
   :group 'lsp-latex
   :type '(repeat string)
   :version "3.5.0")
+
+(defcustom lsp-latex-symbols-custom-environments '()
+  "Extend symbols for environments which is displayed as document symbols.
+
+See also `lsp-latex-symbol-allowed-patterns'."
+  :group 'lsp-latex
+  :type '(repeat (cons (cons (const name) string)
+                       (set
+                        (cons (const displayName) string)
+                        (cons (const label) boolean))))
+  :version "3.10.0")
 
 (define-obsolete-variable-alias 'lsp-latex-bibtex-formatting-line-length
   'lsp-latex-bibtex-formatter-line-length
@@ -856,6 +925,17 @@ The root directory is used by default."
   :type 'boolean
   :version "2.0.0")
 
+(defcustom lsp-latex-latexindent-replacement nil
+  "Additional indent flag passed to latexindent."
+  :group 'lsp-latex
+  :type '(choice
+          string
+          (const :tag "Indentation and replacements (not respect verbatim code blocks)" "-r")
+          (const :tag "Indentation and replacements (respect verbatim code blocks)" "-rv")
+          (const :tag "Only replacements (not respect verbatim code blocks)" "-rr")
+          (const :tag "Only indentation" nil))
+  :version "3.9.0")
+
 (defcustom lsp-latex-completion-matcher "fuzzy-ignore-case"
   "Algorithm used to filter the completion by Texlab.
 \"fuzzy\", which means fuzzy matching, or \"prefix\",
@@ -868,6 +948,25 @@ which means the matcher should be case insensitive."
                  (const "prefix")
                  (const "prefix-ignore-case"))
   :version "3.5.0")
+
+(defcustom lsp-latex-inlay-hints-label-definitions '()
+  "When non-nil, inlay hints for \"\\label\"-like commands are displayed."
+  :group 'lsp-latex
+  :type 'boolean
+  :version "3.7.0")
+
+(defcustom lsp-latex-inlay-hints-label-references '()
+  "When non-nil, inlay hints for \"\\ref\"-like commands are displayed."
+  :group 'lsp-latex
+  :type 'boolean
+  :version "3.7.0")
+
+
+(defcustom lsp-latex-inlay-hints-max-length nil
+  "When non-nil, inlay hints is truncated to the length."
+  :group 'lsp-latex
+  :type '(choice int (const nil))
+  :version "3.9.0")
 
 (defcustom lsp-latex-experimental-math-environments '()
   "List of environment name regarded as math environment, such as \"align\"."
@@ -898,13 +997,61 @@ For example, \"cite\" is meet the condition. Note that backslash is not needed."
   :type '(repeat string)
   :version "3.5.0")
 
+(defcustom lsp-latex-experimental-label-definition-commands '()
+  "List of command name which should be regarded as \"\\label\"-like command.
+For example, \"label\" is meet the condition. Note that backslash is not needed."
+  :group 'lsp-latex
+  :type '(repeat string)
+  :version "3.8.0")
+
+(defcustom lsp-latex-experimental-label-reference-commands '()
+  "List of command name which should be regarded as \"\\ref\"-like command.
+For example, \"ref\" is meet the condition. Note that backslash is not needed."
+  :group 'lsp-latex
+  :type '(repeat string)
+  :version "3.7.0")
+
+(defcustom lsp-latex-experimental-label-reference-range-commands '()
+  "List of command name which should be regarded as \"\\crefrange\"-like command.
+
+Same as `lsp-latex-experimental-label-reference-commands' except the target is
+\"\\cfrange\"-like command."
+  :group 'lsp-latex
+  :type '(repeat string)
+  :version "3.10.0")
+
+(defcustom lsp-latex-experimental-label-definition-prefixes '()
+  "List of prefix for the label name for definition.
+Each element should be (COMMAND PREFIX), where COMMAND is string regarded as
+reference like \"label\", and where PREFIX should be string like \"fig:\"."
+  :group 'lsp-latex
+  :type '(repeat (list string string))
+  :version "3.8.0")
+
+(defcustom lsp-latex-experimental-label-reference-prefixes '()
+  "List of prefix for the label name for reference.
+Same as `lsp-latex-experimental-label-definition-prefixes'
+except COMMAND should be  string regarded as definition, like \"ref\"."
+  :group 'lsp-latex
+  :type '(repeat (list string string))
+  :version "3.8.0")
+
+
+(defun lsp-latex--vectorize-recursive (list-or-atom)
+  "Transform recursive list LIST-OR-ATOM to recursive vector.
+When LIST-OR-ATOM is atom, this function returns it as-is."
+  (if (listp list-or-atom)
+      (apply #'vector
+             (mapcar #'lsp-latex--vectorize-recursive list-or-atom))
+    list-or-atom))
+
 (defun lsp-latex--getter-vectorize-list (symbol)
   "Make list in SYMBOL into vector.
 This function is thoughted to be used with `apply-partially'.
 
 This function is used for the treatment before `json-serialize',
 because `json-serialize' cannot recognize normal list as array of json."
-  (vconcat (eval symbol)))
+  (lsp-latex--vectorize-recursive (eval symbol)))
 
 (defun lsp-latex--diagnostics-allowed-patterns ()
   "Get `lsp-latex-build-args' with changing to vector.
@@ -921,36 +1068,45 @@ should be vector."
      ("texlab.build.args" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-build-args))
      ("texlab.build.forwardSearchAfter" lsp-latex-build-forward-search-after t)
      ("texlab.build.onSave" lsp-latex-build-on-save t)
-     ("texlab.auxDirectory" lsp-latex-build-aux-directory)
+     ("texlab.build.useFileList" lsp-latex-build-use-file-list)
+     ("texlab.build.auxDirectory" lsp-latex-build-aux-directory)
+     ("texlab.build.logDirectory" lsp-latex-build-log-directory)
+     ("texlab.build.pdfDirectory" lsp-latex-build-pdf-directory)
      ("texlab.forwardSearch.executable" lsp-latex-forward-search-executable)
      ("texlab.forwardSearch.args" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-forward-search-args))
+     ("texlab.chktex.additionalArgs" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-chktex-additional-args))
      ("texlab.chktex.onOpenAndSave" lsp-latex-chktex-on-open-and-save t)
      ("texlab.chktex.onEdit" lsp-latex-chktex-on-edit t)
      ("texlab.diagnosticsDelay" lsp-latex-diagnostics-delay)
      ("texlab.diagnostics.allowedPatterns" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-diagnostics-allowed-patterns))
      ("texlab.diagnostics.ignoredPatterns" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-diagnostics-ignored-patterns))
+     ("texlab.symbols.allowedPatterns" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-symbol-allowed-patterns))
+     ("texlab.symbols.ignoredPatterns" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-symbol-ignored-patterns))
+     ("texlab.symbols.customEnvironments" (lambda () (apply #'vector lsp-latex-symbols-custom-environments)))
      ("texlab.formatterLineLength" lsp-latex-bibtex-formatter-line-length)
      ("texlab.bibtexFormatter" lsp-latex-bibtex-formatter)
      ("texlab.latexFormatter" lsp-latex-latex-formatter)
      ("texlab.latexindent.local" lsp-latex-latexindent-local)
      ("texlab.latexindent.modifyLineBreaks" lsp-latex-latexindent-modify-line-breaks)
+     ("texlab.latexindent.replacement" lsp-latex-latexindent-replacement)
      ("texlab.completion.matcher" lsp-latex-completion-matcher)
-     ("texlab.experimental.mathEnvironments" lsp-latex-experimental-math-environments)
-     ("texlab.experimental.enumEnvironments"lsp-latex-experimental-enum-environments)
-     ("texlab.experimental.verbatimEnvironments" lsp-latex-experimental-verbatim-environments)
-     ("texlab.experimental.citationCommands" lsp-latex-experimental-citation-commands))))
+     ("texlab.inlayHints.labelDefinitions" lsp-latex-inlay-hints-label-definitions t)
+     ("texlab.inlayHints.labelReferences" lsp-latex-inlay-hints-label-references t)
+     ("texlab.inlayHints.maxLength" lsp-latex-inlay-hints-max-length)
+     ("texlab.experimental.mathEnvironments" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-math-environments))
+     ("texlab.experimental.enumEnvironments" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-enum-environments))
+     ("texlab.experimental.verbatimEnvironments" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-verbatim-environments))
+     ("texlab.experimental.citationCommands" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-citation-commands))
+     ("texlab.experimental.labelDefinitionCommands" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-label-definition-commands))
+     ("texlab.experimental.labelReferenceCommands" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-label-reference-commands))
+     ("texlab.experimental.labelReferenceRangeCommands" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-label-reference-range-commands))
+     ("texlab.experimental.labelDefinitionPrefixes" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-label-definition-prefixes))
+     ("texlab.experimental.labelReferencePrefixes" ,(apply-partially #'lsp-latex--getter-vectorize-list 'lsp-latex-experimental-label-reference-prefixes)))))
 
 (lsp-latex-setup-variables)
 
 (add-to-list 'lsp-language-id-configuration '(".*\\.tex$" . "latex"))
 (add-to-list 'lsp-language-id-configuration '(".*\\.bib$" . "bibtex"))
-
-(defun lsp-latex-new-connection ()
-  "Create new connection of lsp-latex."
-  (if (locate-file lsp-latex-texlab-executable exec-path)
-      (cons lsp-latex-texlab-executable
-            lsp-latex-texlab-executable-argument-list)
-    (error "\"texlab\" executable is not found")))
 
 ;; Copied from `lsp-clients--rust-window-progress' in `lsp-rust'.
 (defun lsp-latex-window-progress (_workspace params)
@@ -961,11 +1117,12 @@ PARAMS progress report notification data."
 
 (lsp-register-client
  (make-lsp-client :new-connection
-                  (lsp-stdio-connection
-                   #'lsp-latex-new-connection)
+                  (lsp-stdio-connection lsp-latex-texlab-executable)
                   :major-modes '(tex-mode
+                                 TeX-mode ;; AUCTeX 14+ has renamed tex-mode to TeX-mode
                                  yatex-mode
                                  latex-mode
+                                 LaTeX-mode  ;; AUCTeX 14+ has renamed latex-mode to LaTeX-mode
                                  bibtex-mode)
                   :server-id 'texlab2
                   :priority 2
@@ -987,7 +1144,7 @@ PARAMS progress report notification data."
 
 
 ;;; Interface
-(eval-when-compile
+(eval-and-compile
   (lsp-interface
    (texlab:BuildTextDocumentParams
     (:textDocument) (:position?))
@@ -1055,33 +1212,33 @@ This function is partially copied from
   (require 'pdf-sync)
 
   (with-current-buffer (get-file-buffer tex-file)
-   (cl-destructuring-bind (pdf page _x1 y1 _x2 _y2)
-       (let* ((column 1)
-              (pdf (expand-file-name (with-no-warnings pdf-file)))
-              (sfilename (pdf-sync-synctex-file-name
-                          (buffer-file-name) pdf)))
-         (cons pdf
-               (condition-case error
-                   (let-alist (pdf-info-synctex-forward-search
-                               (or sfilename
-                                   (buffer-file-name))
-                               line column pdf)
-                     (cons .page .edges))
-                 (error
-                  (message "%s" (error-message-string error))
-                  (list nil nil nil nil nil)))))
-     (let ((buffer (or (find-buffer-visiting pdf)
-                       (find-file-noselect pdf))))
-       (with-selected-window (display-buffer
-                              buffer pdf-sync-forward-display-action)
-         (pdf-util-assert-pdf-window)
-         (when page
-           (pdf-view-goto-page page)
-           (when y1
-             (let ((top (* y1 (cdr (pdf-view-image-size)))))
-               (pdf-util-tooltip-arrow (round top))))))
-       (with-current-buffer buffer
-         (run-hooks 'pdf-sync-forward-hook))))))
+    (cl-destructuring-bind (pdf page _x1 y1 _x2 _y2)
+        (let* ((column 1)
+               (pdf (expand-file-name (with-no-warnings pdf-file)))
+               (sfilename (pdf-sync-synctex-file-name
+                           (buffer-file-name) pdf)))
+          (cons pdf
+                (condition-case error
+                    (let-alist (pdf-info-synctex-forward-search
+                                (or sfilename
+                                    (buffer-file-name))
+                                line column pdf)
+                      (cons .page .edges))
+                  (error
+                   (message "%s" (error-message-string error))
+                   (list nil nil nil nil nil)))))
+      (let ((buffer (or (find-buffer-visiting pdf)
+                        (find-file-noselect pdf))))
+        (with-selected-window (display-buffer
+                               buffer pdf-sync-forward-display-action)
+          (pdf-util-assert-pdf-window)
+          (when page
+            (pdf-view-goto-page page)
+            (when y1
+              (let ((top (* y1 (cdr (pdf-view-image-size)))))
+                (pdf-util-tooltip-arrow (round top))))))
+        (with-current-buffer buffer
+          (run-hooks 'pdf-sync-forward-hook))))))
 
 (lsp-defun lsp-latex--message-forward-search ((&texlab:ForwardSearchResult :status))
   "Message unless STATUS means success."

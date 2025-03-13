@@ -1,12 +1,11 @@
 ;;; qrencode.el --- QRCode encoder  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2023 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
+;; Copyright (C) 2021-2024 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Keywords: qrcode comm
-;; Package-Version: 20230324.2335
-;; Package-Commit: d7896e9594d45d7b2622d4617ff9cb7037378167
-;; Version: 1.2
+;; Package-Version: 20240922.1231
+;; Package-Revision: 4bbb1f331d7e
 ;; Package-Requires: ((emacs "25.1"))
 ;; Package: qrencode
 ;; URL: https://github.com/ruediger/qrencode-el
@@ -872,17 +871,19 @@ is `byte'.  If RETURN-RAW is set a raw vector version of the
 QRCode is returned instead of a formatted string."
   ;; Following Section 7.1 from ISO/IEC 18004 2015
 
-  (let (version data qr function-pattern datamask)
+  (let (version raw-bytes data qr function-pattern datamask)
     ;; Step 1: Analyse data
     ;; TODO(#11): find suitable mode. For now we only support byte
     (setq mode (or mode 'byte))
+    ;; Convert Emacs internal encoded characters into raw UTF-8 bytes
+    (setq raw-bytes (encode-coding-string s 'utf-8))
     ;; Find the version with the highest error correction to fit the data
-    (pcase-let ((`(,ver . ,ec) (qrencode--find-version (length s) mode errcorr)))
+    (pcase-let ((`(,ver . ,ec) (qrencode--find-version (length raw-bytes) mode errcorr)))
       (setq version ver
             errcorr ec))
 
     ;; Step 2: Encode data
-    (setq data (qrencode--encode-byte s version))
+    (setq data (qrencode--encode-byte raw-bytes version))
     ;; Add padding
     (let* ((size-table (aref qrencode--size-table (1- version)))
            (qrlen (car size-table))
@@ -1085,6 +1086,16 @@ Commands:
     (if (null url)
         (message "No URL found at point")
       (qrencode--encode-to-buffer url))))
+
+;;;###autoload
+(defun qrencode-string (str)
+  "Encode STR.
+When called interactively, read STR with `read-string'."
+  (interactive "sString: ")
+  (let ((trimmed-str (string-trim str)))
+    (if (string-empty-p trimmed-str)
+	(user-error "Empty string"))
+    (qrencode--encode-to-buffer trimmed-str)))
 
 (provide 'qrencode)
 

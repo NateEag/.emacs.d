@@ -31,7 +31,6 @@
 (require 'ledger-exec)
 (require 'ledger-post)
 (declare-function ledger-read-date "ledger-mode" (prompt))
-(declare-function ledger-format-date "ledger-init" (&optional date))
 
 ;; TODO: This file depends on code in ledger-mode.el, which depends on this.
 
@@ -70,36 +69,29 @@ When nil, `ledger-add-transaction' will not prompt twice."
             (move-overlay ledger-xact-highlight-overlay b (+ 1 e))
           (move-overlay ledger-xact-highlight-overlay 1 1))))))
 
+(defun ledger-highlight--before-revert ()
+  "Clean up highlighting overlay before reverting buffer."
+  (when ledger-xact-highlight-overlay
+    (delete-overlay ledger-xact-highlight-overlay)))
+
 (defun ledger-xact-context ()
   "Return the context of the transaction containing point or nil."
   (let ((i 0))
     (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
       (setq i (- i 1)))
     (let ((context-info (ledger-context-other-line i)))
-      (if (eq (ledger-context-line-type context-info) 'xact)
-          context-info
-        nil))))
+      (when (eq (ledger-context-line-type context-info) 'xact)
+        context-info))))
 
 (defun ledger-xact-payee ()
   "Return the payee of the transaction containing point or nil."
-  (let ((xact-context (ledger-xact-context)))
-    (if xact-context
-        (ledger-context-field-value xact-context 'payee)
-      nil)))
+  (when-let ((xact-context (ledger-xact-context)))
+    (ledger-context-field-value xact-context 'payee)))
 
 (defun ledger-xact-date ()
   "Return the date of the transaction containing point or nil."
-  (let ((xact-context (ledger-xact-context)))
-    (if xact-context
-        (ledger-context-field-value xact-context 'date)
-      nil)))
-
-(defun ledger-time-less-p (t1 t2)
-  "Say whether time value T1 is less than time value T2."
-  ;; TODO: assert listp, or support when both are strings
-  (or (< (car t1) (car t2))
-      (and (= (car t1) (car t2))
-           (< (nth 1 t1) (nth 1 t2)))))
+  (when-let ((xact-context (ledger-xact-context)))
+    (ledger-context-field-value xact-context 'date)))
 
 (defun ledger-xact-find-slot (moment)
   "Find the right place in the buffer for a transaction at MOMENT.
@@ -107,11 +99,11 @@ MOMENT is an encoded date"
   (let (last-xact-start)
     (catch 'found
       (ledger-xact-iterate-transactions
-       (function
-        (lambda (start date _mark _desc)
-          (setq last-xact-start start)
-          (if (ledger-time-less-p moment date)
-              (throw 'found t))))))
+       (lambda (start date _mark _desc)
+         (setq last-xact-start start)
+         (when (time-less-p moment date)
+           (throw 'found t)))))
+    ;; If we are inserting at the end of the buffer, insert an extra newline
     (when (and (eobp) last-xact-start)
       (let ((end (cadr (ledger-navigate-find-xact-extents last-xact-start))))
         (goto-char end)
@@ -125,21 +117,20 @@ MOMENT is an encoded date"
          (current-year (nth 5 (decode-time now))))
     (while (not (eobp))
       (when (looking-at ledger-iterate-regexp)
-        (let ((found-y-p (match-string 1)))
-          (if found-y-p
-              (setq current-year (string-to-number found-y-p)) ;; a Y directive was found
-            (let ((start (match-beginning 0))
-                  (year (match-string (+ ledger-regex-iterate-group-actual-date 1)))
-                  (month (string-to-number (match-string (+ ledger-regex-iterate-group-actual-date 2))))
-                  (day (string-to-number (match-string (+ ledger-regex-iterate-group-actual-date 3))))
-                  (state (match-string ledger-regex-iterate-group-state))
-                  (payee (match-string ledger-regex-iterate-group-payee)))
-              (if (and year (> (length year) 0))
-                  (setq year (string-to-number year)))
-              (funcall callback start
-                       (encode-time 0 0 0 day month
-                                    (or year current-year))
-                       state payee)))))
+        (if-let ((year (match-string 1)))
+            (setq current-year (string-to-number year)) ;a Y directive was found
+          (let ((start (match-beginning 0))
+                (year (match-string (+ ledger-regex-iterate-group-actual-date 1)))
+                (month (string-to-number (match-string (+ ledger-regex-iterate-group-actual-date 2))))
+                (day (string-to-number (match-string (+ ledger-regex-iterate-group-actual-date 3))))
+                (state (match-string ledger-regex-iterate-group-state))
+                (payee (match-string ledger-regex-iterate-group-payee)))
+            (if (and year (> (length year) 0))
+                (setq year (string-to-number year)))
+            (funcall callback start
+                     (encode-time 0 0 0 day month
+                                  (or year current-year))
+                     state payee))))
       (forward-line))))
 
 (defcustom ledger-copy-transaction-insert-blank-line-after nil
@@ -149,9 +140,8 @@ MOMENT is an encoded date"
 
 (defun ledger-copy-transaction-at-point (date)
   "Ask for a new DATE and copy the transaction under point to that date.
-Leave point on the first amount."
-  (interactive  (list
-                 (ledger-read-date "Copy to date: ")))
+Leave point on the first amount, if any, otherwise the first account."
+  (interactive (list (ledger-read-date "Copy to date: ")))
   (let* ((extents (ledger-navigate-find-xact-extents (point)))
          (transaction (buffer-substring-no-properties (car extents) (cadr extents)))
          (encoded-date (ledger-parse-iso-date date)))
@@ -163,11 +153,14 @@ Leave point on the first amount."
               "\n"))
     (beginning-of-line -1)
     (ledger-navigate-beginning-of-xact)
-    (re-search-forward ledger-iso-date-regexp)
-    (replace-match date)
-    (ledger-next-amount)
-    (if (re-search-forward "[-0-9]")
-        (goto-char (match-beginning 0)))))
+    (let ((end (save-excursion (ledger-navigate-end-of-xact) (point))))
+      (re-search-forward ledger-iso-date-regexp)
+      (replace-match date)
+      (if (ledger-next-amount end)
+          (progn
+            (re-search-forward "[-0-9]")
+            (goto-char (match-beginning 0)))
+        (ledger-next-account end)))))
 
 (defun ledger-delete-current-transaction (pos)
   "Delete the transaction surrounding POS."
@@ -198,9 +191,11 @@ Leave point on the first amount."
   "Use ledger xact TRANSACTION-TEXT to add a transaction to the buffer.
 If INSERT-AT-POINT is non-nil insert the transaction there,
 otherwise call `ledger-xact-find-slot' to insert it at the
-correct chronological place in the buffer.  Interactively, the
-date is requested via `ledger-read-date'."
-  (interactive (list (ledger-read-transaction)))
+correct chronological place in the buffer.
+
+Interactively, the date is requested via `ledger-read-date' and
+the \\[universal-argument] enables INSERT-AT-POINT."
+  (interactive (list (ledger-read-transaction) current-prefix-arg))
   (let* ((args (with-temp-buffer
                  (insert transaction-text)
                  (eshell-parse-arguments (point-min) (point-max))))
@@ -215,7 +210,7 @@ date is requested via `ledger-read-date'."
         (ledger-xact-find-slot (or parsed-date date))
         (when (looking-at "\n*\\'")
           (setq separator ""))))
-    (if (> (length args) 1)
+    (if (cdr args)
         (save-excursion
           (insert
            (with-temp-buffer
@@ -225,9 +220,8 @@ date is requested via `ledger-read-date'."
              (ledger-post-align-postings (point-min) (point-max))
              (buffer-string))
            separator))
-      (progn
-        (insert (car args) " ")
-        (save-excursion (insert "\n" separator))))))
+      (insert (car args) " ")
+      (save-excursion (insert "\n" separator)))))
 
 (provide 'ledger-xact)
 

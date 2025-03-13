@@ -94,16 +94,30 @@ Returns a list with (value commodity)."
           (split-string str "[\n\r]")))
 
 (defun ledger-subtract-commodity (c1 c2)
-  "Subtract C2 from C1, ensuring their commodities match."
-  (if (string= (cadr c1) (cadr c2))
-      (list (-(car c1) (car c2)) (cadr c1))
-    (error "Can't subtract different commodities %S from %S" c2 c1)))
+  "Subtract C2 from C1, ensuring their commodities match.
+
+As an exception, if the quantity of C2 is zero, C1 is returned
+directly."
+  (cond
+   ((zerop (car c2)) c1)
+   ((string= (cadr c1) (cadr c2))
+    (list (- (car c1) (car c2)) (cadr c1)))
+   (t (error "Can't subtract different commodities: %S - %S" c1 c2))))
 
 (defun ledger-add-commodity (c1 c2)
-  "Add C1 and C2, ensuring their commodities match."
-  (if (string= (cadr c1) (cadr c2))
-      (list (+ (car c1) (car c2)) (cadr c1))
-    (error "Can't add different commodities, %S to %S" c1 c2)))
+  "Add C1 and C2, ensuring their commodities match.
+
+As an exception, if the quantity of C2 is zero, C1 is returned
+directly."
+  (cond
+   ((zerop (car c2)) c1)
+   ((string= (cadr c1) (cadr c2))
+    (list (+ (car c1) (car c2)) (cadr c1)))
+   (t (error "Can't add different commodities: %S + %S" c1 c2))))
+
+(defun ledger-negate-commodity (c)
+  "Return the negative of the commoditized amount C."
+  (list (- (car c)) (cadr c)))
 
 (defun ledger-strip (str char)
   "Return STR with CHAR removed."
@@ -148,13 +162,12 @@ longer ones are after the value."
   (let ((str (read-from-minibuffer
               (concat prompt " (" ledger-reconcile-default-commodity "): ")))
         comm)
-    (if (and (> (length str) 0)
+    (when (and (> (length str) 0)
              (ledger-split-commodity-string str))
-        (progn
-          (setq comm (ledger-split-commodity-string str))
-          (if (cadr comm)
-              comm
-            (list (car comm) ledger-reconcile-default-commodity))))))
+      (setq comm (ledger-split-commodity-string str))
+      (if (cadr comm)
+          comm
+        (list (car comm) ledger-reconcile-default-commodity)))))
 
 (provide 'ledger-commodities)
 

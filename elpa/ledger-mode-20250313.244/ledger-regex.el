@@ -50,7 +50,7 @@
   "^!comment\n\\(.*\n\\)*?!end_comment$")
 
 (defconst ledger-payee-any-status-regex
-  "^[0-9]+[-/][-/.=0-9]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\s-*\\(;\\|$\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\(?:\\s-+\\*\\)?\\(?:\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\s-*\\(?:;\\|$\\)")
 
 (defconst ledger-payee-pending-regex
   "^[0-9]+[-/][-/.=0-9]+\\s-!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
@@ -60,6 +60,12 @@
 
 (defconst ledger-payee-uncleared-regex
   "^[0-9]+[-/][-/.=0-9]+\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
+
+(defconst ledger-payee-directive-regex
+  (concat "^payee[ \t]+\\(.*?\\)[ \t]*$"))
+
+(defconst ledger-payee-name-or-directive-regex
+  (format "\\(?:%s\\|%s\\)" ledger-payee-any-status-regex ledger-payee-directive-regex))
 
 (defconst ledger-init-string-regex
   "^--.+?\\($\\|[ ]\\)")
@@ -282,7 +288,7 @@
 (ledger-define-regexp amount-no-group
   (rx (and (? ?-)
            (+ digit)
-           (*? (and (any ?. ?,) (+ digit)))))
+           (* (and (any ?. ?,) (+ digit)))))
   "")
 
 (ledger-define-regexp amount
@@ -293,13 +299,22 @@
 (ledger-define-regexp commoditized-amount
   (macroexpand
    `(rx (group
-         (or (and (regexp ,ledger-commodity-no-group-regexp)
-                  (*? blank)
-                  (regexp ,ledger-amount-no-group-regexp))
-             (and (regexp ,ledger-amount-no-group-regexp)
-                  (*? blank)
-                  (regexp ,ledger-commodity-no-group-regexp))))))
-  "")
+         (or
+          ;; Match commodity before amount, with optional
+          ;; minus sign allowed before commodity.
+
+          ;; Ex: "$100" or "-$100"
+          (and (opt ?-)
+               (regexp ,ledger-commodity-no-group-regexp)
+               (*? blank)
+               (regexp ,ledger-amount-no-group-regexp))
+          ;; Match commodity after amount
+
+          ;; Ex: "100 Dollars"
+          (and (regexp ,ledger-amount-no-group-regexp)
+               (*? blank)
+               (regexp ,ledger-commodity-no-group-regexp))))))
+  "Regexp to match a commodity with amount such as \"$100\" or \"100 Dollars\"")
 
 (ledger-define-regexp commodity-annotations
   (macroexpand
@@ -401,12 +416,14 @@
           ))
 
 (defconst ledger-posting-regex
-  (concat "^[[:blank:]]+"                 ; initial white space
-          "\\(\\([*!]\\)?"                ; state and account 1, state 2
-          "[[:blank:]]*\\(.*?\\)\\)?"     ; account 3
-          "\\(?:\\(?:\t\\|[[:blank:]]\\{2,\\}\\)" ; column separator
-          "\\([^;\n]*?\\)"                ; amount 4
-          "[[:blank:]]*\\(;.*\\)?\\)?$"   ; comment 5
+  (concat "^[[:blank:]]+" ; initial white space
+          ;; state and account, subexp 1
+          "\\(\\([*!]\\)?"            ; state,   subexp 2
+          "[[:blank:]]*\\(.*?\\)\\)?" ; account, subexp 3
+          "\\(?:\\(?:\t\\|[[:blank:]]\\{2,\\}\\)"
+          "\\([^;\n]*?\\)\\)?"        ; amount,  subexp 4
+          "\\(?:\\(?:\t\\|[[:blank:]]\\{2,\\}\\)"
+          "\\(;.*\\)\\)?$"            ; comment, subexp 5
           ))
 
 

@@ -4,6 +4,8 @@
 
 ;; This file is not part of GNU Emacs.
 
+;; Package-Version: 20250313.244
+;; Package-Revision: 5546f19567fb
 ;; Package-Requires: ((emacs "25.1"))
 
 ;; This is free software; you can redistribute it and/or modify it under
@@ -96,6 +98,13 @@
                                            (regexp-quote account))
                                          (ledger-accounts-list))))
 
+(defun ledger-read-payee-with-prompt (prompt)
+  "Read a payee from the minibuffer with PROMPT."
+  (ledger-completing-read-with-default prompt
+                                       (when-let ((payee (ledger-xact-payee)))
+                                         (regexp-quote payee))
+                                       (ledger-payees-list)))
+
 (defun ledger-read-date (prompt)
   "Return user-supplied date after `PROMPT', defaults to today.
 This uses `org-read-date', which see."
@@ -137,11 +146,10 @@ the balance into that."
                         (buffer-substring-no-properties (point-min) (1- (point-max)))
                       (concat account " is empty.")))))
     (when balance
-      (message balance))))
+      (display-message-or-buffer balance))))
 
 (defun ledger-display-ledger-stats ()
-  "Display the cleared-or-pending balance.
-And calculate the target-delta of the account being reconciled."
+  "Display some summary statistics about the current ledger file."
   (interactive)
   (let* ((buffer (find-file-noselect (ledger-master-file)))
          (balance (with-temp-buffer
@@ -153,6 +161,10 @@ And calculate the target-delta of the account being reconciled."
 (defvar ledger-mode-abbrev-table)
 
 (defvar ledger-date-string-today (ledger-format-date))
+
+
+
+;;; Editing commands
 
 (defun ledger-remove-effective-date ()
   "Remove the effective date from a transaction or posting."
@@ -216,19 +228,133 @@ With a prefix argument, remove the effective date."
   "Indent, remove multiple line feeds and sort the buffer."
   (interactive)
   (let ((start (point-min-marker))
-        (end (point-max-marker)))
-    (ledger-navigate-beginning-of-xact)
-    (beginning-of-line)
-    (let ((target (buffer-substring (point) (progn
-                                              (end-of-line)
-                                              (point)))))
+        (end (point-max-marker))
+        (distance-in-xact (- (point) (ledger-navigate-beginning-of-xact))))
+    (let ((target (buffer-substring (line-beginning-position) (line-end-position))))
       (goto-char start)
       (untabify start end)
       (ledger-sort-buffer)
       (ledger-post-align-postings start end)
       (ledger-mode-remove-extra-lines)
       (goto-char start)
-      (search-forward target))))
+      (search-forward target)
+      (beginning-of-line)
+      (forward-char distance-in-xact))))
+
+(defun ledger-rename-account (old new &optional toplevel-only)
+  "Rename account with name OLD to name NEW.
+
+Affects account names mentioned in postings as well as declared
+with the \"account\" directive.
+
+By default, child accounts of OLD are also renamed to
+corresponding child accounts of NEW.  With \\[universal-argument]
+prefix, child accounts are not renamed.  When called from Lisp,
+TOPLEVEL-ONLY has the same meaning."
+  (interactive
+   (let* ((old-name
+           (ledger-read-account-with-prompt "Old name: "))
+          (new-name
+           (ledger-read-string-with-default "New name: " old-name)))
+     (list old-name new-name current-prefix-arg)))
+  (save-excursion
+    (goto-char (point-min))
+    (while (re-search-forward ledger-account-name-or-directive-regex nil t)
+      (let ((account (match-string 1)))
+        (cond
+         ((string-equal account old)
+          (replace-match new 'fixedcase 'literal nil 1))
+         ((and (not toplevel-only)
+               (string-prefix-p (concat old ":") account))
+          (replace-match
+           (concat new (substring account (length old)))
+           'fixedcase 'literal nil 1))))))
+  (when ledger-post-auto-align
+    (ledger-post-align-postings (point-min) (point-max))))
+
+
+
+;;; Commands for changing dates
+
+;; These functions are adapted from the implementation of `org-timestamp-change'.
+
+(defun ledger--in-regexp (regexp)
+  "Return (BEG . END) if point is inside a match of REGEXP, or nil.
+
+Only check the current line for occurrences of REGEXP."
+  (catch :exit
+    (let ((pos (point))
+          (eol (line-end-position)))
+      (save-excursion
+        (beginning-of-line)
+        (while (and (re-search-forward regexp eol t)
+                    (<= (match-beginning 0) pos))
+          (let ((end (match-end 0)))
+            (when (>= end pos)
+              (throw :exit (cons (match-beginning 0) (match-end 0))))))))))
+
+(defsubst ledger--pos-in-match-range (pos n)
+  "Return non-nil if POS is inside the range of group N in the match data."
+  (and (match-beginning n)
+       (<= (match-beginning n) pos)
+       (>= (match-end n) pos)))
+
+(defun ledger--at-date-p ()
+  "Return non-nil if point is inside a date.
+
+Specifically, return `year', `month', or `day', depending on
+which part of the date string point is in."
+  (let ((pos (point))
+        (boundaries (ledger--in-regexp ledger-iso-date-regexp)))
+    (cond ((null boundaries) nil)
+          ((ledger--pos-in-match-range pos 2) 'year)
+          ((ledger--pos-in-match-range pos 3) 'month)
+          ((ledger--pos-in-match-range pos 4) 'day))))
+
+(defun ledger--date-change (n)
+  "Change the date field at point by N (can be negative)."
+  (let ((date-cat (ledger--at-date-p))
+        (origin-pos (point))
+        date-separator
+        date-str time-old time-new)
+    (unless date-cat (user-error "Not at a date"))
+    (setq date-str (match-string 0))
+    (setq date-separator
+          (string (aref date-str 4)))
+    (save-match-data
+      (setq time-old (decode-time (ledger-parse-iso-date date-str)))
+      (setq time-new
+            ;; Do not pass DST or ZONE arguments here; it should be
+            ;; automatically inferred from the other arguments, since the
+            ;; appropriate DST value may differ from `time-old'.
+            (encode-time
+             0                          ; second
+             0                          ; minute
+             0                          ; hour
+             (+ (if (eq date-cat 'day)   n 0) (nth 3 time-old))
+             (+ (if (eq date-cat 'month) n 0) (nth 4 time-old))
+             (+ (if (eq date-cat 'year)  n 0) (nth 5 time-old)))))
+    (replace-match (format-time-string (concat "%Y" date-separator "%m" date-separator "%d")
+                                       time-new)
+                   'fixedcase
+                   'literal)
+    (goto-char origin-pos)))
+
+(defun ledger-date-up (&optional arg)
+  "Increment the date field at point by 1.
+With prefix ARG, increment by that many instead."
+  (interactive "p")
+  (ledger--date-change arg))
+
+(defun ledger-date-down (&optional arg)
+  "Decrement the date field at point by 1.
+With prefix ARG, decrement by that many instead."
+  (interactive "p")
+  (ledger--date-change (- arg)))
+
+
+
+;;; Major mode definition
 
 (defvar ledger-mode-syntax-table
   (let ((table (make-syntax-table text-mode-syntax-table)))
@@ -268,6 +394,9 @@ With a prefix argument, remove the effective date."
     (define-key map (kbd "M-p") #'ledger-navigate-prev-xact-or-directive)
     (define-key map (kbd "M-n") #'ledger-navigate-next-xact-or-directive)
     (define-key map (kbd "M-q") #'ledger-post-align-dwim)
+
+    (define-key map (kbd "S-<up>") #'ledger-date-up)
+    (define-key map (kbd "S-<down>") #'ledger-date-down)
 
     ;; Reset the `text-mode' override of this standard binding
     (define-key map (kbd "C-M-i") 'completion-at-point)
@@ -325,6 +454,8 @@ With a prefix argument, remove the effective date."
   (add-hook 'after-save-hook 'ledger-report-redo nil t)
 
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
+  (add-hook 'before-revert-hook 'ledger-highlight--before-revert nil t)
+  (add-hook 'after-revert-hook 'ledger-highlight-xact-under-point nil t)
 
   (ledger-init-load-init-file)
   (setq-local comment-start ";")

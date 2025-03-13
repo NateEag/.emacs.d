@@ -10,7 +10,8 @@
 ;; Maintainer: Tom Dalziel <tom.dalziel@gmail.com>
 ;;
 ;; Created: July 23 2011
-;; Version: 1.0.4
+;; Package-Version: 20240325.852
+;; Package-Revision: 14dc693ed971
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -222,7 +223,7 @@ Does not modify the buffer."
     (save-excursion
       (save-match-data
         (goto-char (evil-range-beginning range))
-        (while (looking-at regexp) (forward-char))
+        (while (looking-at-p regexp) (forward-char))
         (let ((new-beg (point)))
           (evil-set-range-beginning range new-beg)
           (goto-char (evil-range-end range))
@@ -289,6 +290,17 @@ This overlay excludes the delimeters."
       (evil-expand-range range)
       range)))
 
+(defun evil-surround--get-delims (char)
+  "Given a CHAR, return delims from the pairs alist. Trim whitespace."
+  (let ((kv-pair (assoc char evil-surround-pairs-alist)))
+    (when kv-pair
+      (let* ((delims (cdr kv-pair))
+             (o (car-safe delims))
+             (c (cdr-safe delims)))
+        (if (and (stringp o) (stringp c))
+            (cons (string-trim o) (string-trim c))
+          delims)))))
+
 ;;;###autoload
 (defun evil-surround-delete (char &optional outer inner)
   "Delete the surrounding delimiters represented by CHAR.
@@ -306,7 +318,7 @@ between these overlays is what is deleted."
    (t
     ;; no overlays specified: create them on the basis of CHAR
     ;; and delete after use
-    (let* ((delims (cdr (assoc char evil-surround-pairs-alist)))
+    (let* ((delims (evil-surround--get-delims char))
            (outer (evil-surround-outer-overlay delims char))
            (inner (evil-surround-inner-overlay delims char)))
       (unwind-protect
@@ -330,7 +342,7 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
                             (overlay-end outer)
                             nil (if (evil-surround-valid-char-p key) key char))))
    (t
-    (let* ((delims (cdr (assoc char evil-surround-pairs-alist)))
+    (let* ((delims (evil-surround--get-delims char))
            (outer (evil-surround-outer-overlay delims char))
            (inner (evil-surround-inner-overlay delims char)))
       (unwind-protect
@@ -396,7 +408,9 @@ Otherwise call `evil-surround-region'."
     (call-interactively 'evil-surround-delete))
    (t
     (evil-surround-setup-surround-line-operators)
-    (evil-surround-call-with-repeat 'evil-surround-region))))
+    (evil-surround-call-with-repeat 'evil-surround-region)))
+  ;; Return an empty range so evil-motion-range doesn't try to guess
+  (let ((p (point))) (list p p 'exclusive)))
 
 (evil-define-command evil-Surround-edit (operation)
   "Like evil-surround-edit, but for surrounding with additional new-lines.

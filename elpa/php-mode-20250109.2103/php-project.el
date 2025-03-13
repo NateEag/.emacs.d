@@ -5,7 +5,6 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Keywords: tools, files
 ;; URL: https://github.com/emacs-php/php-mode
-;; Version: 1.25.0
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -267,7 +266,7 @@ Typically it is `pear', `drupal', `wordpress', `symfony2' and `psr2'.")
 
 This function is compatible with `project-find-functions'."
   (let ((default-directory dir))
-    (when-let (root (php-project-get-root-dir))
+    (when-let* ((root (php-project-get-root-dir)))
       (if (file-exists-p (expand-file-name ".git" root))
           (cons 'vc root)
         (cons 'transient root)))))

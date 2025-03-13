@@ -1,6 +1,6 @@
 ;;; php-mode.el --- Major mode for editing PHP code  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023  Friends of Emacs-PHP development
+;; Copyright (C) 2024  Friends of Emacs-PHP development
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004 Turadg Aleahmad
 ;;               2008 Aaron S. Hawley
 ;;               2011, 2012, 2013, 2014, 2015, 2016, 2017 Eric James Michael Ritz
@@ -9,13 +9,14 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.25.0
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Version: 20250109.2103
+;; Package-Revision: 0f756a8c0782
+;; Package-Requires: ((emacs "27.1"))
 ;; License: GPL-3.0-or-later
 
 (eval-and-compile
   (make-obsolete-variable
-   (defconst php-mode-version-number "1.25.0" "PHP Mode version number.")
+   (defconst php-mode-version-number "1.26.1" "PHP Mode version number.")
    "Please call (php-mode-version :as-number t) for compatibility." "1.24.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -83,6 +84,7 @@
   (require 'rx)
   (require 'cl-lib)
   (require 'flymake)
+  (require 'flymake-proc)
   (require 'php-flymake)
   (require 'regexp-opt)
   (declare-function acm-backend-tabnine-candidate-expand "ext:acm-backend-tabnine"
@@ -190,7 +192,7 @@ Turning this on will open it whenever `php-mode' is loaded."
                        #'php-flymake))
   "Flymake function to replace, if NIL do not replace."
   :tag "PHP Mode Replace Flymake Diag Function"
-  :type '(choice 'function
+  :type '(choice function
                  (const :tag "Disable to replace" nil)))
 
 (define-obsolete-variable-alias 'php-do-not-use-semantic-imenu 'php-mode-do-not-use-semantic-imenu "1.20.0")
@@ -252,7 +254,7 @@ mumamo-mode turned on.  Detects if there are any HTML tags in the
 buffer before warning, but this is is not very smart; e.g. if you
 have any tags inside a PHP string, it will be fooled."
   :tag "PHP Mode Warn If MuMaMo Off"
-  :type '(choice (const :tag "Warn" t) (const "Don't warn" nil)))
+  :type '(choice (const :tag "Warn" t) (const :tag "Don't warn" nil)))
 
 (defcustom php-mode-coding-style 'pear
   "Select default coding style to use with `php-mode'.
@@ -291,13 +293,6 @@ In that case set to `NIL'."
   :tag "PHP Mode Enable Backup Style Variables"
   :type 'boolean)
 
-(define-obsolete-variable-alias 'php-mode-disable-parent-mode-hooks 'php-mode-disable-c-mode-hook "1.21.0")
-(defcustom php-mode-disable-c-mode-hook t
-  "When set to `T', do not run hooks of parent modes (`java-mode', `c-mode')."
-  :tag "PHP Mode Disable C Mode Hook"
-  :type 'boolean)
-(make-obsolete-variable 'php-mode-disable-c-mode-hook nil "1.24.2")
-
 (defcustom php-mode-enable-project-local-variable t
   "When set to `T', apply project local variable to buffer local variable."
   :tag "PHP Mode Enable Project Local Variable"
@@ -326,6 +321,7 @@ as a function.  Call with AS-NUMBER keyword to compare by `version<'.
 
 (defvar php-mode-map
   (let ((map (make-sparse-keymap "PHP Mode")))
+    (set-keymap-parent map c-mode-base-map)
     ;; Remove menu item for c-mode
     (define-key map [menu-bar C] nil)
 
@@ -632,8 +628,7 @@ but only if the setting is enabled."
    ((assq 'defun-block-intro c-syntactic-context) nil)
    ((assq 'defun-close c-syntactic-context) nil)
    ((assq 'statement-cont c-syntactic-context) nil)
-   (t
-    (save-excursion
+   ((save-excursion
       (beginning-of-line)
       (let ((beginning-of-langelem (cdr langelem))
             (beginning-of-current-line (point))
@@ -656,8 +651,10 @@ but only if the setting is enabled."
               (skip-chars-backward " 	\r\n")
               (backward-char 1))
             (and (not (eq (point) beginning-of-current-line))
+                 (not (php-in-string-or-comment-p))
                  (not (looking-at-p ","))
-                 (not (php-in-string-or-comment-p))))
+                 (save-excursion
+                   (backward-char) (not (looking-at-p ",")))))
           '+)
          (t nil)))))))
 
@@ -714,7 +711,7 @@ a backward search limit."
  "pear"
  '("php"
    (c-basic-offset . 4)
-   (c-offsets-alist . ((case-label . 0)))
+   (c-offsets-alist . ((case-label . 0) (statement-cont . +)))
    (tab-width . 4)
    (php-mode-lineup-cascaded-calls . nil)))
 
@@ -1043,17 +1040,24 @@ HEREDOC-START."
       (unwind-protect
           (let (new-start new-end)
             (goto-char start)
+            ;; Consider bounding this backwards search by `beginning-of-defun'.
+            ;; (Benchmarking for a wide range of cases may be needed to decide
+            ;; whether that's an improvement, as `php-beginning-of-defun' also
+            ;; uses `re-search-backward'.)
             (when (re-search-backward php-heredoc-start-re nil t)
               (let ((maybe (point)))
                 (when (and (re-search-forward (php-heredoc-end-re (match-string 0)) nil t)
                            (> (point) start))
-                  (setq new-start maybe))))
-            (goto-char end)
-            (when (re-search-backward php-heredoc-start-re nil t)
-              (if (re-search-forward (php-heredoc-end-re (match-string 0)) nil t)
+                  (setq new-start maybe)
                   (when (> (point) end)
-                    (setq new-end (point)))
-                (setq new-end (point-max))))
+                    (setq new-end (point))))))
+            (unless new-end
+              (goto-char end)
+              (when (re-search-backward php-heredoc-start-re start t)
+                (if (re-search-forward (php-heredoc-end-re (match-string 0)) nil t)
+                    (when (> (point) end)
+                      (setq new-end (point)))
+                  (setq new-end (point-max)))))
             (when (or new-start new-end)
               (cons (or new-start start) (or new-end end))))
         ;; Cleanup
@@ -1130,13 +1134,6 @@ After setting the stylevars run hook `php-mode-STYLENAME-hook'."
   (php-project-apply-local-variables)
   (remove-hook 'hack-local-variables-hook #'php-mode-set-local-variable-delay))
 
-(defun php-mode-neutralize-cc-mode-effect ()
-  "Reset PHP-irrelevant variables set by Cc Mode initialization."
-  (setq-local c-mode-hook nil)
-  (setq-local java-mode-hook nil)
-  (remove-hook 'flymake-diagnostic-functions 'flymake-cc t)
-  t)
-
 (defvar php-mode-syntax-table
   (let ((table (make-syntax-table)))
     (c-populate-syntax-table table)
@@ -1149,26 +1146,28 @@ After setting the stylevars run hook `php-mode-STYLENAME-hook'."
     table))
 
 ;;;###autoload
-(define-derived-mode php-mode c-mode "PHP"
+(define-derived-mode php-mode php-base-mode "PHP"
   "Major mode for editing PHP code.
 
 \\{php-mode-map}"
   :syntax-table php-mode-syntax-table
-  ;; :after-hook (c-update-modeline)
-  ;; (setq abbrev-mode t)
-
+  :after-hook (progn (c-make-noise-macro-regexps)
+                     (c-make-macro-with-semi-re)
+                     (c-update-modeline))
   (unless (string= php-mode-cc-version c-version)
     (php-mode-debug-reinstall nil))
 
-  (if php-mode-disable-c-mode-hook
-      (php-mode-neutralize-cc-mode-effect)
-    (display-warning 'php-mode
-                     "`php-mode-disable-c-mode-hook' will be removed.  Do not depends on this variable."
-                     :warning))
-
   (c-initialize-cc-mode t)
+  (setq abbrev-mode t)
+
+  ;; Must be called once as c-mode to enable font-lock for Heredoc.
+  ;; TODO: This call may be removed in the future.
+  (c-common-init 'c-mode)
+
   (c-init-language-vars php-mode)
   (c-common-init 'php-mode)
+  (cc-imenu-init cc-imenu-c-generic-expression)
+
   (setq-local c-auto-align-backslashes nil)
 
   (setq-local comment-start "// ")
@@ -1251,13 +1250,8 @@ After setting the stylevars run hook `php-mode-STYLENAME-hook'."
   (advice-add 'acm-backend-tabnine-candidate-expand
               :filter-args #'php-acm-backend-tabnine-candidate-expand-filter-args)
 
-  (when (>= emacs-major-version 25)
-    (with-silent-modifications
-      (save-excursion
-        (let* ((start (point-min))
-               (end (min (point-max)
-                         (+ start syntax-propertize-chunk-size))))
-          (php-syntax-propertize-function start end))))))
+  (when (eval-when-compile (>= emacs-major-version 25))
+    (syntax-ppss-flush-cache (point-min))))
 
 (declare-function semantic-create-imenu-index "semantic/imenu" (&optional stream))
 
@@ -1309,18 +1303,20 @@ for \\[find-tag] (which see)."
 
 ;; Font Lock
 (defconst php-phpdoc-type-names
-  (list "string" "integer" "int" "boolean" "bool" "float"
-        "double" "object" "mixed" "array" "resource"
-        "void" "null" "false" "true" "self" "static"
-        "callable" "iterable" "number"
-        ;; PHPStan and Psalm types
-        "array-key" "associative-array" "callable-array" "callable-object"
-        "callable-string" "class-string" "empty" "enum-string" "list"
-        "literal-string" "negative-int" "non-positive-int" "non-negative-int"
-        "never" "never-return" "never-returns" "no-return" "non-empty-array"
-        "non-empty-list" "non-empty-string" "non-falsy-string"
-        "numeric" "numeric-string" "positive-int" "scalar"
-        "trait-string" "truthy-string" "key-of" "value-of")
+  '(;; PHPStan and Psalm types
+    "__stringandstringable" "array" "array-key" "associative-array" "bool" "boolean"
+    "callable" "callable-array" "callable-object" "callable-string" "class-string"
+    "closed-resource" "double" "empty" "empty-scalar" "enum-string" "false" "float"
+    "int" "integer" "interface-string" "iterable" "list" "literal-string" "lowercase-string"
+    "mixed" "negative-int" "never" "never-return" "never-returns" "no-return" "non-empty-array"
+    "non-empty-list" "non-empty-literal-string" "non-empty-lowercase-string" "non-empty-mixed"
+    "non-empty-scalar" "non-empty-string" "non-empty-uppercase-string" "non-falsy-string"
+    "non-negative-int" "non-positive-int" "non-zero-int" "noreturn" "null" "number" "numeric"
+    "numeric-string" "object" "open-resource" "parent" "positive-int" "pure-callable"
+    "pure-closure" "resource" "scalar" "self" "static" "string" "trait-string" "true"
+    "truthy-string" "uppercase-string" "void"
+    ;; PHPStan Generic Types
+    "key-of" "value-of" "int-mask-of" "int-mask" "__benevolent" "template-type" "new")
   "A list of type and pseudotype names that can be used in PHPDoc.")
 
 (make-obsolete-variable 'php-phpdoc-type-keywords 'php-phpdoc-type-names "1.24.2")
@@ -1330,6 +1326,7 @@ for \\[find-tag] (which see)."
         "return" "throws" "var" "self-out" "this-out" "param-out"
         "type" "extends" "require-extends" "implemtents" "require-implements"
         "template" "template-covariant" "template-extends" "template-implements"
+        "require-extends" "require-implements"
         "assert" "assert-if-true" "assert-if-false" "if-this-is")
   "A list of tags specifying type names.")
 
@@ -1380,14 +1377,14 @@ for \\[find-tag] (which see)."
 
      ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
      ;; not in $obj->var()
-     ("\\(->\\)\\(\\sw+\\)\\s-*(" (1 'php-object-op) (2 'php-method-call))
+     ("\\(->\\)\\(\\sw+\\)\\s-*(" (1 'php-object-op) (2 php-method-call))
      ("\\<\\(const\\)\\s-+\\(\\_<.+?\\_>\\)" (1 'php-keyword) (2 'php-constant-assign))
 
      ;; Logical operator (!)
      ("\\(!\\)[^=]" 1 'php-logical-op)
 
      ;; Highlight special variables
-     ("\\(\\$\\)\\(this\\)\\>" (1 'php-$this-sigil) (2 'php-$this))
+     ("\\(\\$\\)\\(this\\)\\>" (1 'php-this-sigil) (2 'php-this))
      ("\\(\\$+\\)\\(\\sw+\\)" (1 'php-variable-sigil) (2 'php-variable-name))
      ("\\(->\\)\\([a-zA-Z0-9_]+\\)" (1 'php-object-op) (2 'php-property-name))
 
@@ -1422,7 +1419,7 @@ for \\[find-tag] (which see)."
 
      ;; Highlight static method calls as such. This is necessary for method
      ;; names which are identical to keywords to be highlighted correctly.
-     ("\\sw+::\\(\\sw+\\)(" 1 'php-static-method-call)
+     ("\\sw+::\\(\\sw+\\)(" 1 php-static-method-call)
      ;; Multiple catch (FooException | BarException $e)
      (,(rx symbol-start "catch" symbol-end
            (* (syntax whitespace)) "(" (* (syntax whitespace))
@@ -1466,7 +1463,7 @@ for \\[find-tag] (which see)."
       (1 'php-import-declaration)
       (,(rx (group (+ (or (syntax word) (syntax symbol) "\\" "{" "}")))) nil nil (1 'php-constant-assign t)))
      ;; Highlight function calls
-     ("\\(\\_<\\(?:\\sw\\|\\s_\\)+?\\_>\\)\\s-*(" 1 'php-function-call)
+     ("\\(\\_<\\(?:\\sw\\|\\s_\\)+?\\_>\\)\\s-*(" 1 php-function-call)
      ;; Highlight all upper-cased symbols as constant
      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 'php-constant)
 
@@ -1524,7 +1521,9 @@ for \\[find-tag] (which see)."
      ;; Not operator (!) is defined in "before cc-mode" section above.
      ("\\(&&\\|||\\)" 1 'php-logical-op)
      ;; string interpolation ("$var, ${var}, {$var}")
-     (php-mode--string-interpolated-variable-font-lock-find 0 nil)))
+     (php-mode--string-interpolated-variable-font-lock-find 0 nil)
+     (,(rx symbol-start (group (or "get" "set")) (+ (syntax whitespace)) (or "{" "=>"))
+      1 'php-builtin)))
   "Detailed highlighting for PHP Mode.")
 
 (defvar php-font-lock-keywords php-font-lock-keywords-3

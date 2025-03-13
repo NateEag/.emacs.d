@@ -5,7 +5,6 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Keywords: tools, files
 ;; URL: https://github.com/emacs-php/php-mode
-;; Version: 1.25.0
 ;; License: GPL-3.0-or-later
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -166,7 +165,7 @@
   (cond
    ((stringp php-ide-eglot-executable) (list php-ide-eglot-executable))
    ((listp php-ide-eglot-executable) php-ide-eglot-executable)
-   ((when-let (command (assq php-ide-eglot-executable php-ide-lsp-command-alist))
+   ((when-let* ((command (assq php-ide-eglot-executable php-ide-lsp-command-alist)))
       (cond
        ((functionp command) (funcall command))
        ((listp command) command))))))
@@ -178,6 +177,7 @@
   :type 'string
   :safe #'stringp)
 
+;;;###autoload
 (defcustom php-ide-mode-functions nil
   "Hook functions called when before activating or deactivating PHP-IDE.
 Notice that two arguments (FEATURE ACTIVATE) are given.
@@ -188,18 +188,16 @@ ACTIVATE: T is given when activeting, NIL when deactivating PHP-IDE."
   :group 'php-ide
   :type '(repeat function)
   :safe (lambda (functions)
-          (and (listp functions)
-               (cl-loop for function in functions
-                        always (functionp function)))))
+          (and (listp functions) (cl-every #'functionp functions))))
 
 ;;;###autoload
 (define-minor-mode php-ide-mode
   "Minor mode for integrate IDE-like tools."
   :lighter php-ide-mode-lighter
   (let ((ide-features php-ide-features))
-    (when-let (unavailable-features (cl-loop for feature in ide-features
-                                             unless (assq feature php-ide-feature-alist)
-                                             collect feature))
+    (when-let* ((unavailable-features (cl-loop for feature in ide-features
+                                               unless (assq feature php-ide-feature-alist)
+                                               collect feature)))
       (user-error "%s includes unavailable PHP-IDE features.  (available features are: %s)"
                   ide-features
                   (mapconcat (lambda (feature) (concat "'" (symbol-name feature)))

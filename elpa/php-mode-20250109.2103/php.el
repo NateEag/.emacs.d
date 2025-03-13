@@ -5,7 +5,6 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 5 Dec 2018
-;; Version: 1.25.0
 ;; Keywords: languages, php
 ;; Homepage: https://github.com/emacs-php/php-mode
 ;; License: GPL-3.0-or-later
@@ -99,8 +98,8 @@ You can replace \"en\" with your ISO language code."
   "Function to search PHP Manual at cursor position."
   :group 'php
   :tag "PHP Search Documentation Function"
-  :type '(choice (const :tag "Use online documentation" #'php-search-web-documentation)
-                 (const :tag "Use local documentation" #'php-local-manual-search)
+  :type '(choice (const :tag "Use online documentation" php-search-web-documentation)
+                 (const :tag "Use local documentation" php-local-manual-search)
                  (function :tag "Use other function")))
 
 (defcustom php-search-documentation-browser-function nil
@@ -203,6 +202,30 @@ a completion list."
   :type 'integer
   :link '(url-link :tag "Built-in web server"
                    "https://www.php.net/manual/features.commandline.webserver.php"))
+
+(defcustom php-topsy-separator " > "
+  "Separator string for `php-topsy-beginning-of-defun-with-class'."
+  :group 'php
+  :tag "PHP Topsy Separator"
+  :type 'string)
+
+(defcustom php-function-call 'php-function-call-traditional
+  "Face name to use for method call."
+  :group 'php
+  :tag "PHP Function Call"
+  :type 'face)
+
+(defcustom php-method-call 'php-method-call-traditional
+  "Face name to use for method call."
+  :group 'php
+  :tag "PHP Method Call"
+  :type 'face)
+
+(defcustom php-static-method-call 'php-static-method-call-traditional
+  "Face name to use for method call."
+  :group 'php
+  :tag "PHP Static Method Call"
+  :type 'face)
 
 ;;; PHP Keywords
 (defconst php-magical-constants
@@ -429,7 +452,7 @@ can be used to match against definitions for that classlike."
 
 (defcustom php-imenu-generic-expression 'php-imenu-generic-expression-default
   "Default Imenu generic expression for PHP Mode.  See `imenu-generic-expression'."
-  :type '(choice (alist :key-type string :value-type list)
+  :type '(choice (alist :key-type string :value-type (list string))
                  (const php-imenu-generic-expression-legacy)
                  (const php-imenu-generic-expression-simple)
                  variable)
@@ -529,15 +552,14 @@ The order is reversed by calling as follows:
               (c-backward-token-2 1 nil))
          collect
          (cond
-          ((when-let (bounds (php--thing-at-point-bounds-of-string-at-point))
+          ((when-let* ((bounds (php--thing-at-point-bounds-of-string-at-point)))
              (prog1 (buffer-substring-no-properties (car bounds) (cdr bounds))
                (goto-char (car bounds)))))
           ((looking-at php-re-token-symbols)
            (prog1 (match-string-no-properties 0)
              (goto-char (match-beginning 0))))
-          (t
-             (buffer-substring-no-properties (point)
-                                             (save-excursion (php--c-end-of-token) (point))))))))))
+          ((buffer-substring-no-properties (point)
+                                           (save-excursion (php--c-end-of-token) (point))))))))))
 
 (defun php-get-pattern ()
   "Find the pattern we want to complete.
@@ -622,6 +644,15 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
     (or mode php-default-major-mode)))
 
 ;;;###autoload
+(define-derived-mode php-base-mode prog-mode "PHP"
+  "Generic major mode for editing PHP.
+
+This mode is intended to be inherited by concrete major modes.
+Currently there are `php-mode' and `php-ts-mode'."
+  :group 'php
+  nil)
+
+;;;###autoload
 (defun php-mode-maybe ()
   "Select PHP mode or other major mode."
   (interactive)
@@ -632,17 +663,15 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
 (defun php-current-class ()
   "Insert current class name if cursor in class context."
   (interactive)
-  (let ((matched (php-get-current-element php--re-classlike-pattern)))
-    (when matched
-      (insert (concat matched php-class-suffix-when-insert)))))
+  (when-let* ((matched (php-get-current-element php--re-classlike-pattern)))
+    (insert (concat matched php-class-suffix-when-insert))))
 
 ;;;###autoload
 (defun php-current-namespace ()
   "Insert current namespace if cursor in namespace context."
   (interactive)
-  (let ((matched (php-get-current-element php--re-namespace-pattern)))
-    (when matched
-      (insert (concat matched php-namespace-suffix-when-insert)))))
+  (when-let* ((matched (php-get-current-element php--re-namespace-pattern)))
+    (insert (concat matched php-namespace-suffix-when-insert))))
 
 ;;;###autoload
 (defun php-copyit-fqsen ()
@@ -654,6 +683,33 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
     (kill-new (concat (if (string= namespace "") "" namespace)
                       (if (string= class "") "" (concat "\\" class "::"))
                       (if (string= namedfunc "") "" (concat namedfunc "()"))))))
+
+(defun php-topsy-beginning-of-defun-with-class ()
+  "Return function signature and class name string for header line in topsy.
+
+You can add the function to topsy with the code below:
+
+    (add-to-list \\='topsy-mode-functions
+                 \\='(php-mode . php-topsy-beginning-of-defun-with-class))"
+  (save-excursion
+    (goto-char (window-start))
+    (mapconcat
+     #'identity
+     (append
+      (save-match-data
+        (save-excursion
+          (when (re-search-backward php--re-classlike-pattern nil t)
+            (font-lock-ensure (point) (line-end-position))
+            (list (string-trim (buffer-substring (point) (line-end-position)))))))
+      (progn
+        (beginning-of-defun)
+        (font-lock-ensure (point) (line-end-position))
+        (list (string-trim
+               (replace-regexp-in-string
+                (eval-when-compile (rx bos "<?php"))
+                ""
+                (buffer-substring (point) (line-end-position)))))))
+     php-topsy-separator)))
 
 ;;;###autoload
 (defun php-run-builtin-web-server (router-or-dir hostname port &optional document-root)

@@ -4,7 +4,6 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 5 Mar 2023
-;; Version: 0.1.0
 ;; Keywords: tools, php
 ;; URL: https://github.com/emacs-php/php-mode.el
 ;; License: GPL-3.0-or-later
@@ -176,7 +175,7 @@
                                files)
                            return sym))
         (setq-local php-format-command cmd))
-      (when-let (tup (plist-get (cdr-safe (assq cmd php-format-formatter-alist)) :command))
+      (when-let* ((tup (plist-get (cdr-safe (assq cmd php-format-formatter-alist)) :command)))
         (setq executable (car tup))
         (setq args (cdr tup))
         (setq vendor (expand-file-name executable (expand-file-name php-format-command-dir default-directory)))

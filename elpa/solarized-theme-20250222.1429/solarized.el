@@ -1,6 +1,6 @@
 ;;; solarized.el --- Solarized theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Bozhidar Batsov
+;; Copyright (C) 2011-2025 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
@@ -49,6 +49,13 @@ Also affects `linum-mode' background."
 (defcustom solarized-distinct-doc-face nil
   "Make `font-lock-doc-face' stand out more.
 Related discussion: https://github.com/bbatsov/solarized-emacs/issues/158"
+  :type 'boolean
+  :group 'solarized)
+
+(defcustom solarized-highlight-numbers nil
+  "Highlight all numbers.
+Applies color to `font-lock-number-face' and `highlight-numbers' mode.
+Many tree-sitter based modes use `font-lock-number-face'."
   :type 'boolean
   :group 'solarized)
 
@@ -426,6 +433,25 @@ If OVERWRITE is non-nil, overwrite theme file if exist."
     (apply #'solarized-create-theme-file (list variant theme-name color-palette childtheme-sexp overwrite))))
 
 (define-obsolete-function-alias 'create-solarized-theme-file 'solarized-create-theme-file "1.3.0")
+
+(defun solarized-reload (&optional theme)
+  "Reload the Solarized theme.
+You can specify the variant to reload manually with THEME.
+
+Useful after changing some configuration options or tweaking some colors."
+  (interactive)
+  (let ((theme (or theme (car custom-enabled-themes))))
+    (disable-theme theme)
+    (load-theme theme t)))
+
+(defun solarized-toggle-theme ()
+  "Toggle between the light and dark variants of Solarized."
+  (interactive)
+  (let ((current-theme (car custom-enabled-themes)))
+    (cond
+     ((eq current-theme 'solarized-dark) (solarized-reload 'solarized-light))
+     ((eq current-theme 'solarized-light) (solarized-reload 'solarized-dark))
+     (t (message "You're not currently running a Solarized theme")))))
 
 ;;; Footer
 

@@ -1,6 +1,6 @@
 ;;; solarized-faces.el --- the faces definitions for solarized theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Bozhidar Batsov
+;; Copyright (C) 2011-2025 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
@@ -46,7 +46,7 @@
                                 :foreground ,s-header-line-fg
                                 :background ,s-header-line-bg
                                 :box (:line-width 2 :color ,s-header-line-bg
-                                                  :style unspecified)))))
+                                                  :style nil)))))
      `(highlight ((,class (:background ,base02))))
      `(lazy-highlight ((,class (:foreground ,base03 :background ,yellow
                                             :weight normal))))
@@ -63,7 +63,7 @@
                                 :foreground ,s-mode-line-fg
                                 :background ,s-mode-line-bg
                                 :box (:line-width 1 :color ,s-mode-line-bg
-                                                  :style unspecified)))))
+                                                  :style nil)))))
      `(mode-line-buffer-id ((,class (:foreground ,s-mode-line-buffer-id-fg :weight bold))))
      `(mode-line-inactive
        ((,class (:inverse-video unspecified
@@ -72,7 +72,7 @@
                                 :foreground ,s-mode-line-inactive-fg
                                 :background ,s-mode-line-inactive-bg
                                 :box (:line-width 1 :color ,s-mode-line-inactive-bg
-                                                  :style unspecified)))))
+                                                  :style nil)))))
      `(region
        ((,class (,@(and (>= emacs-major-version 27) '(:extend t))
                  :foreground ,base03
@@ -236,6 +236,7 @@
        ((,class (:foreground ,base01 :slant ,s-maybe-italic))))
      `(font-lock-comment-face ((,class (:foreground ,base01))))
      `(font-lock-constant-face ((,class (:foreground ,blue :weight bold))))
+     `(font-lock-number-face ((,class (:foreground ,(if solarized-highlight-numbers violet 'unspecified)))))
      `(font-lock-doc-face ((,class (:foreground ,(if solarized-distinct-doc-face violet cyan)
                                                 :slant ,s-maybe-italic))))
      `(font-lock-function-name-face ((,class (:foreground ,blue))))
@@ -260,7 +261,6 @@
      `(spaceline-all-the-icons-info-face ((,class (:foreground ,blue))))
      `(spaceline-all-the-icons-sunrise-face ((,class (:foreground ,yellow))))
      `(spaceline-all-the-icons-sunrise-face ((,class (:foreground ,orange))))
-     `(all-the-icons-dired-dir-face ((,class (:foreground ,base0))))
      `(all-the-icons-red ((,class (:foreground ,red))))
      `(all-the-icons-lred ((,class (:foreground ,red-lc))))
      `(all-the-icons-dred ((,class (:foreground ,red-hc))))
@@ -651,6 +651,19 @@
                              :background ,(if solarized-emphasize-indicators
                                               blue-lc s-fringe-bg) :weight bold))))
 ;;;;; flymake
+     `(flymake-error
+       ((,(append '((supports :underline (:style wave))) class)
+         (:underline (:style wave :color ,red) :inherit unspecified))
+        (,class (:foreground ,red-hc :background ,red-lc :weight bold :underline t))))
+     `(flymake-warning
+       ((,(append '((supports :underline (:style wave))) class)
+         (:underline (:style wave :color ,yellow) :inherit unspecified))
+        (,class (:foreground ,yellow-hc :background ,yellow-lc :weight bold :underline t))))
+     `(flymake-note
+       ((,(append '((supports :underline (:style wave))) class)
+         (:underline (:style wave :color ,(if solarized-emphasize-indicators
+                                              blue base03)) :inherit unspecified))
+        (,class (:foreground ,blue-hc :background ,blue-lc :weight bold :underline t))))
      `(flymake-errline
        ((,(append '((supports :underline (:style wave))) class)
          (:underline (:style wave :color ,red) :inherit unspecified
@@ -907,7 +920,7 @@
      `(highlight-indentation-face ((,class (:background ,base02))))
      `(highlight-indentation-current-column-face((,class (:background ,base02))))
 ;;;;; highlight-numbers
-     `(highlight-numbers-number ((,class (:foreground ,violet :bold nil))))
+     `(highlight-numbers-number ((,class (:inherit font-lock-number-face))))
 ;;;;; highlight-symbol
      `(highlight-symbol-face ((,class (:foreground ,magenta))))
 ;;;;; hl-line-mode
@@ -1806,6 +1819,14 @@
      `(tabbar-unselected-modified ((,class (:inherit tabbar-modified :background ,base02 :underline nil :box (:line-width 1 :color ,base03)))))
      `(tabbar-selected ((,class (:inherit tabbar-default :foreground ,base3 :background ,base03 :weight bold :underline nil :box (:line-width 1 :color ,base03)))))
      `(tabbar-selected-modified ((,class (:inherit tabbar-selected :foreground ,blue :underline nil :box (:line-width 1 :color ,base03)))))
+;;;;; tab-line
+     `(tab-line ((t (:background ,base03 :foreground ,base0))))
+     `(tab-line-highlight ((,class (:underline t))))
+     `(tab-line-tab ((t (:background ,base03 :foreground ,base1))))
+     `(tab-line-tab-current ((,class (:inherit tab-line-tab :underline nil))))
+     `(tab-line-tab-inactive ((,class (:inherit tab-line-tab :background ,base02 :foreground ,base01))))
+     `(tab-line-tab-inactive-alternate ((,class (:inherit tab-line-tab-inactive))))
+     `(tab-line-tab-modified ((,class (:inherit tab-line-tab :foreground ,blue))))
 ;;;;; centaur-tabs
    `(centaur-tabs-default ((t (:background ,base03 :foreground ,base0 :box nil))))
    `(centaur-tabs-selected ((t (:background ,base03 :foreground ,base1 :box nil))))
@@ -2042,6 +2063,10 @@
      `(window-divider-last-pixel ((,class (:foreground ,s-mode-line-bg))))
 ;;;;; window-number-mode
      `(window-number-face ((,class (:foreground ,green))))
+;;;;; window-tool-bar-mode
+     `(window-tool-bar-button ((,class (:inherit tab-line))) )
+     `(window-tool-bar-button-hover ((,class (:background ,base02 :foreground ,base1))))
+     `(window-tool-bar-button-disabled ((,class (:background ,red-1bg :foreground ,base0))))
 ;;;;; woman
      `(woman-bold ((,class (:inherit Man-overstrike))))
      `(woman-italic ((,class (:inherit Man-underline))))

@@ -1,11 +1,12 @@
 ;;; solarized-theme.el --- The Solarized color theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2021 Bozhidar Batsov
+;; Copyright (C) 2011-2025 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
 ;; URL: http://github.com/bbatsov/solarized-emacs
-;; Version: 2.0.1
+;; Package-Version: 20250222.1429
+;; Package-Revision: 5d136736f76c
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: convenience, themes, solarized
 
@@ -28,7 +29,7 @@
 ;;
 ;;; Installation:
 ;;
-;;   Drop the `solarized-theme.el` somewhere in your `load-path` and
+;;   Drop the solarized-theme.el somewhere in your `load-path' and
 ;; the two themes in a folder that is on `custom-theme-load-path'
 ;; and enjoy!
 ;;

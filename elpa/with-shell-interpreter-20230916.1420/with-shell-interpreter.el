@@ -2,9 +2,8 @@
 
 ;; Copyright (C) 2019-2020 Jordan Besly
 ;;
-;; Version: 0.2.4
-;; Package-Version: 20200828.1217
-;; Package-Commit: 45b7d6ad63165c82a95966b291abbfe305d3ada2
+;; Package-Version: 20230916.1420
+;; Package-Revision: bef977d8058d
 ;; Keywords: processes, terminals
 ;; URL: https://github.com/p3r7/with-shell-interpreter
 ;; Package-Requires: ((emacs "25.1")(cl-lib "0.6.1"))
@@ -85,7 +84,7 @@ To read more about the standard connection-local variables see
 ;; NB: only bound on Windows build of Emacs
 (unless (boundp 'w32-quote-process-args)
   ;; tame lexical binding warnings
-  (defvar w32-quote-process-args))
+  (defvar w32-quote-process-args nil))
 
 
 

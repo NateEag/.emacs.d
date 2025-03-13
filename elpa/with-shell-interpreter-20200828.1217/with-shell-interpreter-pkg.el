@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/with-shell-interpreter-20200828.1217/with-shell-interpreter.el  -*- no-byte-compile: t -*-
-(define-package "with-shell-interpreter" "20200828.1217" "Helper for shell command APIs" '((emacs "25.1") (cl-lib "0.6.1")) :commit "45b7d6ad63165c82a95966b291abbfe305d3ada2" :keywords '("processes" "terminals") :url "https://github.com/p3r7/with-shell-interpreter")

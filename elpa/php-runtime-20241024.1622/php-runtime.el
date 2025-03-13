@@ -4,7 +4,8 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 28 Aug 2017
-;; Version: 0.3.1
+;; Package-Version: 20241024.1622
+;; Package-Revision: 37beef404c70
 ;; Keywords: processes php lisp
 ;; URL: https://github.com/emacs-php/php-runtime.el
 ;; Package-Requires: ((emacs "25.1") (compat "29"))
@@ -65,9 +66,9 @@
   (generate-new-buffer "*PHP temp*"))
 
 (defun php-runtime--stdin-satisfied-p (obj)
-  "Return t if the object `OBJ' is satisfied to stdin format.
+  "Return non-NIL if the object OBJ is satisfied to stdin format.
 
-for example, (get-buffer \"foo-buffer\"), '(:file . \"/path/to/file\")."
+for example, (get-buffer \"foo-buffer\"), \\='(:file . \"/path/to/file\")."
   (cond
    ((null obj) t)
    ((and (bufferp obj) (buffer-live-p obj) t))

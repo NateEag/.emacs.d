@@ -3,7 +3,6 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -175,6 +174,7 @@ The number of columns by which a line is shifted.
 This applies to the shifting operators \\[evil-shift-right] and \
 \\[evil-shift-left]."
   :type 'integer
+  :safe #'integerp
   :group 'evil)
 
 (defcustom evil-shift-round t
@@ -558,11 +558,11 @@ ubiquity of prefix arguments."
            (cond
             ((and (not value)
                   (eq (lookup-key evil-command-line-map (kbd "C-w"))
-                      #'backward-kill-word))
+                      'evil-delete-backward-word))
              (define-key evil-command-line-map (kbd "C-w") nil))
             ((and value
                   (null (lookup-key evil-command-line-map (kbd "C-w"))))
-             (define-key evil-command-line-map (kbd "C-w") #'backward-kill-word))))
+             (define-key evil-command-line-map (kbd "C-w") 'evil-delete-backward-word))))
          (when (boundp 'evil-ex-search-keymap)
            (cond
             ((and (not value)
@@ -926,6 +926,7 @@ expression matching the buffer's name and STATE is one of `normal',
     internal-ange-ftp-mode
     haskell-interactive-mode
     prolog-inferior-mode
+    racket-repl-mode
     reb-mode
     shell-mode
     slime-repl-mode
@@ -1029,6 +1030,7 @@ intercepted."
     forward-sentence
     forward-sexp
     forward-word
+    goto-char
     goto-last-change
     ibuffer-backward-line
     ibuffer-forward-line
@@ -1123,7 +1125,7 @@ that line."
   :type 'boolean
   :group 'evil)
 (make-obsolete-variable
- evil-want-visual-char-semi-exclusive
+ 'evil-want-visual-char-semi-exclusive
  "Semi-exclusivity prevents selecting text + 1st char of next line,
 without having to introduce new niche functionality.
 Prefer to set `evil-v$-excludes-newline' to non-nil."
@@ -1736,6 +1738,16 @@ instead of `buffer-undo-list'.")
 
 (evil-define-local-var evil-visual-selection nil
   "The kind of Visual selection.
+This is a selection as defined by `evil-define-visual-selection'.")
+
+(evil-define-local-var evil-prev-visual-point nil
+  "The previous position of point in Visual state, a marker.")
+
+(evil-define-local-var evil-prev-visual-mark nil
+  "The previous position of mark in Visual state, a marker.")
+
+(evil-define-local-var evil-prev-visual-selection nil
+  "The previous kind of Visual selection.
 This is a selection as defined by `evil-define-visual-selection'.")
 
 ;; we could infer the direction by comparing `evil-visual-mark'

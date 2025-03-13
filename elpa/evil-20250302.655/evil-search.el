@@ -3,7 +3,6 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.15.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -348,26 +347,27 @@ nil if nothing is found."
   "Prefix STRING with the search prompt."
   (format "%s%s" (evil-search-prompt forward) string))
 
-(defadvice isearch-message-prefix (around evil activate)
+(advice-add 'isearch-message-prefix :around #'evil--use-search-prompt)
+(defun evil--use-search-prompt (orig-fun &rest args)
   "Use `evil-search-prompt'."
-  (if evil-search-prompt
-      (setq ad-return-value evil-search-prompt)
-    ad-do-it))
+  (or evil-search-prompt
+      (apply orig-fun args)))
 
-(defadvice isearch-delete-char (around evil activate)
+(advice-add 'isearch-delete-char :around #'evil--exit-search-when-empty)
+(defun evil--exit-search-when-empty (orig-fun &rest args)
   "Exit search if no search string."
   (cond
    ((and evil-search-prompt (string= isearch-string ""))
     (let (search-nonincremental-instead)
       (setq isearch-success nil)
       (isearch-exit)))
-   (t
-    ad-do-it)))
+   (t (apply orig-fun args))))
 
-(defadvice isearch-lazy-highlight-search (around evil activate)
+(advice-add 'isearch-lazy-highlight-search :around #'evil--without-search-wrap)
+(defun evil--without-search-wrap (orig-fun &rest args)
   "Never wrap the search in this context."
   (let (evil-search-wrap)
-    ad-do-it))
+    (apply orig-fun args)))
 
 ;;; Ex search
 
@@ -1158,7 +1158,7 @@ special situations like empty patterns or repetition of previous
 substitution commands. If IMPLICIT-R is non-nil, then the \"r\" flag
 is assumed, i.e. in case of an empty pattern the last search pattern
 is used. It is meant for :substitute commands with arguments."
-  (let (pattern replacement flags)
+  (let (pattern replacement flags using-prev-pattern)
     (cond
      ((or (string= string "") (string-match-p "\\`[a-zA-Z]" string))
       ;; No pattern, since it starts with a letter which cannot be a
@@ -1191,16 +1191,25 @@ is used. It is meant for :substitute commands with arguments."
             (if (eq evil-search-module 'evil-search)
                 (if (and evil-ex-last-was-search (memq ?r flags))
                     (and evil-ex-search-pattern
+                         (setq using-prev-pattern t)
                          (evil-ex-pattern-regex evil-ex-search-pattern))
                   (and evil-ex-substitute-pattern
+                       (setq using-prev-pattern t)
                        (evil-ex-pattern-regex evil-ex-substitute-pattern)))
               (if (eq case-fold-search t)
                   isearch-string
                 (concat isearch-string "\\C")))
             flags (remq ?r flags)))
+    (when (and using-prev-pattern
+               (not (evil-ex-pattern-ignore-case evil-ex-search-pattern)))
+      (setq pattern (concat pattern "\\C")))
     ;; generate pattern
     (when pattern
-      (setq pattern (evil-ex-make-substitute-pattern pattern flags)))
+      ;; Disable vim-style regexp conversion if using a previous pattern, because
+      ;; this conversion will already have been done before storing it
+      (let ((evil-ex-search-vim-style-regexp (and evil-ex-search-vim-style-regexp
+                                                  (not using-prev-pattern))))
+        (setq pattern (evil-ex-make-substitute-pattern pattern flags))))
     (list pattern replacement flags)))
 
 (defun evil-ex-nohighlight ()

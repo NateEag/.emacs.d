@@ -1,10 +1,12 @@
-;;; json-mode.el --- Major mode for editing JSON files
+;;; json-mode.el --- Major mode for editing JSON files -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2011-2014 Josh Johnston
+;; Copyright (C) 2011-2023 Josh Johnston, taku0
 
 ;; Author: Josh Johnston
+;;         taku0
 ;; URL: https://github.com/joshwnj/json-mode
-;; Version: 1.6.0
+;; Package-Version: 20240427.1245
+;; Package-Revision: 77125b01c0dd
 ;; Package-Requires: ((json-snatcher "1.0.0") (emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -201,7 +203,6 @@ See `forward-sexp for ARG."
 (define-derived-mode jsonc-mode json-mode "JSONC"
   "Major mode for editing JSON files with comments."
   :syntax-table jsonc-mode-syntax-table)
-  (setq font-lock-defaults '(json-font-lock-keywords-1 t))
 
 ;; Well formatted JSON files almost always begin with “{” or “[”.
 ;;;###autoload
@@ -271,7 +272,7 @@ If the region is not active, beautify the entire buffer ."
      ((setq symbol (bounds-of-thing-at-point 'symbol))
       (cond
        ((looking-at-p "null"))
-       ((save-excursion (skip-chars-backward "[-0-9.]") (looking-at json-mode-number-re))
+       ((save-excursion (skip-chars-backward "-0-9.") (looking-at json-mode-number-re))
         (kill-region (match-beginning 0) (match-end 0))
         (insert "null"))
        (t (kill-region (car symbol) (cdr symbol)) (insert "null"))))
@@ -286,7 +287,7 @@ If the region is not active, beautify the entire buffer ."
 (defun json-increment-number-at-point (&optional delta)
   "Add DELTA to the number at point; DELTA defaults to 1."
   (interactive "P")
-  (when (save-excursion (skip-chars-backward "[-0-9.]") (looking-at json-mode-number-re))
+  (when (save-excursion (skip-chars-backward "-0-9.") (looking-at json-mode-number-re))
     (let ((num (+ (or delta 1)
                   (string-to-number (buffer-substring-no-properties (match-beginning 0) (match-end 0)))))
           (pt (point)))

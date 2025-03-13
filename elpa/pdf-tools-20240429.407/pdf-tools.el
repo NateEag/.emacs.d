@@ -7,7 +7,8 @@
 ;; URL: http://github.com/vedang/pdf-tools/
 ;; Keywords: files, multimedia
 ;; Package: pdf-tools
-;; Version: 1.1.0
+;; Package-Version: 20240429.407
+;; Package-Revision: 30b50544e55b
 ;; Package-Requires: ((emacs "26.3") (tablist "1.0") (let-alist "1.0.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -212,11 +213,13 @@ PDF buffers."
 (defcustom pdf-tools-installer-os nil
   "Specifies which installer to use.
 
-If nil the installer is chosen automatically. This variable is
+If nil, the installer is chosen automatically.  This variable is
 useful if you have multiple installers present on your
 system (e.g. nix on arch linux)"
   :group 'pdf-tools
-  :type 'string)
+  :type '(choice
+          (const :tag "Choose automatically" nil)
+          string))
 
 (defun pdf-tools-identify-build-directory (directory)
   "Return non-nil, if DIRECTORY appears to contain the epdfinfo source.

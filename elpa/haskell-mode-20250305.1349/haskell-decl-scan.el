@@ -106,6 +106,7 @@
 (require 'haskell-mode)
 (require 'syntax)
 (require 'imenu)
+(require 'subr-x)
 
 (defgroup haskell-decl-scan nil
   "Haskell declaration scanning (`imenu' support)."
@@ -120,6 +121,11 @@
 
 (defcustom haskell-decl-scan-add-to-menubar t
   "Whether to add a \"Declarations\" menu entry to menu bar."
+  :group 'haskell-decl-scan
+  :type 'boolean)
+
+(defcustom haskell-decl-scan-sort-imenu t
+  "Whether to sort the candidates in imenu."
   :group 'haskell-decl-scan
   :type 'boolean)
 
@@ -537,11 +543,7 @@ datatypes) in a Haskell file for the `imenu' package."
   ;; These lists are nested using `(INDEX-TITLE . INDEX-ALIST)'.
   (let* ((bird-literate (haskell-ds-bird-p))
          (index-alist '())
-         (index-class-alist '()) ;; Classes
-         (index-var-alist '())   ;; Variables
-         (index-imp-alist '())   ;; Imports
-         (index-inst-alist '())  ;; Instances
-         (index-type-alist '())  ;; Datatypes
+         (imenu (make-hash-table :test 'equal))
          ;; The result we wish to return.
          result)
     (goto-char (point-min))
@@ -557,47 +559,29 @@ datatypes) in a Haskell file for the `imenu' package."
                  (posns (cdr name-posns))
                  (start-pos (car posns))
                  (type (cdr result)))
-                 ;; Place `(name . start-pos)' in the correct alist.
-                 (cl-case type
-                   (variable
-                    (setq index-var-alist
-                          (cl-acons name start-pos index-var-alist)))
-                   (datatype
-                    (setq index-type-alist
-                          (cl-acons name start-pos index-type-alist)))
-                   (class
-                    (setq index-class-alist
-                          (cl-acons name start-pos index-class-alist)))
-                   (import
-                    (setq index-imp-alist
-                          (cl-acons name start-pos index-imp-alist)))
-                   (instance
-                    (setq index-inst-alist
-                          (cl-acons name start-pos index-inst-alist)))))))
+            (puthash type
+                     (cons (cons name start-pos) (gethash type imenu '()))
+                     imenu))))
     ;; Now sort all the lists, label them, and place them in one list.
-    (when index-type-alist
-      (push (cons "Datatypes"
-                  (sort index-type-alist 'haskell-ds-imenu-label-cmp))
-            index-alist))
-    (when index-inst-alist
-      (push (cons "Instances"
-                  (sort index-inst-alist 'haskell-ds-imenu-label-cmp))
-            index-alist))
-    (when index-imp-alist
-      (push (cons "Imports"
-                  (sort index-imp-alist 'haskell-ds-imenu-label-cmp))
-            index-alist))
-    (when index-class-alist
-      (push (cons "Classes"
-                  (sort index-class-alist 'haskell-ds-imenu-label-cmp))
-            index-alist))
-    (when index-var-alist
+    (dolist (type '((datatype . "Datatypes") (instance . "Instances")
+                    (import   . "Imports")   (class    . "Classes")))
+      (when-let ((curr-alist (gethash (car type) imenu)))
+        (push (cons (cdr type)
+                    (if haskell-decl-scan-sort-imenu
+                        (sort curr-alist 'haskell-ds-imenu-label-cmp)
+                      (reverse curr-alist)))
+              index-alist)))
+    (when-let ((var-alist (gethash 'variable imenu)))
       (if haskell-decl-scan-bindings-as-variables
           (push (cons "Variables"
-                      (sort index-var-alist 'haskell-ds-imenu-label-cmp))
+                      (if haskell-decl-scan-sort-imenu
+                          (sort var-alist 'haskell-ds-imenu-label-cmp)
+                        (reverse var-alist)))
                 index-alist)
         (setq index-alist (append index-alist
-                                  (sort index-var-alist 'haskell-ds-imenu-label-cmp)))))
+                                  (if haskell-decl-scan-sort-imenu
+                                      (sort var-alist 'haskell-ds-imenu-label-cmp)
+                                    (reverse var-alist))))))
     ;; Return the alist.
     index-alist))
 

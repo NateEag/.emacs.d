@@ -5,7 +5,8 @@
 
 ;; Copyright © 1992, 1997-1998  Simon Marlow, Graeme E Moss, and Tommy Thorn
 
-;; Version: 17.4
+;; Package-Version: 20250305.1349
+;; Package-Revision: 2ada981f2447
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: haskell cabal ghc repl languages
 ;; URL: https://github.com/haskell/haskell-mode
@@ -129,6 +130,7 @@
 (require 'compile)
 (require 'etags)
 (require 'flymake)
+(require 'flymake-proc nil 'noerror)
 (require 'outline)
 (require 'cl-lib)
 (require 'haskell-ghc-support)
@@ -853,7 +855,7 @@ Minor modes that work well with `haskell-mode':
   (setq-local dabbrev-case-fold-search nil)
   (setq-local dabbrev-case-distinction nil)
   (setq-local dabbrev-case-replace nil)
-  (setq-local dabbrev-abbrev-char-regexp "\\sw\\|[.]")
+  (setq-local dabbrev-abbrev-char-regexp "\\sw\\|\\s_\\|[.]")
   (setq haskell-literate nil)
   (add-hook 'before-save-hook 'haskell-mode-before-save-handler nil t)
   (add-hook 'after-save-hook 'haskell-mode-after-save-handler nil t)

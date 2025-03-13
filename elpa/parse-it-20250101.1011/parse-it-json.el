@@ -1,6 +1,6 @@
-;;; parse-it-markdown.el --- Core parser for Markdown  -*- lexical-binding: t; -*-
+;;; parse-it-json.el --- Core parser for JSON  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,41 +19,35 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Markdown.
+;; Core parser for JSON.
 ;;
 
 ;;; Code:
 
-(require 'parse-it)
+(require 'parse-it-c)
 
-(defconst parse-it-markdown--token-type
-  '(("COMMENT_BEG" . "[<][!][-][-]")
-    ("COMMENT_END" . "[-][-][>]")
-    ("TAG_BEG" . "\\([<]\\)[^!][^-][^-]")
-    ("TAG_BEG" . "\\([<]\\)[!][^-]")
-    ("TAG_END" . "[^-][^-]\\([>]\\)")
-    ("COLON" . "[:]")
+(defconst parse-it-json--token-type
+  '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
-    ("TRI_BACK_QT" . "[`][`][`]")
-    ("BACK_QT" . "[^`]\\([`]\\)[^`]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]"))
-  "Markdown token type.")
+  "JSON token type.")
 
-(defun parse-it-markdown--make-token-type ()
+(defun parse-it-json--make-token-type ()
   "Make up the token type."
-  (append parse-it-markdown--token-type
+  (append parse-it-json--token-type
+          parse-it-c--bracket-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-markdown (path)
-  "Parse the PATH Markdown."
-  (let* ((parse-it-lex--token-type (parse-it-markdown--make-token-type))
+(defun parse-it-json (path)
+  "Parse the PATH JSON."
+  (let* ((parse-it-lex--token-type (parse-it-json--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-markdown)
-;;; parse-it-markdown.el ends here
+(provide 'parse-it-json)
+;;; parse-it-json.el ends here

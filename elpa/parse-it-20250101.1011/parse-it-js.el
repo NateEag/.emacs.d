@@ -1,6 +1,6 @@
-;;; parse-it-csharp.el --- Core parser for CSharp  -*- lexical-binding: t; -*-
+;;; parse-it-js.el --- Core parser for JavaScript  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2021  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,14 +19,14 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for CSharp.
+;; Core parser for JavaScript.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-csharp--token-type
+(defconst parse-it-js--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
@@ -34,30 +34,35 @@
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
     ("ARROW" . "[=][>]")
-    ("KEYWORD" . "\\<\\(abstract\\|as\\|base\\|bool\\|break\\|byte\\|case\\|catch\\|char\\|checked\\|class\\|const\\|continue\\|decimal\\|default\\|delegate\\|do\\|double\\|else\\|enum\\|event\\|explicit\\|extern\\|false\\|finally\\|fixed\\|float\\|foreach\\|for\\|goto\\|if\\|implicit\\|interface\\|internal\\|int\\|in\\|is\\|lock\\|long\\|namespace\\|new\\|null\\|object\\|operator\\|out\\|override\\|params\\|private\\|protected\\|public\\|readonly\\|ref\\|return\\|sbyte\\|sealed\\|short\\|sizeof\\|stackalloc\\|static\\|string\\|struct\\|switch\\|this\\|throw\\|true\\|try\\|typeof\\|uint\\|ulong\\|unchecked\\|unsafe\\|ushort\\|using\\|virtual\\|void\\|volatile\\|while\\)"))
-  "CSharp token type.")
+    ("KEYWORD" . "\\<\\(abstract\\|any\\|as\\|async\\|await\\|boolean\\|bigint\\|break\\|case\\|catch\\|class\\|const\\|constructor\\|continue\\|declare\\|default\\|delete\\|do\\|else\\|enum\\|export\\|extends\\|extern\\|false\\|finaly\\|for\\|function\\|from\\|get\\|goto\\|if\\|implements\\|import\\|in\\|instanceof\\|interface\\|keyof\\|let\\|module\\|namespace\\|never\\|new\\|null\\|number\\|object\\|of\\|private\\|protected\\|public\\|readonly\\|return\\|set\\|static\\|string\\|super\\|switch\\|this\\|throw\\|true\\|try\\|type\\|typeof\\|var\\|void\\|while\\)"))
+  "JavaScript token type.")
 
-(defun parse-it-csharp--make-token-type ()
+(defconst parse-it-js--relational-operators-token-type
+  '(("RE_OP" . "[=][=][=]")
+    ("RE_OP" . "[!][=][=]"))
+  "JavaScript relational operators token type.")
+
+(defun parse-it-js--make-token-type ()
   "Make up the token type."
-  (append parse-it-csharp--token-type
+  (append parse-it-js--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
-          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
+          parse-it-js--relational-operators-token-type
           parse-it-c--c-type-relational-operators-token-type
           parse-it-c--c-type-logical-operators-token-type
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-csharp (path)
-  "Parse the PATH CSharp."
-  (let* ((parse-it-lex--token-type (parse-it-csharp--make-token-type))
+(defun parse-it-js (path)
+  "Parse the PATH in JavaScript."
+  (let* ((parse-it-lex--token-type (parse-it-js--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-csharp)
-;;; parse-it-csharp.el ends here
+(provide 'parse-it-js)
+;;; parse-it-js.el ends here

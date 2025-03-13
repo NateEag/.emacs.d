@@ -1,6 +1,6 @@
-;;; parse-it-js.el --- Core parser for JavaScript  -*- lexical-binding: t; -*-
+;;; parse-it-swift.el --- Core parser for Swift  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,50 +19,46 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for JavaScript.
+;; Core parser for Swift.
 ;;
 
 ;;; Code:
 
-(require 'parse-it-c)
+(require 'parse-it-objc)
 
-(defconst parse-it-js--token-type
+(defconst parse-it-swift--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("ARROW" . "[=][>]")
-    ("KEYWORD" . "\\<\\(abstract\\|any\\|as\\|async\\|await\\|boolean\\|bigint\\|break\\|case\\|catch\\|class\\|const\\|constructor\\|continue\\|declare\\|default\\|delete\\|do\\|else\\|enum\\|export\\|extends\\|extern\\|false\\|finaly\\|for\\|function\\|from\\|get\\|goto\\|if\\|implements\\|import\\|in\\|instanceof\\|interface\\|keyof\\|let\\|module\\|namespace\\|never\\|new\\|null\\|number\\|object\\|of\\|private\\|protected\\|public\\|readonly\\|return\\|set\\|static\\|string\\|super\\|switch\\|this\\|throw\\|true\\|try\\|type\\|typeof\\|var\\|void\\|while\\)"))
-  "JavaScript token type.")
+    ("KEYWORD" . "\\B\\(@interface\\|@implementation\\|@protocol\\|@end\\|@private\\|@protected\\|@public\\|@try\\|@throw\\|@catch\\|@finally\\|@class\\|@selector\\|@protocol\\|@encode\\|@synchronized\\|#import\\)\\b")
+    ("KEYWORD" . "\\<\\(alloc\\|retain\\|release\\|autorelease\\)"))
+  "Swift token type.")
 
-(defconst parse-it-js--relational-operators-token-type
-  '(("RE_OP" . "[=][=][=]")
-    ("RE_OP" . "[!][=][=]"))
-  "JavaScript relational operators token type.")
-
-(defun parse-it-js--make-token-type ()
+(defun parse-it-swift--make-token-type ()
   "Make up the token type."
-  (append parse-it-js--token-type
+  (append parse-it-objc--token-type
+          parse-it-c--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
-          parse-it-js--relational-operators-token-type
           parse-it-c--c-type-relational-operators-token-type
           parse-it-c--c-type-logical-operators-token-type
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-js (path)
-  "Parse the PATH in JavaScript."
-  (let* ((parse-it-lex--token-type (parse-it-js--make-token-type))
+(defun parse-it-swift (path)
+  "Parse the PATH Swift."
+  (let* ((parse-it-lex--token-type (parse-it-swift--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-js)
-;;; parse-it-js.el ends here
+(provide 'parse-it-swift)
+;;; parse-it-swift.el ends here

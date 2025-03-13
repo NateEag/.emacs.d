@@ -1,6 +1,6 @@
 ;;; parse-it-lisp.el --- Core parser for Lisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2020-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 

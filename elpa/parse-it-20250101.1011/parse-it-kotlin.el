@@ -1,6 +1,6 @@
 ;;; parse-it-kotlin.el --- Core parser for Kotlin  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 

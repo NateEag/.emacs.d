@@ -1,11 +1,12 @@
 ;;; parse-it.el --- Basic Parser in Emacs Lisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh
 ;; Created date 2019-10-10 11:50:37
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/jcs-elpa/parse-it
-;; Version: 0.2.1
+;; Package-Version: 20250101.1011
+;; Package-Revision: 19df0d8d67f0
 ;; Package-Requires: ((emacs "25.1") (s "1.12.0"))
 ;; Keywords: convenience parse parser lex lexer ast
 

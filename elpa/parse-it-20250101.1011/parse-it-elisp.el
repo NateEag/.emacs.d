@@ -1,6 +1,6 @@
-;;; parse-it-json.el --- Core parser for JSON  -*- lexical-binding: t; -*-
+;;; parse-it-elisp.el --- Core parser for Emacs Lisp  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2020-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,35 +19,30 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for JSON.
+;; Core parser for Emacs Lisp.
 ;;
 
 ;;; Code:
 
-(require 'parse-it-c)
+(require 'parse-it-lisp)
 
-(defconst parse-it-json--token-type
-  '(("COLON" . "[:]")
-    ("SEMICOLON" . "[;]")
-    ("COMMA" . "[,]")
-    ("DOT" . "[.]")
-    ("QT_S" . "[']")
-    ("QT_D" . "[\"]"))
-  "JSON token type.")
+(defconst parse-it-elisp--token-type
+  '()
+  "Lisp token type.")
 
-(defun parse-it-json--make-token-type ()
+(defun parse-it-elisp--make-token-type ()
   "Make up the token type."
-  (append parse-it-json--token-type
-          parse-it-c--bracket-token-type
+  (append parse-it-elisp--token-type
+          parse-it-lisp--comment-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-json (path)
-  "Parse the PATH JSON."
-  (let* ((parse-it-lex--token-type (parse-it-json--make-token-type))
+(defun parse-it-elisp (path)
+  "Parse the PATH Emacs Lisp."
+  (let* ((parse-it-lex--token-type (parse-it-elisp--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
-                        parse-it-c--into-level-symbols
-                        parse-it-c--back-level-symbols)))
+                        parse-it-lisp--into-level-symbols
+                        parse-it-lisp--back-level-symbols)))
 
-(provide 'parse-it-json)
-;;; parse-it-json.el ends here
+(provide 'parse-it-elisp)
+;;; parse-it-elisp.el ends here

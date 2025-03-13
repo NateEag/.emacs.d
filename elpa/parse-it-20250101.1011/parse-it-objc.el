@@ -1,6 +1,6 @@
-;;; parse-it-actionscript.el --- Core parser for ActionScript  -*- lexical-binding: t; -*-
+;;; parse-it-objc.el --- Core parser for Objective-C  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,28 +19,31 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for ActionScript.
+;; Core parser for Objective-C.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-actionscript--token-type
+(defconst parse-it-objc--token-type
   '(("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(break\\|case\\|continue\\|default\\|do\\|while\\|else\\|for\\|in\\|each\\|if\\|label\\|return\\|super\\|switch\\|throw\\|try\\|catch\\|finally\\|while\\|with\\|dynamic\\|final\\|internal\\|native\\|override\\|private\\|protected\\|public\\|static\\|class\\|cont\\|extends\\|function\\|get\\|implements\\|interface\\|namespace\\|package\\|set\\|var\\|import\\|include\\|false\\|null\\|this\\|true\\)"))
-  "ActionScript token type.")
+    ("KEYWORD" . "\\B\\(@interface\\|@implementation\\|@protocol\\|@end\\|@private\\|@protected\\|@public\\|@try\\|@throw\\|@catch\\|@finally\\|@class\\|@selector\\|@protocol\\|@encode\\|@synchronized\\|#import\\)\\b")
+    ("KEYWORD" . "\\<\\(alloc\\|retain\\|release\\|autorelease\\)"))
+  "Objective-C token type.")
 
-(defun parse-it-actionscript--make-token-type ()
+(defun parse-it-objc--make-token-type ()
   "Make up the token type."
-  (append parse-it-actionscript--token-type
+  (append parse-it-objc--token-type
+          parse-it-c--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
+          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
@@ -49,13 +52,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-actionscript (path)
-  "Parse the PATH ActionScript."
-  (let* ((parse-it-lex--token-type (parse-it-actionscript--make-token-type))
+(defun parse-it-objc (path)
+  "Parse the PATH Objective-C."
+  (let* ((parse-it-lex--token-type (parse-it-objc--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-actionscript)
-;;; parse-it-actionscript.el ends here
+(provide 'parse-it-objc)
+;;; parse-it-objc.el ends here

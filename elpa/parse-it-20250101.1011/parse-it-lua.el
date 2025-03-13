@@ -1,6 +1,6 @@
-;;; parse-it-c++.el --- Core parser for C++  -*- lexical-binding: t; -*-
+;;; parse-it-lua.el --- Core parser for Lua  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,45 +19,42 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for C++.
+;; Core parser for Lua.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-c++--token-type
-  '(("COLON" . "[:]")
+(defconst parse-it-lua--token-type
+  '(("COMMENT" . "[-][-]")
+    ("COMMENT_BEG" . "[-][-][[][[]")
+    ("COMMENT_END" . "[]][]][-][-]")
+    ("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(asm\\|bool\\|catch\\|class\\|const_cast\\|delete\\|dynamic_cast\\|explicit\\|export\\|false\\|friend\\|inline\\|mutable\\|namespace\\|new\\|operator\\|private\\|protected\\|public\\|reinterpret_cast\\|static_cast\\|template\\|this\\|throw\\|true\\|try\\|typeid\\|typename\\|using\\|virtual\\|wchar_t\\|nullptr\\)"))
-  "C++ token type.")
+    ("KEYWORD" . "\\<\\(break\\|case\\|catch\\|continue\\|debugger\\|default\\|delete\\|do\\|else\\|finally\\|for\\|function\\|if\\|instanceof\\|in\\|new\\|return\\|switch\\|this\\|throw\\|try\\|typeof\\|var\\|void\\|while\\|with\\|null\\|true\\|false\\|NaN\\|Infinity\\|undefined\\)"))
+  "Lua token type.")
 
-(defun parse-it-c++--make-token-type ()
+(defun parse-it-lua--make-token-type ()
   "Make up the token type."
-  (append parse-it-c++--token-type
-          parse-it-c--token-type
-          parse-it-c--c-type-comment-token-type
-          parse-it-c--bracket-token-type
-          parse-it-c--macro-token-type
+  (append parse-it-lua--token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
           parse-it-c--c-type-relational-operators-token-type
-          parse-it-c--c-type-logical-operators-token-type
-          parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-c++ (path)
-  "Parse the PATH C++."
-  (let* ((parse-it-lex--token-type (parse-it-c++--make-token-type))
+(defun parse-it-lua (path)
+  "Parse the PATH Lua."
+  (let* ((parse-it-lex--token-type (parse-it-lua--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-c++)
-;;; parse-it-c++.el ends here
+(provide 'parse-it-lua)
+;;; parse-it-lua.el ends here

@@ -1,6 +1,6 @@
-;;; parse-it-java.el --- Core parser for Java  -*- lexical-binding: t; -*-
+;;; parse-it-php.el --- Core parser for PHP  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2022  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,29 +19,32 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for Java.
+;; Core parser for PHP.
 ;;
 
 ;;; Code:
 
 (require 'parse-it-c)
 
-(defconst parse-it-java--token-type
-  '(("COLON" . "[:]")
+(defconst parse-it-php--token-type
+  '(("COMMENT" . "[#]")
+    ("COLON" . "[:]")
     ("SEMICOLON" . "[;]")
     ("COMMA" . "[,]")
     ("DOT" . "[.]")
     ("QT_S" . "[']")
     ("QT_D" . "[\"]")
-    ("KEYWORD" . "\\<\\(abstract\\|assert\\|boolean\\|break\\|byte\\|case\\|catch\\|char\\|class\\|const\\|continue\\|default\\|do\\|double\\|else\\|enum\\|extends\\|final\\|finally\\|float\\|for\\|goto\\|if\\|implements\\|import\\|instanceof\\|int\\|interface\\|long\\|native\\|new\\|package\\|private\\|protected\\|public\\|return\\|short\\|static\\|strictfp\\|super\\|switch\\|synchronized\\|this\\|throw\\|throws\\|transient\\|try\\|void\\|volatile\\|while\\|true\\|false\\|null\\)"))
-  "Java token type.")
+    ("ARROW" . "[=][>]")
+    ("VARIABLE" . "[$][^ \t\n]*")
+    ("CONSTANT" . "\\<\\(__CLASS__\\|__DIR__\\|__FILE__\\|__FUNCTION__\\|__LINE__\\|__METHOD__\\|__NAMESPACE__\\|__TRAIT__\\)")
+    ("KEYWORD" . "\\<\\(abstract\\|and\\|as\\|break\\|callable\\|case\\|catch\\|class\\|clone\\|const\\|continue\\|declare\\|default\\|do\\|echo\\|else\\|elseif\\|enddeclare\\|endfor\\|endforeach\\|endif\\|endswitch\\|endwhile\\|extends\\|final\\|finally\\|foreach\\|for\\|function\\|global\\|goto\\|if\\|implements\\|include\\|include_once\\|instanceof\\|insteadof\\|interface\\|namespace\\|new\\|or\\|print\\|private\\|protected\\|public\\|require\\|require_once\\|return\\|static\\|switch\\|throw\\|trait\\|try\\|use\\|var\\|while\\|xor\\|yield from\\|yield\\)"))
+  "PHP token type.")
 
-(defun parse-it-java--make-token-type ()
+(defun parse-it-php--make-token-type ()
   "Make up the token type."
-  (append parse-it-java--token-type
+  (append parse-it-php--token-type
           parse-it-c--c-type-comment-token-type
           parse-it-c--bracket-token-type
-          parse-it-c--macro-token-type
           parse-it-c--c-type-arithmetic-operators-token-type
           parse-it-c--c-type-inc-dec-operators-token-type
           parse-it-c--c-type-assignment-operators-token-type
@@ -50,13 +53,13 @@
           parse-it-c--c-type-bitwise-operators-token-type
           parse-it-lex--token-type))
 
-(defun parse-it-java (path)
-  "Parse the PATH Java."
-  (let* ((parse-it-lex--token-type (parse-it-java--make-token-type))
+(defun parse-it-php (path)
+  "Parse the PATH PHP."
+  (let* ((parse-it-lex--token-type (parse-it-php--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
                         parse-it-c--into-level-symbols
                         parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-java)
-;;; parse-it-java.el ends here
+(provide 'parse-it-php)
+;;; parse-it-php.el ends here

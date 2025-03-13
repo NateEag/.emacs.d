@@ -1,12 +1,13 @@
 ;;; lsp-treemacs.el --- LSP treemacs -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019 Ivan Yonchovski
+;; Copyright (C) 2019-2024 emacs-lsp maintainers
 
 ;; Author: Ivan Yonchovski
 ;; Keywords: languages
-;; Package-Requires: ((emacs "27.1") (dash "2.18.0") (f "0.20.0") (ht "2.0") (treemacs "2.5") (lsp-mode "6.0"))
+;; Package-Requires: ((emacs "28.1") (dash "2.18.0") (f "0.20.0") (ht "2.0") (treemacs "2.5") (lsp-mode "6.0"))
 ;; Homepage: https://github.com/emacs-lsp/lsp-treemacs
-;; Version: 0.4
+;; Package-Version: 20250301.131
+;; Package-Revision: 2495abd9df2f
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -26,6 +27,7 @@
 ;; `lsp-mode' and `treemacs' integration.
 
 ;;; Code:
+
 (require 'treemacs)
 (require 'treemacs-icons)
 (require 'treemacs-treelib)
@@ -122,6 +124,26 @@
   "List the error list of the current project only if available.
 Fallback to list all workspaces if no project root is found."
   :type 'boolean
+  :group 'lsp-treemacs)
+
+(defcustom lsp-treemacs-error-list-expand-depth nil
+  "Automatic expansion depth for `lsp-treemacs-error-list'."
+  :type 'number
+  :group 'lsp-treemacs)
+
+(defcustom lsp-treemacs-call-hierarchy-expand-depth nil
+  "Automatic expansion depth for `lsp-treemacs-call-hierarchy'."
+  :type 'number
+  :group 'lsp-treemacs)
+
+(defcustom lsp-treemacs-type-hierarchy-expand-depth nil
+  "Automatic expansion depth for `lsp-treemacs-type-hierarchy'."
+  :type 'number
+  :group 'lsp-treemacs)
+
+(defcustom lsp-treemacs-java-deps-list-expand-depth nil
+  "Automatic expansion depth for `lsp-treemacs-java-deps-list'."
+  :type 'number
   :group 'lsp-treemacs)
 
 (defun lsp-treemacs--open-file-in-mru (file)
@@ -482,7 +504,7 @@ will be rendered an empty line between them."
    (display-buffer-in-side-window
     (lsp-treemacs-render
      (-map 'lsp-treemacs-deps--process-dep (lsp-treemacs-deps--root-folders))
-     "*Java Deps*" nil)
+     "*Java Deps*" lsp-treemacs-java-deps-list-expand-depth)
     lsp-treemacs-deps-position-params)))
 
 (defun lsp-treemacs--deps-find-children-for-key (node key)
@@ -566,7 +588,8 @@ will be rendered an empty line between them."
 
 ;;;###autoload
 (define-minor-mode lsp-treemacs-sync-mode
-  "Global minor mode for synchronizing lsp-mode workspace folders and treemacs projects."
+  "Global minor mode for synchronizing lsp-mode workspace folders and
+treemacs projects."
   :init-value nil
   :group 'lsp-treemacs
   :global t
@@ -731,7 +754,8 @@ depending on if a custom mode line is detected."
 ;;;###autoload
 (defun lsp-treemacs-references (arg)
   "Show the references for the symbol at point.
-With a prefix argument, select the new window and expand the tree of references automatically."
+With a prefix argument, select the new window and expand the tree of
+references automatically."
   (interactive "P")
   (lsp-treemacs--do-search
    "textDocument/references"
@@ -742,7 +766,8 @@ With a prefix argument, select the new window and expand the tree of references 
 ;;;###autoload
 (defun lsp-treemacs-implementations (arg)
   "Show the implementations for the symbol at point.
-With a prefix argument, select the new window expand the tree of implementations automatically."
+With a prefix argument, select the new window expand the tree of
+implementations automatically."
   (interactive "P")
   (lsp-treemacs--do-search "textDocument/implementation"
                            (lsp--text-document-position-params)
@@ -816,7 +841,7 @@ With a prefix argument, show the outgoing call hierarchy."
         (lsp-request "textDocument/prepareCallHierarchy"
                      (lsp--text-document-position-params)))
        (concat (if outgoing "Outgoing" "Incoming") " Call Hierarchy")
-       nil "*Call Hierarchy*" nil t) nil))))
+       lsp-treemacs-call-hierarchy-expand-depth "*Call Hierarchy*" nil t) nil))))
 
 
 
@@ -887,7 +912,7 @@ With prefix 2 show both."
                    ((eq lsp-treemacs--hierarchy-super direction) "Super")
                    ((eq lsp-treemacs--hierarchy-both direction) "Sub/Super"))
                   " Type Hierarchy")
-          nil
+          lsp-treemacs-type-hierarchy-expand-depth
           "*lsp-treemacs-call-hierarchy*"))
       (user-error "No class under point."))
     (setq lsp--buffer-workspaces workspaces)))
@@ -1022,7 +1047,7 @@ With prefix 2 show both."
           (lsp-session-folders)
           (-keep #'lsp-treemacs--build-error-list)))
    "Errors List"
-   nil
+   lsp-treemacs-error-list-expand-depth
    lsp-treemacs-errors-buffer-name
    `(["Cycle Severity" lsp-treemacs-cycle-severity])))
 

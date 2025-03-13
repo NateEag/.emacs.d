@@ -2,7 +2,8 @@
 
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-language-id
-;; Version: 0.19
+;; Package-Version: 20241024.854
+;; Package-Revision: dbfbc4903ffb
 ;; Package-Requires: ((emacs "24.3"))
 ;; Keywords: languages util
 ;; SPDX-License-Identifier: ISC
@@ -69,6 +70,7 @@
     ;; php-mode is derived from c-mode.
     ("PHP"
      php-mode
+     php-ts-mode
      (web-mode
       (web-mode-content-type "html")
       (web-mode-engine "php")))
@@ -171,6 +173,7 @@
     ("GraphQL" graphql-mode)
     ("Haskell" haskell-mode)
     ("HCL" hcl-mode)
+    ("HLSL" hlsl-mode)
     ("HTML"
      html-helper-mode
      mhtml-mode
@@ -188,6 +191,7 @@
      (web-mode
       (web-mode-content-type "html")
       (web-mode-engine "erb")))
+    ("Hy" hy-mode)
     ("Java" java-mode java-ts-mode)
     ("JavaScript"
      js-ts-mode
@@ -226,11 +230,12 @@
     ("Lua" lua-mode)
     ("Markdown" gfm-mode markdown-mode)
     ("Meson" meson-mode)
-    ("Nix" nix-mode)
+    ("Nix" nix-mode nix-ts-mode)
     ("Objective-C" objc-mode)
     ("OCaml" caml-mode tuareg-mode)
     ("Perl" cperl-mode perl-mode)
     ("Protocol Buffer" protobuf-mode)
+    ("Puppet" puppet-mode)
     ("PureScript" purescript-mode)
     ("Python" python-mode python-ts-mode)
     ("R"
@@ -240,7 +245,7 @@
     ("Racket" racket-mode)
     ("Ruby" enh-ruby-mode ruby-mode ruby-ts-mode)
     ("Rust" rust-mode rustic-mode rust-ts-mode)
-    ("Scala" scala-mode)
+    ("Scala" scala-mode scala-ts-mode)
     ("Scheme" scheme-mode)
     ("Shell" sh-mode bash-ts-mode)
     ("SQL" sql-mode)

@@ -1,9 +1,8 @@
 ;;; eslint-disable-rule-all.el --- Find all eslint rules that may be disabled  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022 Damien Cassou
+;; Copyright (C) 2022-2023  Damien Cassou
 
 ;; Authors: Damien Cassou <damien@cassou.me>
-;; Version: 0.3.0
 ;; URL: https://github.com/DamienCassou/eslint-disable-rule
 ;; Package-Requires: ((emacs "27.2"))
 ;; Created: 15 March 2022

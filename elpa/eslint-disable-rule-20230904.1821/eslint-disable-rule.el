@@ -1,9 +1,10 @@
 ;;; eslint-disable-rule.el --- Commands to add JS comments disabling eslint rules  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2022 Damien Cassou
+;; Copyright (C) 2022-2023  Damien Cassou
 
 ;; Authors: Damien Cassou <damien@cassou.me>
-;; Version: 0.3.0
+;; Package-Version: 20230904.1821
+;; Package-Revision: 54771405e09e
 ;; URL: https://github.com/DamienCassou/eslint-disable-rule
 ;; Package-Requires: ((emacs "27.2"))
 ;; Created: 15 March 2022
@@ -59,19 +60,19 @@ free to add it if you want it."
 
 Adding a description can be made mandatory by adding eslint rule
 \"eslint-comments/require-description\" from the eslint-plugin-comments
-plugin (see URL `https://www.npmjs.com/package/eslint-plugin-comments').
+plugin (see URL https://www.npmjs.com/package/eslint-plugin-comments).
 
-When the value is 'always, the user must enter a non-empty description to
+When the value is `always', the user must enter a non-empty description to
 justify why the rule is disabled.
 
-When the value is 'never, the user is not prompted for a description when
+When the value is `never', the user is not prompted for a description when
 disabling a rule.
 
-When the value is 'prefer-description, the default, the user is prompted
+When the value is `prefer-description', the default, the user is prompted
 for a description but doesn't have to write any."
-  :type '(choice (const :tag "Always" 'always)
-                 (const :tag "Never" 'never)
-                 (const :tag "Prefer description" 'prefer-description)))
+  :type '(choice (const :tag "Always" always)
+                 (const :tag "Never" never)
+                 (const :tag "Prefer description" prefer-description)))
 
 
 ;;; Utility functions
@@ -131,7 +132,7 @@ on `eslint-disable-rule-require-description'."
                 (eslint-disable-rule--find-rule-name (eslint-disable-rule--find-rule-names))
                 (eslint-disable-rule--maybe-prompt-for-description)))
   (save-excursion
-    (setf (point) (line-beginning-position))
+    (goto-char (line-beginning-position))
     (open-line 1)
     (widen)
     (comment-indent)

@@ -494,13 +494,21 @@ The shell command lives in my dotfiles repo."
 (use-package forge
   :after magit
   :hook ((forge-post-mode . (lambda ()
-                                     (auto-fill-mode -1)
-                                     (aggressive-fill-paragraph-mode -1)
-                                     (visual-line-mode -1)))))
+                              (auto-fill-mode -1)
+                              (aggressive-fill-paragraph-mode -1)
+                              (visual-line-mode -1)))))
 
+(use-package gitconfig-mode
+  :mode ".gitconfig$")
+
+;; TODO: Figure out how to replace this config. It breaks under current magit.
 (use-package git-commit
-  :init (global-git-commit-mode 1)
-  (add-hook 'git-commit-mode-hook 'evil-insert-state))
+   :config (global-git-commit-mode 1)
+   :hook ((git-commit-mode . evil-insert-state)
+          (git-commit-mode . (lambda ()
+                               (auto-fill-mode t)
+                               (setq fill-column 72)
+                               (turn-on-flyspell)))))
 
 (use-package abbrev
   :defer t
@@ -638,6 +646,22 @@ The shell command lives in my dotfiles repo."
   (add-hook 'json-mode-hook '(lambda ()
                                (setq-local js2-concat-multiline-strings
                                            nil))))
+
+;; TODO: Start using TypeScript mode for plain JS files. Probably works better
+;; than js2 + tern, these days.
+(use-package js2-mode
+  :mode "\\.js\\'"
+  :init (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
+  :hook ((js2-mode . js-mode-init)
+         (js2-mode . (lambda ()
+                       (setq mode-name "js2-mode")))))
+
+;; js2-mode works poorly for me on .json files.
+(use-package js-mode
+  :mode "\\.*jsbeautifyrc\\'" "\\.*jshintrc\\'" "\\.tern-project\\'"
+  :hook ((js-mode . js-mode-init)
+         (js-mode . (lambda () (setq mode-name "js-mode")))))
+
 (use-package js-jsx-mode
   ;; There's a whole lot to be said for working jump-to-definition from
   ;; templates, and this actually got me that with no extra work in a project
@@ -663,6 +687,9 @@ The shell command lives in my dotfiles repo."
   :hook ((typescript-mode . lsp)
          (typescript-mode . (lambda () (setq-local comment-style
                                                    'extra-line)))))
+
+(use-package prog-mode
+  :hook my-prog-mode-init)
 
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)
@@ -732,6 +759,10 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'web-mode-hook 'web-mode-init))
 
+(use-package php-mode
+  :after lsp-mode
+  :hook ((php-mode . php-mode-init)))
+
 (use-package web-mode-edit-element
   :diminish 'web-mode-edit-element-minor-mode)
 
@@ -743,16 +774,23 @@ The shell command lives in my dotfiles repo."
 (use-package html-scratchpad
   :commands html-scratchpad-open)
 
+;; Tweak CSS mode a bit.
+;; Note that for skewer-mode to be useful, you'll need to first call
+;; the function (run-skewer). The following bookmarklet can then be used to
+;; skewer-ify a page:
+;; javascript:(function(){var d=document;var s=d.createElement('script');s.src='http://localhost:9000/skewer';d.body.appendChild(s);})()
 (use-package css-mode
   :mode (("\\.css\\'" . css-mode)
          ("\\.scss\\'" . scss-mode))
-  :config
-  (add-hook 'scss-mode-hook
+  ;; FIXME: This should be a :config for simple-httpd.
+  :init (setq httpd-port 9000)
+  :hook ((css-mode . css-mode-init)
+         (scss-mode .
             (lambda ()
               ;; Use SCSS-style comments, largely so that comment functions
               ;; don't go crazy the way they do in css-mode.
               (setq comment-start "//"
-                    comment-end ""))))
+                    comment-end "")))))
 
 (use-package apheleia :diminish)
 
@@ -980,10 +1018,19 @@ With this alias I hope to not need to remember it.")
 (use-package camel-spell)
 
 (use-package text-mode
-  :mode "\\.txt.gpg")
+  :mode "\\.txt.gpg"
+  :hook text-mode-init)
 
 (use-package rst-mode
-  :mode "\\.rst")
+  :mode "\\.rst" "\\.rest$"
+  :hook ((rst-mode . (lambda ()
+                           (text-mode-init)
+                           ;; rst uses these for link delimiters. In other
+                           ;; modes I'm more prone to use them for tags.
+                           (sp-pair "<" ">")))))
+
+(use-package markdown-mode
+  :hook ((markdown-mode . text-mode-init)))
 
 (use-package sensitive-mode
   :minor ("\\.gpg$" . sensitive-mode))
@@ -1088,12 +1135,25 @@ With this alias I hope to not need to remember it.")
   ;; Because we don't want this to override any other rules, we manually put it
   ;; on the end of the list.
   :config
-  (add-to-list 'auto-mode-alist '("dotfiles/src/.+" . conf-mode) t))
+  (add-to-list 'auto-mode-alist '("dotfiles/src/.+" . conf-mode) t)
+  :hook ((conf-unix-mode . (lambda () (auto-fill-mode)))
+         (conf-mode . (lambda () (my-prog-mode-init)))))
 
 ;; EmacsWiki-based packages that used to be on MELPA but are no more:
 ;;
 ;; https://github.com/melpa/melpa/pull/5008#issuecomment-360098939
 (use-package ascii
   :commands ascii-on ascii-off ascii-display ascii-customize)
+
+(use-package sql-mode
+  :mode "\\.sql$"
+  :hook (sql-mode . (lambda ()
+                      (when (locate-library "sql-indent")
+                        (load-library "sql-indent")))))
+
+(use-package LilyPond-mode
+  :mode "\\.ly$" "\\.ily$"
+  :hook ((LilyPond-mode . text-mode-init)
+         (LilyPond-mode . (lambda () (turn-on-font-lock)))))
 
 ;;; config-packages.el ends here

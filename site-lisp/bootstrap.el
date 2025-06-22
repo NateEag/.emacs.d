@@ -23,17 +23,6 @@
 ;; Add my local dirs to the load path.
 (add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
 
-;; I'm starting to flirt with ledger for handling financial tracking. In
-;; complete opposition to my usual approach to emacs, I'm going to let
-;; installing the ledger package install the corresponding elisp, in hopes of
-;; keeping the CLI and the Emacs mode in proper synchronization.
-(autoload 'ledger-mode "ledger-mode" "A major mode for Ledger" t)
-(add-to-list
- 'load-path
- (expand-file-name "/usr/local/Cellar/ledger/3.1.1_3/share/emacs/site-lisp/ledger"))
-(add-to-list 'auto-mode-alist '("\.ledger$" . ledger-mode))
-
-
 ;; Set up auto-compile, which should prevent me from ever again loading an
 ;; older byte-code file.
 ;;
@@ -75,10 +64,6 @@ are for modes that didn't come with autoloading."
   (autoload 'emmet-mode-init "emmet-mode-init.el")
   (autoload 'css-mode-init "css-mode-init.el")
   (autoload 'smart-dash-mode "smart-dash.el" "Smart Dash mode")
-
-  ;; Autoloads for eclim preferences and eclimd.
-  ;; eclimd should have come with autoloads, in principle, but it didn't.
-  (autoload 'start-eclimd "eclimd.el" nil t)
 
   (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
   (autoload 'rst-mode "rst-mode.el")

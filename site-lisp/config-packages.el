@@ -387,9 +387,8 @@ The shell command lives in my dotfiles repo."
 
 (use-package crontab-mode
   :mode "\\.cron\\(tab\\)?\\'"
-  :config (add-hook 'crontab-mode-hook '(lambda () (aggressive-fill-paragraph-mode nil)))
-          (add-hook 'crontab-mode-hook 'conf-mode-init)
-          )
+  :hook ((crontab-mode . conf-mode-init)
+         (crontab-mode . (lambda () (aggressive-fill-paragraph-mode nil)))))
 
 (use-package evil-smartparens
   :commands evil-sp-smartparens-config)
@@ -585,22 +584,22 @@ The shell command lives in my dotfiles repo."
 
 (use-package tern
   :diminish tern-mode
-  :config (add-hook 'tern-mode-hook '(lambda ()
-                                       (require 'tern-auto-complete)
-                                       (tern-ac-setup)
+  :hook (tern-mode . (lambda ()
+                       (require 'tern-auto-complete)
+                       (tern-ac-setup)
 
-                                       ;; Keybinding to force Tern's
-                                       ;; autocompletion, for cases like
-                                       ;; discussing data structures and APIs in
-                                       ;; comments.
-                                       (define-key
-                                         tern-mode-keymap
-                                         (kbd "C-<tab>")
-                                         'tern-ac-complete)
+                       ;; Keybinding to force Tern's
+                       ;; autocompletion, for cases like
+                       ;; discussing data structures and APIs in
+                       ;; comments.
+                       (define-key
+                        tern-mode-keymap
+                        (kbd "C-<tab>")
+                        'tern-ac-complete)
 
-                                       (setq tern-ac-sync t)
-                                       (add-to-list 'ac-sources
-                                                    'ac-source-tern-completion))))
+                       (setq tern-ac-sync t)
+                       (add-to-list 'ac-sources
+                                    'ac-source-tern-completion))))
 
 (use-package ac-ispell
   :commands ac-ispell-setup)
@@ -642,10 +641,10 @@ The shell command lives in my dotfiles repo."
   ;; There's nothing that needs to be configured, but don't forget the
   ;; jq-interactively command. It can be very handy when trying to figure out
   ;; how to transform some arbitrary JSON with jq.
-  :config (add-hook 'json-mode-hook 'js-mode-init)
-  (add-hook 'json-mode-hook '(lambda ()
-                               (setq-local js2-concat-multiline-strings
-                                           nil))))
+  :hook ((json-mode . js-mode-init)
+         (json-mode . (lambda ()
+                        (setq-local js2-concat-multiline-strings
+                                    nil)))))
 
 ;; TODO: Start using TypeScript mode for plain JS files. Probably works better
 ;; than js2 + tern, these days.
@@ -698,11 +697,10 @@ The shell command lives in my dotfiles repo."
   :mode "Tiltfile\\'"
   :init (jedi-force-set-up-hooks)
   :config
-  (add-hook 'python-mode-hook '(lambda ()
-                                 (my-prog-mode-init)
-
-                                 (setq jedi:use-shortcuts t)
-                                 (setq jedi:complete-on-dot t))))
+  :hook (lambda ()
+          (my-prog-mode-init)
+          (setq jedi:use-shortcuts t)
+          (setq jedi:complete-on-dot t)))
 
 (use-package terraform-mode
   :hook ((terraform-mode . lsp)))
@@ -717,20 +715,17 @@ The shell command lives in my dotfiles repo."
   :mode "\\.ya?ml\\'"
   :defer t
   :bind ("RET" . default-indent-new-line)
-  :config
-  (add-hook 'yaml-mode-hook
-            'my-prog-mode-init)
-  (add-hook 'yaml-mode-hook 'lsp)
-  ;; yaml-mode constantly shifts indentation and breaks things with
-  ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there.
-  (add-hook 'yaml-mode-hook '(lambda () (aggressive-fill-paragraph-mode -1)) 80))
+  :hook ((yaml-mode . my-prog-mode-init)
+         (yaml-mode . lsp)
+         ;; yaml-mode constantly shifts indentation and breaks things with
+         ;; aggressive-fill-paragraph-mode. Therefore, turning it off in there.
+         (yaml-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))
 
 (use-package groovy-mode
   :defer t
   :mode "\\.groovy\\'"
   :mode "\\.gradle\\'"
-  :config
-  (add-hook 'groovy-mode-hook 'my-prog-mode-init))
+  :hook (groovy-mode . my-prog-mode-init))
 
 (use-package lua-mode
   :mode "\\.lua\\'"
@@ -740,11 +735,12 @@ The shell command lives in my dotfiles repo."
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)
   :defer t
+  :hook (nxml-mode . (lambda () (emmet-mode t)))
   :config
   (progn
     (setq nxml-child-indent 4)
     (setq nxml-slash-auto-complete-flag t)
-    (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))))
+    ))
 
 (use-package jinja2-mode
   :mode (("\\.j2\\'" . jinja2-mode)))
@@ -756,8 +752,7 @@ The shell command lives in my dotfiles repo."
          ("\\.twig\\'" . web-mode)
          ("\\.hbs\\'" . web-mode)
          ("\\.handlebars\\'" . web-mode))
-  :config
-  (add-hook 'web-mode-hook 'web-mode-init))
+  :hook (web-mode . web-mode-init))
 
 (use-package php-mode
   :after lsp-mode
@@ -797,7 +792,6 @@ The shell command lives in my dotfiles repo."
 (use-package lisp-mode
   :mode (("\\.el\\'" . emacs-lisp-mode)
          ("/Cask\\'" . emacs-lisp-mode))
-  :config
   ;; Wait to set up elisp customizations until initialization is done.
   ;;
   ;; Otherwise, the various elisp buffers like *scratch* that appear before my
@@ -806,9 +800,8 @@ The shell command lives in my dotfiles repo."
   ;;
   ;; This still results in *scratch* having the extras, though, since the hook
   ;; runs first time it's set. For a workaround, this is a pretty seamless one.
-  (add-hook 'after-init-hook
-            '(lambda ()
-               (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
+  :hook (after-init . (lambda ()
+                        (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
 
 (use-package slime
   :config
@@ -865,7 +858,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package lsp-java
   :after lsp-mode
-  :config (add-hook 'java-mode-hook 'lsp))
+  :hook (java-mode . lsp))
 
 (use-package haskell-mode
   :after lsp-mode lsp-haskell
@@ -943,16 +936,14 @@ With this alias I hope to not need to remember it.")
   :diminish glasses-mode)
 
 (use-package diff-mode
-  :init (add-hook 'diff-mode-hook
-                  '(lambda ()
-                     ;; TODO Submit this as a patch to diff-mode.
-                     ;;
-                     ;; It already has these semantics, in that lines starting
-                     ;; with a # do not cause the hunk headers to adjust, so
-                     ;; that should probably be properly reflected.
-                     (setq-local comment-start "#")
-                     (text-mode-init)
-                     ))
+  :hook (diff-mode . (lambda ()
+                       ;; TODO Submit this as a patch to diff-mode.
+                       ;;
+                       ;; It already has these semantics, in that lines starting
+                       ;; with a # do not cause the hunk headers to adjust, so
+                       ;; that should probably be properly reflected.
+                       (setq-local comment-start "#")
+                       (text-mode-init)))
   :bind (:map diff-mode-map
               ("M-\d" . backward-kill-word)))
 
@@ -998,7 +989,7 @@ With this alias I hope to not need to remember it.")
 ;;
 ;; (use-package eldoc
 ;;   :diminish
-;;   :init (add-hook 'eldoc-mode-hook 'eldoc-overlay-mode))
+;;   :hook (eldoc-mode . eldoc-overlay-mode))
 
 ;; Use camel-spell to spell-check camel-cased words, mostly to catch spelling
 ;; errors in source code.

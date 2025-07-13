@@ -374,6 +374,31 @@ buffer's file does not exist."
         (smart-dash-mode)
         (diminish 'smart-dash-mode))))
 
+;; Text-editing modes of various stripes.
+(defun text-mode-init ()
+  "Configuration that is shared across my various text modes."
+
+  (evil-local-mode)
+
+  ;; Not all software uses git, but git-gutter does the right thing if it can't
+  ;; find a parent git repo.
+  (git-gutter-mode)
+
+  (turn-on-flyspell)
+  (ac-ispell-setup)
+  (ac-ispell-ac-setup)
+
+  (auto-fill-mode t)
+  (aggressive-fill-paragraph-mode t)
+
+  (smartparens-mode)
+
+  ;; I occasionally want to use yasnippet in text mode.
+  (yas-minor-mode)
+
+  ;; Turn on flycheck-mode for prose-lint.
+  (flycheck-mode t))
+
 (add-hook 'prog-mode-hook 'my-prog-mode-init)
 
 (eval-after-load 'flycheck

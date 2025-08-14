@@ -1010,7 +1010,7 @@ With this alias I hope to not need to remember it.")
 
 (use-package text-mode
   :mode "\\.txt.gpg"
-  :hook text-mode-init)
+  :hook ((text-mode . text-mode-init)))
 
 (use-package rst-mode
   :mode "\\.rst" "\\.rest$"

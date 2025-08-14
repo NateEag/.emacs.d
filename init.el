@@ -378,7 +378,7 @@ buffer's file does not exist."
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
 
-  (evil-local-mode)
+  (evil-local-mode t)
 
   ;; Not all software uses git, but git-gutter does the right thing if it can't
   ;; find a parent git repo.

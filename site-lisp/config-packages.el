@@ -566,7 +566,9 @@ The shell command lives in my dotfiles repo."
          ("/completions/" . sh-mode))
   :bind (:map sh-mode-map ("=" . 'ne-sh-mode-maybe-insert-equals))
   :hook ((sh-mode . (lambda () (setq-local ne-yas-auto-insert-snippet-name
-                                           "shell-script")))
+                                           "shell-script")
+                      ;; For whatever reason, dap-auto-configure breaks my sh-mode setup.
+                      (setq-local lsp-enable-dap-auto-configure nil)))
          (sh-mode . lsp)))
 
 (use-package dtrt-indent

@@ -117,7 +117,7 @@ I use [magit](https://magit.vc) for version control with
 UI flaws. I sometimes use its [forge](https://magit.vc/manual/forge/) plugin
 for interacting with external Git hosting services like GitHub and GitLab. Note
 that getting it set up with GitLab is a minor pain - you must create an API
-token manually and drop it in your \~/.authsource.gpg file [per the
+token manually and drop it in your `~/.authsource.gpg` file [per the
 docs](https://magit.vc/manual/ghub/How-Ghub-uses-Auth_002dSource.html#How-Ghub-uses-Auth_002dSource).
 
 I use [backup-walker](https://github.com/lewang/backup-walker) to search

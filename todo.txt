@@ -4,7 +4,10 @@
   snappy. Guess I can start moving it towards doing what I want and see when it
   starts bogging down. Looks like magit-delta may be contributing, which seems
   to be stalled at "...probably it's the overlays?" for years now:
-  https://github.com/dandavison/magit-delta/issues/9
+  https://github.com/dandavison/magit-delta/issues/9 Someone seems to have come
+  up with a workaround just lately (apparently magit-delta never cleans up its
+  overlays, and the workaround just shoves doing so into a magit hook):
+  https://github.com/dandavison/magit-delta/issues/9#issuecomment-3252826580
 
 - Get js2-concat-multiline-strings to always be false in NodeJS projects. I
   might conceivably want it in projects with stringent backwards compatibility

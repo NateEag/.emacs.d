@@ -1,4 +1,5 @@
-(("git-branch" nil)
+((forge-dispatch nil)
+ ("git-branch" nil)
  ("git-commit" nil)
  ("git-commit" nil)
  ("git-push" nil)
@@ -21,10 +22,10 @@
  (magit-fetch nil)
  (magit-gitignore nil)
  (magit-log
+  ("-n256" "--graph" "--decorate")
   ("-n256"
    ("--" "bin/grant-logger-access-to-all-servers")
    "--graph" "--decorate")
-  ("-n256" "--graph" "--decorate")
   ("--graph" "--decorate"))
  (magit-merge nil
               ("--ff-only"))
@@ -34,6 +35,7 @@
              ("--force-with-lease")
              ("--force"))
  (magit-rebase
+  ("--autostash")
   ("--autosquash" "--autostash")
   nil
   ("--autosquash")
@@ -41,8 +43,10 @@
  (magit-remote
   ("-f"))
  (magit-reset nil)
+ (magit-run nil)
  (magit-stash nil
               ("--include-untracked"))
+ (magit-status-jump nil)
  (magit-submodule nil)
  (magit-svn nil)
  (magit-tag nil)

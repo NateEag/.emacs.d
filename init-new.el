@@ -396,7 +396,7 @@ buffer's file does not exist."
   ;; "Emacs is a great OS, but a terrible text editor.
   ;; Fortunately, it's possible to write a great text editor for a great OS..."
   ;; -- some wag discussing evil-mode
-  (evil-local-mode)
+  (evil-local-mode t)
 
   ;; Not all software uses git, but git-gutter does the right thing if it can't
   ;; find a parent git repo.

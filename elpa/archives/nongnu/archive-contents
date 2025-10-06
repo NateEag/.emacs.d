@@ -618,7 +618,7 @@
 		(:keywords "languages" "elixir")
 		(:commit . "00d6580a040a750e019218f9392cf9a4c2dac23a"))])
  (elpher .
-	 [(3 6 5)
+	 [(3 6 6)
 	  ((emacs
 	    (27 1)))
 	  "A friendly gopher and gemini client" tar
@@ -627,7 +627,7 @@
 	   (:maintainer "Tim Vaughan" . "plugd@thelambdalab.xyz")
 	   (:authors
 	    ("Tim Vaughan" . "plugd@thelambdalab.xyz"))
-	   (:commit . "972a069f240f071a79da23c98d3519df45bb5851"))])
+	   (:commit . "dcdeb86f7ae633e252f9ef8a73d3458e87c1ab12"))])
  (emacsql .
 	  [(4 3 2)
 	   ((emacs
@@ -1297,7 +1297,7 @@
 		     (:keywords "languages")
 		     (:commit . "59640ceec33cd4df37096289e11ff6f4b876be03"))])
  (haskell-ts-mode .
-		  [(1 3 2)
+		  [(1 3 4)
 		   ((emacs
 		     (29 3)))
 		   "A treesit based major mode for haskell" tar
@@ -1306,7 +1306,7 @@
 		    (:maintainer "Pranshu Sharma" . "pranshu@bauherren.ovh")
 		    (:authors
 		     ("Pranshu Sharma" . "pranshu@bauherren.ovh"))
-		    (:commit . "b47211699944997bfb03fd88b1157dd71727bad7"))])
+		    (:commit . "d1278fe66681f9ed6a7b61a573af0463a3b200d2"))])
  (helm .
        [(4 0 6)
 	((helm-core
@@ -1504,11 +1504,11 @@
 	     ("Akib Azmain Turja" . "akib@disroot.org"))
 	    (:commit . "3f43991f747edcf7ed5782e7b2f68dab24574ae0"))])
  (j-mode .
-	 [(2 0 1)
+	 [(2 0 2)
 	  nil "Major mode for editing J programs" tar
-	  ((:url . "http://github.com/ldbeth/j-mode")
-	   (:keywords "j" "langauges")
-	   (:commit . "65753691027760178f60efa2dec850d372ae931b"))])
+	  ((:url . "http://github.com/zellio/j-mode")
+	   (:keywords "j" "languages")
+	   (:commit . "1365e5a3fe772609685b3787bbd2960331c1a02f"))])
  (jade-mode .
 	    [(1 0 1)
 	     nil "Major mode for editing .jade files" tar
@@ -2115,7 +2115,7 @@
 	       ("Andreas Politz" . "mail@andreas-politz.de"))
 	      (:commit . "a9c9a12c3ecf2005fa641059368ac8284f507620"))])
  (pg .
-     [(0 59)
+     [(0 60)
       ((emacs
 	(28 1))
        (peg
@@ -2126,7 +2126,7 @@
        (:maintainer "Eric Marsden" . "eric.marsden@risk-engineering.org")
        (:authors
 	("Eric Marsden" . "eric.marsden@risk-engineering.org"))
-       (:commit . "b764ead94d2bb8ff030d812df429e86beb3edb4e"))])
+       (:commit . "215cec9499d9069b387a4638a00b16c08d1e0c19"))])
  (php-mode .
 	   [(1 26 1)
 	    ((emacs
@@ -2744,7 +2744,7 @@
 	       ("Daniel Semyonov" . "daniel@dsemy.com"))
 	      (:commit . "93ae3db40d07ae15e61d34c3c3870de5d2fce2de"))])
  (visual-fill-column .
-		     [(2 6 3)
+		     [(2 7 0)
 		      ((emacs
 			(25 1)))
 		      "fill-column for visual-line-mode" tar
@@ -2752,7 +2752,7 @@
 		       (:maintainer "Joost Kremers" . "joostkremers@fastmail.fm")
 		       (:authors
 			("Joost Kremers" . "joostkremers@fastmail.fm"))
-		       (:commit . "e04d3521b6dc2435de4c4a4b9cac5feb194f0d5b"))])
+		       (:commit . "a38e3a28e580084749f5adb31a382aba118fa2bd"))])
  (web-mode .
 	   [(17 3 22)
 	    ((emacs
@@ -2867,14 +2867,14 @@
 	       ("Le Wang" . "l26wang@gmail.com"))
 	      (:commit . "9ee5a7657a22e836618813c2e2b64a548d27d2ff"))])
  (xah-fly-keys .
-	       [(28 6 20250909094330)
+	       [(28 7 20250917123258)
 		((emacs
 		  (28 3)))
 		"ergonomic modal keybinding minor mode." tar
 		((:url . "http://xahlee.info/emacs/misc/xah-fly-keys.html")
 		 (:keywords "convenience" "vi" "vim" "ergoemacs" "keybinding")
 		 (:maintainer "Xah Lee" . "xah@xahlee.org")
-		 (:commit . "3e5919be93f3f103b34ea00845eacf2efdc40663"))])
+		 (:commit . "8178b841acbf927728682befbe226f701dffe6e9"))])
  (xkcd .
        [(1 1)
 	((json

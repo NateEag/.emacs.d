@@ -89,7 +89,7 @@
  '(mail-user-agent 'notmuch-user-agent)
  '(mailcap-download-directory "~/Downloads")
  '(markdown-command "cmark")
- '(max-specpdl-size 5000 nil nil "I get the \"Variable binding depth exceeds max-specpdl-size\" error a lot when using lsp-mode on a large PHP codebase at $DAYJOB. I'm therefore bumping this up to see if it helps.")
+ '(max-specpdl-size 5000 t nil "I get the \"Variable binding depth exceeds max-specpdl-size\" error a lot when using lsp-mode on a large PHP codebase at $DAYJOB. I'm therefore bumping this up to see if it helps.")
  '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
  '(message-kill-buffer-on-exit t nil nil "If I have sent a message, I have little reason to keep the buffer around.")
  '(mm-inline-large-images 'resize)

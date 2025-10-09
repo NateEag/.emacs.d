@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: TargetFramework
+# key: TargetFramework
+# --
+<TargetFramework>${1:$$(yas-completing-read "TargetFramework: " '("netcoreapp2.1" "netcoreapp2.2" "netcoreapp3.0" "netcoreapp3.1" "netstandard2.0" "netstandard1.6" "net452" "net462" "net5.0" "net5.0-android" "net5.0-ios" "net5.0-macos" "net5.0-tvos" "net5.0-watchos" "net5.0-windows" "net6.0" "uap"))}</TargetFramework>

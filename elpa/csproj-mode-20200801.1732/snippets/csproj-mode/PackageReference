@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Package Reference
+# key: PackageReference
+# --
+<PackageReference Include="$1" Version="$2"/>

@@ -1,0 +1,10 @@
+# -*- mode: snippet -*-
+# name: Target
+# key: Target
+# --
+<Target Name="$1"
+        DependsOnTarget="$2"
+        AfterTargets="$3"
+        BeforeTargets="$4">
+  $0
+</Target>

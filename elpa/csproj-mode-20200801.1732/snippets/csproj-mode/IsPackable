@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: IsPackabe
+# key: IsPackabe
+# --
+<IsPackable>${0:true}</IsPackable>

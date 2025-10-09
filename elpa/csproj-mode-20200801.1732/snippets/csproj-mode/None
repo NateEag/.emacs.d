@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: None
+# key: None
+# --
+<None Include="$0" CopyToOutputDirectory="PreserveNewest" />

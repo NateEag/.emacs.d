@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: DotNetCliToolReference
+# key: DotNetCliToolReference
+# --
+<DotNetCliToolReference Include="$1" Version="$2" />

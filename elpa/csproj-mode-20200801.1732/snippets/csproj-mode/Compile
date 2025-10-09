@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Compile
+# key: Compile
+# --
+<Compile Include="$0" CopyToOutputDirectory="PreserveNewest" />

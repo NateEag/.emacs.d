@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: ItemGroup
+# key: ItemGroup
+# --
+<ItemGroup>
+  $0
+</ItemGroup>

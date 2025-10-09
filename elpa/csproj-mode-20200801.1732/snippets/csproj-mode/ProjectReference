@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Project Reference
+# key: ProjectReference
+# --
+<ProjectReference Include="$0" />

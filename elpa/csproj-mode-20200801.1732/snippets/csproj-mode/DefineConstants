@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: DefineConstants
+# key: DefineConstants
+# --
+<DefineConstants>\$(DefineConstants);$0</DefineConstants>

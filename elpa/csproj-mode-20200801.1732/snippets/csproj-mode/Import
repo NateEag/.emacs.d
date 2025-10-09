@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: Import
+# key: Import
+# --
+<Import Project="$0" />

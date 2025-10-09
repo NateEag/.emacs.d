@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: RuntimeIdentifiers
+# key: RuntimeIdentifiers
+# --
+<RuntimeIdentifiers>win10-x64;osx.10-11-x64;linux-x64</RuntimeIdentifiers>

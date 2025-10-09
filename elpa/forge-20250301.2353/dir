@@ -15,4 +15,11 @@ File: dir,	Node: Top	This is the top of the INFO tree
 * Menu:
 
 Emacs
+<<<<<<<< HEAD:elpa/forge-20250301.2353/dir
 * Forge: (forge).               Access Git Forges from Magit.
+|||||||| parent of fb6babe65 (Delete / add a bunch of elpa packages):elpa/magit-section-20210615.1036/dir
+* Magit-Section: (magit-section).
+                                Use Magit sections in your own packages.
+========
+* Ledger Mode: (ledger-mode).   Command-Line Accounting
+>>>>>>>> fb6babe65 (Delete / add a bunch of elpa packages):elpa/ledger-mode-20250313.244/dir

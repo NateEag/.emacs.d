@@ -1152,7 +1152,8 @@ With this alias I hope to not need to remember it.")
          ;; fail2ban suggests you put your own configuration into jail.local.
          ;; This is thus a useful rule.
          ("jail.local\\'" . conf-mode)
-         ("CODEOWNERS\\'" . conf-mode))
+         ("CODEOWNERS\\'" . conf-mode)
+         (".prettierignore\\'" . conf-mode))
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
   ;; more-specific regex, it should probably open in conf-mode.
   ;;

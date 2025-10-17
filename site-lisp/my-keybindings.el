@@ -108,7 +108,7 @@
     ("d i" . insert-date-iso-format)
     ("d t" . insert-time)
 
-    ("o" . other-window)
+    ("o o" . other-window)
 
     ;; HTML involves lots of extraneous angle brackets. Emmet-mode makes typing
     ;; it less annoying.
@@ -137,6 +137,7 @@
     ;;
     ;; ...though I probably am going to move away from Tern soon since it's not
     ;; supported any more, so y'know. Mileage may vary.
+    ("o ." . xref-find-definitions-other-window)
     ("." . xref-find-definitions)
     ("," . xref-pop-marker-stack)
 
@@ -164,6 +165,7 @@ Used to define keyboard shortcuts.")
   (global-unset-key (kbd "s-p"))
   (global-unset-key (kbd "s-g"))
   (global-unset-key (kbd "s-d"))
+  (global-unset-key (kbd "s-o"))
 
   (dolist (elt nateeag/command-mnemonics)
     (let* ((mnemonic (car elt))

@@ -387,7 +387,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package crontab-mode
   :mode "\\.cron\\(tab\\)?\\'"
-  :hook ((crontab-mode . conf-mode-init)
+  :hook ((crontab-mode . conf-unix-mode-init)
          (crontab-mode . (lambda () (aggressive-fill-paragraph-mode nil)))))
 
 (use-package evil-smartparens

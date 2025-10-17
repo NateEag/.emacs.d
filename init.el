@@ -418,6 +418,12 @@ buffer's file does not exist."
 (eval-after-load 'emmet-mode
   '(emmet-mode-init))
 
+;; Unix config mode (mostly used for .git* files)
+(defun conf-unix-mode-init ()
+  "My settings for editing Unix config files."
+  (auto-fill-mode))
+(add-hook 'conf-unix-mode-hook 'conf-unix-mode-init)
+
 ;; Start an emacs server as needed so emacsclient has something to connect to.
 (when (display-graphic-p)
   (require 'server)

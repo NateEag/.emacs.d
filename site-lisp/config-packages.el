@@ -697,12 +697,10 @@ The shell command lives in my dotfiles repo."
 
 (use-package python-mode
   :mode "Tiltfile\\'"
-  :init (jedi-force-set-up-hooks)
   :config
   :hook (lambda ()
           (my-prog-mode-init)
-          (setq jedi:use-shortcuts t)
-          (setq jedi:complete-on-dot t)))
+          (lsp)))
 
 (use-package terraform-mode
   :hook ((terraform-mode . lsp)))

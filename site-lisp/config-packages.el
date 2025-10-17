@@ -873,6 +873,14 @@ The shell command lives in my dotfiles repo."
   :hook ((haskell-mode . lsp)
          (haskell-literate-mode . lsp)))
 
+;; haskell-cabal-mode extends fundamental-mode, so if I want evil-local-mode, I
+;; need to explicitly use my text-mode-init hook.
+;;
+;; TODO Consider just adding a fundamental-mode hook for evil-local-mode, which
+;; text-mode-init calls?
+(use-package haskell-cabal
+  :hook ((haskell-cabal-mode . text-mode-init)))
+
 (use-package go-mode
   :hook ((go-mode . lsp)
          (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))

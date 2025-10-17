@@ -104,8 +104,6 @@
 
     ;; Dates and times are handy to be able to insert.
     ("d d" . insert-date)
-    ;; FIXME Remove Gnome Super-p keybinding and use "d p" for path-formatted
-    ;; dates.
     ("d /" . insert-date-path-format)
     ("d i" . insert-date-iso-format)
     ("d t" . insert-time)

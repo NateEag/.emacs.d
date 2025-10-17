@@ -1037,6 +1037,14 @@ With this alias I hope to not need to remember it.")
   :mode "\\.txt.gpg"
   :hook ((text-mode . text-mode-init)))
 
+(use-package markdown-mode
+  ;; Because they're not pure Markdown files, my daily log files have the .txt
+  ;; extension.
+  ;;
+  ;; However, I do still use a lot of Markdown idioms in them, so I still use
+  ;; markdown-mode in practice.
+  :mode "/daily-log/\\.*")
+
 (use-package rst-mode
   :mode "\\.rst" "\\.rest$"
   :hook ((rst-mode . (lambda ()

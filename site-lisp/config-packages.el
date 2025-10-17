@@ -996,7 +996,7 @@ With this alias I hope to not need to remember it.")
 (use-package apache-mode
   ;; A rule specific to a system I use at $DAYJOB.
   :mode "default-[[:digit:]]\\{8\\}\\'"
-  :hook (apache-mode . conf-mode-init))
+  :hook (apache-mode . conf-unix-mode-init))
 
 (use-package nginx-mode)
 

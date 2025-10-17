@@ -739,6 +739,9 @@ The shell command lives in my dotfiles repo."
 
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)
+  ;; For working with .NET projects' various project-related files
+  :mode "\\.props\\'"
+  :mode "\\.csproj\\'"
   :defer t
   :hook (nxml-mode . (lambda () (emmet-mode t)))
   :config

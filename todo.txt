@@ -63,6 +63,10 @@
   def, then to stay in that window for successive jumps. That's usually what I
   want.
 
+- Figure out why // eslint-disable-next-line comments aren't being respected in
+  Emacs even though they are by 'npm run lint' in projects at $DAYJOB. Probably
+  has to do with using nts-scripts for 'npm run lint'.
+
 - Replace Tern.js with the Typescript language server - by all accounts it does
   quite well with JS and of course it gives you TypeScript intelligence too. I
   suppose I'd get free basic typechecking in all JS I write, now that I type

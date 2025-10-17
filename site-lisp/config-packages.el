@@ -702,6 +702,9 @@ The shell command lives in my dotfiles repo."
           (my-prog-mode-init)
           (lsp)))
 
+(use-package graphql-mode
+  :mode ".graphql\\'")
+
 (use-package terraform-mode
   :hook ((terraform-mode . lsp)))
 

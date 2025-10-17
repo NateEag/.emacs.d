@@ -885,15 +885,24 @@ The shell command lives in my dotfiles repo."
   :hook ((go-mode . lsp)
          (go-mode . (lambda () (aggressive-fill-paragraph-mode -1)))))
 
+;; FIXME Figure out why these aren't getting executed at startup time.
 (use-package csharp-mode
   :after apheleia-mode lsp-mode
-  :init (setq lsp-csharp-server-path (executable-find "OmniSharp"))
+  :init
+  ;; TODO Figure out why this is necessary. Shouldn't lsp-mode automatically use
+  ;; the binary it installed by default?
+  (setq lsp-csharp-server-path
+        (executable-find "OmniSharp"))
   :config
+  ;; TODO Submit a PR to upstream to add this, + a fallback default of "dotnet
+  ;; format" for c-sharp-mode? The html-tidy formatter is a decent example of
+  ;; how to do this - if csharpier is available, make "csharpier" the second
+  ;; arg, otherwise use "format".
   (add-to-list 'apheleia-formatters '(csharpier "dotnet" "csharpier"))
   :hook ((csharp-mode . lsp)
          (csharp-mode . (lambda ()
-               ;; Make lsp-mode stop spewing noise about something it doesn't understand in
-               ;; OmniSharp's output.
+               ;; Make lsp-mode stop spewing noise about something it doesn't
+               ;; understand in OmniSharp's output.
                (setq-local warning-minimum-level :error)
                (setq-local apheleia-formatter 'csharpier)))))
 

@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: doccoment
+# key: doccoment
+# --
+/**
+ * $0
+ */

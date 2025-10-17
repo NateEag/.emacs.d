@@ -20,7 +20,7 @@
 
 (use-package activity-watch-mode
   :diminish
-  :init (global-activity-watch-mode))
+  :hook (after-init . global-activity-watch-mode))
 
 (use-package s
   :commands s-replace s-trim)

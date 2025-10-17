@@ -708,8 +708,10 @@ The shell command lives in my dotfiles repo."
 (use-package terraform-mode
   :hook ((terraform-mode . lsp)))
 
+;; TODO Rename this to be more general - it's more like poly-yaml-template-mode
 (use-package poly-argocd-template-mode
-  :mode "/argo/\\(cd\\)?/.*/*.tpl")
+  :mode "/argo/\\(cd\\)?/.*/*.tpl"
+  :mode ".ya?ml.tpl\\'")
 
 (use-package hcl-mode
   :mode "\\.hcl.tpl")

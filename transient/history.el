@@ -13,13 +13,22 @@
  (magit-branch nil)
  (magit-cherry-pick
   ("--ff"))
- (magit-commit nil)
+ (magit-commit nil
+               ("--author=Tom Martinson <tmartinson@scheduleengine.com>")
+               ("--reset-author")
+               ("--no-verify")
+               ("--author=Rohan Thakral <rthakral@servicetitan.com>")
+               ("--author=Shiva Kodiganti <skodiganti@servicetitan.com>")
+               ("--author=Nate Eagleson <nate@nateeag.com>")
+               ("--author=Ryan Keener <rkeener@servicetitan.com>")
+               ("--author=\"Rohan Thakral <rthakral@servicetitan.com>\""))
  (magit-diff
   ("--no-ext-diff" "--stat")
   nil)
  (magit-dispatch nil)
  (magit-ediff nil)
- (magit-fetch nil)
+ (magit-fetch nil
+              ("--tags"))
  (magit-gitignore nil)
  (magit-log
   ("-n256" "--graph" "--decorate")
@@ -27,22 +36,26 @@
    ("--" "bin/grant-logger-access-to-all-servers")
    "--graph" "--decorate")
   ("--graph" "--decorate"))
+ (magit-log:-G "IKafkaManager" "PrimaryStatus\\?")
  (magit-merge nil
               ("--ff-only"))
  (magit-pull nil
+             ("--ff-only")
              ("--rebase"))
  (magit-push nil
              ("--force-with-lease")
              ("--force"))
- (magit-rebase
-  ("--autostash")
-  ("--autosquash" "--autostash")
-  nil
-  ("--autosquash")
-  ("--interactive"))
+ (magit-rebase nil
+               ("--autosquash" "--autostash")
+               ("--autostash" "--interactive")
+               ("--autosquash" "--autostash" "--interactive")
+               ("--autosquash")
+               ("--interactive"))
  (magit-remote
   ("-f"))
  (magit-reset nil)
+ (magit-revert
+  ("--edit"))
  (magit-run nil)
  (magit-stash nil
               ("--include-untracked"))
@@ -50,4 +63,6 @@
  (magit-submodule nil)
  (magit-svn nil)
  (magit-tag nil)
- (magit:-- "bin/grant-logger-access-to-all-servers" ""))
+ (magit:-- "bin/grant-logger-access-to-all-servers" "")
+ (magit:--author "Tom Martinson <tmartinson@scheduleengine.com>" "Rohan Thakral <rthakral@servicetitan.com>" "Shiva Kodiganti <skodiganti@servicetitan.com>" "Nate Eagleson <nate@nateeag.com>" "Ryan Keener <rkeener@servicetitan.com>" "\"Rohan Thakral <rthakral@servicetitan.com>\"")
+ (rg-menu nil))

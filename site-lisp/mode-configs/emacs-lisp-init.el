@@ -19,6 +19,8 @@
 
   (push '(?\` . ("`" . "'")) evil-surround-pairs-alist)
 
+  (setq-local apheleia-formatter 'lisp-indent)
+
   (eldoc-mode t)
   (diminish 'eldoc-mode))
 ;;; emacs-lisp-init.el ends here

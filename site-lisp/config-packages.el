@@ -62,8 +62,9 @@
 ;;
 ;; Enter the dashman.
 (use-package dash-docs
-  :init (setq dash-docs-docsets-path (expand-file-name "~/Reference/.docsets"))
-        (make-directory dash-docs-docsets-path t)
+  :init
+  (setq dash-docs-docsets-path (expand-file-name "~/Reference/.docsets"))
+  (make-directory dash-docs-docsets-path t)
   :config (cl-map 'list #'dash-docs-ensure-docset-installed '("JavaScript"
                                                               "NodeJS"
                                                               "TypeScript"
@@ -147,22 +148,22 @@
     ;; ...granted, the right answer here is to figure out how to sync notmuch
     ;; tags to IMAP folders. Someday.
     (define-key notmuch-search-mode-map "d"
-      (lambda (&optional beg end)
-        "mark message as deleted"
-        (interactive)
-        (notmuch-search-tag (list "+deleted" "-unread" "-inbox") beg end)))
+                (lambda (&optional beg end)
+                  "mark message as deleted"
+                  (interactive)
+                  (notmuch-search-tag (list "+deleted" "-unread" "-inbox") beg end)))
 
     (define-key notmuch-search-mode-map "r"
-      (lambda (&optional beg end)
-        "mark message as an archived receipt"
-        (interactive)
-        (notmuch-search-tag (list "+receipts" "-unread" "-inbox") beg end)))
+                (lambda (&optional beg end)
+                  "mark message as an archived receipt"
+                  (interactive)
+                  (notmuch-search-tag (list "+receipts" "-unread" "-inbox") beg end)))
 
     (define-key notmuch-search-mode-map "s"
-      (lambda (&optional beg end)
-        "mark message as spam"
-        (interactive)
-        (notmuch-search-tag (list "+spam" "-inbox" "-unread") beg end)))
+                (lambda (&optional beg end)
+                  "mark message as spam"
+                  (interactive)
+                  (notmuch-search-tag (list "+spam" "-inbox" "-unread") beg end)))
 
     ;; Be evil-ish, because I want that.
     (define-key notmuch-show-mode-map "j" 'next-line)
@@ -172,45 +173,45 @@
 
     ;; Make it easier to open attachments in the corresponding tool.
     (define-key notmuch-show-mode-map (kbd "o")
-      'notmuch-show-interactively-view-part)
+                'notmuch-show-interactively-view-part)
 
     (define-key notmuch-show-mode-map (kbd "D")
-      (lambda ()
-        "Delete current message and move to the next message or thread.
+                (lambda ()
+                  "Delete current message and move to the next message or thread.
 
 TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-then-next?"
-        (interactive)
-        (notmuch-show-tag (list "+deleted" "-inbox" "-unread"))
-        (unless (notmuch-show-next-open-message)
-          (notmuch-show-next-thread t))))
+                  (interactive)
+                  (notmuch-show-tag (list "+deleted" "-inbox" "-unread"))
+                  (unless (notmuch-show-next-open-message)
+                    (notmuch-show-next-thread t))))
 
     (define-key notmuch-show-mode-map "w"
-      (lambda ()
-        "Mark message as watched and reply to the sender."
-        (interactive)
-        (notmuch-show-tag (list "+watched"))
-        (notmuch-show-reply-sender)))
+                (lambda ()
+                  "Mark message as watched and reply to the sender."
+                  (interactive)
+                  (notmuch-show-tag (list "+watched"))
+                  (notmuch-show-reply-sender)))
 
     (define-key notmuch-show-mode-map "W"
-      (lambda ()
-        "Mark message as watched and reply to all."
-        (interactive)
-        (notmuch-show-tag (list "+watched"))
-        (notmuch-show-reply)))
+                (lambda ()
+                  "Mark message as watched and reply to all."
+                  (interactive)
+                  (notmuch-show-tag (list "+watched"))
+                  (notmuch-show-reply)))
 
     ;; I already have a keybinding for 'archive thread', so rebind Spacebar to
     ;; just let me advance the thread and move to the next one when I'm done
     ;; with it, rather than moving to the next one and archiving.
     (define-key notmuch-show-mode-map (kbd "SPC")
-      (lambda ()
-        "Move to the next message or thread.
+                (lambda ()
+                  "Move to the next message or thread.
 
 I feel like this should be built-in somewhere to notmuch-mode, but I haven't
 found it."
-        (interactive)
+                  (interactive)
 
-        (if (notmuch-show-advance)
-            (notmuch-show-next-thread t))))
+                  (if (notmuch-show-advance)
+                      (notmuch-show-next-thread t))))
 
     ;; Download an attachment locally.
     ;;
@@ -249,8 +250,8 @@ The shell command lives in my dotfiles repo."
   ;; it assumes I want the first result, which is not often true and thus
   ;; forces me to type more than I want to.
   (define-key message-mode-map
-    (kbd "<backtab>")
-    '(lambda () (interactive) (notmuch-address-expand-name))))
+              (kbd "<backtab>")
+              '(lambda () (interactive) (notmuch-address-expand-name))))
 
 (use-package message-attachment-reminder)
 
@@ -441,8 +442,9 @@ The shell command lives in my dotfiles repo."
   :init (evil-collection-init))
 
 (use-package evil-args
-  :config (define-key evil-inner-text-objects-map "a" 'evil-inner-arg)
-          (define-key evil-outer-text-objects-map "a" 'evil-outer-arg))
+  :config
+  (define-key evil-inner-text-objects-map "a" 'evil-inner-arg)
+  (define-key evil-outer-text-objects-map "a" 'evil-outer-arg))
 
 (use-package scratch-comment
   :bind (:map lisp-interaction-mode-map
@@ -502,12 +504,12 @@ The shell command lives in my dotfiles repo."
 
 ;; TODO: Figure out how to replace this config. It breaks under current magit.
 (use-package git-commit
-   :config (global-git-commit-mode 1)
-   :hook ((git-commit-mode . evil-insert-state)
-          (git-commit-mode . (lambda ()
-                               (auto-fill-mode t)
-                               (setq fill-column 72)
-                               (turn-on-flyspell)))))
+  :config (global-git-commit-mode 1)
+  :hook ((git-commit-mode . evil-insert-state)
+         (git-commit-mode . (lambda ()
+                              (auto-fill-mode t)
+                              (setq fill-column 72)
+                              (turn-on-flyspell)))))
 
 (use-package abbrev
   :defer t
@@ -789,11 +791,11 @@ The shell command lives in my dotfiles repo."
   :init (setq httpd-port 9000)
   :hook ((css-mode . css-mode-init)
          (scss-mode .
-            (lambda ()
-              ;; Use SCSS-style comments, largely so that comment functions
-              ;; don't go crazy the way they do in css-mode.
-              (setq comment-start "//"
-                    comment-end "")))))
+                    (lambda ()
+                      ;; Use SCSS-style comments, largely so that comment functions
+                      ;; don't go crazy the way they do in css-mode.
+                      (setq comment-start "//"
+                            comment-end "")))))
 
 (use-package apheleia :diminish)
 
@@ -901,10 +903,10 @@ The shell command lives in my dotfiles repo."
   (add-to-list 'apheleia-formatters '(csharpier "dotnet" "csharpier"))
   :hook ((csharp-mode . lsp)
          (csharp-mode . (lambda ()
-               ;; Make lsp-mode stop spewing noise about something it doesn't
-               ;; understand in OmniSharp's output.
-               (setq-local warning-minimum-level :error)
-               (setq-local apheleia-formatter 'csharpier)))))
+                          ;; Make lsp-mode stop spewing noise about something it doesn't
+                          ;; understand in OmniSharp's output.
+                          (setq-local warning-minimum-level :error)
+                          (setq-local apheleia-formatter 'csharpier)))))
 
 (use-package apples-mode
   :mode "\\.scpt\\'"
@@ -1048,10 +1050,10 @@ With this alias I hope to not need to remember it.")
 (use-package rst-mode
   :mode "\\.rst" "\\.rest$"
   :hook ((rst-mode . (lambda ()
-                           (text-mode-init)
-                           ;; rst uses these for link delimiters. In other
-                           ;; modes I'm more prone to use them for tags.
-                           (sp-pair "<" ">")))))
+                       (text-mode-init)
+                       ;; rst uses these for link delimiters. In other
+                       ;; modes I'm more prone to use them for tags.
+                       (sp-pair "<" ">")))))
 
 (use-package markdown-mode
   :hook ((markdown-mode . text-mode-init)))

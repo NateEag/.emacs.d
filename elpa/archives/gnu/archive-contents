@@ -1043,7 +1043,7 @@
 	     ("Phil Sainty" . "psainty@orcon.net.nz"))
 	    (:commit . "a763ec1e5c2987efea3ce2ee6d9c979f56ab6528"))])
  (denote .
-	 [(4 1 0)
+	 [(4 1 1)
 	  ((emacs
 	    (28 1)))
 	  "Simple notes with an efficient file-naming scheme" tar
@@ -1051,7 +1051,7 @@
 	   (:maintainer "Protesilaos Stavrou" . "info@protesilaos.com")
 	   (:authors
 	    ("Protesilaos Stavrou" . "info@protesilaos.com"))
-	   (:commit . "d4ba0eb290bd7afe54300718f16f23919390ce9b"))])
+	   (:commit . "13a4de04c8d04be697c891c34765526d7e6c5f25"))])
  (denote-journal .
 		 [(0 2 0)
 		  ((emacs
@@ -3468,7 +3468,7 @@
 	(:url . "https://elpa.gnu.org/packages/osc.html")
 	(:commit . "6b6dbb4176f45f9ff3a783c816c4556ca2931a22"))])
  (osm .
-      [(1 8)
+      [(1 9)
        ((emacs
 	 (29 1))
 	(compat
@@ -3479,7 +3479,7 @@
 	(:maintainer "Daniel Mendler" . "mail@daniel-mendler.de")
 	(:authors
 	 ("Daniel Mendler" . "mail@daniel-mendler.de"))
-	(:commit . "ebde926c159c6adbf72540d3067bcd88cbbf0247"))])
+	(:commit . "7641bf620bf20b71908702e91c0a5e82a103b196"))])
  (other-frame-window .
 		     [(1 0 6)
 		      ((emacs
@@ -4732,7 +4732,7 @@
 	  ("Oleh Krehel" . "ohwoeowho@gmail.com"))
 	 (:keywords "convenience"))])
  (tmr .
-      [(1 2 0)
+      [(1 2 1)
        ((emacs
 	 (29 1)))
        "Set timers using a convenient notation" tar
@@ -4744,7 +4744,7 @@
 	 ("Damien Cassou" . "damien@cassou.me")
 	 ("Daniel Mendler" . "mail@daniel-mendler.de")
 	 ("Steven Allen" . "steven@stebalien.com"))
-	(:commit . "726c6491e327140e7df30e4c58e45244d0c22f22"))])
+	(:commit . "f6b62106b64d4ff99875fd10aad2950be06009e7"))])
  (tomelr .
 	 [(0 4 3)
 	  ((emacs

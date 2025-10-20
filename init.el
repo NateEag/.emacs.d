@@ -106,25 +106,25 @@
 ;; suppression function would be. Something involving auto-revert-mode?
 (make-directory my-autosaves-dir t)
 (setq
-   ; Don't clobber symlinks.
-   backup-by-copying t
+                                        ; Don't clobber symlinks.
+ backup-by-copying t
 
-   ; Don't break multiple hardlinks.
-   backup-by-copying-when-linked t
+                                        ; Don't break multiple hardlinks.
+ backup-by-copying-when-linked t
 
-   ; Don't litter the filesystem with backups *or* autosaves.
-   backup-directory-alist
-    `(("." . ,my-autosaves-dir))
+                                        ; Don't litter the filesystem with backups *or* autosaves.
+ backup-directory-alist
+ `(("." . ,my-autosaves-dir))
 
-   auto-save-file-name-transforms
-   `((".*" ,(concat my-autosaves-dir "\\1") t))
+ auto-save-file-name-transforms
+ `((".*" ,(concat my-autosaves-dir "\\1") t))
 
-   ;; Never auto-delete backups, so the backup-walker package is as useful as
-   ;; possible.
-   delete-old-versions -1
+ ;; Never auto-delete backups, so the backup-walker package is as useful as
+ ;; possible.
+ delete-old-versions -1
 
-   ; use versioned backups
-   version-control t)
+                                        ; use versioned backups
+ version-control t)
 
 ;; Back up files even when using version control.
 (setq vc-make-backup-files t)
@@ -193,7 +193,7 @@ Accepts unused `args' so it can be used as advice for arbitrary functions."
 buffer's file does not exist."
 
   (when (ne/should-autosave-buffer (nth 0 arguments))
-                  (apply old-function arguments)))
+    (apply old-function arguments)))
 
 (advice-add 'other-window :before #'ne/save-when-file)
 (advice-add 'switch-to-buffer :before #'ne/save-when-file)
@@ -237,7 +237,7 @@ buffer's file does not exist."
   (setq indent-tabs-mode nil))
 
 (defadvice tabify (after tabify-set-indent-tabs-mode
-                           (start end  &optional _arg))
+                         (start end  &optional _arg))
   "Set `indent-tabs-mode' after tabifying."
   (setq indent-tabs-mode t))
 

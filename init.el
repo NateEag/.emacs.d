@@ -388,6 +388,9 @@ buffer's file does not exist."
   (ac-ispell-setup)
   (ac-ispell-ac-setup)
 
+  ;; TODO: Only activate these modes if there are no long lines in the buffer.
+  ;; Long lines strongly imply that the convention in the file is not to wrap
+  ;; text.
   (auto-fill-mode t)
   (aggressive-fill-paragraph-mode t)
 

@@ -21,8 +21,9 @@
   ;; by on hardcoding a few special cases.
   (let ((bash-var-chars "[a-zA-Z0-9_]+"))
 
-    ;; If it contains dashes already, you probably shouldn't underscore.
-    (and (not (thing-at-point-looking-at "[a-zA-Z0-9]+-[a-zA-Z0-9]+"))
+    ;; If it contains dashes already (especially if it starts with one), you
+    ;; probably shouldn't underscore.
+    (and (not (thing-at-point-looking-at "[a-zA-Z0-9]*--?[a-zA-Z0-9]+"))
          ;; However, if it doesn't, there may be several good reasons *to* use
          ;; underscores...
          (or

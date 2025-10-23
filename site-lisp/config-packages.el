@@ -29,7 +29,7 @@
   :commands
   hit-servlet comment-or-uncomment-region-or-line wrap-args
   move-current-buffer insert-date insert-date-iso-format insert-time unfill-paragraph
-  add-auto-mode ne/set-theme-to-match-system-theme)
+  add-auto-mode ne/set-theme-to-match-system-theme ne/switch-window-then-find-project-file)
 
 (use-package daily-log
   :commands

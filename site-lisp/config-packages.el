@@ -700,9 +700,9 @@ The shell command lives in my dotfiles repo."
 (use-package python-mode
   :mode "Tiltfile\\'"
   :config
-  :hook (lambda ()
-          (my-prog-mode-init)
-          (lsp)))
+  :hook ((python-mode . (lambda ()
+                          (my-prog-mode-init)
+                          (lsp)))))
 
 (use-package graphql-mode
   :mode ".graphql\\'")

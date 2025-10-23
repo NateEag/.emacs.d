@@ -547,7 +547,7 @@
 	      ("Yuchen Pei" . "id@ypei.org"))
 	     (:commit . "d614eea91ca5717c2b0019dae8c85e6a24873f39"))])
  (calibre .
-	  [(1 4 1)
+	  [(1 5 0)
 	   ((emacs
 	     (27 1))
 	    (compat
@@ -557,7 +557,7 @@
 	    (:maintainer "Kjartan Oli Agustsson" . "kjartanoli@disroot.org")
 	    (:authors
 	     ("Kjartan Oli Agustsson" . "kjartanoli@disroot.org"))
-	    (:commit . "855a9cb092eecf1e5c17ea56c440a0200f95eb4c"))])
+	    (:commit . "dbbffe75c6a2492099e36dc93b6183800a7d6fcd"))])
  (cape .
        [(2 2)
 	((emacs
@@ -1149,16 +1149,18 @@
 	      ("Niklas Eklund" . "niklas.eklund@posteo.net"))
 	     (:commit . "fedb0df5b0fbba13c662107855fb07a922793096"))])
  (devdocs .
-	  [(0 6 1)
+	  [(0 7)
 	   ((emacs
-	     (27 1)))
+	     (27 1))
+	    (compat
+	     (30 1)))
 	   "Emacs viewer for DevDocs" tar
 	   ((:url . "https://github.com/astoff/devdocs.el")
 	    (:keywords "help")
 	    (:maintainer "Augusto Stoffel" . "arstoffel@gmail.com")
 	    (:authors
 	     ("Augusto Stoffel" . "arstoffel@gmail.com"))
-	    (:commit . "ebdd3b39bef1a928c069373337d0f8e4f2d8b8d2"))])
+	    (:commit . "25c746024ddf73570195bf42b841f761a2fee10c"))])
  (devicetree-ts-mode .
 		     [(0 3)
 		      ((emacs
@@ -1708,7 +1710,7 @@
 		("Ted Zlatanov" . "tzz@lifelogs.com"))
 	       (:maintainer "Ted Zlatanov" . "tzz@lifelogs.com"))])
  (erc .
-      [(5 6)
+      [(5 6 1)
        ((emacs
 	 (27 1))
 	(compat
@@ -1721,7 +1723,7 @@
 	 ("F. Jason Park" . "jp@neverwas.me"))
 	(:authors
 	 ("Alexander L. Belikoff" . "alexander@belikoff.net"))
-	(:commit . "d1e98a8f0128747030e97ffea20a8f67aa0cd923"))])
+	(:commit . "1b5fef63b483fba9908543da39365bd522ad6e4a"))])
  (ergoemacs-mode .
 		 [(5 16 10 12)
 		  ((emacs

@@ -119,137 +119,32 @@
  '(package-native-compile t)
  '(package-quickstart t nil nil "I like my startup time to be as low as it reasonably can.")
  '(package-selected-packages
-   '(accent
-     ace-jump-mode
-     ac-emmet
-     ac-helm
-     ac-html
-     ac-html-csswatcher
-     ac-ispell
-     ac-slime
-     aggressive-fill-paragraph
-     anzu
-     ascii
-     async-backup
-     backup-each-save
-     backup-walker
-     bats-mode
-     beacon
-     bind-key
-     browse-kill-ring
-     browse-url-dwim
-     bufler
-     bug-hunter
-     cask-mode
-     code-review
-     compact-docstrings
-     csv
-     cycle-quotes
-     cygwin-mount
-     dart-mode
-     delight
-     diffview
-     do-at-point
-     dot-env
-     dynamic-spaces
-     el2markdown
-     eldoc-overlay-mode
-     elisp-def
-     elm-mode
-     elpl
-     elpygen
-     esup
-     evil-commentary
-     evil-escape
-     evil-indent-textobject
-     evil-leader
-     evil-textobj-tree-sitter
-     evil-tutor
-     flycheck-css-colorguard
-     focus-autosave-mode
-     forge
-     frame-cmds
-     free-keys
-     gitattributes-mode
-     git-blamed
-     gitconfig-mode
-     git-gutter
-     git-gutter-fringe+
-     gitignore-mode
-     git-walktree
-     gnuplot-mode
-     goto-line-preview
-     helm-git-files
-     hideshowvis
-     iss-mode
-     jscs
-     js-doc
-     key-chord
-     khalel
-     know-your-http-well
-     kotlin-mode
-     literate-coffee-mode
-     lsp-dart
-     lsp-java
-     lsp-origami
-     macrostep
-     magit
-     magit-delta
-     magit-patch-changelog
-     magit-stats
-     markdown-changelog
-     minimap
-     mo-git-blame
-     names
-     neotree
-     nginx-mode
-     notmuch-addr
-     notmuch-transient
-     origami
-     osx-plist
-     parse-it
-     php-auto-yasnippets
-     pip-requirements
-     popwin
-     puppet-mode
-     pyenv-mode
-     pyimpsort
-     qrencode
-     regex-tool
-     reveal-in-folder
-     reveal-in-osx-finder
-     rfc-mode
-     rg
-     ripgrep
-     s
-     sane-term
-     scss-mode
-     separedit
-     sexp-diff
-     shell-pop
-     sicp
-     sidecar-locals
-     skewer-reload-stylesheets
-     slack
-     smart-tabs-mode
-     string-edit
-     string-inflection
-     sublimity
-     swagg
-     tagedit
-     tea-time
-     tern-auto-complete
-     toggle-quotes
-     transient
-     tzc
-     undo-tree
-     url-http-oauth
-     use-package
-     vcard
-     xref
-     xterm-color
-     yasnippet-classic-snippets
-     ))
+   '(ac-emmet ac-helm ac-html ac-html-csswatcher ac-ispell ac-slime accent
+              ace-jump-mode aggressive-fill-paragraph anzu ascii async-backup
+              backup-each-save backup-walker bats-mode beacon bind-key
+              browse-kill-ring browse-url-dwim bufler bug-hunter cask-mode
+              code-review compact-docstrings csv cycle-quotes cygwin-mount
+              dart-mode delight diffview do-at-point dot-env dynamic-spaces
+              el2markdown eldoc-overlay-mode elisp-def elm-mode elpl elpygen
+              esup evil-commentary evil-escape evil-indent-textobject
+              evil-leader evil-textobj-tree-sitter evil-tutor
+              flycheck-css-colorguard focus-autosave-mode forge frame-cmds
+              free-keys git-blamed git-gutter git-gutter-fringe+ git-walktree
+              gitattributes-mode gitconfig-mode gitignore-mode gnuplot-mode
+              goto-line-preview helm-git-files hideshowvis iss-mode js-doc jscs
+              key-chord khalel know-your-http-well kotlin-mode
+              literate-coffee-mode lsp-dart lsp-java lsp-origami macrostep
+              magit magit-delta magit-patch-changelog magit-stats
+              markdown-changelog minimap mo-git-blame names neotree nginx-mode
+              notmuch-addr notmuch-transient origami osx-plist parse-it
+              php-auto-yasnippets pip-requirements popwin puppet-mode
+              pyenv-mode pyimpsort qrencode regex-tool reveal-in-folder
+              reveal-in-osx-finder rfc-mode rg ripgrep s sane-term scss-mode
+              separedit sexp-diff shell-pop sicp sidecar-locals
+              skewer-reload-stylesheets slack smart-tabs-mode string-edit
+              string-inflection sublimity tagedit tea-time tern-auto-complete
+              tide toggle-quotes tzc undo-tree url-http-oauth use-package vcard
+              xref xterm-color yasnippet-classic-snippets))
  '(php-mode-coding-style 'psr2 nil nil "PSR-2 is not ideal, but it's a standard.")
  '(php-mode-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")
  '(php-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")

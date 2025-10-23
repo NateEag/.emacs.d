@@ -19,8 +19,8 @@
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/dap-mode
 ;; Package-Requires: ((emacs "28.1") (dash "2.18.0") (lsp-mode "6.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1") (posframe "0.7.0") (ht "2.3") (lsp-docker "1.0.0"))
-;; Package-Version: 20250228.2153
-;; Package-Revision: 56e92dd86b52
+;; Package-Version: 20251004.452
+;; Package-Revision: 6c74027e39fc
 
 ;;; Commentary:
 ;; Debug Adapter Protocol client for Emacs.
@@ -121,7 +121,7 @@ also `dap--make-terminal-buffer'."
 (defcustom dap-output-buffer-filter '("stdout" "stderr")
   "If non-nil, a list of output types to display in the debug output buffer."
   :group 'dap-mode
-  :type 'list)
+  :type '(repeat string))
 
 (defcustom dap-label-output-buffer-category nil
   "If non-nil, content that is printed to the output buffer will be labelled

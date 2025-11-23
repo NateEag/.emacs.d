@@ -6,12 +6,13 @@
 ;; Homepage: https://github.com/magit/transient
 ;; Keywords: extensions
 
-;; Package-Version: 20251006.1815
-;; Package-Revision: 053d56e4de2d
+;; Package-Version: 20251020.1535
+;; Package-Revision: 7b8f01dff1a3
 ;; Package-Requires: (
-;;     (emacs  "26.1")
-;;     (compat "30.1")
-;;     (seq     "2.24"))
+;;     (emacs   "28.1")
+;;     (compat  "30.1")
+;;     (cond-let "0.1")
+;;     (seq      "2.24"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -42,6 +43,7 @@
 
 (require 'cl-lib)
 (require 'compat)
+(require 'cond-let)
 (require 'eieio)
 (require 'edmacro)
 (require 'format-spec)
@@ -85,10 +87,6 @@ similar defect.") :emergency))
 
 (eval-when-compile (require 'subr-x))
 
-(eval-and-compile
-  (unless (boundp 'eieio--unbound) ; New name since Emacs 28.1.
-    (defvaralias 'eieio--unbound 'eieio-unbound nil)))
-
 (declare-function info "info" (&optional file-or-node buffer))
 (declare-function Man-find-section "man" (section))
 (declare-function Man-next-section "man" (n))
@@ -96,15 +94,6 @@ similar defect.") :emergency))
 
 (defvar Man-notify-method)
 (defvar pp-default-function) ; since Emacs 29.1
-
-(eval-and-compile
-  (when (< emacs-major-version 28)
-    (pcase-defmacro cl-type (type)
-      "Pcase pattern that matches objects of TYPE.
-TYPE is a type descriptor as accepted by `cl-typep', which see."
-      (static-if (< emacs-major-version 30)
-          `(pred (pcase--flip cl-typep ',type))
-        `(pred (cl-typep _ ',type))))))
 
 (static-if (< emacs-major-version 30)
     (progn
@@ -631,10 +620,9 @@ See info node `(transient)Enabling and Disabling Suffixes'."
   :group 'transient-faces)
 
 (defface transient-higher-level
-  `((t :box ( :line-width ,(if (>= emacs-major-version 28) (cons -1 -1) -1)
-              :color ,(let ((color (face-attribute 'shadow :foreground t t)))
-                        (or (and (not (eq color 'unspecified)) color)
-                            "grey60")))))
+  (let* ((color (face-attribute 'shadow :foreground t t))
+         (color (if (eq color 'unspecified) "grey60" color)))
+    `((t :box (:line-width (-1 . -1) :color ,color))))
   "Face optionally used to highlight suffixes on higher levels.
 See also option `transient-highlight-higher-levels'."
   :group 'transient-faces)
@@ -715,15 +703,13 @@ character used to separate possible values from each other."
   :group 'transient-faces)
 
 (defface transient-nonstandard-key
-  `((t :box ( :line-width ,(if (>= emacs-major-version 28) (cons -1 -1) -1)
-              :color "cyan")))
+  `((t :box (:line-width (-1 . -1) :color "cyan")))
   "Face optionally used to highlight keys conflicting with short-argument.
 See also option `transient-highlight-mismatched-keys'."
   :group 'transient-faces)
 
 (defface transient-mismatched-key
-  `((t :box ( :line-width ,(if (>= emacs-major-version 28) (cons -1 -1) -1)
-              :color "magenta")))
+  `((t :box (:line-width (-1 . -1) :color "magenta")))
   "Face optionally used to highlight keys without a short-argument.
 See also option `transient-highlight-mismatched-keys'."
   :group 'transient-faces)
@@ -1280,7 +1266,7 @@ commands are aliases for."
               (setq class v)
             (push k keys)
             (push v keys))))
-      (while-let
+      (while-let*
           ((arg (car args))
            (arg (cond
                  ;; Inline group definition.
@@ -1320,8 +1306,8 @@ commands are aliases for."
   (cl-typecase spec
     (null    (error "Invalid transient--parse-child spec: %s" spec))
     (symbol  (list `',spec))
-    (vector  (and-let* ((c (transient--parse-group  prefix spec))) (list c)))
-    (list    (and-let* ((c (transient--parse-suffix prefix spec))) (list c)))
+    (vector  (and$ (transient--parse-group  prefix spec) (list $)))
+    (list    (and$ (transient--parse-suffix prefix spec) (list $)))
     (string  (list spec))
     (t       (error "Invalid transient--parse-child spec: %s" spec))))
 
@@ -1481,8 +1467,7 @@ See also `transient-command-completion-not-suffix-only-p'.
 Only use this alias as the value of the `completion-predicate'
 symbol property.")
 
-(when (and (boundp 'read-extended-command-predicate) ; since Emacs 28.1
-           (not read-extended-command-predicate))
+(unless read-extended-command-predicate
   (setq read-extended-command-predicate
         #'transient-command-completion-not-suffix-only-p))
 
@@ -1512,27 +1497,26 @@ symbol property.")
                 layout
               (error "Unsupported layout version %s for %s" version prefix)))
         ;; Upgrade from version 1.
-        (cl-labels
-            ((upgrade (spec)
-               (cond
-                ((vectorp spec)
-                 (pcase-let ((`[,level ,class ,args ,children] spec))
-                   (when level
-                     (setq args (plist-put args :level level)))
-                   (vector class args (mapcar #'upgrade children))))
-                ((and (listp spec)
-                      (length= spec 3)
-                      (or (null (car spec))
-                          (natnump (car spec)))
-                      (symbolp (cadr spec)))
-                 (pcase-let ((`(,level ,class ,args) spec))
-                   (when level
-                     (setq args (plist-put args :level level)))
-                   (cons class args)))
-                ((listp spec)
-                 (mapcar #'upgrade spec))
-                (t spec))))
-          (transient--set-layout prefix (upgrade layout))))
+        (transient--set-layout
+         prefix
+         (named-let upgrade ((spec layout))
+           (cond ((vectorp spec)
+                  (pcase-let ((`[,level ,class ,args ,children] spec))
+                    (when level
+                      (setq args (plist-put args :level level)))
+                    (vector class args (mapcar #'upgrade children))))
+                 ((and (listp spec)
+                       (length= spec 3)
+                       (or (null (car spec))
+                           (natnump (car spec)))
+                       (symbolp (cadr spec)))
+                  (pcase-let ((`(,level ,class ,args) spec))
+                    (when level
+                      (setq args (plist-put args :level level)))
+                    (cons class args)))
+                 ((listp spec)
+                  (mapcar #'upgrade spec))
+                 (t spec)))))
     (error "Not a transient prefix command or group definition: %s" prefix)))
 
 (defun transient--get-children (prefix)
@@ -2052,25 +2036,22 @@ to `transient-predicate-map'."
   "<next>"  #'transient-scroll-up
   "<prior>" #'transient-scroll-down)
 
-(defvar transient-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map transient-base-map)
-    (keymap-set map "C-u"   #'universal-argument)
-    (keymap-set map "C--"   #'negative-argument)
-    (keymap-set map "C-t"   #'transient-show)
-    (keymap-set map "?"     #'transient-help)
-    (keymap-set map "C-h"   #'transient-help)
-    ;; Next two have additional bindings in transient-common-commands.
-    (keymap-set map "C-M-p" #'transient-history-prev)
-    (keymap-set map "C-M-n" #'transient-history-next)
-    (when (fboundp 'other-frame-prefix) ;Emacs >= 28.1
-      (keymap-set map "C-x 5 5" 'other-frame-prefix)
-      (keymap-set map "C-x 4 4" 'other-window-prefix))
-    map)
-  "Top-level keymap used by all transients.
+(defvar-keymap transient-map
+  :doc "Top-level keymap used by all transients.
 
 If you add a new command here, then you must also add a binding
-to `transient-predicate-map'.  See also `transient-base-map'.")
+to `transient-predicate-map'.  See also `transient-base-map'."
+  :parent transient-base-map
+  "C-u"     #'universal-argument
+  "C--"     #'negative-argument
+  "C-t"     #'transient-show
+  "?"       #'transient-help
+  "C-h"     #'transient-help
+  "C-x 5 5" #'other-frame-prefix
+  "C-x 4 4" #'other-window-prefix
+  ;; These have additional bindings in transient-common-commands.
+  "C-M-p"   #'transient-history-prev
+  "C-M-n"   #'transient-history-next)
 
 (defvar-keymap transient-edit-map
   :doc "Keymap that is active while a transient in is in \"edit mode\"."
@@ -2292,9 +2273,9 @@ of the corresponding object."
                  (error "Cannot bind %S to %s and also %s"
                         (string-trim key) cmd alt))
                 ((define-key map kbd cmd))))))
-    (when-let ((b (keymap-lookup map "-"))) (keymap-set map "<kp-subtract>" b))
-    (when-let ((b (keymap-lookup map "="))) (keymap-set map "<kp-equal>" b))
-    (when-let ((b (keymap-lookup map "+"))) (keymap-set map "<kp-add>" b))
+    (when$ (keymap-lookup map "-") (keymap-set map "<kp-subtract>" $))
+    (when$ (keymap-lookup map "=") (keymap-set map "<kp-equal>" $))
+    (when$ (keymap-lookup map "+") (keymap-set map "<kp-add>" $))
     (when transient-enable-popup-navigation
       ;; `transient--make-redisplay-map' maps only over bindings that are
       ;; directly in the base keymap, so that cannot be a composed keymap.
@@ -2504,16 +2485,14 @@ value.  Otherwise return CHILDREN as is.")
                          (transient--get-children 'transient-common-commands))))))
 
 (defun transient--flatten-suffixes (layout)
-  (cl-labels ((s (def)
-                (cond
-                 ((stringp def) nil)
-                 ((cl-typep def 'transient-information) nil)
-                 ((listp def) (mapcan #'s def))
-                 ((cl-typep def 'transient-group)
-                  (mapcan #'s (oref def suffixes)))
-                 ((cl-typep def 'transient-suffix)
-                  (list def)))))
-    (mapcan #'s layout)))
+  (named-let flatten ((def layout))
+    (cond ((stringp def) nil)
+          ((cl-typep def 'transient-information) nil)
+          ((listp def) (mapcan #'flatten def))
+          ((cl-typep def 'transient-group)
+           (mapcan #'flatten (oref def suffixes)))
+          ((cl-typep def 'transient-suffix)
+           (list def)))))
 
 (defun transient--init-child (levels spec parent)
   (cl-etypecase spec
@@ -2623,8 +2602,8 @@ value.  Otherwise return CHILDREN as is.")
      t)))
 
 (defun transient--inapt-suffix-p (obj)
-  (or (and-let* ((parent (oref obj parent)))
-        (oref parent inapt))
+  (or (and$ (oref obj parent)
+            (oref $ inapt))
       (let ((transient--shadowed-buffer (current-buffer))
             (transient--pending-suffix obj))
         (transient--do-suffix-p
@@ -2665,8 +2644,8 @@ value.  Otherwise return CHILDREN as is.")
 (defun transient--suffix-predicate (spec)
   (let ((props (transient--suffix-props spec)))
     (seq-some (lambda (prop)
-                (and-let* ((pred (plist-get props prop)))
-                  (list prop pred)))
+                (and$ (plist-get props prop)
+                      (list prop $)))
               '( :if :if-not
                  :if-nil :if-non-nil
                  :if-mode :if-not-mode
@@ -4524,8 +4503,7 @@ have a history of their own.")
              (height (cond ((not window-system) nil)
                            ((natnump format) format)
                            ((eq format 'line) 1)))
-             (face `(,@(and (>= emacs-major-version 27) '(:extend t))
-                     :background ,(transient--prefix-color))))
+             (face `(:background ,(transient--prefix-color) :extend t)))
     (concat (propertize "__" 'face face 'display `(space :height (,height)))
             (propertize "\n" 'face face 'line-height t))))
 
@@ -5246,8 +5224,8 @@ See `forward-button' for information about N."
       (goto-char (match-beginning 0))))
    (command
     (cl-flet ((found ()
-                (and-let* ((button (button-at (point))))
-                  (eq (button-get button 'command) command))))
+                (and$ (button-at (point))
+                      (eq (button-get $ 'command) command))))
       (while (and (ignore-errors (forward-button 1))
                   (not (found))))
       (unless (found)
@@ -5268,6 +5246,7 @@ See `forward-button' for information about N."
 
 (defvar-keymap transient--isearch-mode-map
   :parent isearch-mode-map
+  "<t>"                      #'transient-isearch-exit
   "<remap> <isearch-exit>"   #'transient-isearch-exit
   "<remap> <isearch-cancel>" #'transient-isearch-cancel
   "<remap> <isearch-abort>"  #'transient-isearch-abort)
@@ -5479,8 +5458,8 @@ as stand-in for elements of exhausted lists."
 
 (cl-defmethod transient-infix-value ((obj transient-cons-option))
   "Return ARGUMENT and VALUE as a cons-cell or nil if the latter is nil."
-  (and-let* ((value (oref obj value)))
-    (cons (oref obj argument) value)))
+  (and$ (oref obj value)
+        (cons (oref obj argument) $)))
 
 (cl-defmethod transient-format-description ((obj transient-cons-option))
   (or (oref obj description)
@@ -5497,6 +5476,13 @@ as stand-in for elements of exhausted lists."
 ;;; _
 (provide 'transient)
 ;; Local Variables:
+;; read-symbol-shorthands: (
+;;   ("and$"         . "cond-let--and$")
+;;   ("and-let"      . "cond-let--and-let")
+;;   ("if-let"       . "cond-let--if-let")
+;;   ("when$"        . "cond-let--when$")
+;;   ("when-let"     . "cond-let--when-let")
+;;   ("while-let"    . "cond-let--while-let"))
 ;; indent-tabs-mode: nil
 ;; checkdoc-symbol-words: ("command-line" "edit-mode" "help-mode")
 ;; End:

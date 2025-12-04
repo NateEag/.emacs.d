@@ -4,20 +4,21 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-aio
-;; Version: 1.0
+;; Package-Version: 20251117.644
+;; Package-Revision: 58157e51e7eb
 ;; Package-Requires: ((emacs "26.1"))
 
 ;;; Commentary:
 
-;; `aio` is to Emacs Lisp as [`asyncio`][asyncio] is to Python. This
+;; `aio` is to Emacs Lisp as [`asyncio`][asyncio] is to Python.  This
 ;; package builds upon Emacs 25 generators to provide functions that
-;; pause while they wait on asynchronous events. They do not block any
+;; pause while they wait on asynchronous events.  They do not block any
 ;; thread while paused.
 
 ;; The main components of this package are `aio-defun' / `aio-lambda'
 ;; to define async function, and `aio-await' to pause these functions
-;; while they wait on asynchronous events. When an asynchronous
-;; function is paused, the main thread is not blocked. It is no more
+;; while they wait on asynchronous events.  When an asynchronous
+;; function is paused, the main thread is not blocked.  It is no more
 ;; or less powerful than callbacks, but is nicer to use.
 
 ;; This is implementation is based on Emacs 25 generators, and
@@ -29,29 +30,25 @@
 (require 'cl-lib)
 (require 'font-lock)
 (require 'generator)
+(require 'macroexp)
 (require 'rx)
+(require 'iter2 nil t)
 
 ;; Register new error types
 (define-error 'aio-cancel "Promise was canceled")
 (define-error 'aio-timeout "Timeout was reached")
 
-(defun aio-promise ()
-  "Create a new promise object."
-  (record 'aio-promise nil ()))
-
-(defsubst aio-promise-p (object)
-  "Return non-nil if OBJECT is a promise."
-  (and (eq 'aio-promise (type-of object))
-       (= 3 (length object))))
+(cl-defstruct (aio-promise (:constructor aio-promise))
+  "A promise object."
+  result
+  callbacks)
 
 (defsubst aio-result (promise)
   "Return the result of PROMISE, or nil if it is unresolved.
 
-Promise results are wrapped in a function. The result must be
+Promise results are wrapped in a function.  The result must be
 called (e.g. `funcall') in order to retrieve the value."
-  (unless (aio-promise-p promise)
-    (signal 'wrong-type-argument (list 'aio-promise-p promise)))
-  (aref promise 1))
+  (aio-promise-result promise))
 
 (defun aio-listen (promise callback)
   "Add CALLBACK to PROMISE.
@@ -61,21 +58,20 @@ scheduled for the next event loop turn."
   (let ((result (aio-result promise)))
     (if result
         (run-at-time 0 nil callback result)
-      (push callback (aref promise 2)))))
+      (push callback (aio-promise-callbacks promise)))))
 
 (defun aio-resolve (promise value-function)
   "Resolve this PROMISE with VALUE-FUNCTION.
 
 A promise can only be resolved once, and any further calls to
-`aio-resolve' are silently ignored. The VALUE-FUNCTION must be a
+`aio-resolve' are silently ignored.  The VALUE-FUNCTION must be a
 function that takes no arguments and either returns the result
 value or rethrows a signal."
-  (unless (functionp value-function)
-    (signal 'wrong-type-argument (list 'functionp value-function)))
+  (cl-check-type value-function function)
   (unless (aio-result promise)
-    (let ((callbacks (nreverse (aref promise 2))))
-      (setf (aref promise 1) value-function
-            (aref promise 2) ())
+    (let ((callbacks (nreverse (aio-promise-callbacks promise))))
+      (setf (aio-promise-result promise) value-function
+            (aio-promise-callbacks promise) ())
       (dolist (callback callbacks)
         (run-at-time 0 nil callback value-function)))))
 
@@ -83,7 +79,7 @@ value or rethrows a signal."
   "Advance ITER to the next promise.
 
 PROMISE is the return promise of the iterator, which was returned
-by the originating async function. YIELD-RESULT is the value
+by the originating async function.  YIELD-RESULT is the value
 function result directly from the previously yielded promise."
   (condition-case _
       (cl-loop for result = (iter-next iter yield-result)
@@ -104,7 +100,7 @@ promise and rethrown in the promise's listeners."
   (cl-assert (eq lexical-binding t))
   `(aio-resolve ,promise
                 (condition-case error
-                    (let ((result (progn ,@body)))
+                    (let ((result ,(macroexp-progn body)))
                       (lambda () result))
                   (error (lambda ()
                            (signal (car error) (cdr error)))))))
@@ -112,9 +108,9 @@ promise and rethrown in the promise's listeners."
 (defmacro aio-await (expr)
   "If EXPR evaluates to a promise, pause until the promise is resolved.
 
-Pausing an async function does not block Emacs' main thread. If
+Pausing an async function does not block Emacs' main thread.  If
 EXPR doesn't evaluate to a promise, the value is returned
-immediately and the function is not paused. Since async functions
+immediately and the function is not paused.  Since async functions
 return promises, async functions can await directly on other
 async functions using this macro.
 
@@ -126,9 +122,14 @@ This macro can only be used inside an async function, either
   "Like `lambda', but defines an async function.
 
 The body of this function may use `aio-await' to wait on
-promises. When an async function is called, it immediately
+promises.  When an async function is called, it immediately
 returns a promise that will resolve to the function's return
-value, or any uncaught error signal."
+value, or any uncaught error signal.
+
+See Info node ‘(elisp)Lambda Components’ for a description of
+ARGLIST and BODY.
+
+\(fn ARGLIST &optional DOCSTRING INTERACTIVE &rest BODY)"
   (declare (indent defun)
            (doc-string 3)
            (debug (&define lambda-list lambda-doc
@@ -137,24 +138,55 @@ value, or any uncaught error signal."
   (let ((args (make-symbol "args"))
         (promise (make-symbol "promise"))
         (split-body (macroexp-parse-body body)))
-    `(lambda (&rest ,args)
-       ,@(car split-body)
-       (let* ((,promise (aio-promise))
-              (iter (apply (iter-lambda ,arglist
-                             (aio-with-promise ,promise
-                               ,@(cdr split-body)))
-                           ,args)))
-         (prog1 ,promise
-           (aio--step iter ,promise nil))))))
+    (if (fboundp 'iter2-lambda)
+        `(lambda (&rest ,args)
+           ,@(car split-body)
+           (let* ((,promise (aio-promise))
+                  (iter (apply (iter2-lambda ,arglist
+                                 (aio-with-promise ,promise
+                                   ,@(cdr split-body)))
+                               ,args)))
+             (prog1 ,promise
+               (aio--step iter ,promise nil))))
+      `(lambda (&rest ,args)
+         ,@(car split-body)
+         (let* ((,promise (aio-promise))
+                (iter (apply (iter-lambda ,arglist
+                               (aio-with-promise ,promise
+                                 ,@(cdr split-body)))
+                             ,args)))
+           (prog1 ,promise
+             (aio--step iter ,promise nil)))))))
 
 (defmacro aio-defun (name arglist &rest body)
-  "Like `aio-lambda' but gives the function a name like `defun'."
+  "Like `aio-lambda' but gives the function a NAME like `defun'.
+
+See Info node ‘(elisp)Defining Functions’ for a description of
+ARGLIST and BODY."
   (declare (indent defun)
            (doc-string 3)
            (debug (&define name lambda-list &rest sexp)))
-  `(progn
-     (defalias ',name (aio-lambda ,arglist ,@body))
-     (function-put ',name 'aio-defun-p t)))
+  (or name (error "Cannot define `%s' as a function" name))
+  (let* ((split-body (macroexp-parse-body body))
+         (declarations (car split-body))
+         (body (cdr split-body))
+         (docstring (and (stringp (car declarations)) (pop declarations)))
+         (declares (and (eq (car-safe (car declarations)) #'declare)
+                        (cdr (pop declarations)))))
+    ;; Other declarations (e.g., ‘interactive’ forms) are left as-is.
+    `(progn
+       (defalias ',name (aio-lambda ,arglist ,docstring ,@declarations ,@body))
+       (function-put ',name 'aio-defun-p t)
+       ,@(mapcar
+          (lambda (declare)
+            (let* ((prop (car declare))
+                   (args (cdr declare))
+                   (fun (assq prop defun-declarations-alist)))
+              (or fun (error "Unknown ‘defun’ declaration property %s" prop))
+              (apply (cadr fun) name arglist args)))
+          declares)
+       (set-advertised-calling-convention (indirect-function ',name) ',arglist nil)
+       ',name)))
 
 (defun aio-wait-for (promise)
   "Synchronously wait for PROMISE, blocking the current thread."
@@ -165,8 +197,9 @@ value, or any uncaught error signal."
 (defun aio-cancel (promise &optional reason)
   "Attempt to cancel PROMISE, returning non-nil if successful.
 
-All awaiters will receive an aio-cancel signal. The actual
-underlying asynchronous operation will not actually be canceled."
+All awaiters will receive an `aio-cancel' signal.  The actual
+underlying asynchronous operation will not actually be canceled.
+Optional argument REASON is used as error data for the signal."
   (unless (aio-result promise)
     (aio-resolve promise (lambda () (signal 'aio-cancel reason)))))
 
@@ -174,7 +207,7 @@ underlying asynchronous operation will not actually be canceled."
   "Evaluate BODY asynchronously as if it was inside `aio-lambda'.
 
 Since BODY is evalued inside an asynchronous lambda, `aio-await'
-is available here. This macro evaluates to a promise for BODY's
+is available here.  This macro evaluates to a promise for BODY's
 eventual result.
 
 Beware: Dynamic bindings that are lexically outside
@@ -202,7 +235,7 @@ Other global state such as the current buffer behaves likewise."
 (defmacro aio-chain (expr)
   "`aio-await' on EXPR and replace place EXPR with the next promise.
 
-EXPR must be setf-able. Returns (cdr result). This macro is
+EXPR must be setf-able.  Returns (cdr result).  This macro is
 intended to be used with `aio-make-callback' in order to follow
 a chain of promise-yielding promises."
   (let ((result (make-symbol "result")))
@@ -212,18 +245,17 @@ a chain of promise-yielding promises."
 
 ;; Useful promise-returning functions:
 
-(require 'url)
-
-(aio-defun aio-all (promises)
+(defmacro aio-all (promises)
   "Return a promise that resolves when all PROMISES are resolved."
-  (dolist (promise promises)
-    (aio-await promise)))
+  `(let ((promises ,promises))
+      (while-let ((promise (pop promises)))
+        (aio-await promise))))
 
 (defun aio-catch (promise)
   "Return a new promise that wraps PROMISE but will never signal.
 
 The promise value is a cons where the car is either :success or
-:error. For :success, the cdr will be the result value. For
+:error.  For :success, the cdr will be the result value.  For
 :error, the cdr will be the error data."
   (let ((result (aio-promise)))
     (cl-flet ((callback (value)
@@ -257,19 +289,24 @@ automatically wrapped with a value function (see `aio-resolve')."
 
 (defun aio-timeout (seconds)
   "Create a promise with a timeout error after SECONDS."
-  (let ((timeout (aio-promise)))
-    (prog1 timeout
-      (run-at-time seconds nil#'aio-resolve timeout
-                   (lambda () (signal 'aio-timeout seconds))))))
+  (let ((promise (aio-promise)))
+    (prog1 promise
+      (run-at-time seconds nil
+                   #'aio-resolve promise (lambda () (signal 'aio-timeout seconds))))))
 
 (defun aio-url-retrieve (url &optional silent inhibit-cookies)
   "Wraps `url-retrieve' in a promise.
 
-This function will never directly signal an error. Instead any
-errors will be delivered via the returned promise. The promise
-result is a cons of (status . buffer). This buffer is a clone of
+This function will never directly signal an error.  Instead any
+errors will be delivered via the returned promise.  The promise
+result is a cons of (status . buffer).  This buffer is a clone of
 the buffer created by `url-retrieve' and should be killed by the
-caller."
+caller.
+
+Arguments URL, SILENT, and INHIBIT-COOKIES are passed on to
+`url-retrieve', which see.  Also see Info node ‘(url)Retrieving
+URLs’ for details."
+  (require 'url)
   (let ((promise (aio-promise)))
     (prog1 promise
       (condition-case error
@@ -285,8 +322,8 @@ caller."
   "Return a new callback function and its first promise.
 
 Returns a cons (callback . promise) where callback is function
-suitable for repeated invocation. This makes it useful for
-process filters and sentinels. The promise is the first promise
+suitable for repeated invocation.  This makes it useful for
+process filters and sentinels.  The promise is the first promise
 to be resolved by the callback.
 
 The promise resolves to:
@@ -296,7 +333,7 @@ Or when TAG is supplied:
 Or if ONCE is non-nil:
   callback-args
 
-The callback resolves next-promise on the next invocation. This
+The callback resolves next-promise on the next invocation.  This
 creates a chain of promises representing the sequence of calls.
 Note: To avoid keeping lots of garbage in memory, avoid holding
 onto the first promise (i.e. capturing it in a closure).
@@ -349,18 +386,20 @@ An empty queue is (nil . nil)."
               (cdr queue) new)))))
 
 ;; An efficient select()-like interface for promises
+(cl-defstruct (aio-select (:constructor aio--make-select))
+  "A select() object for waiting on multiple promises."
+  ;; Membership table
+  (members (make-hash-table :test 'eq))
+  ;; "Seen" table (avoid adding multiple callback)
+  (seen (make-hash-table :test 'eq :weakness 'key))
+  ;; Queue of pending resolved promises
+  (queue (cons nil nil))
+  ;; Callback to resolve select's own promise
+  callback)
 
 (defun aio-make-select (&optional promises)
-  "Create a new `aio-select' object for waiting on multiple promises."
-  (let ((select (record 'aio-select
-                        ;; Membership table
-                        (make-hash-table :test 'eq)
-                        ;; "Seen" table (avoid adding multiple callback)
-                        (make-hash-table :test 'eq :weakness 'key)
-                        ;; Queue of pending resolved promises
-                        (cons nil nil)
-                        ;; Callback to resolve select's own promise
-                        nil)))
+  "Create a new `aio-select' object for waiting on multiple PROMISES."
+  (let ((select (aio--make-select)))
     (prog1 select
       (dolist (promise promises)
         (aio-select-add select promise)))))
@@ -368,10 +407,10 @@ An empty queue is (nil . nil)."
 (defun aio-select-add (select promise)
   "Add PROMISE to the set of promises in SELECT.
 
-SELECT is created with `aio-make-select'. It is valid to add a
+SELECT is created with `aio-make-select'.  It is valid to add a
 promise that was previously removed."
-  (let ((members (aref select 1))
-        (seen (aref select 2)))
+  (let ((members (aio-select-members select))
+        (seen (aio-select-seen select)))
     (prog1 promise
       (unless (gethash promise seen)
         (setf (gethash promise seen) t
@@ -379,64 +418,66 @@ promise that was previously removed."
         (aio-listen promise
                     (lambda (_)
                       (when (gethash promise members)
-                        (aio--queue-put (aref select 3) promise)
+                        (aio--queue-put (aio-select-queue select) promise)
                         (remhash promise members)
-                        (let ((callback (aref select 4)))
+                        (let ((callback (aio-select-callback select)))
                           (when callback
-                            (setf (aref select 4) nil)
+                            (setf (aio-select-callback select) nil)
                             (funcall callback))))))))))
 
 (defun aio-select-remove (select promise)
   "Remove PROMISE form the set of promises in SELECT.
 
 SELECT is created with `aio-make-select'."
-  (remhash promise (aref select 1)))
+  (remhash promise (aio-select-members select)))
 
 (defun aio-select-promises (select)
   "Return a list of promises in SELECT.
 
 SELECT is created with `aio-make-select'."
-  (cl-loop for key being the hash-keys of (aref select 1)
+  (cl-loop for key being the hash-keys of (aio-select-members select)
            collect key))
 
 (defun aio-select (select)
   "Return a promise that resolves when any promise in SELECT resolves.
 
-SELECT is created with `aio-make-select'. This function is
+SELECT is created with `aio-make-select'.  This function is
 level-triggered: if a promise in SELECT is already resolved, it
-returns immediately with that promise. Promises returned by
-`aio-select' are automatically removed from SELECT. Use this
+returns immediately with that promise.  Promises returned by
+`aio-select' are automatically removed from SELECT.  Use this
 function to repeatedly wait on a set of promises.
 
 Note: The promise returned by this function resolves to another
-promise, not that promise's result. You will need to `aio-await'
+promise, not that promise's result.  You will need to `aio-await'
 on it, or use `aio-result'."
   (let* ((result (aio-promise))
          (callback (lambda ()
-                     (let ((promise (aio--queue-get (aref select 3))))
+                     (let ((promise (aio--queue-get (aio-select-queue select))))
                        (aio-resolve result (lambda () promise))))))
     (prog1 result
-      (if (aio--queue-empty-p (aref select 3))
-          (setf (aref select 4) callback)
+      (if (aio--queue-empty-p (aio-select-queue select))
+          (setf (aio-select-callback select) callback)
         (funcall callback)))))
 
 ;; Semaphores
+(cl-defstruct (aio-sem (:constructor aio--make-sem))
+  "A semaphore object."
+  ;; Semaphore value
+  (value 0)
+  ;; Queue of waiting async functions
+  (queue (cons nil nil)))
 
 (defun aio-sem (init)
   "Create a new semaphore with initial value INIT."
-  (record 'aio-sem
-          ;; Semaphore value
-          init
-          ;; Queue of waiting async functions
-          (cons nil nil)))
+  (aio--make-sem :value init))
 
 (defun aio-sem-post (sem)
   "Increment the value of SEM.
 
 If asynchronous functions are awaiting on SEM, then one will be
-woken up. This function is not awaitable."
-  (when (<= (cl-incf (aref sem 1)) 0)
-    (let ((waiting (aio--queue-get (aref sem 2))))
+woken up.  This function is not awaitable."
+  (when (<= (cl-incf (aio-sem-value sem)) 0)
+    (let ((waiting (aio--queue-get (aio-sem-queue sem))))
       (when waiting
         (aio-resolve waiting (lambda () nil))))))
 
@@ -445,8 +486,8 @@ woken up. This function is not awaitable."
 
 If SEM is at zero, returns a promise that will resolve when
 another asynchronous function uses `aio-sem-post'."
-  (when (< (cl-decf (aref sem 1)) 0)
-    (aio--queue-put (aref sem 2) (aio-promise))))
+  (when (< (cl-decf (aio-sem-value sem)) 0)
+    (aio--queue-put (aio-sem-queue sem) (aio-promise))))
 
 ;; `emacs-lisp-mode' font lock
 
@@ -464,6 +505,9 @@ This function is added to ‘help-fns-describe-function-functions’."
   (when (function-get function 'aio-defun-p)
     (insert "  This function is asynchronous; it returns "
             "an ‘aio-promise’ object.\n")))
+
+(add-to-list 'lisp-imenu-generic-expression
+             (list nil (concat "^\\s-*(aio-defun\\s-+\\(" lisp-mode-symbol-regexp "\\)") 1))
 
 (provide 'aio)
 

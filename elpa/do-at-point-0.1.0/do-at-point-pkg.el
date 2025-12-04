@@ -1,2 +1,0 @@
-;; Generated package description from do-at-point.el  -*- no-byte-compile: t -*-
-(define-package "do-at-point" "0.1.0" "Generic context-sensitive action dispatcher." '((emacs "26.1")) :commit "539d5da7f439ca05b6f3eb227dc0587b951a86f0" :authors '(("Philip Kaludercic" . "philipk@posteo.net")) :maintainer '("Philip Kaludercic" . "~pkal/public-inbox@lists.sr.ht") :keywords '("convenience") :url "https://git.sr.ht/~pkal/do-at-point")

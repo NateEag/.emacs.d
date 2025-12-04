@@ -1,2 +1,0 @@
-;;; Generated package description from async-backup.el  -*- no-byte-compile: t -*-
-(define-package "async-backup" "20220131.1438" "Backup on each save without freezing Emacs" '((emacs "24.4")) :commit "6ddb39fe77d66cdef48b87cb0d0554ad7d132308" :authors '(("contrapunctus" . "xmpp:contrapunctus@jabjab.de")) :maintainer '("contrapunctus" . "xmpp:contrapunctus@jabjab.de") :keywords '("files") :url "https://tildegit.org/contrapunctus/async-backup")

@@ -12,7 +12,7 @@
 ;; me to do so.
 ;;
 ;; This actually happens in my site-lisp/bootstrap.el file.
-;(package-initialize)
+                                        ;(package-initialize)
 
 ;; Temporarily make the GC threshold large, to speed up startup.
 (setq ne/old-gc-cons-threshold gc-cons-threshold)

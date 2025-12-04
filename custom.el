@@ -130,11 +130,11 @@
               evil-leader evil-textobj-tree-sitter evil-tutor
               flycheck-css-colorguard focus-autosave-mode forge frame-cmds
               free-keys git-blamed git-gutter git-gutter-fringe+ git-walktree
-              gitattributes-mode gitconfig-mode gitignore-mode gnuplot-mode
-              goto-line-preview helm-git-files hideshowvis iss-mode js-doc jscs
-              key-chord khalel know-your-http-well kotlin-mode
-              literate-coffee-mode lsp-dart lsp-java lsp-origami macrostep
-              magit magit-delta magit-patch-changelog magit-stats
+              gitattributes-mode gitconfig-mode gitignore-mode glsl-mode
+              gnuplot-mode goto-line-preview helm-git-files hideshowvis
+              iss-mode js-doc jscs key-chord khalel know-your-http-well
+              kotlin-mode literate-coffee-mode lsp-dart lsp-java lsp-origami
+              macrostep magit-delta magit-patch-changelog magit-stats
               markdown-changelog minimap mo-git-blame names neotree nginx-mode
               notmuch-addr notmuch-transient origami osx-plist parse-it
               php-auto-yasnippets pip-requirements popwin puppet-mode

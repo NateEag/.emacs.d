@@ -481,7 +481,7 @@ The shell command lives in my dotfiles repo."
          (magit-status-mode . evil-local-mode)
          (magit-rebase-mode . evil-local-mode))
   :config
-  (magit-delta-mode)
+                                        ;(magit-delta-mode)
   ;; I never use magit's gitignore editing and because evil-collection doesn't
   ;; have support for everything I want to do from evil-normal-state, I change
   ;; to evil-insert-state sometimes.
@@ -669,7 +669,7 @@ The shell command lives in my dotfiles repo."
   ;; There's a whole lot to be said for working jump-to-definition from
   ;; templates, and this actually got me that with no extra work in a project
   ;; where I already had tsserver running via LSP.
-  :mode ".\\(t\\|j\\)sx\\'")
+  :mode ".jsx\\'")
 
 ;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
 ;; modes should be way better in several respects.
@@ -1035,6 +1035,35 @@ With this alias I hope to not need to remember it.")
 (use-package text-mode
   :mode "\\.txt.gpg"
   :hook ((text-mode . text-mode-init)))
+
+;; TODO: A quick test suggests this may not be good enough for general use in
+;; detecting text files where we should wrap.
+;;
+;; Update this to return t if the majority of inspected lines are >80
+;; characters long, and to return nil otherwise. The default assumption is
+;; "this document is filled," and to override that assumption we need to see
+;; lots of long lines.
+;;
+;; (Last N lines because those are more likely to be body text than the first
+;; few lines, which are often front matter like badge HTML in project readmes.)
+(defun ne/get-max-buffer-width (num-lines)
+  "Return the widest line in the last `NUM-LINES' of the buffer."
+  (save-excursion
+    (goto-char (point-max))
+    (let ((line-num 1)
+          (max-line-length -1)
+          (cur-line-start-pos (point-max))
+          (cur-line-length -1))
+      (while (and (< line-num num-lines) (> (point) (point-min)))
+        (move-beginning-of-line nil)
+        (setq cur-line-start-pos (point))
+        (move-end-of-line nil)
+        (setq cur-line-length (- (point) cur-line-start-pos))
+        (if (> cur-line-length max-line-length)
+            (setq max-line-length cur-line-length))
+        (forward-line -1)
+        (setq line-num (1+ line-num)))
+      max-line-length)))
 
 (use-package markdown-mode
   ;; Because they're not pure Markdown files, my daily log files have the .txt

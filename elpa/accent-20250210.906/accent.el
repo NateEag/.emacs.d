@@ -5,10 +5,9 @@
 ;; Author: Elia Scotto <eliascotto94@gmail.com>
 ;; Maintainer: Elia Scotto <eliascotto94@gmail.com>
 ;; URL: https://github.com/elias94/accent
-;; Package-Version: 20220202.1312
-;; Package-Commit: 6b502df6940587dae2dfbd349c22dfd44c803a86
 ;; Keywords: i18n
-;; Version: 1.3
+;; Package-Version: 20250210.906
+;; Package-Revision: d613700dc415
 ;; Package-Requires: ((emacs "24.3") (popup "0.5.8"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -33,6 +32,8 @@
 ;;
 ;; (global-set-key (kbd "C-x C-a") 'accent-menu)
 ;;
+;; Supported backends: `company`, `corfu`.
+;;
 ;; See README.md for more information.
 ;; https://github.com/elias94/accent/blob/main/README.md
 
@@ -40,7 +41,7 @@
 
 (require 'popup)
 
-(defconst accent-version "1.3"
+(defconst accent-version "1.4"
   "Version of accent.el.")
 
 (defgroup accent nil
@@ -103,7 +104,7 @@ of available options to be displayed in the popup.")
 
 ;;;###autoload
 (defun accent-menu ()
-  "Display a popup menu with available accents if current character is matching."
+  "Display a popup completion menu with accents, if current character is matching."
   (interactive)
   (let* ((after? (eq accent-position 'after))
          (char (if after? (char-after) (char-before)))
@@ -115,6 +116,48 @@ of available options to be displayed in the popup.")
             (progn
               (delete-char (if after? 1 -1))
               (insert (symbol-name opt)))))
+      (message "No accented characters available"))))
+
+(declare-function company-begin-backend "company")
+
+;;;###autoload
+(defun accent-company (command &rest _ignored)
+  "Use `company' to display a completion menu for accented characters at point.
+
+See `company-backends' for the description of COMMAND."
+  (interactive (list 'interactive))
+  (let* ((after? (eq accent-position 'after))
+         (char (if after? (char-after) (char-before)))
+         (curr (intern (string char)))
+         (diac (assoc curr (accent-lst))))
+    (cl-case command
+      (interactive (company-begin-backend 'accent-company))
+      (prefix (when diac
+                (string char)))
+      (candidates (mapcar (lambda (d) (if after?
+                                          (format "%s%s" (string (char-before)) d)
+                                        (format "%s" d)))
+                          (cadr diac)))
+      (post-completion (when after?
+                         (delete-char 1))))))
+
+;;;###autoload
+(defun accent-corfu ()
+  "Use `corfu' to display a completion menu for accented characters at point."
+  (interactive)
+  (let* ((after? (eq accent-position 'after))
+         (char (if after? (char-after) (char-before)))
+         (curr (intern (string char)))
+         (diac (assoc curr (accent-lst))))
+    (if diac
+        (progn
+          (delete-char (if after? 1 -1))
+          (setq-local completion-at-point-functions
+                      (list (lambda ()
+                              (let ((start (point))
+                                    (candidates (mapcar #'symbol-name (cadr diac))))
+                                (list start start candidates :exclusive 'no)))))
+         (completion-at-point))
       (message "No accented characters available"))))
 
 (provide 'accent)

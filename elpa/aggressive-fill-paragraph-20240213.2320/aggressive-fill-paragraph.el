@@ -1,8 +1,8 @@
 ;;; aggressive-fill-paragraph.el --- A mode to automatically keep paragraphs filled -*- lexical-binding: t; -*-
 
 ;; Author: David Shepherd <davidshepherd7@gmail.com>
-;; Version: 0.0.1
-;; Package-Version: 20180910.816
+;; Package-Version: 20240213.2320
+;; Package-Revision: 60e4eb5c57d4
 ;; Package-Requires: ((dash "2.10.0"))
 ;; URL: https://github.com/davidshepherd7/aggressive-fill-paragraph-mode
 ;; Keywords: fill-paragraph, automatic, comments
@@ -24,7 +24,7 @@
 
 (defun afp-current-line ()
   "Get the current line."
-  (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+  (buffer-substring-no-properties (line-beginning-position) (line-end-position)))
 
 
 ;; Functions for testing conditions to suppress fill-paragraph
@@ -33,14 +33,6 @@
   "Check if we are inside a markdown code block."
   (and (string-equal major-mode "markdown-mode")
        (string-match-p "^    " (afp-current-line))))
-
-(defun afp-start-of-comment? ()
-  "Check if we have just started writing a new comment line.
-
-It's annoying if you are trying to write a list but it keeps
-getting filled before you can type the * which afp recognises
-as a list."
-  (and (string-match-p (concat))))
 
 (defun afp-repeated-whitespace? ()
   "Check if this is the second whitespace character in a row."
@@ -176,7 +168,8 @@ for any reason."
 
 ;;;###autoload
 (defun afp-setup-recommended-hooks ()
-  "Install hooks to enable function ‘aggressive-fill-paragraph-mode’ in recommended major modes."
+  "Install hooks to enable function ‘aggressive-fill-paragraph-mode’
+in recommended major modes."
   (interactive)
 
   (add-hook 'text-mode-hook #'aggressive-fill-paragraph-mode)

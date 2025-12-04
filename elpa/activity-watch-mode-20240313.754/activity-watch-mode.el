@@ -8,7 +8,8 @@
 ;; Homepage: https://github.com/pauldub/activity-watch-mode
 ;; Keywords: calendar, comm
 ;; Package-Requires: ((emacs "25") (request "0") (json "0") (cl-lib "0"))
-;; Version: 1.0.2
+;; Package-Version: 20240313.754
+;; Package-Revision: 19aed6ca81a3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -145,8 +146,12 @@ use it to find the project's name." docstring)
            ,@body)))))
 
 (activity-watch--gen-feature-resolver 'project project
-  (when (project-current)
-    (project-name (project-current))))
+  (when-let ((project (project-current)))
+    (if (fboundp 'project-name)
+        ;; `project-name' is a generic function added in Emacs 29.1
+        (project-name project)
+      ;; For earlier versions, use the generic function's default definition
+      (file-name-nondirectory (directory-file-name (car (project-roots project)))))))
 
 (activity-watch--gen-feature-resolver 'projectile projectile
   (when (projectile-project-p)
@@ -227,29 +232,35 @@ Argument TIME time at which the heartbeat was computed."
                (file . ,(if (activity-watch--s-blank file-name) "unknown" file-name))
                (branch . ,(or git-branch "unknown")))))))
 
-(defun activity-watch--send-heartbeat (heartbeat)
-  "Send HEARTBEAT to activity watch server."
+(cl-defun activity-watch--send-heartbeat (heartbeat &key (on-error nil) (on-success nil))
+  "Send HEARTBEAT to activity watch server, calling ON-ERROR on error and ON-SUCCESS on success."
   (request (concat activity-watch-api-host "/api/0/buckets/" (activity-watch--bucket-id) "/heartbeat")
            :type "POST"
            :params `(("pulsetime" . ,activity-watch-pulse-time))
            :data (json-encode heartbeat)
            :headers '(("Content-Type" . "application/json"))
-           :error (cl-function
-                   (lambda (&key data &allow-other-keys)
-                     (message data) (global-activity-watch-mode 0) (activity-watch-mode 0)))))
+           :success on-success
+           :error on-error
+  ))
 
 (defun activity-watch--call ()
   "Conditionally submit heartbeat to activity watch."
   (activity-watch--create-bucket)
   (let ((now (float-time))
         (current-file-path (buffer-file-name (current-buffer)))
-        (time-delta (+ (or activity-watch-last-heartbeat-time 0) activity-watch-max-heartbeat-per-sec)))
+        (time-delta (+ (or activity-watch-last-heartbeat-time 0) activity-watch-max-heartbeat-per-sec))
+        (coding-system-for-read
+         (unless (eq coding-system-for-read 'auto-save-coding)
+           coding-system-for-read)))
     (if (or (not (string= (or activity-watch-last-file-path "") current-file-path))
             (< time-delta now))
         (progn
           (setq activity-watch-last-file-path current-file-path)
           (setq activity-watch-last-heartbeat-time now)
-          (activity-watch--send-heartbeat (activity-watch--create-heartbeat (current-time)))))))
+          (activity-watch--send-heartbeat (activity-watch--create-heartbeat (current-time))
+                                          :on-error (cl-function (lambda (&key data &allow-other-keys)
+                                                                   (message data) (global-activity-watch-mode 0) (activity-watch-mode 0)))
+          )))))
 
 (defun activity-watch--save ()
   "Send save notice to Activity-Watch."

@@ -478,10 +478,10 @@ The shell command lives in my dotfiles repo."
 (use-package magit
   :defer t
   :hook ((magit-mode . magit-svn-mode)
+         (magit-mode . magit-delta-mode)
          (magit-status-mode . evil-local-mode)
          (magit-rebase-mode . evil-local-mode))
   :config
-                                        ;(magit-delta-mode)
   ;; I never use magit's gitignore editing and because evil-collection doesn't
   ;; have support for everything I want to do from evil-normal-state, I change
   ;; to evil-insert-state sometimes.

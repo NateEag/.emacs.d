@@ -14,6 +14,11 @@
   standards for browsers, but any Node version I'll be using will have template
   literal support.
 
+- Work around or file a bug report for package-quickstart-refresh crashing when
+  a package's autoload files have been deleted. It assumes they'll all exist,
+  which seems like an invariant it should ensure as needed. The error
+  message was "wrong type argument: stringp, nil".
+
 - Get lsp-mode not to interfere with the flycheck-checkers I've configured
   manually (e.g. in sh-mode I'm no longer getting shellcheck reports). That
   might be due to lsp-mode setting flycheck-checker itself, which apparently it

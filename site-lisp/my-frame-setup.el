@@ -83,12 +83,16 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
       (insert "m")
       (aref (aref (font-get-glyphs (font-at 1) 1 2) 0) 4))))
 
-(defun my-set-up-frame ()
+(defun my-set-up-frame (&optional screen-share)
   "Configure current frame's layout and font size based on display size."
 
   (interactive)
 
-  (my-set-default-font)
+  (if screen-share
+      (progn (my-set-default-font 16)
+             (global-display-line-numbers-mode 1))
+    (progn (my-set-default-font)
+           (global-display-line-numbers-mode -1)))
 
   (delete-other-windows)
 
@@ -116,8 +120,8 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
                (assq 'workarea
                      (car (display-monitor-attributes-list (selected-frame))))))
          (screen-height-in-chars (floor
-                                   (/ (float current-monitor-height)
-                                    (default-font-height))))
+                                  (/ (float current-monitor-height)
+                                     (default-font-height))))
          (screen-height-less-menubar-in-chars (- screen-height-in-chars 2))
 
          ;; I want as many windows as I can reasonably fit on this display,
@@ -158,9 +162,15 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
              (split-window-right my-window-width)))
 
   (if (= 2 num-windows)
-        (split-window-right my-window-width))
+      (split-window-right my-window-width))
 
   (balance-windows))
+
+(defun my-set-up-frame-for-screenshare ()
+  "Set up frame for productive screensharing."
+  (interactive)
+  (global-display-line-numbers-mode 1)
+  (my-set-up-frame 't))
 
 (defadvice make-frame-command (after set-up-new-frame activate)
   "After creating a new frame, size it the way I like."

@@ -566,13 +566,13 @@
        ("Jackson Ray Hamilton" . "jackson@jacksonrayhamilton.com"))
       (:commit . "1b30a28857727202d1f6a027f83ad66151fb1e92"))])
  (corfu
-  . [(2 5) ((emacs (29 1)) (compat (30)))
+  . [(2 6) ((emacs (29 1)) (compat (30)))
      "COmpletion in Region FUnction" tar
      ((:url . "https://github.com/minad/corfu")
       (:keywords "abbrev" "convenience" "matching" "completion" "text")
       (:maintainer "Daniel Mendler" . "mail@daniel-mendler.de")
       (:authors ("Daniel Mendler" . "mail@daniel-mendler.de"))
-      (:commit . "2d7d5d25a9003077329d3469b64d81a60a629aba"))])
+      (:commit . "81af89b43aceb5714fcd21daabcfd4b77008e22e"))])
  (coterm
   . [(1 6) ((emacs (26 1)) (compat (28 1 2 0)))
      "Terminal emulation for comint" tar
@@ -1680,19 +1680,19 @@
 		("Dmitry Gutov" . "dgutov@yandex.ru"))
       (:commit . "010a536da6df345a0b9a55bbd892f5f4d0d9fdfc"))])
  (json-mode
-  . [(0 2) ((emacs (25 1))) "Major mode for editing JSON files" tar
+  . [(0 3 1) ((emacs (25 1))) "Major mode for editing JSON files" tar
      ((:keywords "data")
       (:maintainer "Simen Heggestøyl" . "simenheg@gmail.com")
       (:authors ("Simen Heggestøyl" . "simenheg@gmail.com"))
       (:url . "https://elpa.gnu.org/packages/json-mode.html")
-      (:commit . "dc1e531039e381edf04787c89d17038db5dc8b77"))])
+      (:commit . "2eb4b83db23e61fa2112688148aeedbacfc3c18e"))])
  (jsonrpc
-  . [(1 0 26) ((emacs (25 2))) "JSON-RPC library" tar
+  . [(1 0 27) ((emacs (25 2))) "JSON-RPC library" tar
      ((:keywords "processes" "languages" "extensions")
       (:maintainer "João Távora" . "joaotavora@gmail.com")
       (:authors ("João Távora" . "joaotavora@gmail.com"))
       (:url . "https://elpa.gnu.org/packages/jsonrpc.html")
-      (:commit . "74618070ab751562c307c66cd3546d680a472d80"))])
+      (:commit . "6caf598ac49b3ed592f22e31307fe71e71490f2b"))])
  (jumpc
   . [(3 1) nil "jump to previous insertion points" tar
      ((:maintainer "Ivan Kanis" . "ivan@kanis.fr")
@@ -1808,14 +1808,14 @@
       (:authors ("Sean Whitton" . "spwhitton@spwhitton.name"))
       (:commit . "00b8f65effe4f2673e6450d70000644b266aa78a"))])
  (llm
-  . [(0 27 3)
+  . [(0 28 0)
      ((emacs (28 1)) (plz (0 8)) (plz-event-source (0 1 1))
       (plz-media-type (0 2 1)) (compat (29 1)))
      "Interface to pluggable llm backends" tar
      ((:url . "https://github.com/ahyatt/llm")
       (:maintainer "Andrew Hyatt" . "ahyatt@gmail.com")
       (:authors ("Andrew Hyatt" . "ahyatt@gmail.com"))
-      (:commit . "ed64003f382a0e3ad399f886c78fdb893f973a8e"))])
+      (:commit . "4c2b673120a78d7af82e7d0e6bd75a193d8ca8a5"))])
  (lmc
   . [(1 4) nil "Little Man Computer in Elisp" tar
      ((:maintainer "Stefan Monnier" . "monnier@iro.umontreal.ca")
@@ -3182,6 +3182,13 @@
       (:authors ("Kai Großjohann" . "kai.grossjohann@gmx.net")
 		("Michael Albinus" . "michael.albinus@gmx.de"))
       (:commit . "ffb5b3473a4054e8d5499370cae50032227e8644"))])
+ (tramp-hlo
+  . [(0 0 1) ((tramp (2 8 0 5)))
+     "High level operations as Tramp handlers" tar
+     ((:url . "https://github.com/jsadusk/tramp-hlo")
+      (:maintainer "Joe Sadusk" . "joe@sadusk.com")
+      (:authors ("Joe Sadusk" . "joe@sadusk.com"))
+      (:commit . "3193e24a954c91c88351fd448a21643ef1e319a8"))])
  (tramp-nspawn
   . [(1 0 1) ((emacs (23)))
      "Tramp integration for systemd-nspawn containers" tar

@@ -6,14 +6,17 @@
 # Thus, this provides a much more robust idiom for handling cleanup actions
 # than manually doing it throughout the script.
 #
+# Make sure to invoke the function at the bottom of the script too. I used to
+# include EXIT, but recently realized that causes the trap to run twice.
+#
 # name: trap
 # key: trap
 # --
-$1 () {
+${1:cleanup} () {
    exit_status=$?
 
    if [ $exit_status -ne 0 ]; then
        $0
    fi
 }
-trap $1 INT TERM EXIT
+trap $1 INT TERM

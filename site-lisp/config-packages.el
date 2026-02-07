@@ -864,6 +864,7 @@ The shell command lives in my dotfiles repo."
 (use-package cc-mode
   :defer t
   :hook ((c-mode . lsp)
+         (c++-mode . lsp)
          (java-mode . lsp)))
 
 (use-package lsp-java

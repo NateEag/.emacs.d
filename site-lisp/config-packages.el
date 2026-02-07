@@ -13,6 +13,8 @@
 (require 'use-package)
 (require 'auto-minor-mode)
 
+(use-package use-package-treesit :ensure)
+
 (use-package envrc
   :diminish
   :init

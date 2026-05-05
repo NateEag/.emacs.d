@@ -1212,4 +1212,6 @@ With this alias I hope to not need to remember it.")
   :hook ((LilyPond-mode . text-mode-init)
          (LilyPond-mode . (lambda () (turn-on-font-lock)))))
 
+(use-package chemtable)
+
 ;;; config-packages.el ends here

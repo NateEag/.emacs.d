@@ -19,6 +19,11 @@
   typing, realized this ought to exist, did a quick search, and found that sure
   enough it does.
 
+- Replace my personal "move current buffer" keybinding's implementation with bufferfile's.
+
+- Replace my personal "autosave aggressively" config with buffer-guardian. I've
+  been meaning to package-ize it for a long while, and lo, someone already has.
+
 - Remove my dumb hacks to try to start evil-mode in the desired state and
   instead use the supported mechanisms to choose initial state
   (evil-*-state-modes, evil-buffer-regexps). The code to rip out is added to

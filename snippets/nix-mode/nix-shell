@@ -1,0 +1,14 @@
+# -*- mode: snippet -*-
+# name: nix-shell
+# key: nix-shell
+# --
+let
+  nixpkgs = fetchTarball "https://github.com/NixOS/nixpkgs/tarball/${1:nixos-25.11}";
+  pkgs = import nixpkgs { config = {}; overlays = []; };
+in
+
+pkgs.mkShellNoCC {
+  packages = with pkgs; [
+    $0
+  ];
+}

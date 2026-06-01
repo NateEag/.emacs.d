@@ -575,6 +575,11 @@ The shell command lives in my dotfiles repo."
                       (setq-local lsp-enable-dap-auto-configure nil)))
          (sh-mode . lsp)))
 
+(use-package nix-mode
+  :hook ((nix-mode . (lambda ()
+                       (if (string-equal (ff-basename (buffer-file-name)) "shell.nix")
+                           (setq-local ne-yas-auto-insert-snippet-name
+                                       "nix-shell"))))))
 (use-package dtrt-indent
   :diminish)
 

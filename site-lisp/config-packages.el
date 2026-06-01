@@ -918,12 +918,6 @@ The shell command lives in my dotfiles repo."
   :hook (apples-mode . my-prog-mode-init)
   :interpreter "osascript")
 
-;; For some reason cquery has caused my config to be broken after updating from
-;; MELPA (on 2018-12-04). I've taken the expedient course of commenting it out
-;; for now, since I have lots of time-bound work at the moment.
-;;
-;;(use-package cquery)
-
 (use-package hideshow
   :defer t
   :config

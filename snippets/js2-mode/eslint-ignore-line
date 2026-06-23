@@ -1,0 +1,21 @@
+# key: eslint-ignore-line
+# name: eslint-ignore-line
+#
+# TODO It would be great to auto-suggest exactly the ESLint rules for $1.
+#
+# Getting the list of available rules for a project is fairly easy:
+#
+# npx eslint --print-config <path/to/current/file> |
+#    jq --raw-output '.rules|keys[]'
+#
+# I'm not sure how to trigger auto-completion with those values, though.
+#
+# I suppose ideally it'd auto-complete with only failures seen on the following
+# line available...
+#
+# --
+
+// ${2:Justify this ignore.}
+//
+// eslint-ignore-next-line $1
+$0

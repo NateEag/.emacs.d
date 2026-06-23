@@ -576,10 +576,19 @@ The shell command lives in my dotfiles repo."
          (sh-mode . lsp)))
 
 (use-package nix-mode
-  :hook ((nix-mode . (lambda ()
-                       (if (string-equal (ff-basename (buffer-file-name)) "shell.nix")
-                           (setq-local ne-yas-auto-insert-snippet-name
-                                       "nix-shell"))))))
+  :hook ((nix-mode .
+                   (lambda ()
+                     (if (string-equal (ff-basename (buffer-file-name)) "shell.nix")
+                         (setq-local ne-yas-auto-insert-snippet-name
+                                     "nix-shell"))))
+         (nix-mode . lsp-deferred)))
+
+(use-package lsp-nix
+  :after (lsp-mode)
+  :demand t
+  :custom
+  (lsp-nix-nil-formatter ["nixfmt"]))
+
 (use-package dtrt-indent
   :diminish)
 

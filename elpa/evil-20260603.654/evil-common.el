@@ -730,7 +730,11 @@ filename."
   "Change the cursor's apperance according to SPECS.
 SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
-function for changing the cursor, or a list of the above."
+function for changing the cursor, or a list of the above.
+
+If SPECS is nil, this function does not have an effect;
+pass (list nil) instead to indicate a nil `cursor-type'
+\(i.e., to disable the cursor)."
   (unless (and (not (functionp specs))
                (listp specs)
                (null (cdr-safe (last specs))))
@@ -1254,9 +1258,10 @@ Signal an error at buffer boundaries unless NOERROR is non-nil."
       (condition-case err
           (line-move count)
         ((beginning-of-buffer end-of-buffer)
-         (let ((col (or goal-column
-                        (car-safe temporary-goal-column)
-                        temporary-goal-column)))
+         (let* ((raw-col (or goal-column
+                             (car-safe temporary-goal-column)
+                             temporary-goal-column))
+                (col (if (numberp raw-col) (max 0 raw-col) 0)))
            (line-move-finish col opoint (< count 0)))
          (or noerror (/= (point) opoint) (signal (car err) (cdr err))))))))
 

@@ -84,7 +84,7 @@ If nil, full account names are offered for completion."
     (sort (delete-dups payees-list) #'string-lessp)))
 
 (defun ledger-payees-list ()
-  "Return a list of all known account names as strings.
+  "Return a list of all known payees as strings.
 Looks in `ledger-payees-file' if set, otherwise the current buffer."
   (if ledger-payees-file
       (let ((f ledger-payees-file))
@@ -304,11 +304,17 @@ an alist (ACCOUNT-ELEMENT . NODE)."
                              (match-string 2) (match-string 3) (match-string 4)
                              (match-string 5) (match-string 6)
                              (= (line-end-position) (match-end 0)))))
+          (;; Transaction comments
+           (eq 'comment (car (cdr (ledger-context-at-point))))
+           (save-excursion
+             (back-to-indentation)
+             (setq start (point)))
+           (setq collection (cons 'nullary #'ledger-comments-list)))
           (;; Payees
            (eq 'transaction
-                (save-excursion
-                  (prog1 (ledger-thing-at-point)
-                    (setq start (point)))))
+               (save-excursion
+                 (prog1 (ledger-thing-at-point)
+                   (setq start (point)))))
            (setq collection (cons 'nullary #'ledger-payees-list)))
           (;; Accounts
            (save-excursion
@@ -322,10 +328,10 @@ an alist (ACCOUNT-ELEMENT . NODE)."
                                    (- (match-beginning 0) end)))
                  realign-after t
                  collection (cons 'nullary
-                                   (if ledger-complete-in-steps
-                                       (lambda ()
-                                         (ledger-complete-account-next-steps start end))
-                                     #'ledger-accounts-list)))))
+                                  (if ledger-complete-in-steps
+                                      (lambda ()
+                                        (ledger-complete-account-next-steps start end))
+                                    #'ledger-accounts-list)))))
     (when collection
       (let ((prefix (buffer-substring-no-properties start end)))
         (list start end
@@ -349,8 +355,19 @@ an alist (ACCOUNT-ELEMENT . NODE)."
                                (when (and realign-after ledger-post-auto-align)
                                  (ledger-post-align-postings (line-beginning-position) (line-end-position)))))))))
 
-(defun ledger-trim-trailing-whitespace (str)
-  (replace-regexp-in-string "[ \t]*$" "" str))
+(defun ledger-comments-list ()
+  "Collect comments from the buffer."
+  (let ((comments '()))
+    (save-excursion
+      (goto-char (point-min))
+      ;; FIXME: This only catches comments at beginning of lines and starting
+      ;; with some spaces (so "transaction comments"). There can also be
+      ;; comments after payees or prices too, as well as comments outside of
+      ;; transactions (the latter should be completed over separately).
+      ;; TODO: Unify this regex with `ledger-comment-regex'
+      (while (re-search-forward "^[ \t]+\\(?1:;.+\\)$" nil t)
+        (push (match-string-no-properties 1) comments)))
+    (sort (delete-dups comments) #'string-lessp)))
 
 (defun ledger-fully-complete-xact ()
   "Completes a transaction if there is another matching payee in the buffer.
@@ -359,7 +376,7 @@ Interactively, if point is after a payee, complete the
 transaction with the details from the last transaction to that
 payee."
   (interactive)
-  (let* ((name (ledger-trim-trailing-whitespace
+  (let* ((name (string-trim-right
                 (buffer-substring
                  (save-excursion
                    (unless (eq (ledger-thing-at-point) 'transaction)

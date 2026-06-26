@@ -40,7 +40,7 @@
   "\\(^[~=A-Za-z].+\\)+")
 
 (defconst ledger-comment-regex
-  "^[;#|\\*%].*\\|[ \t]+;.*")
+  "^[;#|*%].*\\|[ \t]+;.*")
 
 (defconst ledger-multiline-comment-start-regex
   "^!comment$")
@@ -87,26 +87,20 @@
 (defconst ledger-account-name-or-directive-regex
   (format "\\(?:%s\\|%s\\)" ledger-account-any-status-regex ledger-account-directive-regex))
 
-(defconst ledger-account-pending-regex
-  (concat "\\(^[ \t]+\\)!" ledger-account-name-maybe-virtual-regex))
-
-(defconst ledger-account-cleared-regex
-  (concat "\\(^[ \t]+\\)*" ledger-account-name-maybe-virtual-regex))
-
 (defmacro ledger-define-regexp (name regex docs &rest args)
   "Simplify the creation of a Ledger regex and helper functions."
   (let* ((regex (eval regex))
          (group-count (regexp-opt-depth regex))
          (defs
-           (list
-            `(defconst
-               ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
-               ,regex
-               ,docs)
-            `(defconst
-               ,(intern (concat "ledger-regex-" (symbol-name name)
-                                "-group--count"))
-               ,group-count)))
+          (list
+           `(defconst
+              ,(intern (concat "ledger-" (symbol-name name) "-regexp"))
+              ,regex
+              ,docs)
+           `(defconst
+              ,(intern (concat "ledger-regex-" (symbol-name name)
+                               "-group--count"))
+              ,group-count)))
          (addend 0) last-group)
     (if (null args)
         (progn

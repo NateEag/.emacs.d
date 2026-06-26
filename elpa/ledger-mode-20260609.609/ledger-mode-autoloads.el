@@ -98,7 +98,7 @@ A mode for editing ledger data files.
 
 ;;; Generated autoloads from ledger-schedule.el
 
-(register-definition-prefixes "ledger-schedule" '("ledger-"))
+(register-definition-prefixes "ledger-schedule" '("ledger-schedule-"))
 
 
 ;;; Generated autoloads from ledger-sort.el

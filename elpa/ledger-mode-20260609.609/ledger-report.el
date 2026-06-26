@@ -1,4 +1,4 @@
-;; ledger-report.el --- Helper code for use with the "ledger" command-line tool  -*- lexical-binding: t; -*-
+;;; ledger-report.el --- Helper code for use with the "ledger" command-line tool  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2003-2016 John Wiegley (johnw AT gnu DOT org)
 
@@ -32,6 +32,7 @@
 (declare-function ledger-read-string-with-default "ledger-mode" (prompt default))
 (declare-function ledger-read-account-with-prompt "ledger-mode" (prompt))
 (declare-function ledger-read-payee-with-prompt "ledger-mode" (prompt))
+(declare-function ledger-read-date "ledger-mode" (prompt))
 
 (require 'easymenu)
 (require 'ansi-color)
@@ -70,6 +71,8 @@ specifier."
     ("payee" . ledger-report-payee-format-specifier)
     ("account" . ledger-report-account-format-specifier)
     ("month" . ledger-report-month-format-specifier)
+    ("amount" . ledger-report-amount-format-specifier)
+    ("date" . ledger-report-date-format-specifier)
     ("tagname" . ledger-report-tagname-format-specifier)
     ("tagvalue" . ledger-report-tagvalue-format-specifier))
   "An alist mapping ledger report format specifiers to implementing functions.
@@ -162,7 +165,12 @@ Calls `shrink-window-if-larger-than-buffer'."
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar-local ledger-report-name nil)
-(defvar-local ledger-report-cmd nil)
+(defvar-local ledger-report-cmd nil
+  "The raw command template for the current ledger report buffer.
+Format specifiers such as %(binary) and %(ledger-file) are left
+unexpanded and resolved at execution time in `ledger-do-report',
+so the current values of `ledger-binary-path' and the ledger file
+take effect on each run.")
 (defvar-local ledger-report-saved nil)
 (defvar-local ledger-report-current-month nil)
 (defvar-local ledger-report-is-reversed nil)
@@ -193,10 +201,11 @@ See documentation for the function `ledger-master-file'")
     (save-excursion
       (reverse-region (point) (point-max)))))
 
-(defun ledger-report-maybe-shrink-window ()
-  "Shrink window if `ledger-report-resize-window' is non-nil."
+(defun ledger-report-maybe-shrink-window (buf)
+  "Shrink window displaying BUF if `ledger-report-resize-window' is non-nil."
   (when ledger-report-resize-window
-    (shrink-window-if-larger-than-buffer)))
+    (when-let* ((w (get-buffer-window buf)))
+      (shrink-window-if-larger-than-buffer w))))
 
 (defvar ledger-report-mode-map
   (let ((map (make-sparse-keymap)))
@@ -237,7 +246,7 @@ See documentation for the function `ledger-master-file'")
 
 (define-derived-mode ledger-report-mode special-mode "Ledger-Report"
   "A mode for viewing ledger reports."
-  (setq-local revert-buffer-function #'ledger-report-redo)
+  (setq-local revert-buffer-function #'ledger-report--revert-buffer)
   (hack-dir-local-variables-non-file-buffer))
 
 (defconst ledger-report--extra-args-marker "[[ledger-mode-flags]]")
@@ -258,6 +267,14 @@ See documentation for the function `ledger-master-file'")
   ;; It is intended completion should be available on existing tag
   ;; values, but it remains to be implemented.
   (ledger-read-string-with-default "Tag Value" nil))
+
+(defun ledger-report-amount-format-specifier ()
+  "Return a commoditized amount."
+  (ledger-commodity-to-string (ledger-read-commodity-string "Amount")))
+
+(defun ledger-report-date-format-specifier ()
+  "Return a date."
+  (ledger-read-date "Date: "))
 
 (defun ledger-report-read-name ()
   "Read the name of a ledger report to use, with completion.
@@ -305,7 +322,7 @@ used to generate the buffer, navigating the buffer, etc."
       (with-silent-modifications
         (erase-buffer)
         (ledger-do-report ledger-report-cmd))
-      (ledger-report-maybe-shrink-window)
+      (ledger-report-maybe-shrink-window (current-buffer))
       (run-hooks 'ledger-report-after-report-hook)
       (message (substitute-command-keys (concat "\\[ledger-report-quit] to quit; "
                                                 "\\[ledger-report-redo] to redo; "
@@ -339,7 +356,7 @@ returns nil."
 (defun ledger-report-read-command (report-cmd)
   "Read the command line to create a report from REPORT-CMD."
   (read-from-minibuffer "Report command line: "
-                        (if (null report-cmd) "ledger " report-cmd)
+                        (if (null report-cmd) "%(binary) " report-cmd)
                         nil nil 'ledger-report-cmd-prompt-history))
 
 (defun ledger-report-ledger-file-format-specifier ()
@@ -416,7 +433,7 @@ MONTH is of the form (YEAR . INDEX) where INDEX ranges from
 
 (defun ledger-report-month-format-specifier ()
   "Substitute current month."
-  (with-current-buffer (or ledger-report-buffer-name (current-buffer))
+  (with-current-buffer ledger-report-buffer-name
     (let* ((month (or ledger-report-current-month (ledger-report--current-month)))
            (year (car month))
            (month-index (cdr month)))
@@ -427,7 +444,9 @@ MONTH is of the form (YEAR . INDEX) where INDEX ranges from
 
 Format specifiers are defined in the
 `ledger-report-format-specifiers' alist.  The functions are
-called in the ledger buffer for which the report is being run."
+called in the ledger buffer for which the report is being run.
+
+This function must be called from a report buffer."
   (let ((ledger-buf ledger-report-ledger-buf))
     (with-temp-buffer
       (save-excursion (insert report-cmd))
@@ -465,13 +484,19 @@ called in the ledger buffer for which the report is being run."
 
 (defun ledger-report-cmd (report-name edit)
   "Get the command line to run the report name REPORT-NAME.
-Optionally EDIT the command."
+Optionally EDIT the command.
+
+The returned command retains its format specifiers (e.g., %(binary)
+and %(ledger-file)) so that `ledger-do-report' can expand them each
+time the report runs.  This keeps saved reports in `ledger-reports'
+responsive to later changes in `ledger-binary-path' or the current
+ledger file, rather than baking in the values observed when the
+report was first run."
   (let ((report-cmd (car (cdr (assoc report-name ledger-reports)))))
     ;; logic for substitution goes here
     (when (or (null report-cmd) edit)
       (setq report-cmd (ledger-report-read-command report-cmd))
       (setq ledger-report-saved nil)) ;; this is a new report, or edited report
-    (setq report-cmd (ledger-report-expand-format-specifiers report-cmd))
     (setq ledger-report-cmd report-cmd)
     (or (string-empty-p report-name)
         (ledger-report-name-exists report-name)
@@ -491,7 +516,7 @@ Optionally EDIT the command."
          (previous-month (ledger-report--shift-month current-month shift)))
     (setq ledger-report-current-month previous-month)
     (ledger-report-cmd ledger-report-name nil)
-    (ledger-report-redo)))
+    (revert-buffer)))
 
 (defun ledger-report--add-links ()
   "Replace file and line annotations with buttons."
@@ -518,16 +543,19 @@ Optionally EDIT the command."
 
 (defun ledger-do-report (cmd)
   "Run a report command line CMD.
-CMD may contain a (shell-quoted) version of
-`ledger-report--extra-args-marker', which will be replaced by
-arguments returned by `ledger-report--compute-extra-args'."
+CMD may contain format specifiers (e.g., %(binary), %(ledger-file))
+which are expanded via `ledger-report-expand-format-specifiers'
+each time the report runs.  It may also contain a (shell-quoted)
+version of `ledger-report--extra-args-marker', which will be
+replaced by arguments returned by `ledger-report--compute-extra-args'."
   (goto-char (point-min))
-  (let* ((marker ledger-report--extra-args-marker)
+  (let* ((expanded-cmd (ledger-report-expand-format-specifiers cmd))
+         (marker ledger-report--extra-args-marker)
          (marker-re (concat " *" (regexp-quote marker)))
-         (args (ledger-report--compute-extra-args cmd))
+         (args (ledger-report--compute-extra-args expanded-cmd))
          (args-str (concat " " (mapconcat #'shell-quote-argument args " ")))
-         (clean-cmd (replace-regexp-in-string marker-re "" cmd t t))
-         (real-cmd (replace-regexp-in-string marker-re args-str cmd t t)))
+         (clean-cmd (replace-regexp-in-string marker-re "" expanded-cmd t t))
+         (real-cmd (replace-regexp-in-string marker-re args-str expanded-cmd t t)))
     (setq header-line-format
           (and ledger-report-use-header-line
                `(:eval (ledger-report--compute-header-line ,clean-cmd))))
@@ -541,7 +569,7 @@ arguments returned by `ledger-report--compute-extra-args'."
         (setq report (ansi-color-apply report)))
       (save-excursion
         (insert report))
-      (when (ledger-report--cmd-needs-links-p cmd)
+      (when (ledger-report--cmd-needs-links-p expanded-cmd)
         (save-excursion
           (ledger-report--add-links))))))
 
@@ -557,10 +585,10 @@ specific posting at point instead."
     (when (and file xact-position)
       (find-file-other-window file)
       (widen)
-      (if (markerp xact-position) 
-	  (goto-char xact-position)
- 	(progn (goto-char (point-min))
-	 (forward-line (1- xact-position))))
+      (if (markerp xact-position)
+          (goto-char xact-position)
+        (progn (goto-char (point-min))
+               (forward-line (1- xact-position))))
       (when ledger-report-links-beginning-of-xact
         (ledger-navigate-beginning-of-xact)))))
 
@@ -571,31 +599,42 @@ specific posting at point instead."
     (if (not rbuf)
         (error "There is no ledger report buffer"))
     (pop-to-buffer rbuf)
-    (ledger-report-maybe-shrink-window)))
+    (ledger-report-maybe-shrink-window rbuf)))
 
-(defun ledger-report-redo (&optional _ignore-auto _noconfirm)
-  "Redo the report in the current ledger report buffer.
+(defun ledger-report-redo-after-save ()
+  "If `ledger-report-auto-refresh' is non-nil, redo the report buffer.
+
+This is intended to be added to `after-save-hook' by `ledger-mode'."
+  (when (and ledger-report-auto-refresh
+             (get-buffer ledger-report-buffer-name))
+    (with-current-buffer ledger-report-buffer-name
+      (revert-buffer))))
+
+(defun ledger-report--revert-buffer (&optional _ignore-auto _noconfirm)
+  "Redo the report in the current buffer.
 IGNORE-AUTO and NOCONFIRM are for compatibility with
 `revert-buffer-function' and are currently ignored."
+  (when (buffer-live-p ledger-report-ledger-buf)
+    (setq ledger-report-cursor-line-number (line-number-at-pos))
+    (with-silent-modifications
+      (erase-buffer)
+      (ledger-do-report ledger-report-cmd)
+      (when ledger-report-is-reversed
+        (ledger-report-reverse-lines))
+      (when ledger-report-auto-refresh-sticky-cursor
+        (forward-line (- ledger-report-cursor-line-number 5))))
+    (ledger-report-maybe-shrink-window (current-buffer))
+    (run-hooks 'ledger-report-after-report-hook)))
+
+(defun ledger-report-redo ()
+  "Redo the report in the ledger report buffer."
   (interactive)
   (unless (or (derived-mode-p 'ledger-mode)
               (derived-mode-p 'ledger-report-mode))
     (user-error "Not in a ledger-mode or ledger-report-mode buffer"))
-  (let ((cur-buf (current-buffer)))
-    (when (and ledger-report-auto-refresh
-               (get-buffer ledger-report-buffer-name))
-      (pop-to-buffer (get-buffer ledger-report-buffer-name))
-      (ledger-report-maybe-shrink-window)
-      (setq ledger-report-cursor-line-number (line-number-at-pos))
-      (with-silent-modifications
-        (erase-buffer)
-        (ledger-do-report ledger-report-cmd)
-        (when ledger-report-is-reversed
-          (ledger-report-reverse-lines))
-        (when ledger-report-auto-refresh-sticky-cursor
-          (forward-line (- ledger-report-cursor-line-number 5))))
-      (run-hooks 'ledger-report-after-report-hook)
-      (pop-to-buffer cur-buf))))
+  (when (get-buffer ledger-report-buffer-name)
+    (with-current-buffer ledger-report-buffer-name
+      (revert-buffer))))
 
 (defun ledger-report-quit ()
   "Quit the ledger report buffer and kill its buffer."
@@ -614,8 +653,11 @@ IGNORE-AUTO and NOCONFIRM are for compatibility with
 (defun ledger-report-edit-report ()
   "Edit the current report command in the mini buffer and re-run the report."
   (interactive)
-  (setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
-  (ledger-report-redo))
+  (unless (derived-mode-p 'ledger-report-mode)
+    (user-error "Not a ledger report buffer"))
+  (with-current-buffer ledger-report-buffer-name
+    (setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
+    (revert-buffer)))
 
 (define-obsolete-function-alias 'ledger-report-select-report #'ledger-report "ledger 4.0.0")
 
@@ -673,7 +715,7 @@ IGNORE-AUTO and NOCONFIRM are for compatibility with
         (setq ledger-report-cmd (replace-match "" nil nil ledger-report-cmd))
       (setq ledger-report-cmd (concat ledger-report-cmd
                                       " --exchange " ledger-reconcile-default-commodity))))
-  (ledger-report-redo))
+  (revert-buffer))
 
 (provide 'ledger-report)
 

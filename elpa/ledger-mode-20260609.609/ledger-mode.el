@@ -4,9 +4,10 @@
 
 ;; This file is not part of GNU Emacs.
 
-;; Package-Version: 20250821.1439
-;; Package-Revision: e9bb645e8f05
+;; Package-Version: 20260609.609
+;; Package-Revision: b0ee99feb2dc
 ;; Package-Requires: ((emacs "26.1"))
+;; URL: https://github.com/ledger/ledger-mode
 
 ;; This is free software; you can redistribute it and/or modify it under
 ;; the terms of the GNU General Public License as published by the Free
@@ -70,7 +71,7 @@
 (defun ledger-mode-dump-variable (var)
   "Format VAR for dump to buffer."
   (if var
-      (insert (format "         %s: %S\n" (symbol-name var) (eval var)))))
+      (insert (format "         %s: %S\n" (symbol-name var) (symbol-value var)))))
 
 (defun ledger-mode-dump-group (group)
   "Dump GROUP customizations to current buffer."
@@ -156,11 +157,9 @@ the balance into that."
                     (ledger-exec-ledger buffer (current-buffer) "stats")
                     (buffer-substring-no-properties (point-min) (1- (point-max))))))
     (when balance
-      (message balance))))
+      (message "%s" balance))))
 
 (defvar ledger-mode-abbrev-table)
-
-(defvar ledger-date-string-today (ledger-format-date))
 
 
 
@@ -386,7 +385,9 @@ With prefix ARG, decrement by that many instead."
 
     (define-key map (kbd "C-c C-o C-a") #'ledger-report-redo)
     (define-key map (kbd "C-c C-o C-e") #'ledger-report-edit-report)
-    (define-key map (kbd "C-c C-o C-g") #'ledger-report-goto)
+    ;; `C-g' is reserved as the universal quit key, so use `C-v' (visit) for
+    ;; ledger-report-goto instead.
+    (define-key map (kbd "C-c C-o C-v") #'ledger-report-goto)
     (define-key map (kbd "C-c C-o C-k") #'ledger-report-quit)
     (define-key map (kbd "C-c C-o C-r") #'ledger-report)
     (define-key map (kbd "C-c C-o C-s") #'ledger-report-save)
@@ -399,7 +400,7 @@ With prefix ARG, decrement by that many instead."
     (define-key map (kbd "S-<down>") #'ledger-date-down)
 
     ;; Reset the `text-mode' override of this standard binding
-    (define-key map (kbd "C-M-i") 'completion-at-point)
+    (define-key map (kbd "C-M-i") #'completion-at-point)
     map)
   "Keymap for `ledger-mode'.")
 
@@ -447,11 +448,11 @@ With prefix ARG, decrement by that many instead."
 (define-derived-mode ledger-mode text-mode "Ledger"
   "A mode for editing ledger data files."
   (ledger-check-version)
-  (setq font-lock-defaults
-        '(ledger-font-lock-keywords t nil nil nil))
-  (add-hook 'font-lock-extend-region-functions 'ledger-fontify-extend-region)
+  (setq-local font-lock-defaults
+              '(ledger-font-lock-keywords t nil nil nil))
+  (add-hook 'font-lock-extend-region-functions #'ledger-fontify-extend-region nil t)
   (add-hook 'completion-at-point-functions #'ledger-complete-at-point nil t)
-  (add-hook 'after-save-hook 'ledger-report-redo nil t)
+  (add-hook 'after-save-hook 'ledger-report-redo-after-save nil t)
 
   (add-hook 'post-command-hook 'ledger-highlight-xact-under-point nil t)
   (add-hook 'before-revert-hook 'ledger-highlight--before-revert nil t)

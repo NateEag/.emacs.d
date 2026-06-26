@@ -8,8 +8,8 @@
 ;; URL: https://github.com/yoshiki/yaml-mode
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: data yaml
-;; Package-Version: 20241003.153
-;; Package-Revision: d91f87872931
+;; Package-Version: 20260420.156
+;; Package-Revision: 62cbd8050776
 
 ;; This file is not part of Emacs
 
@@ -273,7 +273,8 @@ that key is pressed to begin a block literal."
              (sps (save-excursion (syntax-ppss (1- pt)))))
         (when (not (nth 8 sps))
           (cond
-           ((and (char-equal ?' (char-before (1- pt)))
+           ((and (char-before (1- pt))
+                 (char-equal ?' (char-before (1- pt)))
                  (char-equal ?' (char-before pt)))
             (put-text-property (- pt 2) pt
                                'syntax-table (string-to-syntax "w"))

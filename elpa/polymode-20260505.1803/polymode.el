@@ -3,8 +3,8 @@
 ;; Author: Vitalie Spinu
 ;; Maintainer: Vitalie Spinu <spinuvit@gmail.com>
 ;; Copyright (C) 2013-2022  Free Software Foundation, Inc.
-;; Package-Version: 20250617.1033
-;; Package-Revision: 25ba9463a443
+;; Package-Version: 20260505.1803
+;; Package-Revision: 8cb72fa5dcc0
 ;; Package-Requires: ((emacs "25"))
 ;; URL: https://github.com/polymode/polymode
 ;; Keywords: languages, multi-modes, processes

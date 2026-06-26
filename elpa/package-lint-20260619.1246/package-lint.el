@@ -1,14 +1,14 @@
 ;;; package-lint.el --- A linting library for elisp package authors -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2020  Steve Purcell, Fanael Linithien
+;; Copyright (C) 2014-2026  Steve Purcell, Fanael Linithien and contributors
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
 ;; Keywords: lisp
-;; Package-Version: 20250828.1506
-;; Package-Revision: f990665a1b4c
-;; Package-Requires: ((emacs "24.4") (let-alist "1.0.6"))
+;; Package-Version: 20260619.1246
+;; Package-Revision: 35996f478d81
+;; Package-Requires: ((emacs "25.1") (let-alist "1.0.6"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -201,6 +201,7 @@ TYPE is `function' or `variable'."
     "org-babel-variable-assignments:"
     "org-babel-default-header-args:"
     "pcomplete/"
+    "eshell/"
     "use-package-normalize/"
     "use-package-handler/"
     "use-package-autoloads/"))
@@ -289,9 +290,9 @@ TYPE is `function' or `variable'."
             (package-lint--check-no-use-of-cl-lib-sublibraries)
             (package-lint--check-eval-after-load)
             (package-lint--check-lexical-binding-requires-emacs-24 deps)
-            (package-lint--check-libraries-available-in-emacs deps)
+            (package-lint--check-libraries-available-in-emacs deps prefix)
             (package-lint--check-libraries-removed-from-emacs)
-            (package-lint--check-macros-functions-available-in-emacs deps)
+            (package-lint--check-macros-functions-available-in-emacs deps prefix)
             (package-lint--check-macros-functions-removed-from-emacs deps)
             (package-lint--check-objects-by-regexp
              (concat "(" (regexp-opt '("format" "message" "error")) "\\s-")
@@ -624,7 +625,7 @@ CALLBACK."
                     (looking-at binding-pat))))))
       (scan-error nil))))
 
-(defun package-lint--check-version-regexp-list (valid-deps symbol-regexp type)
+(defun package-lint--check-version-regexp-list (valid-deps prefix symbol-regexp type)
   "Warn if symbols matched by SYMBOL-REGEXP are unavailable in the target Emacs.
 The target Emacs version is taken from VALID-DEPS, which are the
 declared dependencies of this package.  TYPE is the
@@ -666,7 +667,10 @@ type of the symbol, either FUNCTION or FEATURE."
                                                   (cadr matching-dep))))
                         (and (eq type 'function)
                              (or (package-lint--seen-fboundp-check-for sym)
-                                 (package-lint--is-a-let-binding))))
+                                 (package-lint--is-a-let-binding)))
+                        ;; This is itself a core lib in ELPA
+                        (and (eq type 'function) prefix
+                             (string-prefix-p (format "%s-" prefix) sym)))
                  (list
                   'error
                   (format "You should depend on (emacs \"%s\")%s%s if you need `%s'."
@@ -716,11 +720,12 @@ type of the symbol, either FUNCTION or FEATURE."
   "(\\s-*?require\\s-*?'\\_<\\(.*?\\)\\_>\\s-*?)"
   "Regexp to match unconditional `require' forms.")
 
-(defun package-lint--check-libraries-available-in-emacs (valid-deps)
+(defun package-lint--check-libraries-available-in-emacs (valid-deps prefix)
   "Warn about use of libraries that are not available.
 The check is performed against the Emacs version in VALID-DEPS."
   (package-lint--check-version-regexp-list
    valid-deps
+   prefix
    package-lint--unconditional-require-regexp
    'feature))
 
@@ -752,11 +757,12 @@ The check is performed against the Emacs version in VALID-DEPS."
     symbol-end))
   "Regexp to match function names.")
 
-(defun package-lint--check-macros-functions-available-in-emacs (valid-deps)
+(defun package-lint--check-macros-functions-available-in-emacs (valid-deps prefix)
   "Warn about use of unavailable functions/macros that are not available.
 The check is performed against the Emacs version in VALID-DEPS."
   (package-lint--check-version-regexp-list
    valid-deps
+   prefix
    package-lint--function-name-regexp
    'function))
 

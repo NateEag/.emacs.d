@@ -1,11 +1,11 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "package-lint" "20250828.1506"
+(define-package "package-lint" "20260619.1246"
   "A linting library for elisp package authors."
-  '((emacs     "24.4")
+  '((emacs     "25.1")
     (let-alist "1.0.6"))
   :url "https://github.com/purcell/package-lint"
-  :commit "f990665a1b4ca9eadbfcdb0b2a22fbb819e78ef4"
-  :revdesc "f990665a1b4c"
+  :commit "35996f478d81e51dae4fa30d051f741895d07399"
+  :revdesc "35996f478d81"
   :keywords '("lisp")
   :authors '(("Steve Purcell" . "steve@sanityinc.com")
              ("Fanael Linithien" . "fanael4@gmail.com"))

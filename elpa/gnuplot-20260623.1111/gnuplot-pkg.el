@@ -1,11 +1,11 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "gnuplot" "20250724.1531"
+(define-package "gnuplot" "20260623.1111"
   "Major-mode and interactive frontend for gnuplot."
-  '((emacs  "28.1")
-    (compat "30"))
+  '((emacs  "29.1")
+    (compat "31"))
   :url "https://github.com/emacs-gnuplot/gnuplot"
-  :commit "43e9674b869475b1c2a32f045c167673eb2faae0"
-  :revdesc "43e9674b8694"
+  :commit "81e3cb30297f0d12df41b865d2a76c8ba179089c"
+  :revdesc "81e3cb30297f"
   :keywords '("data" "gnuplot" "plotting")
   :maintainers '(("Maxime Tréca" . "maxime@gmail.com")
                  ("Daniel Mendler" . "mail@daniel-mendler.de")))

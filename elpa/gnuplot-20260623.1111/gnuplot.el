@@ -5,13 +5,11 @@
 ;; Author:           Jon Oddie, Bruce Ravel, Phil Type
 ;; Maintainer:       Maxime Tréca <maxime@gmail.com>, Daniel Mendler <mail@daniel-mendler.de>
 ;; Created:          1998
-;; Package-Version: 20250724.1531
-;; Package-Revision: 43e9674b8694
+;; Package-Version: 20260623.1111
+;; Package-Revision: 81e3cb30297f
 ;; Keywords:         data gnuplot plotting
 ;; URL:              https://github.com/emacs-gnuplot/gnuplot
-;; Package-Requires: ((emacs "28.1") (compat "30"))
-
-;; This file is not part of GNU Emacs.
+;; Package-Requires: ((emacs "29.1") (compat "31"))
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

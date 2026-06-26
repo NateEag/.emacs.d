@@ -1,16 +1,16 @@
 ;;; moody.el --- Tabs and ribbons for the mode line  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.moody@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/tarsius/moody
 ;; Keywords: faces
 
-;; Package-Version: 20251101.2036
-;; Package-Revision: c88c360065cc
+;; Package-Version: 20260601.1514
+;; Package-Revision: 48556e65f37c
 ;; Package-Requires: (
 ;;     (emacs  "28.1")
-;;     (compat "30.1"))
+;;     (compat "31.0"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -300,7 +300,7 @@ not specified, then ad hoc faces based on `default', `mode-line',
                      (window-mode-line-height))))
   (setq height (* height moody-display-scale))
   (unless (cl-evenp height)
-    (cl-incf height))
+    (incf height))
   (let ((key (list direction c1 c2 c3 height)))
     (or (cdr (assoc key moody--cache))
         (let* ((width (/ height 2))
@@ -580,5 +580,6 @@ be used as an advice to window creation functions."
 (provide 'moody)
 ;; Local Variables:
 ;; indent-tabs-mode: nil
+;; lisp-indent-local-overrides: ((cond . 0) (interactive . 0))
 ;; End:
 ;;; moody.el ends here

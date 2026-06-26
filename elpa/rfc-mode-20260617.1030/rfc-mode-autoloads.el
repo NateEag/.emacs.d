@@ -16,6 +16,8 @@ Read the RFC document NUMBER.
 Offer the number at point as default.
 
 (fn NUMBER)" t)
+(autoload 'rfc-mode-update-index "rfc-mode" "\
+Force download and rebuild of the RFC index." t)
 (autoload 'rfc-mode-browse "rfc-mode" "\
 Browse through all RFC documents referenced in the index." t)
 (autoload 'rfc-mode "rfc-mode" "\

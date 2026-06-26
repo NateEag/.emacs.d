@@ -3,8 +3,8 @@
 ;; Author: Nicolas Martyanoff <nicolas@n16f.net>
 ;; SPDX-License-Identifier: ISC
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20231013.1353
-;; Package-Revision: ab09db78d9d1
+;; Package-Version: 20260617.1030
+;; Package-Revision: 0ab3e0b5eca4
 ;; Package-Requires: ((emacs "25.1"))
 
 ;;; Commentary:
@@ -241,6 +241,16 @@ Offer the number at point as default."
   (interactive)
   (setq rfc-mode-index-entries nil))
 
+;;;###autoload
+(defun rfc-mode-update-index ()
+  "Force download and rebuild of the RFC index."
+  (interactive)
+  (message "Updating RFC index...")
+  (let ((file (rfc-mode--download-index)))
+    (setq rfc-mode-index-entries
+          (rfc-mode-read-index-file file)))
+  (message "RFC index updated successfully."))
+
 (defun rfc-mode--index-entries ()
   (or rfc-mode-index-entries
       (let ((file (rfc-mode--document-file "-index")))
@@ -387,7 +397,7 @@ ENTRIES is a list of RFC index entries in the browser."
 
 ENTRY is a RFC index entry in the browser."
   (let* ((ref (rfc-mode--pad-string
-               (format "RFC%d" (plist-get entry :number)) 7))
+               (format "RFC%d" (plist-get entry :number)) 8))
          (title (rfc-mode--pad-string
                  (plist-get entry :title)
                  rfc-mode-browser-entry-title-width))
@@ -411,6 +421,15 @@ ENTRY is a RFC index entry in the browser."
     (rfc-mode-read number)))
 
 ;;; Index utils:
+
+
+(defun rfc-mode--download-index ()
+  "Download the RFC index file and return its local filename."
+  (let ((file (rfc-mode--document-file "-index")))
+    ;; Force re-download by deleting existing file first
+    (when (file-exists-p file)
+      (delete-file file))
+    (rfc-mode--document-file "-index")))
 
 (defun rfc-mode-read-index-file (filename)
   "Read an RFC index file at FILENAME and return a list of entries."

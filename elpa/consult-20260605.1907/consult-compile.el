@@ -1,6 +1,6 @@
-;;; consult-compile.el --- Provides the command `consult-compile-error' -*- lexical-binding: t -*-
+;;; consult-compile.el --- Consult commands to navigate compilation errors -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -19,10 +19,10 @@
 
 ;;; Commentary:
 
-;; Provides the command `consult-compile-error'.  This is an extra package, to
-;; allow lazy loading of compile.el.  The `consult-compile-error' command is
-;; autoloaded.  See also the command `consult-grep-match' which adapts
-;; `consult-compile-error' to Grep buffers.
+;; Provides the command `consult-compile-error'.  This is an extra file to
+;; allow lazy loading of compile.el.  See also the command
+;; `consult-grep-match' which adapts `consult-compile-error' to Grep
+;; buffers.
 
 ;;; Code:
 
@@ -43,8 +43,8 @@ If GREP is non-nil, the buffer is a Grep buffer."
     (let ((pos (point-min)) candidates)
       (save-excursion
         (while (setq pos (compilation-next-single-property-change pos 'compilation-message))
-          (when-let ((msg (get-text-property pos 'compilation-message))
-                     ((compilation--message->loc msg)))
+          (when-let* ((msg (get-text-property pos 'compilation-message))
+                      ((compilation--message->loc msg)))
             (goto-char pos)
             (let ((str (consult--buffer-substring pos (pos-eol))))
               (add-text-properties
@@ -58,7 +58,7 @@ If GREP is non-nil, the buffer is a Grep buffer."
 
 (defun consult-compile--lookup (marker)
   "Lookup error position given error MARKER."
-  (when-let (buffer (and marker (marker-buffer marker)))
+  (when-let* ((buffer (and marker (marker-buffer marker))))
     (with-current-buffer buffer
       (let ((next-error-highlight nil)
             (compilation-current-error marker)
@@ -84,9 +84,9 @@ If GREP is non-nil, search Grep buffers."
   (let ((jump (consult--jump-state)))
     (lambda (action marker)
       (let ((pos (consult-compile--lookup marker)))
-        (when-let (buffer (and (eq action 'return)
-                               marker
-                               (marker-buffer marker)))
+        (when-let* ((buffer (and (eq action 'return)
+                                 marker
+                                 (marker-buffer marker))))
           (with-current-buffer buffer
             (setq compilation-current-error marker
                   overlay-arrow-position marker)))

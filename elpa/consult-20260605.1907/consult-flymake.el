@@ -1,6 +1,6 @@
-;;; consult-flymake.el --- Provides the command `consult-flymake' -*- lexical-binding: t -*-
+;;; consult-flymake.el --- Consult commands to navigate Flymake errors -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -19,9 +19,8 @@
 
 ;;; Commentary:
 
-;; Provides the command `consult-flymake'.  This is an extra package,
-;; to allow lazy loading of flymake.el.  The `consult-flymake' command
-;; is autoloaded.
+;; Provides the command `consult-flymake'.  This is an extra file to allow lazy
+;; loading of flymake.el.
 
 ;;; Code:
 
@@ -98,7 +97,7 @@ buffers in the current project instead of just the current buffer."
   (consult--forbid-minibuffer)
   (consult--read
    (consult-flymake--candidates
-     (if-let ((project (and project (project-current))))
+     (if-let* ((project (and project (project-current))))
          (flymake--project-diagnostics project)
        (flymake-diagnostics)))
    :prompt "Flymake diagnostic: "

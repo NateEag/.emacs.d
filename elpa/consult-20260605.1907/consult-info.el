@@ -1,6 +1,6 @@
-;;; consult-info.el --- Search through the info manuals -*- lexical-binding: t -*-
+;;; consult-info.el --- Consult commands to search the info manuals -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -19,9 +19,8 @@
 
 ;;; Commentary:
 
-;; Provides the command `consult-info'.  This is an extra package,
-;; to allow lazy loading of info.el.  The `consult-info' command
-;; is autoloaded.
+;; Provides the command `consult-info' and the macro `consult-info-define'.
+;; This is an extra file to allow lazy loading of info.el.
 
 ;;; Code:
 
@@ -52,7 +51,7 @@ CALLBACK receives the candidates."
           (while (and (not (eobp)) (re-search-forward re nil t))
             (if (match-end 1)
                 (progn
-                  (if-let ((node (match-string 2)))
+                  (if-let* ((node (match-string 2)))
                       (unless (equal node last-node)
                         (setq full-node (concat consult-info--manual node)
                               last-node node))
@@ -78,7 +77,7 @@ CALLBACK receives the candidates."
                                (funcall hl (buffer-substring-no-properties bol eol))
                                (consult--tofu-encode cand-idx))))
                     (put-text-property 0 1 'consult--info (list full-node bol buf) cand)
-                    (cl-incf cand-idx)
+                    (incf cand-idx)
                     (push cand candidates)))
                 (goto-char (1+ eol))))))
         (funcall callback (nreverse candidates))
@@ -86,9 +85,9 @@ CALLBACK receives the candidates."
 
 (defun consult-info--position (cand)
   "Return position information for CAND."
-  (when-let ((pos (and cand (get-text-property 0 'consult--info cand)))
-             (matches (consult--point-placement cand 0))
-             (dest (+ (cadr pos) (car matches))))
+  (when-let* ((pos (and cand (get-text-property 0 'consult--info cand)))
+              (matches (consult--point-placement cand 0))
+              (dest (+ (cadr pos) (car matches))))
     `( ,(cdr matches) ,dest . ,pos)))
 
 (defun consult-info--action (cand &optional buf)

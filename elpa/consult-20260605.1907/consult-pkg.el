@@ -1,10 +1,10 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "consult" "20251129.758"
-  "Consulting completing-read."
+(define-package "consult" "20260605.1907"
+  "Search and navigate via completing-read."
   '((emacs  "29.1")
-    (compat "30"))
+    (compat "31"))
   :url "https://github.com/minad/consult"
-  :commit "d0370320d9fdde5ac6e0a27720f51138315af882"
-  :revdesc "d0370320d9fd"
+  :commit "9bb68cf3941eb618fff18bd7626164951c70eb8a"
+  :revdesc "9bb68cf3941e"
   :keywords '("matching" "files" "completion")
   :maintainers '(("Daniel Mendler" . "mail@daniel-mendler.de")))

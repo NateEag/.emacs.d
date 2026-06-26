@@ -1,6 +1,6 @@
-;;; consult-org.el --- Consult commands for org-mode -*- lexical-binding: t -*-
+;;; consult-org.el --- Consult commands to navigate Org files -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2021-2026 Free Software Foundation, Inc.
 
 ;; This file is part of GNU Emacs.
 
@@ -19,8 +19,8 @@
 
 ;;; Commentary:
 
-;; Provides a `completing-read' interface for Org mode navigation.
-;; This is an extra package, to allow lazy loading of Org.
+;; Provides the commands `consult-org-agenda' and `consult-org-heading'.  This
+;; is an extra file to allow lazy loading of org.el.
 
 ;;; Code:
 
@@ -69,7 +69,7 @@ MATCH, SCOPE and SKIP are as in `org-map-entries'."
                org-outline-path-cache nil))
        (pcase-let* ((`(_ ,level ,todo ,prio ,_hl ,tags) (org-heading-components))
                     (tags (if org-use-tag-inheritance
-                              (when-let ((tags (org-get-tags)))
+                              (when-let* ((tags (org-get-tags)))
                                 (concat ":" (string-join tags ":") ":"))
                             tags))
                     (cand (org-format-outline-path
@@ -81,7 +81,7 @@ MATCH, SCOPE and SKIP are as in `org-map-entries'."
            (put-text-property 0 (length tags) 'face 'org-tag tags))
          (setq cand (concat (and prefix buffer) (and prefix " ") cand (and tags " ")
                             tags (consult--tofu-encode idx)))
-         (cl-incf idx)
+         (incf idx)
          (add-text-properties 0 1
                               `(org-marker ,(point-marker)
                                 consult-org--heading (,level ,todo ,prio . ,buffer))

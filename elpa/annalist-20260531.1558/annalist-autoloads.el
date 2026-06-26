@@ -14,19 +14,19 @@
 (autoload 'annalist-record "annalist" "\
 In the store for ANNALIST, TYPE, and LOCAL, record RECORD.
 ANNALIST should correspond to the package/user recording this information (e.g.
-'general, 'me, etc.). TYPE is the type of information being recorded (e.g.
-'keybindings). LOCAL corresponds to whether to store RECORD only for the current
+\\='general, \\='me, etc.). TYPE is the type of information being recorded (e.g.
+\\='keybindings). LOCAL corresponds to whether to store RECORD only for the current
 buffer. This information together is used to select where RECORD should be
 stored in and later retrieved from with `annalist-describe'. RECORD should be a
 list of items to record and later print as org headings and column entries in a
 single row. If PLIST is non-nil, RECORD should be a plist instead of an ordered
-list (e.g. '(keymap org-mode-map key \"C-c a\" ...)). The plist keys should be
+list (e.g. \\='(keymap org-mode-map key \"C-c a\" ...)). The plist keys should be
 the symbols used for the definition of TYPE.
 
 (fn ANNALIST TYPE RECORD &key LOCAL PLIST)")
 (autoload 'annalist-describe "annalist" "\
 Describe information recorded by ANNALIST for TYPE.
-For example: (annalist-describe 'general 'keybindings) If VIEW is non-nil, use
+For example: (annalist-describe \\='general \\='keybindings) If VIEW is non-nil, use
 those settings for displaying recorded information instead of the defaults.
 
 (fn ANNALIST TYPE &optional VIEW)")

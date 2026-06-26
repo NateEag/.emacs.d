@@ -1,13 +1,13 @@
 ;;; lsp-origami.el --- origami.el support for lsp-mode    -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019-2020  Vibhav Pant <vibhavp@gmail.com>
-;; Copyright (C) 2020-2025  emacs-lsp maintainers
+;; Copyright (C) 2020-2026  emacs-lsp maintainers
 
 ;; Author: Vibhav Pant
-;; Package-Version: 20250825.521
-;; Package-Revision: b52f42b7932d
+;; Package-Version: 20260507.1743
+;; Package-Revision: dd398afcf8e9
 ;; Keywords: languages lsp-mode
-;; Package-Requires: ((emacs "28.1") (origami "1.0") (lsp-mode "6.1"))
+;; Package-Requires: ((emacs "29.1") (origami "1.0") (lsp-mode "6.1"))
 ;; URL: https://github.com/emacs-lsp/lsp-origami
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -1,7 +1,6 @@
-This is docRpTqL0.info, produced by makeinfo version 7.1.1 from
-pulsar.texi.
+This is pulsar.info, produced by makeinfo version 7.2 from pulsar.texi.
 
-Copyright (C) 2022-2025 Free Software Foundation, Inc.
+Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -20,12 +19,12 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
-File: docRpTqL0.info,  Node: Top,  Next: Installation,  Up: (dir)
+File: pulsar.info,  Node: Top,  Next: Installation,  Up: (dir)
 
 pulsar.el: Highlight line automatically after some change or on demand
 **********************************************************************
 
-Copyright (C) 2022-2025 Free Software Foundation, Inc.
+Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -93,9 +92,8 @@ Indices
 * Variable index::
 * Concept index::
 
-
 
-File: docRpTqL0.info,  Node: Installation,  Next: Sample configuration,  Prev: Top,  Up: Top
+File: pulsar.info,  Node: Installation,  Next: Sample configuration,  Prev: Top,  Up: Top
 
 1 Installation
 **************
@@ -106,7 +104,7 @@ File: docRpTqL0.info,  Node: Installation,  Next: Sample configuration,  Prev: T
 * Manual installation::
 
 
-File: docRpTqL0.info,  Node: GNU ELPA package,  Next: Manual installation,  Up: Installation
+File: pulsar.info,  Node: GNU ELPA package,  Next: Manual installation,  Up: Installation
 
 1.1 GNU ELPA package
 ====================
@@ -125,7 +123,7 @@ archive.  Read:
 <https://protesilaos.com/codelog/2022-05-13-emacs-elpa-devel/>.
 
 
-File: docRpTqL0.info,  Node: Manual installation,  Prev: GNU ELPA package,  Up: Installation
+File: pulsar.info,  Node: Manual installation,  Prev: GNU ELPA package,  Up: Installation
 
 1.2 Manual installation
 =======================
@@ -152,7 +150,7 @@ following commands in a shell prompt:
    Everything is in place to set up the package.
 
 
-File: docRpTqL0.info,  Node: Sample configuration,  Next: Overview,  Prev: Installation,  Up: Top
+File: pulsar.info,  Node: Sample configuration,  Next: Overview,  Prev: Installation,  Up: Top
 
 2 Sample configuration
 **********************
@@ -180,7 +178,7 @@ Remember to read the doc string of each of these variables or functions.
 * Use pulsar in the minibuffer::
 
 
-File: docRpTqL0.info,  Node: Use pulsar with next-error,  Next: Use pulsar in the minibuffer,  Up: Sample configuration
+File: pulsar.info,  Node: Use pulsar with next-error,  Next: Use pulsar in the minibuffer,  Up: Sample configuration
 
 2.1 Use pulsar with next-error
 ==============================
@@ -195,7 +193,7 @@ Pulsar-level solution that "just works":
      (add-hook 'next-error-hook #'pulsar-pulse-line)
 
 
-File: docRpTqL0.info,  Node: Use pulsar in the minibuffer,  Prev: Use pulsar with next-error,  Up: Sample configuration
+File: pulsar.info,  Node: Use pulsar in the minibuffer,  Prev: Use pulsar with next-error,  Up: Sample configuration
 
 2.2 Use pulsar in the minibuffer
 ================================
@@ -217,7 +215,7 @@ applied by default.  For example:
      (add-hook 'minibuffer-setup-hook #'pulsar-pulse-line-blue)
 
 
-File: docRpTqL0.info,  Node: Overview,  Next: Style of a pulse effect,  Prev: Sample configuration,  Up: Top
+File: pulsar.info,  Node: Overview,  Next: Style of a pulse effect,  Prev: Sample configuration,  Up: Top
 
 3 Overview
 **********
@@ -235,7 +233,7 @@ effect in all buffers (*note More ways to create automatic pulse
 effects::).
 
 
-File: docRpTqL0.info,  Node: Style of a pulse effect,  Next: Temporary static highlights,  Prev: Overview,  Up: Top
+File: pulsar.info,  Node: Style of a pulse effect,  Next: Temporary static highlights,  Prev: Overview,  Up: Top
 
 4 Style of a pulse effect
 *************************
@@ -252,7 +250,7 @@ value), ‘pulsar-red’, ‘pulsar-green’, ‘pulsar-yellow’, ‘pulsar-blu
 ‘pulsar-magenta’, ‘pulsar-cyan’.
 
 
-File: docRpTqL0.info,  Node: Temporary static highlights,  Next: Permanent static highlights,  Prev: Style of a pulse effect,  Up: Top
+File: pulsar.info,  Node: Temporary static highlights,  Next: Permanent static highlights,  Prev: Style of a pulse effect,  Up: Top
 
 5 Temporary static highlights
 *****************************
@@ -273,7 +271,7 @@ assigned to a different face to help differentiate pulses from static
 highlights (*note Style of a pulse effect::).
 
 
-File: docRpTqL0.info,  Node: Permanent static highlights,  Next: More ways to create automatic pulse effects,  Prev: Temporary static highlights,  Up: Top
+File: pulsar.info,  Node: Permanent static highlights,  Next: More ways to create automatic pulse effects,  Prev: Temporary static highlights,  Up: Top
 
 6 Permanent static highlights
 *****************************
@@ -298,7 +296,7 @@ the user option ‘pulsar-highlight-face’.  It is the same used for their
 temporary counterparts (*note Temporary static highlights::).
 
 
-File: docRpTqL0.info,  Node: More ways to create automatic pulse effects,  Next: Resolve function aliases,  Prev: Permanent static highlights,  Up: Top
+File: pulsar.info,  Node: More ways to create automatic pulse effects,  Next: Resolve function aliases,  Prev: Permanent static highlights,  Up: Top
 
 7 More ways to create automatic pulse effects
 *********************************************
@@ -325,7 +323,7 @@ region-related pulses.  By default, it is the same as the ‘pulsar-face’
 (*note Style of a pulse effect::).
 
 
-File: docRpTqL0.info,  Node: Resolve function aliases,  Next: Omit hidden buffers,  Prev: More ways to create automatic pulse effects,  Up: Top
+File: pulsar.info,  Node: Resolve function aliases,  Next: Omit hidden buffers,  Prev: More ways to create automatic pulse effects,  Up: Top
 
 8 Resolve function aliases
 **************************
@@ -341,7 +339,7 @@ a non-‘nil’ value to make Pulsar check for the aliases of all the
 function symbols it is aware of and act on them accordingly.
 
 
-File: docRpTqL0.info,  Node: Omit hidden buffers,  Next: Convenience functions,  Prev: Resolve function aliases,  Up: Top
+File: pulsar.info,  Node: Omit hidden buffers,  Next: Convenience functions,  Prev: Resolve function aliases,  Up: Top
 
 9 Omit hidden buffers
 *********************
@@ -353,7 +351,7 @@ buffer-switching commands.  When this user option is set to ‘nil’,
 Pulsar will work in those buffers as well (*note Overview::).
 
 
-File: docRpTqL0.info,  Node: Convenience functions,  Next: Integration with other packages,  Prev: Omit hidden buffers,  Up: Top
+File: pulsar.info,  Node: Convenience functions,  Next: Integration with other packages,  Prev: Omit hidden buffers,  Up: Top
 
 10 Convenience functions
 ************************
@@ -380,7 +378,7 @@ the user's convenience:
 binding, or be incorporated in custom functions.
 
 
-File: docRpTqL0.info,  Node: Integration with other packages,  Next: Acknowledgements,  Prev: Convenience functions,  Up: Top
+File: pulsar.info,  Node: Integration with other packages,  Next: Acknowledgements,  Prev: Convenience functions,  Up: Top
 
 11 Integration with other packages
 **********************************
@@ -407,7 +405,7 @@ the aforementioned recentering functions.
      (add-hook 'imenu-after-jump-hook #'pulsar-reveal-entry)
 
 
-File: docRpTqL0.info,  Node: Acknowledgements,  Next: GNU Free Documentation License,  Prev: Integration with other packages,  Up: Top
+File: pulsar.info,  Node: Acknowledgements,  Next: GNU Free Documentation License,  Prev: Integration with other packages,  Up: Top
 
 12 Acknowledgements
 *******************
@@ -424,11 +422,13 @@ Contributions to the code or manual
 
 Ideas and user feedback
      Anwesh Gangula, Diego Alvarez, Duy Nguyen, Koloszár Gergely,
-     Matthias Meulien, Mark Barton, Petter Storvik, Ronny Randen, Rudolf
-     Adamkovič, Toon Claes, and users djl, kb.
+     Matthias Meulien, Mark Barton, Mehrad Mahmoudian, Nikolaos
+     Bezirgiannis, Petter Storvik, Ronny Randen, Rudolf Adamkovič,
+     Sébastien Delafond, Toon Claes, and users djl, hammerandtongs,
+     irisjae, kb.
 
 
-File: docRpTqL0.info,  Node: GNU Free Documentation License,  Next: Indices,  Prev: Acknowledgements,  Up: Top
+File: pulsar.info,  Node: GNU Free Documentation License,  Next: Indices,  Prev: Acknowledgements,  Up: Top
 
 Appendix A GNU Free Documentation License
 *****************************************
@@ -910,7 +910,7 @@ software license, such as the GNU General Public License, to permit
 their use in free software.
 
 
-File: docRpTqL0.info,  Node: Indices,  Prev: GNU Free Documentation License,  Up: Top
+File: pulsar.info,  Node: Indices,  Prev: GNU Free Documentation License,  Up: Top
 
 B Indices
 *********
@@ -922,7 +922,7 @@ B Indices
 * Concept index::
 
 
-File: docRpTqL0.info,  Node: Function index,  Next: Variable index,  Up: Indices
+File: pulsar.info,  Node: Function index,  Next: Variable index,  Up: Indices
 
 B.1 Function index
 ==================
@@ -964,7 +964,7 @@ B.1 Function index
                                                                (line 13)
 
 
-File: docRpTqL0.info,  Node: Variable index,  Next: Concept index,  Prev: Function index,  Up: Indices
+File: pulsar.info,  Node: Variable index,  Next: Concept index,  Prev: Function index,  Up: Indices
 
 B.2 Variable index
 ==================
@@ -1006,7 +1006,7 @@ B.2 Variable index
                                                                (line 11)
 
 
-File: docRpTqL0.info,  Node: Concept index,  Prev: Variable index,  Up: Indices
+File: pulsar.info,  Node: Concept index,  Prev: Variable index,  Up: Indices
 
 B.3 Concept index
 =================
@@ -1020,35 +1020,35 @@ B.3 Concept index
 * Installation instructions:             Installation.          (line 6)
 * Package configuration:                 Sample configuration.  (line 6)
 
-
 
 Tag Table:
-Node: Top869
-Node: Installation3207
-Node: GNU ELPA package3389
-Node: Manual installation3950
-Node: Sample configuration4719
-Node: Use pulsar with next-error5533
-Node: Use pulsar in the minibuffer6180
-Node: Overview7049
-Node: Style of a pulse effect7781
-Node: Temporary static highlights8578
-Node: Permanent static highlights9566
-Node: More ways to create automatic pulse effects10761
-Node: Resolve function aliases12105
-Node: Omit hidden buffers12867
-Node: Convenience functions13390
-Node: Integration with other packages14239
-Node: Acknowledgements15291
-Node: GNU Free Documentation License16004
-Node: Indices41164
-Node: Function index41340
-Node: Variable index43756
-Node: Concept index46219
+Node: Top864
+Node: Installation3198
+Node: GNU ELPA package3377
+Node: Manual installation3935
+Node: Sample configuration4701
+Node: Use pulsar with next-error5512
+Node: Use pulsar in the minibuffer6156
+Node: Overview7022
+Node: Style of a pulse effect7751
+Node: Temporary static highlights8545
+Node: Permanent static highlights9530
+Node: More ways to create automatic pulse effects10722
+Node: Resolve function aliases12063
+Node: Omit hidden buffers12822
+Node: Convenience functions13342
+Node: Integration with other packages14188
+Node: Acknowledgements15237
+Node: GNU Free Documentation License16045
+Node: Indices41202
+Node: Function index41375
+Node: Variable index43788
+Node: Concept index46248
 
 End Tag Table
 
 
 Local Variables:
 coding: utf-8
+Info-documentlanguage: en
 End:

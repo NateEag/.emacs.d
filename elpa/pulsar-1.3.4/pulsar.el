@@ -1,11 +1,11 @@
 ;;; pulsar.el --- Pulse highlight on demand or after select functions -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2025  Free Software Foundation, Inc.
+;; Copyright (C) 2022-2026  Free Software Foundation, Inc.
 
 ;; Author: Protesilaos Stavrou <info@protesilaos.com>
 ;; Maintainer: Protesilaos Stavrou <info@protesilaos.com>
 ;; URL: https://github.com/protesilaos/pulsar
-;; Version: 1.3.1
+;; Version: 1.3.4
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: convenience, pulse, highlight
 
@@ -39,6 +39,7 @@
 ;;; Code:
 
 (require 'pulse)
+(eval-when-compile (require 'cl-lib))
 
 (defgroup pulsar ()
   "Pulse highlight line on demand or after running select functions.
@@ -85,6 +86,7 @@ pulse.  Only applies when `pulsar-pulse' is non-nil."
     evil-scroll-page-down
     evil-scroll-page-up
     evil-scroll-up
+    evil-window-next
     forward-page
     goto-line
     handle-switch-frame
@@ -232,7 +234,7 @@ background attribute."
   :package-version '(pulsar . "0.2.0")
   :group 'pulsar)
 
-(defcustom pulsar-highlight-face 'pulsar-face
+(defcustom pulsar-highlight-face pulsar-face
   "Face used by temporary or permanent static highlights.
 These are done by commands such as `pulsar-highlight-temporarily'
 and `pulsar-highlight-permanently'."
@@ -384,13 +386,51 @@ extended to the edge of the window."
       (pulsar--get-region-boundaries)
     (pulsar--get-line-boundaries)))
 
+(defvar pulsar-tty-color "red"
+  "Named color used in non-graphical frames.")
+
+;; NOTE 2026-02-25: The `cl-letf' in `pulsar--create-pulse' is to make
+;; Pulsar work in frames that normally do not produce a pulse, per `pulse-available-p'.
+;;
+;; The complete thread is here: <https://github.com/protesilaos/pulsar/issues/33>.
+;;
+;; Below is what I wrote with regard to the choice of `pulsar-tty-color':
+;;
+;;
+;;     For completeness, my rationale with the choice of colour is this:
+;;
+;;     - We are in an environment which does not guarantee accurate colour reproduction.
+;;     - It is almost a given that the frame supports at least 8 colours.
+;;     - Of those 8 colours we have black, red, green, yellow, blue, magenta, cyan, white.
+;;     - Excluding black and white, the colour that contrasts best against both black and white is red.
+;;     - Picking red means we do not need to know the background-mode of the frame, which saves us the extra computations.
+;;
+;;     The contrast table for the six colours, using Org, where Λ is an alias for modus-themes-contrast:
+;;
+;;     |         | #000000 | #ffffff |
+;;     |---------+---------+---------|
+;;     | #ff0000 |    5.25 |    4.00 |
+;;     | #00ff00 |   15.30 |    1.37 |
+;;     | #0000ff |    2.44 |    8.59 |
+;;     | #ffff00 |   19.56 |    1.07 |
+;;     | #ff00ff |    6.70 |    3.14 |
+;;     | #00ffff |   16.75 |    1.25 |
+;;     #+TBLFM: $2='(Λ $1 @1$2);%.2f :: $3='(Λ $1 @1$3);%.2f
 (defun pulsar--create-pulse (locus face)
   "Create a pulse spanning the LOCUS using FACE.
 LOCUS is a cons cell with two buffer positions."
-  (let ((overlay (make-overlay (car locus) (cdr locus))))
-    (overlay-put overlay 'pulse-delete t)
-    (overlay-put overlay 'window (frame-selected-window))
-    (pulse-momentary-highlight-overlay overlay face)))
+  (let ((common-fn (lambda (locus face)
+                     (let ((pulse-flag t)
+                           (pulse-delay pulsar-delay)
+                           (pulse-iterations pulsar-iterations)
+                           (overlay (make-overlay (car locus) (cdr locus))))
+                       (overlay-put overlay 'pulse-delete t)
+                       (overlay-put overlay 'window (frame-selected-window))
+                       (pulse-momentary-highlight-overlay overlay face)))))
+    (if (display-graphic-p)
+        (funcall common-fn locus face)
+      (cl-letf (((symbol-function 'face-background) (lambda (&rest _) pulsar-tty-color)))
+        (funcall common-fn locus face)))))
 
 (define-obsolete-function-alias
   'pulsar-pulse-region
@@ -402,10 +442,7 @@ LOCUS is a cons cell with two buffer positions."
   "Create a pulse highlight for the current line.
 Also see `pulsar-highlight-pulse'."
   (interactive)
-  (let ((pulse-delay pulsar-delay)
-        (pulse-flag t)
-        (pulse-iterations pulsar-iterations))
-    (pulsar--create-pulse (pulsar--get-line-boundaries) pulsar-face)))
+  (pulsar--create-pulse (pulsar--get-line-boundaries) pulsar-face))
 
 ;;;###autoload
 (defun pulsar-highlight-pulse (&optional locus)
@@ -419,10 +456,7 @@ Otherwise, LOCUS spans the current line.
 For highlights without a pulse, see `pulsar-highlight-temporarily' and
 `pulsar-highlight-permanently'."
   (interactive (list (pulsar--get-line-or-region-boundaries)))
-  (let ((pulse-flag t)
-        (pulse-delay pulsar-delay)
-        (pulse-iterations pulsar-iterations))
-    (pulsar--create-pulse locus pulsar-face)))
+  (pulsar--create-pulse locus pulsar-face))
 
 (define-obsolete-function-alias
   'pulsar-highlight-line
@@ -445,8 +479,11 @@ For a permanent highlight, see `pulsar-highlight-permanently'."
   (interactive (list (pulsar--get-line-or-region-boundaries)))
   (let ((pulse-flag nil)
         (pulse-delay nil)
-        (pulse-iterations nil))
-    (pulsar--create-pulse locus pulsar-highlight-face)))
+        (pulse-iterations nil)
+        (overlay (make-overlay (car locus) (cdr locus))))
+    (overlay-put overlay 'pulse-delete t)
+    (overlay-put overlay 'window (frame-selected-window))
+    (pulse-momentary-highlight-overlay overlay pulsar-highlight-face)))
 
 ;;;###autoload
 (defun pulsar-highlight-permanently (locus)

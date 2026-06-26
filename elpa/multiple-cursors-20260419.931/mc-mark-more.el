@@ -56,7 +56,7 @@
     beg))
 
 (defun mc/furthest-cursor-before-point ()
-  (let ((beg (if mark-active (min (mark) (point)) (point)))
+  (let ((beg (or (use-region-beginning) (point)))
         furthest)
     (mc/for-each-fake-cursor
      (when (< (mc/cursor-beg cursor) beg)
@@ -65,7 +65,7 @@
     furthest))
 
 (defun mc/furthest-cursor-after-point ()
-  (let ((end (if mark-active (max (mark) (point)) (point)))
+  (let ((end (or (use-region-end) (point)))
         furthest)
     (mc/for-each-fake-cursor
      (when (> (mc/cursor-end cursor) end)
@@ -309,7 +309,7 @@ With zero ARG, skip the last one and mark next."
     (mc/mark-previous-like-this arg)))
 
 (defun mc/mark-lines (num-lines direction)
-  (dotimes (i (if (= num-lines 0) 1 num-lines))
+  (dotimes (_ (if (= num-lines 0) 1 num-lines))
     (mc/save-excursion
      (let ((furthest-cursor (cl-ecase direction
                               (forwards  (mc/furthest-cursor-after-point))
@@ -500,10 +500,10 @@ remove the keymap depends on user input and KEEP-PRED:
 
 (defvar mc/mark-more-like-this-extended-keymap (make-sparse-keymap))
 
-(define-key mc/mark-more-like-this-extended-keymap (kbd "<up>") 'mc/mmlte--up)
-(define-key mc/mark-more-like-this-extended-keymap (kbd "<down>") 'mc/mmlte--down)
-(define-key mc/mark-more-like-this-extended-keymap (kbd "<left>") 'mc/mmlte--left)
-(define-key mc/mark-more-like-this-extended-keymap (kbd "<right>") 'mc/mmlte--right)
+(define-key mc/mark-more-like-this-extended-keymap (kbd "<up>") #'mc/mmlte--up)
+(define-key mc/mark-more-like-this-extended-keymap (kbd "<down>") #'mc/mmlte--down)
+(define-key mc/mark-more-like-this-extended-keymap (kbd "<left>") #'mc/mmlte--left)
+(define-key mc/mark-more-like-this-extended-keymap (kbd "<right>") #'mc/mmlte--right)
 
 ;;;###autoload
 (defun mc/mark-more-like-this-extended ()
@@ -706,7 +706,7 @@ already there."
     (mc/maybe-multiple-cursors-mode)))
 
 ;;;###autoload
-(defalias 'mc/add-cursor-on-click 'mc/toggle-cursor-on-click)
+(defalias 'mc/add-cursor-on-click #'mc/toggle-cursor-on-click)
 
 ;;;###autoload
 (defun mc/mark-sgml-tag-pair ()

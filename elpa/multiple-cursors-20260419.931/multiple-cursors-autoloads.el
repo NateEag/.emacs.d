@@ -61,8 +61,6 @@ evaluate the variable `mc-hide-unmatched-lines-mode'.
 The mode's hook is called both when the mode is enabled and when it is
 disabled.
 
-\\{hum/hide-unmatched-lines-mode-map}
-
 (fn &optional ARG)" t)
 (register-definition-prefixes "mc-hide-unmatched-lines-mode" '("hum/"))
 
@@ -226,7 +224,7 @@ Add a cursor where you click, or remove a fake cursor that is
 already there.
 
 (fn EVENT)" t)
-(defalias 'mc/add-cursor-on-click 'mc/toggle-cursor-on-click)
+(defalias 'mc/add-cursor-on-click #'mc/toggle-cursor-on-click)
 (autoload 'mc/mark-sgml-tag-pair "mc-mark-more" "\
 Mark the tag we're in and its pair for renaming." t)
 (register-definition-prefixes "mc-mark-more" '("mc--" "mc/"))
@@ -287,8 +285,6 @@ evaluate the variable `multiple-cursors-mode'.
 
 The mode's hook is called both when the mode is enabled and when it is
 disabled.
-
-\\{mc/keymap}
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "multiple-cursors-core" '("deactivate-cursor-after-undo" "mc--" "mc/" "unsupported-cmd"))

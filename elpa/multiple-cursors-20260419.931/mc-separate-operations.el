@@ -1,4 +1,4 @@
-;;; mc-separate-operations.el - functions that work differently on each cursor  -*- lexical-binding: t; -*-
+;;; mc-separate-operations.el --- Functions that work differently on each cursor  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2012-2016 Magnar Sveen
 
@@ -118,7 +118,7 @@
   (interactive)
   (unless (use-region-p)
     (mc/execute-command-for-all-cursors 'mark-sexp))
-  (setq mc--strings-to-replace (sort (mc--ordered-region-strings) 'string<))
+  (setq mc--strings-to-replace (sort (mc--ordered-region-strings) #'string<))
   (mc--replace-region-strings))
 
 

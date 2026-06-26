@@ -73,7 +73,7 @@
          (cursors-after-point (cl-remove-if (lambda (cursor)
                                               (< (mc/cursor-beg cursor) point))
                                             cursors))
-         (cursors-in-order (cl-sort cursors-after-point '< :key 'mc/cursor-beg)))
+         (cursors-in-order (cl-sort cursors-after-point #'< :key #'mc/cursor-beg)))
     (car cursors-in-order)))
 
 (defun mc/last-fake-cursor-before (point)
@@ -82,7 +82,7 @@
          (cursors-before-point (cl-remove-if (lambda (cursor)
                                                (> (mc/cursor-end cursor) point))
                                              cursors))
-         (cursors-in-order (cl-sort cursors-before-point '> :key 'mc/cursor-end)))
+         (cursors-in-order (cl-sort cursors-before-point #'> :key #'mc/cursor-end)))
     (car cursors-in-order)))
 
 (cl-defun mc/cycle (next-cursor fallback-cursor loop-message)
@@ -110,8 +110,8 @@
             (mc/last-fake-cursor-before (point-max))
             "We're already at the last cursor"))
 
-(define-key mc/keymap (kbd "C-v") 'mc/cycle-forward)
-(define-key mc/keymap (kbd "M-v") 'mc/cycle-backward)
+(define-key mc/keymap (kbd "C-v") #'mc/cycle-forward)
+(define-key mc/keymap (kbd "M-v") #'mc/cycle-backward)
 
 (provide 'mc-cycle-cursors)
 

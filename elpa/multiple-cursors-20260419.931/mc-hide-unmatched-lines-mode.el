@@ -35,8 +35,8 @@
 (defvar hum/hide-unmatched-lines-mode-map (make-sparse-keymap)
   "Keymap for hide unmatched lines is mainly for rebinding C-g")
 
-(define-key hum/hide-unmatched-lines-mode-map (kbd "C-g") 'hum/keyboard-quit)
-(define-key hum/hide-unmatched-lines-mode-map (kbd "<return>") 'hum/keyboard-quit)
+(define-key hum/hide-unmatched-lines-mode-map (kbd "C-g") #'hum/keyboard-quit)
+(define-key hum/hide-unmatched-lines-mode-map (kbd "<return>") #'hum/keyboard-quit)
 
 (defun hum/keyboard-quit ()
   "Leave hide-unmatched-lines mode"
@@ -61,10 +61,10 @@ mode. To leave this mode press <return> or \"C-g\""
       ;;just in case if mc mode will be disabled while hide-unmatched-lines is active
       (progn
         (hum/hide-unmatched-lines)
-        (add-hook 'multiple-cursors-mode-disabled-hook 'hum/disable-hum-mode t t))
+        (add-hook 'multiple-cursors-mode-disabled-hook #'hum/disable-hum-mode t t))
     (progn
       (hum/unhide-unmatched-lines)
-      (remove-hook 'multiple-cursors-mode-disabled-hook 'hum/disable-hum-mode))))
+      (remove-hook 'multiple-cursors-mode-disabled-hook #'hum/disable-hum-mode))))
 
 (defconst hum/invisible-overlay-name 'hum/invisible-overlay-name)
 
@@ -104,6 +104,6 @@ mode. To leave this mode press <return> or \"C-g\""
 (defun hum/unhide-unmatched-lines ()
   (remove-overlays nil nil hum/invisible-overlay-name t))
 
-(define-key mc/keymap (kbd "C-'") 'mc-hide-unmatched-lines-mode)
+(define-key mc/keymap (kbd "C-'") #'mc-hide-unmatched-lines-mode)
 
 (provide 'mc-hide-unmatched-lines-mode)

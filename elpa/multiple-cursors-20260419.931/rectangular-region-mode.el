@@ -35,8 +35,8 @@
 (defvar rectangular-region-mode-map (make-sparse-keymap)
   "Keymap for rectangular region is mainly for rebinding C-g")
 
-(define-key rectangular-region-mode-map (kbd "C-g") 'rrm/keyboard-quit)
-(define-key rectangular-region-mode-map (kbd "<return>") 'rrm/switch-to-multiple-cursors)
+(define-key rectangular-region-mode-map (kbd "C-g") #'rrm/keyboard-quit)
+(define-key rectangular-region-mode-map (kbd "<return>") #'rrm/switch-to-multiple-cursors)
 
 (defvar rectangular-region-mode nil)
 
@@ -71,16 +71,17 @@ multiple cursors to multiple lines."
 (defun rrm/repaint ()
   "Start from the anchor and draw a rectangle between it and point."
   (if (not rectangular-region-mode)
-      (remove-hook 'post-command-hook 'rrm/repaint t)
+      (remove-hook 'post-command-hook #'rrm/repaint t)
     ;; else
+    (defvar annoying-arrows-mode)
     (rrm/remove-rectangular-region-overlays)
     (let* ((annoying-arrows-mode nil)
            (point-column (current-column))
            (point-line (mc/line-number-at-pos))
            (anchor-column (save-excursion (goto-char rrm/anchor) (current-column)))
            (anchor-line (save-excursion (goto-char rrm/anchor) (mc/line-number-at-pos)))
-           (left-column (if (< point-column anchor-column) point-column anchor-column))
-           (right-column (if (> point-column anchor-column) point-column anchor-column))
+           ;; (left-column (if (< point-column anchor-column) point-column anchor-column))
+           ;; (right-column (if (> point-column anchor-column) point-column anchor-column))
            (navigation-step (if (< point-line anchor-line) 1 -1)))
       (move-to-column anchor-column)
       (set-mark (point))
@@ -95,17 +96,15 @@ multiple cursors to multiple lines."
            (when (= point-column (current-column))
              (mc/create-fake-cursor-at-point))))))))
 
-(defun rrm/switch-to-multiple-cursors (&rest forms)
-  "Switch from rectangular-region-mode to multiple-cursors-mode."
+(defun rrm/switch-to-multiple-cursors (&rest _)
+  "Switch from `rectangular-region-mode' to `multiple-cursors-mode'."
   (interactive)
   (rectangular-region-mode 0)
   (multiple-cursors-mode 1))
 
-(defadvice er/expand-region (before switch-from-rrm-to-mc activate)
-  (when rectangular-region-mode
-    (rrm/switch-to-multiple-cursors)))
-
-(defadvice kill-ring-save (before switch-from-rrm-to-mc activate)
+(advice-add 'er/expand-region :before #'rrm//switch-from-rrm-to-mc)
+(advice-add 'kill-ring-save :before #'rrm//switch-from-rrm-to-mc)
+(defun rrm//switch-from-rrm-to-mc (&rest _)
   (when rectangular-region-mode
     (rrm/switch-to-multiple-cursors)))
 
@@ -117,10 +116,10 @@ multiple cursors to multiple lines."
   :keymap rectangular-region-mode-map
   (if rectangular-region-mode
       (progn
-        (add-hook 'after-change-functions 'rrm/switch-to-multiple-cursors t t)
-        (add-hook 'post-command-hook 'rrm/repaint t t))
-    (remove-hook 'after-change-functions 'rrm/switch-to-multiple-cursors t)
-    (remove-hook 'post-command-hook 'rrm/repaint t)
+        (add-hook 'after-change-functions #'rrm/switch-to-multiple-cursors t t)
+        (add-hook 'post-command-hook #'rrm/repaint t t))
+    (remove-hook 'after-change-functions #'rrm/switch-to-multiple-cursors t)
+    (remove-hook 'post-command-hook #'rrm/repaint t)
     (set-marker rrm/anchor nil)))
 
 (provide 'rectangular-region-mode)

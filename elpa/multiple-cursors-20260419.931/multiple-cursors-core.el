@@ -1,4 +1,4 @@
-;;; multiple-cursors-core.el --- An experiment in multiple cursors for emacs.  -*- lexical-binding: t; -*-
+;;; multiple-cursors-core.el --- An experiment in multiple cursors for Emacs  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2012-2016 Magnar Sveen
 
@@ -67,7 +67,7 @@ rendered or shift text."
                (cons (cons 'apply (cons 'activate-cursor-for-undo (list id))) buffer-undo-list))))))
 
 (defun mc/all-fake-cursors (&optional start end)
-  (cl-remove-if-not 'mc/fake-cursor-p
+  (cl-remove-if-not #'mc/fake-cursor-p
                     (overlays-in (or start (point-min))
                                  (or end   (point-max)))))
 
@@ -95,7 +95,7 @@ rendered or shift text."
        (mapc #'(lambda (cursor)
                  (when (mc/fake-cursor-p cursor)
                    ,@forms))
-             (sort (overlays-in (point-min) (point-max)) 'mc--compare-by-overlay-start))
+             (sort (overlays-in (point-min) (point-max)) #'mc--compare-by-overlay-start))
        (mc/pop-state-from-overlay (mc/cursor-with-id ,rci)))))
 
 (defmacro mc/save-window-scroll (&rest forms)
@@ -123,18 +123,20 @@ rendered or shift text."
         (and (listp cursor-type)
              (eq (car cursor-type) 'bar)))))
 
-(defun mc/line-number-at-pos (&optional pos absolute)
-  "Faster implementation of `line-number-at-pos'."
-  (if pos
-      (save-excursion
-        (if absolute
-            (save-restriction
-              (widen)
-              (goto-char pos)
-              (string-to-number (format-mode-line "%l")))
-          (goto-char pos)
-          (string-to-number (format-mode-line "%l"))))
-    (string-to-number (format-mode-line "%l"))))
+(if (>= emacs-major-version 28)
+    (defalias 'mc/line-number-at-pos #'line-number-at-pos)
+  (defun mc/line-number-at-pos (&optional pos absolute)
+    "Faster implementation of `line-number-at-pos'."
+    (if pos
+        (save-excursion
+          (if absolute
+              (save-restriction
+                (widen)
+                (goto-char pos)
+                (string-to-number (format-mode-line "%l")))
+            (goto-char pos)
+            (string-to-number (format-mode-line "%l"))))
+      (string-to-number (format-mode-line "%l")))))
 
 (defun mc/make-cursor-overlay-at-eol (pos)
   "Create overlay to look like cursor at end of line."
@@ -288,6 +290,8 @@ makes sense for fake cursors."
 (defvar mc--executing-command-for-fake-cursor nil)
 
 (defun mc/execute-command-for-fake-cursor (cmd cursor)
+  (defvar annoying-arrows-mode)
+  (defvar smooth-scroll-margin)
   (let ((mc--executing-command-for-fake-cursor t)
         (id (overlay-get cursor 'mc-id))
         (annoying-arrows-mode nil)
@@ -579,7 +583,7 @@ which action is being undone."
 
 (defun mc/num-cursors ()
   "The number of cursors (real and fake) in the buffer."
-  (1+ (cl-count-if 'mc/fake-cursor-p
+  (1+ (cl-count-if #'mc/fake-cursor-p
                    (overlays-in (point-min) (point-max)))))
 
 (defvar mc--this-command nil
@@ -611,9 +615,10 @@ not be recognized through the command-remapping lookup."
 ;; execute-kbd-macro should never be run for fake cursors. The real cursor will
 ;; execute the keyboard macro, resulting in new commands in the command loop,
 ;; and the fake cursors can pick up on those instead.
-(defadvice execute-kbd-macro (around skip-fake-cursors activate)
+(advice-add 'execute-kbd-macro :around #'mc--skip-fake-cursors)
+(defun mc--skip-fake-cursors (orig-fun &rest args)
   (unless mc--executing-command-for-fake-cursor
-    ad-do-it))
+    (apply orig-fun args)))
 
 (defun mc/execute-this-command-for-all-cursors-1 ()
   "Used with post-command-hook to execute supported commands for all cursors.
@@ -692,7 +697,7 @@ you should disable multiple-cursors-mode."
     (mc/execute-command-for-all-fake-cursors
      (lambda () (interactive)
        (cl-letf (((symbol-function 'read-from-minibuffer)
-                  (lambda (p &optional i k r h d m) (read i))))
+                  (lambda (_p &optional i &rest _) (read i))))
          (repeat-complex-command 0))))))
 
 (defvar mc/keymap nil
@@ -701,13 +706,13 @@ Main goal of the keymap is to rebind C-g and <return> to conclude
 multiple cursors editing.")
 (unless mc/keymap
   (setq mc/keymap (make-sparse-keymap))
-  (define-key mc/keymap (kbd "C-g") 'mc/keyboard-quit)
-  (define-key mc/keymap (kbd "<return>") 'multiple-cursors-mode)
-  (define-key mc/keymap (kbd "C-:") 'mc/repeat-command)
+  (define-key mc/keymap (kbd "C-g") #'mc/keyboard-quit)
+  (define-key mc/keymap (kbd "<return>") #'multiple-cursors-mode)
+  (define-key mc/keymap (kbd "C-:") #'mc/repeat-command)
   (when (fboundp 'phi-search)
-    (define-key mc/keymap (kbd "C-s") 'phi-search))
+    (define-key mc/keymap (kbd "C-s") #'phi-search))
   (when (fboundp 'phi-search-backward)
-    (define-key mc/keymap (kbd "C-r") 'phi-search-backward)))
+    (define-key mc/keymap (kbd "C-r") #'phi-search-backward)))
 
 (defun mc--all-equal (list)
   "Are all the items in LIST equal?"
@@ -748,13 +753,13 @@ They are temporarily disabled when multiple-cursors are active.")
     (funcall mode -1)))
 
 (defun mc/temporarily-disable-unsupported-minor-modes ()
-  (mapc 'mc/temporarily-disable-minor-mode mc/unsupported-minor-modes))
+  (mapc #'mc/temporarily-disable-minor-mode mc/unsupported-minor-modes))
 
 (defun mc/enable-minor-mode (mode)
   (funcall mode 1))
 
 (defun mc/enable-temporarily-disabled-minor-modes ()
-  (mapc 'mc/enable-minor-mode mc/temporarily-disabled-minor-modes)
+  (mapc #'mc/enable-minor-mode mc/temporarily-disabled-minor-modes)
   (setq mc/temporarily-disabled-minor-modes nil))
 
 (defcustom mc/mode-line
@@ -774,11 +779,11 @@ They are temporarily disabled when multiple-cursors are active.")
   (if multiple-cursors-mode
       (progn
         (mc/temporarily-disable-unsupported-minor-modes)
-        (add-hook 'pre-command-hook 'mc/make-a-note-of-the-command-being-run nil t)
-        (add-hook 'post-command-hook 'mc/execute-this-command-for-all-cursors t t)
+        (add-hook 'pre-command-hook #'mc/make-a-note-of-the-command-being-run nil t)
+        (add-hook 'post-command-hook #'mc/execute-this-command-for-all-cursors t t)
         (run-hooks 'multiple-cursors-mode-enabled-hook))
-    (remove-hook 'post-command-hook 'mc/execute-this-command-for-all-cursors t)
-    (remove-hook 'pre-command-hook 'mc/make-a-note-of-the-command-being-run t)
+    (remove-hook 'post-command-hook #'mc/execute-this-command-for-all-cursors t)
+    (remove-hook 'pre-command-hook #'mc/make-a-note-of-the-command-being-run t)
     (setq mc--this-command nil)
     (mc--maybe-set-killed-rectangle)
     (mc/remove-fake-cursors)
@@ -790,7 +795,7 @@ They are temporarily disabled when multiple-cursors are active.")
   (multiple-cursors-mode 0)
   (run-hooks 'multiple-cursors-mode-disabled-hook))
 
-(add-hook 'after-revert-hook 'mc/disable-multiple-cursors-mode)
+(add-hook 'after-revert-hook #'mc/disable-multiple-cursors-mode)
 
 (defun mc/maybe-multiple-cursors-mode ()
   "Enable multiple-cursors-mode if there is more than one currently active cursor."
@@ -798,23 +803,26 @@ They are temporarily disabled when multiple-cursors are active.")
       (multiple-cursors-mode 1)
     (mc/disable-multiple-cursors-mode)))
 
+(defun mc--unsupported-advice (orig-fun &rest args)
+  "command isn't supported with multiple cursors."
+  (unless (and multiple-cursors-mode (called-interactively-p 'any))
+    (apply orig-fun args)))
+
 (defmacro unsupported-cmd (cmd msg)
   "Adds command to list of unsupported commands and prevents it
 from being executed if in multiple-cursors-mode."
   `(progn
-     (put (quote ,cmd) 'mc--unsupported ,msg)
-     (defadvice ,cmd (around unsupported-advice activate)
-       "command isn't supported with multiple cursors"
-       (unless (and multiple-cursors-mode (called-interactively-p 'any))
-         ad-do-it))))
+     (put ',cmd 'mc--unsupported ,msg)
+     (advice-add ',cmd :around #'mc--unsupported-advice)))
 
 ;; Commands that does not work with multiple-cursors
 (unsupported-cmd isearch-forward ". Feel free to add a compatible version.")
 (unsupported-cmd isearch-backward ". Feel free to add a compatible version.")
 
 ;; Make sure pastes from other programs are added to all kill-rings when yanking
-(defadvice current-kill (before interprogram-paste-for-all-cursors
-        (n &optional do-not-move) activate)
+(advice-add 'current-kill :before #'mc--interprogram-paste-for-all-cursors)
+(defun mc--interprogram-paste-for-all-cursors (n &rest _)
+  ;; FIXME: Shouldn't we check `multiple-cursors-mode' or something?
   (let ((interprogram-paste (and (= n 0)
                                  interprogram-paste-function
                                  (funcall interprogram-paste-function))))
@@ -825,7 +833,7 @@ from being executed if in multiple-cursors-mode."
       ;; something once. It is not a pure function.
       (let ((interprogram-cut-function nil))
         (if (listp interprogram-paste)
-            (mapc 'kill-new (nreverse interprogram-paste))
+            (mapc #'kill-new (nreverse interprogram-paste))
           (kill-new interprogram-paste))
         ;; And then add interprogram-paste to the kill-rings
         ;; of all the other cursors too.
@@ -833,12 +841,13 @@ from being executed if in multiple-cursors-mode."
          (let ((kill-ring (overlay-get cursor 'kill-ring))
                (kill-ring-yank-pointer (overlay-get cursor 'kill-ring-yank-pointer)))
            (if (listp interprogram-paste)
-               (mapc 'kill-new (nreverse interprogram-paste))
+               (mapc #'kill-new (nreverse interprogram-paste))
              (kill-new interprogram-paste))
            (overlay-put cursor 'kill-ring kill-ring)
            (overlay-put cursor 'kill-ring-yank-pointer kill-ring-yank-pointer)))))))
 
-(defadvice execute-extended-command (after execute-extended-command-for-all-cursors () activate)
+(advice-add 'execute-extended-command :after #'mc--execute-extended-command-for-all-cursors)
+(defun mc--execute-extended-command-for-all-cursors (&rest _)
   (when multiple-cursors-mode
     (unless (or mc/always-run-for-all
                 (not (symbolp this-command))
@@ -868,7 +877,7 @@ for running commands with multiple cursors."
     (setq mc--list-file-loaded t)))
 
 (defun mc/dump-list (list-symbol)
-  "Insert (setq 'LIST-SYMBOL LIST-VALUE) to current buffer."
+  "Insert (setq LIST-SYMBOL LIST-VALUE) to current buffer."
   (cl-symbol-macrolet ((value (symbol-value list-symbol)))
     (insert "(setq " (symbol-name list-symbol) "\n"
             "      '(")

@@ -10,8 +10,7 @@
 ;;; Commentary:
 
 ;; This library provides an EmacSQL back-end for PostgreSQL, which
-;; uses the `pg' package to directly speak to the database.  This
-;; library requires at least Emacs 28.1.
+;; uses the `pg' package to directly speak to the database.
 
 ;; (For an alternative back-end for PostgreSQL, see `emacsql-psql'.)
 
@@ -19,14 +18,10 @@
 
 (require 'emacsql)
 
-(if (>= emacs-major-version 28)
-    (require 'pg nil t)
-  (message "emacsql-pg.el requires Emacs 28.1 or later"))
-(declare-function pg-connect "ext:pg"
-                  ( dbname user &optional
-                    (password "") (host "localhost") (port 5432) (tls nil)))
+(require 'pg nil t)
+(declare-function pg-connect-plist "ext:pg")
 (declare-function pg-disconnect "ext:pg" (con))
-(declare-function pg-exec "ext:pg" (connection &rest args))
+(declare-function pg-exec "ext:pg" (con &rest args))
 (declare-function pg-result "ext:pg" (result what &rest arg))
 
 (defclass emacsql-pg-connection (emacsql-connection)
@@ -41,11 +36,14 @@
                       (nil "TEXT"))))
   "A connection to a PostgreSQL database via pg.el.")
 
-(cl-defun emacsql-pg (dbname user &key
-                             (host "localhost") (password "") (port 5432) debug)
+(cl-defun emacsql-pg ( dbname user &key
+                       (host "localhost") (password nil) (port 5432) debug)
   "Connect to a PostgreSQL server using pg.el."
   (require 'pg)
-  (let* ((pgcon (pg-connect dbname user password host port))
+  (let* ((pgcon (pg-connect-plist dbname user
+                                  :password password
+                                  :host host
+                                  :port port))
          (connection (make-instance 'emacsql-pg-connection
                                     :handle (and (fboundp 'pgcon-process)
                                                  (pgcon-process pgcon))

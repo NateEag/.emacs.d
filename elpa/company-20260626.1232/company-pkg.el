@@ -1,9 +1,10 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "company" "20251021.2211"
+(define-package "company" "20260626.1232"
   "Modular text completion framework."
-  '((emacs "26.1"))
+  '((emacs    "26.1")
+    (posframe "1.5.1"))
   :url "http://company-mode.github.io/"
-  :commit "4ff89f7369227fbb89fe721d1db707f1af74cd0f"
-  :revdesc "4ff89f736922"
+  :commit "0c0ebcdd52d494a1ff4e0225d3f37ce1cfe9b849"
+  :revdesc "0c0ebcdd52d4"
   :keywords '("abbrev" "convenience" "matching")
   :maintainers '(("Dmitry Gutov" . "dmitry@gutov.dev")))

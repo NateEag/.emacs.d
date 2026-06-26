@@ -9,7 +9,8 @@ Copyright © 2021-2024 Free Software Foundation, Inc.
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation.
+     Foundation, with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.
 INFO-DIR-SECTION Emacs misc features
 START-INFO-DIR-ENTRY
 * Company: (company).           A modular text completion framework.
@@ -35,7 +36,8 @@ Copyright © 2021-2024 Free Software Foundation, Inc.
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation.
+     Foundation, with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.
 
 * Menu:
 
@@ -353,11 +355,11 @@ core settings that influence its overall behavior.
 
  -- User Option: company-minimum-prefix-length
      This is one of the values (together with ‘company-idle-delay’),
-     based on which Company auto-stars looking up completion candidates.
-     This option configures how many characters have to be typed in by a
-     user before candidates start to be collected and displayed.  An
-     often choice nowadays is to configure this option to a lower number
-     than the default value of ‘3’.
+     based on which Company auto-starts looking up completion
+     candidates.  This option configures how many characters have to be
+     typed in by a user before candidates start to be collected and
+     displayed.  An often choice nowadays is to configure this option to
+     a lower number than the default value of ‘3’.
 
  -- User Option: company-idle-delay
      This is the second of the options that configure Company’s
@@ -1775,45 +1777,45 @@ Concept Index
 
 
 Tag Table:
-Node: Top573
-Node: Overview2002
-Node: Terminology2410
-Node: Structure3717
-Node: Getting Started5208
-Node: Installation5486
-Node: Initial Setup5869
-Node: Usage Basics6717
-Node: Commands7695
-Ref: Commands-Footnote-110093
-Node: Customization10260
-Node: Customization Interface10732
-Node: Configuration File11265
-Ref: company-selection-wrap-around13579
-Node: Frontends16072
-Node: Tooltip Frontends17041
-Ref: Tooltip Frontends-Footnote-127755
-Node: Preview Frontends27992
-Ref: Preview Frontends-Footnote-129250
-Node: Echo Frontends29377
-Node: Candidates Search30910
-Node: Filter Candidates32244
-Node: Quick Access a Candidate33024
-Node: Backends34642
-Node: Backends Usage Basics35672
-Ref: Backends Usage Basics-Footnote-137104
-Node: Grouped Backends37188
-Node: Package Backends38699
-Node: Code Completion39628
-Node: Text Completion45155
-Node: File Name Completion49589
-Node: Template Expansion51137
-Node: Candidates Post-Processing51856
-Node: Troubleshooting54433
-Node: Index56106
-Node: Key Index56269
-Node: Variable Index57768
-Node: Function Index62621
-Node: Concept Index67321
+Node: Top653
+Node: Overview2162
+Node: Terminology2570
+Node: Structure3877
+Node: Getting Started5368
+Node: Installation5646
+Node: Initial Setup6029
+Node: Usage Basics6877
+Node: Commands7855
+Ref: Commands-Footnote-110253
+Node: Customization10420
+Node: Customization Interface10892
+Node: Configuration File11425
+Ref: company-selection-wrap-around13741
+Node: Frontends16234
+Node: Tooltip Frontends17203
+Ref: Tooltip Frontends-Footnote-127917
+Node: Preview Frontends28154
+Ref: Preview Frontends-Footnote-129412
+Node: Echo Frontends29539
+Node: Candidates Search31072
+Node: Filter Candidates32406
+Node: Quick Access a Candidate33186
+Node: Backends34804
+Node: Backends Usage Basics35834
+Ref: Backends Usage Basics-Footnote-137266
+Node: Grouped Backends37350
+Node: Package Backends38861
+Node: Code Completion39790
+Node: Text Completion45317
+Node: File Name Completion49751
+Node: Template Expansion51299
+Node: Candidates Post-Processing52018
+Node: Troubleshooting54595
+Node: Index56268
+Node: Key Index56431
+Node: Variable Index57930
+Node: Function Index62783
+Node: Concept Index67483
 
 End Tag Table
 

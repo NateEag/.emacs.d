@@ -114,6 +114,20 @@ inserted." t)
 (register-definition-prefixes "company-capf" '("company-"))
 
 
+;;; Generated autoloads from company-childframe.el
+
+(autoload 'company-childframe-frontend "company-childframe" "\
+`company-mode' frontend using childframe.
+For COMMAND refer to `company-frontends'.
+
+(fn COMMAND)")
+(autoload 'company-childframe-unless-just-one-frontend "company-childframe" "\
+`company-childframe-frontend', but not shown for single candidates.
+
+(fn COMMAND)")
+(register-definition-prefixes "company-childframe" '("company-childframe-"))
+
+
 ;;; Generated autoloads from company-clang.el
 
 (register-definition-prefixes "company-clang" '("company-clang"))

@@ -1,9 +1,9 @@
 ;;; git-link.el --- Get the GitHub/Bitbucket/GitLab URL for a buffer location -*- lexical-binding: t -*-
 
-;; Copyright (C) 2013-2025 Skye Shaw and others
+;; Copyright (C) 2013-2026 Skye Shaw and others
 ;; Author: Skye Shaw <skye.shaw@gmail.com>
-;; Package-Version: 20251116.105
-;; Package-Revision: 12caebc0982d
+;; Package-Version: 20260612.337
+;; Package-Revision: 3870ae57408d
 ;; Keywords: git, vc, github, bitbucket, gitlab, sourcehut, aws, azure, convenience
 ;; URL: http://github.com/sshaw/git-link
 ;; Package-Requires: ((emacs "24.3"))
@@ -36,6 +36,11 @@
 
 ;;; Change Log:
 
+;; 2026-04-29 - v0.11.0
+;; * Add: forge.fedoraproject.org as a codeberg instance (Issue #150, thanks Jakub Kadlcik)
+;; * Add: magit-buffer-revision fallback when using git-link-commit in magit revision buffer (Thanks Jakub Kadlcik)
+;; * Add: codeberg.org to git-link-homepage-remote-alist (Issue #152, thanks Kyrre Havik)
+;;
 ;; 2025-10-23 - v0.10.0
 ;; * Add: support for linking to custom web hosts (Issue #136, thanks Sebastian Poeplau)
 ;; * Add: Transient menu interface (Issues #128 and #132, thanks Yikai Zhao and David Morgan)
@@ -288,6 +293,7 @@ As an example, \"gitlab\" will match with both \"gitlab.com\" and
 
 (defcustom git-link-homepage-remote-alist
   '(("git.sr.ht" git-link-homepage-github)
+    ("codeberg.org" git-link-homepage-codeberg)
     ("github" git-link-homepage-github)
     ("bitbucket" git-link-homepage-github)
     ("gitorious" git-link-homepage-github)
@@ -361,7 +367,8 @@ If you want \\='http://\\=' instead prefix the host with it:
   (git-link--exec "remote"))
 
 (defun git-link--last-commit ()
-  (car (git-link--exec "--no-pager" "log" "-n1" "--pretty=format:%H")))
+  (car (git-link--exec
+        "--no-pager" "log" "-n1" "--no-show-signature" "--pretty=format:%H")))
 
 (defvar magit-buffer-revision)
 
@@ -850,6 +857,9 @@ is prepended to it."
       (git-link--read-remote)
     (git-link--remote)))
 
+(defun git-link--commit-hash-p (commit)
+  (string-match-p "[a-fA-F0-9]\\{7,40\\}" (or commit "")))
+
 (defun git-link--should-render-plain (filename)
   "Check if the extension of the given filename belongs
 to the list of extensions which generated link should be
@@ -952,15 +962,20 @@ Defaults to \"origin\"."
     (if (null remote-url)
         (message "Remote `%s' not found" remote)
 
+      (setq commit (word-at-point))
+      (when (and (not (git-link--commit-hash-p commit))
+                 (derived-mode-p 'magit-revision-mode)
+                 (boundp 'magit-buffer-revision))
+        (setq commit magit-buffer-revision))
+
       (setq remote-info (git-link--parse-remote remote-url)
             git-host (car remote-info)
-            commit (word-at-point)
             handler (git-link--handler git-link-commit-remote-alist git-host)
             web-host (git-link--web-host git-host))
 
       (cond ((null git-host)
              (message "Remote `%s' contains an unsupported URL" remote))
-            ((not (string-match-p "[a-fA-F0-9]\\{7,40\\}" (or commit "")))
+            ((not (git-link--commit-hash-p commit))
              (message "Point is not on a commit hash"))
             ((not (functionp handler))
              (message "No handler for %s" git-host))

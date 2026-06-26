@@ -5,8 +5,8 @@
 ;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
 ;; Created: 17 Nov 2012
-;; Package-Version: 20250612.1050
-;; Package-Revision: b629b4e893ba
+;; Package-Version: 20260129.1214
+;; Package-Revision: 82d2cf084a19
 ;; Package-Requires: ((dash "2.13.0"))
 ;; Keywords: abbrev convenience editing
 ;; URL: https://github.com/Fuco1/smartparens
@@ -624,6 +624,7 @@ Symbol is defined as a chunk of text recognized by
 (defcustom sp-no-reindent-after-kill-modes '(
                                              python-mode
                                              python-ts-mode
+                                             purescript-mode
                                              coffee-mode
                                              asm-mode
                                              makefile-gmake-mode

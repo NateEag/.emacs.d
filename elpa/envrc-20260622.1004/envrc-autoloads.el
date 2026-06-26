@@ -57,7 +57,24 @@ envrc-direnv-executable))) (envrc-mode 1)))' would do it.
 
 See `envrc-mode' for more information on Envrc mode.
 
+`envrc-global-modes' is used to control which modes this minor mode is used
+in.
+
 (fn &optional ARG)" t)
+(defvar envrc-global-modes t "\
+Which major modes `envrc-mode' is switched on in.
+This variable can be either t (all major modes), nil (no major modes),
+or a list of modes and (not modes) to switch use this minor mode or
+not.  For instance
+
+  (c-mode (not message-mode mail-mode) text-mode)
+
+means \"use this mode in all modes derived from `c-mode', don't use in
+modes derived from `message-mode' or `mail-mode', but do use in other
+modes derived from `text-mode'\".  An element with value t means \"use\"
+and nil means \"don't use\".  There's an implicit nil at the end of the
+list.")
+(custom-autoload 'envrc-global-modes "envrc" t)
 (autoload 'envrc-file-mode "envrc" "\
 Major mode for .envrc files as used by direnv.
 \\{envrc-file-mode-map}

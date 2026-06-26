@@ -1,13 +1,13 @@
 ;;; envrc.el --- Support for `direnv' that operates buffer-locally  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2020  Steve Purcell
+;; Copyright (C) 2020-2026  Steve Purcell
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: processes, tools
 ;; Homepage: https://github.com/purcell/envrc
-;; Package-Requires: ((emacs "27.1") (inheritenv "0.1") (seq "2.24"))
-;; Package-Version: 20250917.915
-;; Package-Revision: de1ae6e53876
+;; Package-Requires: ((emacs "28.1") (inheritenv "0.1") (seq "2.24"))
+;; Package-Version: 20260622.1004
+;; Package-Revision: 77e9dec1563b
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -162,7 +162,8 @@ e.g. (define-key envrc-mode-map (kbd \"C-c e\") \\='envrc-command-map)"
                 envrc-supported-tramp-methods
                 (with-parsed-tramp-file-name default-directory vec vec-method))))
          (t (executable-find envrc-direnv-executable)))
-      (envrc-mode 1))))
+      (envrc-mode 1)))
+  :predicate t)
 
 (defface envrc-mode-line-on-face '((t :inherit success))
   "Face used in mode line to indicate that direnv is in effect.")
@@ -369,12 +370,12 @@ also appear in PAIRS."
   "Update BUF with RESULT, which is a result of `envrc--export'."
   (with-current-buffer buf
     (setq-local envrc--status (if (listp result) 'on result))
+    (envrc--clear buf)
     (if (memq result '(none error))
         (progn
-          (envrc--clear buf)
           (envrc--debug "[%s] reset environment to default" buf))
       (envrc--debug "[%s] applied merged environment" buf)
-      (let* ((remote (when-let* ((fn (buffer-file-name buf)))
+      (let* ((remote (when-let* ((fn (or (buffer-file-name buf) default-directory)))
                        (file-remote-p fn)))
              (env (envrc--merged-environment
                    (default-value (if remote
@@ -390,15 +391,15 @@ also appear in PAIRS."
         (if remote
             (setq-local envrc--remote-path parsed-path)
           (setq-local exec-path parsed-path))
-        (when (derived-mode-p 'eshell-mode)
-          (if (fboundp 'eshell-set-path)
-              (eshell-set-path path)
-            (setq-local eshell-path-env path)))
-        (when-let* ((info-path (getenv-internal "INFOPATH" env)))
-          (setq-local Info-directory-list
-                      (append (seq-filter #'identity (parse-colon-path info-path))
-                              (when (boundp 'Info-directory-list)
-                                (default-value 'Info-directory-list)))))))))
+        (cond ((derived-mode-p 'eshell-mode)
+               (if (fboundp 'eshell-set-path)
+                   (eshell-set-path path)
+                 (setq-local eshell-path-env path)))
+              ((derived-mode-p 'Info-mode)
+               (when-let* ((info-path (getenv-internal "INFOPATH" env)))
+                 (setq-local Info-directory-list
+                             (append (seq-filter #'identity (parse-colon-path info-path))
+                                     (default-value 'Info-directory-list))))))))))
 
 (defun envrc--update-env (env-dir)
   "Refresh the state of the direnv in ENV-DIR and apply in all relevant buffers."
@@ -517,6 +518,7 @@ Shortcuts tramp caching direnv sets the variable `exec-path'."
 (advice-add 'shell-command :around #'envrc-propagate-environment)
 (advice-add 'org-babel-eval :around #'envrc-propagate-environment)
 (advice-add 'org-export-file :around #'envrc-propagate-environment)
+(advice-add 'vc-do-command :around #'envrc-propagate-environment)
 (advice-add 'tramp-get-connection-buffer :filter-return #'envrc-propagate-tramp-environment)
 (advice-add 'tramp-get-remote-path :around #'envrc-get-remote-path)
 

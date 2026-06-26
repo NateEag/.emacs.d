@@ -1,16 +1,16 @@
 ;;; cond-let.el --- Additional and improved binding conditionals  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2025 Jonas Bernoulli
+;; Copyright (C) 2025-2026 Jonas Bernoulli
 
 ;; May contain traces of Emacs, which is
 ;; Copyright (C) 1985-2025 Free Software Foundation, Inc.
 
-;; Authors: Jonas Bernoulli <emacs.cond-let@jonas.bernoulli.dev>
+;; Author: Jonas Bernoulli <emacs.cond-let@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/tarsius/cond-let
 ;; Keywords: extensions
 
-;; Package-Version: 20251101.1942
-;; Package-Revision: 288b7d365632
+;; Package-Version: 20260601.1457
+;; Package-Revision: 21b9e9835756
 ;; Package-Requires: ((emacs "28.1"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
@@ -30,14 +30,12 @@
 
 ;;; Commentary:
 
-;; This is an ALPHA release!
-;; Breaking changes are possible!
-
 ;; Emacs provides the binding conditionals `if-let', `if-let*',
 ;; `when-let', `when-let*', `and-let*' and `while-let'.
 
-;; This package implements the missing `and-let' and `while-let*',
-;; and the original `cond-let', `cond-let*', `and$' and `and>'.
+;; This package implements the missing `and-let' and `while-let*';
+;; and the original `cond-let', `cond-let*', `when$', `and$' and
+;; `thread$'.
 
 ;; This package additionally provides more consistent and improved
 ;; implementations of the binding conditionals already provided by
@@ -57,12 +55,17 @@
 
 ;; Local Variables:
 ;; read-symbol-shorthands: (
-;;   ("and$"      . "cond-let--and$")
-;;   ("and>"      . "cond-let--and>")
-;;   ("and-let"   . "cond-let--and-let")
-;;   ("if-let"    . "cond-let--if-let")
-;;   ("when-let"  . "cond-let--when-let")
-;;   ("while-let" . "cond-let--while-let"))
+;;   ("and$"       . "cond-let--and$")
+;;   ("thread$"    . "cond-let--thread$")
+;;   ("when$"      . "cond-let--when$")
+;;   ("and-let*"   . "cond-let--and-let*")
+;;   ("and-let"    . "cond-let--and-let")
+;;   ("if-let*"    . "cond-let--if-let*")
+;;   ("if-let"     . "cond-let--if-let")
+;;   ("when-let*"  . "cond-let--when-let*")
+;;   ("when-let"   . "cond-let--when-let")
+;;   ("while-let*" . "cond-let--while-let*")
+;;   ("while-let"  . "cond-let--while-let"))
 ;; End:
 
 ;; You can think of these file-local settings as import statements of
@@ -73,8 +76,8 @@
 ;; Due to limitations of the shorthand implementation this has to be
 ;; done for each individual library.  "dir-locals.el" cannot be used.
 
-;; If you use `and$' and `and>', you might want to add this to your
-;; configuration:
+;; If you use `when$', `and$' and `thread$', you might want to add
+;; this to your configuration:
 
 ;;   (with-eval-after-load 'cond-let
 ;;     (font-lock-add-keywords 'emacs-lisp-mode
@@ -93,38 +96,38 @@
   (let (body)
     (dolist (clause (nreverse clauses))
       (cond
-       ((vectorp clause)
-        (setq body
-              `((,(if (and sequential (length> clause 1)) 'let* 'let)
-                 ,(mapcar (lambda (vec) (append vec nil)) clause)
-                 ,@body))))
-       ((let (varlist)
-          (while (vectorp (car clause))
-            (push (append (pop clause) nil) varlist))
-          (push (cond
-                 (varlist
-                  `(,(pcase (list (and body t)
-                                  (and sequential (length> varlist 1)))
-                       ('(t   t ) 'cond-let--when-let*)
-                       (`(t   ,_) 'cond-let--when-let)
-                       ('(nil t ) 'cond-let--and-let*)
-                       (`(nil ,_) 'cond-let--and-let))
-                    ,(nreverse varlist)
-                    ,(if body
-                         `(throw ',tag ,(macroexp-progn clause))
-                       (macroexp-progn clause))))
-                 ((length= clause 1)
-                  (if body
-                      (let ((a (gensym "anon")))
-                        `(let ((,a ,(car clause)))
-                           (when ,a (throw ',tag ,a))))
-                    (car clause)))
-                 ((and (eq (car clause) t) (not body))
-                  (macroexp-progn (cdr clause)))
-                 (t
-                  `(when ,(pop clause)
-                     (throw ',tag ,(macroexp-progn clause)))))
-                body)))))
+        ((vectorp clause)
+         (setq body
+               `((,(if (and sequential (length> clause 1)) 'let* 'let)
+                  ,(mapcar (lambda (vec) (append vec nil)) clause)
+                  ,@body))))
+        ((let (varlist)
+           (while (vectorp (car clause))
+             (push (append (pop clause) nil) varlist))
+           (push (cond
+                   (varlist
+                    `(,(pcase (list (and body t)
+                                    (and sequential (length> varlist 1)))
+                         ('(t   t ) 'cond-let--when-let*)
+                         (`(t   ,_) 'cond-let--when-let)
+                         ('(nil t ) 'cond-let--and-let*)
+                         (`(nil ,_) 'cond-let--and-let))
+                      ,(nreverse varlist)
+                      ,(if body
+                           `(throw ',tag ,(macroexp-progn clause))
+                         (macroexp-progn clause))))
+                   ((length= clause 1)
+                    (if body
+                        (let ((a (gensym "anon")))
+                          `(let ((,a ,(car clause)))
+                             (when ,a (throw ',tag ,a))))
+                      (car clause)))
+                   ((and (eq (car clause) t) (not body))
+                    (macroexp-progn (cdr clause)))
+                   (t
+                    `(when ,(pop clause)
+                       (throw ',tag ,(macroexp-progn clause)))))
+                 body)))))
     body))
 
 (defmacro cond-let* (&rest clauses)
@@ -195,7 +198,8 @@ remaining clauses and binding vectors.  Evaluate all VALUEFORMs before
 binding their respective SYMBOLs.  Unlike for the previous form, bind
 all SYMBOLs, even if a VALUEFORM yields nil.  Always proceed to the
 next clause."
-  (declare (indent 0) (debug cond-let*))
+  (declare (indent 0)
+           (debug cond-let*))
   (let ((tag (gensym ":cond-let")))
     `(catch ',tag
        ,@(cond-let--prepare-clauses tag nil clauses))))
@@ -286,7 +290,8 @@ nil, and evaluate neither the remaining VALUEFORMs nor BODYFORM.  If all
 VALUEFORMs yield non-nil, evaluate BODYFORM with the bindings in effect,
 and return its value; or if there is no BODYFORM, the value of the last
 VALUEFORM."
-  (declare (indent 1) (debug cond-let--and-let*))
+  (declare (indent 1)
+           (debug cond-let--and-let*))
   (pcase-let ((`(,anon ,set ,bind ,lastvar)
                (cond-let--prepare-varforms varlist)))
     (cond (anon
@@ -300,19 +305,10 @@ VALUEFORM."
                    `(and ,lastvar ,bodyform)
                  lastvar))))))
 
-(defmacro cond-let--and$ (varform bodyform)
-  "Bind variable `$' to value of VARFORM and conditionally evaluate BODYFORM.
+;;; Thread
 
-If VARFORM yields a non-nil value, bind the symbol `$' to that value,
-evaluate BODYFORM with that binding in effect, and return the value of
-BODYFORM.  If VARFORM yields nil, do not evaluate BODYFORM, and return
-nil."
-  (declare (debug (form form)))
-  `(let (($ ,varform))
-     (and $ ,bodyform)))
-
-(defmacro cond-let--and> (form form2 &rest forms)
-  "Bind variables according to each VARFORM until one of them yields nil.
+(defmacro cond-let--and$ (form form2 &rest forms)
+  "Bind variables according to each FORM until one of them yields nil.
 
 Evaluate the first FORM and if that yields a non-nil value, bind the
 symbol `$' to that value, and evaluate the next FORM with that binding
@@ -321,7 +317,8 @@ nil, then return nil without evaluate the remaining FORMs.  If all
 FORMs yield non-nil, return the value of the last FORM.
 
 \(fn FORM FORM...)"
-  (declare (debug (form form body)))
+  (declare (indent 0)
+           (debug t))
   `(,(if forms 'let* 'let)
     (($ ,form)
      ,@(and forms
@@ -331,6 +328,25 @@ FORMs yield non-nil, return the value of the last FORM.
     (and $
          ,(or (car (last forms))
               form2))))
+
+(defmacro cond-let--thread$ (form form2 &rest forms)
+  "Bind variable `$' to value of nth FORM before evaluating nth+1 FORM.
+
+Evaluate the first FORM and bind the symbol `$' to its value.
+Then evaluate the next FORM with that binding in effect.  Repeat this
+process with subsequent FORMs, and return the value of the last FORM.
+
+\(fn FORM FORM...)"
+  (declare (indent 0)
+           (debug t))
+  `(,(if forms 'let* 'let)
+    (($ ,form)
+     ,@(and forms
+            (mapcar (lambda (form)
+                      `($ ,form))
+                    (cons form2 (butlast forms)))))
+    ,(or (car (last forms))
+         form2)))
 
 ;;; If
 
@@ -375,7 +391,8 @@ value of the last form; or if there are no ELSE forms return nil.  The
 bindings from VARLIST do _not_ extend to the ELSE forms.
 
 \(fn VARLIST THEN [ELSE...])"
-  (declare (indent 2) (debug cond-let--if-let*))
+  (declare (indent 2)
+           (debug cond-let--if-let*))
   (pcase-let* ((`(,anon ,set ,bind ,_)
                 (cond-let--prepare-varforms varlist t))
                (set (if (length= set 1) (car set) (cons 'and set))))
@@ -429,7 +446,8 @@ BODY must be one or more expressions.  If VARLIST is empty, do nothing
 and return nil.
 
 \(fn VARLIST BODY...)"
-  (declare (indent 1) (debug cond-let--when-let*))
+  (declare (indent 1)
+           (debug cond-let--when-let*))
   (pcase-let ((`(,anon ,set ,bind ,lastvar)
                (cond-let--prepare-varforms varlist)))
     (cond (anon
@@ -451,8 +469,9 @@ last form.  If VARFORM yields nil, do not evaluate BODY, and return nil.
 BODY must be one or more expressions.  If VARLIST is empty, do nothing
 and return nil.
 
-\(fn VARLIST BODY...)"
-  (declare (debug (form form)))
+\(fn VARFORM BODY...)"
+  (declare (indent 1)
+           (debug t))
   `(let (($ ,varform))
      (when $
        ,bodyform ,@body)))
@@ -475,7 +494,8 @@ nor the BODY forms, and instead return, always yielding nil.
 BODY can be zero or more expressions.
 
 \(fn VARLIST [BODY...])"
-  (declare (indent 1) (debug cond-let--if-let*))
+  (declare (indent 1)
+           (debug ((&rest (symbolp form)) body)))
   (pcase-let ((`(,varlist ,lastvar)
                (cond-let--prepare-varlist varlist))
               (tag (gensym ":while-let*")))
@@ -502,7 +522,8 @@ nor the BODY forms, and instead return, always yielding nil.
 BODY can be one or more expressions.
 
 \(fn VARLIST BODY...)"
-  (declare (indent 1) (debug cond-let--if-let*))
+  (declare (indent 1)
+           (debug ((&rest (symbolp form)) form body)))
   (pcase-let ((`(,anon ,set ,bind ,lastvar)
                (cond-let--prepare-varforms varlist))
               (tag (gensym ":while-let")))
@@ -529,6 +550,19 @@ BODY can be one or more expressions.
   "Highlight `$' using `font-lock-variable-name-face'.
 To add these keywords, add this to your configuration:
 \(font-lock-add-keywords \\='emacs-lisp-mode cond-let-font-lock-keywords t)")
+
+;;; Compatibility
+
+(defalias 'cond-let--and> #'cond-let--and$
+  "Instead of this alias, use `cond-let--and$' via `and$' shorthand.
+
+This alias will likely be declared obsolete in 2027.  If you would like
+to continue to use it, please get in contact before then.  This alias
+might eventually be removed altogether; again subject to user feedback.
+
+If you do not care about the symbol `cond-let--and>', but want to keep
+using the respective `and>' shorthand, you can future-proof that now,
+by changing the shorthand definition to (\"and>\" . \"cond-let--and$\").")
 
 (provide 'cond-let)
 ;;; cond-let.el ends here

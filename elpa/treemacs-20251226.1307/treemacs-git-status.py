@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-from os import listdir
+from os import listdir, environ
 from os.path import isdir, islink
 from posixpath import join
 import sys
@@ -44,7 +44,7 @@ def find_recursive_entries(path, state):
     global output, ht_size
     for item in listdir(path):
         full_path = join(path, item)
-        output.append(QUOTE + full_path + QUOTE + face_for_status(state))
+        output.append(QUOTE + full_path.replace(b'"', b'\\"') + QUOTE + face_for_status(state))
         ht_size += 1
         if ht_size > LIMIT:
             break
@@ -54,7 +54,9 @@ def find_recursive_entries(path, state):
 def main():
     global output, ht_size
     # Don't lock Git when updating status.
-    proc = Popen(GIT_CMD, shell=True, stdout=PIPE, bufsize=100, env={"LC_ALL": "C", "GIT_OPTIONAL_LOCKS": "0"})
+    environ["LC_ALL"] = "C"
+    environ["GIT_OPTIONAL_LOCKS"] = "0"
+    proc = Popen(GIT_CMD, shell=True, stdout=PIPE, bufsize=100)
     dirs_added = {}
 
     for item in proc.stdout:
@@ -100,7 +102,7 @@ def main():
                 # directories should not be printed more than once, which would happen if
                 # e.g. both /A/B/C/x and /A/B/C/y have changes
                 if full_dirname not in dirs_added:
-                    output.append(QUOTE + full_dirname + QUOTE + b"treemacs-git-modified-face")
+                    output.append(QUOTE + full_dirname.replace(b'"', b'\\"') + QUOTE + b"treemacs-git-modified-face")
                     ht_size += 1
                     dirs_added[full_dirname] = True
         # for untracked and ignored directories we need to find an entry for every single file

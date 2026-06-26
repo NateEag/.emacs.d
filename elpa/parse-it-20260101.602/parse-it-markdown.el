@@ -1,6 +1,6 @@
-;;; parse-it-html.el --- Core parser for HTML  -*- lexical-binding: t; -*-
+;;; parse-it-markdown.el --- Core parser for Markdown  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2025  Shen, Jen-Chieh <jcs090218@gmail.com>
+;; Copyright (C) 2019-2026  Shen, Jen-Chieh <jcs090218@gmail.com>
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -19,41 +19,41 @@
 
 ;;; Commentary:
 ;;
-;; Core parser for html.
+;; Core parser for Markdown.
 ;;
 
 ;;; Code:
 
 (require 'parse-it)
 
-(defconst parse-it-html--token-type
+(defconst parse-it-markdown--token-type
   '(("COMMENT_BEG" . "[<][!][-][-]")
     ("COMMENT_END" . "[-][-][>]")
     ("TAG_BEG" . "\\([<]\\)[^!][^-][^-]")
     ("TAG_BEG" . "\\([<]\\)[!][^-]")
-    ("TAG_END" . "[^-][^-]\\([>]\\)"))
-  "HTML token type.")
+    ("TAG_END" . "[^-][^-]\\([>]\\)")
+    ("COLON" . "[:]")
+    ("SEMICOLON" . "[;]")
+    ("COMMA" . "[,]")
+    ("TRI_BACK_QT" . "[`][`][`]")
+    ("BACK_QT" . "[^`]\\([`]\\)[^`]")
+    ("DOT" . "[.]")
+    ("QT_S" . "[']")
+    ("QT_D" . "[\"]"))
+  "Markdown token type.")
 
-(defconst parse-it-html--into-level-symbols
-  '("TAG_BEG")
-  "All symbols that goes into one nested level.")
-
-(defconst parse-it-html--back-level-symbols
-  '("TAG_END")
-  "All symbols that goes back up one nested level.")
-
-(defun parse-it-html--make-token-type ()
+(defun parse-it-markdown--make-token-type ()
   "Make up the token type."
-  (append parse-it-html--token-type
+  (append parse-it-markdown--token-type
           parse-it-lex--token-type))
 
-(defun parse-it-html (path)
-  "Parse the PATH HTML."
-  (let* ((parse-it-lex--token-type (parse-it-html--make-token-type))
+(defun parse-it-markdown (path)
+  "Parse the PATH Markdown."
+  (let* ((parse-it-lex--token-type (parse-it-markdown--make-token-type))
          (token-list (parse-it-lex-tokenize-it path)))
     (parse-it-ast-build token-list
-                        parse-it-html--into-level-symbols
-                        parse-it-html--back-level-symbols)))
+                        parse-it-c--into-level-symbols
+                        parse-it-c--back-level-symbols)))
 
-(provide 'parse-it-html)
-;;; parse-it-html.el ends here
+(provide 'parse-it-markdown)
+;;; parse-it-markdown.el ends here

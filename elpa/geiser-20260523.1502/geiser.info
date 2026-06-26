@@ -3,7 +3,7 @@ This is geiser.info, produced by makeinfo version 6.8 from geiser.texi.
 This manual documents Geiser, an Emacs environment to hack in Scheme.
 
    Copyright (C) 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2018, 2020,
-2021 Jose Antonio Ortega Ruiz
+2021, 2026 Jose Antonio Ortega Ruiz
 
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
@@ -198,29 +198,29 @@ File: geiser.info,  Node: Must needs,  Next: The quick and easy way,  Prev: Inst
 ==============
 
 If Geiser came with any guarantees, you'd break all of them by not using
-GNU Emacs 24.4 (or better: i regularly use it with a recent Emacs
+GNU Emacs 27.1 (or better: i regularly use it with a recent Emacs
 snapshot) and at least one of the supported Schemes, namely:
 
-   * Chez (http://www.scheme.com) 9.4 or better, via geiser-chez
-     (https://gitlab.com/emacs-geiser/chez)
-   * Chibi (http://synthcode.com/scheme/chibi) 0.7.3 or better, via
-     geiser-chibi (https://gitlab.com/emacs-geiser/chibi)
-   * Chicken (http://call-cc.org) 4.8.0 or better, via geiser-chicken
-     (https://gitlab.com/emacs-geiser/chicken)
-   * Gambit (http://gambitscheme.org/wiki/index.php/Main_Page) 4.9.3 or
-     better, via geiser-gambit (https://gitlab.com/emacs-geiser/gambit)
-   * Gauche (http://practical-scheme.net/gauche/) 0.9.6 or better, via
-     geiser-gauche (https://gitlab.com/emacs-geiser/gauche)
-   * Guile (http://www.gnu.org/software/guile) 2.2 or better, via
-     geiser-guile (https://gitlab.com/emacs-geiser/guile)
    * GNU Kawa (http://www.gnu.org/software/kawa/index.html) 3.1 or
      better, via geiser-kawa (https://gitlab.com/emacs-geiser/kawa)
-   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme) 9.0 or
-     better, via geiser-mit (https://gitlab.com/emacs-geiser/mit)
-   * Racket (http://www.racket-lang.org) 7.0 or better, via
-     geiser-racket (https://gitlab.com/emacs-geiser/racket)
+   * Gauche (http://practical-scheme.net/gauche/) 0.9.6 or better, via
+     geiser-gauche (https://gitlab.com/emacs-geiser/gauche)
    * Stklos (https://stklos.net/) 1.50 or better, via geiser-stklos
      (https://gitlab.com/emacs-geiser/stklos)
+   * Chez (http://www.scheme.com) 9.4 or better, via geiser-chez
+     (https://codeberg.org/geiser/chez)
+   * Chibi (http://synthcode.com/scheme/chibi) 0.7.3 or better, via
+     geiser-chibi (https://codeberg.org/geiser/chibi)
+   * Chicken (http://call-cc.org) 4.8.0 or better, via geiser-chicken
+     (https://codeberg.org/geiser/chicken)
+   * Gambit (http://gambitscheme.org/wiki/index.php/Main_Page) 4.9.3 or
+     better, via geiser-gambit (https://codeberg.org/geiser/gambit)
+   * Guile (http://www.gnu.org/software/guile) 2.2 or better, via
+     geiser-guile (https://codeberg.org/geiser/guile)
+   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme) 9.0 or
+     better, via geiser-mit (https://codeberg.org/geiser/mit)
+   * Racket (http://www.racket-lang.org) 7.0 or better, via
+     geiser-racket (https://codeberg.org/geiser/racket)
 
    Since Geiser supports multiple REPLs, having all of them will just
 add to the fun.
@@ -681,12 +681,12 @@ Choosing a Scheme implementation
 
 Instead of using the generic 'geiser' command, you can directly start
 your Scheme of choice using any of the following commands:
-   * 'run-racket'
-   * 'run-guile'
-   * 'run-chicken'
-   * 'run-mit'
-   * 'run-chibi'
-   * 'run-chez'
+   * 'geiser-racket'
+   * 'geiser-guile'
+   * 'geiser-chicken'
+   * 'geiser-mit'
+   * 'geiser-chibi'
+   * 'geiser-chez'
    In addition, the variable 'geiser-active-implementations' contains a
 list of those Schemes Geiser should be aware of.  Thus, if you happen to
 be, say, a racketeer not to be beguiled by other schemes, you can tell
@@ -886,7 +886,7 @@ File: geiser.info,  Node: The source and the REPL,  Next: Documentation helpers,
 
 As i've already mentioned a couple of times, geiser-mode needs a running
 REPL to be operative.  Thus, a common usage pattern will be for you to
-first call 'geiser' (or one of its variants, e.g.  'run-guile'), and
+first call 'geiser' (or one of its variants, e.g.  'geiser-guile'), and
 then open some Scheme files; but there's nothing wrong in first opening
 a couple Scheme buffers and then starting the REPL (you can even find it
 more convenient, since pressing 'C-c C-z' in a Scheme buffer will start
@@ -1604,8 +1604,7 @@ Joining the fun
      gmane.lisp.scheme.geiser
      (http://dir.gmane.org/gmane.lisp.scheme.geiser).
    * You can submit bug reports either to the mailing list or to our bug
-     tracker (https://gitlab.com/groups/emacs-geiser/-/issues) over at
-     Gitlab.
+     tracker (https://codeberg.org/org/geiser/issues) over at Codeberg.
    * The Freenode IRC channel #geiser is the Geiserati's meeting point
      in cyberspace.
 
@@ -1709,7 +1708,7 @@ Index
 * interrupt evaluation:                  To eval or not to eval.
                                                               (line  78)
 * IRC channel:                           No hacker is an island.
-                                                              (line  79)
+                                                              (line  78)
 * jump, at the REPL:                     Autodoc and friends. (line  51)
 * jumping customized:                    Jumping around.      (line  22)
 * jumping in scheme buffers:             Jumping around.      (line   6)
@@ -1794,51 +1793,51 @@ Index
 
 
 Tag Table:
-Node: Top907
-Node: Introduction2668
-Node: Modus operandi3002
-Ref: current-module3657
-Node: Showing off5122
-Node: Installation6400
-Node: Must needs6613
-Node: The quick and easy way8571
-Ref: The quick and easy way-Footnote-110049
-Node: From the source's mouth10204
-Node: Friends10989
-Ref: paredit11263
-Node: The REPL12400
-Ref: quick-start12519
-Node: Starting the REPL12910
-Node: First aids17289
-Node: Switching context19122
-Node: Completion and error handling21052
-Ref: completion-caveat22760
-Node: Autodoc and friends24674
-Ref: repl-mod26744
-Node: Seeing is believing27750
-Node: Customization and tips28762
-Ref: choosing-impl29491
-Ref: active-implementations29722
-Ref: impl-binary30104
-Node: Between the parens34515
-Node: Activating Geiser35577
-Node: The source and the REPL38187
-Ref: repl-association39227
-Ref: repl-per-project42475
-Ref: switching-repl-buff43888
-Node: Documentation helpers45577
-Ref: doc-browser49845
-Node: To eval or not to eval52572
-Ref: To eval or not to eval-Footnote-157316
-Node: To err perchance to debug57569
-Node: Jumping around59073
-Node: Geiser writes for you60350
-Node: Cheat sheet62854
-Node: Scheme buffers63238
-Node: REPL67676
-Node: Documentation browser70263
-Node: No hacker is an island71331
-Node: Index74783
+Node: Top913
+Node: Introduction2674
+Node: Modus operandi3008
+Ref: current-module3663
+Node: Showing off5128
+Node: Installation6406
+Node: Must needs6619
+Node: The quick and easy way8549
+Ref: The quick and easy way-Footnote-110027
+Node: From the source's mouth10182
+Node: Friends10967
+Ref: paredit11241
+Node: The REPL12378
+Ref: quick-start12497
+Node: Starting the REPL12888
+Node: First aids17267
+Node: Switching context19100
+Node: Completion and error handling21030
+Ref: completion-caveat22738
+Node: Autodoc and friends24652
+Ref: repl-mod26722
+Node: Seeing is believing27728
+Node: Customization and tips28740
+Ref: choosing-impl29469
+Ref: active-implementations29718
+Ref: impl-binary30100
+Node: Between the parens34511
+Node: Activating Geiser35573
+Node: The source and the REPL38183
+Ref: repl-association39226
+Ref: repl-per-project42474
+Ref: switching-repl-buff43887
+Node: Documentation helpers45576
+Ref: doc-browser49844
+Node: To eval or not to eval52571
+Ref: To eval or not to eval-Footnote-157315
+Node: To err perchance to debug57568
+Node: Jumping around59072
+Node: Geiser writes for you60349
+Node: Cheat sheet62853
+Node: Scheme buffers63237
+Node: REPL67675
+Node: Documentation browser70262
+Node: No hacker is an island71330
+Node: Index74770
 
 End Tag Table
 

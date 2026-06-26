@@ -1,6 +1,6 @@
 ;;; geiser-connection.el --- Talking to a scheme process  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2011, 2013, 2021-2022, 2025 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2011, 2013, 2021-2022, 2025, 2026 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -39,7 +39,7 @@
 ;;; Request datatype:
 
 (defun geiser-con--make-request (con str cont &optional sender-buffer)
-  (list (cons :id (geiser-con--connection-inc-count con))
+  (list (cons :id (and (car con) (geiser-con--connection-inc-count con)))
         (cons :string str)
         (cons :continuation cont)
         (cons :buffer (or sender-buffer (current-buffer)))
@@ -81,7 +81,7 @@
           (progn (geiser-log--error "Unexpected queue input:\n %s" in)
                  (delete-region (point-min) (point-max)))
         (goto-char (point-max))
-        (insert in)
+        (insert (geiser--strip-ansi in))
         (goto-char (point-min))
         (when (re-search-forward (tq-queue-head-regexp tq) nil t)
           (unwind-protect
@@ -109,6 +109,9 @@
         (cons :is-debugging nil)
         (cons :count 0)
         (cons :completed (make-hash-table :weakness 'value))))
+
+(defsubst geiser-con--pending-requests-p (c)
+  (not (tq-queue-empty (geiser-con--connection-tq c))))
 
 (defsubst geiser-con--connection-process (c)
   (tq-process (cdr (assq :tq c))))
@@ -260,7 +263,8 @@
 
 (defun geiser-con--send-string (con str cont &optional sbuf)
   (let ((req (geiser-con--make-request con str cont sbuf)))
-    (geiser-con--connection-add-request con req)
+    (when (geiser-con--request-id req)
+      (geiser-con--connection-add-request con req))
     req))
 
 (defvar geiser-connection-timeout 30000
@@ -273,19 +277,24 @@
       (interrupt-process proc))))
 
 (defun geiser-con--wait (req timeout)
-  "Wait up to TIMEOUT msecs for request REQ to finish, returning its result."
+  "Wait up to TIMEOUT msecs for request REQ to finish."
   (let* ((con (or (geiser-con--request-connection req)
                   (error "Geiser connection not active")))
          (proc (geiser-con--connection-process con))
          (id (geiser-con--request-id req))
          (timeout (/ (or timeout geiser-connection-timeout) 1000.0))
          (step (/ timeout 10)))
-    (with-timeout (timeout (geiser-con--request-deactivate req))
-      (condition-case nil
-          (while (and (geiser-con--connection-process con)
-                      (not (geiser-con--connection-completed-p con id)))
-            (accept-process-output proc step))
-        (error (geiser-con--request-deactivate req))))))
+    (if (null (geiser-con--request-id req)) ;; request sent with paused conn
+        (when-let* ((cont (geiser-con--request-continuation req)))
+          (with-current-buffer (or (geiser-con--request-buffer req)
+                                   (current-buffer))
+              (funcall cont '((result)))))
+      (with-timeout (timeout (geiser-con--request-deactivate req))
+        (condition-case nil
+            (while (and (geiser-con--connection-process con)
+                        (not (geiser-con--connection-completed-p con id)))
+              (accept-process-output proc step))
+          (error (geiser-con--request-deactivate req)))))))
 
 (defun geiser-con--send-string/wait (con str cont &optional timeout sbuf)
   (when (and (stringp str) (not (string-blank-p str)))

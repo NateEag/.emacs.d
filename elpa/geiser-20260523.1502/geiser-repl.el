@@ -1,6 +1,6 @@
 ;;; geiser-repl.el --- Geiser's REPL  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2009-2013, 2015-2016, 2018-2023 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2013, 2015-2016, 2018-2023, 2026 Jose Antonio Ortega Ruiz
 
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the Modified BSD License. You should
@@ -235,11 +235,29 @@ See also `geiser-repl-startup-hook'."
   "The character that represents a closing super parentheses."
   :type 'character)
 
+(geiser-custom--defcustom geiser-repl-classify-output-p nil
+  "Whether to classify REPL output by type (success/warning/error).
+
+When enabled, REPL output will be colored differently based on
+whether it represents successful evaluation, a warning, or an error.
+This classification is based on pattern matching of the output."
+  :type 'boolean)
+
+
 (geiser-custom--defface repl-input
   'comint-highlight-input geiser-repl "evaluated input highlighting")
 
 (geiser-custom--defface repl-output
   'font-lock-string-face geiser-repl "REPL output")
+
+(geiser-custom--defface repl-output-success
+  'font-lock-string-face geiser-repl "REPL output (success)")
+
+(geiser-custom--defface repl-output-warning
+  'warning geiser-repl "REPL output (warnings)")
+
+(geiser-custom--defface repl-output-error
+  'error geiser-repl "REPL output (errors)")
 
 (geiser-custom--defface repl-prompt
   'comint-highlight-prompt geiser-repl "REPL prompt")
@@ -465,21 +483,55 @@ will be set up using `geiser-connect-local' when a REPL is started.")
          (setq header-line-format
                (format "Socket: %s" address)))))
 
-(defun geiser-repl--fontify-output-region (beg end)
-  "Apply highlighting to a REPL output region."
-  (remove-text-properties beg end '(font-lock-face nil face nil))
-  (if geiser-repl-highlight-output-p
-      (geiser-syntax--fontify-syntax-region beg end)
-    (geiser-repl--fontify-plaintext beg end)))
 
-(defun geiser-repl--fontify-plaintext (start end)
-  "Fontify REPL output plainly."
-  (add-text-properties
-   start end
-   '(font-lock-fontified t
-                         fontified t
-                         font-lock-multiline t
-                         font-lock-face geiser-font-lock-repl-output)))
+(defun geiser-repl--classify-output (start end)
+  "Classify output region as :success, :warning, or :error.
+Returns the classification based on the first line of output.
+Only used when `geiser-repl-classify-output-p' is non-nil."
+  (save-excursion
+    (goto-char start)
+    (let ((first-line (buffer-substring-no-properties
+                       start
+                       (min end (line-end-position)))))
+      (cond
+       ((string-match-p "raise-exception" first-line) :error)
+       ((string-match-p "warning:" first-line) :warning)
+       (t :success)))))
+
+(defun geiser-repl--fontify-output-region (beg end)
+  "Apply highlighting to a REPL output region.
+If `geiser-repl-highlight-output-p' is enabled, applies syntax
+highlighting. Otherwise, if `geiser-repl-classify-output-p' is
+enabled, classifies output and applies appropriate face. If neither
+is enabled, applies default output face."
+  (remove-text-properties beg end '(font-lock-face nil face nil))
+  (cond
+   (geiser-repl-highlight-output-p
+    (geiser-syntax--fontify-syntax-region beg end))
+   (geiser-repl-classify-output-p
+    (let ((output-type (geiser-repl--classify-output beg end)))
+      (geiser-repl--fontify-plaintext beg end output-type)))
+   (t
+    (geiser-repl--fontify-plaintext beg end))))
+
+(defun geiser-repl--fontify-plaintext (start end &optional output-type)
+  "Fontify REPL output plainly with appropriate face.
+If OUTPUT-TYPE is provided and `geiser-repl-classify-output-p' is
+enabled, it can be :success, :warning, or :error. Otherwise defaults
+to standard output face."
+  (let ((face (if (and output-type geiser-repl-classify-output-p)
+                  (pcase output-type
+                    (:error 'geiser-font-lock-repl-output-error)
+                    (:warning 'geiser-font-lock-repl-output-warning)
+                    (:success 'geiser-font-lock-repl-output-success)
+                    (_ 'geiser-font-lock-repl-output))
+                'geiser-font-lock-repl-output)))
+    (add-text-properties
+     start end
+     `(font-lock-fontified t
+                           fontified t
+                           font-lock-multiline t
+                           font-lock-face ,face))))
 
 (defun geiser-repl--narrow-to-prompt ()
   "Narrow to active prompt region and return t, otherwise returns nil."
@@ -533,13 +585,21 @@ will be set up using `geiser-connect-local' when a REPL is started.")
     (geiser--font-lock-ensure geiser-repl--last-output-start
                               geiser-repl--last-output-end)))
 
+(defun geiser-repl--matches-prompt-p (txt)
+  (or (string-match-p
+       (geiser-con--connection-prompt geiser-repl--connection)
+       txt)
+      (string-match-p
+       (geiser-con--connection-debug-prompt geiser-repl--connection)
+       txt)))
+
 (defun geiser-repl--output-filter (txt)
   (when (geiser-repl--find-output-region) (geiser-repl--treat-output-region))
   (geiser-con--connection-update-debugging geiser-repl--connection txt)
   (geiser-image--replace-images geiser-repl-inline-images-p
                                 geiser-repl-auto-display-images-p)
-  (when (string-match-p (geiser-con--connection-prompt geiser-repl--connection)
-                        txt)
+  (when (geiser-repl--matches-prompt-p txt)
+    (geiser-con--connection-activate geiser-repl--connection)
     (geiser-autodoc--disinhibit-autodoc)))
 
 (defun geiser-repl--check-version (impl)
@@ -697,14 +757,16 @@ will be set up using `geiser-connect-local' when a REPL is started.")
   "Send CMD input string to the current REPL buffer.
 If SAVE-HISTORY is non-nil, save CMD in the REPL history."
   (when (and cmd (eq major-mode 'geiser-repl-mode))
-    (geiser-repl--prepare-send)
-    (goto-char (point-max))
-    (comint-kill-input)
-    (insert cmd)
-    (let ((comint-input-filter (if save-history
-                                   comint-input-filter
-                                 'ignore)))
-      (comint-send-input nil t))))
+    (if (geiser-eval--pending-requests-p)
+        (message "Waiting for scheme process...")
+      (geiser-repl--prepare-send)
+      (goto-char (point-max))
+      (comint-kill-input)
+      (insert cmd)
+      (let ((comint-input-filter (if save-history
+                                     comint-input-filter
+                                   'ignore)))
+        (comint-send-input nil t)))))
 
 (defun geiser-repl-interrupt ()
   (interactive)
@@ -1100,7 +1162,7 @@ buffer."
     (geiser-repl-autoeval-mode 1))
   (when geiser-repl-superparen-mode-p
     (geiser-repl-superparen-mode 1))
-
+  (add-hook 'comint-preoutput-filter-functions #'geiser--strip-ansi nil t)
   ;; enabling compilation-shell-minor-mode without the annoying highlighter
   (compilation-setup t))
 

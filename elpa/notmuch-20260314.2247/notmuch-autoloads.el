@@ -9,6 +9,11 @@
 
 
 
+;;; Generated autoloads from autoloads-gen.el
+
+(register-definition-prefixes "autoloads-gen" '("autoloads-gen"))
+
+
 ;;; Generated autoloads from coolj.el
 
 (register-definition-prefixes "coolj" '("coolj-"))

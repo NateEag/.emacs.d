@@ -683,7 +683,7 @@ message at DEPTH in the current thread."
       ;; alternative (even if we can't render it).
       (push (list content-id msg part) notmuch-show--cids)))
   ;; Recurse on sub-parts
-  (when-let ((type (plist-get part :content-type)))
+  (when-let* ((type (plist-get part :content-type)))
     (pcase-let ((`(,type ,subtype)
 		 (split-string (downcase type) "/")))
       (cond ((equal type "multipart")
@@ -702,7 +702,7 @@ This will only find parts from messages that have been inserted
 into the current buffer.  CID must be a raw content ID, without
 enclosing angle brackets, a cid: prefix, or URL encoding.  This
 will return nil if the CID is unknown or cannot be retrieved."
-  (when-let ((descriptor (cdr (assoc cid notmuch-show--cids))))
+  (when-let* ((descriptor (cdr (assoc cid notmuch-show--cids))))
     (pcase-let ((`(,msg ,part) descriptor))
       ;; Request caching for this content, as some messages
       ;; reference the same cid: part many times (hundreds!).
@@ -1057,7 +1057,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 
 (defun notmuch-show-mime-type (part)
   "Return the correct mime-type to use for PART."
-  (when-let ((content-type (plist-get part :content-type)))
+  (when-let* ((content-type (plist-get part :content-type)))
     (setq content-type (downcase content-type))
     (or (and (string= content-type "application/octet-stream")
 	     (notmuch-show-get-mime-type-of-application/octet-stream part))
@@ -1400,15 +1400,17 @@ function is used.
 Returns the buffer containing the messages, or NIL if no messages
 matched."
   (interactive "sNotmuch show: \nP")
-  (let ((buffer-name (generate-new-buffer-name
-		      (or buffer-name
-			  (concat "*notmuch-" thread-id "*"))))
-	(mm-inline-override-types (notmuch--inline-override-types)))
+  (let* ((buffer-name (generate-new-buffer-name
+		       (or buffer-name
+			   (concat "*notmuch-" thread-id "*"))))
+	 (buffer (get-buffer-create buffer-name))
+	 (mm-inline-override-types (notmuch--inline-override-types)))
 
-    (pop-to-buffer-same-window (get-buffer-create buffer-name))
+    (with-current-buffer buffer
+      (notmuch-show-mode))
+    (pop-to-buffer-same-window buffer)
     ;; No need to track undo information for this buffer.
     (setq buffer-undo-list t)
-    (notmuch-show-mode)
     ;; Set various buffer local variables to their appropriate initial
     ;; state. Do this after enabling `notmuch-show-mode' so that they
     ;; aren't wiped out.
@@ -1945,7 +1947,7 @@ user decision and we should not override it."
 		 (concat header-line-format
 			 (propertize
 			  "  [some mark read tag changes may have failed]"
-			  'face font-lock-warning-face)))))))))
+			  'face 'font-lock-warning-face)))))))))
 
 (defun notmuch-show-filter-thread (query)
   "Filter or LIMIT the current thread based on a new query string.

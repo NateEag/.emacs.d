@@ -18,8 +18,8 @@
 ;; along with Notmuch.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
-;; Package-Version: 20250620.1557
-;; Package-Revision: 63665f1ebd6e
+;; Package-Version: 20260314.2247
+;; Package-Revision: 094744b3f6f5
 ;; Homepage: https://notmuchmail.org
 
 ;;; Commentary:
@@ -1194,7 +1194,7 @@ search results and that are also tagged with the given TAG."
   (interactive
    (list (notmuch-select-tag-with-completion "Filter by tag: "
 					     notmuch-search-query-string)))
-  (notmuch-search (concat notmuch-search-query-string " and tag:" tag)
+  (notmuch-search (format "(%s) and tag:%s" notmuch-search-query-string tag)
 		  notmuch-search-oldest-first
 		  notmuch-search-hide-excluded))
 

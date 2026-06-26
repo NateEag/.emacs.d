@@ -5,8 +5,8 @@
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: terminals tools
 ;; URL: https://www.github.com/IvanMalison/term-manager
-;; Package-Version: 20240811.2337
-;; Package-Revision: fbf64768902c
+;; Package-Version: 20260220.840
+;; Package-Revision: 1581a90ff9b3
 ;; Package-Requires: ((dash "2.12.0") (emacs "24.4"))
 
 ;; This program is free software; you can redistribute it and/or modify

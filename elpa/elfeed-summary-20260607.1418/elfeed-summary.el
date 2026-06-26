@@ -4,8 +4,8 @@
 
 ;; Author: Korytov Pavel <thexcloud@gmail.com>
 ;; Maintainer: Korytov Pavel <thexcloud@gmail.com>
-;; Package-Version: 20240929.2043
-;; Package-Revision: 76b4b93838b0
+;; Package-Version: 20260607.1418
+;; Package-Revision: d8f237530c05
 ;; Package-Requires: ((emacs "27.1") (magit-section "3.3.0") (elfeed "3.4.1"))
 ;; Homepage: https://github.com/SqrtMinusOne/elfeed-summary.el
 ;; Published-At: 2022-03-26
@@ -1550,7 +1550,7 @@ of string."
                       elfeed-summary-refresh-on-each-update)
               (elfeed-summary--refresh-if-exists)))))
     (add-hook 'elfeed-update-hooks elfeed-update-closure)
-    (mapc #'elfeed-update-feed (elfeed--shuffle feeds))
+    (mapc #'elfeed-update-feed (elfeed-shuffle feeds))
     (run-hooks 'elfeed-update-init-hooks)
     (elfeed-db-save)))
 

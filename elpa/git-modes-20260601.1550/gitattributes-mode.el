@@ -1,7 +1,7 @@
 ;;; gitattributes-mode.el --- Major mode for editing .gitattributes files  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2013-2015 Rüdiger Sonderfeld
-;; Copyright (C) 2013-2025 The Magit Project Contributors
+;; Copyright (C) 2013-2026 The Magit Project Contributors
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Maintainer: Jonas Bernoulli <emacs.git-modes@jonas.bernoulli.dev>
@@ -121,10 +121,10 @@ If NO-STATE is non-nil then do not print state."
                                          gitattributes-mode-attributes)))
       (concat (unless no-state
                 (cond
-                 ((string= (match-string 1) "-") "[Unset] ")
-                 ((string= (match-string 1) "!") "[Unspecified] ")
-                 ((string= (match-string 3) "=") "[Set to a value] ")
-                 (t "[Set] ")))
+                  ((string= (match-string 1) "-") "[Unset] ")
+                  ((string= (match-string 1) "!") "[Unspecified] ")
+                  ((string= (match-string 3) "=") "[Set to a value] ")
+                  (t "[Set] ")))
               (cadr entry)))))
 
 (defvar gitattributes-mode-syntax-table

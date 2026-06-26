@@ -1,4 +1,4 @@
-;;; solarized-gruvbox-light-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
+;;; solarized-dark-high-contrast-theme.el --- Solarized Dark High Contrast Theme  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Thomas Frössman
 
@@ -17,7 +17,7 @@
 
 ;;; Commentary:
 ;;
-;; The dark variant of the solarized theme with gruvbox color palette
+;; The dark variant of the solarized theme.
 ;;
 ;;; Code:
 
@@ -25,18 +25,18 @@
 (eval-when-compile
   (require 'solarized-palettes))
 
-(deftheme solarized-gruvbox-light
-  "The light variant of the Solarized colour theme with gruvbox color palette")
+(deftheme solarized-dark-high-contrast
+  "The dark variant of the Solarized colour theme with slightly higher text contrast")
 
-(solarized-with-color-variables 'light 'solarized-gruvbox-light
-  solarized-gruvbox-light-color-palette-alist)
+(solarized-with-color-variables 'dark 'solarized-dark-high-contrast
+  solarized-dark-high-contrast-palette-alist)
 
-(provide-theme 'solarized-gruvbox-light)
+(provide-theme 'solarized-dark-high-contrast)
 
-(provide 'solarized-gruvbox-light-theme)
+(provide 'solarized-dark-high-contrast-theme)
 
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; solarized-gruvbox-light-theme.el ends here
+;;; solarized-dark-high-contrast-theme.el ends here

@@ -1,4 +1,4 @@
-;;; solarized-zenburn-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
+;;; solarized-gruvbox-light-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Thomas Frössman
 
@@ -17,7 +17,7 @@
 
 ;;; Commentary:
 ;;
-;; The dark variant of the solarized theme with a zenburn palette.
+;; The light variant of the solarized theme with gruvbox color palette
 ;;
 ;;; Code:
 
@@ -25,18 +25,18 @@
 (eval-when-compile
   (require 'solarized-palettes))
 
-(deftheme solarized-zenburn
-  "The dark variant of the Solarized colour theme with gruvbox color palette")
+(deftheme solarized-gruvbox-light
+  "The light variant of the Solarized colour theme with gruvbox color palette")
 
-(solarized-with-color-variables 'dark 'solarized-zenburn
-  solarized-zenburn-color-palette-alist)
+(solarized-with-color-variables 'light 'solarized-gruvbox-light
+  solarized-gruvbox-light-color-palette-alist)
 
-(provide-theme 'solarized-zenburn)
+(provide-theme 'solarized-gruvbox-light)
 
-(provide 'solarized-zenburn-theme)
+(provide 'solarized-gruvbox-light-theme)
 
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; solarized-zenburn-theme.el ends here
+;;; solarized-gruvbox-light-theme.el ends here

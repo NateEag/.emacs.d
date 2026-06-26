@@ -142,7 +142,7 @@ Optional argument ROUND rounds values which probably is what you usually want."
   (let* ((maxval (if (= digits-per-component 2) 255 65535))
          (fmt (if (= digits-per-component 2) "#%02x%02x%02x" "#%04x%04x%04x")))
     (if round
-        (format fmt (+ 0.5 (* red maxval)) (+ 0.5 (* green maxval)) (+ 0.5(* blue maxval)))
+        (format fmt (+ 0.5 (* red maxval)) (+ 0.5 (* green maxval)) (+ 0.5 (* blue maxval)))
         (format fmt (* red maxval) (* green maxval) (* blue maxval)))))
 
 ;;;###autoload
@@ -169,7 +169,7 @@ use the latter if you need a 24-bit specification of a color."
 (defun solarized-create-color-palette (core-palette)
   "Create color-palette from CORE-PALETTE.
 
-The Returned color-palette has the same format as `solarized-color-palette'"
+The returned color-palette has the same format as `solarized-color-palette'."
   (let ((darkest-base   (nth 0 core-palette))
         (brightest-base (nth 1 core-palette))
         (yellow         (nth 2 core-palette))
@@ -292,12 +292,12 @@ customize the resulting theme."
             ;; Line drawing color
             ;;
             ;; NOTE only use this for very thin lines that are hard to see using base02, in low
-            ;; color displayes base02 might be used instead
+            ;; color displays base02 might be used instead
             (s-line (if (eq variant 'light) "#cccec4" "#284b54"))
 
             ;; Light/Dark adaptive higher/lower contrast accented colors
             ;;
-            ;; NOTE Only use these in exceptional cirmumstances!
+            ;; NOTE Only use these in exceptional circumstances!
             (yellow-hc (if (eq variant 'light) yellow-d yellow-l))
             (yellow-lc (if (eq variant 'light) yellow-l yellow-d))
             (orange-hc (if (eq variant 'light) orange-d orange-l))
@@ -397,11 +397,15 @@ customize the resulting theme."
                s-diff-fine-C-bg s-diff-fine-C-fg s-diff-context-fg
                s-diff-heading-bg s-diffstat-added-fg
                s-diffstat-changed-fg s-diffstat-removed-fg)
-       ;; NOTE: `custom--inhibit-theme-enable' turn-off needed
-       ;;       childtheme works well disscussed in #352
-       (let ((custom--inhibit-theme-enable nil))
-         ,@solarized-definition
-         ,@(eval childtheme-sexp)))))
+       ;; Emit the child theme's faces *before* the base definition.
+       ;; `custom-theme-set-faces' keeps the first spec it sees for a
+       ;; given face, so this is what lets a child theme override the
+       ;; base faces (#352).  Doing it through ordering, rather than by
+       ;; binding `custom--inhibit-theme-enable' to nil, means we no
+       ;; longer force the faces to apply during loading and thus honor
+       ;; `load-theme's NO-ENABLE argument (#420, #325).
+       ,@(eval childtheme-sexp)
+       ,@solarized-definition)))
 
 (defmacro solarized-with-color-variables-with-palette (variant theme-name core-palette &optional childtheme-sexp)
   "Create a VARIANT of the theme named THEME-NAME with CORE-PALETTE.
@@ -455,24 +459,68 @@ If OVERWRITE is non-nil, overwrite theme file if exist."
 
 (define-obsolete-function-alias 'create-solarized-theme-file 'solarized-create-theme-file "1.3.0")
 
+(defconst solarized--themes
+  '(solarized-dark
+    solarized-light
+    solarized-dark-high-contrast
+    solarized-light-high-contrast
+    solarized-gruvbox-dark
+    solarized-gruvbox-light
+    solarized-selenized-dark
+    solarized-selenized-light
+    solarized-selenized-black
+    solarized-selenized-white
+    solarized-zenburn
+    solarized-wombat-dark)
+  "List of all bundled Solarized theme variants.")
+
+(defvar solarized--current nil
+  "The currently active Solarized theme, or nil.")
+
+(defun solarized--set-current (theme)
+  "Record THEME as the active Solarized theme.
+Called from `enable-theme-functions'."
+  (when (memq theme solarized--themes)
+    (setq solarized--current theme)))
+
+(defun solarized--clear-current (theme)
+  "Clear the active Solarized theme if THEME is being disabled.
+Called from `disable-theme-functions'."
+  (when (eq theme solarized--current)
+    (setq solarized--current nil)))
+
+(when (boundp 'enable-theme-functions)
+  (add-hook 'enable-theme-functions #'solarized--set-current)
+  (add-hook 'disable-theme-functions #'solarized--clear-current))
+
 (defun solarized-reload (&optional theme)
   "Reload the Solarized theme.
 You can specify the variant to reload manually with THEME.
 
 Useful after changing some configuration options or tweaking some colors."
   (interactive)
-  (let ((theme (or theme (car custom-enabled-themes))))
+  (let ((theme (or theme solarized--current (car custom-enabled-themes))))
     (disable-theme theme)
     (load-theme theme t)))
 
+;;;###autoload
 (defun solarized-toggle-theme ()
   "Toggle between the light and dark variants of Solarized."
   (interactive)
-  (let ((current-theme (car custom-enabled-themes)))
+  (let ((current-theme (or solarized--current (car custom-enabled-themes))))
     (cond
      ((eq current-theme 'solarized-dark) (solarized-reload 'solarized-light))
      ((eq current-theme 'solarized-light) (solarized-reload 'solarized-dark))
      (t (message "You're not currently running a Solarized theme")))))
+
+;;;###autoload
+(defun solarized-select-theme ()
+  "Select and load a Solarized theme variant interactively."
+  (interactive)
+  (let* ((names (mapcar #'symbol-name solarized--themes))
+         (choice (intern (completing-read "Solarized theme: " names nil t))))
+    (mapc #'disable-theme solarized--themes)
+    (load-theme choice t)))
 
 ;;; Footer
 

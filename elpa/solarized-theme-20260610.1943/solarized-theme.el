@@ -5,8 +5,8 @@
 ;; Author: Bozhidar Batsov <bozhidar@batsov.dev>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
 ;; URL: http://github.com/bbatsov/solarized-emacs
-;; Package-Version: 20250913.451
-;; Package-Revision: 65f677211946
+;; Package-Version: 20260610.1943
+;; Package-Revision: 0d9d9efff196
 ;; Package-Requires: ((emacs "24.1"))
 ;; Keywords: convenience, themes, solarized
 
@@ -37,7 +37,7 @@
 ;;
 ;;; Credits
 ;;
-;; Ethan Schoonover created the original theme for vim on such this port
+;; Ethan Schoonover created the original theme for vim on which this port
 ;; is based.
 ;;
 ;;; Code:

@@ -1,4 +1,4 @@
-;;; solarized-dark-high-contrast-theme.el --- Solarized Light Theme for Emacs  -*- lexical-binding: t -*-
+;;; solarized-zenburn-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2019 Thomas Frössman
 
@@ -17,7 +17,7 @@
 
 ;;; Commentary:
 ;;
-;; The dark variant of the solarized theme.
+;; The dark variant of the solarized theme with a zenburn palette.
 ;;
 ;;; Code:
 
@@ -25,19 +25,18 @@
 (eval-when-compile
   (require 'solarized-palettes))
 
-(deftheme solarized-dark-high-contrast
-  "The dark variant of the Solarized colour theme with slightly higher text contrast")
+(deftheme solarized-zenburn
+  "The dark variant of the Solarized colour theme with zenburn color palette")
 
-(solarized-with-color-variables 'dark 'solarized-dark-high-contrast
-  solarized-dark-high-contrast-palette-alist)
+(solarized-with-color-variables 'dark 'solarized-zenburn
+  solarized-zenburn-color-palette-alist)
 
-(provide-theme 'solarized-dark-high-contrast)
+(provide-theme 'solarized-zenburn)
 
-
-(provide 'solarized-dark-high-contrast-theme)
+(provide 'solarized-zenburn-theme)
 
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
 
-;;; solarized-dark-high-contrast-theme.el ends here
+;;; solarized-zenburn-theme.el ends here

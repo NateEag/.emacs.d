@@ -26,9 +26,13 @@ use the latter if you need a 24-bit specification of a color.
 (autoload 'solarized-create-color-palette "solarized" "\
 Create color-palette from CORE-PALETTE.
 
-The Returned color-palette has the same format as `solarized-color-palette'
+The returned color-palette has the same format as `solarized-color-palette'.
 
 (fn CORE-PALETTE)")
+(autoload 'solarized-toggle-theme "solarized" "\
+Toggle between the light and dark variants of Solarized." t)
+(autoload 'solarized-select-theme "solarized" "\
+Select and load a Solarized theme variant interactively." t)
 (when (and (boundp 'custom-theme-load-path) load-file-name) (add-to-list 'custom-theme-load-path (file-name-as-directory (file-name-directory load-file-name))))
 (register-definition-prefixes "solarized" '("solarized-"))
 

@@ -1,12 +1,12 @@
 ;;; web-mode.el --- major mode for editing web templates -*- coding: utf-8; lexical-binding: t; -*-
 
-;; Copyright 2011-2025 François-Xavier Bois
+;; Copyright 2011-2026 François-Xavier Bois
 
-;; Package-Version: 20250827.1315
-;; Package-Revision: 1eb0abb1a9bf
+;; Package-Version: 20260623.932
+;; Package-Revision: aeee2d4c82a7
 ;; Author: François-Xavier Bois
 ;; Maintainer: François-Xavier Bois <fxbois@gmail.com>
-;; Package-Requires: ((emacs "23.1"))
+;; Package-Requires: ((emacs "24.3.1"))
 ;; URL: https://web-mode.org
 ;; Repository: http://github.com/fxbois/web-mode
 ;; Created: July 2011
@@ -24,7 +24,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "17.3.22"
+(defconst web-mode-version "17.3.24"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -5676,6 +5676,17 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
 ;; (6)value-uq (7)value-sq (8)value-dq (9)value-bq : jsx attr={}
 ;; (10)value-block
 
+(defun web-mode--indentless-attribute-p (attr)
+  "Return t if ATTR is in `web-mode-indentless-attributes'.
+  Handles wildcards where '*' matches any suffix."
+  (let ((found nil))
+    (dolist (pattern web-mode-indentless-attributes found)
+      (if (string-suffix-p "*" pattern)
+          (when (string-prefix-p (substring pattern 0 -1) attr)
+            (setq found t))
+        (when (string= pattern attr)
+          (setq found t))))))
+
 (defun web-mode-attr-skip (limit)
 
   (let ((tag-flags 0) (attr-flags 0) (continue t) (attrs 0) (brace-depth 0)
@@ -5767,7 +5778,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
                name-end (1- pos))
          (setq state 4)
          (setq attr (buffer-substring-no-properties name-beg (1+ name-end)))
-         (when (and web-mode-indentless-attributes (member (downcase attr) web-mode-indentless-attributes))
+         (when (and web-mode-indentless-attributes (web-mode--indentless-attribute-p (downcase attr)))
            (setq attr-flags (logior attr-flags 8)))
          )
 
@@ -8073,7 +8084,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
   (let ((index 0) overlay diff column line-to line-from line-delta last-line-no)
     (web-mode-column-hide)
     (setq web-mode-enable-current-column-highlight t)
-    (save-excursion ;;save-mark-and-excursion
+    (save-mark-and-excursion
       (back-to-indentation)
       (setq column (current-column)
             line-to (web-mode-line-number))
@@ -8093,7 +8104,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
         (when (> line-from 1)
           (forward-line (1- line-from)))
         ;; Added by JMA
-        (save-excursion ;;save-mark-and-excursion
+        (save-mark-and-excursion
           (let (start-point end-point)
             (goto-line line-from)
             (move-to-column column)
@@ -9580,7 +9591,7 @@ Also return non-nil if it is the command `self-insert-command' is remapped to."
           ((and is-js (member ?\, chars))
            (when debug (message "I400(%S) part-args" pos))
            (cond
-             ((not (web-mode-part-args-beginning pos reg-beg))
+             ((not (web-mode-javascript-args-beginning pos reg-beg)) ;; #1337
               ;;(message "ici")
               )
              ((cdr (assoc "lineup-args" web-mode-indentation-params))

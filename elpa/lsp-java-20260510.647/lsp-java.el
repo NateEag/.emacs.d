@@ -1,11 +1,15 @@
 ;;; lsp-java.el --- Java support for lsp-mode  -*- lexical-binding: t; -*-
 
-;; Package-Version: 20251118.1411
-;; Package-Revision: 094593d9c13d
+;; Copyright (C) 2019  Ivan Yonchovski
+;; Copyright (C) 2020-2026 emacs-lsp maintainers
 
-;; Package-Requires: ((emacs "28.1") (lsp-mode "6.0") (markdown-mode "2.3") (dash "2.18.0") (f "0.20.0") (ht "2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
+;; Package-Requires: ((emacs "29.1") (lsp-mode "10.0.0") (markdown-mode "2.3") (dash "2.18.0") (f "0.20.0") (ht "2.0") (request "0.3.0") (treemacs "2.5") (dap-mode "0.5"))
+;; Package-Version: 20260510.647
+;; Package-Revision: 5294db2ac033
 ;; Keywords: languague, tools
 ;; URL: https://github.com/emacs-lsp/lsp-java
+
+;; This file is not part of GNU Emacs.
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -62,7 +66,7 @@ lsp's java -jar invocation."
   :risky t
   :type 'string)
 
-(defcustom lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.48.0/jdt-language-server-1.48.0-202506271502.tar.gz"
+(defcustom lsp-java-jdt-download-url "https://www.eclipse.org/downloads/download.php?file=/jdtls/milestones/1.57.0/jdt-language-server-1.57.0-202602261110.tar.gz"
   "JDT JS download url.
 Use https://download.eclipse.org/jdtls/milestones/1.12.0/jdt-language-server-1.12.0-202206011637.tar.gz if you want to use older java version."
   :type 'string)

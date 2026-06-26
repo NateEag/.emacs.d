@@ -4,8 +4,8 @@
 
 ;; Author: Ian Wahbe
 ;; URL: https://github.com/iwahbe/jsonian
-;; Package-Version: 20250507.1231
-;; Package-Revision: 513219ebb3cc
+;; Package-Version: 20260612.2214
+;; Package-Revision: 2709fb0140c9
 ;; Package-Requires: ((emacs "27.1"))
 
 ;; This program is free software; you can redistribute it and/or
@@ -65,11 +65,13 @@ It will be removed in a future version of jsonian."
   "The number of spaces each increase in indentation level indicates.
 nil means that `jsonian-mode' will infer the correct indentation."
   :type '(choice (const nil) integer)
+  :safe (lambda (x) (or (null x) (integerp x)))
   :group 'jsonian)
 
 (defcustom jsonian-default-indentation 4
   "The default number of spaces per indent for when it cannot be inferred."
   :type 'integer
+  :safe #'integerp
   :group 'jsonian)
 
 (defcustom jsonian-find-filter-fn #'jsonian--filter-prefix

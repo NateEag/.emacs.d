@@ -1220,7 +1220,8 @@ With this alias I hope to not need to remember it.")
   :hook ((LilyPond-mode . text-mode-init)
          (LilyPond-mode . (lambda () (turn-on-font-lock)))))
 
-(use-package rust-ts-mode)
+(use-package rust-ts-mode
+  :hook (rust-ts-mode . lsp))
 
 (use-package glsl-mode)
 

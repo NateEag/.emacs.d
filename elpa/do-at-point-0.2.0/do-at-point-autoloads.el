@@ -19,8 +19,14 @@ selected.
 
 (fn &optional THING)" t)
  (put 'do-at-point 'setup-func 'do-at-point)
-(register-definition-prefixes "do-at-point" '("do-at-point-"))
+(autoload 'do-at-point-dwim "do-at-point" "\
+Immediately execute first action for the first thing at point.
+If invoked with a prefix argument (or non-interactively with a non-nil
+value for DRY-RUN), then this command will only display the name of the
+action it would perform.
 
+(fn DRY-RUN)" t)
+(register-definition-prefixes "do-at-point" '("do-at-point-"))
 
 ;;; End of scraped data
 

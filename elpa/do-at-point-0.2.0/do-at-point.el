@@ -1,11 +1,11 @@
 ;;; do-at-point.el --- Generic context-sensitive action dispatcher.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2023, 2024  Free Software Foundation, Inc.
+;; Copyright (C) 2023, 2024, 2025, 2026  Free Software Foundation, Inc.
 
 ;; Author: Philip Kaludercic <philipk@posteo.net>
-;; Maintainer: Philip Kaludercic <~pkal/public-inbox@lists.sr.ht>
-;; URL: https://git.sr.ht/~pkal/do-at-point
-;; Version: 0.1.2
+;; Maintainer: Philip Kaludercic <philipk@posteo.net>
+;; URL: https://codeberg.org/pkal/do-at-point.el
+;; Version: 0.2.0
 ;; Package-Requires: ((emacs "26.1"))
 ;; Keywords: convenience
 
@@ -30,10 +30,12 @@
 ;; different "actions" can be dispatched, e.g. opening a url using
 ;; `browse-url' or occurring a symbol at point.
 
-;; The entry point of this package is `do-at-point'.  Bind it to a
-;; convenient key:
+;; The main entry point of this package is `do-at-point'.  Bind it to
+;; a convenient key:
 ;;
 ;;   (global-set-key (kbd "C-'") #'do-at-point)
+;;
+;; Also take a look at `do-at-point-dwim'.
 ;;
 ;; Most of the behaviour is controlled via the user option
 ;; `do-at-point-actions' and `do-at-point-user-actions'.  A mode may
@@ -44,19 +46,19 @@
 
 ;;; News:
 
-;;;; Version 0.1.2
+;;;; Version 0.2.0
 
-;; - New general actions: "delete-region" and "yank-and-swap".
-;;
-;; - New hook `do-at-point-mode-hook'.
-;;
-;; - New minor mode `do-at-point-persist-mode', bound to M-<return> by
-;;   default.  If enabled, it disables the disactivation of selections
-;;   after an action.  To enable it by default, evaluate
-;;
-;;     (add-hook 'do-at-point-hook #'do-at-point-persist-mode)
-;;
-;; - Allow customising the quick-confirm key (by Visuwesh).
+;; - Add new command `do-at-point-dwim'.  It will automatically run
+;;   the first action on the first thing `do-at-point' would select.
+;;   With a prefix argument, you can inspect what that action would
+;;   be.
+;; - Add new action on URLs to clone Git repositories into /tamp/
+;; - Add new action to attach files to Gnus
+;; - Add new action to run "rgrep" on some text
+;; - Add new action to integrate Iedit (if installed)
+;; - Prioritise matching symbols before words in the cycle order
+;; - Improve robustness of `do-at-point-forward' and
+;;   `do-at-point-backward'.
 
 ;;; Code:
 
@@ -92,6 +94,8 @@ but not `do-at-point-user-actions'.  Refer to the user option
 `do-at-point-actions' for details on the structure of the values
 of this variable.")
 
+(declare-function gnus-dired-attach "gnus-dired" (files-to-attach))
+
 (defcustom do-at-point-actions
   `((region
      (?\s "Mark" ,(lambda (start end)
@@ -110,6 +114,8 @@ of this variable.")
               (write-region beg end file))))
      (?k "Kill" ,#'kill-region)
      (?n "Narrow" ,#'narrow-to-region)
+     (?g "Grep" ,(lambda (str)
+                   (rgrep (regexp-quote str) "*" ".")))
      (?$ "Spell check" ,#'ispell-region)
      (?| "Pipe command"
          ,(lambda (beg end)
@@ -130,27 +136,49 @@ of this variable.")
             (let ((str (delete-and-extract-region start end)))
               (insert-for-yank (current-kill 0))
               (kill-new str t))))
-     (?\C-? "Delete" ,#'delete-region))
+     (?\C-? "Delete" ,#'delete-region)
+     ,@(and (fboundp 'iedit-mode)
+            `((?i "Iedit" ,(lambda (start end)
+                             (set-mark start)
+                             (goto-char end)
+                             (funcall-interactively 'iedit-mode))))))
     (email
      (?m "Compose message" ,(lambda (to) (compose-mail to))))
     (existing-filename
      (?f "Find file" ,#'find-file)
-     (?4 "Find file other window" ,#'find-file-other-window))
+     (?4 "Find file other window" ,#'find-file-other-window)
+     (?a "Attach to message"
+         ,(lambda (path)
+            (require 'gnus-dired)
+            (gnus-dired-attach (list path)))))
     (url
      (?b "Browse" ,#'browse-url)
      (?d "Download" ,#'(lambda (url)
-                         (start-process "*Download*" nil "wget" "-q" "-c" url)))
+                         (cond
+                          ((executable-find "wget")
+                           (start-process "*Download*" nil "wget" "-q" "-c" url))
+                          ((executable-find "wcurl")
+                           (start-process "*Download*" nil "wcurl" url))
+                          ;; FIXME: We should also try falling back to
+                          ;; `url-retrieve'.
+                          ((error "Failed to find external executable for downloads")))))
+     (?g "git-clone into temp"
+         ,(lambda (url)
+            (let ((dir (make-temp-file (file-name-base url) t))
+                  (default-directory temporary-file-directory))
+              (call-process "git" nil nil nil "clone" url dir)
+              (find-file-other-window dir))))
      (?e "eww" ,#'eww-browse-url))
     (number
      (?* "Calc" ,(lambda () (calc-embedded '(t)))))
-    (word
-     (?$ "Spell check" ,(lambda () (ispell-word)))
-     (?d "Dictionary" ,#'dictionary-search)
-     (?t "Transpose" ,(lambda () (transpose-words (or current-prefix-arg 1)))))
     (symbol
      (?. "Xref" ,#'xref-find-definitions)
      (?o "Occur" ,(lambda (str)
                     (occur (concat "\\_<\\(" (regexp-quote str) "\\)\\_>")))))
+    (word
+     (?$ "Spell check" ,(lambda () (ispell-word)))
+     (?d "Dictionary" ,#'dictionary-search)
+     (?t "Transpose" ,(lambda () (transpose-words (or current-prefix-arg 1)))))
     (string)
     (sexp
      (?t "Transpose" ,(lambda () (transpose-sexps (or current-prefix-arg 1)))))
@@ -247,10 +275,11 @@ invoke `do-at-point' is bound transiently."
 
 (defvar do-at-point-persist-mode)
 
-(defun do-at-point-confirm (&optional quick)
+(defun do-at-point-confirm (&optional quick dry-run)
   "Dispatch an action on the current \"thing\" being selected.
-If the optional argument QUICK is non-nil, the first applicable
-action is selected."
+If the optional argument QUICK is non-nil, the first applicable action
+is selected.  If DRY-RUN is non-nil, then only display the name of the
+selected action."
   (interactive)
   (unless (and do-at-point--overlay
                (overlay-start do-at-point--overlay)
@@ -277,6 +306,8 @@ action is selected."
     (when func
       (message nil)               ;clear mini buffer
       (pcase (car (func-arity func))
+        ((guard dry-run)
+         (message "Would do: %s on %s" (cadr choice) thing))
         (0 (funcall func))
         (1 (funcall func (buffer-substring (car bound) (cdr bound))))
         (2 (funcall func (car bound) (cdr bound)))
@@ -368,8 +399,9 @@ instead."
         (setq do-at-point--overlay ov)
         (do-at-point--update))
     (remove-hook 'post-command-hook #'do-at-point--update t)
-    (overlay-put do-at-point--overlay 'do-at-point-thing nil)
-    (delete-overlay do-at-point--overlay)
+    (when do-at-point--overlay
+      (overlay-put do-at-point--overlay 'do-at-point-thing nil)
+      (delete-overlay do-at-point--overlay))
     (setq do-at-point--overlay nil))
   (run-hooks 'do-at-point-hook))
 
@@ -380,23 +412,32 @@ without having to re-select the object repeatedly."
   :global nil)
 
 (defun do-at-point-forward (n)
-  "Move focus N things ahead.
+   "Move focus N things ahead.
 By default, this will move one thing ahead."
-  (interactive "p")
-  (when do-at-point--overlay
-    (when (overlay-end do-at-point--overlay)
-      (goto-char (overlay-end do-at-point--overlay)))
-    (forward-thing (overlay-get do-at-point--overlay 'do-at-point-thing) n)))
+   (interactive "p")
+   (when do-at-point--overlay
+     (let ((begin (overlay-start do-at-point--overlay))
+           (thing (overlay-get do-at-point--overlay 'do-at-point-thing))
+           (same 0))                     ;retry-counter
+       (if (and begin thing)
+           ;; The `same' counter gives us two attempts to move to the
+           ;; next "thing."  If we just try once without repeating, we
+           ;; can stay on the same "thing", which sometimes is a
+           ;; problem with paragraphs.  If we don't limit the number
+           ;; of repetitions, we don't terminate if we are at the end
+           ;; of a buffer and there are no more things, hence we
+           ;; remain at the same point.
+           (while (and (<= same 1) (eq begin (car (bounds-of-thing-at-point thing))))
+             (let ((before (point)))
+               (forward-thing thing n)
+               (setq same (if (= before (point)) (1+ same) 0))))
+         (forward-thing thing n)))))
 
 (defun do-at-point-backward (n)
-  "Move focus N things back.
+   "Move focus N things back.
 Refer to the command `do-at-point-forward' for more details."
-  (interactive "p")
-  (when do-at-point--overlay
-    (when (overlay-start do-at-point--overlay)
-      (goto-char (overlay-start do-at-point--overlay)))
-    (forward-thing (overlay-get do-at-point--overlay 'do-at-point-thing)
-                   (- (or n 1)))))
+   (interactive "p")
+   (do-at-point-forward (- (or n 1))))
 
 ;;;###autoload
 (defun do-at-point (&optional thing)
@@ -418,6 +459,20 @@ selected."
   (do-at-point--mode 1))
 
 ;;;###autoload (put 'do-at-point 'setup-func 'do-at-point)
+
+;;;###autoload
+(defun do-at-point-dwim (dry-run)
+  "Immediately execute first action for the first thing at point.
+If invoked with a prefix argument (or non-interactively with a non-nil
+value for DRY-RUN), then this command will only display the name of the
+action it would perform."
+  (interactive "P")
+  (unwind-protect
+      (let ((do-at-point-persist-mode nil))
+        (do-at-point--mode 1)
+        (do-at-point-confirm t dry-run))
+    (when do-at-point--mode
+      (do-at-point--mode -1))))
 
 (provide 'do-at-point)
 ;;; do-at-point.el ends here

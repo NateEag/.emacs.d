@@ -26,11 +26,13 @@ invoking
 Usage
 -----
 
-The main and presently only entry point for this package is the
-autoloaded `do-at-point` command itself.  Bind it to a convenient key,
-for example
+The main entry point for this package is the autoloaded `do-at-point`
+command itself.  Bind it to a convenient key, for example
 
     (global-set-key (kbd "C-'") #'do-at-point)
+	
+If you are feeling lucky, you can also bind `do-at-point-dwim` to a
+convenient key (e.g. <kbd>M-.</kbd>).
 
 There are some options that users may configure.  After having have
 loaded the package consult `M-x apropos-user-option RET do-at-point-
@@ -51,24 +53,26 @@ code contributions.
 Source code
 -----------
 
-Do-at-point.el is developed on [SourceHut].
+Do-at-point.el is developed on [Codeberg].
 
-[SourceHut]:
-	https://git.sr.ht/~pkal/do-at-point
+[Codeberg]:
+	https://codeberg.org/pkal/do-at-point.el
 
 Bugs and Patches
 ----------------
 
-Bugs, patches, comments or questions can be submitted to my [public
-inbox].
+Bugs, patches, comments or questions can be submitted via [Codeberg's
+issue system] or by sending [me] an email.
 
-[public inbox]:
-	https://lists.sr.ht/~pkal/public-inbox
+[Codeberg's issue system]:
+	https://codeberg.org/pkal/do-at-point.el/issues
+[me]:
+	https://amodernist.com/#email
 
 Distribution
 ------------
 
-Auto-header.el and all other source files in this directory are
+Do-at-point.el and all other source files in this directory are
 distributed under the [GNU Public License], Version 3 (like Emacs
 itself).
 

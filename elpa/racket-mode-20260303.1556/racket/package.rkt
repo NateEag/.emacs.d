@@ -4,7 +4,6 @@
          (only-in racket/hash hash-union!)
          racket/match
          racket/path
-         racket/promise
          (only-in racket/string string-join)
          (except-in pkg/lib
                     pkg-desc)
@@ -28,6 +27,7 @@
          pkg/name
          (only-in setup/getinfo get-info/full)
          net/url
+         "package-channel.rkt"
          (only-in "scribble.rkt"
                   module-doc-path
                   refresh-doc-index!))
@@ -35,8 +35,7 @@
 (provide package-list
          package-details
          package-op
-         catalog-package-doc-link
-         package-notify-channel)
+         catalog-package-doc-link)
 
 (define (package-list)
   (define installed (installed-packages))
@@ -276,8 +275,6 @@
       [_ #f])))
 
 ;;; package operations
-
-(define package-notify-channel (make-channel))
 
 (define sema (make-semaphore 1))
 

@@ -182,10 +182,11 @@ Intended to be called after a (ready) notification from back end."
     (message "{%s} %s" (process-name proc) (substring event 0 -1))))
 
 (defun racket--cmd-process-stderr-filter (proc string)
-  "Show back end process stderr via `message'.
+  "Show back end process stderr to user.
 Won't show noise like \"process finished\" if stderr process
 sentinel is `ignore'."
-  (message "{%s} %s\n" proc string))
+  (racket--log-warning (format "{%s} %s" (process-name proc) string)
+                       '(back-end)))
 
 (defun racket--cmd-process-filter (proc string)
   "Read and dispatch sexprs as they become available from process output."
@@ -362,13 +363,15 @@ mistake."
                             (with-current-buffer buf (funcall callback v))))
              (`(error ,m) (let ((print-length nil) ;for %S
                                 (print-level nil))
-                            (message "Exception for command %S with repl-id %S from %S to %S:\n%s"
-                                     command-sexpr repl-session-id buf name m)))
+                            (racket--log-warning (format "Exception for command %S with repl-id %S from %S to %S:\n%s"
+                                                         command-sexpr repl-session-id buf name m)
+                                                 '(back-end))))
              (`(break)    nil)
              (v           (let ((print-length nil) ;for %S
                                 (print-level nil))
-                            (message "Unknown response to command %S with repl-id %S from %S to %S:\n%S"
-                                     command-sexpr repl-session-id buf name v)))))
+                            (racket--log-warning (format "Unknown response to command %S with repl-id %S from %S to %S:\n%S"
+                                                         command-sexpr repl-session-id buf name v)
+                                                 '(back-end))))))
        #'ignore))))
 
 (defun racket--cmd/await (repl-session-id command-sexpr)

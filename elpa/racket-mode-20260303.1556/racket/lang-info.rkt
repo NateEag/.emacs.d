@@ -19,7 +19,8 @@
    range-indenter
    reverse-range-indenter
    submit-predicate
-   comment-delimiters)
+   comment-delimiters
+   documentation-language-family)
   #:transparent #:authentic)
 
 (define racket-grouping-position

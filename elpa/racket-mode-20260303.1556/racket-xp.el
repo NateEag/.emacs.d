@@ -265,7 +265,8 @@ commands directly to whatever keys you prefer.
          (if (< (buffer-size) racket-xp-buffer-size-limit)
              (racket--xp-annotate)
            (setq-local racket-xp-after-change-refresh-delay nil)
-           (message "Extremely large buffer; racket-xp-after-change-refresh-delay locally set to nil"))
+           (racket--log-warning "Extremely large buffer; racket-xp-after-change-refresh-delay locally set to nil"
+                                '(xp)))
          (add-hook 'after-change-functions
                    #'racket--xp-after-change-hook
                    t t)

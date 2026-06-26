@@ -2304,6 +2304,8 @@ Key                                                                             
 ‘^’                                                                                                                                               ‘racket-describe-nav-up’
 ‘C-^’                                                                                                                                             ‘racket-describe-nav-top’
 ‘x’                                                                                                                                               ‘racket-describe-browse-external’
+‘L’                                                                                                                                               ‘racket-describe-choose-language-family’
+‘a’                                                                                                                                               ‘racket-describe-about-language-family’
 
    In addition to any hooks its parent mode ‘special-mode’ might have
 run, this mode runs the hook ‘racket-describe-mode-hook’, as the final
@@ -5065,167 +5067,167 @@ Node: racket-xp-tail-next-sibling82515
 Node: racket-xp-tail-previous-sibling82817
 Node: racket-documentation-search83139
 Node: racket-describe-mode84165
-Node: racket-describe-search88069
-Node: Run88339
-Node: racket-repl-mode88786
-Node: racket-run93626
-Node: racket-run-and-switch-to-repl95679
-Node: racket-run-module-at-point96135
-Node: racket-repl96642
-Node: racket-repl-describe97579
-Node: racket-repl-documentation99067
-Node: racket-racket100185
-Node: racket-profile100524
-Node: racket-profile-mode101242
-Node: racket-logger102430
-Node: racket-logger-mode102651
-Node: racket-repl-clear103789
-Node: racket-repl-clear-leaving-last-prompt104377
-Node: Test104692
-Node: racket-test104837
-Node: racket-raco-test105671
-Node: Eval106020
-Node: racket-send-region106212
-Node: racket-send-definition106508
-Node: racket-send-last-sexp106835
-Node: Collections107301
-Node: racket-open-require-path107468
-Node: Macro expand108079
-Node: racket-stepper-mode108352
-Node: racket-expand-file109529
-Node: racket-expand-region110232
-Node: racket-expand-definition110645
-Node: racket-expand-last-sexp111081
-Node: Packages111480
-Node: racket-package-refresh111714
-Node: list-racket-packages112054
-Node: racket-package-mode112347
-Node: describe-racket-package113401
-Node: Debug114776
-Node: racket-debug-mode115369
-Node: racket-debug-step118324
-Node: racket-debug-step-over118582
-Node: racket-debug-step-out118848
-Node: racket-debug-forward-breakable119108
-Node: racket-debug-backward-breakable119512
-Node: racket-debug-run-to-here119925
-Node: racket-debug-set-break-expression120320
-Node: racket-debug-clear-break-expression122623
-Node: racket-debug-toggle-break-expression123003
-Node: racket-debug-forward-break-expression123411
-Node: racket-debug-backward-break-expression123758
-Node: racket-debug-set-local124097
-Node: racket-debug-continue124352
-Node: racket-debug-go124725
-Node: Other125132
-Node: racket-mode-start-faster125292
-Node: racket-mode-start-slower126637
-Node: Variables126932
-Node: General variables127299
-Node: racket-program127818
-Node: racket-command-timeout128486
-Node: racket-memory-limit128956
-Node: racket-error-context129562
-Node: racket-user-command-line-arguments130679
-Node: racket-browse-url-function131547
-Node: racket-xp-after-change-refresh-delay131952
-Node: racket-xp-highlight-unused-regexp132369
-Node: racket-xp-add-binding-faces132818
-Node: racket-xp-eldoc-level133654
-Node: racket-documentation-search-location134326
-Node: racket-expand-hiding135184
-Node: Hash lang variables135436
-Node: racket-hash-lang-token-face-alist135694
-Node: racket-hash-lang-module-language-hook137173
-Node: REPL variables140631
-Node: racket-repl-buffer-name-function141168
-Node: racket-submodules-to-run142203
-Node: racket-repl-history-directory142950
-Node: racket-history-filter-regexp143233
-Node: racket-images-inline143585
-Node: racket-imagemagick-props143833
-Node: racket-images-keep-last144441
-Node: racket-images-system-viewer144695
-Node: racket-images-do-not-use-svg144978
-Node: racket-pretty-print145412
-Node: racket-repl-command-file145969
-Node: racket-repl-echo-sent-expressions146231
-Node: Other variables146748
-Node: racket-doc-index-directory147237
-Node: racket-doc-index-predicate-function147494
-Node: racket-indent-curly-as-sequence148207
-Node: racket-indent-sequence-depth148634
-Node: racket-pretty-lambda149324
-Node: racket-smart-open-bracket-enable149731
-Node: racket-logger-config150187
-Node: racket-before-run-hook151038
-Node: racket-after-run-hook151640
-Node: racket-sexp-comment-fade152245
-Node: Experimental debugger variables152951
-Node: racket-debuggable-files153196
-Node: Showing information153742
-Node: racket-show-functions154001
-Node: Running racket and raco commands in a shell or terminal155096
-Node: racket-shell-or-terminal-function155427
-Node: Racket input method155988
-Node: racket-input-prefix156235
-Node: racket-input-translations156994
-Node: Configuration functions157596
-Node: Showing information (1)158036
-Node: racket-show-pseudo-tooltip158343
-Node: racket-show-echo-area159062
-Node: racket-show-header-line159480
-Node: racket-show-pos-tip160059
-Node: Associating edit buffers with REPL buffers160390
-Node: racket-repl-buffer-name-shared160804
-Node: racket-repl-buffer-name-unique161203
-Node: racket-repl-buffer-name-project161669
-Node: racket-project-root162184
-Node: Browsing file URLs with anchors162663
-Node: racket-browse-url-using-temporary-file162966
-Node: Configuring back ends164057
-Node: racket-add-back-end164338
-Node: Running racket and raco commands in a shell or terminal (1)169548
-Node: racket-shell169904
-Node: racket-term170205
-Node: racket-ansi-term170527
-Node: racket-vterm170869
-Node: Faces171205
-Node: All171322
-Node: racket-keyword-argument-face172399
-Node: racket-reader-quoted-symbol-face172621
-Node: racket-reader-syntax-quoted-symbol-face173143
-Node: racket-here-string-face173680
-Node: racket-xp-def-face173908
-Node: racket-xp-use-face174146
-Node: racket-xp-unused-face174375
-Node: racket-xp-tail-target-face174639
-Node: racket-xp-tail-position-face174919
-Node: racket-xp-binding-lang-face175213
-Node: racket-xp-binding-lang-use-face175529
-Node: racket-xp-binding-import-face175877
-Node: racket-xp-binding-import-use-face176201
-Node: racket-xp-binding-local-face176531
-Node: racket-xp-binding-local-use-face176849
-Node: racket-logger-config-face177175
-Node: racket-logger-topic-face177438
-Node: racket-logger-fatal-face177684
-Node: racket-logger-error-face177934
-Node: racket-logger-warning-face178186
-Node: racket-logger-info-face178443
-Node: racket-logger-debug-face178691
-Node: racket-doc-link-face178936
-Node: racket-ext-link-face179322
-Node: racket-doc-output-face179618
-Node: racket-doc-litchar-face179894
-Node: racket-repl-message180147
-Node: racket-repl-prompt180393
-Node: racket-repl-value180612
-Node: racket-repl-error-message180849
-Node: racket-repl-error-location181103
-Node: racket-repl-stdout181361
-Node: racket-repl-stderr181610
-Node: racket-hash-lang-text181853
+Node: racket-describe-search88458
+Node: Run88728
+Node: racket-repl-mode89175
+Node: racket-run94015
+Node: racket-run-and-switch-to-repl96068
+Node: racket-run-module-at-point96524
+Node: racket-repl97031
+Node: racket-repl-describe97968
+Node: racket-repl-documentation99456
+Node: racket-racket100574
+Node: racket-profile100913
+Node: racket-profile-mode101631
+Node: racket-logger102819
+Node: racket-logger-mode103040
+Node: racket-repl-clear104178
+Node: racket-repl-clear-leaving-last-prompt104766
+Node: Test105081
+Node: racket-test105226
+Node: racket-raco-test106060
+Node: Eval106409
+Node: racket-send-region106601
+Node: racket-send-definition106897
+Node: racket-send-last-sexp107224
+Node: Collections107690
+Node: racket-open-require-path107857
+Node: Macro expand108468
+Node: racket-stepper-mode108741
+Node: racket-expand-file109918
+Node: racket-expand-region110621
+Node: racket-expand-definition111034
+Node: racket-expand-last-sexp111470
+Node: Packages111869
+Node: racket-package-refresh112103
+Node: list-racket-packages112443
+Node: racket-package-mode112736
+Node: describe-racket-package113790
+Node: Debug115165
+Node: racket-debug-mode115758
+Node: racket-debug-step118713
+Node: racket-debug-step-over118971
+Node: racket-debug-step-out119237
+Node: racket-debug-forward-breakable119497
+Node: racket-debug-backward-breakable119901
+Node: racket-debug-run-to-here120314
+Node: racket-debug-set-break-expression120709
+Node: racket-debug-clear-break-expression123012
+Node: racket-debug-toggle-break-expression123392
+Node: racket-debug-forward-break-expression123800
+Node: racket-debug-backward-break-expression124147
+Node: racket-debug-set-local124486
+Node: racket-debug-continue124741
+Node: racket-debug-go125114
+Node: Other125521
+Node: racket-mode-start-faster125681
+Node: racket-mode-start-slower127026
+Node: Variables127321
+Node: General variables127688
+Node: racket-program128207
+Node: racket-command-timeout128875
+Node: racket-memory-limit129345
+Node: racket-error-context129951
+Node: racket-user-command-line-arguments131068
+Node: racket-browse-url-function131936
+Node: racket-xp-after-change-refresh-delay132341
+Node: racket-xp-highlight-unused-regexp132758
+Node: racket-xp-add-binding-faces133207
+Node: racket-xp-eldoc-level134043
+Node: racket-documentation-search-location134715
+Node: racket-expand-hiding135573
+Node: Hash lang variables135825
+Node: racket-hash-lang-token-face-alist136083
+Node: racket-hash-lang-module-language-hook137562
+Node: REPL variables141020
+Node: racket-repl-buffer-name-function141557
+Node: racket-submodules-to-run142592
+Node: racket-repl-history-directory143339
+Node: racket-history-filter-regexp143622
+Node: racket-images-inline143974
+Node: racket-imagemagick-props144222
+Node: racket-images-keep-last144830
+Node: racket-images-system-viewer145084
+Node: racket-images-do-not-use-svg145367
+Node: racket-pretty-print145801
+Node: racket-repl-command-file146358
+Node: racket-repl-echo-sent-expressions146620
+Node: Other variables147137
+Node: racket-doc-index-directory147626
+Node: racket-doc-index-predicate-function147883
+Node: racket-indent-curly-as-sequence148596
+Node: racket-indent-sequence-depth149023
+Node: racket-pretty-lambda149713
+Node: racket-smart-open-bracket-enable150120
+Node: racket-logger-config150576
+Node: racket-before-run-hook151427
+Node: racket-after-run-hook152029
+Node: racket-sexp-comment-fade152634
+Node: Experimental debugger variables153340
+Node: racket-debuggable-files153585
+Node: Showing information154131
+Node: racket-show-functions154390
+Node: Running racket and raco commands in a shell or terminal155485
+Node: racket-shell-or-terminal-function155816
+Node: Racket input method156377
+Node: racket-input-prefix156624
+Node: racket-input-translations157383
+Node: Configuration functions157985
+Node: Showing information (1)158425
+Node: racket-show-pseudo-tooltip158732
+Node: racket-show-echo-area159451
+Node: racket-show-header-line159869
+Node: racket-show-pos-tip160448
+Node: Associating edit buffers with REPL buffers160779
+Node: racket-repl-buffer-name-shared161193
+Node: racket-repl-buffer-name-unique161592
+Node: racket-repl-buffer-name-project162058
+Node: racket-project-root162573
+Node: Browsing file URLs with anchors163052
+Node: racket-browse-url-using-temporary-file163355
+Node: Configuring back ends164446
+Node: racket-add-back-end164727
+Node: Running racket and raco commands in a shell or terminal (1)169937
+Node: racket-shell170293
+Node: racket-term170594
+Node: racket-ansi-term170916
+Node: racket-vterm171258
+Node: Faces171594
+Node: All171711
+Node: racket-keyword-argument-face172788
+Node: racket-reader-quoted-symbol-face173010
+Node: racket-reader-syntax-quoted-symbol-face173532
+Node: racket-here-string-face174069
+Node: racket-xp-def-face174297
+Node: racket-xp-use-face174535
+Node: racket-xp-unused-face174764
+Node: racket-xp-tail-target-face175028
+Node: racket-xp-tail-position-face175308
+Node: racket-xp-binding-lang-face175602
+Node: racket-xp-binding-lang-use-face175918
+Node: racket-xp-binding-import-face176266
+Node: racket-xp-binding-import-use-face176590
+Node: racket-xp-binding-local-face176920
+Node: racket-xp-binding-local-use-face177238
+Node: racket-logger-config-face177564
+Node: racket-logger-topic-face177827
+Node: racket-logger-fatal-face178073
+Node: racket-logger-error-face178323
+Node: racket-logger-warning-face178575
+Node: racket-logger-info-face178832
+Node: racket-logger-debug-face179080
+Node: racket-doc-link-face179325
+Node: racket-ext-link-face179711
+Node: racket-doc-output-face180007
+Node: racket-doc-litchar-face180283
+Node: racket-repl-message180536
+Node: racket-repl-prompt180782
+Node: racket-repl-value181001
+Node: racket-repl-error-message181238
+Node: racket-repl-error-location181492
+Node: racket-repl-stdout181750
+Node: racket-repl-stderr181999
+Node: racket-hash-lang-text182242
 
 End Tag Table
 

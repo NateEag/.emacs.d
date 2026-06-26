@@ -261,6 +261,20 @@ whether it would shadow an end user binding in the global map.")
     "-"
     str)))
 
+(defun racket--log (message sub-types level)
+  "Use `display-warning' when available else `message'."
+  (if (fboundp 'display-warning)
+      (display-warning (cons 'racket-mode sub-types)
+                       message
+                       level)
+    (message "%s" message)))
+
+(defsubst racket--log-warning (message &optional sub-types)
+  (racket--log message sub-types :warning))
+
+(defsubst racket--log-debug (message &optional sub-types)
+  (racket--log message sub-types :debug))
+
 (provide 'racket-util)
 
 ;; racket-util.el ends here

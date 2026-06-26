@@ -693,6 +693,7 @@
              #f
              #f
              #f
+             #f
              #f))
 
 (define (read-lang-info* in)
@@ -710,7 +711,8 @@
                      (info 'drracket:range-indentation #f)
                      (info 'drracket:range-indentation/reverse-choices #f)
                      (info 'drracket:submit-predicate #f)
-                     (comment-delimiters info mod-lang))
+                     (comment-delimiters info mod-lang)
+                     (info 'documentation-language-family #f))
           end-pos))
 
 ;; Handle the module-language lang info key, as documented at

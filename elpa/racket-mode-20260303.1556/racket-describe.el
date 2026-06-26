@@ -1,6 +1,6 @@
 ;;; racket-describe.el -*- lexical-binding: t -*-
 
-;; Copyright (c) 2013-2025 by Greg Hendershott.
+;; Copyright (c) 2013-2026 by Greg Hendershott.
 ;; Portions Copyright (C) 1985-1986, 1999-2013 Free Software Foundation, Inc.
 
 ;; Author: Greg Hendershott
@@ -19,7 +19,10 @@
 (require 'racket-back-end)
 ;; Don't (require 'racket-repl). Mutual dependency. Instead:
 (declare-function racket--repl-session-id "racket-repl" ())
-(autoload         'racket--repl-session-id "racket-repl")
+(autoload        'racket--repl-session-id "racket-repl")
+;; Don't (require 'racket-hash-lang-mode). Mutual dependency. Instead:
+(declare-function racket--hash-lang-doc-family "racket-hash-lang" ())
+(autoload        'racket--hash-lang-doc-family "racket-hash-lang")
 
 (defvar-local racket--describe-here nil
   "The current navigation point. Either nil or (cons path point).")
@@ -27,6 +30,31 @@
   "Back navigation list. Each item is (cons path point).")
 (defvar-local racket--describe-stack-forward nil
   "Forward navigation list. Each item is (cons path point).")
+
+(defvar-local racket--describe-page-family nil
+  "The language family extracted from documentation page.")
+
+(defvar-local racket--describe-as-family nil
+  "When not nil and not equal to `racket--describe-page-family', show
+different UX and use this family for things like top and search sort
+priority.")
+
+(defun racket--describe-family-default-and-choices ()
+  (racket--cmd/await nil `(doc-families)))
+(defun racket--describe-default-family ()
+  (or (car (racket--describe-family-default-and-choices))
+      "Racket"))
+(defun racket--describe-family-choices ()
+  (cdr (racket--describe-family-default-and-choices)))
+(defun racket--describe-family-details (family)
+  (seq-some (lambda (v)
+              (and (string-equal family (cdr (assq 'family v)))
+                   v))
+            (racket--describe-family-choices)))
+(defun racket--describe-family-start-doc (family)
+  (cdr (assq 'start-doc (racket--describe-family-details family))))
+(defun racket--describe-family-describe-doc (family)
+  (cdr (assq 'describe-doc (racket--describe-family-details family))))
 
 (defun racket--call-with-describe-buffer (thunk)
   "Call THUNK in a blank `racket-describe-mode-buffer' and return
@@ -114,11 +142,6 @@ anchor. If numberp, move to that position."
   (setq racket--describe-here
         (if path (cons path goto) nil))
   (setq racket--describe-nav nil)
-  (setq header-line-format
-        (propertize
-         (concat path (cond ((stringp goto) (concat " " goto))
-                            ((numberp goto) (format " %s" goto))))
-         'face '(:height 0.75)))
   ;; Although `shr' carefully fills to fit window width, if user
   ;; resizes window or changes text scaling, we don't want it to wrap.
   (setq truncate-lines t)
@@ -141,9 +164,16 @@ anchor. If numberp, move to that position."
              (racket-doc-link   . ,#'racket-render-tag-racket-doc-link)
              (racket-ext-link   . ,#'racket-render-tag-racket-ext-link)
              (racket-anchor     . ,#'racket-render-tag-racket-anchor)
-             (racket-nav        . ,#'racket-render-tag-racket-nav))))
+             (racket-nav        . ,#'racket-render-tag-racket-nav)
+             (racket-family     . ,#'racket-render-tag-racket-family))))
       (shr-insert-document
        (racket--describe-handle-toc-nodes dom)))
+    (let ((path+goto (format " %s %s" path (or goto ""))))
+     (setq header-line-format
+           `((:eval (racket--describe-family-header))
+             (:propertize ,path+goto
+                          face (:height 0.75)
+                          help-echo ,path+goto))))
     ;; See doc string for `racket--scribble-temp-nbsp'.
     (goto-char (point-min))
     (while (re-search-forward (string racket--scribble-temp-nbsp) nil t)
@@ -159,11 +189,11 @@ anchor. If numberp, move to that position."
 
 If `numberp', move to that position.
 
-If `stringp' move to the position after the anchor that is not
-anchor. There could be multiple anchors before some non-anchor
-text. We want point left where `racket-search-describe' can use
+If `stringp' move to the first position after the anchor that is not
+another anchor. There could be multiple anchors before some non-anchor
+text. We want to leave point where `racket-search-describe' can use
 `thing-at-point' to find a symbol."
-  (set-window-point ;in case buffer window isnt' selected; #590
+  (set-window-point ;in case buffer window isn't selected; #590
    (get-buffer-window (current-buffer))
    (cond
     ((numberp goto)
@@ -343,29 +373,123 @@ for our custom shr handler."
   (setq racket--describe-nav dom))
 
 (defun racket--describe-nav (which)
-  (interactive)
-  (let ((path (dom-attr racket--describe-nav which)))
-    (unless path
-      (user-error "There is no %s page available" which))
-    (setq racket--describe-stack-forward nil)
-    (racket--describe-maybe-push-here 'back)
-    (racket--describe-fetch-and-show path nil)))
+  (cl-flet ((top ()
+              (racket--describe-family-start-doc
+               (or racket--describe-as-family
+                   racket--describe-page-family))))
+    (let* ((dom-path (dom-attr racket--describe-nav which))
+           (path (pcase which
+                   ;; When there's a special language family top page,
+                   ;; (a) use it to go top and (b) don't go up beyond.
+                   ('top (or (top) dom-path))
+                   ('up (and (not (equal (top) (car racket--describe-here)))
+                             dom-path))
+                   (_ dom-path))))
+      (unless path
+        (user-error "No \"%s\" page is available%s"
+                    which
+                    (if (memq which '(top up))
+                        (format " (using language family \"%s\")"
+                                (or racket--describe-as-family
+                                    racket--describe-page-family))
+                      "")))
+      (setq racket--describe-stack-forward nil)
+      (racket--describe-maybe-push-here 'back)
+      (racket--describe-fetch-and-show path nil))))
 
 (defun racket-describe-nav-top ()
+  "Navigate to the top page."
   (interactive)
   (racket--describe-nav 'top))
 
 (defun racket-describe-nav-up ()
+  "Navigate to the parent page."
   (interactive)
   (racket--describe-nav 'up))
 
 (defun racket-describe-nav-prev ()
+  "Navigate to the previous page."
   (interactive)
   (racket--describe-nav 'prev))
 
 (defun racket-describe-nav-next ()
+  "Navigate to the next page."
   (interactive)
   (racket--describe-nav 'next))
+
+(defun racket-render-tag-racket-family (dom)
+  (setq racket--describe-page-family (dom-attr dom 'data-fam)))
+
+(defun racket--describe-family-header ()
+  (if (not racket--describe-page-family)
+      ""
+    ;; `buttonize' not availabe in older Emacs, so...
+    (cl-flet ((button (str help-echo)
+                (propertize
+                 str
+                 'button t
+                 'follow-link t
+                 'category t
+                 'keymap button-map
+                 'action #'racket-describe-choose-language-family
+                 'face '(:underline t :height 0.75)
+                 'mouse-face 'highlight
+                 'help-echo help-echo)))
+      (if (or (not racket--describe-as-family)
+              (equal racket--describe-as-family
+                     racket--describe-page-family))
+          (button
+           racket--describe-page-family
+           "Documentation language family; click to navigate using another family")
+        (concat
+         (propertize (concat racket--describe-page-family " ")
+                     'face '(:height 0.75)
+                     'help-echo "Documentation language family")
+         (button
+          (concat "(as " racket--describe-as-family ")")
+          "Navigating as family; click to change"))))))
+
+(defun racket--describe-completing-read-family (prompt)
+  (let* ((vs (racket--describe-family-choices))
+         (vs (seq-sort (lambda (a b)
+                         (or (> (or (cdr (assq 'order a)) 0)
+                                (or (cdr (assq 'order b)) 0))
+                             (string< (cdr (assq 'family a))
+                                      (cdr (assq 'family b)))))
+                       vs))
+         (names (seq-map (lambda (v)
+                           (cdr (assq 'family v)))
+                         vs)))
+    (completing-read prompt
+                     names
+                     nil ;predicate
+                     t   ;require-match
+                     nil ;initial-input
+                     'racket-documentation-language-family)))
+
+(defun racket-describe-choose-language-family (&optional _button)
+  "Choose a documentation language family with which to navigate.
+
+The family can affect `racket-describe-nav-top' and order in which
+`racket-describe-search' sorts candidates."
+  (interactive)
+  (when-let (name (racket--describe-completing-read-family
+                   "Navigate documentation as language family: "))
+    (setq racket--describe-as-family name)))
+
+(defun racket-describe-about-language-family ()
+  "Show the documentation page about a language family.
+
+For some languages, this will be something like a \"Guide\" table of
+contents. For other languages, it might be the same as the top page,
+i.e. `racket-describe-nav-top'."
+  (interactive)
+  (when-let (name (racket--describe-completing-read-family
+                   "View documentation about language family: "))
+    (when-let (about (racket--describe-family-describe-doc name))
+      (setq racket--describe-stack-forward nil)
+      (racket--describe-maybe-push-here 'back)
+      (racket--describe-fetch-and-show about nil))))
 
 (defun racket--describe-fetch-and-show (path goto)
   "Insert shr dom for PATH and move point to GOTO.
@@ -547,7 +671,9 @@ current line and looking back."
                 ("p"                 ,#'racket-describe-nav-prev)
                 ("^"                 ,#'racket-describe-nav-up)
                 ("C-^"               ,#'racket-describe-nav-top)
-                ("x"                 ,#'racket-describe-browse-external)))))
+                ("x"                 ,#'racket-describe-browse-external)
+                ("L"                 ,#'racket-describe-choose-language-family)
+                ("a"                 ,#'racket-describe-about-language-family)))))
     (define-key map [XF86Back]    'racket-describe-back)
     (define-key map [XF86Forward] 'racket-describe-back)
     (set-keymap-parent map special-mode-map)
@@ -615,6 +741,15 @@ Return nil or \(term path anchor lib\)."
                                          [32 racket-describe-search-from-libs]
                                          [0  racket-describe-search-lang-fams]]))
          (candidates nil)
+         (first-family (or racket--describe-as-family ;buffer-local
+                           racket--describe-page-family ;buffer-local
+                           (racket--hash-lang-doc-family)
+                           (racket--describe-default-family)))
+         (family-orders (seq-map (lambda (v)
+                                   (cons (cdr (assq 'family v))
+                                         (- (or (cdr (assq 'order v))
+                                                0))))
+                                 (racket--describe-family-choices)))
          (collection
           (lambda (string predicate action)
             (cond
@@ -627,8 +762,11 @@ Return nil or \(term path anchor lib\)."
              (t
               (when (eq action t)
                 (setq candidates
-                      (racket--describe-search-make-strings
-                       (racket--cmd/await nil `(doc-search ,string)))))
+                      (mapcar (apply-partially
+                               #'racket--describe-search-make-string
+                               first-family
+                               family-orders)
+                              (racket--cmd/await nil `(doc-search ,string)))))
               (funcall (cond
                         ((null action) #'try-completion)
                         ((eq action t) #'all-completions)
@@ -640,7 +778,7 @@ Return nil or \(term path anchor lib\)."
           (lambda (v)
             (apply racket-doc-index-predicate-function
                    (get-text-property 0 'racket-affix v))))
-         (prompt "Search Racket documentation: ")
+         (prompt "Search documentation: ")
          (require-match t)
          (initial-input (racket--thing-at-point 'symbol t))
          (history 'racket-identifier)
@@ -658,28 +796,47 @@ Return nil or \(term path anchor lib\)."
          (add-to-history 'racket-identifier term) ;just term
          (list term path anchor lib))))))
 
-(defun racket--describe-search-make-strings (items)
-  "Make a list of candidate strings from back end ITEMS.
+(defun racket--describe-search-make-string (first-family family-orders item)
+  "Make a candidate string from back end ITEM.
+
+FIRST-FAMILY is a language family that, if an index item says that's one
+of its families, it should sort before all other similar items.
+
+FAMILY-ORDERS is an alist from family name to the \"order\" mapping
+supplied by get-language-families, albeit negated. This is used to sort
+index items by their language families, when none are FIRST-FAMILY.
 
 Each string has text properties needed by our affixation and
-display-sort functions.
+display-sort functions, used by `completing-read'.
 
-However `completing-read' returns a string stripped of text
-properties. :( So we append the path and anchor, tab separated,
-as invisible text. Use `racket--describe-search-parse-result' to
-extract."
-  (mapcar
-   (pcase-lambda (`(,term ,sort ,what ,from ,fams ,pkg-sort
-                          ,path ,anchor))
-     (let* ((term (propertize term
-                              'racket-affix (list what from fams)
-                              'racket-sort (list (format "%09d" sort)
-                                                 (format "%09d" pkg-sort))))
-            (lib (substring from 0 (string-match (rx ?,) from)))
-            (data (concat "\t" path "\t" anchor "\t" lib))
-            (data (propertize data 'display "")))
-       (concat term data)))
-   items))
+But note that `completing-read' returns a string stripped of text
+properties. To return values besides the term, we append them tab
+separated, as invisible text. Use `racket--describe-search-parse-result'
+to extract."
+  (pcase-let*
+      ((`(,term ,sort-order ,what ,from ,fams ,pkg-sort ,path ,anchor) item)
+       (affix (list what from (string-join fams ", ")))
+       (sort (list term
+                   (if (member first-family fams)
+                       " "
+                     (string-join
+                      (seq-map (lambda (fam)
+                                 (format "%09d"
+                                         (or (cdr (assoc fam family-orders))
+                                             0)))
+                               fams)))
+                   (string-join fams ",")
+                   (format "%09d" pkg-sort)
+                   from
+                   what
+                   (format "%09d" sort-order)))
+       (term (propertize term
+                         'racket-affix affix
+                         'racket-sort sort))
+       (lib (substring from 0 (string-match (rx ?,) from)))
+       (data (concat "\t" path "\t" anchor "\t" lib))
+       (data (propertize data 'display "")))
+    (concat term data)))
 
 (defun racket--describe-search-parse-result (str)
   (when (string-match (rx bos
@@ -695,24 +852,8 @@ extract."
 (defun racket--describe-search-display-sort (strs)
   "A value for display-sort-function metadata."
   (cl-flet*
-      ((term (s)
-         (substring s 0 (string-match (rx ?\t) s)))
-       (adjust-fams (fams)
-         (pcase fams
-           ("Racket" " Racket")
-           (v v)))
-       (key (v)
-         (pcase-let
-             ((`(,what ,from ,fams)
-               (get-text-property 0 'racket-affix v))
-              (`(,sort ,pkg-sort)
-               (get-text-property 0 'racket-sort v)))
-           (list (term v)
-                 (adjust-fams fams)
-                 pkg-sort
-                 from
-                 what
-                 sort)))
+      ((key (v)
+         (get-text-property 0 'racket-sort v))
        (key< (as bs)
          (cl-loop for a in as
                   for b in bs

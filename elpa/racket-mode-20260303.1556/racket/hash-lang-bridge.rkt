@@ -8,6 +8,7 @@
          racket/match
          racket/runtime-path
          "elisp.rkt"
+         "hash-lang-channel.rkt"
          "lang-info.rkt"
          "util.rkt")
 
@@ -55,7 +56,9 @@
                                 (cons (symbol->string o) (symbol->string c)))
           'quote-matches      (for/list ([c (in-list (lang-info-quote-matches li))])
                                 (make-string 1 c))
-          'comment-delimiters (lang-info-comment-delimiters li))))
+          'comment-delimiters (lang-info-comment-delimiters li)
+          'documentation-language-family
+          (lang-info-documentation-language-family li))))
       (define/override (on-changed-tokens gen beg end)
         (when (< beg end)
           (async-channel-put hash-lang-notify-channel
@@ -89,8 +92,6 @@
      (get-tokens id gen from upto)]
     [`(submit-predicate ,id ,str ,eos?)
      (submit-predicate id str eos?)]))
-
-(define hash-lang-notify-channel (make-async-channel))
 
 (define ht (make-hash)) ;id => hash-lang%
 (define (get-object id)

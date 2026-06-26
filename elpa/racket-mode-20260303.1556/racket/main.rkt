@@ -91,3 +91,51 @@
     (parameterize ([current-input-port  (open-input-bytes #"")]
                    [current-output-port (open-output-nowhere)])
       (command-server-loop stdin stdout))))
+
+;;; Measure module load times
+
+;; Evaluating this module will show time to load modules,
+;; transitively, to get to the command server loop. Modules with large
+;; load times might be good candidates to lazy-require instead.
+
+(module measure-load racket/base
+  (require racket/list
+           racket/path
+           racket/pretty
+           racket/runtime-path
+           setup/path-to-relative)
+
+  (define-runtime-path command-server.rkt "command-server.rkt")
+  (define here (path-only command-server.rkt))
+  (define here-parts (explode-path here))
+
+  (struct Node (path duration kids) #:transparent #:mutable)
+  (define (make-Node path)
+    (define label
+      (cond
+        [(not (path? path)) path]
+        [(list-prefix? here-parts (explode-path path))
+         (path->string (find-relative-path here path))]
+        [else
+         (path->relative-string/library path)]))
+    (Node label 0 null))
+
+  (define current-node (make-parameter #f))
+  (define ((make-load/use-compiled [orig (current-load/use-compiled)]) path mod)
+    (define parent (current-node))
+    (define child (make-Node path))
+    (define t0 (current-milliseconds))
+    (define v (parameterize ([current-node child])
+                (orig path mod))) ;might recurse
+    (set-Node-duration! child (- (current-milliseconds) t0))
+    (set-Node-kids! parent
+                    (sort (cons child (Node-kids parent))
+                          >
+                          #:key Node-duration))
+    v)
+
+  (parameterize ([current-node (make-Node 'root)]
+                 [current-load/use-compiled (make-load/use-compiled)])
+    (dynamic-require command-server.rkt 'command-server-loop)
+    (parameterize ([pretty-print-columns 160])
+      (pretty-print (current-node)))))

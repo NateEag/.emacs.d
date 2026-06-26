@@ -1,6 +1,6 @@
 ;;; racket-scribble.el -*- lexical-binding: t -*-
 
-;; Copyright (c) 2021-2024 by Greg Hendershott.
+;; Copyright (c) 2021-2026 by Greg Hendershott.
 ;; Portions Copyright (C) 1985-1986, 1999-2013 Free Software Foundation, Inc.
 
 ;; Author: Greg Hendershott
@@ -131,20 +131,25 @@ avoid penalty."
        (pcase (dom-attr v 'class)
          ;; Page navigation.
          ("navsettop"
-          (pcase-let* ((navleft (car (dom-by-class v "navleft")))
-                       (top (dom-attr (car (dom-by-tag navleft 'a)) 'href))
-                       (navright (car (dom-by-class v "navright")))
-                       (`(,prev ,up ,next)
-                        (mapcar (lambda (v) (dom-attr v 'href))
-                                (dom-by-tag navright 'a))))
-            (if (and top up)
-                `(racket-nav
-                  ((top  . ,(expand-file-name top racket--scribble-base))
-                   (prev . ,(and prev (expand-file-name prev racket--scribble-base)))
-                   (up   . ,(expand-file-name up racket--scribble-base))
-                   (next . ,(and next (expand-file-name next racket--scribble-base)))))
-              `(span))))
+          (let* ((navleft (car (dom-by-class v "navleft")))
+                 (top (dom-attr (car (dom-by-tag navleft 'a)) 'href))
+                 (navright (car (dom-by-class v "navright")))
+                 (as (mapcar (lambda (v)
+                               (cons (or (dom-attr v 'rel) "up")
+                                     (dom-attr v 'href)))
+                             (dom-by-tag navright 'a)))
+                 (prev (cdr (assoc "prev" as)))
+                 (up   (cdr (assoc "up" as)))
+                 (next (cdr (assoc "next" as))))
+            `(racket-nav
+              ((top  . ,(and top (expand-file-name top racket--scribble-base)))
+               (prev . ,(and prev (expand-file-name prev racket--scribble-base)))
+               (up   . ,(and up (expand-file-name up racket--scribble-base)))
+               (next . ,(and next (expand-file-name next racket--scribble-base)))))))
          ("navsetbottom" `(span))
+         ;; Language family
+         ("navfamily"
+          `(racket-family ((data-fam . ,(dom-attr v 'data-fam)))))
          ;; The kind (e.g. "procedure" or "syntax"): Add <hr>
          ("RBackgroundLabel SIEHidden"
           `(div ()

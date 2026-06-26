@@ -1,6 +1,10 @@
 ;;; elfeed-curl.el --- curl backend for Elfeed -*- lexical-binding: t; -*-
 
-;;; Comments:
+;; This is free and unencumbered software released into the public domain.
+
+;; Author: Christopher Wellons <wellons@nullprogram.com>
+
+;;; Commentary:
 
 ;; An alternative to `url-retrieve' and `url-queue' that fetches URLs
 ;; using the curl command line program.
@@ -18,52 +22,52 @@
 ;; * `elfeed-curl-error-message'
 ;; * `elfeed-curl-location'
 
-;; The buffer delivered to callbacks may contain multiple requests. It
+;; The buffer delivered to callbacks may contain multiple requests.  It
 ;; will be narrowed to the specific content for the current request.
 ;; It's vitally important that callbacks do not kill the buffer
-;; because it may be needed for other callbacks. It also means the
+;; because it may be needed for other callbacks.  It also means the
 ;; buffer won't necessarily be around when the callback returns.
 ;; Callbacks should also avoid editing the buffer, though this
 ;; generally shouldn't impact other requests.
 
 ;; Sometimes Elfeed asks curl to retrieve multiple requests and
-;; deliver them concatenated. Due to the possibility of HTTP/1.0 being
+;; deliver them concatenated.  Due to the possibility of HTTP/1.0 being
 ;; involved — and other ambiguous-length protocols — there's no
-;; perfectly unambiguous way to split the output. To work around this,
+;; perfectly unambiguous way to split the output.  To work around this,
 ;; I use curl's --write-out to insert a randomly-generated token after
-;; each request. It's highly unlikely (1 in ~1e38) that this token
+;; each request.  It's highly unlikely (1 in ~1e38) that this token
 ;; will appear in content, so I can use it to identify the end of each
 ;; request.
 
 ;;; Code:
 
-(require 'url)
-(require 'cl-lib)
+(eval-when-compile (require 'subr-x))
+
 (require 'elfeed-lib)
 (require 'elfeed-log)
 
+(defgroup elfeed-curl ()
+  "Elfeed curl backend."
+  :group 'elfeed)
+
 (defcustom elfeed-curl-program-name "curl"
   "Name/path by which to invoke the curl program."
-  :group 'elfeed
   :type 'string)
 
 (defcustom elfeed-curl-max-connections 16
   "Maximum number of concurrent fetches."
-  :group 'elfeed
   :type 'integer)
 
 (defcustom elfeed-curl-timeout 30
   "Maximum number of seconds a fetch is allowed to take once started."
-  :group 'elfeed
   :type 'integer)
 
 (defcustom elfeed-curl-extra-arguments ()
-  "A list of additional arguments to pass to cURL.
+  "A list of additional arguments to pass to curl.
 These extra arguments are appended after Elfeed's own arguments,
-and care must be taken to not interfere with Elfeed's needs. The
-guideline is to avoid arguments that change anything about cURL's
+and care must be taken to not interfere with Elfeed's needs.  The
+guideline is to avoid arguments that change anything about curl's
 output format."
-  :group 'elfeed
   :type '(repeat string))
 
 (defvar elfeed-curl-queue ()
@@ -177,12 +181,12 @@ output format."
     (90 . "SSL public key does not matched pinned public key")))
 
 (defvar elfeed-curl--capabilities-cache
-  (make-hash-table :test 'eq :weakness 'key)
+  (make-hash-table :test #'eq :weakness 'key)
   "Used to avoid invoking curl more than once for version info.")
 
 (defun elfeed-curl-get-capabilities ()
   "Return capabilities plist for the curl at `elfeed-curl-program-name'.
-:version     -- cURL's version string
+:version     -- curl's version string
 :compression -- non-nil if --compressed is supported
 :protocols   -- symbol list of supported protocols
 :features    -- string list of supported features"
@@ -213,21 +217,16 @@ output format."
                       :protocols protocols
                       :features features)))))))
 
-(defun elfeed-curl-get-version ()
-  "Return the version of curl for `elfeed-curl-program-name'."
-  (plist-get (elfeed-curl-get-capabilities) :version))
-(make-obsolete 'elfeed-curl-get-version 'elfeed-curl-get-capabilities "3.0.1")
-
 (defun elfeed-curl--token ()
   "Return a unique, random string that prints as a symbol without escapes.
-This token is used to split requests. The % is excluded since
+This token is used to split requests.  The % is excluded since
 it's special to --write-out."
-  (let* ((token (make-string 22 ?=))
-         (set "!$&*+-/0123456789:<>@ABCDEFGHIJKLMNOPQRSTUVWXYZ^_\
+  (let ((token (make-string 22 ?=))
+        (set "!$&*+-/0123456789:<>@ABCDEFGHIJKLMNOPQRSTUVWXYZ^_\
 abcdefghijklmnopqrstuvwxyz|~"))
-    (prog1 token ; workaround bug#16206
-      (dotimes (i (- (length token) 2))
-        (setf (aref token (1+ i)) (aref set (cl-random (length set))))))))
+    (dotimes (i (- (length token) 2))
+      (setf (aref token (1+ i)) (aref set (cl-random (length set)))))
+    token))
 
 (defun elfeed-curl--parse-write-out ()
   "Parse curl's write-out (-w) messages into `elfeed-curl--regions'."
@@ -296,7 +295,9 @@ Use `elfeed-curl--narrow' to select a header."
 
 (defun elfeed-curl--args (url token &optional headers method data)
   "Build an argument list for curl for URL.
-URL can be a string or a list of URL strings."
+TOKEN is a unique token.  URL can be a string or a list of URL strings.
+HEADERS is an alist of HTTP headers, METHOD the HTTP method, and DATA
+is sent as the body of the request (POST)."
   (let* ((args ())
          (capabilities (elfeed-curl-get-capabilities)))
     (push "--disable" args)
@@ -318,7 +319,8 @@ URL can be a string or a list of URL strings."
       (nreverse (cons url args)))))
 
 (defun elfeed-curl--prepare-response (url n protocol)
-  "Prepare response N for delivery to user."
+  "Prepare response N for delivery to the user.
+URL is the requested resource, and PROTOCOL the transfer protocol."
   (elfeed-curl--narrow :header n)
   (when (eq protocol 'http)
     (elfeed-curl--parse-http-headers))
@@ -343,13 +345,15 @@ DATA is the content to include in the request."
     (elfeed-curl--prepare-response url 0 (elfeed-curl--protocol-type url))))
 
 (defun elfeed-curl--protocol-type (url)
+  "Get protocol type from URL."
   (let ((scheme (intern (or (url-type (url-generic-parse-url url)) "nil"))))
     (cl-case scheme
       ((https nil) 'http)
       (otherwise scheme))))
 
 (defun elfeed-curl--call-callback (buffer n url cb)
-  "Prepare the buffer for callback N and call it."
+  "Prepare BUFFER for response N and call callback CB.
+URL is the requested resource."
   (let ((result nil)
         (protocol (elfeed-curl--protocol-type url)))
     (with-current-buffer buffer
@@ -358,6 +362,13 @@ DATA is the content to include in the request."
           (progn
             (elfeed-curl--prepare-response url n protocol)
             (cond ((eq protocol 'file)
+                   ;; HACK: Work around Curl bug for file:// URLs. Curl
+                   ;; responds with size_header=0 such that the header still
+                   ;; needs to be skipped.
+                   (when (looking-at-p "Content-Length: ")
+                     (goto-char (point-min))
+                     (elfeed-move-to-first-empty-line)
+                     (narrow-to-region (point) (point-max)))
                    ;; No status code is returned by curl for file:// urls
                    (setf result t
                          elfeed-curl-error-message nil))
@@ -365,30 +376,33 @@ DATA is the content to include in the request."
                    (setf result t
                          elfeed-curl-error-message nil
                          elfeed-curl-status-code nil))
-                  ((and (>= elfeed-curl-status-code 400)
-                        (<= elfeed-curl-status-code 599))
+                  ((if elfeed-curl-status-code
+                       (and (>= elfeed-curl-status-code 400)
+                            (<= elfeed-curl-status-code 599))
+                     (setq elfeed-curl-status-code 500))
                    (setf elfeed-curl-error-message
                          (format "HTTP %d" elfeed-curl-status-code)))
                   (t
                    (setf result t
-                         elfeed-curl-error-message nil)))
-            ;; Always call callback
-            (unwind-protect
-                (funcall cb result)
-              ;; Always clean up
-              (when (zerop (cl-decf elfeed-curl--refcount))
-                (kill-buffer))))))))
+                         elfeed-curl-error-message nil))))
+        ;; Always call callback
+        (unwind-protect
+            (funcall cb result)
+          ;; Always clean up
+          (when (zerop (decf elfeed-curl--refcount))
+            (kill-buffer)))))))
 
 (defun elfeed-curl--fail-callback (buffer cb)
-  "Inform the callback the request failed."
+  "Inform the callback CB that the request failed.
+The callback is run within BUFFER."
   (with-current-buffer buffer
     (unwind-protect
         (funcall cb nil)
-      (when (zerop (cl-decf elfeed-curl--refcount))
+      (when (zerop (decf elfeed-curl--refcount))
         (kill-buffer)))))
 
 (defun elfeed-curl--sentinel (process status)
-  "Manage the end of a curl process' life."
+  "Manage the end of life of curl PROCESS with STATUS."
   (let ((buffer (process-buffer process)))
     (with-current-buffer buffer
       ;; Fire off callbacks in separate interpreter turns so they can
@@ -423,14 +437,15 @@ METHOD is the HTTP method to use.
 DATA is the content to include in the request.
 
 URL can be a list of URLs, which will fetch them all in the same
-curl process. In this case, CB can also be either a list of the
+curl process.  In this case, CB can also be either a list of the
 same length, or just a single function to be called once for each
-URL in the list. Headers will be common to all requests. A TCP or
+URL in the list.  Headers will be common to all requests.  A TCP or
 DNS failure in one will cause all to fail, but 4xx and 5xx
 results will not."
   (with-current-buffer (generate-new-buffer " *curl*")
     (setf elfeed-curl--token (elfeed-curl--token))
-    (let* ((coding-system-for-read 'binary)
+    (let* ((default-directory temporary-file-directory)
+           (coding-system-for-read 'binary)
            (process-connection-type nil)
            (args (elfeed-curl--args url elfeed-curl--token headers method data))
            (process (apply #'start-process "elfeed-curl" (current-buffer)
@@ -448,45 +463,48 @@ results will not."
         (setf (process-sentinel process) #'elfeed-curl--sentinel)))))
 
 (defun elfeed-curl--request-key (url headers method data)
-  "Try to fetch URLs with matching keys at the same time."
-  (unless (listp url)
-    (let* ((urlobj (url-generic-parse-url url)))
-      (list (url-type urlobj)
-            (url-host urlobj)
-            (url-portspec urlobj)
-            headers
-            method
-            data))))
+  "Compute request key for URL, HEADERS, METHOD and DATA.
+The goal is to fetch URLs with matching keys at the same time."
+  (let ((urlobj (url-generic-parse-url url)))
+    (list (url-type urlobj)
+          (url-host urlobj)
+          (url-portspec urlobj)
+          headers
+          method
+          data)))
 
 (defun elfeed-curl--queue-consolidate (queue-in)
-  "Group compatible requests together and return a new queue.
-Compatible means the requests have the same protocol, domain,
-port, headers, method, and body, allowing them to be used safely
-in the same curl invocation."
-  (let ((table (make-hash-table :test 'equal))
+  "Group compatible requests from QUEUE-IN together and return a new queue.
+Compatible means the requests have the same protocol, domain, port,
+headers, method, and body, allowing them to be used safely in the same
+curl invocation."
+  (let ((table (make-hash-table :test #'equal))
         (keys ())
         (queue-out ()))
     (dolist (entry queue-in)
       (cl-destructuring-bind (url _ headers method data) entry
-        (let* ((key (elfeed-curl--request-key url headers method data)))
-          (push key keys)
-          (push entry (gethash key table nil)))))
+        (if (listp url)
+            ;; Already-consolidated entry, pass through unchanged to
+            ;; avoid wrapping its URL list in another list layer.
+            (push entry queue-out)
+          (let ((key (elfeed-curl--request-key url headers method data)))
+            (push key keys)
+            (push entry (gethash key table nil))))))
     (dolist (key (nreverse keys))
-      (let ((entry (gethash key table)))
-        (when entry
-          (let ((rotated (list (nreverse (cl-mapcar #'car entry))
-                               (nreverse (cl-mapcar #'cadr entry))
-                               (cl-caddar entry)
-                               (elt (car entry) 3)
-                               (elt (car entry) 4))))
-            (push rotated queue-out)
-            (setf (gethash key table) nil)))))
+      (when-let* ((entry (gethash key table)))
+        (let ((rotated (list (nreverse (cl-mapcar #'car entry))
+                             (nreverse (cl-mapcar #'cadr entry))
+                             (cl-caddar entry)
+                             (elt (car entry) 3)
+                             (elt (car entry) 4))))
+          (push rotated queue-out)
+          (setf (gethash key table) nil))))
     (nreverse queue-out)))
 
 (defun elfeed-curl--queue-wrap (cb)
   "Wrap the curl CB so that it operates the queue."
   (lambda (status)
-    (cl-decf elfeed-curl-queue-active)
+    (decf elfeed-curl-queue-active)
     (elfeed-curl--run-queue)
     (funcall cb status)))
 
@@ -501,10 +519,10 @@ in the same curl invocation."
           elfeed-curl-queue
           (elfeed-curl--queue-consolidate elfeed-curl-queue)))
   (while (and (< elfeed-curl-queue-active elfeed-curl-max-connections)
-              (> (length elfeed-curl-queue) 0))
+              elfeed-curl-queue)
     (cl-destructuring-bind (url cb headers method data) (pop elfeed-curl-queue)
       (elfeed-log 'debug "retrieve %s" url)
-      (cl-incf elfeed-curl-queue-active 1)
+      (incf elfeed-curl-queue-active 1)
       (elfeed-curl-retrieve
        url
        (if (functionp cb)
@@ -516,7 +534,9 @@ in the same curl invocation."
        :data data))))
 
 (cl-defun elfeed-curl-enqueue (url cb &key headers method data)
-  "Just like `elfeed-curl-retrieve', but restricts concurrent fetches."
+  "Just like `elfeed-curl-retrieve', but restricts concurrent fetches.
+See `elfeed-curl-retrieve' for the arguments URL, CB, HEADERS, METHOD
+and DATA."
   (unless (or (stringp url)
               (and (listp url) (cl-every #'stringp url)))
     ;; Signal error synchronously instead of asynchronously in the timer
@@ -528,5 +548,4 @@ in the same curl invocation."
       (setf elfeed-curl--run-queue-queued t))))
 
 (provide 'elfeed-curl)
-
 ;;; elfeed-curl.el ends here

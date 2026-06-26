@@ -1,50 +1,64 @@
 ;;; elfeed-log.el --- Elfeed's logging system -*- lexical-binding: t; -*-
 
+;; This is free and unencumbered software released into the public domain.
+
+;; Author: Christopher Wellons <wellons@nullprogram.com>
+
 ;;; Commentary:
+
+;; Elfeed's logging system.
 
 ;;; Code:
 
-(require 'cl-lib)
+(eval-when-compile (require 'subr-x))
+
+(require 'elfeed-lib)
+
+(defgroup elfeed-log ()
+  "Elfeed log buffer."
+  :group 'elfeed)
+
+(defcustom elfeed-log-buffer-name " *elfeed-log*"
+  "Name of buffer used for logging Elfeed events."
+  :type 'string)
+
+(defcustom elfeed-log-level 'info
+  "Lowest type of messages to be logged."
+  :type 'symbol)
+
+(defvar elfeed-log-error-count 0
+  "Number of logged errors since the last feed update.")
+
+(defgroup elfeed-log-faces ()
+  "Elfeed log buffer faces."
+  :group 'elfeed-log)
 
 (defface elfeed-log-date-face
   '((t :inherit font-lock-type-face))
-  "Face for showing the date in the elfeed log buffer."
-  :group 'elfeed)
+  "Face for showing the date in the elfeed log buffer.")
 
 (defface elfeed-log-error-level-face
   '((t :foreground "red"))
-  "Face for showing the `error' log level in the elfeed log buffer."
-  :group 'elfeed)
+  "Face for showing the `error' log level in the elfeed log buffer.")
 
 (defface elfeed-log-warn-level-face
   '((t :foreground "goldenrod"))
-  "Face for showing the `warn' log level in the elfeed log buffer."
-  :group 'elfeed)
+  "Face for showing the `warn' log level in the elfeed log buffer.")
 
 (defface elfeed-log-info-level-face
   '((t :foreground "deep sky blue"))
-  "Face for showing the `info' log level in the elfeed log buffer."
-  :group 'elfeed)
+  "Face for showing the `info' log level in the elfeed log buffer.")
 
 (defface elfeed-log-debug-level-face
   '((t :foreground "magenta2"))
-  "Face for showing the `debug' log level in the elfeed log buffer."
-  :group 'elfeed)
-
-(defvar elfeed-log-buffer-name "*elfeed-log*"
-  "Name of buffer used for logging Elfeed events.")
-
-(defvar elfeed-log-level 'info
-  "Lowest type of messages to be logged.")
+  "Face for showing the `debug' log level in the elfeed log buffer.")
 
 (defun elfeed-log-buffer ()
   "Returns the buffer for `elfeed-log', creating it as needed."
-  (let ((buffer (get-buffer elfeed-log-buffer-name)))
-    (if buffer
-        buffer
-      (with-current-buffer (generate-new-buffer elfeed-log-buffer-name)
+  (or (get-buffer elfeed-log-buffer-name)
+      (with-current-buffer (get-buffer-create elfeed-log-buffer-name)
         (special-mode)
-        (current-buffer)))))
+        (current-buffer))))
 
 (defun elfeed-log--level-number (level)
   "Return a relative level number for LEVEL."
@@ -67,6 +81,8 @@ FMT must be a string suitable for `format' given OBJECTS as arguments."
                           (warn 'elfeed-log-warn-level-face)
                           (error 'elfeed-log-error-level-face)))
         (inhibit-read-only t))
+    (when (eq level 'error)
+      (incf elfeed-log-error-count))
     (when (>= (elfeed-log--level-number level)
               (elfeed-log--level-number elfeed-log-level))
       (with-current-buffer log-buffer
@@ -79,6 +95,13 @@ FMT must be a string suitable for `format' given OBJECTS as arguments."
           level
           (apply #'format fmt objects)))))))
 
-(provide 'elfeed-log)
+;;;###autoload
+(defun elfeed-log-show ()
+  "Show log buffer."
+  (declare (completion elfeed--mode-p))
+  (interactive)
+  (setq elfeed-log-error-count 0)
+  (switch-to-buffer (elfeed-log-buffer)))
 
+(provide 'elfeed-log)
 ;;; elfeed-log.el ends here

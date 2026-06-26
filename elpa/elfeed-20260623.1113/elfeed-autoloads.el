@@ -11,25 +11,57 @@
 
 ;;; Generated autoloads from elfeed.el
 
+(defun elfeed--mode-p (_sym buf) (let ((mode (buffer-local-value 'major-mode buf))) (and (symbolp mode) (string-prefix-p "elfeed-" (symbol-name mode)))))
 (autoload 'elfeed-update "elfeed" "\
 Update all the feeds in `elfeed-feeds'." t)
+(function-put 'elfeed-update 'completion-predicate #'elfeed--mode-p)
+(autoload 'elfeed-update-background "elfeed" "\
+Update all the feeds in `elfeed-feeds' without running update hooks.
+This function can be called from a timer in the background, since it
+does not disturb any visible Elfeed windows.  No new update is started
+if another update is already running.")
 (autoload 'elfeed "elfeed" "\
-Enter elfeed." t)
-(autoload 'elfeed-load-opml "elfeed" "\
-Load feeds from an OPML file into `elfeed-feeds'.
-When called interactively, the changes to `elfeed-feeds' are
-saved to your customization file.
-
-(fn FILE)" t)
-(autoload 'elfeed-export-opml "elfeed" "\
-Export the current feed listing to OPML-formatted FILE.
-
-(fn FILE)" t)
+Enter elfeed via `elfeed-entry-point'." t)
 (register-definition-prefixes "elfeed" '("elfeed-"))
 
 
 ;;; Generated autoloads from elfeed-csv.el
 
+(autoload 'elfeed-csv-export "elfeed-csv" "\
+Create separate CSV files for feeds, entries, and tags.
+
+The files are FEEDS-FILE, ENTRIES-FILE and TAGS-FILE respectively.
+Headers are added optionally if HEADERS-P is non-nil.
+
+These CSV files are intended for an analysis of an Elfeed
+database.  They are suitable for importing as tables into a
+relational database such as SQLite.  Here's the recommended SQL
+schema, reflecting the structure of the data.
+
+CREATE TABLE feeds (
+    url TEXT PRIMARY KEY,
+    title TEXT,
+    canonical_url TEXT,
+    author TEXT
+);
+
+CREATE TABLE entries (
+    id TEXT NOT NULL,
+    feed TEXT NOT NULL REFERENCES feeds (url),
+    title TEXT,
+    link TEXT NOT NULL,
+    date REAL NOT NULL,
+    PRIMARY KEY (id, feed)
+);
+
+CREATE TABLE tags (
+    entry TEXT NOT NULL,
+    feed TEXT NOT NULL,
+    tag TEXT NOT NULL,
+    FOREIGN KEY (entry, feed) REFERENCES entries (id, feed)
+);
+
+(fn FEEDS-FILE ENTRIES-FILE TAGS-FILE &key HEADERS-P)")
 (register-definition-prefixes "elfeed-csv" '("elfeed-csv-"))
 
 
@@ -54,7 +86,7 @@ Export the current feed listing to OPML-formatted FILE.
 Store a link to an elfeed search or entry buffer.
 
 When storing a link to an entry, automatically extract all the
-entry metadata. These can be used in the capture templates as
+entry metadata.  These can be used in the capture templates as
 `%:keyword` expansion.
 
 List of available keywords, when store from an Elfeed search:
@@ -95,26 +127,33 @@ Depending on what FILTER-OR-ID looks like, we jump to either
 search buffer or show a concrete entry.
 
 (fn FILTER-OR-ID)")
-(eval-after-load 'org `(funcall ',(lambda nil (if (version< (org-version) "9.0") (with-no-warnings (org-add-link-type "elfeed" #'elfeed-link-open) (add-hook 'org-store-link-functions #'elfeed-link-store-link)) (with-no-warnings (org-link-set-parameters "elfeed" :follow #'elfeed-link-open :store #'elfeed-link-store-link))))))
+(eval-after-load 'ol (lambda nil (org-link-set-parameters "elfeed" :follow #'elfeed-link-open :store #'elfeed-link-store-link)))
 
 
 ;;; Generated autoloads from elfeed-log.el
 
+(autoload 'elfeed-log-show "elfeed-log" "\
+Show log buffer." t)
+(function-put 'elfeed-log-show 'completion-predicate #'elfeed--mode-p)
 (register-definition-prefixes "elfeed-log" '("elfeed-log"))
 
 
 ;;; Generated autoloads from elfeed-search.el
 
+(autoload 'elfeed-search "elfeed-search" "\
+Enter `elfeed-search' buffer, optionally with a NEW-FILTER.
+
+(fn &optional NEW-FILTER)" t)
 (autoload 'elfeed-search-bookmark-handler "elfeed-search" "\
-Jump to an elfeed-search bookmarked location.
+Jump to an `elfeed-search' bookmark RECORD.
 
 (fn RECORD)")
 (autoload 'elfeed-search-desktop-restore "elfeed-search" "\
-Restore the state of an elfeed-search buffer on desktop restore.
+Restore the SEARCH-FILTER of an `elfeed-search' buffer on desktop restore.
 
 (fn FILE-NAME BUFFER-NAME SEARCH-FILTER)")
 (add-to-list 'desktop-buffer-mode-handlers '(elfeed-search-mode . elfeed-search-desktop-restore))
-(register-definition-prefixes "elfeed-search" '("elfeed-s"))
+(register-definition-prefixes "elfeed-search" '("elfeed-search-"))
 
 
 ;;; Generated autoloads from elfeed-show.el
@@ -124,6 +163,17 @@ Show the bookmarked entry saved in the `RECORD'.
 
 (fn RECORD)")
 (register-definition-prefixes "elfeed-show" '("elfeed-"))
+
+
+;;; Generated autoloads from elfeed-tree.el
+
+(autoload 'elfeed-tree "elfeed-tree" "\
+Enter `elfeed-tree' buffer." t)
+(autoload 'elfeed-tree-bookmark-handler "elfeed-tree" "\
+Jump to an `elfeed-tree' bookmark RECORD.
+
+(fn RECORD)")
+(register-definition-prefixes "elfeed-tree" '("elfeed-tree-"))
 
 
 ;;; Generated autoloads from xml-query.el

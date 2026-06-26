@@ -1,14 +1,13 @@
 ;;; eros.el --- Evaluation Result OverlayS for Emacs Lisp   -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016-2018  Tianxiang Xiong
+;; Copyright (C) 2016-2023  Tianxiang Xiong
 
 ;; Author: Tianxiang Xiong <tianxiang.xiong@gmail.com>
 ;; Keywords: convenience, lisp
-;; Package-Version: 20230309.615
-;; Package-Commit: a9a92bdc6be0521a6a06eb464be55ed61946639c
 ;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/xiongtx/eros
-;; Version: 0.1.0
+;; Package-Version: 20251226.345
+;; Package-Revision: 66ee90baa316
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -234,15 +233,16 @@ This function also removes itself from `pre-command-hook'."
   (remove-hook 'pre-command-hook #'eros--remove-result-overlay 'local)
   (remove-overlays nil nil 'category 'result))
 
-(defun eros--eval-overlay (value point)
-  "Make overlay for VALUE at POINT."
-  (eros--make-result-overlay (format "%S" value)
-    :where point
-    :duration eros-eval-result-duration)
-  value)
 
 
 ;; API
+
+;;;###autoload
+(defun eros-eval-overlay (string point)
+  "Make overlay for STRING value at POINT."
+  (eros--make-result-overlay string
+    :where point
+    :duration eros-eval-result-duration))
 
 ;;;###autoload
 (defun eros-eval-last-sexp (eval-last-sexp-arg-internal)
@@ -252,19 +252,18 @@ This function also removes itself from `pre-command-hook'."
     (setq eros--last-result result)
     (when (get-buffer eros--inspect-buffer-name)
       (eros-inspect-last-result))
-    (eros--eval-overlay
-     result
+    (eros-eval-overlay
+     (format "%S" result)
      (point))))
 
 ;;;###autoload
 (defun eros-eval-defun (edebug-it)
   "Wrapper for `eval-defun' that overlays results."
   (interactive "P")
-  (eros--eval-overlay
-   (eval-defun edebug-it)
-   (save-excursion
-     (end-of-defun)
-     (point))))
+  (let ((value (eval-defun edebug-it))
+        (point (save-excursion (end-of-defun) (point))))
+    (eros-eval-overlay (format "%S" value) point)
+    value))
 
 (defun eros-inspect-last-result ()
   "Inspect the result of last `eros-eval-'."

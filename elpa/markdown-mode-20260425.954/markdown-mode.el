@@ -1,13 +1,13 @@
 ;;; markdown-mode.el --- Major mode for Markdown-formatted text -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2007-2023 Jason R. Blevins and markdown-mode
+;; Copyright (C) 2007-2026 Jason R. Blevins and markdown-mode
 ;; contributors (see the commit log for details).
 
 ;; Author: Jason R. Blevins <jblevins@xbeta.org>
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
-;; Package-Version: 20251204.852
-;; Package-Revision: 92802fae9ebb
+;; Package-Version: 20260425.954
+;; Package-Revision: 1f72cefa6a4b
 ;; Package-Requires: ((emacs "28.1"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -848,9 +848,9 @@ Groups 1 and 3 match the opening and closing tags.
 Group 2 matches the key sequence.")
 
 (defconst markdown-regex-gfm-code-block-open
-  "^[[:blank:]]*\\(?1:```\\)\\(?2:[[:blank:]]*{?[[:blank:]]*\\)\\(?3:[^`[:space:]]+?\\)?\\(?:[[:blank:]]+\\(?4:.+?\\)\\)?\\(?5:[[:blank:]]*}?[[:blank:]]*\\)$"
+  "^[[:blank:]]*\\(?1:`\\{3,\\}\\)\\(?2:[[:blank:]]*{?[[:blank:]]*\\)\\(?3:[^`[:space:]]+?\\)?\\(?:[[:blank:]]+\\(?4:.+?\\)\\)?\\(?5:[[:blank:]]*}?[[:blank:]]*\\)$"
   "Regular expression matching opening of GFM code blocks.
-Group 1 matches the opening three backquotes and any following whitespace.
+Group 1 matches the opening three or more backquotes.
 Group 2 matches the opening brace (optional) and surrounding whitespace.
 Group 3 matches the language identifier (optional).
 Group 4 matches the info string (optional).
@@ -858,9 +858,9 @@ Group 5 matches the closing brace (optional), whitespace, and newline.
 Groups need to agree with `markdown-regex-tilde-fence-begin'.")
 
 (defconst markdown-regex-gfm-code-block-close
-  "^[[:blank:]]*\\(?1:```\\)\\(?2:\\s *?\\)$"
+  "^[[:blank:]]*\\(?1:`\\{3,\\}\\)\\(?2:\\s *?\\)$"
   "Regular expression matching closing of GFM code blocks.
-Group 1 matches the closing three backquotes.
+Group 1 matches the closing three or more backquotes.
 Group 2 matches any whitespace and the final newline.")
 
 (defconst markdown-regex-pre
@@ -1008,6 +1008,13 @@ Groups 1 and 4 match the opening and closing markup.
 Group 3 matches the mathematical expression contained within.
 Group 2 matches the opening slashes, and is used internally to
 match the closing slashes.")
+
+(defsubst markdown-make-gfm-fence-regex (num-backticks &optional end-of-line)
+  "Return regexp matching a GFM code fence at least NUM-BACKTICKS long.
+END-OF-LINE is the regexp construct to indicate end of line; $ if
+missing."
+  (format "%s%d%s%s" "^[[:blank:]]*\\([`]\\{" num-backticks ",\\}\\)"
+          (or end-of-line "$")))
 
 (defsubst markdown-make-tilde-fence-regex (num-tildes &optional end-of-line)
   "Return regexp matching a tilde code fence at least NUM-TILDES long.
@@ -1422,7 +1429,7 @@ giving the bounds of the current and parent list items."
      (markdown-get-yaml-metadata-end-border markdown-yaml-metadata-end)
      markdown-yaml-metadata-section)
     ((,markdown-regex-gfm-code-block-open markdown-gfm-block-begin)
-     (,markdown-regex-gfm-code-block-close markdown-gfm-block-end)
+     (markdown-make-gfm-fence-regex markdown-gfm-block-end)
      markdown-gfm-code))
   "Mapping of regular expressions to \"fenced-block\" constructs.
 These constructs are distinguished by having a distinctive start
@@ -1688,12 +1695,12 @@ MIDDLE-BEGIN is the start of the \"middle\" section of the block."
       (put-text-property close-begin close-end
                          (cl-cadadr fence-spec) close-data))))
 
-(defun markdown--triple-quote-single-line-p (begin)
+(defun markdown--code-fence-single-line-p (begin)
   (save-excursion
     (goto-char begin)
     (save-match-data
-      (and (search-forward "```" nil t)
-           (search-forward "```" (line-end-position) t)))))
+      (and (re-search-forward "`\\{3,\\}" nil t)
+           (re-search-forward "`\\{3,\\}" (line-end-position) t)))))
 
 (defun markdown-syntax-propertize-fenced-block-constructs (start end)
   "Propertize according to `markdown-fenced-block-pairs' from START to END.
@@ -1750,7 +1757,7 @@ start which was previously propertized."
                    0)))
                (prop (cl-cadar correct-entry)))
           (when (or (not (eq prop 'markdown-gfm-block-begin))
-                    (not (markdown--triple-quote-single-line-p block-start)))
+                    (not (markdown--code-fence-single-line-p block-start)))
             ;; get correct match data
             (save-excursion
               (beginning-of-line)
@@ -2255,6 +2262,9 @@ Depending on your font, some reasonable choices are:
                                        (2 'markdown-markup-face)
                                        (3 'markdown-metadata-value-face)))
     (markdown-fontify-hrs)
+    (,markdown-regex-strike-through . ((3 markdown-markup-properties)
+                                       (4 'markdown-strike-through-face)
+                                       (5 markdown-markup-properties)))
     (markdown-match-code . ((1 markdown-markup-properties prepend)
                             (2 'markdown-inline-code-face prepend)
                             (3 markdown-markup-properties prepend)))
@@ -2320,9 +2330,6 @@ Depending on your font, some reasonable choices are:
     (markdown-match-italic . ((1 markdown-markup-properties prepend)
                               (2 'markdown-italic-face append)
                               (3 markdown-markup-properties prepend)))
-    (,markdown-regex-strike-through . ((3 markdown-markup-properties)
-                                       (4 'markdown-strike-through-face)
-                                       (5 markdown-markup-properties)))
     (markdown--match-highlighting . ((3 markdown-markup-properties)
                                      (4 'markdown-highlighting-face)
                                      (5 markdown-markup-properties)))
@@ -2924,22 +2931,21 @@ This may be useful for tables and Pandoc's line_blocks extension."
   "Return t if PROP from BEGIN to END is equal to one of the given PROP-VALUES.
 Also returns t if PROP is a list containing one of the PROP-VALUES.
 Return nil otherwise."
-  (let (props)
-    (catch 'found
-      (dolist (loc (number-sequence begin end))
-        (when (setq props (get-text-property loc prop))
-          (cond ((listp props)
-                 ;; props is a list, check for membership
-                 (dolist (val prop-values)
-                   (when (memq val props) (throw 'found loc))))
-                (t
-                 ;; props is a scalar, check for equality
-                 (dolist (val prop-values)
-                   (when (eq val props) (throw 'found loc))))))))))
+  (catch 'found
+    (let ((loc begin))
+      (while (<= loc end)
+        (when-let* ((props (get-text-property loc prop)))
+          (if (listp props)
+              ;; props is a list, check for membership
+              (dolist (val prop-values)
+                (when (memq val props) (throw 'found loc)))
+            (dolist (val prop-values)
+              (when (eq val props) (throw 'found loc)))))
+        (setq loc (next-single-property-change loc prop nil (1+ end)))))))
 
 (defun markdown-range-properties-exist (begin end props)
   (cl-loop
-   for loc in (number-sequence begin end)
+   for loc from begin to end
    with result = nil
    while (not
           (setq result
@@ -7793,9 +7799,11 @@ Return the name of the output buffer used."
                       markdown-command exit-code))))
     output-buffer-name))
 
-(defun markdown-standalone (&optional output-buffer-name)
+(defun markdown-standalone (&optional output-buffer-name title)
   "Special function to provide standalone HTML output.
-Insert the output in the buffer named OUTPUT-BUFFER-NAME."
+Insert the output in the buffer named OUTPUT-BUFFER-NAME.
+Set the HTML title to TITLE if provided, otherwise the name of the
+output buffer."
   (interactive)
   (setq output-buffer-name (markdown output-buffer-name))
   (let ((css-path markdown-css-paths))
@@ -7803,7 +7811,7 @@ Insert the output in the buffer named OUTPUT-BUFFER-NAME."
       (set-buffer output-buffer-name)
       (setq-local markdown-css-paths css-path)
       (unless (markdown-output-standalone-p)
-        (markdown-add-xhtml-header-and-footer output-buffer-name))
+        (markdown-add-xhtml-header-and-footer (or title output-buffer-name)))
       (goto-char (point-min))
       (html-mode)))
   output-buffer-name)
@@ -7884,7 +7892,8 @@ When OUTPUT-BUFFER-NAME is given, insert the output in the buffer with
 that name."
   (interactive)
   (browse-url-of-buffer
-   (markdown-standalone (or output-buffer-name markdown-output-buffer-name))))
+   (markdown-standalone (or output-buffer-name markdown-output-buffer-name)
+                        (buffer-name))))
 
 (defun markdown-export-file-name (&optional extension)
   "Attempt to generate a filename for Markdown output.
@@ -9767,7 +9776,7 @@ This function assumes point is on a table."
        (setq fmt (car fmtspec) fmtspec (cdr fmtspec))
        (setq width (car widths) widths (cdr widths))
        (if (equal fmt 'c)
-           (setq cell (concat (make-string (/ (- width (length cell)) 2) ?\s) cell)))
+           (setq cell (concat (make-string (/ (- width (markdown--string-width cell)) 2) ?\s) cell)))
        (unless (equal fmt 'r) (setq width (- width)))
        (format (format " %%%ds " width) cell))
      cells "|")))
@@ -10552,7 +10561,7 @@ rows and columns and the column alignment."
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
-             '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\)\\'" . markdown-mode))
+             '("\\.\\(?:md\\|markdown\\|mkd\\|mdown\\|mkdn\\|mdwn\\|mdx\\)\\'" . markdown-mode))
 
 
 ;;; GitHub Flavored Markdown Mode  ============================================

@@ -7,8 +7,8 @@
 ;; URL: http://github.com/vedang/pdf-tools/
 ;; Keywords: files, multimedia
 ;; Package: pdf-tools
-;; Package-Version: 20240429.407
-;; Package-Revision: 30b50544e55b
+;; Package-Version: 20260102.1101
+;; Package-Revision: e4b7f1f37cf5
 ;; Package-Requires: ((emacs "26.3") (tablist "1.0") (let-alist "1.0.4"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -273,9 +273,9 @@ Returns always nil, unless `system-type' equals windows-nt."
   "Return the location of /mingw*/bin."
   (when (pdf-tools-msys2-directory)
     (let ((arch (intern (car (split-string system-configuration "-" t)))))
-    (expand-file-name
-     (format "./mingw%s/bin" (if (eq arch 'x86_64) "64" "32"))
-     (pdf-tools-msys2-directory)))))
+      (expand-file-name
+       (format "./mingw%s/bin" (if (eq arch 'x86_64) "64" "32"))
+       (pdf-tools-msys2-directory)))))
 
 (defun pdf-tools-find-bourne-shell ()
   "Locate a usable sh."
@@ -324,7 +324,7 @@ Returns the buffer of the compilation process."
          (process-environment process-environment)
          (default-directory build-directory)
          (autobuild (shell-quote-argument
-                     (expand-file-name "autobuild" build-directory)))
+                     (expand-file-name (if (eq system-type 'android) "autobuild.android" "autobuild") build-directory)))
          (msys2-p (equal "bash.exe" (file-name-nondirectory shell-file-name))))
     (unless shell-file-name
       (error "No suitable shell found"))
@@ -405,20 +405,20 @@ See `pdf-view-mode' and `pdf-tools-enabled-modes'."
                pdf-tools-directory)))
       (if (or no-query-p
               (y-or-n-p "Need to (re)build the epdfinfo program, do it now ?"))
-        (pdf-tools-build-server
-         target-directory
-         skip-dependencies-p
-         force-dependencies-p
-         (lambda (executable)
-           (let ((msg (format
-                       "Building the PDF Tools server %s"
-                       (if executable "succeeded" "failed"))))
-             (if (not executable)
-                 (funcall (if no-error-p #'message #'error) "%s" msg)
-               (message "%s" msg)
-               (setq pdf-info-epdfinfo-program executable)
-               (let ((pdf-info-restart-process-p t))
-                 (pdf-tools-install-noverify))))))
+          (pdf-tools-build-server
+           target-directory
+           skip-dependencies-p
+           force-dependencies-p
+           (lambda (executable)
+             (let ((msg (format
+                         "Building the PDF Tools server %s"
+                         (if executable "succeeded" "failed"))))
+               (if (not executable)
+                   (funcall (if no-error-p #'message #'error) "%s" msg)
+                 (message "%s" msg)
+                 (setq pdf-info-epdfinfo-program executable)
+                 (let ((pdf-info-restart-process-p t))
+                   (pdf-tools-install-noverify))))))
         (message "PDF Tools not activated")))))
 
 (defun pdf-tools-install-noverify ()
@@ -449,9 +449,9 @@ See `pdf-view-mode' and `pdf-tools-enabled-modes'."
   (interactive)
   (pdf-info-quit)
   (setq-default auto-mode-alist
-    (remove pdf-tools-auto-mode-alist-entry auto-mode-alist))
+                (remove pdf-tools-auto-mode-alist-entry auto-mode-alist))
   (setq-default magic-mode-alist
-    (remove pdf-tools-magic-mode-alist-entry magic-mode-alist))
+                (remove pdf-tools-magic-mode-alist-entry magic-mode-alist))
   (pdf-occur-global-minor-mode -1)
   (pdf-virtual-global-minor-mode -1)
   (remove-hook 'pdf-view-mode-hook #'pdf-tools-enable-minor-modes)

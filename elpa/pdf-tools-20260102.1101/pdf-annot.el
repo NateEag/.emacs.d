@@ -479,6 +479,7 @@ Signals an error, if PROPERTY is not modifiable.
 Returns the modified annotation."
 
   (declare (indent 2))
+  (setq a (pdf-annot--ensure-fresh a))
   (unless (equal value (pdf-annot-get a property))
     (unless (pdf-annot-property-modifiable-p a property)
       (error "Property `%s' is read-only for this annotation"
@@ -558,6 +559,15 @@ have identical id properties."
   "Return id property of annotation A."
   (pdf-annot-get a 'id))
 
+(defun pdf-annot--ensure-fresh (a)
+  "Return a fresh version of annotation A from the server.
+If the annotation does not exist anymore, signal an error."
+  (let ((id (pdf-annot-get-id a)))
+    (or (cl-find id
+                 (pdf-annot-getannots (pdf-annot-get a 'page) nil (pdf-annot-get-buffer a))
+                 :key #'pdf-annot-get-id)
+        (user-error "No such annotation: %s" id))))
+
 (defun pdf-annot-get-type (a)
   "Return type property of annotation A."
   (pdf-annot-get a 'type))
@@ -581,6 +591,7 @@ This function always returns nil."
   (interactive
    (list (pdf-annot-read-annotation
           "Click on the annotation you wish to delete")))
+  (setq a (pdf-annot--ensure-fresh a))
   (with-current-buffer (pdf-annot-get-buffer a)
     (pdf-info-delannot
      (pdf-annot-get-id a))
@@ -644,6 +655,7 @@ The DO-SAVE argument is given to
 `pdf-info-getattachment-from-annot', which see."
   (unless (pdf-annot-has-attachment-p a)
     (error "Annotation has no data attached: %s" a))
+  (setq a (pdf-annot--ensure-fresh a))
   (pdf-info-getattachment-from-annot
    (pdf-annot-get-id a)
    do-save
@@ -892,6 +904,7 @@ i.e. a non mouse-movement event is read."
   (let* ((mpos (posn-object-x-y (event-start event)))
          (a (or annot
                 (pdf-annot-at-position mpos))))
+    (setq a (pdf-annot--ensure-fresh a))
     (unless a
       (error "No annotation at this position: %s" mpos))
     (let* ((apos (pdf-annot-image-position a))
@@ -999,7 +1012,8 @@ other annotations."
                 `("white" "steel blue" 0.35 ,@edges))
              :map (pdf-view-apply-hotspot-functions
                    window page size)
-             :width (car size))))
+             :width (car size))
+           (when pdf-view-roll-minor-mode page)))
         (pdf-util-scroll-to-edges
          (pdf-util-scale-relative-to-pixel (car edges)))))))
 
@@ -1086,8 +1100,8 @@ Return the new annotation."
       (pdf-annot-activate-annotation a))
     a))
 
-(defun pdf-annot-add-text-annotation (pos &optional icon property-alist)
-  "Add a new text annotation at POS in the selected window.
+(defun pdf-annot-add-text-annotation (pos &optional icon property-alist page)
+  "Add a new text annotation at POS on PAGE in the selected window.
 
 POS should be a image position object or a cons \(X . Y\), both
 being image coordinates.
@@ -1115,6 +1129,9 @@ Return the new annotation."
      (list posn)))
   (pdf-util-assert-pdf-window)
   (when (posnp pos)
+    (setq page (or page
+                   (when pdf-view-roll-minor-mode
+                     (1+ (/ (posn-point pos) 4)))))
     (setq pos (posn-object-x-y pos)))
   (let ((isize (pdf-view-image-size))
         (x (car pos))
@@ -1139,7 +1156,8 @@ Return the new annotation."
         property-alist
         (cdr (assq 'text pdf-annot-default-annotation-properties))
         (cdr (assq t pdf-annot-default-annotation-properties))
-        `((color . ,(car pdf-annot-color-history))))))))
+        `((color . ,(car pdf-annot-color-history))))
+       page))))
 
 (defun pdf-annot-mouse-add-text-annotation (ev)
   "Add a text annotation using the mouse.
@@ -1155,11 +1173,12 @@ EV describes the captured mouse event."
           "Click where a new text annotation should be added ..."))
      (event-start ev))))
 
-(defun pdf-annot-add-markup-annotation (list-of-edges type &optional color
+(defun pdf-annot-add-markup-annotation (region type &optional color
                                                       property-alist)
   "Add a new markup annotation in the selected window.
 
-LIST-OF-EDGES determines the marked up area and should be a list
+REGION determines the marked up area and should be a cons cell
+\(PAGE . LIST-OF-EDGES\) where LIST-OF-EDGES should be list
 of \(LEFT TOP RIGHT BOT\), each value a relative coordinate.
 
 TYPE should be one of `squiggly', `underline', `strike-out' or
@@ -1182,7 +1201,7 @@ Return the new annotation."
   (pdf-util-assert-pdf-window)
   (pdf-annot-add-annotation
    type
-   list-of-edges
+   (cdr region)
    (pdf-annot-merge-alists
     (and color `((color . ,color)))
     property-alist
@@ -1191,7 +1210,7 @@ Return the new annotation."
     (when pdf-annot-color-history
       `((color . ,(car pdf-annot-color-history))))
     '((color . "#ffff00")))
-   (pdf-view-current-page)))
+   (car region)))
 
 (defun pdf-annot-add-squiggly-markup-annotation (list-of-edges
                                                  &optional color property-alist)
@@ -1510,6 +1529,7 @@ At any given point of time, only one annotation can be in edit mode."
                (not (eq a pdf-annot-edit-contents--annotation)))
       (with-current-buffer pdf-annot-edit-contents--buffer
         (pdf-annot-edit-contents-finalize 'ask)))
+    (setq a (pdf-annot--ensure-fresh a))
     (unless (buffer-live-p pdf-annot-edit-contents--buffer)
       (setq pdf-annot-edit-contents--buffer
             (get-buffer-create
@@ -1540,6 +1560,66 @@ At any given point of time, only one annotation can be in edit mode."
       (error "No annotation at this position"))
     (pdf-annot-edit-contents a)))
 
+(defun pdf-annot-edit (annot)
+  "Activate ANNOT, for editing.
+
+Interactively, annot is read via `pdf-annot-read-annot'.
+This function displays characters around the annots in the current
+page and starts reading characters (ignoring case).  After a
+sufficient number of characters have been read, the corresponding
+annot's annot is invoked.  Additionally, SPC may be used to
+scroll the current page."
+  (interactive
+   (list (or (pdf-annot-read-annot "Activate annot (SPC scrolls): ")
+             (error "No annot selected"))))
+  (pdf-annot-activate-annotation annot))
+
+;; TODO 'merge' this function with `pdf-links-read-link-action' into a single
+;; universal 'read-action' function (in `pdf-util'?)
+(defun pdf-annot-read-annot (prompt)
+  "Using PROMPT, interactively read an annot-action.
+
+See `pdf-annot-edit' for the interface."
+  (pdf-util-assert-pdf-window)
+  (let* ((annots (pdf-annot-getannots (pdf-view-current-page) nil nil))
+         (keys (pdf-links-read-link-action--create-keys
+                (length annots)))
+         (key-strings (mapcar (apply-partially 'apply 'string)
+                              keys))
+         (alist (cl-mapcar 'cons keys annots))
+         (size (pdf-view-image-size))
+         (colors (pdf-util-face-colors
+                  'pdf-links-read-link pdf-view-dark-minor-mode))
+         (args (list
+                :foreground (car colors)
+                :background (cdr colors)
+                :formats
+                `((?c . ,(lambda (_edges) (pop key-strings)))
+                  (?P . ,(number-to-string
+                          (max 1 (* (cdr size)
+                                    pdf-links-convert-pointsize-scale)))))
+                :commands pdf-links-read-link-convert-commands
+                :apply (pdf-util-scale-relative-to-pixel
+                        (mapcar (lambda (l) (cdr (assq 'edges l)))
+                                annots)))))
+    ;; (print (plist-get args :apply))
+    (unless annots
+      (error "No annots on this page"))
+    (unwind-protect
+        (let ((image-data
+               (pdf-cache-get-image
+                (pdf-view-current-page)
+                (car size) (car size) 'pdf-annot-read-annot)))
+          (unless image-data
+            (setq image-data (apply 'pdf-util-convert-page args ))
+            (pdf-cache-put-image
+             (pdf-view-current-page)
+             (car size) image-data 'pdf-annot-read-annot))
+          (pdf-view-display-image
+           (create-image image-data (pdf-view-image-type) t)
+           (when pdf-view-roll-minor-mode (pdf-view-current-page)))
+          (pdf-links-read-link-action--read-chars prompt alist))
+      (pdf-view-redisplay))))
 
 
 ;; * ================================================================== *
@@ -1582,6 +1662,7 @@ Currently supported properties are page, type, label, date and contents."
 
 (defvar pdf-annot-list-mode-map
   (let ((km (make-sparse-keymap)))
+    (define-key km (kbd "e") 'pdf-annot-edit)
     (define-key km (kbd "C-c C-f") #'pdf-annot-list-follow-minor-mode)
     (define-key km (kbd "SPC") #'pdf-annot-list-display-annotation-from-id)
     km))

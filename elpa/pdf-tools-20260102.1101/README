@@ -4,10 +4,10 @@
 #+Maintainer: Vedang Manerikar
 #+Maintainer_Email: vedang.manerikar@gmail.com
 
-[[https://app.circleci.com/pipelines/github/vedang/pdf-tools][https://circleci.com/gh/vedang/pdf-tools.svg?style=svg]]
+[[https://github.com/vedang/pdf-tools/actions/workflows/test.yml][https://github.com/vedang/pdf-tools/actions/workflows/test.yml/badge.svg]]
 [[https://elpa.nongnu.org/nongnu/pdf-tools.html][http://elpa.nongnu.org/nongnu/pdf-tools.svg]]
 [[https://stable.melpa.org/#/pdf-tools][http://stable.melpa.org/packages/pdf-tools-badge.svg]]
-[[https://melpa.org/#/pdf-tools][http://melpa.org/packages/pdf-tools-badge.svg]] [[https://ci.appveyor.com/project/vedang/pdf-tools][https://ci.appveyor.com/api/projects/status/yqic2san0wi7o5v8/branch/master?svg=true]]
+[[https://melpa.org/#/pdf-tools][http://melpa.org/packages/pdf-tools-badge.svg]]
 
 The ~pdf-tools~ Wiki is maintained at https://pdftools.wiki. Head to the site if you find it easier to navigate a website for reading a manual. All the topics on the site are listed at https://pdftools.wiki/impulse.
 
@@ -25,6 +25,7 @@ The ~pdf-tools~ Wiki is maintained at https://pdftools.wiki. Head to the site if
 - [[#features][Features]]
   - [[#view-and-navigate-pdfs][View and Navigate PDFs]]
     - [[#keybindings-for-navigating-pdf-documents][Keybindings for navigating PDF documents]]
+    - [[#continuous-scroll-mode-experimental][Continuous Scroll Mode (Experimental)]]
     - [[#keybindings-for-manipulating-display-of-pdf][Keybindings for manipulating display of PDF]]
   - [[#annotations][Annotations]]
     - [[#keybindings-for-working-with-annotations][Keybindings for working with Annotations]]
@@ -94,15 +95,19 @@ If you install ~pdf-tools~ via NonGNU ELPA or MELPA, *you don't need to worry ab
 
 Note: You'll need GNU Emacs \ge 26.3 and some form of a GNU/Linux OS. Other operating systems are not officially supported, but ~pdf-tools~ is known to work on many of them.
 
-The ~epdfinfo~ install script takes care of installing all the necessary pre-requisites on supported operating systems (see list below). See the section on [[id:A34704B9-1B51-4614-8806-C4059F7B42D5][I want to add support for ~pdf-tools~ on =My Fav OS=. How do I do that?]] to learn how to add your favorite Operating System to this list.
+The ~epdfinfo~ install script takes care of installing most of the necessary pre-requisites on supported operating systems (see list below). See the section on [[id:A34704B9-1B51-4614-8806-C4059F7B42D5][I want to add support for ~pdf-tools~ on =My Fav OS=. How do I do that?]] to learn how to add your favorite Operating System to this list.
 
 Similarly, package-managers are not officially supported, but ~pdf-tools~ is known to be available on some of them. See the section on [[id:fb5cef15-fed4-4dec-a443-52f7c00c7831][Installing the ~epdfinfo~ server from package managers]] to avoid manual installation of server / server prerequisites.
+
+Pre-requisites:
+- make: if this is not already installed, run ~./server/autobuild~ instead of ~make -s~
+- [[https://github.com/cask/cask][cask]]: if this is not already installed, follow the install instructions from the cask github
 
 Installation Instructions for ~epdfinfo~:
 #+begin_src sh
   $ git clone https://github.com/vedang/pdf-tools
-  $ cd /path/to/pdf-tools
-  $ make -s # If you don't have make installed, run ./server/autobuild and it will install make
+  $ cd pdf-tools
+  $ make -s
 #+end_src
 
 This should give you no error and should compile the ~epdfinfo~ server. If you face a problem, please report on the issue tracker!
@@ -135,6 +140,7 @@ The following Operating Systems / package managers are supported. *Note*: The pa
 - Ubuntu: https://packages.ubuntu.com/impish/elpa-pdf-tools-server
 - MSYS2 / MINGW (Windows): https://packages.msys2.org/package/mingw-w64-x86_64-emacs-pdf-tools-server?repo=mingw64
 - FreeBSD: https://repology.org/metapackages/?search=pdf-tools&inrepo=freebsd
+- GNU Guix: https://hpc.guix.info/package/emacs-pdf-tools
 
 *** Installing the epdfinfo server from source on Windows (+ Gotchas)
 :PROPERTIES:
@@ -264,6 +270,37 @@ PDFView Mode is an Emacs PDF viewer. It displays PDF files as PNG images in Emac
 |-----------------------------------------------+-------------------------|
 |                                               |                         |
 Note that ~pdf-tools~ renders the PDF as images inside Emacs. This means that all the keybindings of ~image-mode~ work on individual PDF pages as well.
+
+*** Continuous Scroll Mode (Experimental)
+:PROPERTIES:
+:CREATED:  [2024-12-31 Tue 14:00]
+:ID:       82201772-0166-4335-B4DF-841D03AE1DCD
+:END:
+~pdf-tools~ supports an optional continuous scroll mode that displays multiple pages simultaneously and allows smooth scrolling across page boundaries. This feature is experimental and off by default.
+
+To enable continuous scroll mode:
+#+begin_src elisp
+  M-x pdf-view-roll-minor-mode RET
+#+end_src
+
+When enabled, you will see "Continuous" in the mode-line. In this mode:
+- Multiple pages are visible at once in tall windows
+- Scrolling is smooth and continuous across page boundaries
+- ~C-n~ / ~C-p~ scroll by pixels instead of jumping pages
+- Mouse wheel scrolling works smoothly across pages
+- Works with ~pixel-scroll-precision-mode~ for trackpad scrolling
+
+To enable by default for all PDFs, add to your configuration:
+#+begin_src elisp
+  (add-hook 'pdf-view-mode-hook #'pdf-view-roll-minor-mode)
+#+end_src
+
+You can customize the appearance with:
+- ~pdf-roll-vertical-margin~: Pixel height of margin between pages (default: 2)
+- ~pdf-roll-margin-color~: Color of the margin between pages (default: "gray")
+
+*Note*: This feature is experimental. Some features may not work perfectly with continuous scroll mode enabled. If you encounter issues, disable the mode with ~M-x pdf-view-roll-minor-mode~.
+
 | Image Mode             |                                             |
 |------------------------+---------------------------------------------|
 | image-scroll-right     | ~C-x >~ / ~<remap> <scroll-right>~          |
@@ -288,15 +325,16 @@ Note that ~pdf-tools~ renders the PDF as images inside Emacs. This means that al
 :CREATED:  [2021-12-30 Thu 18:33]
 :ID:       73a18ea8-aa21-48d4-9d8b-dc64e3601000
 :END:
-| Display                                  |                 |
-|------------------------------------------+-----------------|
-| Zoom in / Zoom out                       | ~+~ / ~-~       |
-| Fit Height / Fit Width / Fit Page        | ~H~ / ~W~ / ~P~ |
-| Trim Margins (set slice to bounding box) | ~s b~           |
-| Reset Margins                            | ~s r~           |
-| Reset Zoom                               | ~0~             |
-| Rotate Page                              | ~R~             |
-|------------------------------------------+-----------------|
+| Display                                          |                 |
+|--------------------------------------------------+-----------------|
+| Zoom in / Zoom out                               | ~+~ / ~-~       |
+| Fit Height / Fit Width / Fit Page                | ~H~ / ~W~ / ~P~ |
+| Trim Margins (set slice to bounding box)         | ~s b~           |
+| Trim Margins to common bounding box of all pages | ~s c~           |
+| Reset Margins                                    | ~s r~           |
+| Reset Zoom                                       | ~0~             |
+| Rotate Page                                      | ~R~             |
+|--------------------------------------------------+-----------------|
 
 ** Annotations
 :PROPERTIES:
@@ -404,6 +442,11 @@ Once you have read through the features provided by ~pdf-tools~, you probably wa
 :ID:       f178ba41-0f5a-4d22-b4a8-889af1af566e
 :END:
 This mode is an alternative to ~linum-mode~ and is available since Emacs 26. ~pdf-tools~ does not work well with it. For example, it makes horizontal navigation (such as ~C-f~, ~C-b~, ~C-x <~ or ~C-x >~ ) in a document impossible.
+
+If you use ~display-line-numbers-mode~ globally, you should disable it for ~pdf-view-mode~:
+#+begin_src elisp
+  (add-hook 'pdf-view-mode-hook (lambda () (display-line-numbers-mode -1)))
+#+end_src
 
 ** auto-revert
 :PROPERTIES:
@@ -643,3 +686,22 @@ If your Emacs is compiled for x86, the =Code Type= will be =x86_64=.
 :ID:       2D173424-C211-4474-B0D0-83F4381CAFFA
 :END:
 Thank you for taking the time to contribute back to the code. You may find some useful notes in the [[id:fd64c10c-4ea5-4ece-8d95-b723098dd4f6][Tips and Tricks for Developers]] section. Please be sure to check it out!
+
+** How do I print a PDF?
+:PROPERTIES:
+:CREATED:  [2024-12-30 Mon 20:00]
+:ID:       D5345C45-2EB7-45B3-B547-E95CB9F81155
+:END:
+Use ~C-c C-p~ (~pdf-misc-print-document~) to print the current PDF. By default, this command prompts for a print program. To avoid the prompt, configure the print program:
+#+begin_src elisp
+  (setq pdf-misc-print-program-executable "lpr")
+#+end_src
+
+Note: ~print-buffer~ does not work with ~pdf-tools~ because it prints buffer text, which ~pdf-tools~ hides using overlays while displaying rendered page images.
+
+** How do I open the current PDF in an external application?
+:PROPERTIES:
+:CREATED:  [2024-12-30 Mon 20:05]
+:ID:       11A36424-B728-4A8E-853E-3AE876E3C6CD
+:END:
+Use ~M-x browse-url-of-file~ to open the current PDF in your system's default external PDF viewer.

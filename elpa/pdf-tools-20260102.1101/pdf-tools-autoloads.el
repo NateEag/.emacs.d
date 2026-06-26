@@ -16,19 +16,19 @@ Support for PDF Annotations.
 
 \\{pdf-annot-minor-mode-map}
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Annot minor mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Annot
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-annot-minor-mode'.
+evaluate the variable `pdf-annot-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "pdf-annot" '("pdf-annot-"))
@@ -55,20 +55,19 @@ may be navigated with the following keys.
 
 \\{pdf-history-minor-mode-map}
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-History minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-History
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-history-minor-mode'.
+evaluate the variable `pdf-history-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "pdf-history" '("pdf-history-"))
@@ -112,20 +111,19 @@ that not every isearch command work as expected.
 
 \\{pdf-isearch-active-mode-map}
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Isearch minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Isearch
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-isearch-minor-mode'.
+evaluate the variable `pdf-isearch-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "pdf-isearch" '("pdf-isearch-"))
@@ -134,7 +132,7 @@ it is disabled.
 ;;; Generated autoloads from pdf-links.el
 
 (autoload 'pdf-links-minor-mode "pdf-links" "\
-Handle links in PDF documents.\\<pdf-links-minor-mode-map>
+Handle links in PDF documents.
 
 If this mode is enabled, most links in the document may be
 activated by clicking on them or by pressing \\[pdf-links-action-perform] and selecting
@@ -143,19 +141,19 @@ links via \\[pdf-links-isearch-link].
 
 \\{pdf-links-minor-mode-map}
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Links minor mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Links
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-links-minor-mode'.
+evaluate the variable `pdf-links-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-links-action-perform "pdf-links" "\
@@ -201,38 +199,38 @@ see.
 (autoload 'pdf-misc-minor-mode "pdf-misc" "\
 FIXME:  Not documented.
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Misc minor mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Misc
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-misc-minor-mode'.
+evaluate the variable `pdf-misc-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-misc-size-indication-minor-mode "pdf-misc" "\
 Provide a working size indication in the mode-line.
 
 This is a minor mode.  If called interactively, toggle the
-`Pdf-Misc-Size-Indication minor mode' mode.  If the prefix
-argument is positive, enable the mode, and if it is zero or
-negative, disable the mode.
+`Pdf-Misc-Size-Indication minor mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-misc-size-indication-minor-mode'.
+evaluate the variable `pdf-misc-size-indication-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-misc-menu-bar-minor-mode "pdf-misc" "\
@@ -240,18 +238,18 @@ Display a PDF Tools menu in the menu-bar.
 
 This is a minor mode.  If called interactively, toggle the
 `Pdf-Misc-Menu-Bar minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-misc-menu-bar-minor-mode'.
+evaluate the variable `pdf-misc-menu-bar-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-misc-context-menu-minor-mode "pdf-misc" "\
@@ -260,22 +258,22 @@ Provide a right-click context menu in PDF buffers.
 \\{pdf-misc-context-menu-minor-mode-map}
 
 This is a minor mode.  If called interactively, toggle the
-`Pdf-Misc-Context-Menu minor mode' mode.  If the prefix argument
-is positive, enable the mode, and if it is zero or negative,
-disable the mode.
+`Pdf-Misc-Context-Menu minor mode' mode.  If the prefix argument is
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-misc-context-menu-minor-mode'.
+evaluate the variable `pdf-misc-context-menu-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
-(register-definition-prefixes "pdf-misc" '("pdf-misc-"))
+(register-definition-prefixes "pdf-misc" '("pdf-m"))
 
 
 ;;; Generated autoloads from pdf-occur.el
@@ -311,19 +309,18 @@ This global minor mode enables (or disables)
 in all current and future ibuffer/dired buffer.
 
 This is a global minor mode.  If called interactively, toggle the
-`Pdf-Occur-Global minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+`Pdf-Occur-Global minor mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
 evaluate `(default-value \\='pdf-occur-global-minor-mode)'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-occur-ibuffer-minor-mode "pdf-occur" "\
@@ -336,18 +333,18 @@ and otherwise fallback to `ibuffer-do-occur'.
 
 This is a minor mode.  If called interactively, toggle the
 `Pdf-Occur-Ibuffer minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-occur-ibuffer-minor-mode'.
+evaluate the variable `pdf-occur-ibuffer-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-occur-dired-minor-mode "pdf-occur" "\
@@ -359,19 +356,18 @@ version of `occur', if all marked buffer's are in `pdf-view-mode'
 and otherwise fallback to `dired-do-search'.
 
 This is a minor mode.  If called interactively, toggle the
-`Pdf-Occur-Dired minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+`Pdf-Occur-Dired minor mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-occur-dired-minor-mode'.
+evaluate the variable `pdf-occur-dired-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "pdf-occur" '("pdf-occur-"))
@@ -388,20 +384,19 @@ buffer.
 
 \\{pdf-outline-minor-mode-map}
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Outline minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Outline
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-outline-minor-mode'.
+evaluate the variable `pdf-outline-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-outline "pdf-outline" "\
@@ -414,6 +409,29 @@ buffer, unless NO-SELECT-WINDOW-P is non-nil.
 (autoload 'pdf-outline-imenu-enable "pdf-outline" "\
 Enable imenu in the current PDF buffer." t)
 (register-definition-prefixes "pdf-outline" '("pdf-outline"))
+
+
+;;; Generated autoloads from pdf-roll.el
+
+(autoload 'pdf-view-roll-minor-mode "pdf-roll" "\
+If enabled display document on a virtual scroll providing continuous scrolling.
+
+This is a minor mode.  If called interactively, toggle the
+`Pdf-View-Roll minor mode' mode.  If the prefix argument is positive,
+enable the mode, and if it is zero or negative, disable the mode.
+
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
+
+To check whether the minor mode is enabled in the current buffer,
+evaluate the variable `pdf-view-roll-minor-mode'.
+
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
+
+(fn &optional ARG)" t)
+(register-definition-prefixes "pdf-roll" '("pdf-roll-"))
 
 
 ;;; Generated autoloads from pdf-sync.el
@@ -437,19 +455,19 @@ function displays the PDF page corresponding to the current
 position in the TeX buffer.  This function only works together
 with AUCTeX.
 
-This is a minor mode.  If called interactively, toggle the
-`Pdf-Sync minor mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
+This is a minor mode.  If called interactively, toggle the `Pdf-Sync
+minor mode' mode.  If the prefix argument is positive, enable the mode,
+and if it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `pdf-sync-minor-mode'.
+evaluate the variable `pdf-sync-minor-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (register-definition-prefixes "pdf-sync" '("pdf-sync-"))
@@ -514,7 +532,7 @@ The bookmark handler-function interface for bookmark BMK.
 See also `pdf-view-bookmark-make-record'.
 
 (fn BMK)")
-(register-definition-prefixes "pdf-view" '("cua-copy-region--pdf-view-advice" "pdf-view-"))
+(register-definition-prefixes "pdf-view" '("cua-copy-region--pdf-view-advice" "pdf-"))
 
 
 ;;; Generated autoloads from pdf-virtual.el
@@ -540,18 +558,18 @@ Enable recognition and handling of VPDF files.
 
 This is a global minor mode.  If called interactively, toggle the
 `Pdf-Virtual-Global minor mode' mode.  If the prefix argument is
-positive, enable the mode, and if it is zero or negative, disable
-the mode.
+positive, enable the mode, and if it is zero or negative, disable the
+mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
 evaluate `(default-value \\='pdf-virtual-global-minor-mode)'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'pdf-virtual-buffer-create "pdf-virtual" "\

@@ -51,6 +51,13 @@
 (require 'tq)
 (require 'cl-lib)
 
+;; Silence native-comp warnings about functions defined elsewhere
+(declare-function pdf-util-frame-scale-factor "pdf-util")
+(declare-function pdf-util-hexcolor "pdf-util")
+(declare-function pdf-util-munch-file "pdf-util")
+(declare-function pdf-util-highlight-regexp-in-string "pdf-util")
+(declare-function pdf-view-buffer-file-name "pdf-view")
+
 
 
 ;; * ================================================================== *
@@ -571,6 +578,8 @@ interrupted."
                (value (cadr key-value)))
            (cl-case key
              ((:render/printed)
+              (setq value (equal value "1")))
+             ((:render/gammabeforeinvert)
               (setq value (equal value "1")))
              ((:render/usecolors)
               (setq value (ignore-errors
@@ -1733,6 +1742,8 @@ Returns a list \(LEFT TOP RIGHT BOT\)."
              (push (pdf-util-hexcolor value)
                    soptions))
             ((:render/printed)
+             (push (if value 1 0) soptions))
+            ((:render/gammabeforeinvert)
              (push (if value 1 0) soptions))
             ((:render/usecolors)
              ;; 0 -> original color

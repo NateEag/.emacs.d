@@ -1,14 +1,14 @@
-use std::{mem, os, collections::HashMap, sync::Mutex};
+use std::{collections::HashMap, mem, os, sync::Mutex};
 
 use emacs::{defun, Result, ResultExt, GlobalRef, Value, Env, IntoLisp, FromLisp, ErrorKind};
 
 use libloading::{Library, Symbol};
 use once_cell::sync::Lazy;
 
-use crate::{types, error};
+use crate::{error, types};
 use tree_sitter::{LANGUAGE_VERSION, MIN_COMPATIBLE_LANGUAGE_VERSION};
 
-#[derive(Copy, Clone)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 #[repr(transparent)]
 pub struct Language(pub(crate) tree_sitter::Language);
 
@@ -94,7 +94,7 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
     let tree_sitter_lang: Symbol<'_, unsafe extern "C" fn() -> _> =
         unsafe { lib.get(symbol_name.as_bytes()) }.or_signal(env, error::tsc_lang_load_failed)?;
     let language: tree_sitter::Language = unsafe { tree_sitter_lang() };
-    let version = language.version();
+    let version = language.abi_version();
     if version < MIN_COMPATIBLE_LANGUAGE_VERSION {
         return env.signal(error::tsc_lang_abi_too_old, (
             version, supported_abi_range(env)?, file
@@ -122,8 +122,9 @@ fn _load_language(file: String, symbol_name: String, lang_symbol: Value) -> Resu
             .make_global_ref()
     }).collect();
     let language: Language = language.into();
+    let id = language.clone().id().clone();
     LANG_INFOS.try_lock().expect("Failed to access language info registry")
-        .insert(language.id(), LangInfo {
+        .insert(id, LangInfo {
             load_file: file,
             lang_symbol: lang_symbol.make_global_ref(),
             _lib: lib,
@@ -191,7 +192,7 @@ defun_lang_methods! {
     /// compatible version of tree-sitter. `tsc-set-language' will fail if the language
     /// is incompatible, so there's rarely a need to use this function, except for
     /// debugging purposes.
-    "lang-version" fn version -> usize
+    "lang-version" fn abi_version -> usize
 
     /// Return the number of distinct node types defined in LANGUAGE.
     "lang-count-types" fn node_kind_count -> usize
@@ -201,7 +202,13 @@ defun_lang_methods! {
 
     /// Return t if the numeric TYPE-ID identifies a named node type in LANGUAGE.
     "lang-node-type-named-p" fn node_kind_is_named(type_id: u16) -> bool
+}
 
-    /// Return the numeric id of FIELD-NAME in LANGUAGE.
-    "-lang-field-id-for-name" fn field_id_for_name(field_name: String) -> Option<u16>
+/// Return the numeric id of FIELD-NAME in LANGUAGE.
+#[defun(name = "-lang-field-id-for-name")]
+fn field_id_for_name(language: Language, field_name: String) -> Result<Option<u16>> {
+    Ok(language
+       .0
+       .field_id_for_name(&field_name)
+       .map(|nz| nz.get()))
 }

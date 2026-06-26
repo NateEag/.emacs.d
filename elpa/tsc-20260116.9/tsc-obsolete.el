@@ -1,6 +1,9 @@
 ;;; tsc-obsolete.el --- Obsolete tree-sitter APIs -*- lexical-binding: t; coding: utf-8-*-
 
-;; Copyright (C) 2020 Tuấn-Anh Nguyễn
+;; Copyright (C) 2020-2026 emacs-tree-sitter maintainers
+;;
+;; Author: Tuấn-Anh Nguyễn <ubolonton@gmail.com>
+;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
@@ -133,6 +136,10 @@
 (define-obsolete-function-alias 'ts--timeout-micros 'tsc--timeout-micros "2020-10-13")
 (define-obsolete-function-alias 'ts--try-load-dyn 'tsc--try-load-dyn "2020-10-13")
 (define-obsolete-function-alias 'ts--without-restriction 'tsc--without-restriction "2020-10-13")
+
+;; 0.26.3
+(define-obsolete-function-alias 'tsc--timeout-micros nil "2025-12-22")
+(define-obsolete-function-alias 'tsc--set-timeout-micros nil "2025-12-22")
 
 (provide 'tsc-obsolete)
 ;;; tsc-obsolete.el ends here

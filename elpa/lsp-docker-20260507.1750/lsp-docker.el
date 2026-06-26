@@ -1,13 +1,14 @@
 ;;; lsp-docker.el --- LSP Docker integration         -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Ivan Yonchovski
+;; Copyright (C) 2019-2026  emacs-lsp maintainers
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; URL: https://github.com/emacs-lsp/lsp-docker
 ;; Keywords: languages langserver
-;; Package-Version: 20250228.2210
-;; Package-Revision: 3960c73349e5
-;; Package-Requires: ((emacs "28.1") (dash "2.14.1") (lsp-mode "6.2.1") (f "0.20.0") (s "1.13.0") (yaml "0.2.0") (ht "2.0"))
+;; Package-Version: 20260507.1750
+;; Package-Revision: f666fba72b49
+;; Package-Requires: ((emacs "29.1") (dash "2.14.1") (lsp-mode "6.2.1") (f "0.20.0") (s "1.13.0") (yaml "0.2.0") (ht "2.0"))
 
 
 ;; This program is free software; you can redistribute it and/or modify

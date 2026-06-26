@@ -1,7 +1,7 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "lsp-docker" "20250228.2210"
+(define-package "lsp-docker" "20260507.1750"
   "LSP Docker integration."
-  '((emacs    "28.1")
+  '((emacs    "29.1")
     (dash     "2.14.1")
     (lsp-mode "6.2.1")
     (f        "0.20.0")
@@ -9,8 +9,8 @@
     (yaml     "0.2.0")
     (ht       "2.0"))
   :url "https://github.com/emacs-lsp/lsp-docker"
-  :commit "3960c73349e5658220f0f48587894ac098e62b97"
-  :revdesc "3960c73349e5"
+  :commit "f666fba72b496c7750bb3f349771b07aa51714f0"
+  :revdesc "f666fba72b49"
   :keywords '("languages" "langserver")
   :authors '(("Ivan Yonchovski" . "yyoncho@gmail.com"))
   :maintainers '(("Ivan Yonchovski" . "yyoncho@gmail.com")))

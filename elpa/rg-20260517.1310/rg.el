@@ -6,8 +6,8 @@
 ;;
 ;; Author: David Landell <david.landell@sunnyhill.email>
 ;;         Roland McGrath <roland@gnu.org>
-;; Package-Version: 20251022.457
-;; Package-Revision: 9ff6cb24bda5
+;; Package-Version: 20260517.1310
+;; Package-Revision: e46a16b8bdba
 ;; URL: https://github.com/dajva/rg.el
 ;; Package-Requires: ((emacs "28.1") (transient "0.9.2") (wgrep "2.1.10"))
 ;; Keywords: matching, tools
@@ -285,6 +285,17 @@ Do this for each type in `rg-custom-type-aliases'."
   "Return non nil if FILES is a custom file pattern."
   (not (assoc files (rg-get-type-aliases))))
 
+(defun rg-quote-flag (flag)
+  "If FLAG is an option with a value, shell quote the value if not already quoted.
+Options are expected to be in the format '--option=value'."
+  (if (and (string-match "\\`\\(--[^=]+=\\)\\(.*\\)\\'" flag)
+           (let ((val (match-string 2 flag)))
+             (not (or (string-prefix-p "'" val)
+                      (string-prefix-p "\"" val)))))
+      (concat (match-string 1 flag)
+              (shell-quote-argument (match-string 2 flag)))
+    flag))
+
 (defun rg-build-command (pattern files literal flags)
   "Create the command line for PATTERN and FILES.
 LITERAL determines if search will be literal or regexp based and FLAGS
@@ -295,10 +306,12 @@ are command line flags to use for the search."
           (when (or rg-show-columns rg-group-result)
             (list "--column"))
           (rg-build-type-add-args)
-          (if (functionp rg-command-line-flags)
-              (funcall rg-command-line-flags)
-            rg-command-line-flags)
-          flags
+          (mapcar #'rg-quote-flag
+                  (if (functionp rg-command-line-flags)
+                      (funcall rg-command-line-flags)
+                    rg-command-line-flags))
+          (mapcar #'rg-quote-flag flags)
+
 
           (list
            (if rg-group-result "--heading" "--no-heading"))

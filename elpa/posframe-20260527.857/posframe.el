@@ -5,12 +5,12 @@
 ;; Author: Feng Shu <tumashu@163.com>
 ;; Maintainer: Feng Shu <tumashu@163.com>
 ;; URL: https://github.com/tumashu/posframe
-;; Package-Version: 20251125.846
-;; Package-Revision: d93828bf6c36
+;; Package-Version: 20260527.857
+;; Package-Revision: 74c8c56131ed
 ;; Keywords: convenience, tooltip
 ;; Package-Requires: ((emacs "26.1"))
 
-;; This file is not part of GNU Emacs.
+;; This file is part of GNU Emacs.
 
 ;; GNU Emacs is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -115,7 +115,7 @@ frame.")
 
 (defvar posframe-gtk-resize-child-frames
   (when (and
-         (> emacs-major-version 26)
+         (< emacs-major-version 29)
          (string-match-p "GTK3" system-configuration-features)
          (let ((value (or (getenv "XDG_CURRENT_DESKTOP") (getenv "DESKTOP_SESSION"))))
            (and (stringp value)
@@ -137,7 +137,7 @@ effect.")
        (not emacs-basic-display)
        (or (display-graphic-p)
            (featurep 'tty-child-frames))
-       (eq (frame-parameter (selected-frame) 'minibuffer) 't)))
+       (not (eq (frame-parameter (selected-frame) 'minibuffer) 'only))))
 
 ;;;###autoload
 (cl-defun posframe-show (buffer-or-name
@@ -213,7 +213,7 @@ position.  Its argument is a plist of the following form:
    :parent-window-width  xxx
    :parent-window-height xxx
    :mouse-x xxx
-   ;mouse-y xxx
+   :mouse-y xxx
    :minibuffer-height xxx
    :mode-line-height  xxx
    :header-line-height xxx
@@ -236,7 +236,7 @@ The builtin poshandler functions are listed below:
 7.  `posframe-poshandler-frame-bottom-left-corner'
 8.  `posframe-poshandler-frame-bottom-right-corner'
 9.  `posframe-poshandler-window-center'
-10.  `posframe-poshandler-window-top-center'
+10. `posframe-poshandler-window-top-center'
 11. `posframe-poshandler-window-top-left-corner'
 12. `posframe-poshandler-window-top-right-corner'
 13. `posframe-poshandler-window-bottom-center'
@@ -433,6 +433,7 @@ You can use `posframe-delete-all' to delete all posframes."
                             0))
          (mouse-position (cdr (mouse-pixel-position)))
          (frame-resize-pixelwise t)
+         pixel-position
          posframe)
 
     (with-current-buffer buffer
@@ -474,56 +475,75 @@ You can use `posframe-delete-all' to delete all posframes."
       ;; Insert string into the posframe buffer
       (posframe--insert-string string no-properties)
 
-      (let ((size-info
-             (list :posframe posframe
-                   :width width
-                   :height height
-                   :max-width max-width
-                   :max-height max-height
-                   :min-width min-width
-                   :min-height min-height)))
-        ;; Set posframe's size
-        (posframe--set-frame-size size-info)
+      (let* ((size-info
+              (list :posframe posframe
+                    :width width
+                    :height height
+                    :max-width max-width
+                    :max-height max-height
+                    :min-width min-width
+                    :min-height min-height))
+             (position-info
+              (list :position position
+                    :poshandler poshandler
+                    :font-height font-height
+                    :font-width font-width
+                    :posframe posframe
+                    :posframe-buffer buffer
+                    :parent-frame parent-frame
+                    :parent-frame-width parent-frame-width
+                    :parent-frame-height parent-frame-height
+                    :ref-position ref-position
+                    :parent-window parent-window
+                    :parent-window-start parent-window-start
+                    :parent-window-end parent-window-end
+                    :parent-window-top parent-window-top
+                    :parent-window-left parent-window-left
+                    :parent-window-width parent-window-width
+                    :parent-window-height parent-window-height
+                    :mouse-x (car mouse-position)
+                    :mouse-y (cdr mouse-position)
+                    :mode-line-height mode-line-height
+                    :minibuffer-height minibuffer-height
+                    :header-line-height header-line-height
+                    :tab-line-height tab-line-height
+                    :x-pixel-offset x-pixel-offset
+                    :y-pixel-offset y-pixel-offset
+                    :parent-text-scale-mode-amount parent-text-scale-mode-amount)))
+        (setq pixel-position (and
+                              width
+                              height
+                              (posframe-run-poshandler
+                               `(,@poshandler-extra-info
+                                 ,@position-info
+                                 :posframe-width ,(* (default-font-width) width)
+                                 :posframe-height ,(* (default-line-height) height)))))
+        (if (and width height
+                 (fboundp 'set-frame-size-and-position-pixelwise)
+                 (frame-visible-p posframe)
+                 (not (equal
+                       pixel-position
+                       posframe--last-posframe-pixel-position)))
+            (posframe--set-frame-size-and-position
+             size-info
+             pixel-position
+             parent-frame-width parent-frame-height)
+          ;; Set posframe's size
+          (posframe--set-frame-size size-info)
+          ;; Get new position of posframe.
+          (unless pixel-position
+            (setq pixel-position
+                  (posframe-run-poshandler
+                   ;; All poshandlers will get info from this plist.
+                   `(,@poshandler-extra-info
+                     ,@position-info
+                     :posframe-width ,(frame-pixel-width posframe)
+                     :posframe-height ,(frame-pixel-height posframe)))))
+          ;; Move posframe
+          (posframe--set-frame-position
+           posframe pixel-position parent-frame-width parent-frame-height))
         ;; Re-adjust posframe's size when buffer's content has changed.
         (posframe--run-refresh-timer refresh size-info))
-
-      ;; Get new position of posframe.
-      (setq position
-            (posframe-run-poshandler
-             ;; All poshandlers will get info from this plist.
-             `(,@poshandler-extra-info
-               ,@(list :position position
-                       :poshandler poshandler
-                       :font-height font-height
-                       :font-width font-width
-                       :posframe posframe
-                       :posframe-width (frame-pixel-width posframe)
-                       :posframe-height (frame-pixel-height posframe)
-                       :posframe-buffer buffer
-                       :parent-frame parent-frame
-                       :parent-frame-width parent-frame-width
-                       :parent-frame-height parent-frame-height
-                       :ref-position ref-position
-                       :parent-window parent-window
-                       :parent-window-start parent-window-start
-                       :parent-window-end parent-window-end
-                       :parent-window-top parent-window-top
-                       :parent-window-left parent-window-left
-                       :parent-window-width parent-window-width
-                       :parent-window-height parent-window-height
-                       :mouse-x (car mouse-position)
-                       :mouse-y (cdr mouse-position)
-                       :mode-line-height mode-line-height
-                       :minibuffer-height minibuffer-height
-                       :header-line-height header-line-height
-                       :tab-line-height tab-line-height
-                       :x-pixel-offset x-pixel-offset
-                       :y-pixel-offset y-pixel-offset
-                       :parent-text-scale-mode-amount parent-text-scale-mode-amount))))
-
-      ;; Move posframe
-      (posframe--set-frame-position
-       posframe position parent-frame-width parent-frame-height)
 
       ;; Delay hide posframe when timeout is a number.
       (posframe--run-timeout-timer posframe timeout)
@@ -551,13 +571,13 @@ You can use `posframe-delete-all' to delete all posframes."
                         (+ (or (cdr ref-position) 0)
                            (cdr mouse-position)))
              :posframe-x
-             (if (>= (car position) 0)
-                 (car position)
+             (if (>= (car pixel-position) 0)
+                 (car pixel-position)
                (- (frame-pixel-width parent-frame)
                   (frame-pixel-width posframe)))
              :posframe-y
-             (if (>= (cdr position) 0)
-                 (cdr position)
+             (if (>= (cdr pixel-position) 0)
+                 (cdr pixel-position)
                (- (frame-pixel-height parent-frame)
                   (frame-pixel-height posframe)))
              :posframe-width (frame-pixel-width posframe)
@@ -622,6 +642,13 @@ ACCEPT-FOCUS."
         ;; http://git.savannah.gnu.org/cgit/emacs.git/commit/?id=ff7b1a133bfa7f2614650f8551824ffaef13fadc
         (border-width (or border-width internal-border-width 0))
         (border-color (or border-color internal-border-color))
+        (border-face
+         ;; NOTE: when use refposhander feature, parent-frame will be
+         ;; nil, we should use internal-border instead.
+         (if (and (facep 'child-frame-border)
+                  parent-frame)
+             'child-frame-border
+           'internal-border))
         (buffer (get-buffer-create buffer-or-name))
         (after-make-frame-functions nil)
         (x-gtk-resize-child-frames posframe-gtk-resize-child-frames)
@@ -739,24 +766,6 @@ ACCEPT-FOCUS."
         (set-frame-parameter
          posframe--frame 'font
          (or font (face-attribute 'default :font parent-frame)))
-        (when border-color
-          (if parent-frame
-              (set-face-background
-               (if (facep 'child-frame-border)
-                   'child-frame-border
-                 'internal-border)
-               border-color posframe--frame)
-            ;; NOTE: when use refposhander feature, parent-frame will be
-            ;; nil, we should use internal-border instead.
-            (set-face-background
-             'internal-border
-             border-color posframe--frame))
-          ;; HACK: Set face background after border color, otherwise the
-          ;; border is not updated (BUG!).
-          (when (version< emacs-version "28.0")
-            (set-frame-parameter
-             posframe--frame 'background-color
-             (or background-color (face-attribute 'default :background)))))
         (let ((posframe-window (frame-root-window posframe--frame)))
           ;; This method is more stable than 'setq mode/header-line-format nil'
           (unless respect-mode-line
@@ -767,6 +776,18 @@ ACCEPT-FOCUS."
           ;; When the buffer of posframe is killed, the child-frame of
           ;; this posframe will be deleted too.
           (set-window-dedicated-p posframe-window t)))
+
+      (when (and border-color
+                 ;; Work around https://debbugs.gnu.org/80871
+                 (not (equal (face-background border-face posframe--frame)
+                             border-color)))
+        (set-face-background border-face border-color posframe--frame)
+        ;; HACK: Set face background after border color, otherwise the
+        ;; border is not updated (BUG!).
+        (when (version< emacs-version "28.0")
+          (set-frame-parameter
+           posframe--frame 'background-color
+           (or background-color (face-attribute 'default :background)))))
 
       ;; Remove tab-bar always.
       ;; NOTE: if we do not test the value of frame parameter
@@ -848,14 +869,36 @@ will be removed."
         (max-height (plist-get size-info :max-height))
         (min-width (plist-get size-info :min-width))
         (min-height (plist-get size-info :min-height)))
-    (when height (set-frame-height posframe height))
-    (when width (set-frame-width posframe width))
+    (cond
+     ((and width height)
+      (set-frame-size posframe
+                      (* (default-font-width) width)
+                      (* (default-line-height) height)
+                      t))
+     (height (set-frame-height posframe height))
+     (width (set-frame-width posframe width)))
     (unless (and height width)
       (posframe--fit-frame-to-buffer
        posframe max-height min-height max-width min-width
        (cond (width 'vertically)
              (height 'horizontally))))
     (setq-local posframe--last-posframe-size size-info)))
+
+(defun posframe--set-frame-size-and-position (size-info position parent-frame-width parent-frame-height)
+  (let ((posframe (plist-get size-info :posframe))
+        (width (plist-get size-info :width))
+        (height (plist-get size-info :height)))
+    (unless (and width height)
+      (user-error "Width and height must be specified together"))
+    (set-frame-size-and-position-pixelwise
+     posframe
+     (* (default-font-width) width)
+     (* (default-line-height) height)
+     (car position) (cdr position))
+    (posframe--save-new-posframe-position posframe position
+                                          parent-frame-width
+                                          parent-frame-height)
+    (posframe--make-frame-visible posframe)))
 
 (defun posframe--fit-frame-to-buffer (posframe max-height min-height max-width min-width only)
   "POSFRAME version of function `fit-frame-to-buffer'.
@@ -947,17 +990,27 @@ This need PARENT-FRAME-WIDTH and PARENT-FRAME-HEIGHT"
                ;; the posframe.
                (equal posframe--last-parent-frame-size
                       (cons parent-frame-width parent-frame-height))
-               (equal posframe--last-posframe-displayed-size
-                      (cons (frame-pixel-width posframe)
-                            (frame-pixel-height posframe))))
+               (or (and (>= (car position) 0)
+                        (>= (cdr position) 0))
+                   (equal posframe--last-posframe-displayed-size
+                          (cons (frame-pixel-width posframe)
+                                (frame-pixel-height posframe)))))
     (set-frame-position posframe (car position) (cdr position))
-    (setq-local posframe--last-posframe-pixel-position position)
-    (setq-local posframe--last-parent-frame-size
-                (cons parent-frame-width parent-frame-height))
-    (setq-local posframe--last-posframe-displayed-size
-                (cons (frame-pixel-width posframe)
-                      (frame-pixel-height posframe))))
+    (posframe--save-new-posframe-position posframe position
+                                          parent-frame-width
+                                          parent-frame-height))
   (posframe--make-frame-visible posframe))
+
+(defun posframe--save-new-posframe-position (posframe
+                                             position
+                                             parent-frame-width
+                                             parent-frame-height)
+  (setq-local posframe--last-posframe-pixel-position position)
+  (setq-local posframe--last-parent-frame-size
+              (cons parent-frame-width parent-frame-height))
+  (setq-local posframe--last-posframe-displayed-size
+              (cons (frame-pixel-width posframe)
+                    (frame-pixel-height posframe))))
 
 (defun posframe--make-frame-visible (posframe)
   "Let POSFRAME visible and redraw it when needed."

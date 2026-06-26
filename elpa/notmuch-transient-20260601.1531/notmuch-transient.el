@@ -1,19 +1,19 @@
 ;;; notmuch-transient.el --- Command dispatchers for Notmuch  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
-;; Copyright (C) 2021-2025 Jonas Bernoulli
+;; Copyright (C) 2021-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.notmuch-transient@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/tarsius/notmuch-transient
 ;; Keywords: mail
 
-;; Package-Version: 20251101.2054
-;; Package-Revision: 09861654f1a2
+;; Package-Version: 20260601.1531
+;; Package-Revision: 41090076ad90
 ;; Package-Requires: (
 ;;     (emacs     "29.1")
-;;     (compat    "30.1")
-;;     (notmuch   "0.38")
-;;     (transient "0.10"))
+;;     (compat    "31.0")
+;;     (notmuch   "0.39")
+;;     (transient "0.13"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -61,11 +61,15 @@
   :group 'faces)
 
 (defface notmuch-transient-add-tag '((t :inherit success))
-  "Face for tags to be added to the current list."
+  "Face used for tags to be added to the current list."
   :group 'notmuch-transient-faces)
 
 (defface notmuch-transient-remove-tag '((t :inherit error))
-  "Face for tags to be removed from the current list."
+  "Face used for tags to be removed from the current list."
+  :group 'notmuch-transient-faces)
+
+(defface notmuch-transient-enabled-tag '((t :inherit success :weight bold))
+  "Face used when listing currently enabled tags."
   :group 'notmuch-transient-faces)
 
 ;;; Hello
@@ -295,7 +299,9 @@ a transitional period you have to additionally add an entry
 to `notmuch-transient--tagging-inverse-name'.
 
 This is a replacement for `notmuch-tag-jump'."
-  :init-value #'notmuch-tag-transient--init
+  :refresh-suffixes t
+  :transient-suffix t
+  :transient-non-suffix t
   [:class transient-column
    :setup-children notmuch-tag-transient--setup
    :description notmuch-tag-transient--description
@@ -305,53 +311,55 @@ This is a replacement for `notmuch-tag-jump'."
     (notmuch-tree-close-message-window))
   (transient-setup 'notmuch-tag-transient))
 
-(defun notmuch-tag-transient--init (obj)
-  (oset obj value (notmuch-transient--get-tags)))
-
 (defun notmuch-tag-transient--description ()
-  (format "Current tags: %s" (oref transient--prefix value)))
+  (format (propertize "Current tags: %s" 'face 'transient-heading)
+          (mapconcat (lambda (tag)
+                       (propertize tag 'face 'notmuch-transient-enabled-tag))
+                     (oref transient--prefix scope)
+                     " ")))
 
 (defun notmuch-tag-transient--setup (_)
-  (transient-parse-suffixes
-   'notmuch-tag-transient
-   (mapcar (pcase-lambda (`(,key ,tags ,desc))
-             (when (symbolp tags)
-               (setq tags (symbol-value tags)))
-             (list (key-description key)
-                   desc
-                   (lambda ()
-                     (interactive)
-                     (notmuch-transient--do-tag
-                      (notmuch-transient-tag-infix--get-changes
-                       (transient-suffix-object)))
-                     (transient-init-value transient-current-prefix))
-                   :class 'notmuch-transient-tag-infix
-                   :tags tags))
-           notmuch-tagging-keys)))
+  (let ((prefix (transient-prefix-object)))
+    (oset prefix scope (notmuch-transient--get-tags))
+    (transient-parse-suffixes
+     'notmuch-tag-transient
+     (mapcar (pcase-lambda (`(,key ,tags ,desc))
+               (when (symbolp tags)
+                 (setq tags (symbol-value tags)))
+               (list (key-description key)
+                     desc
+                     (lambda ()
+                       (interactive)
+                       (notmuch-transient--do-tag
+                        (notmuch-transient-tag-infix--get-changes
+                         (transient-suffix-object)))
+                       (transient-init-value prefix))
+                     :class 'notmuch-transient-tag-infix
+                     :tags tags))
+             notmuch-tagging-keys))))
 
 (defclass notmuch-transient-tag-infix (transient-infix)
-  ((transient :initform 'transient--do-exit)
-   (tags :initarg :tags)))
+  ((tags :initarg :tags)))
 
 (cl-defmethod transient-init-value ((obj notmuch-transient-tag-infix))
-  (let ((value (oref transient--prefix value)))
+  (let ((value (oref transient--prefix scope)))
     (oset obj value
-          (delq nil (mapcar (lambda (change)
-                              (car (member (substring change 1) value)))
-                            (oref obj tags))))))
+          (seq-filter (lambda (change)
+                        (car (member (substring change 1) value)))
+                      (oref obj tags)))))
 
 (cl-defmethod transient-format-description ((obj notmuch-transient-tag-infix))
   (let ((desc (oref obj description))
         (change (car (oref obj tags))))
     (if (xor (member (substring change 1)
-                     (oref transient--prefix value))
+                     (oref transient--prefix scope))
              (= (aref change 0) ?+))
         (propertize desc 'face 'bold)
       (cdr (assoc desc (bound-and-true-p
                         notmuch-transient--tagging-inverse-name))))))
 
 (cl-defmethod transient-format-value ((obj notmuch-transient-tag-infix))
-  (let ((value (oref transient--prefix value)))
+  (let ((value (oref transient--prefix scope)))
     (mapconcat (lambda (change)
                  (let ((tag (substring change 1))
                        (op  (aref change 0)))
@@ -367,7 +375,7 @@ This is a replacement for `notmuch-tag-jump'."
                " ")))
 
 (defun notmuch-transient-tag-infix--get-changes (obj)
-  (let* ((value   (oref (or transient--prefix transient-current-prefix) value))
+  (let* ((value   (oref (transient-prefix-object) scope))
          (changes (oref obj tags))
          (change  (car changes)))
     (if (xor (member (substring change 1) value)
@@ -389,16 +397,16 @@ This is a replacement for `notmuch-tag-jump'."
     ("Delete"       . "Undelete")))
 
 (defun notmuch-transient--get-tags ()
-  (cl-case major-mode
-    (notmuch-search-mode (notmuch-search-get-tags))
-    (notmuch-show-mode   (notmuch-show-get-tags))
-    (notmuch-tree-mode   (notmuch-tree-get-tags))))
+  (pcase major-mode
+    ('notmuch-search-mode (notmuch-search-get-tags))
+    ('notmuch-show-mode   (notmuch-show-get-tags))
+    ('notmuch-tree-mode   (notmuch-tree-get-tags))))
 
 (defun notmuch-transient--do-tag (changes)
-  (cl-case major-mode
-    (notmuch-search-mode (notmuch-search-tag changes))
-    (notmuch-show-mode   (notmuch-show-tag   changes))
-    (notmuch-tree-mode   (notmuch-tree-tag   changes))))
+  (pcase major-mode
+    ('notmuch-search-mode (notmuch-search-tag changes))
+    ('notmuch-show-mode   (notmuch-show-tag   changes))
+    ('notmuch-tree-mode   (notmuch-tree-tag   changes))))
 
 ;;; Inject
 
@@ -426,5 +434,6 @@ This is a replacement for `notmuch-tag-jump'."
 (provide 'notmuch-transient)
 ;; Local Variables:
 ;; indent-tabs-mode: nil
+;; lisp-indent-local-overrides: ((cond . 0) (interactive . 0))
 ;; End:
 ;;; notmuch-transient.el ends here

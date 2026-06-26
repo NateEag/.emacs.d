@@ -6,8 +6,8 @@
 ;; Author: Brady Trainor
 ;; Maintainer: Jen-Chieh Shen <jcs090218@gmail.com>
 ;; URL: https://github.com/emacsorphanage/dart-mode
-;; Package-Version: 20251105.543
-;; Package-Revision: 22288d0bb374
+;; Package-Version: 20260529.1840
+;; Package-Revision: 793d7bcc18a2
 ;; Package-Requires: ((emacs "27.1"))
 ;; Keywords: languages
 
@@ -145,6 +145,7 @@ indentation levels from right to left."
   ;; "Built-in identifiers"
   '("abstract"
     "as"
+    "base"
     "covariant"
     "deferred"
     "dynamic"
@@ -155,7 +156,6 @@ indentation levels from right to left."
     "Function"
     "get"
     "implements"
-    "import"
     "interface"
     "late"
     "library"
@@ -163,6 +163,7 @@ indentation levels from right to left."
     "operator"
     "part"
     "required"
+    "sealed"
     "set"
     "static"
     "typedef"))
@@ -195,6 +196,7 @@ indentation levels from right to left."
     "this"
     "throw"
     "try"
+    "import"
     "var"
     "while"
     "with"))
@@ -360,6 +362,29 @@ For example, \"main\" in \"void main() async\" would be matched."
           (scan-error nil))
         (goto-char end))
       (throw 'result nil))))
+
+(defun dart--function-call-func (limit)
+  "Font-lock matcher function for method invocations.
+
+Matches invocations before LIMIT that look like,
+
+  \"lowercaseIdentifier([...])\"
+
+For example, the \"now\" in \"DateTime.now()\" would be matched"
+  (catch 'result
+    (let (beg end)
+      (while (re-search-forward
+	      (rx (group (eval (dart--identifier 'lower))) ?\() limit t)
+	(setq beg (match-beginning 1))
+	(setq end (match-end 1))
+	;; Exclude control-flow expressions to highlight only methods
+	(unless (member (match-string 1)
+			'("if" "switch" "for" "while" "catch" "assert"))
+	  (set-match-data (list beg end))
+	  (goto-char end)
+	  (throw 'result t))
+	(goto-char end)))
+    (throw 'result nil)))
 
 (defun dart--abstract-method-func (limit)
   "Font-lock matcher function for abstract methods.
@@ -613,6 +638,7 @@ untyped parameters. For example, in
     (,(regexp-opt dart--types 'words)     . font-lock-type-face)
     (,dart--types-re                      . font-lock-type-face)
     (dart--function-declaration-func      . font-lock-function-name-face)
+    (dart--function-call-func             . font-lock-function-name-face)
     (,dart--operator-declaration-re       . (1 font-lock-function-name-face))
     (dart--abstract-method-func           . font-lock-function-name-face)))
 

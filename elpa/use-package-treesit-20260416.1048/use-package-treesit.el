@@ -6,8 +6,8 @@
 ;; Author: Dominique Quatravaux <dominique@quatravaux.org>
 ;; Keywords: lisp tree-sitter treesit auto automatic use-package
 ;; URL: https://github.com/domq/use-package-treesit.git
-;; Package-Version: 20260118.1521
-;; Package-Revision: c4c2b251f3c9
+;; Package-Version: 20260416.1048
+;; Package-Revision: 398ca0df10f2
 ;; Package-Requires: ((emacs "30.0"))
 
 ;; This file is not part of GNU Emacs.
@@ -29,34 +29,29 @@
 ;; Provides the `(use-package foo :treesit)' idiom.
 ;;
 ;; Adding the `:treesit' keyword to your package's `use-package'
-;; stanza (otherwise similar to any other `use-package' invocation),
-;; causes the corresponding treesit grammar to be downloaded and
-;; installed automatically the first time the package loads (which may
-;; mean immediately, unless the `use-package' configuration uses
-;; `:defer', `:mode', `:commands' or any of the other keywords that
-;; cause deferred loading).
+;; stanza, causes the corresponding treesit grammar to be downloaded
+;; and installed automatically the first time the package loads.
 ;;
-;; The `:treesit' keyword accepts at most one plist of arguments, with
-;; the same keys as in the `use-package-treesit-recipes` i.e `:lang`,
-;; `:url`, `:source-dir`, `:cc` or `:c++` (all others, including
-;; `:mode` are ignored). These can amend the settings in variable
-;; `use-package-treesit-recipes' for the package being configured, or
-;; outright replace it if the package is not known in that variable.
-;;
-;; Using the `:treesit' keyword in an `use-package' stanza, lazily
-;; prepares to download and compile the tree-sitter grammar out of a
-;; location taken from the `use-package-treesit-recipes`, using Emacs
-;; 30+'s built-in mechanisms. Specifically,
+;; This is lazily implemented in terms of (or by adding advice to)
+;; Emacs 30+'s built-in mechanisms. Specifically,
 ;;
 ;; - at the time the `use-package' stanza is evaluated, and provided
 ;;   the target package is available (or equivalently, in the same
-;;   time frame ad under the same preconditions as use-pacakge's
-;;   `:init' clause): a new is entry is added to
-;;   `treesit-language-source-alist' for the target language (unless
-;;   one already exists),
+;;   time frame and under the same preconditions as use-package's
+;;   `:init' clause): an entry is added for the target language in
+;;   `treesit-language-source-alist' unless one already exists;
 ;;
 ;; - before the target package actually loads:
-;;   `treesit-install-language-grammar' is invoked.
+;;   `treesit-install-language-grammar' is invoked (through advice on
+;;   Emacs' standard functions for treesit support), and does the
+;;   heavy lifting.
+;;
+;; The `:treesit' keyword to `use-package' accepts arguments as a
+;; plist, with the same keys as in the `use-package-treesit-recipes' variable
+;; i.e `:lang`, `:url`, `:source-dir`, `:cc` and `:c++` (all others,
+;; including `:library` are ignored). These keywords and their values
+;; set or overwrite the corresponding settings in variable
+;; `use-package-treesit-recipes' for the target package.
 
 ;;; Code:
 
@@ -69,198 +64,255 @@
 
 (defvar use-package-treesit-recipes
   '((:lang awk
-     :mode awk-ts-mode
+     :library awk-ts-mode
      :url "https://github.com/Beaglefoot/tree-sitter-awk")
     (:lang bash
-     :mode bash-ts-mode
+     :library bash-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-bash")
     (:lang bibtex
-     :mode bibtex-ts-mode
+     :library bibtex-ts-mode
      :url "https://github.com/latex-lsp/tree-sitter-bibtex")
     (:lang blueprint
-     :mode blueprint-ts-mode
+     :library blueprint-ts-mode
      :url "https://github.com/huanie/tree-sitter-blueprint")
     (:lang c
-     :mode c-ts-mode
+     :library c-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-c")
     (:lang c-sharp
-     :mode csharp-ts-mode
+     :library csharp-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-c-sharp")
     (:lang clojure
-     :mode clojure-ts-mode
+     :library clojure-ts-mode
      :url "https://github.com/sogaiu/tree-sitter-clojure")
     (:lang cmake
-     :mode cmake-ts-mode
+     :library cmake-ts-mode
      :url "https://github.com/uyha/tree-sitter-cmake")
     (:lang commonlisp
-     :mode commonlisp-ts-mode
+     :library commonlisp-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-commonlisp")
     (:lang cpp
-     :mode c++-ts-mode
+     :library c++-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-cpp")
     (:lang css
-     :mode css-ts-mode
+     :library css-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-css")
     (:lang dart
-     :mode dart-ts-mode
+     :library dart-ts-mode
      :url "https://github.com/ast-grep/tree-sitter-dart")
     (:lang dockerfile
-     :mode dockerfile-ts-mode
+     :library dockerfile-ts-mode
      :url "https://github.com/camdencheek/tree-sitter-dockerfile")
     (:lang elixir
-     :mode elixir-ts-mode
+     :library elixir-ts-mode
      :url "https://github.com/elixir-lang/tree-sitter-elixir")
     (:lang glsl
-     :mode glsl-ts-mode
+     :library glsl-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-glsl")
     (:lang go
-     :mode go-ts-mode
+     :library go-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-go")
     (:lang gomod
-     :mode go-mod-ts-mode
+     :library go-mod-ts-mode
      :url "https://github.com/camdencheek/tree-sitter-go-mod")
     (:lang heex
-     :mode heex-ts-mode
+     :library heex-ts-mode
      :url "https://github.com/phoenixframework/tree-sitter-heex")
     (:lang html
-     :mode html-ts-mode
+     :library html-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-html")
     (:lang janet
-     :mode janet-ts-mode
+     :library janet-ts-mode
      :url "https://github.com/sogaiu/tree-sitter-janet-simple")
     (:lang java
-     :mode java-ts-mode
+     :library java-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-java")
     (:lang javascript
-     :mode js-ts-mode
+     :library js-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-javascript"
      :revision "master"
      :source-dir "src")
     (:lang json
-     :mode json-ts-mode
+     :library json-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-json")
     (:lang julia
-     :mode julia-ts-mode
+     :library julia-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-julia")
     (:lang kotlin
-     :mode kotlin-ts-mode
+     :library kotlin-ts-mode
      :url "https://github.com/fwcd/tree-sitter-kotlin")
     (:lang latex
-     :mode latex-ts-mode
+     :library latex-ts-mode
      :url "https://github.com/latex-lsp/tree-sitter-latex")
     (:lang lua
-     :mode lua-ts-mode
+     :library lua-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-lua")
     (:lang magik
-     :mode magik-ts-mode
+     :library magik-ts-mode
      :url "https://github.com/krn-robin/tree-sitter-magik")
     (:lang make
-     :mode makefile-ts-mode
+     :library makefile-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-make")
     (:lang markdown
-     :mode markdown-ts-mode
+     :library markdown-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-markdown")
     (:lang nix
-     :mode nix-ts-mode
+     :library nix-ts-mode
      :url "https://github.com/nix-community/tree-sitter-nix")
     (:lang nu
-     :mode nushell-ts-mode
+     :library nushell-ts-mode
      :url "https://github.com/nushell/tree-sitter-nu")
     (:lang org
-     :mode org-ts-mode
+     :library org-ts-mode
      :url "https://github.com/milisims/tree-sitter-org")
     (:lang perl
-     :mode perl-ts-mode
+     :library perl-ts-mode
      :url "https://github.com/ganezdragon/tree-sitter-perl")
+    (:lang prisma
+     :library prisma-ts-mode
+     :url "https://github.com/victorhqc/tree-sitter-prisma")
     (:lang proto
-     :mode protobuf-ts-mode
+     :library protobuf-ts-mode
      :url "https://github.com/mitchellh/tree-sitter-proto")
     (:lang python
-     :mode python-ts-mode
+     :library python-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-python")
     (:lang r
-     :mode r-ts-mode
+     :library r-ts-mode
      :url "https://github.com/r-lib/tree-sitter-r")
     (:lang ruby
-     :mode ruby-ts-mode
+     :library ruby-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-ruby")
     (:lang rust
-     :mode rust-ts-mode
+     :library rust-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-rust")
     (:lang scala
-     :mode scala-ts-mode
+     :library scala-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-scala")
     (:lang sql
-     :mode sql-ts-mode
+     :library sql-ts-mode
      :revision "gh-pages"
      :url "https://github.com/DerekStride/tree-sitter-sql")
     (:lang surface
-     :mode surface-ts-mode
+     :library surface-ts-mode
      :url "https://github.com/connorlay/tree-sitter-surface")
     (:lang toml
-     :mode toml-ts-mode
+     :library toml-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-toml")
     (:lang tsx
-     :mode tsx-ts-mode
+     :library tsx-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-typescript"
      :revision "master"
      :source-dir "tsx/src")
     (:lang typescript
-     :mode typescript-ts-mode
+     :library typescript-ts-mode
      :url "https://github.com/tree-sitter/tree-sitter-typescript"
      :revision "master"
      :source-dir "typescript/src")
     (:lang typst
-     :mode typst-ts-mode
+     :library typst-ts-mode
      :url "https://github.com/uben0/tree-sitter-typst"
      :revision "master"
      :source-dir "src")
     (:lang verilog
-     :mode verilog-ts-mode
+     :library verilog-ts-mode
      :url "https://github.com/gmlarumbe/tree-sitter-verilog")
     (:lang vhdl
-     :mode vhdl-ts-mode
+     :library vhdl-ts-mode
      :url "https://github.com/alemuller/tree-sitter-vhdl")
     (:lang vue
-     :mode vue-ts-mode
+     :library vue-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-vue")
     (:lang wast
-     :mode wat-ts-wast-mode
+     :library wat-ts-wast-mode
      :url "https://github.com/wasm-lsp/tree-sitter-wasm"
      :source-dir "wast/src")
     (:lang wat
-     :mode wat-ts-mode
+     :library wat-ts-mode
      :url "https://github.com/wasm-lsp/tree-sitter-wasm"
      :source-dir "wat/src")
     (:lang wgsl
-     :mode wgsl-ts-mode
+     :library wgsl-ts-mode
      :url "https://github.com/mehmetoguzderin/tree-sitter-wgsl")
     (:lang yaml
-     :mode yaml-ts-mode
+     :library yaml-ts-mode
      :url "https://github.com/tree-sitter-grammars/tree-sitter-yaml"))
-  "All the treesit languages that `use-package-treesit' can install automatically.")
+  "All the treesit languages that `use-package-treesit' can install automatically.
 
-(defun use-package-treesit--recipe-of-mode (mode)
-  "Find a match for MODE in the variable `use-package-treesit-recipes'."
-  (let ((recipe (cl-find-if (lambda (it) (eq (plist-get it :mode) mode))
+You can add or alter elements in this list by passing a plist after
+`:treesit` in the `use-package' stanza with the same keywords (except
+`:library`), e.g.
+
+  (use-package foo :treesit
+                  (:lang foo-lang
+                   :url \"https://github.com/foo/foo-treesit\"))
+
+Each element of this list is a plist with the following keywords:
+
+  :library
+           The `features' symbol of the target package,
+           i.e. the `foo` in `(use-package foo :treesit)`
+
+  :lang
+           The target package's language symbol, i.e. the key that
+           should be created in variable
+           `treesit-language-source-alist' if none exists. (In the
+           opposite case, the existing entry is not modified and
+           therefore none of the other keywords described below have
+           any effect.)
+
+           The value for `:lang` must match the symbol that the
+           target package's Emacs Lisp code uses in its calls to
+           `treesit-parser-create', `treesit-language-available-p',
+           `treesit-ready-p' and so on.
+
+  :url
+           The URL to download the treesit grammar from, i.e. the
+           `URL` (first) field in the alist value to be created in
+           variable `treesit-language-source-alist'
+
+  :revision (optional)
+           The particular Git branch or tag to download the treesit
+           grammar from, i.e. the `REVISION` (second) field in the
+           alist value to be created in variable
+           `treesit-language-source-alist'
+
+  :source-dir (optional)
+           The subdirectory in the source control to build the grammar
+           from, i.e. the `SOURCE-DIR` (third) field in the alist
+           value to be created in variable
+           `treesit-language-source-alist'
+
+  :cc (optional)
+           The C compiler command to use, i.e. the `CC` (fourth) field
+           in the alist value to be created in variable
+           `treesit-language-source-alist'
+
+  :c++ (optional)
+           The C++ compiler command to use, i.e. the `C++` (fifth)
+           field in the alist value to be created in variable
+           `treesit-language-source-alist'")
+
+(defun use-package-treesit--recipe-of-library (library)
+  "Find a match for LIBRARY in the variable `use-package-treesit-recipes'."
+  (let ((recipe (cl-find-if (lambda (it) (eq (plist-get it :library) library))
                             use-package-treesit-recipes)))
-    (map-delete (copy-sequence recipe) :mode)))
+    (map-delete (copy-sequence recipe) :library)))
 
 (defvar use-package-treesit-keyword :treesit)
 
 (defun use-package-normalize/:treesit (name-symbol _keyword args)
   "`use-package' argument parser for the `:treesit' keyword.
 
-NAME-SYMBOL is the name of the “regular” (Emacs Lisp) being configured
-\(i.e. the first argument to the surrounding `use-package' stanza.) ARGS
-is the list of arguments (sexps) situated between `:treesit' and the
-next `use-package' keyword, or the end of the `use-package' stanza.
-There should be no more than one element in ARGS, and (if one is
-present) it should be a plist with the same keywords as an element of
-the variable `use-package-treesit-recipes'."
+NAME-SYMBOL is the name of the “regular” (Emacs Lisp) package being
+configured (i.e. the first argument to the surrounding `use-package'
+stanza.) ARGS is the list of arguments (sexps) situated between
+`:treesit' and the next `use-package' keyword, or the end of the
+`use-package' stanza. There should be no more than one such sexp,
+which (if present) should be a plist with the same keywords as
+an element of the variable `use-package-treesit-recipes'."
   (when (> (length args) 1)
     (error ":treesit arguments should be in a list"))
-  (let* ((default-recipe (use-package-treesit--recipe-of-mode name-symbol))
+  (let* ((default-recipe (use-package-treesit--recipe-of-library name-symbol))
          (ret (map-merge 'plist default-recipe (car-safe args))))
     (cond (ret)
           (t (error "No default configuration known for treesit grammar %s"
@@ -282,7 +334,7 @@ as-is."
      `((use-package-treesit--prepare-auto-install ,@args-quoted)))))
 
 (defun use-package-treesit--prepare-auto-install (&rest recipe)
-  "Arrange for MODE's treesit grammar to be lazily installed.
+  "Arrange for a treesit grammar to be lazily installed.
 
 Add RECIPE into the variable `treesit-language-source-alist', where
 `use-package-treesit--maybe-install-lazy' will pick it up."
@@ -315,8 +367,10 @@ functions, so as to install the grammars before running them."
                  (head (cl-subseq use-package-keywords 0 before-pos))
                  (tail (nthcdr before-pos use-package-keywords)))
             (append head `(,use-package-treesit-keyword) tail))))
-  (advice-add 'treesit-ready-p :before #'use-package-treesit--maybe-install-lazy)
-  (advice-add 'treesit-parser-create :before #'use-package-treesit--maybe-install-lazy))
+  (advice-add 'treesit-ready-p :before
+              #'use-package-treesit--maybe-install-lazy)
+  (advice-add 'treesit-parser-create :before
+              #'use-package-treesit--maybe-install-lazy))
 
 (use-package-treesit--configure)
 

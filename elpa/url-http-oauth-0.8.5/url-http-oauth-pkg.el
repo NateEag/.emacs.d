@@ -1,0 +1,2 @@
+;; Generated package description from url-http-oauth.el  -*- no-byte-compile: t -*-
+(define-package "url-http-oauth" "0.8.5" "OAuth 2.0 for URL library" '((emacs "24.4")) :commit "ff866a39ccc120d6bed930d2ed4fcec09e0662d4" :url "https://elpa.gnu.org/packages/url-http-oauth.html" :authors '(("Thomas Fitzsimmons" . "fitzsim@fitzsim.org")) :maintainer '("Thomas Fitzsimmons" . "fitzsim@fitzsim.org") :keywords '("comm" "data" "processes" "hypermedia"))

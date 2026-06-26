@@ -3,7 +3,7 @@
 ;; Copyright (C) 2023, 2025 Free Software Foundation, Inc.
 
 ;; Author: Thomas Fitzsimmons <fitzsim@fitzsim.org>
-;; Version: 0.8.4
+;; Version: 0.8.5
 ;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: comm, data, processes, hypermedia
 
@@ -238,6 +238,19 @@ server to receive a new access token."
      (let ((auth-source-do-cache nil)) ; Do not cache nil result.
        (apply #'auth-source-search spec)))))
 
+(defun url-http-oauth--secret-auth-source (url-settings &optional prompt)
+  "Find the `auth-source' entry for the token endpoint in URL-SETTINGS.
+This entry should hold the client secret.  Arrange for the entry to be
+created if it is not already saved in one of `auth-sources', using
+PROMPT to ask for the client secret."
+  (let* ((access-token-url (cdr (assoc "access-token-endpoint" url-settings)))
+         (client-identifier (cdr (assoc "client-identifier" url-settings)))
+         (client-secret-method (cdr (assoc "client-secret-method"
+                                           url-settings))))
+         (when client-secret-method
+            (url-http-oauth--auth-source-search
+             access-token-url client-identifier nil prompt))))
+
 (defun url-http-oauth--parse-grant ()
   "Parse the JSON grant structure in the current buffer.
 Return the parsed JSON object."
@@ -259,21 +272,12 @@ endpoint."
   (let* ((url-request-method "POST")
          (access-token-url (cdr (assoc "access-token-endpoint" url-settings)))
          (client-identifier (cdr (assoc "client-identifier" url-settings)))
-         (client-secret-method (cdr (assoc "client-secret-method"
-                                           url-settings)))
-         (auth-result
-          (when client-secret-method
-            (url-http-oauth--auth-source-search
-             access-token-url client-identifier nil
-             "Client secret for %u at %h: ")))
+         (auth-result (url-http-oauth--secret-auth-source
+                       url-settings
+                       "Client secret for %u at %h: "))
          (client-secret (url-http-oauth--auth-info-password auth-result))
          (save-function (plist-get auth-result :save-function))
-         (authorization (when client-secret
-                          (concat
-                           "Basic "
-                           (base64-encode-string
-                            (format "%s:%s" client-identifier client-secret)
-                            t))))
+         (authorization (url-http-oauth--basic-auth client-identifier client-secret))
          (url-request-extra-headers
           (apply #'list
                  (cons "Content-Type" "application/x-www-form-urlencoded")
@@ -302,6 +306,18 @@ endpoint."
               (funcall save-function)))
         (error "url-http-oauth: Failed to get access token with %s"
                (buffer-string))))))
+
+(defun url-http-oauth--basic-auth (client-identifier client-secret)
+  "Return a header value for doing basic authentication.
+CLIENT-IDENTIFIER and CLIENT-SECRET are credentials for the Emacs
+library or mode.  The returned value can be used in an Authorization
+header to authenticate to the authorization server."
+  (when client-secret
+    (concat
+     "Basic "
+     (base64-encode-string
+      (format "%s:%s" client-identifier client-secret)
+      t))))
 
 (defun url-http-oauth--expiry-string (grant)
   "Return as a string a number representing the expiry time of GRANT.
@@ -474,17 +490,20 @@ The entry is cleared from the `password-data' cache after the
                                                  :port (or port t)))
                       nil)))))))))))
 
-(defun url-http-oauth--save-bearer (url grant)
+(defun url-http-oauth--save-bearer (url grant &optional old-refresh-token)
   "Save bearer access token for URL from GRANT.
 URL is a string or an object.  GRANT is a parsed JSON object.
-Save the bearer token to `auth-sources' then return it."
+OLD-REFRESH-TOKEN is a string containing the previously issued refresh
+token, if any.  Save the bearer token to `auth-sources' then return it."
   (url-http-oauth--netrc-delete url)
   (let* ((bearer-retrieved (gethash "access_token" grant))
          (auth-result
           (url-http-oauth--auth-source-search
            url nil bearer-retrieved nil
            (url-http-oauth--expiry-string grant)
-           (url-http-oauth--refresh-token-string grant)))
+           (or
+            (url-http-oauth--refresh-token-string grant)
+            old-refresh-token)))
          (save-function (plist-get auth-result :save-function)))
     (when (functionp save-function)
       (funcall save-function))
@@ -503,6 +522,15 @@ Save the bearer token to `auth-sources' then return it."
   "Refresh access token using URL-SETTINGS."
   (let* ((url-request-method "POST")
          (access-token-url (cdr (assoc "access-token-endpoint" url-settings)))
+         (client-identifier (cdr (assoc "client-identifier" url-settings)))
+         (auth-result (url-http-oauth--secret-auth-source url-settings))
+         (client-secret (url-http-oauth--auth-info-password auth-result))
+         (authorization (url-http-oauth--basic-auth client-identifier client-secret))
+         (url-request-extra-headers
+          (apply #'list
+                 (cons "Content-Type" "application/x-www-form-urlencoded")
+                 (when authorization
+                   (list (cons "Authorization" authorization)))))
          (url-request-data (url-http-oauth--url-build-refresh url-settings)))
     (with-current-buffer (url-retrieve-synchronously access-token-url)
       (if (eq 'OK (car (alist-get url-http-response-status url-http-codes)))
@@ -534,13 +562,15 @@ Save the bearer token to `auth-sources' upon success."
   "Prompt the user with the authorization endpoint for URL.
 URL is a parsed object."
   (let* ((url-settings (url-http-oauth--settings url))
-         (resource-url (cdr (assoc "resource-url" url-settings))))
-    (let ((expiry (plist-get (url-http-oauth--auth-source-search resource-url)
-                             :expiry)))
+         (resource-url (cdr (assoc "resource-url" url-settings)))
+         (auth-source (url-http-oauth--auth-source-search resource-url)))
+    (let ((expiry (plist-get auth-source :expiry))
+          (refresh-token (plist-get auth-source :refresh-token)))
       (when (and expiry (> (time-to-seconds) (string-to-number expiry)))
         (url-http-oauth--save-bearer
          resource-url
-         (url-http-oauth--refresh-access-token-grant url-settings))))
+         (url-http-oauth--refresh-access-token-grant url-settings)
+         refresh-token)))
     (let ((bearer-current (url-http-oauth--auth-info-password
                            (url-http-oauth--auth-source-search resource-url))))
       (or bearer-current
@@ -557,7 +587,7 @@ permissions that the caller is requesting."
   (when (url-http-oauth-interposed-p url)
     (let ((bearer (url-http-oauth--get-bearer url)))
       (if bearer
-          (concat "Bearer " bearer)
+          (concat "Bearer " (encode-coding-string bearer 'utf-8))
         (error "url-http-oauth: Bearer retrieval failed for %s" url)))))
 
 ;;; Register `url-oauth-auth' HTTP authentication method.

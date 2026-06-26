@@ -1,16 +1,19 @@
-GNU Emacs url-http-oauth NEWS -- history of user-visible changes.
+url-http-oauth adds OAuth 2.0 support to Emacs's URL library.
 
-* New in url-http-oauth 0.8.4
+Most Recent Improvements
+------------------------
 
-Released 2025-06-26
+New in url-http-oauth 0.8.5, released 2025-12-29
+
+** Improve compatibility with certain oauth servers
+
+New in url-http-oauth 0.8.4, released 2025-06-26
 
 ** Register authorization scheme after `url-auth' is loaded.
 
 ** Require Emacs 24.4 or newer.
 
-* New in url-http-oauth 0.8.3
-
-Released 2023-05-10
+New in url-http-oauth 0.8.3, released 2023-05-10
 
 Warning: To deal with OAuth 2.0 refresh tokens, `url-http-oauth' needs
 to delete then rewrite entries in netrc files listed in the
@@ -28,20 +31,10 @@ prompted before the entry deletion happens.
 
 ** Fix compatibility for older Emacs versions.
 
-* New in url-http-oauth 0.8.2
+Quick Start
+-----------
 
-Released 2023-05-09
+M-x package-install RET url-http-oauth
 
-** Prevent url-oauth-auth throwing an error in the default case.
-
-* New in url-http-oauth 0.8.1
-
-Released 2023-05-08
-
-** Introduce ability to delete entries in `auth-sources' netrc files.
-
-** Feature-complete for EWS access.
-See excorporate 1.1.0 package for example configuration.
-
-** Feature-complete for Sourcehut GraphQL access.
-See url-http-oauth-demo 1.0.1 package for example configuration.
+Study url-http-oauth-demo.el, which is installed alongside
+url-http-oauth.el.

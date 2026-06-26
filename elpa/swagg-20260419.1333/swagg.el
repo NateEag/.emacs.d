@@ -3,8 +3,8 @@
 ;; Copyright (C) 2023  Isa Mert Gurbuz
 
 ;; Author: Isa Mert Gurbuz <isamertgurbuz@gmail.com>
-;; Package-Version: 20251110.2034
-;; Package-Revision: 87bd1f698bc4
+;; Package-Version: 20260419.1333
+;; Package-Revision: efc457f6ab95
 ;; Homepage: https://github.com/isamert/swagg.el
 ;; License: GPL-3.0-or-later
 ;; Package-Requires: ((emacs "27.1") (compat "29.1.4.0") (request "0.3.3") (dash "2.19.1") (yaml "0.5.1") (s "1.13.1"))
@@ -896,14 +896,18 @@ the definition as it's defined in `swagg-definitions'."
                 (with-temp-buffer
                   (insert-file-contents definition)
                   (swagg--definition-parse-buffer definition-type))
-              (let (result)
+              (let (result error)
                 (request definition
                   :sync t
                   :parser (apply-partially #'swagg--definition-parse-buffer definition-type)
                   :complete (cl-function
-                             (lambda (&key _status data &allow-other-keys)
-                               ;; TODO: Handle status
+                             (lambda (&key error-thrown data &allow-other-keys)
+                               (setq error error-thrown)
                                (setq result data))))
+                (when error
+                  (error "Error while processing definition of '%s': %s"
+                         (plist-get selected :name)
+                         error))
                 result)))))
     `(,@selected :swagger ,swagger)))
 

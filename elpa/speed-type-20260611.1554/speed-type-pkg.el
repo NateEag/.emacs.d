@@ -1,10 +1,10 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "speed-type" "20251130.2141"
+(define-package "speed-type" "20260611.1554"
   "Practice touch and speed typing."
-  '((emacs  "26.1")
+  '((emacs  "27.1")
     (compat "29.1.3"))
   :url "https://github.com/dakra/speed-type"
-  :commit "d1f22690c728ba0ca3fca5d5aa4cf0b45d19bc0b"
-  :revdesc "d1f22690c728"
+  :commit "f004cce95e0f5c5048d38f973b654587ed73abf6"
+  :revdesc "f004cce95e0f"
   :keywords '("games")
   :maintainers '(("Daniel Kraus" . "daniel@kraus.my")))

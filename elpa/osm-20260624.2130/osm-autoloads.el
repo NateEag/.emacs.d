@@ -48,8 +48,10 @@ If the prefix argument LUCKY is non-nil take the first result and jump there.
 See `osm-search-server' and `osm-search-language' for customization.
 
 (fn NEEDLE &optional LUCKY)" t)
-(autoload 'osm-gpx-show "osm" "\
-Show the tracks of gpx FILE in an `osm-mode' buffer.
+(autoload 'osm-route "osm" "\
+Fetch a route between two locations." t)
+(autoload 'osm-open "osm" "\
+Show the tracks of GPX or TCX FILE in an `osm-mode' buffer.
 
 (fn FILE)" t)
 (autoload 'osm-server "osm" "\

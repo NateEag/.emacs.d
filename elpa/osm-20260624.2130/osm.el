@@ -1,13 +1,13 @@
 ;;; osm.el --- OpenStreetMap viewer -*- lexical-binding: t -*-
 
-;; Copyright (C) 2022-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2022-2026 Free Software Foundation, Inc.
 
 ;; Author: Daniel Mendler <mail@daniel-mendler.de>
 ;; Maintainer: Daniel Mendler <mail@daniel-mendler.de>
 ;; Created: 2022
-;; Package-Version: 20251202.2058
-;; Package-Revision: e58e46abedfe
-;; Package-Requires: ((emacs "29.1") (compat "30"))
+;; Package-Version: 20260624.2130
+;; Package-Revision: 41765d63fd68
+;; Package-Requires: ((emacs "29.1") (compat "31"))
 ;; URL: https://github.com/minad/osm
 ;; Keywords: network, multimedia, hypermedia, mouse
 
@@ -35,12 +35,12 @@
 ;; multiple preconfigured tile servers.  You can bookmark your favorite
 ;; locations using regular Emacs bookmarks or create links from Org files
 ;; to locations.  Furthermore the package provides commands to measure
-;; distances, search for locations by name and to open and display GPX
-;; tracks.
+;; distances, search for locations and routes by name and to open and
+;; display GPX or TCX tracks.
 
 ;; osm.el requires Emacs 29 and depends on the external `curl' program.
-;; Emacs must be built with libxml, libjansson, librsvg, libjpeg and
-;; libpng support.
+;; Emacs must be built with libxml, librsvg, libjpeg, libpng
+;; and libwebp support.
 
 ;;; Code:
 
@@ -49,7 +49,8 @@
 (require 'dom)
 (eval-when-compile
   (require 'cl-lib)
-  (require 'subr-x))
+  (require 'subr-x)
+  (require 'solar))
 
 (defgroup osm nil
   "OpenStreetMap viewer."
@@ -61,7 +62,7 @@
   :prefix "osm-")
 
 (defcustom osm-curl-options
-  "--user-agent emacs-osm/1.0 --disable --fail --location --silent --max-time 30"
+  "--user-agent emacs-osm/1.0 --fail --location --silent --max-time 30"
   "Curl command line options."
   :type 'string)
 
@@ -78,74 +79,80 @@ A comma-separated specifies descending order of preference.  See also
 The server must offer the nominatim.org API."
   :type 'string)
 
+(defcustom osm-route-server
+  "https://routing.openstreetmap.de/routed-%b/route/v1/driving/%x,%y;%X,%Y?steps=false&overview=full&alternatives=false&geometries=geojson"
+  "Server used for route planning.
+The server must offer the OSRM API."
+  :type 'string)
+
 (defcustom osm-server-defaults
   '( :min-zoom 2
      :max-zoom 19
-     :download-batch 4
-     :max-connections 2
-     :subdomains ("a" "b" "c"))
+     :download-batch 5
+     :max-connections 2)
   "Default server properties.
 See also `osm-server-list'."
   :type 'plist)
 
 (defcustom osm-server-list
-  '((default
-     :name "Carto"
-     :description "Standard Carto map provided by OpenStreetMap"
-     :url "https://%s.tile.openstreetmap.org/%z/%x/%y.png"
-     :group "Standard"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {OpenStreetMap Standard|https://www.openstreetmap.org/copyright}"))
-    (de
-     :name "Carto(de)"
-     :description "Localized Carto map provided by OpenStreetMap Germany"
-     :url "https://%s.tile.openstreetmap.de/%z/%x/%y.png"
-     :group "Standard"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {OpenStreetMap Deutschland|https://www.openstreetmap.de/germanstyle.html}"))
-    (fr
-     :name "Carto(fr)"
-     :description "Localized Carto map by OpenStreetMap France"
-     :url "https://%s.tile.openstreetmap.fr/osmfr/%z/%x/%y.png"
-     :group "Standard"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {OpenStreetMap France|https://www.openstreetmap.fr/mentions-legales/}"))
-    (humanitarian
-     :name "Humanitarian"
-     :description "Humanitarian map provided by OpenStreetMap France"
-     :url "https://%s.tile.openstreetmap.fr/hot/%z/%x/%y.png"
-     :group "Special Purpose"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {Humanitarian OpenStreetMap Team|https://www.hotosm.org/updates/2013-09-29_a_new_window_on_openstreetmap_data}"))
-    (cyclosm
-     :name "CyclOSM"
-     :description "Bicycle-oriented map provided by OpenStreetMap France"
-     :url "https://%s.tile-cyclosm.openstreetmap.fr/cyclosm/%z/%x/%y.png"
-     :group "Transportation"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {CyclOSM|https://www.cyclosm.org/} contributors"))
-    (openriverboatmap
-     :name "OpenRiverBoatMap"
-     :description "Waterways map provided by OpenStreetMap France"
-     :url "https://%s.tile.openstreetmap.fr/openriverboatmap/%z/%x/%y.png"
-     :group "Transportation"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {OpenRiverBoatMap|https://github.com/tilery/OpenRiverboatMap}"))
-    (opentopomap
-     :name "OpenTopoMap"
-     :description "Topographical map provided by OpenTopoMap"
-     :url "https://%s.tile.opentopomap.org/%z/%x/%y.png"
-     :group "Topographical"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {OpenTopoMap|https://www.opentopomap.org} ({CC-BY-SA|https://creativecommons.org/licenses/by-sa/3.0/})"
-                 "Elevation data: {SRTM|https://www2.jpl.nasa.gov/srtm/}"))
-    (opvn
-     :name "ÖPNV" :max-zoom 18
-     :description "Base layer with public transport information"
-     :url "http://%s.tile.memomaps.de/tilegen/%z/%x/%y.png"
-     :group "Transportation"
-     :copyright ("Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"
-                 "Map style © {ÖPNVKarte|https://www.öpnvkarte.de}")))
+  (let ((copyright-fix "{Fix the map|https://www.openstreetmap.org/fixthemap}")
+        (copyright-data "Map data © {OpenStreetMap|https://www.openstreetmap.org/copyright} contributors"))
+    `((default
+       :name "Carto"
+       :description "Standard Carto map provided by OpenStreetMap"
+       :url "https://tile.openstreetmap.org/%z/%x/%y.png"
+       :group "Standard"
+       :copyright (,copyright-data
+                   "Map style © {OpenStreetMap Standard|https://www.openstreetmap.org/copyright}"
+                   ,copyright-fix))
+      (de
+       :name "Carto(de)"
+       :description "Localized Carto map provided by OpenStreetMap Germany"
+       :url "https://tile.openstreetmap.de/%z/%x/%y.png"
+       :group "Standard"
+       :copyright (,copyright-data
+                   "Map style © {OpenStreetMap Deutschland|https://www.openstreetmap.de/germanstyle.html}"
+                   ,copyright-fix))
+      (fr
+       :name "Carto(fr)"
+       :description "Localized Carto map by OpenStreetMap France"
+       :url "https://a.tile.openstreetmap.fr/osmfr/%z/%x/%y.png"
+       :group "Standard"
+       :copyright (,copyright-data
+                   "Map style © {OpenStreetMap France|https://www.openstreetmap.fr/mentions-legales/}"
+                   ,copyright-fix))
+      (humanitarian
+       :name "Humanitarian"
+       :description "Humanitarian map provided by OpenStreetMap France"
+       :url "https://a.tile.openstreetmap.fr/hot/%z/%x/%y.png"
+       :group "Special Purpose"
+       :copyright (,copyright-data
+                   "Map style © {Humanitarian OpenStreetMap Team|https://www.hotosm.org/}"
+                   ,copyright-fix))
+      (cyclosm
+       :name "CyclOSM"
+       :description "Bicycle-oriented map provided by OpenStreetMap France"
+       :url "https://a.tile-cyclosm.openstreetmap.fr/cyclosm/%z/%x/%y.png"
+       :group "Transportation"
+       :copyright (,copyright-data
+                   "Map style © {CyclOSM|https://www.cyclosm.org/} contributors"
+                   ,copyright-fix))
+      (openriverboatmap
+       :name "OpenRiverBoatMap"
+       :description "Waterways map provided by OpenStreetMap France"
+       :url "https://a.tile.openstreetmap.fr/openriverboatmap/%z/%x/%y.png"
+       :group "Transportation"
+       :copyright (,copyright-data
+                   "Map style © {OpenRiverBoatMap|https://github.com/tilery/OpenRiverboatMap}"
+                   ,copyright-fix))
+      (opvn
+       :name "ÖPNV" :max-zoom 18
+       :description "Base layer with public transport information"
+       :url "http://tileserver.memomaps.de/tilegen/%z/%x/%y.png"
+       :group "Transportation"
+       :copyright (,copyright-data
+                   "Map style © {ÖPNVKarte|https://www.öpnvkarte.de}"
+                   ,copyright-fix))))
   "List of tile servers.
 
 Allowed keys:
@@ -159,16 +166,14 @@ Allowed keys:
   :max-zoom        Maximum zoom level
   :download-batch  Number of tiles downloaded via a single connection
   :max-connections Maximum number of parallel connections
-  :subdomains      Subdomains used for the %s placeholder
 
-See also `osm-server-defaults' for default values used for a
-server if the property is missing.
+See also `osm-server-defaults' for default values used for a server if
+the property is missing.
 
-The :url of each server should specify %x, %y, %z and %s placeholders
-for the map coordinates.  It can optionally use an %s placeholder
-for the subdomain and a %k placeholder for an apikey.  The apikey
-will be retrieved via `auth-source-search' with the :host set to
-the domain name and the :user to the string \"apikey\"."
+The :url of each server should specify %x, %y and %z placeholders for
+the map coordinates.  It can optionally use a %k placeholder for an
+apikey.  The apikey will be retrieved via `auth-source-search' with the
+:host set to the domain name and the :user to the string \"apikey\"."
   :type '(alist :key-type symbol :value-type plist))
 
 (defcustom osm-copyright t
@@ -178,24 +183,31 @@ the domain name and the :user to the string \"apikey\"."
 (defcustom osm-pin-colors
   '((osm-selected . "#e20")
     (osm-bookmark . "#f80")
-    (osm-home . "#80f")
-    (osm-track . "#00e")
-    (osm-gpx-poi . "#88f")
-    (osm-gpx-track . "#88f"))
+    (osm-home . "#a0f")
+    (osm-track . "#f0f")
+    (osm-file . "#03f")
+    (osm-route . "#00e"))
   "Colors of pins."
   :type '(alist :key-type symbol :value-type string))
 
 (defcustom osm-track-style
-  "stroke:#00a;stroke-width:5;stroke-linejoin:round;stroke-linecap:round;opacity:0.4;"
+  "stroke-width:5;stroke-linejoin:round;stroke-linecap:round;opacity:0.6;"
   "SVG style used to draw tracks."
   :type 'string)
 
+(defcustom osm-default-zoom 15
+  "Default zoom level."
+  :type 'natnum)
+
+(defcustom osm-default-server 'default
+  "Default tile server."
+  :type 'symbol)
+
 (defcustom osm-home
-  (let ((lat (bound-and-true-p calendar-latitude))
-        (lon (bound-and-true-p calendar-longitude)))
-    (if (and lat lon)
-        (list lat lon 12)
-      (list 0 0 3)))
+  (if (and (bound-and-true-p calendar-latitude)
+           (bound-and-true-p calendar-longitude))
+      (list (calendar-latitude) (calendar-longitude) osm-default-zoom)
+    (list 0 0 3))
   "Home coordinates, latitude, longitude and zoom level."
   :type '(list :tag "Coordinates"
                (number :tag "Latitude  ")
@@ -206,19 +218,15 @@ the domain name and the :user to the string \"apikey\"."
   "Scroll step in pixel."
   :type 'natnum)
 
+(defcustom osm-small-step 16
+  "Scroll step in pixel."
+  :type 'natnum)
+
 (defcustom osm-tile-border nil
   "Set to t to display thin tile borders.
 For debugging set the value to `debug', such that a border is
 shown around SVG tiles."
   :type '(choice boolean (const debug)))
-
-(defcustom osm-small-step 16
-  "Scroll step in pixel."
-  :type 'natnum)
-
-(defcustom osm-server 'default
-  "Tile server name."
-  :type 'symbol)
 
 (defcustom osm-tile-directory
   (expand-file-name (file-name-concat
@@ -266,8 +274,8 @@ Should be at least 7 days according to the server usage policies."
   "t" #'osm-goto
   "u" #'osm-url
   "j" #'osm-jump
-  "x" #'osm-gpx-show
-  "X" #'osm-gpx-hide)
+  "r" #'osm-route
+  "f" #'osm-open)
 
 ;;;###autoload (autoload 'osm-prefix-map "osm" nil t 'keymap)
 (defalias 'osm-prefix-map osm-prefix-map)
@@ -317,7 +325,8 @@ Should be at least 7 days according to the server usage policies."
   "u" #'osm-save-url
   "l" 'org-store-link
   "b" #'osm-bookmark-set
-  "X" #'osm-gpx-hide
+  "F" #'osm-hide
+  "R" #'osm-hide
   "<remap> <scroll-down-command>" #'osm-down
   "<remap> <scroll-up-command>" #'osm-up
   "<" nil
@@ -336,20 +345,22 @@ Should be at least 7 days according to the server usage policies."
     ["Go to coordinates" osm-goto]
     ["Go to URL" osm-url]
     ["Jump to pin" osm-jump]
-    ["Search by name" osm-search]
     ["Change tile server" osm-server]
     "--"
-    ["Org Link" org-store-link]
+    ["Search by name" osm-search]
+    ["Plan route" osm-route]
+    "--"
+    ["Org link" org-store-link]
     ["Geo URL" osm-save-url]
-    ["Elisp Link" (osm-save-url t)]
+    ["Elisp link" (osm-save-url t)]
     ("Bookmark"
      ["Set" osm-bookmark-set]
      ["Jump" osm-bookmark-jump]
      ["Rename" osm-bookmark-rename]
      ["Delete" osm-bookmark-delete])
     "--"
-    ["Show GPX file" osm-gpx-show]
-    ["Hide GPX file" osm-gpx-hide]
+    ["Open geometry file" osm-open]
+    ["Hide file or route" osm-hide]
     "--"
     ["Clone buffer" clone-buffer]
     ["Revert buffer" revert-buffer]
@@ -358,8 +369,8 @@ Should be at least 7 days according to the server usage policies."
     ["Customize" (customize-group 'osm)]))
 
 (defconst osm--placeholder
-  '(:type svg :width 256 :height 256
-          :data "<svg width='256' height='256' version='1.1' xmlns='http://www.w3.org/2000/svg'>
+  '( :type svg :width 256 :height 256
+     :data "<svg width='256' height='256' version='1.1' xmlns='http://www.w3.org/2000/svg'>
   <defs>
     <pattern id='grid' width='16' height='16'  patternUnits='userSpaceOnUse'>
       <path d='m 0 0 l 0 16 16 0' fill='none' stroke='#888888'/>
@@ -387,8 +398,8 @@ Should be at least 7 days according to the server usage policies."
 (defvar osm--tile-age 0
   "Tile age, incremented on every update.")
 
-(defvar osm--gpx-files nil
-  "Global list of loaded tracks.")
+(defvar osm--datasets nil
+  "Global list of loaded data sets.")
 
 (defvar osm--track nil
   "List of track coordinates.")
@@ -398,9 +409,6 @@ Should be at least 7 days according to the server usage policies."
 
 (defvar osm--download-active nil
   "Globally active download jobs.")
-
-(defvar osm--download-subdomain nil
-  "Subdomain indices to query the servers in a round-robin fashion.")
 
 (defvar-local osm--download-queue nil
   "Buffer-local tile download queue.")
@@ -416,6 +424,9 @@ Should be at least 7 days according to the server usage policies."
 
 (defvar-local osm--ny 0
   "Number of tiles in y direction.")
+
+(defvar-local osm--server nil
+  "Server of the map.")
 
 (defvar-local osm--zoom nil
   "Zoom level of the map.")
@@ -454,9 +465,14 @@ Local per buffer since the overlays depend on the zoom level.")
          `[,(plist-get plist :name)
            (osm-server ',(car server))
            :style toggle
-           :selected (eq osm-server ',(car server))]
+           :selected (eq osm--server ',(car server))]
          menu)))
     (easy-menu-create-menu "Server" (nreverse menu))))
+
+(defsubst osm--server-get (prop &optional server)
+  "Return server property PROP for SERVER."
+  (or (plist-get (alist-get (or server osm--server) osm-server-list) prop)
+      (plist-get osm-server-defaults prop)))
 
 (defsubst osm--lon-to-normalized-x (lon)
   "Convert LON to normalized x coordinate."
@@ -467,15 +483,39 @@ Local per buffer since the overlays depend on the zoom level.")
   (setq lat (* lat (/ float-pi 180.0)))
   (- 0.5 (/ (log (+ (tan lat) (/ 1.0 (cos lat)))) float-pi 2)))
 
-(defun osm--boundingbox-to-zoom (lat1 lat2 lon1 lon2)
-  "Compute zoom level from boundingbox LAT1 to LAT2 and LON1 to LON2."
-  (let ((w (/ (frame-pixel-width) 256))
-        (h (/ (frame-pixel-height) 256)))
-    (max (osm--server-property :min-zoom)
+(defun osm--bb-to-zoom (bb)
+  "Zoom level from bounding box BB."
+  (pcase-let ((`(,min-lat ,max-lat ,min-lon ,max-lon) bb)
+              (w (/ (frame-pixel-width) 256))
+              (h (/ (frame-pixel-height) 256)))
+    (max (osm--server-get :min-zoom)
          (min
-          (osm--server-property :max-zoom)
-          (min (logb (/ w (abs (- (osm--lon-to-normalized-x lon1) (osm--lon-to-normalized-x lon2)))))
-               (logb (/ h (abs (- (osm--lat-to-normalized-y lat1) (osm--lat-to-normalized-y lat2))))))))))
+          (osm--server-get :max-zoom)
+          (min (logb (/ w (abs (- (osm--lon-to-normalized-x min-lon)
+                                  (osm--lon-to-normalized-x max-lon)))))
+               (logb (/ h (abs (- (osm--lat-to-normalized-y min-lat)
+                                  (osm--lat-to-normalized-y max-lat))))))))))
+
+(defun osm--bb-center (bb)
+  "Center of bounding box BB."
+  (pcase-let ((`(,min-lat ,max-lat ,min-lon ,max-lon) bb))
+    (cons (/ (+ min-lat max-lat) 2) (/ (+ min-lon max-lon) 2))))
+
+(defun osm--bb-from-track (track waypoints)
+  "Compute bounding box from TRACK and WAYPOINTS."
+  (let ((min-lat 90) (max-lat -90) (min-lon 180) (max-lon -180))
+    (cl-loop for seg in track do
+             (cl-loop for (lat . lon) in seg do
+                      (setq min-lat (min lat min-lat)
+                            max-lat (max lat max-lat)
+                            min-lon (min lon min-lon)
+                            max-lon (max lon max-lon))))
+    (cl-loop for (lat lon . _) in waypoints do
+             (setq min-lat (min lat min-lat)
+                   max-lat (max lat max-lat)
+                   min-lon (min lon min-lon)
+                   max-lon (max lon max-lon)))
+    (list min-lat max-lat min-lon max-lon)))
 
 (defun osm--x-to-lon (x zoom)
   "Return longitude in degrees for X/ZOOM."
@@ -510,16 +550,10 @@ Local per buffer since the overlays depend on the zoom level.")
   "Return latitude in pixel of top left corner."
   (- (osm--y) osm--wy))
 
-(defun osm--server-property (prop &optional server)
-  "Return server property PROP for SERVER."
-  (or (plist-get (alist-get (or server osm-server) osm-server-list) prop)
-      (plist-get osm-server-defaults prop)))
-
 (defun osm--tile-url (x y zoom)
   "Return tile url for coordinate X, Y and ZOOM."
-  (let ((url (osm--server-property :url))
-        (sub (osm--server-property :subdomains))
-        (key (osm--server-property :key)))
+  (let ((url (osm--server-get :url))
+        (key (osm--server-get :key)))
     (when (and (string-search "%k" url) (not key))
       (require 'auth-source)
       (declare-function auth-source-search "auth-source")
@@ -534,30 +568,27 @@ Local per buffer since the overlays depend on the zoom level.")
         (unless key
           (warn "No auth source secret found for apikey@%s" host)
           (setq key ""))
-        (setf (plist-get (alist-get osm-server osm-server-list) :key) key)))
+        (setf (plist-get (alist-get osm--server osm-server-list) :key) key)))
     (format-spec
      url `((?z . ,zoom) (?x . ,x) (?y . ,y)
-           (?k . ,(if (functionp key) (funcall key) key))
-           (?s . ,(nth (mod (alist-get osm-server osm--download-subdomain 0)
-                            (length sub))
-                       sub))))))
+           (?k . ,(if (functionp key) (funcall key) key))))))
 
 (defun osm--tile-file (x y zoom)
   "Return tile file name for coordinate X, Y and ZOOM."
   (file-name-concat
    (expand-file-name osm-tile-directory)
-   (symbol-name osm-server)
+   (symbol-name osm--server)
    (format "%d-%d-%d.%s"
            zoom x y
-           (or (osm--server-property :ext)
+           (or (osm--server-get :ext)
                (file-name-extension
                 (url-file-nondirectory
-                 (osm--server-property :url)))))))
+                 (osm--server-get :url)))))))
 
 (defun osm--enqueue-download (x y)
   "Enqueue tile X/Y for download."
   (when (let ((n (expt 2 osm--zoom))) (and (>= x 0) (>= y 0) (< x n) (< y n)))
-    (let ((job (list osm-server osm--zoom x y)))
+    (let ((job (list osm--server osm--zoom x y)))
       (unless (or (member job osm--download-queue) (member job osm--download-active))
         (setq osm--download-queue (nconc osm--download-queue (list job)))))))
 
@@ -576,8 +607,8 @@ Local per buffer since the overlays depend on the zoom level.")
       (when (equal status "200")
         (ignore-errors (rename-file file (string-remove-suffix ".tmp" file) t))
         (osm--each
-          (when (and (= osm--zoom zoom) (eq osm-server server))
-            (osm--display-tile x y (osm--get-tile x y)))))
+         (when (and (= osm--zoom zoom) (eq osm--server server))
+           (osm--display-tile x y (osm--get-tile x y)))))
       (cl-callf2 delete (list server zoom x y) osm--download-active)
       (delete-file file)))
   output)
@@ -585,9 +616,8 @@ Local per buffer since the overlays depend on the zoom level.")
 (defun osm--download-command ()
   "Build download command."
   (let* ((count 0)
-         (batch (osm--server-property :download-batch))
-         (subs (length (osm--server-property :subdomains)))
-         (parallel (* subs (osm--server-property :max-connections)))
+         (batch (osm--server-get :download-batch))
+         (parallel (osm--server-get :max-connections))
          args jobs job)
     (while (and (< count batch)
                 (setq job (nth (* count parallel) osm--download-queue)))
@@ -598,26 +628,23 @@ Local per buffer since the overlays depend on the zoom level.")
                      ,@args))
         (push job jobs)
         (push job osm--download-active)
-        (cl-incf count)))
+        (incf count)))
     (osm--each
-      (dolist (job jobs)
-        (cl-callf2 delq job osm--download-queue)))
-    (cl-callf (lambda (s) (mod (1+ s) subs))
-        (alist-get osm-server osm--download-subdomain 0))
-    (cons `("curl" "--write-out" "%{http_code} %{filename_effective}\n"
+     (dolist (job jobs)
+       (cl-callf2 delq job osm--download-queue)))
+    (cons `("curl" "--disable" "--write-out" "%{http_code} %{filename_effective}\n"
             ,@(split-string-and-unquote osm-curl-options) ,@(nreverse args))
           jobs)))
 
 (defun osm--download ()
   "Download next tiles from the queue."
-  (when (and (< (length (alist-get osm-server osm--download-processes))
-                (* (length (osm--server-property :subdomains))
-                   (osm--server-property :max-connections)))
+  (when (and (< (length (alist-get osm--server osm--download-processes))
+                (osm--server-get :max-connections))
              osm--download-queue)
     (pcase-let ((`(,command . ,jobs) (osm--download-command))
                 (dir (file-name-concat (expand-file-name osm-tile-directory)
-                                       (symbol-name osm-server)))
-                (server osm-server))
+                                       (symbol-name osm--server)))
+                (server osm--server))
       (make-directory dir t)
       (push
        (make-process
@@ -638,8 +665,8 @@ Local per buffer since the overlays depend on the zoom level.")
           (force-mode-line-update t)
           (osm--download)))
        (alist-get server osm--download-processes))
-       (force-mode-line-update t)
-       (osm--download))))
+      (force-mode-line-update t)
+      (osm--download))))
 
 (defun osm-mouse-drag (event)
   "Handle drag EVENT."
@@ -666,14 +693,14 @@ Local per buffer since the overlays depend on the zoom level.")
 (defun osm--zoom-in-wheel (_n)
   "Zoom in with the mouse wheel."
   (pcase-let ((`(,x . ,y) (posn-x-y (event-start last-input-event))))
-    (when (< osm--zoom (osm--server-property :max-zoom))
+    (when (< osm--zoom (osm--server-get :max-zoom))
       (osm--move (/ (- x osm--wx) 2) (/ (- y osm--wy) 2))
       (osm-zoom-in))))
 
 (defun osm--zoom-out-wheel (_n)
   "Zoom out with the mouse wheel."
   (pcase-let ((`(,x . ,y) (posn-x-y (event-start last-input-event))))
-    (when (> osm--zoom (osm--server-property :min-zoom))
+    (when (> osm--zoom (osm--server-get :min-zoom))
       (osm--move (- osm--wx x) (- osm--wy y))
       (osm-zoom-out))))
 
@@ -719,18 +746,18 @@ Local per buffer since the overlays depend on the zoom level.")
                  (`(,sel-lat ,sel-lon ,_ ,sel-name) osm--pin))
       (while (and (cdr p) (not (and (equal (caar p) sel-lat)
                                     (equal (cadar p) sel-lon))))
-        (cl-incf len2 (osm--haversine (caar p) (cadar p)
+        (incf len2 (osm--haversine (caar p) (cadar p)
                                       (caadr p) (cadadr p)))
         (pop p))
       (while (cdr p)
-        (cl-incf len1 (osm--haversine (caar p) (cadar p)
+        (incf len1 (osm--haversine (caar p) (cadar p)
                                       (caadr p) (cadadr p)))
         (pop p))
       (message "%s way points, length %.2fkm, %s"
                (length osm--track) (+ len1 len2)
                (if (or (= len1 0) (= len2 0))
                    sel-name
-                 (format "%.2fkm → %s → %.2fkm"
+                 (format "%.2fkm ⟶ %s ⟶ %.2fkm"
                          len1 sel-name len2))))))
 
 (defun osm--pin-at (event &optional type)
@@ -770,8 +797,8 @@ Local per buffer since the overlays depend on the zoom level.")
   "Zoom N times into the map."
   (interactive "p" osm-mode)
   (osm--barf-unless-osm)
-  (setq osm--zoom (max (osm--server-property :min-zoom)
-                       (min (osm--server-property :max-zoom)
+  (setq osm--zoom (max (osm--server-get :min-zoom)
+                       (min (osm--server-get :max-zoom)
                             (+ osm--zoom (or n 1)))))
   (osm--update))
 
@@ -840,7 +867,7 @@ Local per buffer since the overlays depend on the zoom level.")
      (lambda ()
        (dolist (dir (directory-files osm-tile-directory t "\\`[^.]+\\'" t))
          (dolist (file (directory-files
-                        dir t "\\.\\(?:png\\|jpe?g\\)\\(?:\\.tmp\\)?\\'" t))
+                        dir t "\\.\\(?:png\\|jpe?g\\|webp\\)\\(?:\\.tmp\\)?\\'" t))
            (when (> (float-time (time-since
                                  (file-attribute-modification-time
                                   (file-attributes file))))
@@ -854,7 +881,7 @@ Local per buffer since the overlays depend on the zoom level.")
   (let (req)
     (unless (display-graphic-p)
       (push "graphical display" req))
-    (dolist (type '(svg jpeg png))
+    (dolist (type '(svg jpeg png webp))
       (unless (image-type-available-p type)
         (push (format "%s support" type) req)))
     (unless (libxml-available-p)
@@ -862,14 +889,14 @@ Local per buffer since the overlays depend on the zoom level.")
     (unless (json-available-p)
       (push "libjansson" req))
     (when req
-      (error "Osm: Please compile Emacs with the required libraries, %s needed to proceed"
-             (string-join req ", ")))))
+      (warn "osm: Please compile Emacs with the required libraries, %s needed"
+            (string-join req ", ")))))
 
 (define-derived-mode osm-mode special-mode "Osm"
   "OpenStreetMap viewer mode."
   :interactive nil :abbrev-table nil :syntax-table nil
   (osm--check-libraries)
-  (setq-local osm-server osm-server
+  (setq-local osm--server osm-default-server
               line-spacing nil
               cursor-type nil
               cursor-in-non-selected-windows nil
@@ -940,13 +967,16 @@ Local per buffer since the overlays depend on the zoom level.")
            if (eq (bookmark-prop-get bm 'handler) #'osm-bookmark-jump) do
            (pcase-let ((`(,lat ,lon ,zoom) (bookmark-prop-get bm 'coordinates)))
              (funcall fun 'osm-bookmark lat lon zoom (car bm))))
-  (dolist (file osm--gpx-files)
-    (when-let ((start (caaadr file)))
-      (funcall fun 'osm-gpx-track (car start) (cdr start) 10 (car file)))
-    (cl-loop for (lat lon name) in (cddr file) do
-             (funcall fun 'osm-gpx-poi lat lon 15 name)))
+  (cl-loop for (dname id segs waypoints) in osm--datasets do
+           (when-let* ((start (caar segs)))
+             (funcall fun id (car start) (cdr start) osm-default-zoom
+                      (propertize dname 'osm-dataset dname)))
+           (cl-loop for (lat lon name) in waypoints do
+                    (funcall fun id lat lon osm-default-zoom
+                             (propertize (format "%s [%s]" name dname)
+                                         'osm-dataset dname))))
   (cl-loop for (lat lon name) in osm--track do
-           (funcall fun 'osm-track lat lon 15 name)))
+           (funcall fun 'osm-track lat lon osm-default-zoom name)))
 
 (defun osm--pin-inside-p (x y lat lon)
   "Return non-nil if pin at LAT/LON is inside tile X/Y."
@@ -975,8 +1005,8 @@ Local per buffer since the overlays depend on the zoom level.")
 ;; TODO: The Bresenham algorithm used here to add the line segments to the tiles
 ;; has the issue that lines which go along a tile border may be drawn only
 ;; partially. Use a more precise algorithm instead.
-(defun osm--add-track (tracks seg)
-  "Add track segment SEG to TRACKS hash table."
+(defun osm--add-track (tracks id seg)
+  "Add track segment SEG with ID to TRACKS hash table."
   (when seg
     (let ((p0 (cons (osm--lon-to-x (or (car-safe (cdar seg)) (cdar seg)) osm--zoom)
                     (osm--lat-to-y (caar seg) osm--zoom))))
@@ -1003,17 +1033,17 @@ Local per buffer since the overlays depend on the zoom level.")
               (while
                   (let ((ey (> (* err 2) dy))
                         (ex (< (* err 2) dx)))
-                    (push line (gethash (cons x0 y0) tracks))
+                    (push line (alist-get id (gethash (cons x0 y0) tracks)))
                     (unless (and (= x0 x1) (= y0 y1))
                       (when (and ey ex)
-                        (push line (gethash (cons x0 (+ y0 sy)) tracks))
-                        (push line (gethash (cons (+ x0 sx) y0) tracks)))
+                        (push line (alist-get id (gethash (cons x0 (+ y0 sy)) tracks)))
+                        (push line (alist-get id (gethash (cons (+ x0 sx) y0) tracks))))
                       (when ey
-                        (cl-incf err dy)
-                        (cl-incf x0 sx))
+                        (incf err dy)
+                        (incf x0 sx))
                       (when ex
-                        (cl-incf err dx)
-                        (cl-incf y0 sy))
+                        (incf err dx)
+                        (incf y0 sy))
                       t)))
               (setq p0 p1))))))))
 
@@ -1027,16 +1057,14 @@ Local per buffer since the overlays depend on the zoom level.")
     (let ((pins (make-hash-table :test #'equal))
           (tracks (make-hash-table :test #'equal)))
       (osm--each-pin (apply-partially #'osm--add-pin pins))
-      (dolist (file osm--gpx-files)
-        (dolist (seg (cadr file))
-          (osm--add-track tracks seg)))
-      (osm--add-track tracks osm--track)
+      (cl-loop for (_dname id segs _waypoints) in osm--datasets do
+               (dolist (seg segs) (osm--add-track tracks id seg)))
+      (osm--add-track tracks 'osm-track osm--track)
       (setq osm--overlays (list osm--zoom pins tracks))))
   (let ((pins (gethash (cons x y) (cadr osm--overlays)))
         (tracks (gethash (cons x y) (caddr osm--overlays))))
     (and (or pins tracks) (cons pins tracks))))
 
-(autoload 'svg--image-data "svg")
 (defun osm--draw-tile (x y tpin)
   "Make tile at X/Y from FILE.
 TPIN is an optional pin."
@@ -1047,6 +1075,23 @@ TPIN is an optional pin."
           (let* ((areas nil)
                  (x0 (* 256 x))
                  (y0 (* 256 y))
+                 (svg-track
+                  (lambda (track)
+                    (format
+                     "<path style='%s' stroke='%s' d='%s'/>"
+                     osm-track-style
+                     (cdr (assq (car track) osm-pin-colors))
+                     (let (last)
+                       (mapconcat
+                        (pcase-lambda (`(,beg . ,end))
+                          (prog1
+                              (if (equal beg last)
+                                  (format "L%s %s" (- (car end) x0) (- (cdr end) y0))
+                                (format "M%s %sL%s %s"
+                                        (- (car beg) x0) (- (cdr beg) y0)
+                                        (- (car end) x0) (- (cdr end) y0)))
+                            (setq last end)))
+                        (cdr track) "")))))
                  (svg-pin
                   (lambda (pin)
                     (pcase-let* ((`(,p ,q ,_lat ,_lon ,id ,name) pin)
@@ -1070,21 +1115,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
 <image xlink:href='"
                           (file-name-nondirectory file)
                           "' height='256' width='256'/>"
-                          (when-let (track (cdr overlays))
-                            (format
-                             "<path style='%s' d='%s'/>"
-                             osm-track-style
-                             (let (last)
-                               (mapconcat
-                                (pcase-lambda (`(,beg . ,end))
-                                  (prog1
-                                      (if (equal beg last)
-                                          (format "L%s %s" (- (car end) x0) (- (cdr end) y0))
-                                        (format "M%s %sL%s %s"
-                                                (- (car beg) x0) (- (cdr beg) y0)
-                                                (- (car end) x0) (- (cdr end) y0)))
-                                    (setq last end)))
-                                track ""))))
+                          (mapconcat svg-track (cdr overlays) "")
                           (pcase-exhaustive osm-tile-border
                             ('nil nil)
                             ('debug "<path d='M 1 1 L 1 255 255 255 255 1 Z' stroke='#000' stroke-width='2' fill='none'/>")
@@ -1094,8 +1125,8 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
                           "</svg>")))
             (list 'image :width 256 :height 256 :type 'svg :base-uri file :data svg-text :map areas))
         (list 'image :width 256 :height 256 :file file :type
-              (if (member (file-name-extension file) '("jpg" "jpeg"))
-                  'jpeg 'png))))))
+              (let ((ext (intern (file-name-extension file))))
+                (if (eq ext 'jpg) 'jpeg ext)))))))
 
 (defun osm--get-tile (x y)
   "Get tile at X/Y."
@@ -1106,7 +1137,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
                                (osm--lat-to-y lat osm--zoom)
                                lat lon 'osm-selected name)))
     (_
-     (let* ((key `(,osm-server ,osm--zoom ,x . ,y))
+     (let* ((key `(,osm--server ,osm--zoom ,x . ,y))
             (tile (and osm--tile-cache (gethash key osm--tile-cache))))
        (if tile
            (progn (setcar tile osm--tile-age) (cdr tile))
@@ -1156,8 +1187,8 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
   (clear-image-cache t) ;; Make absolutely sure that the tiles are redrawn.
   (setq osm--tile-cache nil)
   (osm--each
-    (setq osm--overlays nil)
-    (osm--update)))
+   (setq osm--overlays nil)
+   (osm--update)))
 
 (defun osm--header-button (text action)
   "Format header line button with TEXT and ACTION."
@@ -1173,14 +1204,16 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
 
 (defun osm--update-header ()
   "Update header line."
-  (let* ((meter-per-pixel (/ (* 156543.03 (cos (/ osm--lat (/ 180.0 float-pi)))) (expt 2 osm--zoom)))
-         (server (osm--server-property :name))
+  (let* ((meter-per-pixel (/ (* 156543.03 (cos (/ osm--lat (/ 180.0 float-pi))))
+                             (expt 2 osm--zoom)))
+         (server (osm--server-get :name))
          (meter 1) (idx 0)
          (factor '(2 2.5 2))
          (sep #(" " 0 1 (display (space :width (1))))))
-    (while (and (< idx 20) (< (/ (* meter (nth (mod idx 3) factor)) meter-per-pixel) 150))
+    (while (and (< idx 20)
+                (< (/ (* meter (nth (mod idx 3) factor)) meter-per-pixel) 150))
       (setq meter (round (* meter (nth (mod idx 3) factor))))
-      (cl-incf idx))
+      (incf idx))
     (setq-local
      header-line-format
      (list
@@ -1237,7 +1270,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
 
 (defun osm--update-copyright ()
   "Update copyright info."
-  (let ((copyright (and osm-copyright (osm--server-property :copyright))))
+  (let ((copyright (and osm-copyright (osm--server-get :copyright))))
     (if (not copyright)
         (when (eq 'osm-copyright (car-safe tab-line-format))
           (kill-local-variable 'tab-line-format))
@@ -1296,7 +1329,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
 
 (defun osm--purge-tile-cache ()
   "Purge old tiles from the tile cache."
-  (cl-incf osm--tile-age)
+  (incf osm--tile-age)
   (when (and osm--tile-cache (> (hash-table-count osm--tile-cache) osm-max-tiles))
     (let (items)
       (maphash (lambda (k v) (push (list (car v) (cdr v) k) items)) osm--tile-cache)
@@ -1317,7 +1350,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
   `(,name
     (location . ,(osm--location-name lat lon loc 6))
     (coordinates ,lat ,lon ,osm--zoom)
-    (server . ,osm-server)
+    (server . ,osm--server)
     (handler . ,#'osm-bookmark-jump)))
 
 (defun osm--org-link-props ()
@@ -1326,15 +1359,15 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
                (name (osm--location-name lat lon loc 2)))
     (list :type "geo"
           :description
-          (if (eq osm-server (default-value 'osm-server))
-              (string-remove-suffix (concat " " (osm--server-property :name))
+          (if (eq osm--server osm-default-server)
+              (string-remove-suffix (concat " " (osm--server-get :name))
                                     name)
             name)
           :link
           (format "geo:%.6f,%.6f;z=%s%s"
                   lat lon osm--zoom
-                  (if (eq osm-server (default-value 'osm-server)) ""
-                    (format ";s=%s" osm-server))))))
+                  (if (eq osm--server osm-default-server) ""
+                    (format ";s=%s" osm--server))))))
 
 (defun osm--rename-buffer ()
   "Rename current buffer."
@@ -1348,7 +1381,7 @@ xmlns='http://www.w3.org/2000/svg' xmlns:xlink='http://www.w3.org/1999/xlink'>
 The coordinates are formatted with precision PREC."
   (format (format "%%s%%.%df° %%.%df° Z%%s %%s" prec prec)
           (if loc (concat loc ", ") "")
-          lat lon osm--zoom (osm--server-property :name)))
+          lat lon osm--zoom (osm--server-get :name)))
 
 (defun osm--bookmark-name (lat lon loc)
   "Return bookmark name for LAT/LON/LOC."
@@ -1358,37 +1391,37 @@ The coordinates are formatted with precision PREC."
   "Go to LAT/LON/ZOOM, change SERVER.
 Optionally place pin with ID and NAME."
   ;; Server not found
-  (when (and server (not (assq server osm-server-list))) (setq server nil))
-  (with-current-buffer
-      (or
-       (and (eq major-mode #'osm-mode) (current-buffer))
-       (let ((def-server (or server osm-server))
-             (def-lat (or lat (nth 0 osm-home)))
-             (def-lon (or lon (nth 1 osm-home)))
-             (def-zoom (or zoom (nth 2 osm-home))))
+  (unless (assq server osm-server-list) (setq server nil))
+  (let ((def-server (or server osm-default-server))
+        (def-lat (or lat (car osm-home)))
+        (def-lon (or lon (cadr osm-home)))
+        (def-zoom (or zoom (if (and lat lon) osm-default-zoom (caddr osm-home)))))
+    (with-current-buffer
+        (or
+         (and (eq major-mode #'osm-mode) (current-buffer))
          ;; Search for existing buffer
          (cl-loop
           for buf in (buffer-list) thereis
           (and (equal (buffer-local-value 'major-mode buf) #'osm-mode)
-               (equal (buffer-local-value 'osm-server buf) def-server)
+               (equal (buffer-local-value 'osm--server buf) def-server)
                (equal (buffer-local-value 'osm--zoom buf) def-zoom)
                (equal (buffer-local-value 'osm--lat buf) def-lat)
                (equal (buffer-local-value 'osm--lon buf) def-lon)
-               buf)))
-       (generate-new-buffer "*osm*"))
-    (unless (eq major-mode #'osm-mode)
-      (osm-mode))
-    (when (and server (not (eq osm-server server)))
-      (setq-local osm-server server
-                  osm--download-queue nil))
-    (when (or (not (and osm--lon osm--lat)) lat)
-      (setq osm--lat (or lat (nth 0 osm-home))
-            osm--lon (or lon (nth 1 osm-home))
-            osm--zoom (or zoom (nth 2 osm-home)))
-      (when id
-        (osm--set-pin id osm--lat osm--lon name)))
-    (prog1 (pop-to-buffer (current-buffer))
-      (osm--update))))
+               buf))
+         (generate-new-buffer "*osm*"))
+      (unless (eq major-mode #'osm-mode)
+        (osm-mode))
+      (when (and server (not (eq osm--server server)))
+        (setq osm--server server
+              osm--download-queue nil))
+      (when (or (not (and osm--lon osm--lat)) lat)
+        (setq osm--lat def-lat
+              osm--lon def-lon
+              osm--zoom def-zoom)
+        (when id
+          (osm--set-pin id osm--lat osm--lon name)))
+      (prog1 (pop-to-buffer (current-buffer))
+        (osm--update)))))
 
 (defun osm--set-pin (id lat lon name &optional quiet)
   "Set pin at LAT/LON with ID and NAME.
@@ -1439,10 +1472,12 @@ See also `osm-save-url'."
                  (and server (intern-soft server))
                  'osm-selected "Geo Link")))
    ;; Google Maps
-   ((string-match "goo.*@\\([0-9.-]+\\),\\([0-9.-]+\\),\\([0-9]+\\)" url)
+   ((or (string-match "goo.*!3d\\([0-9.-]+\\)!4d\\([0-9.-]+\\)!\\([0-9]+\\)" url)
+        (string-match "goo.*@\\([0-9.-]+\\),\\([0-9.-]+\\),\\([0-9]+\\)" url)
+        (string-match "goo.*/search/\\([0-9.+-]+\\),\\([0-9.+-]+\\)" url))
     (let ((lat (string-to-number (match-string 1 url)))
           (lon (string-to-number (match-string 2 url)))
-          (zoom (string-to-number (match-string 3 url))))
+          (zoom (and (match-end 3) (string-to-number (match-string 3 url)))))
       (osm--goto lat lon zoom nil 'osm-selected "Geo Link")))
    ;; OpenStreetMap.org
    ((string-match "map=\\([0-9]+\\)/\\([0-9.-]+\\)/\\([0-9.-]+\\)" url)
@@ -1452,7 +1487,7 @@ See also `osm-save-url'."
       (osm--goto lat lon zoom nil 'osm-selected "Geo Link")))
    ;; Short URLs
    ((string-match-p "\\`https?://.*\\(openstreetmap\\|osm\\|goo.*maps\\|maps.*goo\\)" url)
-    (osm-url (string-remove-prefix "http" (osm--get-redirect url))))
+    (osm-url (replace-regexp-in-string "\\`https?://" "" (osm--fetch-redirect url))))
    (t
     (user-error "Invalid URL"))))
 
@@ -1511,9 +1546,10 @@ When called interactively, call the function `osm-home'."
          (`(,_lat ,_lon osm-bookmark ,name) name)
          (_ (completing-read
              "Bookmark: "
-             (or (cl-loop for bm in bookmark-alist
-                          if (eq (bookmark-prop-get bm 'handler) #'osm-bookmark-jump)
-                          collect (car bm))
+             (or (cl-loop
+                  for bm in bookmark-alist
+                  if (eq (bookmark-prop-get bm 'handler) #'osm-bookmark-jump)
+                  collect (car bm))
                  (error "No bookmarks found"))
              nil t nil 'bookmark-history)))
        bookmark-alist)
@@ -1526,7 +1562,8 @@ When called interactively, call the function `osm-home'."
   (unwind-protect
       (pcase-let* ((`(,lat ,lon ,loc) (osm--fetch-location-data "New Bookmark"))
                    (def (osm--bookmark-name lat lon loc))
-                   (name (read-from-minibuffer "Bookmark name: " def nil nil 'bookmark-history def))
+                   (name (read-from-minibuffer "Bookmark name: "
+                                               def nil nil 'bookmark-history def))
                    (bookmark-make-record-function
                     (lambda () (osm--bookmark-record name lat lon loc))))
         (bookmark-set name)
@@ -1541,7 +1578,6 @@ When called interactively, call the function `osm-home'."
   (let ((lat (or (car osm--pin) osm--lat))
         (lon (or (cadr osm--pin) osm--lon)))
     (osm--set-pin 'osm-selected lat lon name 'quiet)
-    (message "%s: Fetching name of %.2f° %.2f° from %s..." name lat lon osm-search-server)
     ;; Redisplay before slow fetching
     (osm--update)
     (redisplay)
@@ -1562,7 +1598,7 @@ When called interactively, call the function `osm-home'."
 
 (defun osm--track-delete ()
   "Delete track way point."
-  (when-let ((idx (osm--track-index)))
+  (when-let* ((idx (osm--track-index)))
     ;; Delete pin
     (cl-callf2 delq (nth idx osm--track) osm--track)
     (setq osm--pin nil
@@ -1581,9 +1617,10 @@ When called interactively, call the function `osm-home'."
 
 (defun osm--track-rename ()
   "Rename track way point."
-  (when-let ((pt (nth (osm--track-index) osm--track))
-             (old-name (caddr pt))
-             (new-name (read-from-minibuffer "New name: " old-name nil nil nil old-name)))
+  (when-let* ((pt (nth (osm--track-index) osm--track))
+              (old-name (caddr pt))
+              (new-name (read-from-minibuffer "New name: "
+                                              old-name nil nil nil old-name)))
     (setf (caddr pt) new-name
           (cadddr osm--pin) new-name)
     (osm--revert)))
@@ -1592,19 +1629,24 @@ When called interactively, call the function `osm-home'."
   "Delete selected pin (bookmark or way point)."
   (interactive nil osm-mode)
   (osm--barf-unless-osm)
-  (pcase (caddr osm--pin)
-    ('nil nil)
-    ('osm-bookmark (osm-bookmark-delete (cadddr osm--pin)))
-    ('osm-track (osm--track-delete))
-    (_ (setq osm--pin nil) (osm--update))))
+  (pcase-let ((`(,_lat ,_lon ,id ,name) osm--pin))
+    (pcase id
+      ('nil nil)
+      ('osm-bookmark (osm-bookmark-delete name))
+      ('osm-track (osm--track-delete))
+      ((or 'osm-file 'osm-route)
+       (setq osm--pin nil)
+       (osm-hide (get-text-property 0 'osm-dataset name)))
+      (_ (setq osm--pin nil) (osm--update)))))
 
 (defun osm-rename ()
   "Rename selected pin (bookmark or way point)."
   (interactive nil osm-mode)
   (osm--barf-unless-osm)
-  (pcase (caddr osm--pin)
-    ('osm-bookmark (osm-bookmark-rename (cadddr osm--pin)))
-    ('osm-track (osm--track-rename))))
+  (pcase-let ((`(,_lat ,_lon ,id ,name) osm--pin))
+    (pcase id
+      ('osm-bookmark (osm-bookmark-rename name))
+      ('osm-track (osm--track-rename)))))
 
 ;;;###autoload
 (defun osm-jump ()
@@ -1617,7 +1659,7 @@ When called interactively, call the function `osm-home'."
                            pins)))
     (pcase (assoc (completing-read
                    "Jump: "
-                   (osm--table-with-metadata
+                   (completion-table-with-metadata
                     pins `((group-function
                             . ,(lambda (pin transform)
                                  (if transform pin
@@ -1644,33 +1686,34 @@ When called interactively, call the function `osm-home'."
 (defun osm--fetch-json (url)
   "Get JSON from URL."
   (osm--check-libraries)
+  (message "Contacting %s..." (replace-regexp-in-string "https://\\|/.*" "" url))
   (with-temp-buffer
     (let* ((default-process-coding-system '(utf-8-unix . utf-8-unix))
            (status (apply #'call-process "curl" nil (current-buffer) nil
-                          `(,@(split-string-and-unquote osm-curl-options) ,url))))
+                          `("--disable" ,@(split-string-and-unquote osm-curl-options) ,url))))
       (unless (eq status 0)
         (error "Fetching %s exited with status %s" url status)))
     (goto-char (point-min))
     (json-parse-buffer :array-type 'list :object-type 'alist)))
 
-(defun osm--get-redirect (url)
+(defun osm--fetch-redirect (url)
   "Get redirect location from URL."
   (osm--check-libraries)
+  (message "Contacting %s..." (replace-regexp-in-string "https://\\|/.*" "" url))
   (with-temp-buffer
     (let* ((default-process-coding-system '(utf-8-unix . utf-8-unix))
            (status (apply #'call-process "curl" nil (current-buffer) nil
-                          `(,@(split-string-and-unquote osm-curl-options)
+                          `("--disable" ,@(split-string-and-unquote osm-curl-options)
                             "-I" ,url))))
       (unless (eq status 0)
         (error "Fetching %s exited with status %s" url status)))
     (goto-char (point-max))
-    (if (re-search-backward "^location: \\([^\n]+\\)" nil t)
+    (if (re-search-backward "^location: \\([^\n\r]+\\)" nil t)
         (match-string 1)
       (error "Invalid redirect %s" url))))
 
-(defun osm--search (needle)
+(defun osm--search-request (needle)
   "Globally search for NEEDLE and return the list of results."
-  (message "Contacting %s" osm-search-server)
   (mapcar
    (lambda (x)
      (let ((lat (string-to-number (alist-get 'lat x)))
@@ -1685,119 +1728,191 @@ When called interactively, call the function `osm-home'."
             osm-search-server osm-search-language
             (url-encode-url needle)))))
 
+(defun osm--search-read (prompt)
+  "Read location via `completing-read' with PROMPT."
+  (minibuffer-with-setup-hook
+      (lambda ()
+        (when (eq (keymap-local-lookup "SPC") #'minibuffer-complete-word)
+          ;; Override dreaded `minibuffer-complete-word' for default
+          ;; completion.  When will this keybinding finally get removed from
+          ;; default completion?
+          (use-local-map (make-composed-keymap
+                          (define-keymap "SPC" nil)
+                          (current-local-map)))))
+    (completing-read prompt
+                     (completion-table-with-metadata
+                      ;; Vertico only deletes consecutive duplicates for
+                      ;; performance, and we preserve order by using the
+                      ;; identity sort function.
+                      (delete-dups (copy-sequence osm--search-history))
+                      '((display-sort-function . identity)
+                        (cycle-sort-function . identity)))
+                     nil nil nil 'osm--search-history)))
+
+(defun osm--search-select (needle lucky)
+  "Search for NEEDLE and return selected result.
+Take first result if LUCKY is non-nil."
+  (let ((results (or (osm--search-request needle)
+                     (error "No results for `%s'" needle))))
+    (or
+     (and (or lucky (not (cdr results))) (car results))
+     (assoc
+      (completing-read
+       (format "Matches for '%s': " needle)
+       (completion-table-with-metadata
+        results '((display-sort-function . identity)
+                  (cycle-sort-function . identity)
+                  (eager-display . t)))
+       nil t nil t)
+      results)
+     (error "No selection"))))
+
 ;;;###autoload
 (defun osm-search (needle &optional lucky)
   "Globally search for NEEDLE on `osm-search-server' and display the map.
 If the prefix argument LUCKY is non-nil take the first result and jump there.
 See `osm-search-server' and `osm-search-language' for customization."
-  (interactive
-   (list
-    (minibuffer-with-setup-hook
-        (lambda ()
-          (when (eq (keymap-local-lookup "SPC") #'minibuffer-complete-word)
-            ;; Override dreaded `minibuffer-complete-word' for default
-            ;; completion.  When will this keybinding finally get removed from
-            ;; default completion?
-            (use-local-map (make-composed-keymap
-                            (define-keymap "SPC" nil)
-                            (current-local-map)))))
-      (completing-read "Location: "
-                       (osm--table-with-metadata
-                        osm--search-history '((display-sort-function . identity)
-                                              (cycle-sort-function . identity)))
-                       nil nil nil 'osm--search-history))
-    current-prefix-arg))
-  ;; TODO: Add search bounded to current viewbox, bounded=1, viewbox=x1,y1,x2,y2
-  (let* ((results (or (osm--search needle) (error "No results for `%s'" needle)))
-         (selected
-          (or
-           (and (or lucky (not (cdr results))) (car results))
-           (assoc
-            (completing-read
-             (format "Matches for '%s': " needle)
-             (osm--table-with-metadata
-              results '((display-sort-function . identity)
-                        (cycle-sort-function . identity)
-                        (eager-display . t)))
-             nil t nil t)
-            results)
-           (error "No selection"))))
+  (interactive (list (osm--search-read "Location: ") current-prefix-arg))
+  (let ((selected (osm--search-select needle lucky)))
+    ;; TODO: Add search bounded to current viewbox, bounded=1, viewbox=x1,y1,x2,y2
     (osm--goto (cadr selected) (caddr selected)
-               (apply #'osm--boundingbox-to-zoom (cdddr selected))
+               (osm--bb-to-zoom (cdddr selected))
                nil 'osm-selected (car selected))))
 
-;; TODO: Use `completion-table-with-metadata'
-(defun osm--table-with-metadata (table metadata)
-  "Return new completion TABLE with METADATA."
-  (lambda (string pred action)
-    (if (eq action 'metadata)
-        `(metadata . ,metadata)
-      (complete-with-action action table string pred))))
+;;;###autoload
+(defun osm-route ()
+  "Fetch a route between two locations."
+  (interactive)
+  (let* ((from-name (osm--search-read "Route from: "))
+         (from (osm--search-select from-name nil))
+         (to-name (osm--search-read "Route to: "))
+         (to (osm--search-select to-name nil))
+         (by (completing-read "Go by: " '("Car" "Bike" "Foot") nil t nil t))
+         (data (osm--fetch-json
+                (format-spec osm-route-server
+                             `((?b . ,(downcase by))
+                               (?x . ,(caddr from)) (?y . ,(cadr from))
+                               (?X . ,(caddr to)) (?Y . ,(cadr to))))))
+         (route (car (alist-get 'routes data)))
+         (coords (or (alist-get 'coordinates (alist-get 'geometry route))
+                     (error "No route available")))
+         (waypoints (alist-get 'waypoints data)))
+    (osm--add-dataset
+     (format "%s ⟶ %s (%s, %skm, %s)" from-name to-name by
+             (round (alist-get 'distance route) 1000)
+             (seconds-to-string (alist-get 'duration route)))
+     'osm-route
+     (list (mapcar (lambda (x) (cons (cadr x) (car x))) coords))
+     (mapcar (lambda (x)
+               (let ((l (alist-get 'location x)))
+                 (list (cadr l) (car l) (alist-get 'name x))))
+             waypoints))))
 
 ;;;###autoload
-(defun osm-gpx-show (file)
-  "Show the tracks of gpx FILE in an `osm-mode' buffer."
-  (interactive "fGPX file: ")
+(defun osm-open (file)
+  "Show the tracks of GPX or TCX FILE in an `osm-mode' buffer."
+  (interactive "fGPX or TCX file: ")
   (osm--check-libraries)
   (let ((dom (with-temp-buffer
                (insert-file-contents file)
                (libxml-parse-xml-region (point-min) (point-max))))
-        (min-lat 90) (max-lat -90) (min-lon 180) (max-lon -180))
-    (unless (eq 'gpx (dom-tag dom))
-      (setq dom (dom-child-by-tag dom 'gpx)))
-    (unless (and dom (eq 'gpx (dom-tag dom)))
-      (error "Not a GPX file"))
-    (setf (alist-get (abbreviate-file-name file) osm--gpx-files nil nil #'equal)
-          (cons
-           (cl-loop
-            for trk in (dom-children dom)
-            if (eq (dom-tag trk) 'trk) nconc
-            (cl-loop
-             for seg in (dom-children trk)
-             if (eq (dom-tag seg) 'trkseg) collect
-             (cl-loop
-              for pt in (dom-children seg)
-              if (eq (dom-tag pt) 'trkpt) collect
-              (let ((lat (string-to-number (dom-attr pt 'lat)))
-                    (lon (string-to-number (dom-attr pt 'lon))))
-                (setq min-lat (min lat min-lat)
-                      max-lat (max lat max-lat)
-                      min-lon (min lon min-lon)
-                      max-lon (max lon max-lon))
-                (cons lat lon)))))
-           (cl-loop
-            for pt in (dom-children dom)
-            if (eq (dom-tag pt) 'wpt) collect
-            (let ((lat (string-to-number (dom-attr pt 'lat)))
-                  (lon (string-to-number (dom-attr pt 'lon))))
-              (setq min-lat (min lat min-lat)
-                    max-lat (max lat max-lat)
-                    min-lon (min lon min-lon)
-                    max-lon (max lon max-lon))
-              (list lat lon (with-no-warnings
-                              (dom-text (dom-child-by-tag pt 'name))))))))
-    (osm--revert)
-    (osm--goto (/ (+ min-lat max-lat) 2) (/ (+ min-lon max-lon) 2)
-               (osm--boundingbox-to-zoom min-lat max-lat min-lon max-lon)
-               nil nil nil)))
+        (file (abbreviate-file-name file)))
+    (if (eq 'TrainingCenterDatabase (dom-tag dom))
+        (osm--add-dataset file 'osm-file
+                          (osm--tcx-track dom)
+                          (osm--tcx-waypoints dom))
+      (unless (eq 'gpx (dom-tag dom))
+        (setq dom (dom-child-by-tag dom 'gpx)))
+      (unless (and dom (eq 'gpx (dom-tag dom)))
+        (error "Not a GPX or TCX file"))
+      (osm--add-dataset file 'osm-file
+                        (osm--gpx-track dom)
+                        (osm--gpx-waypoints dom)))))
 
-(defun osm-gpx-hide (file)
-  "Show the tracks of gpx FILE in an `osm-mode' buffer."
-  (interactive (list (completing-read "GPX file: "
-                                      (or osm--gpx-files
-                                          (error "No GPX files shown"))
+;; Prevent deprecation warning
+(defalias 'osm--dom-text 'dom-text)
+
+(defsubst osm--tcx-position (pos)
+  "Convert POS to a cons of (lat . lon)."
+  (let ((lat (dom-child-by-tag pos 'LatitudeDegrees))
+        (lon (dom-child-by-tag pos 'LongitudeDegrees)))
+    (cons (string-to-number (osm--dom-text lat))
+          (string-to-number (osm--dom-text lon)))))
+
+(defun osm--tcx-waypoints (dom)
+  "Return waypoints contained in tcx DOM."
+  (cl-loop
+   with courses = (dom-child-by-tag dom 'Courses)
+   for course in (dom-by-tag courses 'Course) nconc
+   (cl-loop
+    for pt in (dom-by-tag course 'CoursePoint)
+    for pos = (osm--tcx-position (dom-child-by-tag pt 'Position))
+    for name = (dom-by-tag pt 'Name)
+    collect (list (car pos) (cdr pos) (osm--dom-text name)))))
+
+(defun osm--tcx-track (dom)
+  "Return track points contained in tcx DOM."
+  (cl-loop
+   with activities = (dom-child-by-tag dom 'Activities)
+   for activity in (dom-by-tag activities 'Activity) nconc
+   (cl-loop
+    for lap in (dom-by-tag activity 'Lap) nconc
+    (cl-loop
+     for track in (dom-by-tag lap 'Track) collect
+     (cl-loop
+      for pt in (dom-by-tag track 'Trackpoint)
+      for pos = (dom-child-by-tag pt 'Position)
+      if pos collect (osm--tcx-position pos))))))
+
+(defun osm--gpx-track (dom)
+  "Return track points contained in gpx DOM."
+  (cl-loop
+   for trk in (dom-children dom)
+   if (eq (dom-tag trk) 'trk) nconc
+   (cl-loop
+    for seg in (dom-children trk)
+    if (eq (dom-tag seg) 'trkseg) collect
+    (cl-loop
+     for pt in (dom-children seg)
+     if (eq (dom-tag pt) 'trkpt) collect
+     (cons (string-to-number (dom-attr pt 'lat))
+           (string-to-number (dom-attr pt 'lon)))))))
+
+(defun osm--gpx-waypoints (dom)
+  "Return waypoints contained in gpx DOM."
+  (cl-loop
+   for pt in (dom-children dom)
+   if (eq (dom-tag pt) 'wpt) collect
+   (list (string-to-number (dom-attr pt 'lat))
+         (string-to-number (dom-attr pt 'lon))
+         (osm--dom-text (dom-child-by-tag pt 'name)))))
+
+(defun osm--add-dataset (name id track waypoints)
+  "Add dataset with NAME and ID consisting of TRACK and WAYPOINTS."
+  (let* ((bb (osm--bb-from-track track waypoints))
+         (center (osm--bb-center bb)))
+    (setf (alist-get name osm--datasets nil nil #'equal)
+          (list id track waypoints))
+    (osm--revert)
+    (osm--goto (car center) (cdr center) (osm--bb-to-zoom bb) nil nil nil)))
+
+(defun osm-hide (name)
+  "Hide dataset with NAME."
+  (interactive (list (completing-read "Hide: "
+                                      (or osm--datasets
+                                          (error "No datasets shown"))
                                       nil t nil 'file-name-history)))
-  (cl-callf2 assoc-delete-all file osm--gpx-files)
+  (cl-callf2 assoc-delete-all name osm--datasets)
   (osm--revert))
 
 (defun osm--server-annotation (cand)
   "Annotation for server CAND."
-  (when-let ((copyright (osm--server-property :copyright (get-text-property 0 'osm--server cand)))
-             (str
-              (replace-regexp-in-string
-               "{\\(.*?\\)|.*?}"
-               (lambda (str) (match-string 1 str))
-               (string-join (ensure-list copyright) " | ") copyright)))
+  (when-let* ((copyright (osm--server-get :copyright (get-text-property 0 'osm--server cand)))
+              (str
+               (replace-regexp-in-string
+                "{\\(.*?\\)|.*?}"
+                (lambda (str) (match-string 1 str))
+                (string-join (ensure-list copyright) " | ") copyright)))
     (concat (propertize " " 'display `(space :align-to (- right ,(length str) 2)))
             " "
             str)))
@@ -1806,7 +1921,7 @@ See `osm-search-server' and `osm-search-language' for customization."
   "Group function for server CAND with candidate TRANSFORM."
   (if transform
       cand
-    (osm--server-property :group (get-text-property 0 'osm--server cand))))
+    (osm--server-get :group (get-text-property 0 'osm--server cand))))
 
 ;;;###autoload
 (defun osm-server (server)
@@ -1829,15 +1944,15 @@ See `osm-search-server' and `osm-search-language' for customization."
             osm-server-list))
           (selected (completing-read
                      "Server: "
-                     (osm--table-with-metadata
+                     (completion-table-with-metadata
                       servers
                       `((annotation-function
                          . ,(and osm-copyright #'osm--server-annotation))
                         (group-function . ,#'osm--server-group)))
                      nil t nil 'osm--server-history
                      (format fmt
-                             (osm--server-property :name)
-                             (or (osm--server-property :description) "")))))
+                             (osm--server-get :name)
+                             (or (osm--server-get :description) "")))))
      (list
       (get-text-property 0 'osm--server
                          (or (car (member selected servers))
@@ -1850,15 +1965,15 @@ If prefix ARG is given, store URL as Elisp expression."
   (interactive "P" osm-mode)
   (osm--barf-unless-osm)
   (pcase-let* ((`(,lat ,lon ,loc) (osm--fetch-location-data "New Link"))
-               (server (and (not (eq osm-server (default-value 'osm-server))) osm-server))
+               (server (and (not (eq osm--server osm-default-server)) osm--server))
                (url (if arg
                         (format "(osm %.6f %.6f %s%s%s)"
                                 lat lon osm--zoom
-                                (if server (format " '%s" osm-server) "")
+                                (if server (format " '%s" server) "")
                                 (if loc (format " %S" loc) ""))
                       (format "geo:%.6f,%.6f;z=%s%s%s"
                               lat lon osm--zoom
-                              (if server (format ";s=%s" osm-server) "")
+                              (if server (format ";s=%s" server) "")
                               (if loc (format " (%s)" loc) "")))))
     (kill-new url)
     (message "Saved in the kill ring: %s" url)))
@@ -1866,13 +1981,13 @@ If prefix ARG is given, store URL as Elisp expression."
 (cl-defun osm-add-server (server
                           &rest properties
                           &key name description group url ext max-connections
-                          max-zoom min-zoom download-batch subdomains copyright)
+                          max-zoom min-zoom download-batch copyright)
   "Add SERVER with PROPERTIES to `osm-server-list'.
 The properties are checked as keyword arguments.  See
 `osm-server-list' for documentation of the keywords."
   (declare (indent 1))
   (ignore name description group url ext max-connections max-zoom
-          min-zoom download-batch subdomains copyright)
+          min-zoom download-batch copyright)
   (dolist (sym '(:name :description :group :url))
     (unless (stringp (plist-get properties sym))
       (error "Server property %s is required" sym)))

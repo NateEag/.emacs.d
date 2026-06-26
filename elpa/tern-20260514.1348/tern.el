@@ -1,10 +1,9 @@
 ;;; tern.el --- Tern-powered JavaScript integration -*- lexical-binding: t -*-
 
 ;; Author: Marijn Haverbeke
-;; URL: http://ternjs.net/
-;; Package-Version: 20191227.950
-;; Package-Commit: 0d19800db70a6348c627a69f444b91d21ad89629
-;; Version: 0.0.1
+;; URL: http://ternjs.github.io/
+;; Package-Version: 20260514.1348
+;; Package-Revision: fab80daebd79
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
 ;;; Code:

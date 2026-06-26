@@ -1,6 +1,6 @@
 This is ghub.info, produced by makeinfo version 6.8 from ghub.texi.
 
-     Copyright (C) 2017-2025 Jonas Bernoulli
+     Copyright (C) 2017-2026 Jonas Bernoulli
      <emacs.ghub@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
@@ -27,9 +27,9 @@ Ghub User and Developer Manual
 Ghub is an Emacs library that is used by various packages to access the
 APIs of various instances of various Git forge implementations.
 
-This manual is for Ghub version 5.0.2.
+This manual is for Ghub version 5.2.1.
 
-     Copyright (C) 2017-2025 Jonas Bernoulli
+     Copyright (C) 2017-2026 Jonas Bernoulli
      <emacs.ghub@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
@@ -309,7 +309,8 @@ token can be used.
    Before you create a token to be used for a certain package, you
 should consult the documentation of that package, which in turn should
 tell you which scopes are needed and why.  The Forge package for example
-does so in *note (forge)Token Creation::.
+does so in *note (forge)Setup for Githubcom:: and *note (forge)Setup for
+Gitlabcom::.
 
 2.3.2 Storing a Token
 ---------------------
@@ -512,11 +513,6 @@ File: ghub.info,  Node: Making REST Requests,  Next: Making GraphQL Requests,  P
           then it is assumed to be a valid token.  ‘basic’ and an
           explicit token string are only intended for internal and
           debugging uses.
-
-          If ‘AUTH’ is a package symbol, then the scopes are specified
-          using the variable ‘AUTH-github-token-scopes’.  It is an error
-          if that is not specified.  See ‘ghub-github-token-scopes’ for
-          an example.
 
         • If ‘HOST’ is non-‘nil’, then connect to that Github instance.
           This defaults to "api.github.com".  When a repository is
@@ -905,7 +901,7 @@ Appendix A Function Index
 * ghub--graphql-vacuum:                  Making GraphQL Requests.
                                                               (line  56)
 * ghub-continue:                         Making REST Requests.
-                                                              (line 122)
+                                                              (line 117)
 * ghub-delete:                           Github Convenience Wrappers.
                                                               (line  31)
 * ghub-fetch-issue:                      Making GraphQL Requests.
@@ -929,7 +925,7 @@ Appendix A Function Index
 * ghub-request:                          Making REST Requests.
                                                               (line   6)
 * ghub-response-link-relations:          Making REST Requests.
-                                                              (line 172)
+                                                              (line 167)
 * ghub-wait:                             Github Convenience Wrappers.
                                                               (line  44)
 
@@ -943,7 +939,7 @@ Appendix B Variable Index
 * Menu:
 
 * ghub-response-headers:                 Making REST Requests.
-                                                              (line 163)
+                                                              (line 158)
 * github.host:                           Github Configuration Variables.
                                                               (line  26)
 * github.HOST.user:                      Github Configuration Variables.
@@ -965,19 +961,19 @@ Ref: Setting your Github Enterprise Username8953
 Ref: Setting your Username for Other Hosts and/or Forges9686
 Node: Creating and Storing a Token10492
 Ref: Creating a Token10705
-Ref: Storing a Token11622
-Node: Github Configuration Variables13365
-Node: API15076
-Node: Their APIs15278
-Node: Making REST Requests15960
-Node: Making GraphQL Requests25270
-Node: Github Convenience Wrappers31959
-Node: Notes35623
-Node: Using Ghub in Personal Scripts35830
-Node: Using Ghub in Your Own Package36721
-Node: Forge Limitations and Notes37656
-Node: Function Index38668
-Node: Variable Index40936
+Ref: Storing a Token11666
+Node: Github Configuration Variables13409
+Node: API15120
+Node: Their APIs15322
+Node: Making REST Requests16004
+Node: Making GraphQL Requests25063
+Node: Github Convenience Wrappers31752
+Node: Notes35416
+Node: Using Ghub in Personal Scripts35623
+Node: Using Ghub in Your Own Package36514
+Node: Forge Limitations and Notes37449
+Node: Function Index38461
+Node: Variable Index40729
 
 End Tag Table
 

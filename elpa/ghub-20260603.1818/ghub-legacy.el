@@ -1,6 +1,6 @@
 ;;; ghub-legacy.el --- Deprecated Ghub functions  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2016-2025 Jonas Bernoulli
+;; Copyright (C) 2016-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.ghub@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/magit/ghub
@@ -34,26 +34,28 @@
                         &key username auth host forge
                         headers silent
                         callback errorback value extra)
+  (declare (obsolete ghub-query "Ghub 5.1.0"))
   (cl-assert (not (stringp variables)))
   (cl-assert (or (stringp graphql)
                  (memq (car-safe graphql) '(query mutation))))
   (unless (stringp graphql)
     (setq graphql (gsexp-encode (ghub--graphql-prepare-query graphql))))
   (ghub-request "POST"
-                (if (eq forge 'gitlab) "/api/graphql" "/graphql")
-                nil
-                :payload `((query . ,graphql)
-                           ,@(and variables `((variables ,@variables))))
-                :headers headers :silent silent
-                :username username :auth auth :host host :forge forge
-                :callback callback :errorback errorback
-                :extra extra :value value))
+    (if (eq forge 'gitlab) "/api/graphql" "/graphql")
+    nil
+    :payload `((query . ,graphql)
+               ,@(and variables `((variables ,@variables))))
+    :headers headers :silent silent
+    :username username :auth auth :host host :forge forge
+    :callback callback :errorback errorback
+    :extra extra :value value))
 
 (cl-defun ghub--graphql (graphql
                          &optional variables
                          &key username auth host forge
                          headers
                          callback errorback)
+  (declare (obsolete ghub-query "Ghub 5.1.0"))
   (ghub--graphql-vacuum graphql variables callback nil
                         :username  username
                         :auth      auth
@@ -67,6 +69,7 @@
       &optional until
       &key narrow username auth host forge
       headers paginate errorback noerror synchronous)
+  (declare (obsolete ghub-query "Ghub 5.1.0"))
   (ghub-query query variables
     :until until :narrow narrow :headers headers :paginate paginate
     :callback callback
@@ -265,21 +268,22 @@
   "Asynchronously fetch forge data about the specified repository.
 Once all data has been collected, CALLBACK is called with the
 data as the only argument."
+  (declare (obsolete nil "Ghub 5.1.0"))
   (ghub-query (if sparse
                   ghub-fetch-repository-sparse
                 ghub-fetch-repository)
-              `((owner . ,owner)
-                (name  . ,name))
-              :until     until
-              :narrow    '(repository)
-              :username  username
-              :auth      auth
-              :host      host
-              :forge     forge
-              :headers   headers
-              :paginate  paginate
-              :callback  callback
-              :errorback errorback))
+    `((owner . ,owner)
+      (name  . ,name))
+    :until     until
+    :narrow    '(repository)
+    :username  username
+    :auth      auth
+    :host      host
+    :forge     forge
+    :headers   headers
+    :paginate  paginate
+    :callback  callback
+    :errorback errorback))
 
 (cl-defun ghub-fetch-discussion ( owner name number callback
                                   &optional until
@@ -288,20 +292,21 @@ data as the only argument."
   "Asynchronously fetch forge data about the specified discussion.
 Once all data has been collected, CALLBACK is called with the
 data as the only argument."
+  (declare (obsolete nil "Ghub 5.1.0"))
   (ghub-query (ghub--graphql-prepare-query
                ghub-fetch-repository
                `(repository discussions (discussion . ,number)))
-              `((owner . ,owner)
-                (name  . ,name))
-              :until     until
-              :narrow    '(repository discussion)
-              :username  username
-              :auth      auth
-              :host      host
-              :forge     forge
-              :headers   headers
-              :callback  callback
-              :errorback errorback))
+    `((owner . ,owner)
+      (name  . ,name))
+    :until     until
+    :narrow    '(repository discussion)
+    :username  username
+    :auth      auth
+    :host      host
+    :forge     forge
+    :headers   headers
+    :callback  callback
+    :errorback errorback))
 
 (cl-defun ghub-fetch-issue ( owner name number callback
                              &optional until
@@ -310,21 +315,22 @@ data as the only argument."
   "Asynchronously fetch forge data about the specified issue.
 Once all data has been collected, CALLBACK is called with the
 data as the only argument."
+  (declare (obsolete nil "Ghub 5.1.0"))
   (ghub-query (ghub--graphql-narrow-query
                ghub-fetch-repository
                `(repository issues (issue . ,number)))
-              `((owner . ,owner)
-                (name  . ,name))
-              :until     until
-              :narrow    '(repository issue)
-              :username  username
-              :auth      auth
-              :host      host
-              :forge     forge
-              :headers   headers
-              :paginate  paginate
-              :callback  callback
-              :errorback errorback))
+    `((owner . ,owner)
+      (name  . ,name))
+    :until     until
+    :narrow    '(repository issue)
+    :username  username
+    :auth      auth
+    :host      host
+    :forge     forge
+    :headers   headers
+    :paginate  paginate
+    :callback  callback
+    :errorback errorback))
 
 (cl-defun ghub-fetch-pullreq ( owner name number callback
                                &optional until
@@ -336,18 +342,18 @@ data as the only argument."
   (ghub-query (ghub--graphql-narrow-query
                ghub-fetch-repository
                `(repository pullRequests (pullRequest . ,number)))
-              `((owner . ,owner)
-                (name  . ,name))
-              :until     until
-              :narrow    '(repository pullRequest)
-              :username  username
-              :auth      auth
-              :host      host
-              :forge     forge
-              :headers   headers
-              :paginate  paginate
-              :callback  callback
-              :errorback errorback))
+    `((owner . ,owner)
+      (name  . ,name))
+    :until     until
+    :narrow    '(repository pullRequest)
+    :username  username
+    :auth      auth
+    :host      host
+    :forge     forge
+    :headers   headers
+    :paginate  paginate
+    :callback  callback
+    :errorback errorback))
 
 (cl-defun ghub-fetch-review-threads ( owner name number callback
                                       &optional until
@@ -356,21 +362,22 @@ data as the only argument."
   "Asynchronously fetch forge data about the review threads from a pull-request.
 Once all data has been collected, CALLBACK is called with the
 data as the only argument."
+  (declare (obsolete nil "Ghub 5.1.0"))
   (ghub-query (ghub--graphql-narrow-query
                ghub-fetch-repository-review-threads
                `(repository pullRequests (pullRequest . ,number)))
-              `((owner . ,owner)
-                (name  . ,name))
-              :until     until
-              :narrow    '(repository pullRequest)
-              :username  username
-              :auth      auth
-              :host      host
-              :forge     forge
-              :headers   headers
-              :paginate  paginate
-              :callback  callback
-              :errorback errorback))
+    `((owner . ,owner)
+      (name  . ,name))
+    :until     until
+    :narrow    '(repository pullRequest)
+    :username  username
+    :auth      auth
+    :host      host
+    :forge     forge
+    :headers   headers
+    :paginate  paginate
+    :callback  callback
+    :errorback errorback))
 
 ;;; _
 (provide 'ghub-legacy)

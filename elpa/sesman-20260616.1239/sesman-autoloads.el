@@ -16,17 +16,17 @@ Start a Sesman session." t)
 (autoload 'sesman-restart "sesman" "\
 Restart sesman session.
 When WHICH is nil, restart the current session; when a single universal
-argument or 'linked, restart all linked sessions; when a double universal
-argument, t or 'all, restart all sessions. For programmatic use, WHICH can also
+argument or ='linked, restart all linked sessions; when a double universal
+argument, t or ='all, restart all sessions. For programmatic use, WHICH can also
 be a session or a name of the session, in which case that session is restarted.
 
 (fn &optional WHICH)" t)
 (autoload 'sesman-quit "sesman" "\
 Terminate a Sesman session.
 When WHICH is nil, kill only the current session; when a single universal
-argument or 'linked, kill all linked sessions; when a double universal argument,
-t or 'all, kill all sessions. For programmatic use, WHICH can also be a session
-or a name of the session, in which case that session is killed.
+argument or ='linked, kill all linked sessions; when a double universal
+argument, t or ='all, kill all sessions. For programmatic use, WHICH can also
+be a session or a name of the session, in which case that session is killed.
 
 (fn &optional WHICH)" t)
 (autoload 'sesman-info "sesman" "\
@@ -38,20 +38,20 @@ sessions.
 (fn &optional ALL)" t)
 (autoload 'sesman-link-with-buffer "sesman" "\
 Ask for SESSION and link with BUFFER.
-BUFFER defaults to current buffer. On universal argument, or if BUFFER is 'ask,
+BUFFER defaults to current buffer. On universal argument, or if BUFFER is ='ask,
 ask for buffer.
 
 (fn &optional BUFFER SESSION)" t)
 (autoload 'sesman-link-with-directory "sesman" "\
 Ask for SESSION and link with DIR.
-DIR defaults to `default-directory'. On universal argument, or if DIR is 'ask,
+DIR defaults to `default-directory'. On universal argument, or if DIR is ='ask,
 ask for directory.
 
 (fn &optional DIR SESSION)" t)
 (autoload 'sesman-link-with-project "sesman" "\
 Ask for SESSION and link with PROJECT.
 PROJECT defaults to current project. On universal argument, or if PROJECT is
-'ask, ask for the project. SESSION defaults to the current session.
+='ask, ask for the project. SESSION defaults to the current session.
 
 (fn &optional PROJECT SESSION)" t)
 (autoload 'sesman-link-with-least-specific "sesman" "\

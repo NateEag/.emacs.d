@@ -109,7 +109,12 @@ POSITION determines where to insert the comment and can be either `this-line' or
 
 (fn POSITION)" t)
 (autoload 'phpstan-copy-dumped-type "phpstan" "\
-Copy a dumped PHPStan type." t)
+Copy a dumped PHPStan type.
+
+When called without RAW-PREFIX, prefer PHPDoc type from phpstan-hover.
+When called with RAW-PREFIX (for example, `C-u`), copy non-PHPDoc type.
+
+(fn &optional RAW-PREFIX)" t)
 (autoload 'phpstan-insert-dumptype "phpstan" "\
 Insert PHPStan\\dumpType() expression-statement by EXPRESSION and PREFIX-NUM.
 

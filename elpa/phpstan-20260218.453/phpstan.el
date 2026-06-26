@@ -4,8 +4,8 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Package-Version: 20250930.1139
-;; Package-Revision: 07ef7531f2ec
+;; Package-Version: 20260218.453
+;; Package-Revision: 77fba8fe9d63
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "25.1") (compat "30") (php-mode "1.22.3") (php-runtime "0.2"))
@@ -178,6 +178,8 @@ have unexpected behaviors or performance implications."
 (defvar-local phpstan--dumped-types '())
 
 (defvar phpstan-executable-versions-alist '())
+
+(declare-function phpstan-hover-type-at-point "phpstan-hover" (&optional prefer-phpdoc))
 
 ;;;###autoload
 (progn
@@ -487,6 +489,10 @@ it returns the value of `SOURCE' as it is."
        ((executable-find "phpstan") (list (executable-find "phpstan")))
        (t (error "PHPStan executable not found")))))))
 
+(defun phpstan-buffer-not-modified-p (original)
+  "Return non-NIL if ORIGINAL is non-NIL and buffer is not modified."
+  (and original (not (buffer-modified-p))))
+
 (cl-defun phpstan-get-command-args (&key include-executable use-pro args format options config verbose editor)
   "Return command line argument for PHPStan."
   (let ((executable-and-args (phpstan-get-executable-and-args))
@@ -652,17 +658,27 @@ POSITION determines where to insert the comment and can be either `this-line' or
                         (string-join identifiers ", ")))))))
 
 ;;;###autoload
-(defun phpstan-copy-dumped-type ()
-  "Copy a dumped PHPStan type."
-  (interactive)
-  (if phpstan--dumped-types
-      (let ((type (if (eq 1 (length phpstan--dumped-types))
-                      (cdar phpstan--dumped-types)
-                    (let ((linum (line-number-at-pos)))
-                      (cdar (seq-sort-by (lambda (elm) (abs (- linum (car elm)))) #'< phpstan--dumped-types))))))
-        (kill-new type)
-        (message "Copied %s" type))
-    (user-error "No dumped PHPStan types")))
+(defun phpstan-copy-dumped-type (&optional raw-prefix)
+  "Copy a dumped PHPStan type.
+
+When called without RAW-PREFIX, prefer PHPDoc type from phpstan-hover.
+When called with RAW-PREFIX (for example, `C-u`), copy non-PHPDoc type."
+  (interactive "P")
+  (let ((prefer-phpdoc (or (null raw-prefix) (equal raw-prefix 0))))
+    (if-let* ((hover-type
+               (and (bound-and-true-p phpstan-hover-mode)
+                    (phpstan-hover-type-at-point prefer-phpdoc))))
+      (progn
+        (kill-new hover-type)
+        (message "Copied %s" hover-type))
+      (if phpstan--dumped-types
+          (let ((type (if (eq 1 (length phpstan--dumped-types))
+                          (cdar phpstan--dumped-types)
+                        (let ((linum (line-number-at-pos)))
+                          (cdar (seq-sort-by (lambda (elm) (abs (- linum (car elm)))) #'< phpstan--dumped-types))))))
+            (kill-new type)
+            (message "Copied %s" type))
+        (user-error "No dumped PHPStan types")))))
 
 ;;;###autoload
 (defun phpstan-insert-dumptype (&optional expression prefix-num)

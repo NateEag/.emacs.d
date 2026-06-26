@@ -219,7 +219,7 @@ S goes through three transformations:
   "Consume all consecutive white space as possible and return an :whitespace token."
   (let ((pos (point)))
     (while (parseclj-lex-at-whitespace-p)
-      (right-char))
+      (forward-char))
     (parseclj-lex-token :whitespace
                         (buffer-substring-no-properties pos (point))
                         pos)))
@@ -229,7 +229,7 @@ S goes through three transformations:
   (while (and (char-after (point))
               (<= ?0 (char-after (point)))
               (<= (char-after (point)) ?9))
-    (right-char)))
+    (forward-char)))
 
 (defun parseclj-lex-skip-hex ()
   "Skip all consecutive hex digits after point."
@@ -237,7 +237,7 @@ S goes through three transformations:
               (or (<= ?0 (char-after (point)) ?9)
                   (<= ?a (char-after (point)) ?f)
                   (<= ?A (char-after (point)) ?F)))
-    (right-char)))
+    (forward-char)))
 
 (defun parseclj-lex-skip-number ()
   "Skip a number at point."
@@ -245,16 +245,16 @@ S goes through three transformations:
   (if (and (eq ?0 (char-after (point)))
            (eq ?x (char-after (1+ (point)))))
       (progn
-        (right-char 2)
+        (forward-char 2)
         (parseclj-lex-skip-hex))
     (progn
       (when (member (char-after (point)) '(?+ ?-))
-        (right-char))
+        (forward-char))
 
       (parseclj-lex-skip-digits)
 
       (when (eq (char-after (point)) ?.)
-        (right-char))
+        (forward-char))
 
       (parseclj-lex-skip-digits))))
 
@@ -265,21 +265,21 @@ S goes through three transformations:
 
     ;; 10110r2 or 4.3e+22
     (when (member (char-after (point)) '(?E ?e ?r))
-      (right-char))
+      (forward-char))
 
     (parseclj-lex-skip-number)
 
     ;; trailing M
     (when (eq (char-after (point)) ?M)
-      (right-char))
+      (forward-char))
 
     ;; trailing N clojure.lang.BigInt
     (when (eq (char-after (point)) ?N)
-      (right-char))
+      (forward-char))
 
     ;; clojure.lang.Ratio
     (when (eq (char-after (point)) ?/)
-      (right-char)
+      (forward-char)
       (parseclj-lex-skip-number))
 
     (let ((char (char-after (point))))
@@ -287,7 +287,7 @@ S goes through three transformations:
                         (and (<= ?A char) (<= char ?Z))
                         (and (member char '(?. ?* ?+ ?! ?- ?_ ?? ?$ ?& ?= ?< ?> ?/)))))
           (progn
-            (right-char)
+            (forward-char)
             (parseclj-lex-error-token pos :invalid-number-format))
         (parseclj-lex-token :number
                             (buffer-substring-no-properties pos (point))
@@ -331,7 +331,7 @@ For more information on what determines a valid symbol, see
 (defun parseclj-lex-get-symbol-at-point (pos)
   "Return the symbol at POS as a string."
   (while (parseclj-lex-symbol-rest-p (char-after (point)))
-    (right-char))
+    (forward-char))
   (buffer-substring-no-properties pos (point)))
 
 (defun parseclj-lex-symbol ()
@@ -339,7 +339,7 @@ For more information on what determines a valid symbol, see
 Because of their special meaning, symbols \"nil\", \"true\", and \"false\"
 are returned as their own lex tokens."
   (let ((pos (point)))
-    (right-char)
+    (forward-char)
     (let ((sym (parseclj-lex-get-symbol-at-point pos)))
       (cond
        ((equal sym "nil") (parseclj-lex-token :nil "nil" pos))
@@ -351,13 +351,13 @@ are returned as their own lex tokens."
   "Helper for string/regex lexing.
 Returns either the string, or an error token"
   (let ((pos (point)))
-    (right-char)
+    (forward-char)
     (while (not (or (equal (char-after (point)) ?\") (parseclj-lex-at-eof-p)))
       (if (equal (char-after (point)) ?\\)
-          (right-char 2)
-        (right-char)))
+          (forward-char 2)
+        (forward-char)))
     (when (equal (char-after (point)) ?\")
-      (right-char)
+      (forward-char)
       (buffer-substring-no-properties pos (point)))))
 
 (defun parseclj-lex-string ()
@@ -387,34 +387,34 @@ token is returned."
 (defun parseclj-lex-character ()
   "Return a lex token representing a character."
   (let ((pos (point)))
-    (right-char)
+    (forward-char)
     (cond
      ((equal (parseclj-lex-lookahead 3) "tab")
-      (right-char 3)
+      (forward-char 3)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      ((equal (parseclj-lex-lookahead 5) "space")
-      (right-char 5)
+      (forward-char 5)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      ((equal (parseclj-lex-lookahead 6) "return")
-      (right-char 6)
+      (forward-char 6)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      ((equal (parseclj-lex-lookahead 7) "newline")
-      (right-char 7)
+      (forward-char 7)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      ((string-match-p "^u[0-9a-fA-F]\\{4\\}" (parseclj-lex-lookahead 5))
-      (right-char 5)
+      (forward-char 5)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      ((string-match-p "^o[0-8]\\{3\\}" (parseclj-lex-lookahead 4))
-      (right-char 4)
+      (forward-char 4)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos))
 
      (t
-      (right-char)
+      (forward-char)
       (parseclj-lex-token :character (buffer-substring-no-properties pos (point)) pos)))))
 
 (defun parseclj-lex-keyword ()
@@ -424,17 +424,17 @@ two colon characters.
 
 See `parseclj-lex-symbol', `parseclj-lex-symbol-start-p'."
   (let ((pos (point)))
-    (right-char)
+    (forward-char)
     (when (equal (char-after (point)) ?:) ;; same-namespace keyword
-      (right-char))
+      (forward-char))
     (if (equal (char-after (point)) ?:) ;; three colons in a row => lex-error
         (progn
-          (right-char)
+          (forward-char)
           (parseclj-lex-error-token pos :invalid-keyword))
       (progn
         (while (or (parseclj-lex-symbol-rest-p (char-after (point)))
                    (equal (char-after (point)) ?#))
-          (right-char))
+          (forward-char))
         (parseclj-lex-token :keyword (buffer-substring-no-properties pos (point)) pos)))))
 
 (defun parseclj-lex-comment ()
@@ -442,17 +442,17 @@ See `parseclj-lex-symbol', `parseclj-lex-symbol-start-p'."
   (let ((pos (point)))
     (goto-char (line-end-position))
     (when (equal (char-after (point)) ?\n)
-      (right-char))
+      (forward-char))
     (parseclj-lex-token :comment (buffer-substring-no-properties pos (point)) pos)))
 
 (defun parseclj-lex-map-prefix ()
   "Return a lex token representing a map prefix."
   (let ((pos (1- (point))))
-    (right-char)
+    (forward-char)
     (when (equal (char-after (point)) ?:)
-      (right-char))
+      (forward-char))
     (while (parseclj-lex-symbol-rest-p (char-after (point)))
-      (right-char))
+      (forward-char))
     (parseclj-lex-token :map-prefix (buffer-substring-no-properties pos (point)) pos)))
 
 (defun parseclj-lex-next ()
@@ -468,42 +468,42 @@ See `parseclj-lex-token'."
         (parseclj-lex-whitespace))
 
        ((equal char ?\()
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :lparen "(" pos))
 
        ((equal char ?\))
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :rparen ")" pos))
 
        ((equal char ?\[)
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :lbracket "[" pos))
 
        ((equal char ?\])
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :rbracket "]" pos))
 
        ((equal char ?{)
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :lbrace "{" pos))
 
        ((equal char ?})
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :rbrace "}" pos))
 
        ((equal char ?')
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :quote "'" pos))
 
        ((equal char ?`)
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :backquote "`" pos))
 
        ((equal char ?~)
-        (right-char)
+        (forward-char)
         (if (eq ?@ (char-after (point)))
             (progn
-              (right-char)
+              (forward-char)
               (parseclj-lex-token :unquote-splice "~@" pos))
           (parseclj-lex-token :unquote "~" pos)))
 
@@ -526,34 +526,34 @@ See `parseclj-lex-token'."
         (parseclj-lex-comment))
 
        ((equal char ?^)
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :metadata "^" pos))
 
        ((equal char ?@)
-        (right-char)
+        (forward-char)
         (parseclj-lex-token :deref "@" pos))
 
        ((equal char ?#)
-        (right-char)
+        (forward-char)
         (let ((char (char-after (point))))
           (cond
            ((equal char ?{)
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :set "#{" pos))
            ((equal char ?_)
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :discard "#_" pos))
            ((equal char ?\()
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :lambda "#(" pos))
            ((equal char ?')
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :var "#'" pos))
            ((equal char ?=)
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :eval "#=" pos))
            ((equal char ?#)
-            (right-char)
+            (forward-char)
             (let ((sym (parseclj-lex-get-symbol-at-point (point))))
               (parseclj-lex-token :symbolic-value (concat "##" sym) pos)))
            ((equal char ?\")
@@ -561,27 +561,27 @@ See `parseclj-lex-token'."
            ((equal char ?:)
             (parseclj-lex-map-prefix))
            ((equal char ?\?)
-            (right-char)
+            (forward-char)
             (if (eq ?@ (char-after (point)))
                 (progn
-                  (right-char)
+                  (forward-char)
                   (parseclj-lex-token :reader-conditional-splice "#?@" pos))
               (parseclj-lex-token :reader-conditional "#?" pos)))
            ((parseclj-lex-symbol-start-p char t)
-            (right-char)
+            (forward-char)
             (parseclj-lex-token :tag (concat "#" (parseclj-lex-get-symbol-at-point (1+ pos))) pos))
            ((equal char ?!) ;; shebang
-            (left-char)
+            (backward-char)
             (parseclj-lex-comment))
            (t
             (while (not (or (parseclj-lex-at-whitespace-p)
                             (parseclj-lex-at-eof-p)))
-              (right-char))
+              (forward-char))
             (parseclj-lex-error-token pos :invalid-hashtag-dispatcher)))))
 
        (t
         (progn
-          (right-char)
+          (forward-char)
           (parseclj-lex-error-token pos)))))))
 
 (provide 'parseclj-lex)

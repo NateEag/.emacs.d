@@ -6,8 +6,8 @@
 ;; URL: http://www.github.com/clojure-emacs/parseedn
 ;; Keywords: lisp clojure edn parser
 ;; Package-Requires: ((emacs "26") (parseclj "1.1.1") (map "2"))
-;; Package-Version: 20231203.1909
-;; Package-Revision: 3407e4530a36
+;; Package-Version: 20260601.1258
+;; Package-Revision: 1a28a88e2aab
 
 ;; This file is not part of GNU Emacs.
 
@@ -93,31 +93,30 @@ on available options."
       stack
     (cons (parseclj-lex--leaf-token-value token) stack)))
 
-(defun parseedn--build-prefixed-map (prefix-token kvs)
+(defun parseedn--build-prefixed-map (prefix-token children)
   "Build a map that has a prefix for non-qualified keywords.
 PREFIX-TOKEN is the AST token for the map prefix.
-KVS is a list of key, value pairs."
-  (let* ((hash-map (make-hash-table :test 'equal :size (length kvs)))
+CHILDREN is a plist."
+  (let* ((hash-map (make-hash-table :test 'equal :size (/ (length children) 2)))
          ;; map-prefix forms are always "#:...."
          (map-prefix (substring (parseclj-lex-token-form prefix-token) 2)))
-    (seq-do (lambda (pair)
-              (let* ((key-name (substring (symbol-name (car pair)) 1))
-                     (k (if (string-match-p "/" key-name)
-                            ;; keyword is already qualified, we must not add the prefix.
-                            (car pair)
-                          (intern (concat ":" map-prefix "/" key-name))))
-                     (v (cadr pair)))
-                (puthash k v hash-map)))
-            kvs)
+    (while children
+      (let* ((key (pop children))
+             (v (pop children))
+             (key-name (substring (symbol-name key) 1))
+             (k (if (string-match-p "/" key-name)
+                    ;; Keyword is already qualified, we must not add the prefix.
+                    key
+                  (intern (concat ":" map-prefix "/" key-name)))))
+        (puthash k v hash-map)))
     hash-map))
 
-(defun parseedn--build-non-prefixed-map (kvs)
-  "Build a non-prefixed map out of KVS.
-KVS is a list of pairs (key value)"
-  (let ((hash-map (make-hash-table :test 'equal :size (length kvs))))
-    (seq-do (lambda (pair)
-              (puthash (car pair) (cadr pair) hash-map))
-            kvs)
+(defun parseedn--build-non-prefixed-map (children)
+  "Build a non-prefixed map out of CHILDREN.
+CHILDREN is a plist."
+  (let ((hash-map (make-hash-table :test 'equal :size (/ (length children) 2))))
+    (while children
+      (puthash (pop children) (pop children) hash-map))
     hash-map))
 
 (defun parseedn-reduce-branch (stack opening-token children options)
@@ -139,11 +138,10 @@ on available options."
        ((eq :lparen token-type) (cons children stack))
        ((eq :lbracket token-type) (cons (apply #'vector children) stack))
        ((eq :set token-type) (cons (list 'edn-set children) stack))
-       ((eq :lbrace token-type) (let* ((kvs (seq-partition children 2))
-                                       (prefixed-map? (eq :map-prefix (parseclj-lex-token-type (car stack)))))
+       ((eq :lbrace token-type) (let ((prefixed-map? (eq :map-prefix (parseclj-lex-token-type (car stack)))))
                                   (if prefixed-map?
-                                      (cons (parseedn--build-prefixed-map (car stack) kvs) (cdr stack))
-                                    (cons (parseedn--build-non-prefixed-map kvs) stack))))
+                                      (cons (parseedn--build-prefixed-map (car stack) children) (cdr stack))
+                                    (cons (parseedn--build-non-prefixed-map children) stack))))
        ((eq :tag token-type) (let* ((tag (intern (substring (alist-get :form opening-token) 1)))
                                     (reader (alist-get tag tag-readers))
                                     (default-reader (alist-get :default tag-readers parseedn-default-data-reader-fn)))

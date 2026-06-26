@@ -74,6 +74,11 @@ list.")
 (register-definition-prefixes "corfu" '("corfu-" "global-corfu-minibuffer"))
 
 
+;;; Generated autoloads from corfu-auto.el
+
+(register-definition-prefixes "corfu-auto" '("corfu-auto-"))
+
+
 ;;; Generated autoloads from corfu-echo.el
 
 (defvar corfu-echo-mode nil "\

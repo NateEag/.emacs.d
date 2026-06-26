@@ -1,12 +1,12 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "notmuch-addr" "20251101.2052"
+(define-package "notmuch-addr" "20260601.1530"
   "Improved address completion for Notmuch."
   '((emacs   "29.1")
-    (compat  "30.1")
-    (notmuch "0.38"))
+    (compat  "31.0")
+    (notmuch "0.39"))
   :url "https://github.com/tarsius/notmuch-addr"
-  :commit "0883cd753f0a7a204f41c7311d3282ca3e53f869"
-  :revdesc "0883cd753f0a"
+  :commit "0cb6f9e0dc0e27b31b4849630f7e74bafaa78758"
+  :revdesc "0cb6f9e0dc0e"
   :keywords '("mail")
   :authors '(("Jonas Bernoulli" . "emacs.notmuch-addr@jonas.bernoulli.dev"))
   :maintainers '(("Jonas Bernoulli" . "emacs.notmuch-addr@jonas.bernoulli.dev")))

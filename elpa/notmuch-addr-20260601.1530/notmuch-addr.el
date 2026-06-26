@@ -1,18 +1,18 @@
 ;;; notmuch-addr.el --- Improved address completion for Notmuch  -*- lexical-binding:t -*-
 
 ;; Copyright (C) 2020-2021 Free Software Foundation, Inc.
-;; Copyright (C) 2021-2025 Jonas Bernoulli
+;; Copyright (C) 2021-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.notmuch-addr@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/tarsius/notmuch-addr
 ;; Keywords: mail
 
-;; Package-Version: 20251101.2052
-;; Package-Revision: 0883cd753f0a
+;; Package-Version: 20260601.1530
+;; Package-Revision: 0cb6f9e0dc0e
 ;; Package-Requires: (
 ;;     (emacs   "29.1")
-;;     (compat  "30.1")
-;;     (notmuch "0.38"))
+;;     (compat  "31.0")
+;;     (notmuch "0.39"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -152,5 +152,6 @@ for `notmuch-address-from-minibuffer'."
 (provide 'notmuch-addr)
 ;; Local Variables:
 ;; indent-tabs-mode: nil
+;; lisp-indent-local-overrides: ((cond . 0) (interactive . 0))
 ;; End:
 ;;; notmuch-addr.el ends here

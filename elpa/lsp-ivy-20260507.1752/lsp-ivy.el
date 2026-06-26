@@ -1,7 +1,7 @@
 ;;; lsp-ivy.el --- LSP ivy integration             -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2019  Sebastian Sturm
-;; Copyright (C) 2024-2025  emacs-lsp maintainers
+;; Copyright (C) 2024-2026  emacs-lsp maintainers
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -20,9 +20,9 @@
 ;;          Oliver Rausch
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/lsp-ivy
-;; Package-Requires: ((emacs "28.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
-;; Package-Version: 20250825.512
-;; Package-Revision: 2927cbc77647
+;; Package-Requires: ((emacs "29.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
+;; Package-Version: 20260507.1752
+;; Package-Revision: c0930544948d
 ;;
 
 ;;; Commentary:

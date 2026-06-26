@@ -1,17 +1,19 @@
 ;;; closql.el --- Store EIEIO objects using EmacSQL  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2016-2025 Jonas Bernoulli
+;; Copyright (C) 2016-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.closql@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/emacscollective/closql
 ;; Keywords: extensions
 
-;; Package-Version: 20251101.1940
-;; Package-Revision: 4a60723ae4bf
+;; Package-Version: 20260601.1540
+;; Package-Revision: d382e7427f5d
 ;; Package-Requires: (
-;;     (emacs  "28.1")
-;;     (compat "30.1")
-;;     (emacsql "4.3"))
+;;     (emacs   "28.1")
+;;     (compat  "31.0")
+;;     (cond-let "1.1")
+;;     (emacsql  "4.4")
+;;     (llama    "1.0"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -39,10 +41,12 @@
 ;;; Code:
 
 (require 'compat)
+(require 'cond-let)
 (require 'eieio)
 (require 'eieio-base)
 (require 'emacsql)
 (require 'emacsql-sqlite)
+(require 'llama)
 
 (eval-when-compile (require 'subr-x))
 
@@ -94,65 +98,65 @@
 (defun closql-oref (obj slot)
   (cl-check-type slot symbol)
   (let ((class (eieio--object-class obj)))
-    (if-let ((c (eieio--slot-name-index class slot)))
-        (let ((value (aref obj c)))
-          (if (eq value eieio--unbound)
-              (closql-dref obj slot)
-            value))
-      (if-let ((c (eieio--class-slot-name-index class slot)))
-          (aref (eieio--class-class-allocation-values class) c)
-        (slot-missing obj slot 'oref)))))
+    (cond-let
+      ([c (eieio--slot-name-index class slot)]
+       (let ((value (aref obj c)))
+         (if (eq value eieio--unbound)
+             (closql-dref obj slot)
+           value)))
+      ([c (eieio--class-slot-name-index class slot)]
+       (aref (eieio--class-class-allocation-values class) c))
+      ((slot-missing obj slot 'oref)))))
 
 (cl-defgeneric closql-dref (obj slot)
   (let ((c (eieio--slot-name-index (eieio--object-class obj) slot))
         (db (closql--oref obj 'closql-database))
-        (props (closql--slot-properties obj slot))
-        class table tables)
-    (cond
-     ((setq class (alist-get :closql-class props))
-      (aset obj c
-            (closql--remake-instances class db
-              (emacsql
-               db `[:select * :from $i1
-                    :where (= $i2 $s3)
-                    :order-by ,(or (closql--oref-default class 'closql-order-by)
-                                   [(asc $i4)])]
-               (closql--oref-default class 'closql-table)
-               (closql--oref-default class 'closql-foreign-key)
-               (closql--oref obj (closql--oref-default obj 'closql-primary-key))
-               (closql--oref-default class 'closql-primary-key)))))
-     ((setq table (alist-get :closql-table props))
-      (let ((columns (closql--table-columns db table)))
-        (aset obj c
-              (mapcar
-               (if (length= columns 2) #'cadr #'cdr)
+        (props (closql--slot-properties obj slot)))
+    (cond-let
+      ([class (alist-get :closql-class props)]
+       (aset obj c
+             (closql--remake-instances class db
                (emacsql
-                db [:select * :from $i1
-                    :where (= $i2 $s3)
-                    :order-by [(asc $i4)]]
-                table
-                (car columns)
+                db `[:select * :from $i1
+                     :where (= $i2 $s3)
+                     :order-by ,(or (closql--oref-default class 'closql-order-by)
+                                    [(asc $i4)])]
+                (closql--oref-default class 'closql-table)
+                (closql--oref-default class 'closql-foreign-key)
                 (closql--oref obj (closql--oref-default obj 'closql-primary-key))
-                (cadr columns))))))
-     ((setq tables (alist-get :closql-tables props))
-      (pcase-let ((`(,slot-table ,data-table) tables))
-        (aset obj c
-              (mapcar
-               #'cdr
-               (emacsql
-                db [:select $i1 :from $i2
-                    :join $i3 :on (= $i4 $i5)
-                    :where (= $i6 $s7)
-                    :order-by [(asc id)]]
-                (intern (format "%s:*" data-table))
-                data-table slot-table
-                (intern (format "%s:id" slot-table))
-                (intern (format "%s:id" data-table))
-                (intern (format "%s:%s" slot-table
-                                (closql--oref-default obj 'closql-table)))
-                (closql--oref obj (closql--oref-default obj 'closql-primary-key))
-                (closql--oref obj 'id))))))
-     ((slot-unbound obj (eieio--object-class obj) slot 'oref)))))
+                (closql--oref-default class 'closql-primary-key)))))
+      ([table (alist-get :closql-table props)]
+       (let ((columns (closql--table-columns db table)))
+         (aset obj c
+               (mapcar
+                (if (length= columns 2) #'cadr #'cdr)
+                (emacsql
+                 db [:select * :from $i1
+                     :where (= $i2 $s3)
+                     :order-by [(asc $i4)]]
+                 table
+                 (car columns)
+                 (closql--oref obj (closql--oref-default obj 'closql-primary-key))
+                 (cadr columns))))))
+      ([tables (alist-get :closql-tables props)]
+       (pcase-let ((`(,slot-table ,data-table) tables))
+         (aset obj c
+               (mapcar
+                #'cdr
+                (emacsql
+                 db [:select $i1 :from $i2
+                     :join $i3 :on (= $i4 $i5)
+                     :where (= $i6 $s7)
+                     :order-by [(asc id)]]
+                 (intern (format "%s:*" data-table))
+                 data-table slot-table
+                 (intern (format "%s:id" slot-table))
+                 (intern (format "%s:id" data-table))
+                 (intern (format "%s:%s" slot-table
+                                 (closql--oref-default obj 'closql-table)))
+                 (closql--oref obj (closql--oref-default obj 'closql-primary-key))
+                 (closql--oref obj 'id))))))
+      ((slot-unbound obj (eieio--object-class obj) slot 'oref)))))
 
 ;;;; Oset
 
@@ -168,105 +172,106 @@
 (defun closql-oset (obj slot value)
   (cl-check-type slot symbol)
   (let ((class (eieio--object-class obj)))
-    (if-let ((c (eieio--slot-name-index class slot)))
-        (progn (eieio--validate-slot-value class c value slot)
-               (when (and (not (eq slot 'closql-database))
-                          (closql--oref obj 'closql-database))
-                 (closql-dset obj slot value))
-               (aset obj c value))
-      (if-let ((c (eieio--class-slot-name-index class slot)))
-          (progn (eieio--validate-class-slot-value class c value slot)
-                 (aset (eieio--class-class-allocation-values class) c value))
-        (slot-missing obj slot 'oset value)))))
+    (cond-let
+      ([c (eieio--slot-name-index class slot)]
+       (eieio--validate-slot-value class c value slot)
+       (when (and (not (eq slot 'closql-database))
+                  (closql--oref obj 'closql-database))
+         (closql-dset obj slot value))
+       (aset obj c value))
+      ([c (eieio--class-slot-name-index class slot)]
+       (eieio--validate-class-slot-value class c value slot)
+       (aset (eieio--class-class-allocation-values class) c value))
+      ((slot-missing obj slot 'oset value)))))
 
 (cl-defgeneric closql-dset (obj slot value &optional drop-unknown)
   (let* ((db    (closql--oref obj 'closql-database))
          (key   (oref-default obj closql-primary-key))
          (id    (closql--oref obj key))
-         (props (closql--slot-properties obj slot))
-         (table (alist-get :closql-table props))
-         (tables (alist-get :closql-tables props)))
-    (cond
-     ((alist-get :closql-class props)
-      (error "Not implemented for closql-class slots: oset"))
-     ((or table (setq table (car tables)))
-      (closql-with-transaction db
-        (let ((columns (closql--table-columns db table)))
-          ;; Caller might have modified value in place.
-          (closql--oset obj slot eieio--unbound)
-          (let ((list1 (closql-oref obj slot))
-                (list2 value)
-                elt1 elt2)
-            (cond (tables
-                   (setq list1 (mapcar (lambda (e) (list (car e))) list1))
-                   (setq list2 (mapcar (if (atom (car list2))
-                                           #'list
-                                         (lambda (e) (list (car e))))
-                                       list2)))
-                  ((length= columns 2)
-                   (setq list1 (mapcar #'list list1))
-                   (setq list2 (mapcar #'list list2))))
-            ;; `list2' may not be sorted at all and `list1' has to
-            ;; be sorted because Elisp and SQLite sort differently.
-            (setq list1 (cl-sort list1 #'string< :key #'car))
-            (setq list2 (cl-sort list2 #'string< :key #'car))
-            (while (progn (setq elt1 (car list1))
-                          (setq elt2 (car list2))
-                          (or elt1 elt2))
-              (let ((key1 (car elt1))
-                    (key2 (car elt2)))
-                (cond
-                 ((and elt1 (or (not elt2) (string< key1 key2)))
-                  (apply #'emacsql db
-                         `[:delete-from $i1
-                           :where ,(closql--where-equal (cons id elt1) 1)]
-                         table
-                         (cl-mapcan #'list columns (cons id elt1)))
-                  (pop list1))
-                 ((string= key1 key2)
-                  (unless (equal elt1 elt2)
-                    (cl-mapc
-                     (lambda (col val1 val2)
-                       (unless (equal val1 val2)
-                         (emacsql db [:update $i1 :set (= $i2 $s3)
-                                      :where (and (= $i4 $s5) (= $i6 $s7))]
-                                  table col val2
-                                  (car  columns) id
-                                  (cadr columns) key2)))
-                     (cddr columns)
-                     (cdr  elt1)
-                     (cdr  elt2)))
-                  (pop list1)
-                  (pop list2))
-                 (drop-unknown
-                  (ignore-errors
+         (props (closql--slot-properties obj slot)))
+    (cond-let
+      ((alist-get :closql-class props)
+       (error "Not implemented for closql-class slots: oset"))
+      [[tables (alist-get :closql-tables props)]]
+      ([table (or (alist-get :closql-table props)
+                  (car tables))]
+       (closql-with-transaction db
+         (let ((columns (closql--table-columns db table)))
+           ;; Caller might have modified value in place.
+           (closql--oset obj slot eieio--unbound)
+           (let ((list1 (closql-oref obj slot))
+                 (list2 value)
+                 elt1 elt2)
+             (cond (tables
+                    (setq list1 (mapcar (##list (car %)) list1))
+                    (setq list2 (mapcar (if (atom (car list2))
+                                            #'list
+                                          (##list (car %)))
+                                        list2)))
+                   ((length= columns 2)
+                    (setq list1 (mapcar #'list list1))
+                    (setq list2 (mapcar #'list list2))))
+             ;; `list2' may not be sorted at all and `list1' has to
+             ;; be sorted because Elisp and SQLite sort differently.
+             (setq list1 (compat-call sort list1 :lessp #'string< :key #'car))
+             (setq list2 (compat-call sort list2 :lessp #'string< :key #'car))
+             (while (progn (setq elt1 (car list1))
+                           (setq elt2 (car list2))
+                           (or elt1 elt2))
+               (let ((key1 (car elt1))
+                     (key2 (car elt2)))
+                 (cond
+                   ((and elt1 (or (not elt2) (string< key1 key2)))
+                    (apply #'emacsql db
+                           `[:delete-from $i1
+                             :where ,(closql--where-equal (cons id elt1) 1)]
+                           table
+                           (cl-mapcan #'list columns (cons id elt1)))
+                    (pop list1))
+                   ((string= key1 key2)
+                    (unless (equal elt1 elt2)
+                      (cl-mapc
+                       (lambda (col val1 val2)
+                         (unless (equal val1 val2)
+                           (emacsql db [:update $i1 :set (= $i2 $s3)
+                                        :where (and (= $i4 $s5) (= $i6 $s7))]
+                                    table col val2
+                                    (car  columns) id
+                                    (cadr columns) key2)))
+                       (cddr columns)
+                       (cdr  elt1)
+                       (cdr  elt2)))
+                    (pop list1)
+                    (pop list2))
+                   (drop-unknown
+                    (ignore-errors
+                      (emacsql db [:insert-into $i1 :values $v2]
+                               table (vconcat (cons id elt2))))
+                    (pop list2))
+                   (t
                     (emacsql db [:insert-into $i1 :values $v2]
-                             table (vconcat (cons id elt2))))
-                  (pop list2))
-                 (t
-                  (emacsql db [:insert-into $i1 :values $v2]
-                           table (vconcat (cons id elt2)))
-                  (pop list2)))))))))
-     ((emacsql db [:update $i1 :set (= $i2 $s3) :where (= $i4 $s5)]
-               (oref-default obj closql-table)
-               slot
-               (if (eq value eieio--unbound) 'eieio-unbound value)
-               key id)))))
+                             table (vconcat (cons id elt2)))
+                    (pop list2)))))))))
+      ((emacsql db [:update $i1 :set (= $i2 $s3) :where (= $i4 $s5)]
+                (oref-default obj closql-table)
+                slot
+                (if (eq value eieio--unbound) 'eieio-unbound value)
+                key id)))))
 
 ;;;; Slot Properties
 
 (defun closql--slot-properties (object-or-class slot)
-  (and-let* ((desc (cl-find slot
-                            (closql--object-slots object-or-class)
-                            :key #'cl--slot-descriptor-name)))
+  (and-let ((desc (cl-find slot
+                           (closql--object-slots object-or-class)
+                           :key #'cl--slot-descriptor-name)))
     (cl--slot-descriptor-props desc)))
 
 (defun closql--object-slots (object-or-class)
   (eieio-class-slots
    (cond
-    ((eieio-object-p object-or-class) (eieio--object-class object-or-class))
-    ((eieio--class-p object-or-class) object-or-class)
-    ((find-class object-or-class 'error)))))
+     ((eieio-object-p object-or-class) (eieio--object-class object-or-class))
+     ((eieio--class-p object-or-class) object-or-class)
+     ((find-class object-or-class 'error)))))
 
 (defconst closql--slot-properties '(:closql-class :closql-table :closql-tables))
 
@@ -306,32 +311,33 @@
 
 (cl-defmethod closql-db ((class (subclass closql-database))
                          &optional livep connection-class)
-  (or (and-let* ((db (oref-default class singleton))
-                 (conn (and (not (eq db eieio--unbound))
-                            (oref db connection))))
-        (and (emacsql-live-p conn) db))
-      (and (not livep)
-           (let* ((file (closql--db-prepare-storage class))
-                  (connection-class (or connection-class
-                                        (emacsql-sqlite-default-connection)))
-                  (conn (make-instance connection-class :file file))
-                  (db (make-instance class))) ; ignores slot arguments
-             (oset db connection conn)
-             (emacsql conn [:pragma (= foreign-keys on)])
-             (if (not (emacsql-sqlite-list-tables db))
-                 (closql--db-create-schema db)
-               (let ((code-version (oref-default db version))
-                     (data-version (closql--db-get-version db)))
-                 (cond
-                  ((< code-version data-version)
-                   (message
-                    "Please update %s package (database schema version %s < %s)"
-                    (oref-default db name) code-version data-version)
-                   (oset-default class disabled t)
-                   (emacsql-close db)
-                   (setq db nil))
-                  ((closql--db-update-schema db)))))
-             db))))
+  (cond-let*
+    ([db (oref-default class singleton)]
+     [conn (and (not (eq db eieio--unbound))
+                (oref db connection))]
+     [_(emacsql-live-p conn)]
+     db)
+    ((not livep)
+     (let* ((file (closql--db-prepare-storage class))
+            (connection-class (or connection-class
+                                  (emacsql-sqlite-default-connection)))
+            (conn (make-instance connection-class :file file))
+            (db (make-instance class))) ; ignores slot arguments
+       (oset db connection conn)
+       (emacsql conn [:pragma (= foreign-keys on)])
+       (cond-let
+         ((not (emacsql-sqlite-list-tables db))
+          (closql--db-create-schema db))
+         [[code-version (oref-default db version)]
+          [data-version (closql--db-get-version db)]]
+         ((< code-version data-version)
+          (message "Please update %s package (database schema version %s < %s)"
+                   (oref-default db name) code-version data-version)
+          (oset-default class disabled t)
+          (emacsql-close db)
+          (setq db nil))
+         ((closql--db-update-schema db)))
+       db))))
 
 (cl-defmethod closql--db-prepare-storage ((class (subclass closql-database)))
   (when-let ((file (oref-default class file)))
@@ -357,7 +363,7 @@
              (oref-default db name) data-version code-version))))
 
 (cl-defmethod emacsql-live-p ((db closql-database))
-  (and-let* ((conn (oref db connection)))
+  (and-let ((conn (oref db connection)))
     (emacsql-live-p conn)))
 
 (cl-defmethod emacsql-enable-debugging ((db closql-database))
@@ -417,11 +423,11 @@
 (cl-defmethod closql-get ((db closql-database) ident &optional class resolve)
   (unless class
     (setq class (oref-default db object-class)))
-  (and-let* ((row (car (emacsql db [:select * :from $i1
-                                    :where (= $i2 $s3)]
-                                (oref-default class closql-table)
-                                (oref-default class closql-primary-key)
-                                ident))))
+  (and-let ((row (car (emacsql db [:select * :from $i1
+                                   :where (= $i2 $s3)]
+                               (oref-default class closql-table)
+                               (oref-default class closql-primary-key)
+                               ident))))
     (closql--remake-instance class db row resolve)))
 
 (cl-defmethod closql-query ((db closql-database) &optional select pred class)
@@ -469,13 +475,16 @@
                                        db row &optional resolve)
   (pcase-let*
       ((`(,abbrev . ,values) (closql--extern-unbound row))
-       (class-obj (eieio--class-object (closql--expand-abbrev class abbrev)))
+       (class-sym (closql--expand-abbrev class abbrev))
+       (class-obj (eieio--class-object class-sym))
        (obj (copy-sequence (eieio--class-default-object-cache class-obj)))
        (values (apply #'vector (cons db values))))
     (dotimes (i (length (eieio--class-slots class-obj)))
       (aset obj (1+ i) (aref values i)))
     (when resolve
       (closql--resolve-slots obj))
+    (when eieio-backward-compatibility
+      (aset obj 0 class-sym))
     obj))
 
 (defun closql--remake-instances (class db rows)
@@ -508,6 +517,9 @@
                     (vector (make-vector length -1)))
                (dotimes (i length)
                  (aset vector i (aref object i)))
+               ;; Do not assume eieio-backward-compatibility is enabled.
+               (when (eieio--class-p (aref vector 0))
+                 (aset vector 0 (eieio--class-name (aref vector 0))))
                vector)
              type))
 
@@ -530,50 +542,50 @@
          (mapcar (lambda (v)
                    (if v
                        (list '=
-                             (intern (format "$i%i" (cl-incf offset)))
-                             (intern (format "$s%i" (cl-incf offset))))
+                             (intern (format "$i%i" (incf offset)))
+                             (intern (format "$s%i" (incf offset))))
                      (list 'isnull
-                           (intern (format "$i%i" (1- (cl-incf offset 2)))))))
+                           (intern (format "$i%i" (1- (incf offset 2)))))))
                  value))))
 
 (defun closql-where-class-in (args &optional db)
   (when (symbolp args)
     (setq args (list args)))
   (cond
-   ((vectorp args)
-    (unless db
-      (error "closql-where-class-in: DB cannot be nil if ARGS is a vector"))
-    (let ((class (oref-default db object-class))
-          (abbrevs nil))
-      (mapc (lambda (arg)
-              (let ((str (symbol-name arg)))
-                (unless (string-match "\\`\\(!\\)?\\([^*]+\\)\\(\\*\\)?\\'" str)
-                  (error "`closql-where-class-in': invalid type: %s" arg))
-                (let* ((exclude (match-beginning 1))
-                       (a (intern (match-string 2 str)))
-                       (a (cond ((match-beginning 3)
-                                 (closql--list-subabbrevs
-                                  (closql--expand-abbrev class a)))
-                                ((not (class-abstract-p
-                                       (closql--expand-abbrev class a)))
-                                 (list a)))))
-                  (setq abbrevs
-                        (if exclude
-                            (cl-set-difference abbrevs a)
-                          (nconc abbrevs a))))))
-            args)
-      (vconcat abbrevs)))
-   ((vconcat
-     (mapcar #'closql--abbrev-class
-             (mapcan (lambda (sym)
-                       (let ((str (symbol-name sym)))
-                         (cond ((string-suffix-p "--eieio-childp" str)
-                                (closql--list-subclasses
-                                 (intern (substring str 0 -14)) nil))
-                               ((string-suffix-p "-p" str)
-                                (list (intern (substring str 0 -2))))
-                               ((list sym)))))
-                     args))))))
+    ((vectorp args)
+     (unless db
+       (error "closql-where-class-in: DB cannot be nil if ARGS is a vector"))
+     (let ((class (oref-default db object-class))
+           (abbrevs nil))
+       (mapc (lambda (arg)
+               (let ((str (symbol-name arg)))
+                 (unless (string-match "\\`\\(!\\)?\\([^*]+\\)\\(\\*\\)?\\'" str)
+                   (error "`closql-where-class-in': invalid type: %s" arg))
+                 (let* ((exclude (match-beginning 1))
+                        (a (intern (match-string 2 str)))
+                        (a (cond ((match-beginning 3)
+                                  (closql--list-subabbrevs
+                                   (closql--expand-abbrev class a)))
+                                 ((not (class-abstract-p
+                                        (closql--expand-abbrev class a)))
+                                  (list a)))))
+                   (setq abbrevs
+                         (if exclude
+                             (cl-set-difference abbrevs a)
+                           (nconc abbrevs a))))))
+             args)
+       (vconcat abbrevs)))
+    ((vconcat
+      (mapcar #'closql--abbrev-class
+              (mapcan (lambda (sym)
+                        (let ((str (symbol-name sym)))
+                          (cond ((string-suffix-p "--eieio-childp" str)
+                                 (closql--list-subclasses
+                                  (intern (substring str 0 -14)) nil))
+                                ((string-suffix-p "-p" str)
+                                 (list (intern (substring str 0 -2))))
+                                ((list sym)))))
+                      args))))))
 
 (defun closql--list-subclasses (class &optional result)
   (unless (class-abstract-p class)
@@ -629,5 +641,18 @@ define a similar function under a more appropriate name such as
 (provide 'closql)
 ;; Local Variables:
 ;; indent-tabs-mode: nil
+;; lisp-indent-local-overrides: ((cond . 0) (interactive . 0))
+;; read-symbol-shorthands: (
+;;   ("and$"       . "cond-let--and$")
+;;   ("thread$"    . "cond-let--thread$")
+;;   ("when$"      . "cond-let--when$")
+;;   ("and-let*"   . "cond-let--and-let*")
+;;   ("and-let"    . "cond-let--and-let")
+;;   ("if-let*"    . "cond-let--if-let*")
+;;   ("if-let"     . "cond-let--if-let")
+;;   ("when-let*"  . "cond-let--when-let*")
+;;   ("when-let"   . "cond-let--when-let")
+;;   ("while-let*" . "cond-let--while-let*")
+;;   ("while-let"  . "cond-let--while-let"))
 ;; End:
 ;;; closql.el ends here

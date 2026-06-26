@@ -1,12 +1,12 @@
 ;;; counsel.el --- Various completion functions using Ivy -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015-2025 Free Software Foundation, Inc.
+;; Copyright (C) 2015-2026 Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Basil L. Contovounesios <basil@contovou.net>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20250329.1401
-;; Package-Revision: e33b028ed4b1
+;; Package-Version: 20260214.1004
+;; Package-Revision: ee79f68215ae
 ;; Package-Requires: ((emacs "24.5") (ivy "0.15.1") (swiper "0.15.1"))
 ;; Keywords: convenience, matching, tools
 
@@ -42,6 +42,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ivy)
 (require 'swiper)
 
@@ -424,11 +425,10 @@ Update the minibuffer with the amount of lines collected every
 (defun counsel-irony ()
   "Inline C/C++ completion using Irony."
   (interactive)
-  (irony-completion-candidates-async 'counsel-irony-callback))
+  (irony-completion-candidates-async #'counsel-irony-callback))
 
 (defun counsel-irony-callback (candidates)
   "Callback function for Irony to search among CANDIDATES."
-  (interactive)
   (let* ((symbol-bounds (irony-completion-symbol-bounds))
          (beg (car symbol-bounds))
          (end (cdr symbol-bounds))
@@ -456,7 +456,8 @@ Update the minibuffer with the amount of lines collected every
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-.") #'counsel-find-symbol)
     (define-key map (kbd "C-,") #'counsel--info-lookup-symbol)
-    map))
+    map)
+  "Keymap for Counsel commands that describe symbols.")
 
 (ivy-set-actions
  'counsel-describe-variable
@@ -472,12 +473,15 @@ Used by commands `counsel-describe-symbol',
   "Jump to the definition of the current symbol."
   (interactive)
   (ivy-exit-with-action #'counsel--find-symbol))
-(function-put #'counsel-find-symbol 'no-counsel-M-x t)
+(ivy--no-M-x #'counsel-find-symbol #'ivy--minibuffer-p)
 
 (defun counsel--info-lookup-symbol ()
   "Lookup the current symbol in the info docs."
   (interactive)
-  (ivy-exit-with-action #'counsel-info-lookup-symbol))
+  (ivy-exit-with-action
+   (lambda (x)
+     (counsel-info-lookup-symbol (ivy--action-cand-to-str x)))))
+(ivy--no-M-x #'counsel--info-lookup-symbol #'ivy--minibuffer-p)
 
 (defun counsel--push-xref-marker (&optional m)
   "Compatibility shim for `xref-push-marker-stack'."
@@ -496,10 +500,11 @@ Used by commands `counsel-describe-symbol',
     (ring-insert find-tag-marker-ring (or m (point-marker)))))
 
 (defun counsel--find-symbol (x)
-  "Find symbol definition that corresponds to string X."
+  "Find symbol definition that corresponds to action candidate X."
   (with-ivy-window
     (counsel--push-xref-marker)
-    (let ((full-name (get-text-property 0 'full-name x)))
+    (let* ((x (ivy--action-cand-to-str x))
+           (full-name (get-text-property 0 'full-name x)))
       (if full-name
           (find-library full-name)
         (let ((sym (read x)))
@@ -532,7 +537,7 @@ Used by commands `counsel-describe-symbol',
 
 (defun counsel-describe-variable-transformer (var)
   "Propertize VAR if it's a custom variable."
-  (if (custom-variable-p (intern var))
+  (if (custom-variable-p (intern-soft var))
       (ivy-append-face var 'ivy-highlight-face)
     var))
 
@@ -551,7 +556,8 @@ Variables declared using `defcustom' are highlighted according to
               :keymap counsel-describe-map
               :preselect (ivy-thing-at-point)
               :action (lambda (x)
-                        (funcall counsel-describe-variable-function (intern x)))
+                        (funcall counsel-describe-variable-function
+                                 (counsel--action-cand-to-interned x)))
               :caller 'counsel-describe-variable)))
 
 (ivy-configure 'counsel-describe-variable
@@ -571,7 +577,7 @@ Variables declared using `defcustom' are highlighted according to
 
 (defun counsel-describe-function-transformer (function-name)
   "Propertize FUNCTION-NAME if it's an interactive function."
-  (if (commandp (intern function-name))
+  (if (commandp (intern-soft function-name))
       (ivy-append-face function-name 'ivy-highlight-face)
     function-name))
 
@@ -585,9 +591,15 @@ Variables declared using `defcustom' are highlighted according to
           (function-item ivy-thing-at-point)
           (function-item ivy-function-called-at-point)))
 
+(defun counsel--action-cand-to-interned (x)
+  "Try to return Ivy action argument X as an existing symbol.
+Not quite the dual of `ivy--action-cand-to-str'."
+  (intern-soft (if (consp x) (car x) x)))
+
 (defun counsel--describe-function (candidate)
   "Pass string CANDIDATE to `counsel-describe-function-function'."
-  (funcall counsel-describe-function-function (intern candidate)))
+  (funcall counsel-describe-function-function
+           (counsel--action-cand-to-interned candidate)))
 
 ;;;###autoload
 (defun counsel-describe-function ()
@@ -600,7 +612,7 @@ to `ivy-highlight-face'."
     (ivy-read "Describe function: " obarray
               :predicate (lambda (sym)
                            (or (fboundp sym)
-                               (get sym 'function-documentation)))
+                               (function-get sym 'function-documentation)))
               :require-match t
               :history 'counsel-describe-symbol-history
               :keymap counsel-describe-map
@@ -637,7 +649,8 @@ to `ivy-highlight-face'."
               :keymap counsel-describe-map
               :preselect (ivy-thing-at-point)
               :action (lambda (x)
-                        (funcall counsel-describe-symbol-function (intern x)))
+                        (funcall counsel-describe-symbol-function
+                                 (counsel--action-cand-to-interned x)))
               :caller 'counsel-describe-symbol)))
 
 (ivy-configure 'counsel-describe-symbol
@@ -846,6 +859,7 @@ With prefix arg MODE a query for the symbol help mode is offered."
 ;;;; `counsel-M-x'
 
 (defface counsel-key-binding
+  ;; Default Emacs 28 `help-key-binding' doesn't look great in parentheses.
   '((t :inherit font-lock-keyword-face))
   "Face used by `counsel-M-x' for key bindings."
   :group 'ivy-faces)
@@ -874,7 +888,7 @@ With prefix arg MODE a query for the symbol help mode is offered."
     (concat cmd
             (when (and (symbolp alias) counsel-alias-expand)
               (format " (%s)" alias))
-            (when key
+            (when (and key suggest-key-bindings)
               ;; Prefer `<f2>' over `C-x 6' where applicable
               (let ((i (cl-search [?\C-x ?6] key)))
                 (when i
@@ -884,114 +898,149 @@ With prefix arg MODE a query for the symbol help mode is offered."
                                  (lookup-key map dup))
                       (setq key dup)))))
               (setq key (key-description key))
-              (put-text-property 0 (length key) 'face 'counsel-key-binding key)
+              (setq key (propertize key 'face 'counsel-key-binding))
               (format " (%s)" key)))))
 
-(defvar amx-initialized)
-(defvar amx-cache)
-(declare-function amx-initialize "ext:amx")
-(declare-function amx-detect-new-commands "ext:amx")
-(declare-function amx-update "ext:amx")
-(declare-function amx-rank "ext:amx")
-(defvar smex-initialized-p)
-(defvar smex-ido-cache)
-(declare-function smex-initialize "ext:smex")
-(declare-function smex-detect-new-commands "ext:smex")
-(declare-function smex-update "ext:smex")
-(declare-function smex-rank "ext:smex")
+(defcustom counsel-M-x-collection 'auto
+  "Where to source `counsel-M-x' completion candidates from.
+`obarray' - Use the default M-x collection built into Emacs.
+`amx'     - Source candidates from the external `amx' package.
+`smex'    - Source candidates from the external `smex' package.
+`auto'    - Automatically detect one of the previous options,
+            falling back to `obarray'.  This is the default.
+The value can alternatively be a function of no arguments
+that returns a completion table suitable for `ivy-read'."
+  :package-version '(counsel . "0.16.0")
+  :type '(choice (const :tag "Built-in" obarray)
+                 (const :tag "Amx package" amx)
+                 (const :tag "Smex package" smex)
+                 (const :tag "Auto-detect" auto)
+                 (function :tag "Custom function")))
 
-(defun counsel--M-x-externs ()
-  "Return `counsel-M-x' candidates from external packages.
-The return value is a list of strings.  The currently supported
-packages are, in order of precedence, `amx' and `smex'."
-  (cond ((require 'amx nil t)
-         (unless amx-initialized
-           (amx-initialize))
-         (when (amx-detect-new-commands)
-           (amx-update))
-         (mapcar (lambda (entry)
-                   (symbol-name (car entry)))
-                 amx-cache))
-        ((require 'smex nil t)
-         (unless smex-initialized-p
-           (smex-initialize))
-         (when (smex-detect-new-commands)
-           (smex-update))
-         smex-ido-cache)))
+(defun counsel--M-x-collection ()
+  "Return a completion table obeying `counsel-M-x-collection'."
+  (let ((src counsel-M-x-collection))
+    (cond ((eq src 'obarray) obarray)
+          ((eq src 'auto)
+           (cond ((ivy--feature-p 'amx)
+                  (counsel--amx-collection))
+                 ((ivy--feature-p 'smex)
+                  (counsel--smex-collection))
+                 (obarray)))
+          ((eq src 'amx)
+           (unless (ivy--feature-p 'amx)
+             (user-error "Package `amx' not installed"))
+           (counsel--amx-collection))
+          ((eq src 'smex)
+           (unless (ivy--feature-p 'smex)
+             (user-error "Package `smex' not installed"))
+           (counsel--smex-collection))
+          ((functionp src) (funcall src))
+          ((user-error "Unknown `counsel-M-x-collection': %S" src)))))
 
-(defun counsel--M-x-externs-predicate (cand)
-  "Return non-nil if `counsel-M-x' should complete CAND.
-CAND is a string returned by `counsel--M-x-externs'."
-  (not (get (intern cand) 'no-counsel-M-x)))
+(defun counsel--M-x-extern-rank (cmd)
+  "Tell external `counsel-M-x-collection' that CMD was selected."
+  (declare-function amx-rank "ext:amx")
+  (declare-function smex-rank "ext:smex")
+  (let ((src counsel-M-x-collection))
+    (cond ((and (memq src '(auto amx))
+                (bound-and-true-p amx-initialized))
+           (amx-rank cmd))
+          ((and (memq src '(auto smex))
+                (bound-and-true-p smex-initialized-p))
+           (smex-rank cmd)))))
 
-(defun counsel--M-x-make-predicate ()
+(defun counsel--amx-collection ()
+  "Return `counsel-M-x' candidates from the `amx' package."
+  (declare-function amx-detect-new-commands "ext:amx")
+  (declare-function amx-initialize "ext:amx")
+  (declare-function amx-update "ext:amx")
+  (defvar amx-cache)
+  (defvar amx-initialized)
+  (unless amx-initialized
+    (amx-initialize))
+  (when (amx-detect-new-commands)
+    (amx-update))
+  amx-cache)
+
+(defun counsel--smex-collection ()
+  "Return `counsel-M-x' candidates from the `smex' package."
+  (declare-function smex-detect-new-commands "ext:smex")
+  (declare-function smex-initialize "ext:smex")
+  (declare-function smex-update "ext:smex")
+  (defvar smex-ido-cache)
+  (defvar smex-initialized-p)
+  (unless smex-initialized-p
+    (smex-initialize))
+  (when (smex-detect-new-commands)
+    (smex-update))
+  smex-ido-cache)
+
+(defun counsel--M-x-predicate ()
   "Return a predicate for `counsel-M-x' in the current buffer."
-  (defvar read-extended-command-predicate)
   (let ((buf (current-buffer)))
-    (lambda (sym)
-      (and (commandp sym)
-           (not (get sym 'byte-obsolete-info))
-           (not (get sym 'no-counsel-M-x))
-           (cond ((not (bound-and-true-p read-extended-command-predicate)))
-                 ((functionp read-extended-command-predicate)
-                  (condition-case-unless-debug err
-                      (funcall read-extended-command-predicate sym buf)
-                    (error (message "read-extended-command-predicate: %s: %s"
-                                    sym (error-message-string err))))))))))
+    ;; Should work with all completion table types.
+    (lambda (key &optional _val)
+      (when (consp key) (setq key (car key)))
+      (when (stringp key) (setq key (intern key)))
+      (and (commandp key)
+           (not (function-get key 'byte-obsolete-info))
+           (not (function-get key 'no-counsel-M-x))
+           ;; New in Emacs 28.
+           (let ((pred (bound-and-true-p read-extended-command-predicate)))
+             (or (not (functionp pred))
+                 (condition-case-unless-debug err
+                     (funcall pred key buf)
+                   (error (message "read-extended-command-predicate: %s: %s"
+                                   key (error-message-string err))))))))))
 
-(defun counsel--M-x-prompt ()
-  "String for `M-x' plus the string representation of `current-prefix-arg'."
-  (concat (cond ((null current-prefix-arg)
-                 nil)
-                ((eq current-prefix-arg '-)
-                 "- ")
-                ((integerp current-prefix-arg)
-                 (format "%d " current-prefix-arg))
-                ((= (car current-prefix-arg) 4)
-                 "C-u ")
-                (t
-                 (format "%d " (car current-prefix-arg))))
+(defun counsel--M-x-prompt (arg)
+  "Prompt for `counsel-M-x' preceded by a printed form of prefix ARG."
+  (concat (cond ((null arg) ())
+                ((eq (car-safe arg) 4) "C-u ")
+                ((or (eq arg '-)
+                     (integerp (or (car-safe arg) arg)))
+                 (format "%s " (or (car-safe arg) arg))))
           "M-x "))
 
 (defvar counsel-M-x-history nil
   "History for `counsel-M-x'.")
 
 (defun counsel-M-x-action (cmd)
-  "Execute CMD."
-  (setq cmd (intern
-             (subst-char-in-string ?\s ?- (string-remove-prefix "^" cmd))))
-  (cond ((bound-and-true-p amx-initialized)
-         (amx-rank cmd))
-        ((bound-and-true-p smex-initialized-p)
-         (smex-rank cmd)))
-  (setq prefix-arg current-prefix-arg)
+  "Execute CMD from `counsel-M-x'."
+  ;; Currently CMD is a string either following `ivy-immediate-done',
+  ;; or for all collection types but alist, where CMD is the original
+  ;; cons.  There is no harm in allowing other atoms through.
+  (setq cmd (cond ((stringp cmd)
+                   (or (intern-soft cmd)
+                       ;; For the benefit of `ivy-immediate-done'.
+                       (intern (subst-char-in-string
+                                ?\s ?- (string-remove-prefix "^" cmd)))))
+                  ((consp cmd) (intern-soft (car cmd)))
+                  (cmd)))
+  (counsel--M-x-extern-rank cmd)
+  ;; As per `execute-extended-command'.
   (setq this-command cmd)
   (setq real-this-command cmd)
-  (command-execute cmd 'record))
+  (let ((prefix-arg (or ivy-current-prefix-arg current-prefix-arg)))
+    (command-execute cmd 'record)))
 
 ;;;###autoload
 (defun counsel-M-x (&optional initial-input)
   "Ivy version of `execute-extended-command'.
 Optional INITIAL-INPUT is the initial input in the minibuffer.
-This function integrates with either the `amx' or `smex' package
-when available, in that order of precedence."
+This function integrates with either the `amx' or `smex' package when
+available, in that order of precedence; see `counsel-M-x-collection'."
   (interactive)
-  ;; When `counsel-M-x' returns, `last-command' would be set to
-  ;; `counsel-M-x' because :action hasn't been invoked yet.
-  ;; Instead, preserve the old value of `this-command'.
-  (setq this-command last-command)
-  (setq real-this-command real-last-command)
-  (let ((externs (counsel--M-x-externs)))
-    (ivy-read (counsel--M-x-prompt) (or externs obarray)
-              :predicate (if externs
-                             #'counsel--M-x-externs-predicate
-                           (counsel--M-x-make-predicate))
-              :require-match t
-              :history 'counsel-M-x-history
-              :action #'counsel-M-x-action
-              :keymap counsel-describe-map
-              :initial-input initial-input
-              :caller 'counsel-M-x)))
+  (ivy-read (counsel--M-x-prompt current-prefix-arg)
+            (counsel--M-x-collection)
+            :predicate (counsel--M-x-predicate)
+            :require-match t
+            :history 'counsel-M-x-history
+            :action #'counsel-M-x-action
+            :keymap counsel-describe-map
+            :initial-input initial-input
+            :caller 'counsel-M-x))
 
 (ivy-configure 'counsel-M-x
   :initial-input "^"
@@ -1208,13 +1257,13 @@ See `execute-extended-command' for further information."
   "Find symbol definition of candidate X.
 See `counsel--find-symbol' for further information."
   (let ((cmd (cddr x)))
-    (counsel--find-symbol (symbol-name cmd))))
+    (counsel--find-symbol cmd)))
 
 (defun counsel-descbinds-action-info (x)
   "Display symbol definition of candidate X, as found in the relevant manual.
 See `info-lookup-symbol' for further information."
   (let ((cmd (cddr x)))
-    (counsel-info-lookup-symbol (symbol-name cmd))))
+    (counsel-info-lookup-symbol cmd)))
 
 ;;;###autoload
 (defun counsel-descbinds (&optional prefix buffer)
@@ -1752,6 +1801,7 @@ When CMD is non-nil, prompt for a specific \"git grep\" command."
   (unless (ivy-state-dynamic-collection ivy-last)
     (setq ivy--all-candidates
           (all-completions "" #'counsel-git-grep-function))))
+(ivy--no-M-x #'counsel-git-grep-switch-cmd #'ivy--minibuffer-p t)
 
 (defun counsel--normalize-grep-match (str)
   ;; Prepend ./ if necessary:
@@ -1809,6 +1859,7 @@ When CMD is non-nil, prompt for a specific \"git grep\" command."
                    (find-file file-name)
                    (goto-char (point-min)))
                  (perform-replace from to t t nil))))))))))
+(ivy--no-M-x #'counsel-git-grep-query-replace #'ivy--minibuffer-p)
 
 ;;;; `counsel-git-stash'
 
@@ -1974,20 +2025,12 @@ currently checked out."
 ;;; File
 ;;;; `counsel-find-file'
 
-(defvar counsel-find-file-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-DEL") #'counsel-up-directory)
-    (define-key map (kbd "C-<backspace>") #'counsel-up-directory)
-    (define-key map (kbd "`") #'counsel-file-jump-from-find)
-    (define-key map (kbd "C-`") (ivy-make-magic-action #'counsel-find-file "b"))
-    (define-key map `[remap ,#'undo] #'counsel-find-file-undo)
-    map))
-
 (defun counsel-file-jump-from-find ()
   "Switch to `counsel-file-jump' from `counsel-find-file'."
   (interactive)
   (ivy-quit-and-run
     (counsel-file-jump ivy-text (ivy-state-directory ivy-last))))
+(ivy--no-M-x #'counsel-file-jump-from-find #'ivy--minibuffer-p)
 
 (when (executable-find "git")
   (add-to-list 'ivy-ffap-url-functions 'counsel-github-url-p)
@@ -2084,18 +2127,29 @@ choose between `yes-or-no-p' and `y-or-n-p'; otherwise default to
     (when win (with-selected-window win (ivy--cd dir)))))
 
 (ivy-set-actions
- 'counsel-find-file
- '(("j" find-file-other-window "other window")
-   ("f" find-file-other-frame "other frame")
-   ("b" counsel-find-file-cd-bookmark-action "cd bookmark")
-   ("x" counsel-find-file-extern "open externally")
-   ("r" counsel-find-file-as-root "open as root")
-   ("R" find-file-read-only "read only")
-   ("l" find-file-literally "open literally")
-   ("k" counsel-find-file-delete "delete")
-   ("c" counsel-find-file-copy "copy file")
-   ("m" counsel-find-file-move "move or rename")
-   ("d" counsel-find-file-mkdir-action "mkdir")))
+ #'counsel-find-file
+ `(("j" ,#'find-file-other-window "other window")
+   ("f" ,#'find-file-other-frame "other frame")
+   ("b" ,#'counsel-find-file-cd-bookmark-action "cd bookmark")
+   ("x" ,#'counsel-find-file-extern "open externally")
+   ("r" ,#'counsel-find-file-as-root "open as root")
+   ("R" ,#'find-file-read-only "read only")
+   ("l" ,#'find-file-literally "open literally")
+   ("k" ,#'counsel-find-file-delete "delete")
+   ("c" ,#'counsel-find-file-copy "copy file")
+   ("m" ,#'counsel-find-file-move "move or rename")
+   ("d" ,#'counsel-find-file-mkdir-action "mkdir")))
+
+(defvar counsel-find-file-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-DEL") #'counsel-up-directory)
+    (define-key map (kbd "C-<backspace>") #'counsel-up-directory)
+    (define-key map (kbd "`") #'counsel-file-jump-from-find)
+    ;; Needs to come after "b" action is defined.
+    (define-key map (kbd "C-`") (ivy-make-magic-action #'counsel-find-file "b"))
+    (define-key map `[remap ,#'undo] #'counsel-find-file-undo)
+    map)
+  "Keymap used during Counsel file name completion.")
 
 (defcustom counsel-find-file-at-point nil
   "When non-nil, add file-at-point to the list of candidates."
@@ -2247,10 +2301,10 @@ If USE-IGNORE is non-nil, try to generate a command that respects
   (let ((regex ivy--old-re))
     (if (= 0 (length regex))
         "cat"
-      (let ((filter-cmd (cl-find-if
-                         (lambda (x)
+      (let ((filter-cmd (cl-assoc-if
+                         (lambda (cmd)
                            (executable-find
-                            (car (split-string (car x)))))
+                            (car (split-string cmd))))
                          counsel-file-name-filter-alist))
             cmd)
         (when (and use-ignore ivy-use-ignore
@@ -2339,11 +2393,13 @@ See variable `counsel-up-directory-level'."
         (ivy--cd up-dir)
         (setf (ivy-state-preselect ivy-last)
               (file-name-as-directory (file-name-nondirectory cur-dir)))))))
+(ivy--no-M-x #'counsel-up-directory #'ivy--minibuffer-p)
 
 (defun counsel-down-directory ()
   "Descend into the current directory."
   (interactive)
   (ivy--directory-enter))
+(ivy--no-M-x #'counsel-down-directory #'ivy--minibuffer-p)
 
 (defun counsel-find-file-undo ()
   (interactive)
@@ -2354,6 +2410,7 @@ See variable `counsel-up-directory-level'."
         (when dir
           (ivy--cd dir)))
     (undo)))
+(ivy--no-M-x #'counsel-find-file-undo #'ivy--minibuffer-p)
 
 (defun counsel-at-git-issue-p ()
   "When point is at an issue in a Git-versioned file, return the issue string."
@@ -2562,10 +2619,8 @@ This function uses the `dom' library from Emacs 25.1 or later."
   "Return candidates for `counsel-buffer-or-recentf'."
   (recentf-mode)
   (let ((buffers (delq nil (mapcar #'buffer-file-name (buffer-list)))))
-    (nconc
-     buffers
-     (cl-remove-if (lambda (f) (member f buffers))
-                   (counsel-recentf-candidates)))))
+    (nconc buffers (cl-set-difference (counsel-recentf-candidates)
+                                      buffers :test #'equal))))
 
 ;;;###autoload
 (defun counsel-buffer-or-recentf ()
@@ -2648,24 +2703,24 @@ By default `counsel-bookmark' opens a dired buffer for directories."
 
 ;;;; `counsel-bookmarked-directory'
 
-(defun counsel-bookmarked-directory--candidates ()
-  "Get a list of bookmarked directories sorted by file path."
+(defun counsel--bookmarked-dirs ()
+  "Return a list of bookmarked directories sorted by file name."
   (bookmark-maybe-load-default-file)
-  (sort (cl-delete-if-not
-         #'ivy--dirname-p
-         (delq nil (mapcar #'bookmark-get-filename bookmark-alist)))
+  (sort (cl-mapcan (lambda (bm)
+                     (let ((dir (bookmark-get-filename bm)))
+                       (and dir (ivy--dirname-p dir) (list dir))))
+                   bookmark-alist)
         #'string<))
 
 ;;;###autoload
 (defun counsel-bookmarked-directory ()
   "Ivy interface for bookmarked directories.
 
-With a prefix argument, this command creates a new bookmark which points to the
-current value of `default-directory'."
+With a prefix argument, this command creates a new bookmark which points
+to the current value of `default-directory'."
   (interactive)
   (require 'bookmark)
-  (ivy-read "Bookmarked directory: "
-            (counsel-bookmarked-directory--candidates)
+  (ivy-read "Bookmarked directory: " (counsel--bookmarked-dirs)
             :caller 'counsel-bookmarked-directory
             :action #'dired))
 
@@ -2829,17 +2884,19 @@ library, which see."
   "Location where to put the locatedb in case your home folder is encrypted."
   :type 'file)
 
-(defun counsel-file-stale-p (fname seconds)
-  "Return non-nil if FNAME was modified more than SECONDS ago."
-  (> (float-time (time-since (nth 5 (file-attributes fname))))
-     seconds))
+(defun counsel-file-stale-p (file seconds)
+  "Return non-nil if FILE was modified more than SECONDS ago.
+Also return non-nil if FILE does not exist."
+  (let ((mtime (nth 5 (file-attributes file))))
+    (or (not mtime)
+        (> (float-time (time-since mtime))
+           seconds))))
 
 (defun counsel--locate-updatedb ()
   (when (file-exists-p "~/.Private")
     (let ((db-fname (expand-file-name counsel-locate-db-path)))
       (setenv "LOCATE_PATH" db-fname)
-      (when (or (not (file-exists-p db-fname))
-                (counsel-file-stale-p db-fname 60))
+      (when (counsel-file-stale-p db-fname 60)
         (message "Updating %s..." db-fname)
         (counsel--command
          "updatedb" "-l" "0" "-o" db-fname "-U" (expand-file-name "~"))))))
@@ -3050,6 +3107,7 @@ FZF-PROMPT, if non-nil, is passed as `ivy-read' prompt argument."
   (interactive)
   (ivy-quit-and-run
     (counsel-find-file ivy-text (ivy-state-directory ivy-last))))
+(ivy--no-M-x #'counsel-find-file-from-jump #'ivy--minibuffer-p)
 
 ;;;###autoload
 (defun counsel-file-jump (&optional initial-input initial-directory)
@@ -3115,9 +3173,9 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-l") #'ivy-call-and-recenter)
     (define-key map (kbd "M-q") #'counsel-git-grep-query-replace)
-    (define-key map (kbd "C-'") #'swiper-avy)
     (define-key map (kbd "C-x C-d") #'counsel-cd)
-    map))
+    map)
+  "Keymap for `counsel-ag'.")
 
 (defcustom counsel-ag-base-command (list "ag" "--vimgrep" "%s")
   "Template for default `counsel-ag' command.
@@ -3290,6 +3348,7 @@ Works for `counsel-git-grep', `counsel-ag', etc."
          (new-dir (counsel-read-directory-name "cd: " def-dir)))
     (ivy-quit-and-run
       (funcall (ivy-state-caller ivy-last) input new-dir))))
+(ivy--no-M-x #'counsel-cd #'ivy--minibuffer-p)
 
 (defun counsel--grep-smart-case-flag ()
   (if (ivy--case-fold-p ivy-text)
@@ -3457,8 +3516,8 @@ Example input with inclusion and exclusion file patterns:
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-l") #'ivy-call-and-recenter)
     (define-key map (kbd "M-q") #'swiper-query-replace)
-    (define-key map (kbd "C-'") #'swiper-avy)
-    map))
+    map)
+  "Keymap for `counsel-grep'.")
 
 (defcustom counsel-grep-base-command "grep -E -n -e %s %s"
   "Format string used by `counsel-grep' to build a shell command.
@@ -4469,16 +4528,14 @@ When ARG is non-nil, display all active evil registers."
   "Return completion alist for `counsel-package'."
   (unless package--initialized
     (package-initialize t))
-  (if (or (not package-archive-contents)
-          (cl-find-if (lambda (package-archive)
-                        (let ((fname
-                               (format
-                                "%s/archives/%s/archive-contents"
-                                package-user-dir (car package-archive))))
-                          (or (not (file-exists-p fname))
-                              (counsel-file-stale-p fname (* 4 60 60)))))
-                      package-archives))
-      (package-refresh-contents))
+  (when (or (null package-archive-contents)
+            (cl-some (lambda (archive)
+                       (let* ((fname (format "archives/%s/archive-contents"
+                                             (car archive)))
+                              (fname (expand-file-name fname package-user-dir)))
+                         (counsel-file-stale-p fname (* 4 60 60))))
+                     package-archives))
+    (package-refresh-contents))
   (sort (mapcar (lambda (entry)
                   (cons (let ((pkg (car entry)))
                           (concat (if (package-installed-p pkg) "-" "+")
@@ -5099,6 +5156,7 @@ An extra action allows to switch to the process buffer."
                         (delete-minibuffer-contents)
                         (insert (substring-no-properties (car x))))
               :caller 'counsel-minibuffer-history)))
+(ivy--no-M-x #'counsel-minibuffer-history '(minibuffer-mode) t)
 
 ;;;; `counsel-esh-history'
 
@@ -5863,8 +5921,6 @@ You can insert or kill the name of the selected font."
     (define-key map (kbd "C-k") #'counsel-kmacro-kill)
     map))
 
-;; Avoid (declare (modes ...)) warnings in Emacs < 28.
-(function-put #'counsel-kmacro-kill 'command-modes '(minibuffer-mode))
 (defun counsel-kmacro-kill ()
   "Kill the line, or delete the currently selected keyboard macro."
   (interactive)
@@ -5877,6 +5933,7 @@ You can insert or kill the name of the selected font."
       (ivy-state-current ivy-last)
       (ivy-state-collection ivy-last)))
     (ivy--kill-current-candidate)))
+(ivy--no-M-x #'counsel-kmacro-kill #'ivy--minibuffer-p)
 
 (defvar kmacro-counter)
 (defvar kmacro-counter-format-start)
@@ -6492,12 +6549,11 @@ Any desktop entries that fail to parse are recorded in
              (eq counsel-linux-app-format-function
                  counsel--linux-apps-cache-format-function)
              (equal new-files counsel--linux-apps-cached-files)
-             (null (cl-find-if
-                    (lambda (file)
-                      (time-less-p
-                       counsel--linux-apps-cache-timestamp
-                       (nth 5 (file-attributes file))))
-                    new-files)))
+             (cl-notany (lambda (file)
+                          (time-less-p
+                           counsel--linux-apps-cache-timestamp
+                           (nth 5 (file-attributes file))))
+                        new-files))
       (setq counsel--linux-apps-cache (counsel-linux-apps-parse new-desktop-alist))
       (setq counsel--linux-apps-cache-format-function counsel-linux-app-format-function)
       (setq counsel--linux-apps-cache-timestamp (current-time))
@@ -7010,15 +7066,16 @@ handling for the `counsel-compile' metadata."
     (insert (substring-no-properties
              cmd 0 (and (get-text-property 0 'cmd cmd)
                         (next-single-property-change 0 'cmd cmd))))))
+(ivy--no-M-x #'counsel-compile-edit-command #'ivy--minibuffer-p)
 
-;; Currently the only thing we do is override ivy's default insert
+;; Currently the only thing we do is override Ivy's default insert
 ;; operation which doesn't include the metadata we want.
 (defvar counsel-compile-map
   (let ((map (make-sparse-keymap)))
     (define-key map `[remap ,#'ivy-insert-current]
                 #'counsel-compile-edit-command)
     map)
-  "Additional ivy keybindings during command selection.")
+  "Additional Ivy keybindings during command selection.")
 
 ;;;###autoload
 (defun counsel-compile (&optional dir)

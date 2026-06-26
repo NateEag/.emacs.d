@@ -52,8 +52,8 @@ With prefix arg MODE a query for the symbol help mode is offered.
 (autoload 'counsel-M-x "counsel" "\
 Ivy version of `execute-extended-command'.
 Optional INITIAL-INPUT is the initial input in the minibuffer.
-This function integrates with either the `amx' or `smex' package
-when available, in that order of precedence.
+This function integrates with either the `amx' or `smex' package when
+available, in that order of precedence; see `counsel-M-x-collection'.
 
 (fn &optional INITIAL-INPUT)" t)
 (autoload 'counsel-command-history "counsel" "\
@@ -133,8 +133,8 @@ Forward to `bookmark-jump' or `bookmark-set' if bookmark doesn't exist." t)
 (autoload 'counsel-bookmarked-directory "counsel" "\
 Ivy interface for bookmarked directories.
 
-With a prefix argument, this command creates a new bookmark which points to the
-current value of `default-directory'." t)
+With a prefix argument, this command creates a new bookmark which points
+to the current value of `default-directory'." t)
 (autoload 'counsel-file-register "counsel" "\
 Search file in register.
 

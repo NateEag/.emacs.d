@@ -324,7 +324,7 @@ If `haskell-process-load-or-reload-prompt' is nil, accept `default'."
              (haskell-interactive-mode-error-backward)
              (haskell-interactive-jump-to-error-line)))))
 
-(defvar xref-prompt-for-identifier nil)
+(defvar xref-prompt-for-identifier)
 
 ;;;###autoload
 (defun haskell-mode-jump-to-tag (&optional next-p)

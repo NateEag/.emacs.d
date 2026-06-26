@@ -108,7 +108,7 @@ Prompts for a Cabal command to run.
 (fn P)" t)
 (autoload 'haskell-process-minimal-imports "haskell" "\
 Dump minimal imports." t)
-(register-definition-prefixes "haskell" '("haskell-" "interactive-haskell-mode-map" "xref-prompt-for-identifier"))
+(register-definition-prefixes "haskell" '("haskell-" "interactive-haskell-mode-map"))
 
 
 ;;; Generated autoloads from haskell-align-imports.el

@@ -1,12 +1,12 @@
 ;;; reveal-in-folder.el --- Reveal current file/directory in folder  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2025  Shen, Jen-Chieh
+;; Copyright (C) 2019-2026  Shen, Jen-Chieh
 ;; Created date 2019-11-06 23:14:19
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/jcs-elpa/reveal-in-folder
-;; Package-Version: 20250101.1011
-;; Package-Revision: f3b7d1edcf85
+;; Package-Version: 20260101.602
+;; Package-Revision: 70c9ba29705c
 ;; Package-Requires: ((emacs "24.3") (f "0.20.0") (s "1.12.0"))
 ;; Keywords: convenience folder finder reveal file explorer
 

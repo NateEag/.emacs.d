@@ -8,8 +8,8 @@
 ;;          Jim Hourihan <jimhourihan ~at~ gmail.com>
 ;;          Xavier.Decoret@imag.fr,
 ;; Keywords: languages OpenGL GPU SPIR-V Vulkan
-;; Package-Version: 20250324.1304
-;; Package-Revision: 86e6bb6cf28d
+;; Package-Version: 20260603.1348
+;; Package-Revision: 515a2ba4dab3
 ;; URL: https://github.com/jimhourihan/glsl-mode
 ;; Package-Requires: ((emacs "26.1"))
 ;;
@@ -358,6 +358,7 @@ the appropriate place for that."
 		     (c-update-modeline))
   (c-initialize-cc-mode t)
   (c-init-language-vars glsl-mode)
+  (setq-local parse-sexp-lookup-properties t)
   (c-common-init 'glsl-mode)
   (cc-imenu-init cc-imenu-c++-generic-expression)
 

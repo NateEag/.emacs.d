@@ -1,12 +1,12 @@
 ;;; goto-line-preview.el --- Preview line when executing `goto-line` command    -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019-2025 Shen, Jen-Chieh
+;; Copyright (C) 2019-2026 Shen, Jen-Chieh
 ;; Created date 2019-03-01 14:53:00
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacs-vs/goto-line-preview
-;; Package-Version: 20250101.908
-;; Package-Revision: fa34955bcd11
+;; Package-Version: 20260204.956
+;; Package-Revision: 7c86228bc4f9
 ;; Package-Requires: ((emacs "25"))
 ;; Keywords: convenience line navigation
 
@@ -31,6 +31,8 @@
 ;;
 
 ;;; Code:
+
+(require 'isearch)
 
 (defgroup goto-line-preview nil
   "Preview line when executing `goto-line` command."
@@ -68,10 +70,15 @@
 (defvar goto-line-preview--relative-p nil
   "Flag to see if this command relative.")
 
+(defvar goto-line-preview--executing-p nil
+  "Set to t when the command is getting executed.")
+
 (defun goto-line-preview--highlight ()
   "Keep highlight for a fixed time."
   (when goto-line-preview-hl-duration
-    (let ((overlay (make-overlay (line-beginning-position) (1+ (line-end-position)))))
+    (let* ((beg (line-beginning-position))
+           (end (1+ (line-end-position)))
+           (overlay (make-overlay beg end)))
       (overlay-put overlay 'face 'goto-line-preview-hl)
       (overlay-put overlay 'window (selected-window))
       (sit-for goto-line-preview-hl-duration)
@@ -83,12 +90,17 @@
     (select-window goto-line-preview--prev-window)
     (goto-char (point-min))
     (forward-line (1- line-num))
+    (ignore-errors
+      (let ((search-invisible 'open))
+        (isearch-range-invisible (1+ (line-beginning-position))
+                                 (+ (line-beginning-position) 2))))
     (goto-line-preview--highlight)))
 
 (defun goto-line-preview--do-preview ()
   "Do the goto line preview action."
-  (save-selected-window
-    (when goto-line-preview--prev-window
+  (when (and goto-line-preview--executing-p
+             goto-line-preview--prev-window)
+    (save-selected-window
       (let ((line-num-str (thing-at-point 'line)))
         (select-window goto-line-preview--prev-window)
         (if line-num-str
@@ -102,7 +114,8 @@
 (defun goto-line-preview ()
   "Preview goto line."
   (interactive)
-  (let ((goto-line-preview--prev-window (selected-window))
+  (let ((goto-line-preview--executing-p t)
+        (goto-line-preview--prev-window (selected-window))
         (window-point (window-point))
         (goto-line-preview--prev-line-num (line-number-at-pos))
         jumped)
@@ -134,10 +147,7 @@
 
 (defun goto-line-preview--minibuffer-setup ()
   "Locally set up preview hooks for this minibuffer command."
-  (when (memq this-command '(goto-line-preview
-                             goto-line-preview-goto-line
-                             goto-line-preview-relative))
-    (add-hook 'post-command-hook #'goto-line-preview--do-preview nil t)))
+  (add-hook 'post-command-hook #'goto-line-preview--do-preview nil t))
 
 (add-hook 'minibuffer-setup-hook 'goto-line-preview--minibuffer-setup)
 

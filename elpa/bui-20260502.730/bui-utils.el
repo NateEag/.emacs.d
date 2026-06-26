@@ -1,6 +1,6 @@
 ;;; bui-utils.el --- General utility functions  -*- lexical-binding: t -*-
 
-;; Copyright © 2014–2017, 2021 Alex Kost <alezost@gmail.com>
+;; Copyright © 2014–2026 Alex Kost <alezost@gmail.com>
 ;; Copyright © 2020 Joe Bloggs <vapniks@yahoo.com>
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -23,7 +23,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
+(require 'seq)
 
 (defcustom bui-true-string "Yes"
   "String used if the value of a parameter is t."
@@ -154,7 +154,7 @@ If COLUMN is non-nil, fill STR to this column."
 ;; `bui-newline' exists because `newline' does too much.
 (defun bui-newline (&optional n)
   "Insert N (1 by default) number of newlines at point."
-  (--dotimes (or n 1)
+  (dotimes (_ (or n 1))
     (insert "\n")))
 
 (defmacro bui-with-indent (indent &rest body)
@@ -237,7 +237,7 @@ single argument."
   "Find FILE (using `bui-find-file-function') if it exists."
   (if (file-exists-p file)
       (funcall bui-find-file-function file)
-    (message "File '%s' does not exist." file)))
+    (message "File `%s' does not exist." file)))
 
 
 ;;; Symbols, keywords, plists
@@ -255,7 +255,7 @@ single argument."
   (intern (mapconcat #'symbol-name symbols "-")))
 
 (defun bui-symbol-title (symbol)
-  "Return SYMBOL's name, a string.
+  "Return SYMBOL name, a string.
 This is like `symbol-name', but fancier."
   (if (eq symbol 'id)
       "ID"
@@ -284,7 +284,7 @@ be bound to `%foreign-args' variable.
 
 Example:
 
-  (bui-plist-let '(:two 8 :great ! :bui is)
+  (bui-plist-let \\='(:two 8 :great ! :bui is)
       ((one :one 1)
        (two :two 2)
        (foo :smth))
@@ -359,16 +359,18 @@ accessed with KEYS."
 Return a list of elements which satisfy all the PREDICATES."
   (if (null predicates)
       list
-    (-filter (lambda (element)
-               (--every? (funcall it element) predicates))
-             list)))
+    (seq-filter (lambda (element)
+                  (seq-every-p (lambda (pred)
+                                 (funcall pred element))
+                               predicates))
+                list)))
 
 (defun bui-copy-as-kill (string &optional no-message?)
   "Put STRING into `kill-ring'.
 If NO-MESSAGE? is non-nil, do not display a message about it."
   (kill-new string)
   (unless no-message?
-    (message "'%s' has been added to the kill ring." string)))
+    (message "`%s' has been added to the kill ring." string)))
 
 (defmacro bui-define-groups (name &rest args)
   "Define `NAME' and `NAME-faces' customization groups.
@@ -392,10 +394,10 @@ Optional keywords:
         ((parent-group       :parent-group 'bui)
          (parent-faces-group :parent-faces-group 'bui-faces)
          (group-doc          :group-doc
-                             (format "Settings for '%s' buffers."
+                             (format "Settings for `%s' buffers."
                                      name-str))
          (faces-group-doc    :faces-group-doc
-                             (format "Faces for '%s' buffers."
+                             (format "Faces for `%s' buffers."
                                      name-str)))
       `(progn
          (defgroup ,name nil
@@ -455,28 +457,27 @@ For example, the following call:
 will prompt for a number, x, and return a function that takes any
 number of arguments, adds them together and multiplies the result
 by x."
-  (let ((interact (interactive-form function)))
-    (if interact
-	(let* ((args  (eval `(call-interactively
-			      (lambda (&rest args) ,interact args))))
-	       (args2 (mapcar (lambda (x) (if (eq x '<>) (gensym) x))
-			      (cl-remove-if-not
-                               (lambda (y) (memq y '(<> &rest)))
-			       args)))
-	       (args3 (remove '&rest args))
-	       (args4 (remove '&rest args2))
-	       (restp (memq '&rest args2)))
-	  ;; Use `eval' rather than `macroexpand' so that the function
-	  ;; can be called with `funcall'.
-	  (eval `(lambda ,args2
-		   (,@(if restp `(apply ,function) `(,function))
-		    ,@(mapcar
-		       (lambda (x) (if (eq x '<>) (pop args4)
-				     (if (or (symbolp x) (listp x))
-					 (list 'quote x)
-				       x)))
-		       args3)))))
-      function)))
+  (if-let* ((interact (interactive-form function)))
+    (let* ((args  (eval `(call-interactively
+			  (lambda (&rest args) ,interact args))))
+	   (args2 (mapcar (lambda (x) (if (eq x '<>) (gensym) x))
+			  (cl-remove-if-not
+                           (lambda (y) (memq y '(<> &rest)))
+			   args)))
+	   (args3 (remove '&rest args))
+	   (args4 (remove '&rest args2))
+	   (restp (memq '&rest args2)))
+      ;; Use `eval' rather than `macroexpand' so that the function
+      ;; can be called with `funcall'.
+      (eval `(lambda ,args2
+	       (,@(if restp `(apply ,function) `(,function))
+		,@(mapcar
+		   (lambda (x) (if (eq x '<>) (pop args4)
+				 (if (or (symbolp x) (listp x))
+				     (list 'quote x)
+				   x)))
+		   args3)))))
+    function))
 
 (provide 'bui-utils)
 

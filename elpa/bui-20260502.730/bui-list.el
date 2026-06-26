@@ -1,6 +1,6 @@
-;;; bui-list.el --- 'List' buffer interface for displaying data  -*- lexical-binding: t -*-
+;;; bui-list.el --- `List' buffer interface for displaying data  -*- lexical-binding: t -*-
 
-;; Copyright © 2014–2018 Alex Kost <alezost@gmail.com>
+;; Copyright © 2014–2026 Alex Kost <alezost@gmail.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,13 +17,13 @@
 
 ;;; Commentary:
 
-;; This file provides 'list' buffer interface for displaying an arbitrary
+;; This file provides `list' buffer interface for displaying an arbitrary
 ;; data.
 
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
+(require 'seq)
 (require 'tabulated-list)
 (require 'bui-core)
 (require 'bui-button)
@@ -33,7 +33,7 @@
 (bui-define-groups bui-list)
 
 
-;;; General 'list' variables
+;;; General `list' variables
 
 (defvar bui-list-format nil
   "List of methods to get values of the displayed columns.
@@ -53,7 +53,7 @@ For the meaning of WIDTH, SORT and PROPS, see
 (put 'bui-list-format 'permanent-local t)
 
 (defcustom bui-list-sort-key nil
-  "Default sort key for 'list' buffer.
+  "Default sort key for \\+`list' buffer.
 Should be nil (no sort) or have a form:
 
   (PARAM . FLIP)
@@ -66,13 +66,13 @@ FLIP, see `tabulated-list-sort-key'."
 (put 'bui-list-sort-key 'permanent-local t)
 
 (defvar bui-list-additional-marks nil
-  "Alist of additional marks for 'list' buffer.
+  "Alist of additional marks for \\+`list' buffer.
 Marks from this list are used along with `bui-list-default-marks'.")
 (put 'bui-list-additional-marks 'permanent-local t)
 
 (defcustom bui-list-show-single nil
   "If non-nil, list an entry even if it is the only matching result.
-If nil, show a single entry in the 'info' buffer instead."
+If nil, show a single entry in the \\+`info' buffer instead."
   :type 'boolean
   :group 'bui-list)
 (put 'bui-list-show-single 'permanent-local t)
@@ -89,8 +89,8 @@ you will be prompted for confirmation.  See also
 (defvar bui-list-describe-function nil
   "Function used by `bui-list-describe'.
 It is applied to the entries IDs as the rest arguments.
-If nil, 'describing' is not performed (it usually means that
-'info' interface is not defined).")
+If nil, \"describing\" is not performed (it usually means that
+\\+`info' interface is not defined).")
 (put 'bui-list-describe-function 'permanent-local t)
 
 (defconst bui-list-symbol-specifications
@@ -100,15 +100,16 @@ If nil, 'describing' is not performed (it usually means that
     (:list-single?      show-single t)
     (:marks             additional-marks)
     (:sort-key          sort-key t))
-  "Specifications for generating 'list' variables.
+  "Specifications for generating \\+`list' variables.
 See `bui-symbol-specifications' for details.")
 
 
-;;; Displaying 'info' buffer
+;;; Displaying `info' buffer
 
 (defun bui-list-describe (&rest mark-names)
   "Describe entries marked with MARK-NAMES.
-'Describe' means display entries in 'info' buffer.
+
+\"Describe\" means display entries in \\+`info' buffer.
 If no entries are marked, describe the current entry.
 
 Available MARK-NAMES are symbols from `bui-list-marks'.
@@ -117,7 +118,7 @@ Interactively, describe entries marked with a general mark.  With
 prefix argument, describe entries marked with any mark."
   (interactive (unless current-prefix-arg '(general)))
   (or bui-list-describe-function
-      (error "Can't display 'info' buffer: '%S' is unset"
+      (error "Can't display `info' buffer: `%S' is unset"
              (bui-list-symbol (bui-current-entry-type)
                               'describe-function)))
   (let* ((ids   (or (apply #'bui-list-get-marked-id-list mark-names)
@@ -129,14 +130,14 @@ prefix argument, describe entries marked with any mark."
       (apply bui-list-describe-function ids))))
 
 
-;;; Wrappers for 'list' variables
+;;; Wrappers for `list' variables
 
 (defun bui-list-symbol (entry-type symbol)
-  "Return symbol for ENTRY-TYPE and 'list' buffer type."
+  "Return SYMBOL for ENTRY-TYPE and \\+`list' buffer type."
   (bui-symbol entry-type 'list symbol))
 
 (defun bui-list-symbol-value (entry-type symbol)
-  "Return SYMBOL's value for ENTRY-TYPE and 'list' buffer type."
+  "Return SYMBOL value for ENTRY-TYPE and \\+`list' buffer type."
   (bui-symbol-value entry-type 'list symbol))
 
 (defun bui-list-param-title (entry-type param)
@@ -241,7 +242,7 @@ Parameters are taken from ENTRY-TYPE ENTRY."
 ;;; Displaying entries
 
 (defun bui-list-get-display-entries (entry-type &rest args)
-  "Search for entries and show them in a 'list' buffer preferably."
+  "Search for entries and show them in a \\+`list' buffer preferably."
   (let ((entries (bui-get-entries entry-type 'list args)))
     (if (or (null entries)      ; = 0
             (cdr entries)       ; > 1
@@ -344,7 +345,7 @@ ARGS is a list of additional values.")
 (defun bui-list-get-mark (name)
   "Return mark character by its NAME."
   (or (bui-assq-value bui-list-marks name)
-      (error "Mark '%S' not found" name)))
+      (error "Mark `%S' not found" name)))
 
 (defun bui-list-get-mark-string (name)
   "Return mark string by its NAME."
@@ -367,14 +368,14 @@ If MARK-NAMES are not specified, use all marks from
   (or mark-names
       (setq mark-names
             (delq 'empty (mapcar #'car bui-list-marks))))
-  (-filter (-lambda ((_id name . _))
-             (memq name mark-names))
-           bui-list-marked))
+  (seq-filter (pcase-lambda (`(,_id ,name . ,_))
+                (memq name mark-names))
+              bui-list-marked))
 
 (defun bui-list-get-marked-args (mark-name)
   "Return list of (ID . ARGS) elements from lines marked with MARK-NAME.
 See `bui-list-marked' for the meaning of ARGS."
-  (mapcar (-lambda ((id _name . args))
+  (mapcar (pcase-lambda (`(,id ,_name . ,args))
             (cons id args))
           (bui-list-get-marked mark-name)))
 
@@ -475,43 +476,40 @@ Same as `tabulated-list-sort', but also restore marks after sorting."
 
 ;;; Major mode
 
-(defvar bui-list-mode-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent
-     map (make-composed-keymap bui-map
-                               tabulated-list-mode-map))
-    (define-key map (kbd "i")   'bui-list-describe)
-    (define-key map (kbd "RET") 'bui-list-describe)
-    (define-key map (kbd "*")   'bui-list-mark)
-    (define-key map (kbd "m")   'bui-list-mark)
-    (define-key map (kbd "M")   'bui-list-mark-all)
-    (define-key map (kbd "u")   'bui-list-unmark)
-    (define-key map (kbd "DEL") 'bui-list-unmark-backward)
-    (define-key map (kbd "U")   'bui-list-unmark-all)
-    (define-key map (kbd "s")   'bui-list-sort)
-    (define-key map [remap tabulated-list-sort] 'bui-list-sort)
-    map)
-  "Keymap for `bui-list-mode' buffers.")
+(defvar-keymap bui-list-mode-map
+  :parent (make-composed-keymap bui-map
+                                tabulated-list-mode-map)
+  :doc "Keymap for `bui-list-mode' buffers."
+  "i"   #'bui-list-describe
+  "RET" #'bui-list-describe
+  "*"   #'bui-list-mark
+  "m"   #'bui-list-mark
+  "M"   #'bui-list-mark-all
+  "u"   #'bui-list-unmark
+  "DEL" #'bui-list-unmark-backward
+  "U"   #'bui-list-unmark-all
+  "s"   #'bui-list-sort
+  "<remap> <tabulated-list-sort>" #'bui-list-sort)
 
 (defvar bui-list-mark-hint
   '(("\\[bui-list-mark]") " mark; "
     ("\\[bui-list-unmark]") " unmark; "
     ("\\[bui-list-unmark-backward]") " unmark backward;\n")
-  "Hint with 'mark' keys for 'list' buffer.
+  "Hint with \\+`mark' keys for \\+`list' buffer.
 See `bui-hint' for details.")
 
 (defvar bui-list-sort-hint
   '(("\\[bui-list-sort]") " sort by column;\n")
-  "Hint with 'sort' keys for 'list' buffer.
+  "Hint with \\+`sort' keys for \\+`list' buffer.
 See `bui-hint' for details.")
 
 (defvar bui-list-info-hint
   '(("\\[bui-list-describe]") " show 'info' buffer;\n")
-  "Hint for 'list' buffer used only when 'info' interface is defined.
+  "Hint for \\+`list' buffer used only when \\+`info' interface is defined.
 See `bui-hint' for details.")
 
 (defun bui-list-hint ()
-  "Return hint structure for the current 'list' buffer."
+  "Return hint structure for the current \\+`list' buffer."
   (bui-format-hints
    bui-list-mark-hint
    (and (bui-interface-defined? (bui-current-entry-type) 'info)
@@ -519,11 +517,11 @@ See `bui-hint' for details.")
    bui-list-sort-hint))
 
 (define-derived-mode bui-list-mode tabulated-list-mode "BUI-List"
-  "Parent mode for displaying data in 'list' form."
+  "Parent mode for displaying data in \\+`list' form."
   (bui-list-initialize))
 
 (defun bui-list-initialize ()
-  "Set up the current 'list' buffer."
+  "Set up the current \\+`list' buffer."
   (setq tabulated-list-padding  2
         tabulated-list-format   (bui-list-tabulated-format)
         tabulated-list-sort-key (bui-list-tabulated-sort-key))

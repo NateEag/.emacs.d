@@ -1,6 +1,6 @@
 ;;; bui-button.el --- Text buttons and faces  -*- lexical-binding: t -*-
 
-;; Copyright © 2014-2016 Alex Kost <alezost@gmail.com>
+;; Copyright © 2014–2026 Alex Kost <alezost@gmail.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,7 +23,6 @@
 ;;; Code:
 
 (require 'cus-edit)             ; for faces
-(require 'dash)
 (require 'bui-utils)
 
 (defface bui-time
@@ -51,12 +50,10 @@
   "Mouse face used for action buttons."
   :group 'bui-faces)
 
-(defvar bui-button-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map button-map)
-    (define-key map (kbd "c") 'bui-button-copy-label)
-    map)
-  "Keymap for BUI buttons.")
+(defvar-keymap bui-button-map
+  :parent button-map
+  :doc "Keymap for BUI buttons."
+  "c" #'bui-button-copy-label)
 
 (define-button-type 'bui
   'keymap bui-button-map
@@ -87,8 +84,8 @@
   "Copy a label of the button at POSITION into kill ring.
 If POSITION is nil, use the current point position."
   (interactive)
-  (--when-let (button-at (or position (point)))
-    (bui-copy-as-kill (button-label it))))
+  (when-let* ((btn (button-at (or position (point)))))
+    (bui-copy-as-kill (button-label btn))))
 
 (defun bui-button-type? (symbol)
   "Return non-nil, if SYMBOL is a button type."

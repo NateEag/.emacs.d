@@ -1,6 +1,6 @@
-;;; bui-entry.el --- 'Entry' type  -*- lexical-binding: t -*-
+;;; bui-entry.el --- `Entry' type  -*- lexical-binding: t -*-
 
-;; Copyright © 2015-2016 Alex Kost <alezost@gmail.com>
+;; Copyright © 2015–2026 Alex Kost <alezost@gmail.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,12 +17,12 @@
 
 ;;; Commentary:
 
-;; This file provides an API for 'entry' type which is just an alist of
-;; KEY/VALUE pairs (KEY should be a symbol) with the required 'id' KEY.
+;; This file provides an API for `entry' type which is just an alist of
+;; KEY/VALUE pairs (KEY should be a symbol) with the required `id' KEY.
 
 ;;; Code:
 
-(require 'dash)
+(require 'seq)
 (require 'bui-utils)
 
 (defvar bui-void-value 'VOID
@@ -35,14 +35,15 @@
 (defun bui-entry-value (entry param)
   "Return value of the ENTRY PARAM.
 If ENTRY does not have PARAM at all, return `bui-void-value'."
-  (--if-let (assq param entry)
-      (cdr it)
+  (if-let* ((val (assq param entry)))
+      (cdr val)
     bui-void-value))
 
 (defun bui-entry-non-void-value (entry param)
   "Like `bui-entry-value' but return nil if value is void."
-  (--when-let (bui-entry-value entry param)
-    (and (not (bui-void-value? it)) it)))
+  (when-let* ((val (bui-entry-value entry param)))
+    (and (not (bui-void-value? val))
+         val)))
 
 (defun bui-entry-id (entry)
   "Return ENTRY ID."
@@ -50,27 +51,32 @@ If ENTRY does not have PARAM at all, return `bui-void-value'."
 
 (defun bui-entry-by-id (entries id)
   "Return an entry from ENTRIES by its ID."
-  (--find (equal (bui-entry-id it) id)
-          entries))
+  (seq-find (lambda (entry)
+              (equal (bui-entry-id entry) id))
+            entries))
 
 (defun bui-entries-by-ids (entries ids)
   "Return entries with IDS (a list of identifiers) from ENTRIES."
-  (--filter (member (bui-entry-id it) ids)
-            entries))
+  (seq-filter (lambda (entry)
+                (member (bui-entry-id entry) ids))
+              entries))
 
 (defun bui-entry-by-param (entries param value &optional compare)
   "Return an entry from ENTRIES with PARAM's value equal VALUE.
 The values are compared using COMPARE function (`equal' by default)."
   (or compare (setq compare #'equal))
-  (--find (funcall compare (bui-entry-value it param) value)
-          entries))
+  (seq-find (lambda (entry)
+              (funcall compare (bui-entry-value entry param) value))
+            entries))
 
 (defun bui-replace-entry (entries id new-entry)
   "Replace an entry with ID from ENTRIES by NEW-ENTRY.
 Return a list of entries with the replaced entry."
-  (--map-first (equal id (bui-entry-id it))
-               new-entry
-               entries))
+  (mapcar (lambda (entry)
+            (if (equal id (bui-entry-id entry))
+                new-entry
+              entry))
+          entries))
 
 (provide 'bui-entry)
 

@@ -1,6 +1,6 @@
 ;;; bui-core.el --- Core functionality for BUI  -*- lexical-binding: t -*-
 
-;; Copyright © 2014–2017, 2021 Alex Kost <alezost@gmail.com>
+;; Copyright © 2014–2026 Alex Kost <alezost@gmail.com>
 ;; Copyright © 2020 Joe Bloggs <vapniks@yahoo.com>
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -24,7 +24,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dash)
 (require 'bui-history)
 (require 'bui-utils)
 
@@ -33,19 +32,22 @@
   :parent-faces-group faces
   :group-doc "Settings for Buffer User Interface.")
 
-(defvar bui-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-b") 'bui-history-back)
-    (define-key map (kbd "C-c C-f") 'bui-history-forward)
-    (define-key map (kbd "l") 'bui-history-back)
-    (define-key map (kbd "r") 'bui-history-forward)
-    (define-key map (kbd "g") 'revert-buffer)
-    (define-key map (kbd "R") 'bui-redisplay)
-    (define-key map (kbd "f") 'bui-filter-map)
-    (define-key map (kbd "h") 'bui-show-hint)
-    (define-key map [remap self-insert-command] 'bui-show-hint)
-    map)
-  "Parent keymap for all BUI modes.")
+(defvar-keymap bui-filter-map
+  :doc "Keymap with filter commands for BUI modes."
+  "f" #'bui-enable-filter
+  "d" #'bui-disable-filters)
+
+(defvar-keymap bui-map
+  :doc "Parent keymap for all BUI modes."
+  "C-c C-b" #'bui-history-back
+  "C-c C-f" #'bui-history-forward
+  "l" #'bui-history-back
+  "r" #'bui-history-forward
+  "g" #'revert-buffer
+  "R" #'bui-redisplay
+  "f" bui-filter-map
+  "h" #'bui-show-hint
+  "<remap> <self-insert-command>" #'bui-show-hint)
 
 (defvar bui-history-hint
   '("History: "
@@ -114,14 +116,14 @@ See `bui-with-item' for details."
      ,@body))
 
 (defmacro bui-define-current-item-accessor (name)
-  "Define `bui-current-NAME' function to access NAME
-element of `bui-item' structure.
+  "Define \\+`bui-current-NAME' function.
+This function is an accessor for `bui-item' NAME field.
 NAME should be a symbol."
   (let* ((name-str (symbol-name name))
          (accessor (intern (concat "bui-item-" name-str)))
          (fun-name (intern (concat "bui-current-" name-str)))
          (doc      (format "\
-Return '%s' of the current BUI buffer.
+Return \\+`%s' of the current BUI buffer.
 See `bui-item' for details."
                            name-str)))
     `(defun ,fun-name ()
@@ -141,22 +143,25 @@ See `bui-define-current-item-accessor' for details."
  entries entry-type buffer-type args)
 
 (defmacro bui-define-current-args-accessor (n prefix name)
-  "Define `PREFIX-NAME' function to access Nth element of 'args'
-field of `bui-item' structure.
+  "Define \\+`PREFIX-NAME' function.
+
+This function will access Nth element of \\+`args' field of `bui-item'
+structure.
+
 PREFIX and NAME should be symbols."
   (let* ((prefix-str (symbol-name prefix))
          (name-str   (symbol-name name))
          (fun-name   (intern (concat prefix-str "-" name-str)))
          (doc        (format "\
-Return '%s' of the current buffer.
-'%s' is the element number %d in 'args' field of `bui-item'."
+Return \\+`%s' of the current buffer.
+\\+`%s' is the element number %d in \\+`args' field of `bui-item'."
                              name-str name-str n)))
     `(defun ,fun-name ()
        ,doc
        (nth ,n (bui-current-args)))))
 
 (defmacro bui-define-current-args-accessors (prefix &rest names)
-  "Define `PREFIX-NAME' functions for NAMES.
+  "Define \\+`PREFIX-NAME' functions for NAMES.
 See `bui-define-current-args-accessor' for details."
   (declare (indent 1))
   `(progn
@@ -168,14 +173,6 @@ See `bui-define-current-args-accessor' for details."
 
 ;;; Filtering
 
-(defvar bui-filter-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "f") 'bui-enable-filter)
-    (define-key map (kbd "d") 'bui-disable-filters)
-    map)
-  "Keymap with filter commands for BUI modes.")
-(fset 'bui-filter-map bui-filter-map)
-
 (defvar bui-filter-hint
   '(("\\[bui-enable-filter]") " enable filter; "
     ("\\[bui-disable-filters]") " disable filters;\n")
@@ -186,7 +183,7 @@ See `bui-hint' for details.")
   '(bui-filter-by-regexp bui-filter-by-sexp)
   "List of available filter predicates.
 These predicates are used as completions for
-'\\[bui-enable-filter]' command to hide entries. See
+'\\[bui-enable-filter]' command to hide entries.  See
 `bui-active-filter-predicates' for details."
   :type '(repeat function)
   :group 'bui)
@@ -230,13 +227,12 @@ Interactively, prompt for PARAM and REGEXP."
                   (bui-get-string (bui-assq-value entry param))))
 
 (defun bui-filter-by-sexp (entry sexp)
-  "Filter the current entries using sexp.
+  "Filter the current entries using SEXP.
 Evaluate SEXP and return its value.
-SEXP can use the ENTRY's parameters as symbols, e.g.:
+SEXP can use the ENTRY parameters as symbols, e.g.:
 
-  '(or (string-match-p \"foo\" name)
-       (string-match-p \"bar\" synopsis))
-"
+  \\='(or (string-match-p \"foo\" name)
+       (string-match-p \"bar\" synopsis))"
   (interactive (list '<> (read--expression "sexp: ")))
   (dolist (param (bui-current-params))
     (setq sexp (cl-subst (bui-assq-value entry param)
@@ -251,24 +247,23 @@ available predicates.
 If SINGLE? is non-nil (with prefix argument), make PREDICATE the
 only active one (remove the other active predicates)."
   (interactive
-   (let ((predicates bui-filter-predicates))
-     (if (null predicates)
-         (error "Filter predicates are not specified, see '%S' variable"
-                (bui-entry-symbol (bui-current-entry-type)
-                                  'filter-predicates))
+   (if bui-filter-predicates
        (list (intern (completing-read
                       (if current-prefix-arg
                           "Enable single filter: "
                         "Add filter: ")
-                      predicates))
-             current-prefix-arg))))
+                      bui-filter-predicates))
+             current-prefix-arg)
+     (error "Filter predicates are not specified, see `%S' variable"
+            (bui-entry-symbol (bui-current-entry-type)
+                              'filter-predicates))))
   (or (functionp predicate)
       (error "Wrong filter predicate: %S" predicate))
   (setq predicate (bui-apply-interactive predicate))
   (if (if single?
           (equal (list predicate) bui-active-filter-predicates)
         (memq predicate bui-active-filter-predicates))
-      (message "Filter predicate '%S' already enabled" predicate)
+      (message "Filter predicate `%S' already enabled" predicate)
     (apply #'bui-filter-current-entries
            (if single?
                (list predicate)
@@ -291,7 +286,7 @@ only active one (remove the other active predicates)."
 
 (defcustom bui-hint-format "[%s]"
   "String used to format each key in `bui-hint'.
-This string should contain a single '%s' structure that will be
+This string should contain a single `%s' structure that will be
 replaced by a key string."
   :type 'string
   :group 'bui)
@@ -471,7 +466,7 @@ interface.")
   "Return symbol suffix from symbol specification.")
 
 (defalias 'bui-symbol-specification-generate #'cl-third
-  "Return 'generate' value from symbol specification.")
+  "Return \\+`generate' value from symbol specification.")
 
 (defun bui-symbol-generate? (generate &optional reduced?)
   "Return non-nil if a symbol should be generated.
@@ -533,7 +528,7 @@ SPECIFICATIONS should have a form of `bui-symbol-specifications'."
 
 (defun bui-get-entries (entry-type buffer-type &optional args)
   "Return ENTRY-TYPE entries.
-Call an appropriate 'get-entries' function using ARGS as its arguments."
+Call an appropriate \\+`get-entries' function using ARGS as its arguments."
   (apply (bui-symbol-value entry-type buffer-type 'get-entries-function)
          args))
 
@@ -560,28 +555,27 @@ Call an appropriate 'get-entries' function using ARGS as its arguments."
   (let ((inhibit-read-only t))
     (erase-buffer)
     (bui-mode-enable entry-type buffer-type)
-    (let ((filtered-entries (apply #'bui-filter
-                                   entries bui-active-filter-predicates)))
-      (if filtered-entries
-          (bui-insert-entries filtered-entries entry-type buffer-type)
-        (when entries
-          (message (substitute-command-keys
-                    "Everything is filtered out :-)
-Use '\\[bui-disable-filters]' to remove filters")))))
+    (if-let* ((filtered-entries (apply #'bui-filter
+                                       entries bui-active-filter-predicates)))
+        (bui-insert-entries filtered-entries entry-type buffer-type)
+      (when entries
+        (message (substitute-command-keys
+                  "Everything is filtered out :-)
+Use '\\[bui-disable-filters]' to remove filters"))))
     (goto-char (point-min))))
 
 (defun bui-show-entries (entries entry-type buffer-type)
   "Show ENTRY-TYPE ENTRIES in the current BUFFER-TYPE buffer."
-  (--if-let (bui-symbol-value entry-type buffer-type
-                              'show-entries-function)
-      (funcall it entries)
+  (if-let* ((fun (bui-symbol-value entry-type buffer-type
+                                   'show-entries-function)))
+      (funcall fun entries)
     (bui-show-entries-default entries entry-type buffer-type)))
 
 (defun bui-message (entries entry-type buffer-type &optional args)
   "Display a message for BUFFER-ITEM after showing entries."
-  (--when-let (bui-symbol-value entry-type buffer-type
-                                'message-function)
-    (apply it entries args)))
+  (when-let* ((fun (bui-symbol-value entry-type buffer-type
+                                     'message-function)))
+    (apply fun entries args)))
 
 (defun bui-buffer-name (entry-type buffer-type &optional args)
   "Return name of BUFFER-TYPE buffer for displaying ENTRY-TYPE entries."
@@ -640,11 +634,11 @@ Use '\\[bui-disable-filters]' to remove filters")))))
   "Set up the current buffer for displaying BUFFER-ITEM.
 HISTORY should be one of the following:
 
-  `nil' or `add' - add it to history,
+  nil or \\+`add' - add it to history,
 
-  `no' - do not save BUFFER-ITEM in history,
+  \\+`no' - do not save BUFFER-ITEM in history,
 
-  `replace' - replace the current history item."
+  \\+`replace' - replace the current history item."
   (bui-with-item buffer-item
     (when %entries
       ;; At first, set buffer item so that its value can be used by the

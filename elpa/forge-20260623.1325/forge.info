@@ -1,6 +1,6 @@
 This is forge.info, produced by makeinfo version 6.8 from forge.texi.
 
-     Copyright (C) 2018-2025 Jonas Bernoulli
+     Copyright (C) 2018-2026 Jonas Bernoulli
      <emacs.forge@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
@@ -27,9 +27,9 @@ Forge User and Developer Manual
 Forge allows you to work with Git forges, currently Github and Gitlab,
 from the comfort of Magit and Emacs.
 
-This manual is for Forge version 0.6.2.
+This manual is for Forge version 0.6.6.
 
-     Copyright (C) 2018-2025 Jonas Bernoulli
+     Copyright (C) 2018-2026 Jonas Bernoulli
      <emacs.forge@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
@@ -210,10 +210,10 @@ File: forge.info,  Node: Setup for Another Github Instance,  Next: Setup for Git
 =====================================
 
 Before you setup a Github instance that is not <https://github.com>,
-please set that up first.  The setup for <https://github.com> is easier
-and if that works, but the setup for the other Github instance fails,
-then we can tentatively narrow the issue down to the parts that differ
-between <https://github.com> and other instances.
+please first setup the latter.  The setup for <https://github.com> is
+easier, and if that works but the setup for the other Github instance
+fails, then we can tentatively narrow the issue down to the parts that
+differ between <https://github.com> and other instances.
 
 Tell Forge about the Instance
 -----------------------------
@@ -223,13 +223,18 @@ your other Github instances.  Forge instances are configured using the
 option ‘forge-alist’ (also see its docstring).  The entry for
 <https://github.com> in that variable looks like this:
 
+   While Forge knows about <https://github.com> out of the box, for all
+other instances you have to add a new entry to option ‘forge-alist’.
+
+   The entry for <https://github.com> looks like this:
+
      ("github.com"                       ; GITHOST
       "api.github.com"                   ; APIHOST
       "github.com"                       ; WEBHOST and INSTANCE-ID
        forge-github-repository)          ; CLASS
 
    You have to add an entry for your instance.  For example, assuming
-you company uses <https://example.com>, this might be correct:
+your company uses <https://example.com>, this might be correct:
 
      (push '("example.com"               ; GITHOST
              "api.example.com"           ; APIHOST
@@ -384,19 +389,19 @@ File: forge.info,  Node: Setup for Another Gitlab Instance,  Next: Setup a Parti
 =====================================
 
 Before you setup a Gitlab instance that is not <https://gitlab.com>,
-please set that up first.  The setup for <https://gitlab.com> is easier
-and if that works, but the setup for the other Gitlab instance fails,
-then we can tentatively narrow the issue down to the parts that differ
-between <https://gitlab.com> and other instances.
+please first setup the latter.  The setup for <https://gitlab.com> is
+easier, and if that works but the setup for the other Gitlab instance
+fails, then we can tentatively narrow the issue down to the parts that
+differ between <https://gitlab.com> and other instances.
 
 Tell Forge about the Instance
 -----------------------------
 
 While Forge knows about <https://gitlab.com> (and a few other well-known
-instances, see its value) it has to be taught about other Gitlab
-instances.  Forge instances are configured using the option
-‘forge-alist’ (also see its docstring).  The entry for
-<https://gitlab.com> in that variable looks like this:
+instances) out of the box, for other instances you have to add a new
+entry to option ‘forge-alist’.
+
+   The entry for <https://gitlab.com> looks like this:
 
      ("gitlab.com"                       ; GITHOST
       "gitlab.com/api/v4"                ; APIHOST
@@ -407,7 +412,7 @@ instances.  Forge instances are configured using the option
 path.
 
    You have to add an entry for your instance.  For example, assuming
-you company/organisation uses <https://example.com>, this might be
+your company/organisation uses <https://example.com>, this might be
 correct:
 
      (push '("example.com"               ; GITHOST
@@ -1013,6 +1018,8 @@ has to be visited in its own buffer.
      E.g., it can be used to change the status of the topic or to apply
      labels to it.  Additionally it features a few commands that act on
      that topic.
+
+     With a prefix argument, this additionally visits the topic.
 
    Details about a topic, such as its status and labels, can
 alternatively be edited by visiting the topic in its own buffer,
@@ -1969,70 +1976,70 @@ Node: Setup for Githubcom4227
 Ref: Set your Username4388
 Ref: Create and Store an Access Token4718
 Node: Setup for Another Github Instance6586
-Ref: Tell Forge about the Instance7134
-Ref: Set your Username (1)8680
-Ref: Create and Store an Access Token (1)8988
-Node: Setup for Gitlabcom11089
-Ref: Set your Username (2)11292
-Ref: Create and Store an Access Token (2)11622
-Node: Setup for Another Gitlab Instance13655
-Ref: Tell Forge about the Instance (1)14216
-Ref: Set your Username (3)15557
-Ref: Create and Store an Access Token (3)15865
-Node: Setup a Partially Supported Host18541
-Ref: Tell Forge about the Instance (2)19226
-Ref: Add Support for Additional Forge Types20724
-Node: Initial Pull21895
-Node: Getting Started23102
-Node: Lists and Menus25388
-Ref: Dispatch and configuration menus27212
-Ref: Topic menu and list commands27671
-Ref: Notification menu and list commands29582
-Ref: Repository menu and list commands29990
-Ref: Exiting menus and lists31787
-Ref: Default topic filters32482
-Ref: Topic sections in Magit status buffers32920
-Node: Visiting Topics34289
-Node: Creating Topics and Posts37648
-Node: Editing Topics39730
-Node: Pulling41355
-Node: Branching43523
-Node: Miscellaneous Commands49418
-Node: Miscellaneous Options53521
-Node: How Forge Detection Works55985
-Node: Supported Forges and Hosts61522
-Node: Supported Forges62831
-Ref: Github62987
-Ref: Github Caveats63142
-Ref: Github Hosts63804
-Ref: Gitlab63876
-Ref: Gitlab Caveats63903
-Ref: Gitlab Hosts64044
-Node: Partially Supported Forges64180
-Ref: Forgejo https//forgejoorg64386
-Ref: Forgejo Hosts64508
-Ref: Gitea https//giteaio64584
-Ref: Gogs https//gogsio64808
-Ref: Bitbucket https//bitbucketorg65048
-Ref: Bitbucket Caveats65258
-Ref: Bitbucket Hosts66171
-Node: Supported Semi-Forges66252
-Ref: Gitweb https//git-scmcom/docs/gitweb66423
-Ref: Gitweb Caveats66514
-Ref: Cgit https//gitzx2c4com/cgit/about66770
-Ref: Cgit Caveats66859
-Ref: Cgit Hosts67224
-Ref: Stgit https//codemadnessorg/git/stagit/file/READMEhtml67367
-Ref: Stgit Caveats67496
-Ref: Stgit Hosts67798
-Ref: Srht https//metasrht67874
-Ref: Srht Caveats67935
-Ref: Srht Hosts68234
-Node: FAQ68301
-Node: error in process filter HTTP Error 502 "Bad gateway"68711
-Node: Keystroke Index70192
-Node: Function and Command Index76245
-Node: Variable Index82744
+Ref: Tell Forge about the Instance7139
+Ref: Set your Username (1)8888
+Ref: Create and Store an Access Token (1)9196
+Node: Setup for Gitlabcom11297
+Ref: Set your Username (2)11500
+Ref: Create and Store an Access Token (2)11830
+Node: Setup for Another Gitlab Instance13863
+Ref: Tell Forge about the Instance (1)14429
+Ref: Set your Username (3)15692
+Ref: Create and Store an Access Token (3)16000
+Node: Setup a Partially Supported Host18676
+Ref: Tell Forge about the Instance (2)19361
+Ref: Add Support for Additional Forge Types20859
+Node: Initial Pull22030
+Node: Getting Started23237
+Node: Lists and Menus25523
+Ref: Dispatch and configuration menus27347
+Ref: Topic menu and list commands27806
+Ref: Notification menu and list commands29717
+Ref: Repository menu and list commands30125
+Ref: Exiting menus and lists31922
+Ref: Default topic filters32617
+Ref: Topic sections in Magit status buffers33055
+Node: Visiting Topics34424
+Node: Creating Topics and Posts37783
+Node: Editing Topics39865
+Node: Pulling41556
+Node: Branching43724
+Node: Miscellaneous Commands49619
+Node: Miscellaneous Options53722
+Node: How Forge Detection Works56186
+Node: Supported Forges and Hosts61723
+Node: Supported Forges63032
+Ref: Github63188
+Ref: Github Caveats63343
+Ref: Github Hosts64005
+Ref: Gitlab64077
+Ref: Gitlab Caveats64104
+Ref: Gitlab Hosts64245
+Node: Partially Supported Forges64381
+Ref: Forgejo https//forgejoorg64587
+Ref: Forgejo Hosts64709
+Ref: Gitea https//giteaio64785
+Ref: Gogs https//gogsio65009
+Ref: Bitbucket https//bitbucketorg65249
+Ref: Bitbucket Caveats65459
+Ref: Bitbucket Hosts66372
+Node: Supported Semi-Forges66453
+Ref: Gitweb https//git-scmcom/docs/gitweb66624
+Ref: Gitweb Caveats66715
+Ref: Cgit https//gitzx2c4com/cgit/about66971
+Ref: Cgit Caveats67060
+Ref: Cgit Hosts67425
+Ref: Stgit https//codemadnessorg/git/stagit/file/READMEhtml67568
+Ref: Stgit Caveats67697
+Ref: Stgit Hosts67999
+Ref: Srht https//metasrht68075
+Ref: Srht Caveats68136
+Ref: Srht Hosts68435
+Node: FAQ68502
+Node: error in process filter HTTP Error 502 "Bad gateway"68912
+Node: Keystroke Index70393
+Node: Function and Command Index76446
+Node: Variable Index82945
 
 End Tag Table
 

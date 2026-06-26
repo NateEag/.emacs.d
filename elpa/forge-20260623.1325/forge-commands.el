@@ -1,6 +1,6 @@
 ;;; forge-commands.el --- Commands  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -73,16 +73,16 @@ Takes the pull-request as only argument and must return a directory."
     ("c f" "fork or remote" forge-fork)]
    [:description (lambda ()
                    (cond
-                    ((forge-get-repository :tracked?) "Actions")
-                    ((or (magit-gitdir) (forge-repository-at-point))
-                     "Forge does not yet track this repository")
-                    ("Not inside a Git repository")))
+                     ((forge-get-repository :tracked?) "Actions")
+                     ((or (magit-gitdir) (forge-repository-at-point))
+                      "Forge does not yet track this repository")
+                     ("Not inside a Git repository")))
     ("/ a" forge-add-repository
      :description (lambda () (let ((repo (forge-get-repository :stub?)))
                           (if (or (not repo)
                                   (eq (oref repo condition) :tracked))
-                            "track some repo"
-                          "track this repository"))))
+                              "track some repo"
+                            "track this repository"))))
     ("c f" "fork this repository" forge-fork
      :if-not (##forge-get-repository :tracked?))
     ("/ M" "merge with api" forge-merge
@@ -207,8 +207,8 @@ repository cannot be determined, instead invoke `forge-add-repository'."
   :inapt-if-not (lambda () (and (forge-get-repository :tracked?)
                            (forge--get-github-repository)))
   (interactive
-   (list (read-number "Pull topic: "
-                      (and$ (forge-current-topic) (oref $ number)))))
+    (list (read-number "Pull topic: "
+                       (and$ (forge-current-topic) (oref $ number)))))
   (forge--pull-topic (forge-get-repository :tracked) number))
 
 ;;;###autoload(autoload 'forge-pull-this-topic "forge-commands" nil t)
@@ -288,11 +288,11 @@ argument also offer closed pull-requests."
 (defun forge-browse-commit (commit)
   "Read a COMMIT and visit it using a browser."
   (interactive
-   (list (or (magit-completing-read "Browse commit"
-                                    (magit-list-branch-names)
-                                    nil nil nil 'magit-revision-history
-                                    (magit-branch-or-commit-at-point))
-             (user-error "Nothing selected"))))
+    (list (or (magit-completing-read "Browse commit"
+                                     (magit-list-branch-names)
+                                     nil nil nil 'magit-revision-history
+                                     (magit-branch-or-commit-at-point))
+              (user-error "Nothing selected"))))
   (browse-url (forge-get-url :commit commit)))
 
 ;;;###autoload
@@ -388,23 +388,23 @@ commit, and for a file."
 
 (defun forge--browse-blob-args ()
   (cond
-   (magit-buffer-file-name
-    `(,(or magit-buffer-refname magit-buffer-revision)
-      ,(magit-file-relative-name magit-buffer-file-name)
-      ,@(magit-file-region-line-numbers)
-      ,current-prefix-arg))
-   (buffer-file-name
-    `(nil
-      ,(magit-file-relative-name buffer-file-name)
-      ,@(magit-file-region-line-numbers)
-      ,current-prefix-arg))
-   ((derived-mode-p 'dired-mode)
-    `(nil
-      ,(magit-file-relative-name (dired-get-filename))
-      ,current-prefix-arg))
-   ((let ((commit (magit-read-local-branch-or-commit
-                   "Browse file from commit")))
-      (list commit (magit-read-file-from-rev commit "Browse file"))))))
+    (magit-buffer-file-name
+     `(,(or magit-buffer-refname magit-buffer-revision)
+       ,(magit-file-relative-name magit-buffer-file-name)
+       ,@(or (magit-file-region-line-numbers) (list nil nil))
+       ,current-prefix-arg))
+    (buffer-file-name
+     `(nil
+       ,(magit-file-relative-name buffer-file-name)
+       ,@(or (magit-file-region-line-numbers) (list nil nil))
+       ,current-prefix-arg))
+    ((derived-mode-p 'dired-mode)
+     `(nil
+       ,(magit-file-relative-name (dired-get-filename))
+       nil nil ,current-prefix-arg))
+    ((let ((commit (magit-read-local-branch-or-commit
+                    "Browse file from commit")))
+       (list commit (magit-read-file-from-rev commit "Browse file"))))))
 
 ;;;; Urls
 
@@ -424,6 +424,8 @@ commit, and for a file."
   (forge--format repo 'remote-url-format))
 
 (cl-defmethod forge-get-url ((_(eql :commit)) commit)
+  (when (member commit '(nil "{worktree}" "{index}"))
+    (setq commit (or (magit-get-current-branch) "HEAD")))
   (let ((repo (forge-get-repository :stub)))
     (cond-let*
       ((magit-list-containing-branches
@@ -438,9 +440,12 @@ commit, and for a file."
 
 (cl-defmethod forge-get-url ((_(eql :blob)) commit file
                              &optional line end force-hash)
+  (cl-assert (stringp file))
+  (when (member commit '(nil "{worktree}" "{index}"))
+    (setq commit (or (magit-get-current-branch) "HEAD")))
   (let* ((commit (or (and (magit-branch-p commit)
                           (cdr (magit-split-branch-name commit)))
-                     (and commit (magit-commit-p commit))
+                     (magit-commit-p commit)
                      (and (not (or line force-hash))
                           (magit-get-current-branch))
                      (magit-rev-parse "HEAD")))
@@ -454,17 +459,19 @@ commit, and for a file."
                                         (and (not (equal line end)) end))))))
 
 (cl-defmethod forge-get-url ((_(eql :branch)) branch)
+  (cl-assert (stringp branch))
   (let (remote)
-    (if (magit-remote-branch-p branch)
-        (pcase-setq `(,remote . ,branch) (magit-split-branch-name branch))
-      (unless (setq remote (or (magit-get-push-remote branch)
-                               (magit-get-upstream-remote branch)))
-        (user-error "Cannot determine remote for %s" branch)))
+    (cond ((magit-remote-branch-p branch)
+           (pcase-setq `(,remote . ,branch) (magit-split-branch-name branch)))
+          ((not (setq remote (or (magit-get-push-remote branch)
+                                 (magit-get-upstream-remote branch))))
+           (user-error "Cannot determine remote for %s" branch)))
     (forge--format (forge-get-repository :stub remote)
                    'branch-url-format
                    `((?r . ,branch)))))
 
 (cl-defmethod forge-get-url ((_(eql :remote)) remote)
+  (cl-assert (stringp remote))
   (forge--format (forge-get-repository :stub remote) 'remote-url-format))
 
 (cl-defmethod forge-get-url ((post forge-post))
@@ -479,7 +486,7 @@ commit, and for a file."
 (cl-defmethod forge-get-url ((notify forge-notification))
   (oref notify url))
 
- ;; Transitional kludge for the infamous package.el defect.
+;; Transitional kludge for the infamous package.el defect.
 (require 'forge-forgejo)
 
 (cl-defmethod forge-format-blob-lines ((repo forge-repository) line end)
@@ -566,12 +573,12 @@ With prefix argument MENU, also show the topic menu."
   (interactive (list current-prefix-arg))
   (forge-topic-setup-buffer (forge-topic-at-point))
   (cond
-   ((eq transient-current-command 'forge-topic-menu)
-    (setq forge--quit-keep-topic-menu t))
-   ((or menu
-        (memq transient-current-command
-              '(forge-topics-menu forge-notifications-menu)))
-    (transient-setup 'forge-topic-menu))))
+    ((eq transient-current-command 'forge-topic-menu)
+     (setq forge--quit-keep-topic-menu t))
+    ((or menu
+         (memq transient-current-command
+               '(forge-topics-menu forge-notifications-menu)))
+     (transient-setup 'forge-topic-menu))))
 
 ;;;###autoload
 (defun forge-visit-this-repository ()
@@ -580,25 +587,25 @@ With prefix argument MENU, also show the topic menu."
   (let* ((repo (forge-repository-at-point))
          (worktree (forge-get-worktree repo)))
     (cond
-     ((and (eq transient-current-command 'forge-repositories-menu)
-           (forge-get-repository repo nil :tracked?))
-      (cond-let
-        ([buffer (get-buffer (forge-topics-buffer-name repo))]
-         (switch-to-buffer buffer)
-         (transient-setup 'forge-topics-menu))
-        ((forge-list-topics repo))))
-     (worktree
-      (magit-status-setup-buffer worktree))
-     ((forge-get-repository repo nil :tracked?)
-      (forge-list-topics repo))
-     ((user-error "Not tracked and location of clone is unknown")))))
+      ((and (eq transient-current-command 'forge-repositories-menu)
+            (forge-get-repository repo nil :tracked?))
+       (cond-let
+         ([buffer (get-buffer (forge-topics-buffer-name repo))]
+          (switch-to-buffer buffer)
+          (transient-setup 'forge-topics-menu))
+         ((forge-list-topics repo))))
+      (worktree
+       (magit-status-setup-buffer worktree))
+      ((forge-get-repository repo nil :tracked?)
+       (forge-list-topics repo))
+      ((user-error "Not tracked and location of clone is unknown")))))
 
 ;;; Create
 
 (defun forge-create-discussion (category)
   "Create a new discussion for the current repository."
   (interactive
-   (list (forge-read-topic-category nil "Category for new discussion")))
+    (list (forge-read-topic-category nil "Category for new discussion")))
   (forge--setup-post-buffer 'new-discussion #'forge--submit-create-discussion
     "new-discussion" "Create new discussion on %p"
     `((forge--buffer-category ,category))))
@@ -646,28 +653,29 @@ With prefix argument MENU, also show the topic menu."
                    "Source branch"
                    (magit-list-remote-branch-names)
                    nil t nil 'magit-revision-history
-                   (or (and-let ((d (magit-branch-at-point)))
-                         (if (magit-remote-branch-p d)
-                             d
-                           (magit-get-push-branch d t)))
-                       (and-let ((d (magit-get-current-branch)))
-                         (if (magit-remote-branch-p d)
-                             d
-                           (magit-get-push-branch d t))))))
+                   (or (and$ (magit-branch-at-point)
+                             (if (magit-remote-branch-p $)
+                                 $
+                               (magit-get-push-branch $ t)))
+                       (and$ (magit-get-current-branch)
+                             (if (magit-remote-branch-p $)
+                                 $
+                               (magit-get-push-branch $ t))))))
          (remote  (oref repo remote))
          (targets (delete source (magit-list-remote-branch-names remote)))
          (target  (magit-completing-read
                    "Target branch" targets nil t nil 'magit-revision-history
-                   (let* ((d (cdr (magit-split-branch-name source)))
-                          (d (and (magit-branch-p d) d))
-                          (d (and d (magit-get-upstream-branch d)))
-                          (d (and d (if (magit-remote-branch-p d)
-                                        d
-                                      (magit-get-upstream-branch d))))
-                          (d (or d (concat remote "/"
-                                           (or (oref repo default-branch)
-                                               "master")))))
-                     (car (member d targets))))))
+                   (or (and$ (cdr (magit-split-branch-name source))
+                             (and (magit-branch-p $)
+                                  (magit-get-upstream-branch $))
+                             (if (magit-remote-branch-p $)
+                                 $
+                               (magit-get-upstream-branch $))
+                             (car (member $ targets)))
+                       (seq-some (##car (member (concat remote "/" %) targets))
+                                 (delete-dups
+                                  (cons (oref repo default-branch)
+                                        magit-main-branch-names)))))))
     (list source target)))
 
 (defun forge-create-post (&optional quote)
@@ -679,12 +687,12 @@ point is currently on."
   (unless (derived-mode-p 'forge-topic-mode)
     (user-error "This command is only available from topic buffers"))
   (let* ((quote (cond
-                 ((not (magit-section-match 'post)) nil)
-                 ((use-region-p)
-                  (buffer-str (region-beginning) (region-end)))
-                 (quote
-                  (with-slots (content end) (magit-current-section)
-                    (string-trim (buffer-str content end))))))
+                  ((not (magit-section-match 'post)) nil)
+                  ((use-region-p)
+                   (buffer-str (region-beginning) (region-end)))
+                  (quote
+                   (with-slots (content end) (magit-current-section)
+                     (string-trim (buffer-str content end))))))
          (quote (and quote
                      (lambda ()
                        (goto-char (point-max))
@@ -945,10 +953,10 @@ This is like `forge-checkout-pullreq', except that it also
 creates a new worktree.  Please see the manual for more
 information."
   (interactive
-   (let ((id (forge-read-pullreq "Checkout pull request")))
-     (list (funcall forge-checkout-worktree-read-directory-function
-                    (forge-get-pullreq id))
-           id)))
+    (let ((id (forge-read-pullreq "Checkout pull request")))
+      (list (funcall forge-checkout-worktree-read-directory-function
+                     (forge-get-pullreq id))
+            id)))
   (when (and (file-exists-p path)
              (not (and (file-directory-p path)
                        (length= (directory-files path) 2))))
@@ -1015,42 +1023,42 @@ number) and this command is made available as a substitute in the
 (defun forge-create-mark (name face description)
   "Define a new mark that topics can be marked with."
   (interactive
-   (list (read-string "Name: ")
-         (magit-read-char-case "Set appearance using " nil
-           (?n "a face [n]ame"
-               (read-face-name "Face name: "))
-           (?s "face [s]exp"
-               (read-from-minibuffer
-                "Face sexp: "
-                "(:background \"\" :foreground \"\" :box t)"
-                read-expression-map t)))
-         (let ((str (read-string "Description: ")))
-           (and (not (equal str "")) str))))
+    (list (read-string "Name: ")
+          (magit-read-char-case "Set appearance using " nil
+            (?n "a face [n]ame"
+                (read-face-name "Face name: "))
+            (?s "face [s]exp"
+                (read-from-minibuffer
+                 "Face sexp: "
+                 "(:background \"\" :foreground \"\" :box t)"
+                 read-expression-map t)))
+          (let ((str (read-string "Description: ")))
+            (and (not (equal str "")) str))))
   (forge-sql [:insert-into mark :values $v1]
              (vector nil (forge--uuid) name face description)))
 
 (defun forge-edit-mark (id name face description)
   "Define a new mark that topics can be marked with."
   (interactive
-   (pcase-let*
-       ((marks (forge-sql [:select [name id face description] :from mark]))
-        (`(,name ,id ,face ,description)
-         (assoc (completing-read "Edit mark" (mapcar #'car marks) nil t)
-                marks)))
-     (list id
-           (read-string "Name: " name)
-           (magit-read-char-case "Set appearance using " nil
-             (?n "a face [n]ame"
-                 (read-face-name "Face name: " (and (symbolp face) face)))
-             (?s "face [s]exp"
-                 (read-from-minibuffer
-                  "Face sexp: "
-                  (if (listp face)
-                      (format "%S" face)
-                    "(:background \"\" :foreground \"\" :box t)")
-                  read-expression-map t)))
-           (let ((str (read-string "Description: " nil nil description)))
-             (and (not (equal str "")) str)))))
+    (pcase-let*
+        ((marks (forge-sql [:select [name id face description] :from mark]))
+         (`(,name ,id ,face ,description)
+          (assoc (completing-read "Edit mark" (mapcar #'car marks) nil t)
+                 marks)))
+      (list id
+            (read-string "Name: " name)
+            (magit-read-char-case "Set appearance using " nil
+              (?n "a face [n]ame"
+                  (read-face-name "Face name: " (and (symbolp face) face)))
+              (?s "face [s]exp"
+                  (read-from-minibuffer
+                   "Face sexp: "
+                   (if (listp face)
+                       (format "%S" face)
+                     "(:background \"\" :foreground \"\" :box t)")
+                   read-expression-map t)))
+            (let ((str (read-string "Description: " nil nil description)))
+              (and (not (equal str "")) str)))))
   (forge-sql [:update mark
               :set (= [name face description] $v1)
               :where (= id $s2)]
@@ -1068,14 +1076,14 @@ is added anyway.  Currently this only supports Github and Gitlab.
 With prefix argument ALL, fork all branches, not just the default
 branch.  On Gitlab it is not possible to fork only the default."
   (interactive
-   (let ((fork (magit-completing-read "Fork to"
-                                      (mapcar #'car forge-owned-accounts))))
-     (list fork
-           (read-string "Remote name: "
-                        (or (plist-get (cdr (assoc fork forge-owned-accounts))
-                                       'remote-name)
-                            fork))
-           current-prefix-arg)))
+    (let ((fork (magit-completing-read "Fork to"
+                                       (mapcar #'car forge-owned-accounts))))
+      (list fork
+            (read-string "Remote name: "
+                         (or (plist-get (cdr (assoc fork forge-owned-accounts))
+                                        'remote-name)
+                             fork))
+            current-prefix-arg)))
   (let ((repo (forge-get-repository :stub)))
     (forge--fork-repository repo fork all)
     (magit-remote-add remote
@@ -1101,7 +1109,7 @@ as merged."
   (let ((pullreq (forge-get-pullreq pullreq)))
     (forge--merge-pullreq (forge-get-repository pullreq)
                           pullreq
-                          (magit-rev-hash
+                          (magit-commit-oid
                            (forge--pullreq-branch-internal pullreq))
                           method)))
 
@@ -1279,11 +1287,11 @@ upstream remote."
                (propertize (forge--scope 'topdir) 'face 'bold))
        (if-let* ((remote (forge--get-remote))
                  (url (magit-git-string "remote" "get-url" remote)))
-             (format (propertize "because %s is not on a host known to Forge."
-                                 'face 'transient-heading)
-                     (propertize url 'face 'bold))
-           (propertize "because no suitable remote was detected."
-                       'face 'transient-heading))))
+           (format (propertize "because %s is not on a host known to Forge."
+                               'face 'transient-heading)
+                   (propertize url 'face 'bold))
+         (propertize "because no suitable remote was detected."
+                     'face 'transient-heading))))
     ("r" forge-forge.remote :format " %k Try another %d %v" :face 'bold)
     ("h" "Learn how to configure another Github host"
      (lambda () (interactive) (info "(forge)Setup for Another Github Instance")))
@@ -1307,8 +1315,8 @@ upstream remote."
     ("s" "pulling only topics since <date>"
      (lambda (repo date)
        (interactive
-        (list (forge--scope 'repo)
-              (forge-read-date "Limit pulling to topics updated since: ")))
+         (list (forge--scope 'repo)
+               (forge-read-date "Limit pulling to topics updated since: ")))
        (forge-add-repository repo date)))
     ("i" "to allow pulling of individual topics"
      (lambda (repo)
@@ -1324,33 +1332,33 @@ upstream remote."
   (declare (interactive-only nil))
   (interactive)
   (cond
-   ((not repo)
-    (transient-setup 'forge-add-repository nil nil
-                     :scope (forge-add-repository--scope)))
-   ((stringp repo)
-    (transient-setup 'forge-add-repository nil nil
-                     :scope (forge-add-repository--scope repo)))
-   (t
-    (when-let*
-        ((_(not (eq limit :selective)))
-         (_(magit-git-config-p "forge.autoPull" t))
-         (remote  (oref repo remote))
-         (refspec (oref repo pullreq-refspec))
-         (default-directory (forge-get-worktree repo))
-         (_(and (not (member refspec (magit-get-all "remote" remote "fetch")))
-                (or (eq forge-add-pullreq-refspec t)
-                    (and (eq forge-add-pullreq-refspec 'ask)
-                         (y-or-n-p (format "Also add %S refspec? " refspec)))))))
-      (magit-call-git "config" "--add"
-                      (format "remote.%s.fetch" remote)
-                      refspec))
-    (setq repo (forge-get-repository repo nil :insert!))
-    (when (eq limit :selective)
-      (oset repo selective-p t)
-      (setq limit nil))
-    (forge--pull repo
-                 (and (not (forge-get-worktree repo)) #'ignore)
-                 limit))))
+    ((not repo)
+     (transient-setup 'forge-add-repository nil nil
+                      :scope (forge-add-repository--scope)))
+    ((stringp repo)
+     (transient-setup 'forge-add-repository nil nil
+                      :scope (forge-add-repository--scope repo)))
+    (t
+     (when-let*
+         ((_(not (eq limit :selective)))
+          (_(magit-git-config-p "forge.autoPull" t))
+          (remote  (oref repo remote))
+          (refspec (oref repo pullreq-refspec))
+          (default-directory (forge-get-worktree repo))
+          (_(and (not (member refspec (magit-get-all "remote" remote "fetch")))
+                 (or (eq forge-add-pullreq-refspec t)
+                     (and (eq forge-add-pullreq-refspec 'ask)
+                          (y-or-n-p (format "Also add %S refspec? " refspec)))))))
+       (magit-call-git "config" "--add"
+                       (format "remote.%s.fetch" remote)
+                       refspec))
+     (setq repo (forge-get-repository repo nil :insert!))
+     (when (eq limit :selective)
+       (oset repo selective-p t)
+       (setq limit nil))
+     (forge--pull repo
+                  (and (not (forge-get-worktree repo)) #'ignore)
+                  limit))))
 
 (defun forge-add-repository--scope (&optional directory)
   (let* ((repo      (if directory
@@ -1376,22 +1384,22 @@ upstream remote."
 (defun forge-add-some-repository (url)
   "Read a repository and add it to the database."
   (interactive
-   (let (ret url)
-     (while (not ret)
-       (setq url (magit-read-string-ns
-                  "Add repository to database (url, owner/name, or name)" url))
-       (unless (string-match-p "\\(://\\|@\\)" url)
-         (setq url (magit-clone--name-to-url url)))
-       (cond ((forge-get-repository url nil :tracked?)
-              (message "%s is already being tracked locally"
-                       (propertize url 'face 'bold))
-              (sit-for 3))
-             ((not (forge-get-repository url nil :valid?))
-              (message "%s does not exist or is inaccessible"
-                       (propertize url 'face 'bold))
-              (sit-for 3))
-             ((setq ret url))))
-     (list ret)))
+    (let (ret url)
+      (while (not ret)
+        (setq url (magit-read-string-ns
+                   "Add repository to database (url, owner/name, or name)" url))
+        (unless (string-match-p "\\(://\\|@\\)" url)
+          (setq url (magit-clone--name-to-url url)))
+        (cond ((forge-get-repository url nil :tracked?)
+               (message "%s is already being tracked locally"
+                        (propertize url 'face 'bold))
+               (sit-for 3))
+              ((not (forge-get-repository url nil :valid?))
+               (message "%s does not exist or is inaccessible"
+                        (propertize url 'face 'bold))
+               (sit-for 3))
+              ((setq ret url))))
+      (list ret)))
   (forge-add-repository url))
 
 ;;;###autoload
@@ -1399,9 +1407,9 @@ upstream remote."
   "Add all of USER's repositories from HOST to the database.
 This may take a while.  Only Github is supported at the moment."
   (interactive
-   (list (forge-read-host "Add repositories from Github host"
-                          'forge-github-repository)
-         (read-string "User: ")))
+    (list (forge-read-host "Add repositories from Github host"
+                           'forge-github-repository)
+          (read-string "User: ")))
   (forge--add-user-repos 'forge-github-repository host user))
 
 ;;;###autoload
@@ -1409,9 +1417,9 @@ This may take a while.  Only Github is supported at the moment."
   "Add all of ORGANIZATION's repositories from HOST to the database.
 This may take a while.  Only Github is supported at the moment."
   (interactive
-   (list (forge-read-host "Add repositories from Github host"
-                          'forge-github-repository)
-         (read-string "Organization: ")))
+    (list (forge-read-host "Add repositories from Github host"
+                           'forge-github-repository)
+          (read-string "Organization: ")))
   (forge--add-organization-repos 'forge-github-repository host organization))
 
 ;;; Cleanup
@@ -1420,12 +1428,12 @@ This may take a while.  Only Github is supported at the moment."
 (defun forge-remove-repository (repository)
   "Remove a repository from the database."
   (interactive
-   (pcase-let* ((repo (forge-read-repository "Remove repository from db"))
-                ((eieio githost owner name) repo))
-     (if (yes-or-no-p (format "Do you really want to remove \"%s/%s @%s\" %s? "
-                              owner name githost "from the database"))
-         (list repo)
-       (user-error "Abort"))))
+    (pcase-let* ((repo (forge-read-repository "Remove repository from db"))
+                 ((eieio githost owner name) repo))
+      (if (yes-or-no-p (format "Do you really want to remove \"%s/%s @%s\" %s? "
+                               owner name githost "from the database"))
+          (list repo)
+        (user-error "Abort"))))
   (closql-delete repository)
   (forge-refresh-buffer))
 
@@ -1445,12 +1453,12 @@ forge (the service).  Forge (the package) cannot automatically detect
 when that happens, because given how the APIs work, this would be too
 expensive."
   (interactive
-   (list (if-let* ((topics (magit-region-values '(issue pullreq) t))
-                   (_(magit-confirm 'remove-topics-locally nil
-                       "Delete %d topics locally" nil
-                       (mapcar #'forge--format-topic-line topics))))
-             topics
-           (forge-read-topic "Delete topic LOCALLY only"))))
+    (list (if-let* ((topics (magit-region-values '(issue pullreq) t))
+                    (_(magit-confirm 'remove-topics-locally nil
+                        "Delete %d topics locally" nil
+                        (mapcar #'forge--format-topic-line topics))))
+              topics
+            (forge-read-topic "Delete topic LOCALLY only"))))
   (if (listp topic)
       (progn (mapc #'closql-delete topic)
              (forge-refresh-buffer))
@@ -1478,33 +1486,6 @@ heavy development."
 
 ;;; Miscellaneous
 
-(defun forge-mark-completed-topics-as-done ()
-  "Mark completed topics of the current repository as done.
-Change the private status to \"done\" for topics whose private status is
-\"unread\" or \"pending\" and whose public state is \"completed\".
-Whether this affects all such topics or only all such topics of a
-certain type (discussion, issue or pull-request), depends on the
-context."
-  (interactive)
-  (let* ((type (forge-current-topic-type))
-         (desc (if (eq type 'pullreq) 'pull-request type))
-         (topics (forge--list-topics
-                  (forge--topics-spec :type type
-                                      :active nil
-                                      :state 'closed
-                                      :status 'inbox)
-                  (forge-get-repository :tracked))))
-    (cond ((not topics)
-           (message "No completed %s that could be marked as done" desc))
-          ((magit-confirm t
-             "Mark \"%s\" as done"
-             (format "Mark %%d %ss as done" desc)
-             nil
-             (mapcar #'forge--format-topic-line topics))
-           (dolist (topic topics)
-             (oset topic status 'done))
-           (forge-refresh-buffer)))))
-
 (magit-define-section-jumper forge-jump-to-pullreqs "Pull requests" pullreqs)
 (magit-define-section-jumper forge-jump-to-issues "Issues" issues)
 
@@ -1512,9 +1493,16 @@ context."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
+;;   ("when-let*"     . "cond-let--when-let*")
 ;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let")
 ;;   ("buffer-string" . "buffer-string")
 ;;   ("buffer-str"    . "forge--buffer-substring-no-properties")
 ;;   ("partial"       . "llama--left-apply-partially"))

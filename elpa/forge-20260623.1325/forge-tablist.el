@@ -1,6 +1,6 @@
 ;;; forge-tablist.el --- Tabulated-list interface  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -64,12 +64,12 @@
                  (vconcat
                   (mapcar (pcase-lambda (`(,_name ,get ,_width ,_sort ,_props))
                             (let ((val (cond
-                                        ((functionp get)
-                                         (funcall get obj))
-                                        ((eq (car-safe get) 'repository)
-                                         (eieio-oref (forge-get-repository obj)
-                                                     (cadr get)))
-                                        ((eieio-oref obj get)))))
+                                         ((functionp get)
+                                          (funcall get obj))
+                                         ((eq (car-safe get) 'repository)
+                                          (eieio-oref (forge-get-repository obj)
+                                                      (cadr get)))
+                                         ((eieio-oref obj get)))))
                               (cond ((stringp val) val)
                                     ((null val) "")
                                     ((format "%s" val)))))
@@ -80,9 +80,16 @@
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
-;;   ("when-let"      . "cond-let--when-let"))
+;;   ("when-let*"     . "cond-let--when-let*")
+;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-tablist)
 ;;; forge-tablist.el ends here

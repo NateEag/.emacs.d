@@ -1,6 +1,6 @@
 ;;; forge-client.el --- GraphQL and REST support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -126,34 +126,41 @@
 (defun forge--set-field-callback (topic)
   (let ((repo (forge-get-repository topic)))
     (cond
-     ((forge-gitlab-repository--eieio-childp repo)
-      ;; TODO Fetch single topic for Gitlab as well.
-      (lambda (&rest _)
-        (forge--pull repo #'forge-refresh-buffer)))
-     ((forge-discussion--eieio-childp topic)
-      ;; See comment in `forge--update-status'.
-      (let ((status (oref topic status)))
-        (lambda (&rest _)
-          (forge--query repo
-            (ghub--graphql-prepare-query
-             forge--github-repository-query
-             `(repository discussions (discussion . ,(oref topic number))))
-            `((owner . ,(oref repo owner))
-              (name  . ,(oref repo name)))
-            :callback (lambda (data)
-                        (forge--update-discussion repo (cdr (cadr (cadr data))))
-                        (oset topic status status)
-                        (forge-refresh-buffer))))))
-     ((lambda (&rest _)
-        (forge--pull-topic (forge-get-repository topic) topic))))))
+      ((forge-gitlab-repository--eieio-childp repo)
+       ;; TODO Fetch single topic for Gitlab as well.
+       (lambda (&rest _)
+         (forge--pull repo #'forge-refresh-buffer)))
+      ((forge-discussion--eieio-childp topic)
+       ;; See comment in `forge--update-status'.
+       (let ((status (oref topic status)))
+         (lambda (&rest _)
+           (forge--query repo
+             (ghub--graphql-prepare-query
+              forge--github-repository-query
+              `(repository discussions (discussion . ,(oref topic number))))
+             `((owner . ,(oref repo owner))
+               (name  . ,(oref repo name)))
+             :callback (lambda (data)
+                         (forge--update-discussion repo (cdr (cadr (cadr data))))
+                         (oset topic status status)
+                         (forge-refresh-buffer))))))
+      ((lambda (&rest _)
+         (forge--pull-topic (forge-get-repository topic) topic))))))
 
 ;;; _
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
-;;   ("when-let"      . "cond-let--when-let"))
+;;   ("when-let*"     . "cond-let--when-let*")
+;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-client)
 ;;; forge-client.el ends here

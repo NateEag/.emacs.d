@@ -1,6 +1,6 @@
 ;;; forge-topics.el --- List topics  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -190,21 +190,21 @@ the Magit status buffer."
                  (forge-get-repository :tracked?))))
     (magit-insert-section (topicbuf)
       (cond
-       ((not topics)
-        (insert "No matching topics\n"))
-       ((not (oref forge--buffer-topics-spec grouped))
-        (dolist (topic topics)
-          (forge--insert-topic topic 5)))
-       ((pcase-dolist (`(,_ . ,topics)
-                       (seq-group-by (##oref % repository) topics))
-          (let ((repo (forge-get-repository (car topics))))
-            (magit-insert-section (forge-repo repo)
-              (magit-insert-heading
-                (concat (propertize (oref repo slug)
-                                    'font-lock-face 'bold)
-                        (format " (%s)" (length topics))))
-              (dolist (topic topics)
-                (forge--insert-topic topic 5))))))))))
+        ((not topics)
+         (insert "No matching topics\n"))
+        ((not (oref forge--buffer-topics-spec grouped))
+         (dolist (topic topics)
+           (forge--insert-topic topic 5)))
+        ((pcase-dolist (`(,_ . ,topics)
+                        (seq-group-by (##oref % repository) topics))
+           (let ((repo (forge-get-repository (car topics))))
+             (magit-insert-section (forge-repo repo)
+               (magit-insert-heading
+                 (concat (propertize (oref repo slug)
+                                     'font-lock-face 'bold)
+                         (format " (%s)" (length topics))))
+               (dolist (topic topics)
+                 (forge--insert-topic topic 5))))))))))
 
 (defun forge-topics-buffer-desc ()
   (capitalize (concat (symbol-name (oref forge--buffer-topics-spec type)) "s")))
@@ -681,11 +681,11 @@ Expunged topics include:
             (propertize (format "%s" (oref forge--buffer-topics-spec order))
                         'face 'bold)))
   (interactive
-   (list (magit-read-char-case "Order by: " t
-           (?n "[n]ewest"            'newest)
-           (?o "[o]ldest"            'oldest)
-           (?r "[r]ecently updated"  'recently-updated)
-           (?a "[a]nciently updated" 'anciently-updated))))
+    (list (magit-read-char-case "Order by: " t
+            (?n "[n]ewest"            'newest)
+            (?o "[o]ldest"            'oldest)
+            (?r "[r]ecently updated"  'recently-updated)
+            (?a "[a]nciently updated" 'anciently-updated))))
   (oset forge--buffer-topics-spec order order)
   (forge-refresh-buffer))
 
@@ -724,9 +724,15 @@ Expunged topics include:
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
+;;   ("when-let*"     . "cond-let--when-let*")
 ;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
 ;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-topics)

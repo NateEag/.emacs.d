@@ -1,6 +1,6 @@
 ;;; forge-discussion.el --- Discussion support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
@@ -195,7 +195,8 @@ can be selected from the start."
   (forge--read-topic prompt
                      #'forge-current-discussion
                      (forge--topics-spec :type 'discussion :active t)
-                     (forge--topics-spec :type 'discussion :active nil :state nil)))
+                     (forge--topics-spec :type 'discussion :active nil
+                                         :state nil :limit nil)))
 
 (defun forge-read-topic-category (&optional topic prompt)
   (magit-completing-read
@@ -277,9 +278,16 @@ and optional HEADING to change the section heading."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
-;;   ("when-let"      . "cond-let--when-let"))
+;;   ("when-let*"     . "cond-let--when-let*")
+;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-discussion)
 ;;; forge-discussion.el ends here

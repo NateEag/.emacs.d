@@ -1,6 +1,6 @@
 ;;; forge-pullreq.el --- Pullreq support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -211,7 +211,8 @@ can be selected from the start."
   (forge--read-topic prompt
                      #'forge-current-pullreq
                      (forge--topics-spec :type 'pullreq :active t)
-                     (forge--topics-spec :type 'pullreq :active nil :state nil)))
+                     (forge--topics-spec :type 'pullreq :active nil
+                                         :state nil :limit nil)))
 
 ;;; Utilities
 
@@ -227,7 +228,8 @@ can be selected from the start."
   (let* ((number (number-to-string (oref pullreq number)))
          (branch-n (format "pr-%s" number))
          (branch (forge--pullreq-branch-internal pullreq)))
-    (or (and (magit-branch-p branch)
+    (or (and branch
+             (magit-branch-p branch)
              (equal (magit-get "branch" branch "pullRequest") number)
              branch)
         (and (magit-branch-p branch-n)
@@ -299,9 +301,16 @@ and optional HEADING to change the section heading."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
-;;   ("when-let"      . "cond-let--when-let"))
+;;   ("when-let*"     . "cond-let--when-let*")
+;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-pullreq)
 ;;; forge-pullreq.el ends here

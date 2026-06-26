@@ -1,6 +1,6 @@
 ;;; forge-github.el --- Github support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -95,12 +95,12 @@
           emoji
           isAnswerable
           description)
-       (  discussions [(:edges t)
+       (  discussions [(:edges 20)
                        (:singular discussion number)
                        (orderBy ((field UPDATED_AT) (direction DESC)))]
+          number
           id
           databaseId
-          number
           url
           stateReason
           ;; Discussions lack isReadByViewer.
@@ -120,7 +120,7 @@
              createdAt
              updatedAt
              body
-             (  replies [(:edges 20)]
+             (  replies [(:edges t)]
                 id
                 databaseId
                 (author login)
@@ -235,9 +235,9 @@
           (oset repo condition :tracked))
         (forge--msg repo t t   "Storing REPO")
         (cond
-         ((oref repo selective-p))
-         (callback (funcall callback))
-         ((forge--maybe-git-fetch repo buf))))
+          ((oref repo selective-p))
+          (callback (funcall callback))
+          ((forge--maybe-git-fetch repo buf))))
       :narrow '(repository)
       :until
       ;; Keys have the form `FIELD-until', where FIELD is the name of a
@@ -359,8 +359,8 @@
       [($owner String!)
        ($name  String!)]
       (repository
-      [(owner $owner)
-       (name  $name)]
+       [(owner $owner)
+        (name  $name)]
        ,(caddr (caddr (ghub--graphql-prepare-query
                        forge--github-repository-query
                        `(repository discussions (discussion . ,number)))))
@@ -703,7 +703,7 @@
                          (lambda (errors _headers _status _req)
                            (if (zerop tries)
                                (ghub--signal-error errors)
-                             (cl-decf tries)
+                             (decf tries)
                              (cond-let
                                ([notfound
                                  (seq-keep
@@ -717,7 +717,7 @@
                                                           query :key #'caar))
                                 (funcall vacuum))
                                ((ghub--signal-error errors))))))
-                   (cl-incf page)
+                   (incf page)
                    (forge--msg nil t nil
                                "Pulling notifications (page %s/%s)" page pages)
                    (funcall vacuum))
@@ -1266,7 +1266,7 @@
 (cl-defmethod forge--fork-repository ((repo forge-github-repository) fork all)
   (with-slots (name apihost) repo
     (forge-rest repo "POST" "/repos/:owner/:name/forks"
-      ((and (not (equal fork (ghub--username apihost)))
+      ((and (not (equal fork (ghub--username repo)))
             (organization fork))
        (default-branch-only (not all))))
     (ghub-wait (format "/repos/%s/%s" fork name)
@@ -1298,9 +1298,16 @@
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
+;;   ("when-let*"     . "cond-let--when-let*")
 ;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let")
 ;;   ("buffer-string" . "buffer-string")
 ;;   ("buffer-str"    . "forge--buffer-substring-no-properties")
 ;;   ("partial"       . "llama--left-apply-partially"))

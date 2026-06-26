@@ -1,6 +1,6 @@
-;;; forge-gogs.el --- Gogs support  -*- lexical-binding:t -*-
+;;; forge-bitbucket.el --- Bitbucket support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -26,21 +26,21 @@
 
 ;;; Class
 
-(defclass forge-gogs-repository (forge-unusedapi-repository)
+(defclass forge-bitbucket-repository (forge-noapi-repository)
   ((issues-url-format         :initform "https://%h/%o/%n/issues")
    (issue-url-format          :initform "https://%h/%o/%n/issues/%i")
-   (issue-post-url-format     :initform "https://%h/%o/%n/issues/%i#issuecomment-%I")
-   (pullreqs-url-format       :initform "https://%h/%o/%n/pulls")
-   (pullreq-url-format        :initform "https://%h/%o/%n/pulls/%i")
-   (pullreq-post-url-format   :initform "https://%h/%o/%n/pulls/%i#issuecomment-%I")
-   (commit-url-format         :initform "https://%h/%o/%n/commit/%r")
-   (branch-url-format         :initform "https://%h/%o/%n/commits/%r")
-   (remote-url-format         :initform "https://%h/%o/%n")
+   ;; The anchor for the issue itself is .../%i#issue-%i
+   (issue-post-url-format     :initform "https://%h/%o/%n/issues/%i#comment-%I")
+   (pullreqs-url-format       :initform "https://%h/%o/%n/pull-requests")
+   (pullreq-url-format        :initform "https://%h/%o/%n/pull-requests/%i")
+   (pullreq-post-url-format   :initform "https://%h/%o/%n/pull-requests/%i#comment-%I")
+   (commit-url-format         :initform "https://%h/%o/%n/commits/%r")
+   (branch-url-format         :initform "https://%h/%o/%n/branch/%r")
+   (remote-url-format         :initform "https://%h/%o/%n/src")
    (blob-url-format           :initform "https://%h/%o/%n/src/%r/%f")
    (create-issue-url-format   :initform "https://%h/%o/%n/issues/new")
-   (create-pullreq-url-format :initform "https://%h/%o/%n/pulls") ; sic
-   (pullreq-refspec :initform "+refs/pull/*/head:refs/pullreqs/*")))
+   (create-pullreq-url-format :initform "https://%h/%o/%n/pull-requests/new")))
 
 ;;; _
-(provide 'forge-gogs)
-;;; forge-gogs.el ends here
+(provide 'forge-bitbucket)
+;;; forge-bitbucket.el ends here

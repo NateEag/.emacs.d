@@ -1,6 +1,6 @@
 ;;; forge-post.el --- Post support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -166,7 +166,7 @@ One of `new-discussion', `new-issue', `new-pullreq', `reply' and `edit'.")
       (setq forge--buffer-post-object obj)
       (setq forge--submit-post-function submit)
       (pcase-dolist (`(,var ,val) bindings)
-        (set (make-local-variable var) val)
+        (set-local var val)
         (when (eq var 'forge--buffer-template)
           (let-alist forge--buffer-template
             (setq forge--buffer-assignees .assignees)
@@ -285,7 +285,7 @@ Insert the value of `branch.BRANCH.description' of the source BRANCH."
           (if (buffer-live-p prevbuf) prevbuf (current-buffer))
         (if (or (not full-pull)
                 (oref repo selective-p))
-            (forge--pull-topic repo topic)
+            (forge--pull-topic repo (or topic (alist-get 'number value)))
           (forge--pull repo))))))
 
 (defun forge--post-submit-errorback ()
@@ -408,9 +408,16 @@ Insert the value of `branch.BRANCH.description' of the source BRANCH."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
+;;   ("when-let*"     . "cond-let--when-let*")
 ;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let")
 ;;   ("buffer-string" . "buffer-string")
 ;;   ("buffer-str"    . "forge--buffer-substring-no-properties"))
 ;; End:

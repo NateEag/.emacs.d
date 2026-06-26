@@ -1,6 +1,6 @@
 ;;; forge-core.el --- Core functionality  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -239,10 +239,9 @@ Entries have the form (GITHOST APIHOST WEBHOST CLASS).
 If no entry matches, return nil, or signal an error if optional DEMAND
 is non-nil."
   (or (assoc host forge-alist)
-      (assoc (seq-some (lambda (line)
-                         (and (string-prefix-p "hostname" line)
-                              (substring line 9)))
-                       (ignore-errors
+      (assoc (seq-some (##and (string-prefix-p "hostname" %)
+                              (substring % 9))
+                       (ignore-error file-missing
                          (process-lines-ignore-status "ssh" "-G" host)))
              forge-alist)
       (car (cl-member host forge-alist :test #'equal :key #'caddr))
@@ -252,36 +251,36 @@ is non-nil."
 (defun forge--split-forge-url (url &optional relax)
   (save-match-data
     (cond
-     ((string-match
-       (concat "\\`"
-               "\\(?:git://\\|"
-               "[^/@]+@\\|"
-               "\\(?:ssh\\|ssh\\+git\\|git\\+ssh\\)://\\(?:[^/@]+@\\)?\\|"
-               "https?://\\(?:[^/@]+@\\)?\\)?"
-               (if relax
-                   "\\(?1:[^:/]+\\)"
-                 (regexp-opt (mapcar #'car forge-alist) t))
-               "\\(?::[0-9]+\\)?"
-               "\\(?:/\\|:/?\\)"
-               "~?\\(?2:.+?\\)/"
-               "\\(?3:[^/]+?\\)"
-               "\\(?:\\.git\\|/\\)?"
-               "\\'")
-       url)
-      (and-let ((elt (forge--get-forge-host (match-string 1 url) (not relax))))
-        ;; Return the WEBHOST (not the GITHOST, URLs passed to this
-        ;; function usually contain a GITHOST) because the IDs used to
-        ;; identify a repository in the database are based on WEBHOSTs.
-        (list (caddr elt)
-              (match-string 2 url)
-              (match-string 3 url))))
-     ((not relax)
-      ;; The host part didn't match any GITHOST in `forge-alist', but it
-      ;; might be a ssh host alias.  We have to relax strictness; in the
-      ;; extremely unlikely case that there is a common path between the
-      ;; HOST and the OWNER for this forge, we would incorrectly end up
-      ;; making that path part of the owner.
-      (forge--split-forge-url url t)))))
+      ((string-match
+        (concat "\\`"
+                "\\(?:git://\\|"
+                "[^/@]+@\\|"
+                "\\(?:ssh\\|ssh\\+git\\|git\\+ssh\\)://\\(?:[^/@]+@\\)?\\|"
+                "https?://\\(?:[^/@]+@\\)?\\)?"
+                (if relax
+                    "\\(?1:[^:/]+\\)"
+                  (regexp-opt (mapcar #'car forge-alist) t))
+                "\\(?::[0-9]+\\)?"
+                "\\(?:/\\|:/?\\)"
+                "~?\\(?2:.+?\\)/"
+                "\\(?3:[^/]+?\\)"
+                "\\(?:\\.git\\|/\\)?"
+                "\\'")
+        url)
+       (and-let ((elt (forge--get-forge-host (match-string 1 url) (not relax))))
+         ;; Return the WEBHOST (not the GITHOST, URLs passed to this
+         ;; function usually contain a GITHOST) because the IDs used to
+         ;; identify a repository in the database are based on WEBHOSTs.
+         (list (caddr elt)
+               (match-string 2 url)
+               (match-string 3 url))))
+      ((not relax)
+       ;; The host part didn't match any GITHOST in `forge-alist', but it
+       ;; might be a ssh host alias.  We have to relax strictness; in the
+       ;; extremely unlikely case that there is a common path between the
+       ;; HOST and the OWNER for this forge, we would incorrectly end up
+       ;; making that path part of the owner.
+       (forge--split-forge-url url t)))))
 
 ;;; Identity
 
@@ -296,46 +295,46 @@ is non-nil."
   "Return the forge's ID for ARG.
 This deals with technical debt related to our handling of IDs."
   (cond
-   (type
-    (pcase type
-      ('assignee
-       (forge-sql1 [:select [forge-id]
-                    :from assignee
-                    :where (and (= repository $s1)
-                                (= login $s2))]
-                   (oref repo id) arg))
-      ('assignees
-       (forge-sql-car [:select [forge-id]
-                       :from assignee
-                       :where (and (= repository $s1)
-                                   (in login $v2))]
-                      (oref repo id)
-                      (vconcat arg)))
-      ('category
-       (forge-sql1 [:select [their-id]
-                    :from discussion-category
-                    :where (and (= repository $s1)
-                                (= name $s2))]
-                   (oref repo id) arg))
-      ('label
-       (forge--their-id
-        (forge-sql1 [:select [id]
-                     :from label
+    (type
+     (pcase type
+       ('assignee
+        (forge-sql1 [:select [forge-id]
+                     :from assignee
+                     :where (and (= repository $s1)
+                                 (= login $s2))]
+                    (oref repo id) arg))
+       ('assignees
+        (forge-sql-car [:select [forge-id]
+                        :from assignee
+                        :where (and (= repository $s1)
+                                    (in login $v2))]
+                       (oref repo id)
+                       (vconcat arg)))
+       ('category
+        (forge-sql1 [:select [their-id]
+                     :from discussion-category
                      :where (and (= repository $s1)
                                  (= name $s2))]
-                    (oref repo id) arg)))
-      ('labels
-       (mapcar (##forge--their-id % 'label repo) arg))
-      ('milestone
-       (forge--their-id
-        (forge-sql1 [:select [id] :from milestone :where (= title $s1)] arg)))))
-   ((stringp arg)
-    (car (last (split-string (base64-decode-string arg) ":"))))
-   ((slot-exists-p arg 'their-id)
-    (oref arg their-id))
-   ((slot-exists-p arg 'forge-id)
-    (oref arg forge-id))
-   ((forge--their-id (oref arg id)))))
+                    (oref repo id) arg))
+       ('label
+        (forge--their-id
+         (forge-sql1 [:select [id]
+                      :from label
+                      :where (and (= repository $s1)
+                                  (= name $s2))]
+                     (oref repo id) arg)))
+       ('labels
+        (mapcar (##forge--their-id % 'label repo) arg))
+       ('milestone
+        (forge--their-id
+         (forge-sql1 [:select [id] :from milestone :where (= title $s1)] arg)))))
+    ((stringp arg)
+     (car (last (split-string (base64-decode-string arg) ":"))))
+    ((slot-exists-p arg 'their-id)
+     (oref arg their-id))
+    ((slot-exists-p arg 'forge-id)
+     (oref arg forge-id))
+    ((forge--their-id (oref arg id)))))
 
 (cl-defmethod magit-section-ident-value ((obj forge-object))
   "Return the value ob OBJ's `id' slot.
@@ -480,9 +479,16 @@ Optional END defaults to the value of `point-max'."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
-;;   ("when-let"      . "cond-let--when-let"))
+;;   ("when-let*"     . "cond-let--when-let*")
+;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let"))
 ;; End:
 (provide 'forge-core)
 ;;; forge-core.el ends here

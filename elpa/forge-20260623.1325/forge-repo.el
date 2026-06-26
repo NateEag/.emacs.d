@@ -1,6 +1,6 @@
 ;;; forge-repo.el --- Repository support  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2018-2025 Jonas Bernoulli
+;; Copyright (C) 2018-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
 ;; Maintainer: Jonas Bernoulli <emacs.forge@jonas.bernoulli.dev>
@@ -142,7 +142,7 @@
     (forge-get-repository :stub? nil 'notatpt)))
 
 (cl-defmethod forge-get-repository ((demand symbol) &optional remote notatpt)
-  "Return the current forge repository.
+   "Return the current forge repository.
 
 First check if `forge-buffer-repository', or if that is nil, then
 the repository for `forge-buffer-topic', satisfies DEMAND.  If so,
@@ -180,8 +180,7 @@ or signal an error, depending on DEMAND."
                                  $ "that remote does not exist.")))
                   ((magit-list-remotes) "Cannot decide on remote to use.")
                   (t "No remote configured."))
-            "https://docs.magit.vc/forge/How-Forge-Detection-Works.html"
-            ))))))
+            "https://docs.magit.vc/forge/How-Forge-Detection-Works.html"))))))
 
 (cl-defmethod forge-get-repository ((url string) &optional remote demand)
   "Return the repository at URL."
@@ -462,18 +461,6 @@ forges and hosts."
 
 ;;; Miscellaneous
 
-(defun forge--as-githost (host)
-  (or (car (car (cl-member host forge-alist :test #'equal :key #'car)))
-      (car (car (cl-member host forge-alist :test #'equal :key #'cadr)))
-      (car (car (cl-member host forge-alist :test #'equal :key #'caddr)))
-      (user-error "Cannot determine githost for %S" host)))
-
-(defun forge--as-apihost (host)
-  (or (cadr (car (cl-member host forge-alist :test #'equal :key #'cadr)))
-      (cadr (car (cl-member host forge-alist :test #'equal :key #'car)))
-      (cadr (car (cl-member host forge-alist :test #'equal :key #'caddr)))
-      (user-error "Cannot determine apihost for %S" host)))
-
 (cl-defmethod forge--format ((repo forge-repository) format-or-slot &optional spec)
   (pcase-let* (((eieio (forge webhost) owner name) repo)
                (path (if owner (concat owner "/" name) name)))
@@ -511,6 +498,29 @@ forges and hosts."
                                         'magit-mode-line-process)))))
       (force-mode-line-update t))))
 
+(defun forge--as-githost (host)
+  (or (car (car (cl-member host forge-alist :test #'equal :key #'car)))
+      (car (car (cl-member host forge-alist :test #'equal :key #'cadr)))
+      (car (car (cl-member host forge-alist :test #'equal :key #'caddr)))
+      (error "Cannot determine githost for %S" host)))
+
+(defun forge--as-apihost (host)
+  (or (cadr (car (cl-member host forge-alist :test #'equal :key #'cadr)))
+      (cadr (car (cl-member host forge-alist :test #'equal :key #'car)))
+      (cadr (car (cl-member host forge-alist :test #'equal :key #'caddr)))
+      (error "Cannot determine apihost for %S" host)))
+
+(defun forge--as-webhost (host &optional noerror)
+  (or (caddr (car (cl-member host forge-alist :test #'equal :key #'cadr)))
+      (caddr (car (cl-member host forge-alist :test #'equal :key #'car)))
+      (caddr (car (cl-member host forge-alist :test #'equal :key #'caddr)))
+      (and (not noerror)
+           (error "Cannot determine webhost for %S" host))))
+
+(defun forge--host-id (host)
+  (or (forge--as-webhost host t)
+      (error "Cannot determine identifier for %S" host)))
+
 (cl-defmethod ghub--host ((repo forge-repository))
   (cl-call-next-method (forge--ghub-type-symbol (eieio-object-class repo))))
 
@@ -519,7 +529,7 @@ forges and hosts."
     (unless (forge-repository-equal (forge-get-repository :stub?) repo)
       (when-let ((worktree (forge-get-worktree repo)))
         (setq default-directory worktree)))
-    (cl-call-next-method (oref repo apihost)
+    (cl-call-next-method (forge--host-id (oref repo apihost))
                          (forge--ghub-type-symbol (eieio-object-class repo)))))
 
 (defun forge--ghub-type-symbol (class)
@@ -535,9 +545,16 @@ forges and hosts."
 ;; Local Variables:
 ;; read-symbol-shorthands: (
 ;;   ("and$"          . "cond-let--and$")
+;;   ("thread$"       . "cond-let--thread$")
+;;   ("when$"         . "cond-let--when$")
+;;   ("and-let*"      . "cond-let--and-let*")
 ;;   ("and-let"       . "cond-let--and-let")
+;;   ("if-let*"       . "cond-let--if-let*")
 ;;   ("if-let"        . "cond-let--if-let")
+;;   ("when-let*"     . "cond-let--when-let*")
 ;;   ("when-let"      . "cond-let--when-let")
+;;   ("while-let*"    . "cond-let--while-let*")
+;;   ("while-let"     . "cond-let--while-let")
 ;;   ("partial"       . "llama--left-apply-partially"))
 ;; End:
 (provide 'forge-repo)

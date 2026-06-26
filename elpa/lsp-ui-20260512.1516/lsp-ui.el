@@ -2,13 +2,14 @@
 
 ;; Copyright (C) 2017 Tobias Pisani
 ;; Copyright (C) 2018 Sebastien Chapuis, Fangrui Song
+;; Copyright (C) 2017-2026 emacs-lsp maintainers
 
 ;; Author: Sebastien Chapuis <sebastien@chapu.is>, Fangrui Song <i@maskray.me>
 ;; Keywords: languages, tools
 ;; URL: https://github.com/emacs-lsp/lsp-ui
-;; Package-Requires: ((emacs "28.1") (dash "2.18.0") (lsp-mode "6.0") (markdown-mode "2.3"))
-;; Package-Version: 20250804.2109
-;; Package-Revision: dcce464bc5d1
+;; Package-Requires: ((emacs "29.1") (dash "2.18.0") (lsp-mode "6.0") (markdown-mode "2.3"))
+;; Package-Version: 20260512.1516
+;; Package-Revision: 8d888a3ab1ba
 
 ;;; License
 ;;

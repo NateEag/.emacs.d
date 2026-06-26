@@ -1077,15 +1077,15 @@
       (:url . "https://elpa.gnu.org/packages/elisp-benchmarks.html")
       (:commit . "1a3d97954957a95a179806e0d49ca6d178b097af"))])
  (ellama
-  . [(1 27 2)
-     ((emacs (28 1)) (llm (0 30 2)) (plz (0 8)) (transient (0 7))
+  . [(1 29 0)
+     ((emacs (28 1)) (llm (0 31 1)) (plz (0 8)) (transient (0 7))
       (compat (29 1)) (yaml (1 2 3)))
      "Tool for interacting with LLMs" tar
      ((:url . "http://github.com/s-kostyaev/ellama")
       (:keywords "help" "local" "tools")
       (:maintainer "Sergey Kostyaev" . "sskostyaev@gmail.com")
       (:authors ("Sergey Kostyaev" . "sskostyaev@gmail.com"))
-      (:commit . "912385f2132b2fe1a6fa4c710ac995222e0e8fb4"))])
+      (:commit . "9e5eed88f01ec57b3796df489db86ee00faf4a25"))])
  (emacs-gc-stats
   . [(1 4 2) ((emacs (25 1))) "Collect Emacs GC statistics" tar
      ((:url . "https://git.sr.ht/~yantar92/emacs-gc-stats")
@@ -1878,14 +1878,14 @@
       (:authors ("Sean Whitton" . "spwhitton@spwhitton.name"))
       (:commit . "00b8f65effe4f2673e6450d70000644b266aa78a"))])
  (llm
-  . [(0 31 0)
+  . [(0 31 1)
      ((emacs (28 1)) (plz (0 8)) (plz-event-source (0 1 1))
       (plz-media-type (0 2 1)) (compat (29 1)))
      "Interface to pluggable llm backends" tar
      ((:url . "https://github.com/ahyatt/llm")
       (:maintainer "Andrew Hyatt" . "ahyatt@gmail.com")
       (:authors ("Andrew Hyatt" . "ahyatt@gmail.com"))
-      (:commit . "8bb1d42ab7e112a535a608c7a2538350f469e7b9"))])
+      (:commit . "34ac61091994c10bda45eed54433a1a87ca26af1"))])
  (lmc
   . [(1 4) nil "Little Man Computer in Elisp" tar
      ((:maintainer "Stefan Monnier" . "monnier@iro.umontreal.ca")
@@ -2461,14 +2461,14 @@
       (:url . "https://elpa.gnu.org/packages/persist.html")
       (:commit . "3b4b421d5185f2c33bae478aa057dff13701cc25"))])
  (php-fill
-  . [(1 1 1) ((emacs (27 1)))
+  . [(1 1 2) ((emacs (27 1)))
      "Additional fill commands for PHP code editing" tar
      ((:url . "https://github.com/arielenter/php-fill.el")
       (:keywords "php" "languages" "tools" "convenience")
       (:maintainer "Ariel Del Valle Lozano"
 		   . "arielmazatlan@gmail.com")
       (:authors ("Ariel Del Valle Lozano" . "arielmazatlan@gmail.com"))
-      (:commit . "73c1c8765a84b0318f2ba852c504e8251ced43ca"))])
+      (:commit . "293bc8bc939cf0e4553d4aedd9c45e2ee653ae4d"))])
  (phpinspect
   . [(3 0 1) ((compat (29)))
      "PHP parsing and code intelligence package" tar
@@ -3329,15 +3329,15 @@
        ("Jonas Bernoulli" . "emacs.transient@jonas.bernoulli.dev"))
       (:commit . "1856230dc181f23dd15026b0ad21d8b299b034d1"))])
  (transient-cycles
-  . [(2 0) ((emacs (29 1)))
+  . [(2 1) ((emacs (29 1)))
      "Define command variants with transient cycling" tar
      ((:url
-       . "https://git.spwhitton.name/dotfiles/tree/.emacs.d/site-lisp/transient-cycles.el")
+       . "https://git.spwhitton.name/dotfiles/tree/.emacs.d/user-lisp/transient-cycles.el")
       (:keywords "buffer" "window" "processes" "minor-mode"
 		 "convenience")
       (:maintainer "Sean Whitton" . "spwhitton@spwhitton.name")
       (:authors ("Sean Whitton" . "spwhitton@spwhitton.name"))
-      (:commit . "11e547c11b84fa81bb4ef8ec33ee777f96576e8c"))])
+      (:commit . "2a35e2086675c08d1d3d451307566215202b641e"))])
  (tree-inspector
   . [(0 4) ((emacs (27 1)) (treeview (1 1 0)))
      "Inspector tool for Emacs Lisp object that uses a treeview" tar

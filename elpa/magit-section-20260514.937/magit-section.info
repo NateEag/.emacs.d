@@ -1,7 +1,7 @@
 This is magit-section.info, produced by makeinfo version 6.8 from
 magit-section.texi.
 
-     Copyright (C) 2015-2025 Jonas Bernoulli
+     Copyright (C) 2015-2026 Jonas Bernoulli
      <emacs.magit@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms
@@ -34,9 +34,9 @@ packages that have nothing to do with Magit or Git.
 and user options see *note (magit)Sections::.  This manual documents how
 you can use sections in your own packages.
 
-This manual is for Magit-Section version 4.4.2.
+This manual is for Magit-Section version 4.5.0.
 
-     Copyright (C) 2015-2025 Jonas Bernoulli
+     Copyright (C) 2015-2026 Jonas Bernoulli
      <emacs.magit@jonas.bernoulli.dev>
 
      You can redistribute this document and/or modify it under the terms

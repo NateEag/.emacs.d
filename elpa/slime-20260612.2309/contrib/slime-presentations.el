@@ -14,7 +14,9 @@
                ;; Respect the syntax text properties of presentation.
                (set (make-local-variable 'parse-sexp-lookup-properties) t)
                (add-hook 'after-change-functions
-                         'slime-after-change-function 'append t)))
+                         'slime-after-change-function 'append t)
+               (add-to-list 'yank-handled-properties 
+                            '(slime-repl-presentation . slime-yank-presentations-handler))))
    (add-hook 'slime-event-hooks 'slime-dispatch-presentation-event)
    (setq slime-write-string-function 'slime-presentation-write)
    (add-hook 'slime-connected-hook 'slime-presentations-on-connected)
@@ -54,6 +56,12 @@
               :test 'equal)
   (cl-pushnew '(slime-repl-result-face . t) text-property-default-nonsticky
               :test 'equal))
+
+(defun slime-yank-presentations-handler (category start end)
+  (unless (eq major-mode 'slime-repl-mode)
+    (let ((inhibit-modification-hooks t))
+      (set-text-properties start end nil))
+    t))
 
 (make-variable-buffer-local
  (defvar slime-presentation-start-to-point (make-hash-table)))
@@ -324,8 +332,8 @@ string or buffer `object'."
   "Check all presentations within and adjacent to the change.
 When a presentation has been altered, change it to plain text."
   (let ((inhibit-modification-hooks t))
-    (let ((real-start (max 1 (1- start)))
-          (real-end   (min (1+ (buffer-size)) (1+ end)))
+    (let ((real-start (max (point-min) (1- start)))
+          (real-end   (min (point-max) (1+ end)))
           (any-change nil))
       ;; positions around the change
       (slime-for-each-presentation-in-region

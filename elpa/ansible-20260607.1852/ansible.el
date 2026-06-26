@@ -17,8 +17,8 @@
 ;; along with this program; if not, write to the Free Software
 ;; Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
-;; Package-Version: 20250613.2354
-;; Package-Revision: 7385222a4f20
+;; Package-Version: 20260607.1852
+;; Package-Revision: 0d7bc93ad963
 ;; Author: k1LoW (Kenichirou Oyama), <k1lowxb [at] gmail [dot] com>
 ;;                                   <k1low [at] 101000lab [dot] org>
 ;; Updates: Mark A. Hershberger, <mah@everybody.org>
@@ -71,6 +71,7 @@
 (defcustom ansible-vault-password-file "~/.vault_pass.txt"
   "Filename containing `ansible-vault` password."
   :type 'file
+  :risky t
   :group 'ansible)
 
 (defcustom ansible-vault-password-environment-variable "VAULT_PASSWORD"
@@ -82,16 +83,16 @@
   "Password for `ansible-vault'.
 This can be a file path (from `ansible-vault-password-file') or a function."
   :type '(choice
-           (const
-             :tag "Use the contents of the file `ansible-vault-password-file`" file)
-           (const
-            :tag "Prompt for a password"
-            :value ansible-vault-prompt-for-password)
-           (const
-            :tag "Use the contents of the environment variable `ansible-vault-password-environment-variable`"
-            :value ansible-vault-password-from-environment)
-           (function
-             :tag "Function")))
+          (const
+           :tag "Use the contents of the file `ansible-vault-password-file`" file)
+          (const
+           :tag "Prompt for a password"
+           :value ansible-vault-prompt-for-password)
+          (const
+           :tag "Use the contents of the environment variable `ansible-vault-password-environment-variable`"
+           :value ansible-vault-password-from-environment)
+          (function
+           :tag "Function")))
 
 (defconst ansible-dir (file-name-directory (or load-file-name
                                                buffer-file-name)))
@@ -283,7 +284,7 @@ Used for vars, tasks, handlers, etc."
 
 
 (defvar ansible-playbook-font-lock
-`((,ansible-section-keywords-regex    (1 ansible-section-face t))
+  `((,ansible-section-keywords-regex    (1 ansible-section-face t))
     (,ansible-task-keywords-regex       (1 font-lock-keyword-face t))
     (,ansible-keywords-regex            (1 font-lock-builtin-face t))
     ("^ *- \\(name\\):\\([^#\n]*\\)"
@@ -386,16 +387,16 @@ If BUFFER-COUNT is passed and is > 1, then skip unloading."
   "Find ansible directory."
   (let ((current-dir (f-expand default-directory)))
     (cl-loop with count = 0
-          until (f-exists? (f-join current-dir "roles"))
-          ;; Return nil if outside the value of
-          if (= count ansible-dir-search-limit)
-          do (cl-return nil)
-          ;; Or search upper directories.
-          else
-          do (cl-incf count)
-          (unless (f-root? current-dir)
-            (setq current-dir (f-dirname current-dir)))
-          finally return current-dir)))
+             until (f-exists? (f-join current-dir "roles"))
+             ;; Return nil if outside the value of
+             if (= count ansible-dir-search-limit)
+             do (cl-return nil)
+             ;; Or search upper directories.
+             else
+             do (cl-incf count)
+             (unless (f-root? current-dir)
+               (setq current-dir (f-dirname current-dir)))
+             finally return current-dir)))
 
 (defun ansible-list-playbooks ()
   "Find .yml files in `ansible-root-path`."
@@ -410,23 +411,26 @@ If BUFFER-COUNT is passed and is > 1, then skip unloading."
 (defun ansible-vault-get-password ()
   "Retrieve the password based on the value of `ansible-vault-password'."
   (cond
-    ((functionp ansible-vault-password)
-     (funcall ansible-vault-password))
-    ((eq ansible-vault-password 'file)
-     (format "--vault-password-file=%s"
-             (expand-file-name ansible-vault-password-file)))
-    (t
-      (error "Invalid ansible-vault-password value"))))
+   ((functionp ansible-vault-password)
+    (let ((pass (funcall ansible-vault-password)))
+      (if (stringp pass)
+          (list pass)
+        pass)))
+   ((eq ansible-vault-password 'file)
+    (list (format "--vault-password-file=%s"
+                  (expand-file-name ansible-vault-password-file))))
+   (t
+    (error "Invalid ansible-vault-password value"))))
 
-(defun ansible-vault (mode str param-str)
-  "Execute `ansible-vault` MODE on STR with the given PARAM-STR.
+(defun ansible-vault (mode str params)
+  "Execute `ansible-vault` MODE on STR with the given PARAMS.
 
 MODE is `encrypt' or `decrypt'.
 
 STR is the string to be handled.
 
-PARAM-STR is produced by `ansible-vault-string' and is meant to be an
-empty string or `--vault-password-file ...'.
+PARAMS is produced by `ansible-vault-get-password' and is meant to be an
+list of args that can be passed to ansible-vault.
 
 If the first line of STR is indented with whitespace, only those lines
 in STR that match that whitespace will be handled by `ansible-vault MODE'.
@@ -436,52 +440,62 @@ The string that results will be returned.
 
 See the man page `ansible-vault(1)' for more details."
   (let* ((temp-file (make-temp-file "ansible-vault-ansible"))
-          (lines (split-string str "\n"))
-          (first-line (car lines))
-          (first-line-prefix (if (string-match "^[ \t]*" first-line)
-                               (match-string 0 first-line)
-                               ""))
-          (same-indent-lines (cl-loop for line in lines
-                               while (string-prefix-p first-line-prefix line)
-                               collect line))
-          (rest-lines (nthcdr (length same-indent-lines) lines))
-          (cleaned-same-indent-lines
-           (mapconcat (lambda (line)
-                        (replace-regexp-in-string
-                         (format "^%s" (regexp-quote first-line-prefix))
-                         "" line))
-                      same-indent-lines
-                      "\n")))
+         (lines (split-string str "\n"))
+         (first-line (car lines))
+         (first-line-prefix (if (string-match "^[ \t]*" first-line)
+                                (match-string 0 first-line)
+                              ""))
+         (same-indent-lines (cl-loop for line in lines
+                                     while (string-prefix-p first-line-prefix line)
+                                     collect line))
+         (rest-lines (nthcdr (length same-indent-lines) lines))
+         (cleaned-same-indent-lines
+          (mapconcat (lambda (line)
+                       (replace-regexp-in-string
+                        (format "^%s" (regexp-quote first-line-prefix))
+                        "" line))
+                     same-indent-lines
+                     "\n")))
     (write-region cleaned-same-indent-lines nil temp-file 'append)
-    (let* ((vault-str (or param-str ""))
-            (command (format "ansible-vault %s %s %s"
-                       mode vault-str temp-file))
-            (status (shell-command command))
-            (output (string-trim-right (f-read-text temp-file))))
-      (if (/= status 0)
-        (error "Error in `ansible-vault` running %s!" command)
-        (delete-file temp-file)
-        (concat (mapconcat
-                  (lambda (line) (concat first-line-prefix line))
-                  (split-string output "\n")
-                  "\n")
-          (when rest-lines
-            (concat "\n" (mapconcat 'identity rest-lines "\n"))))))))
+
+    (let ((output-buffer (generate-new-buffer " *ansible-vault-output*"))
+          (status nil))
+      (unwind-protect
+          (progn
+            ;; call-process calls the binary directly without spawning /bin/sh
+            (let ((full-args (append (list mode) params (list temp-file))))
+              (setq status (apply #'call-process "ansible-vault" nil output-buffer nil full-args)))
+
+            (if (/= status 0)
+                (error "Error in `ansible-vault` execution! Exit code: %s" status)
+              ;; Read the output directly from our isolated buffer
+              (let ((output (with-current-buffer output-buffer
+                              (string-trim-right (buffer-string)))))
+                (delete-file temp-file)
+                (concat (mapconcat
+                         (lambda (line) (concat first-line-prefix line))
+                         (split-string output "\n")
+                         "\n")
+                        (when rest-lines
+                          (concat "\n" (mapconcat 'identity rest-lines "\n")))))))
+        ;; Ensure buffer cleanup happens even if errors occur
+        (when (buffer-live-p output-buffer)
+          (kill-buffer output-buffer))))))
 
 (defun ansible-vault-string (mode str)
   "Do `ansible-vault' MODE on STR and return result.
 MODE should be one of `decrypt' or `encrypt'."
   (if (or (string-equal "decrypt" mode) (string-equal "encrypt" mode))
-    (let ((output (ansible-vault mode str (ansible-vault-get-password))))
+      (let ((output (ansible-vault mode str (ansible-vault-get-password))))
 
-      ;; Clean up any temp password file ansible-vault-get-password may have
-      ;; produced.
-      (when (and (stringp ansible-vault-store-cleanup-file)
-                 (file-exists-p ansible-vault-store-cleanup-file))
-        (delete-file ansible-vault-store-cleanup-file)
-        (setq ansible-vault-store-cleanup-file nil))
+        ;; Clean up any temp password file ansible-vault-get-password may have
+        ;; produced.
+        (when (and (stringp ansible-vault-store-cleanup-file)
+                   (file-exists-p ansible-vault-store-cleanup-file))
+          (delete-file ansible-vault-store-cleanup-file)
+          (setq ansible-vault-store-cleanup-file nil))
 
-      output)
+        output)
     (error "MODE should be one of 'encrypt' or 'decrypt'")))
 
 (defun ansible-decrypt-buffer ()
@@ -495,8 +509,8 @@ MODE should be one of `decrypt' or `encrypt'."
   "Encrypt current buffer."
   (interactive)
   (if (buffer-modified-p)
-	  (ansible-vault-buffer "encrypt")
-	(revert-buffer t t)))
+      (ansible-vault-buffer "encrypt")
+    (revert-buffer t t)))
 
 (defun ansible-vault-buffer (mode)
   "Execute `ansible-vault' MODE and update current buffer."

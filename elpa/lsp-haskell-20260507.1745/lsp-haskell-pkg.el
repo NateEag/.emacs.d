@@ -1,9 +1,9 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "lsp-haskell" "20251121.1710"
+(define-package "lsp-haskell" "20260507.1745"
   "Haskell support for lsp-mode."
-  '((emacs    "28.1")
+  '((emacs    "29.1")
     (lsp-mode "3.0"))
   :url "https://github.com/emacs-lsp/lsp-haskell"
-  :commit "871a0ef2e98b3a749d0b69d958698000ca5640d3"
-  :revdesc "871a0ef2e98b"
+  :commit "4c3001aeb116fb489223269ea353359b90e2a5e1"
+  :revdesc "4c3001aeb116"
   :keywords '("haskell"))

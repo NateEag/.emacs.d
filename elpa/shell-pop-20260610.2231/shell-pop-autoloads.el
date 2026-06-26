@@ -17,7 +17,8 @@ Key binding used to pop in and out of the shell.
 The input format is the same as that of `kbd'.")
 (custom-autoload 'shell-pop-universal-key "shell-pop" nil)
 (autoload 'shell-pop "shell-pop" "\
-
+Toggle the shell buffer pop-up.
+With prefix ARG, switch to or create a specific shell buffer index.
 
 (fn ARG)" t)
 (register-definition-prefixes "shell-pop" '("shell-pop-"))

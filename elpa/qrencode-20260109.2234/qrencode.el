@@ -1,11 +1,11 @@
 ;;; qrencode.el --- QRCode encoder  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2024 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
+;; Copyright (C) 2021-2026 Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 
 ;; Author: Rüdiger Sonderfeld <ruediger@c-plusplus.net>
 ;; Keywords: qrcode comm
-;; Package-Version: 20240922.1231
-;; Package-Revision: 4bbb1f331d7e
+;; Package-Version: 20260109.2234
+;; Package-Revision: 023c61309e8f
 ;; Package-Requires: ((emacs "25.1"))
 ;; Package: qrencode
 ;; URL: https://github.com/ruediger/qrencode-el
@@ -36,6 +36,9 @@
 ;; in a separate buffer.
 
 ;;; Code:
+
+;; backwards compatibility for Emacs <29.1
+(eval-when-compile (require 'subr-x))
 
 (require 'cl-lib)
 (eval-when-compile (require 'easymenu))
@@ -830,7 +833,7 @@ version."
                               (m (qrencode--length-in-version n version mode)))
                     (if errcorr
                         (when (>= (- num-codewords (cadr (assq errcorr errlevels))) m)
-                          (cl-return (cons version errcorr)))
+                          (cl-return-from outer-loop (cons version errcorr)))
                       (cl-loop for e in '(H Q M L) ; Go from highest err corr level to lowest
                                do (when (>= (- num-codewords (cadr (assq e errlevels))) m)
                                     (cl-return-from outer-loop (cons version e)))))))

@@ -96,19 +96,19 @@ Like Vim %, NUM is the percentage of location.
 (autoload 'evil-matchit-mode "evil-matchit-evil-setup" "\
 Buffer-local minor mode to emulate matchit.vim.
 
-This is a minor mode.  If called interactively, toggle the
-`Evil-Matchit mode' mode.  If the prefix argument is positive,
-enable the mode, and if it is zero or negative, disable the mode.
+This is a minor mode.  If called interactively, toggle the `Evil-Matchit
+mode' mode.  If the prefix argument is positive, enable the mode, and if
+it is zero or negative, disable the mode.
 
-If called from Lisp, toggle the mode if ARG is `toggle'.  Enable
-the mode if ARG is nil, omitted, or is a positive number.
-Disable the mode if ARG is a negative number.
+If called from Lisp, toggle the mode if ARG is `toggle'.  Enable the
+mode if ARG is nil, omitted, or is a positive number.  Disable the mode
+if ARG is a negative number.
 
 To check whether the minor mode is enabled in the current buffer,
-evaluate `evil-matchit-mode'.
+evaluate the variable `evil-matchit-mode'.
 
-The mode's hook is called both when the mode is enabled and when
-it is disabled.
+The mode's hook is called both when the mode is enabled and when it is
+disabled.
 
 (fn &optional ARG)" t)
 (autoload 'turn-on-evil-matchit-mode "evil-matchit-evil-setup" "\
@@ -187,6 +187,17 @@ Jump to the matching tag using INFO and NUM.
 
 (fn INFO NUM)")
 (register-definition-prefixes "evil-matchit-javascript" '("evilmi-"))
+
+
+;;; Generated autoloads from evil-matchit-julia.el
+
+(autoload 'evilmi-julia-get-tag "evil-matchit-julia" "\
+Get tag at point.")
+(autoload 'evilmi-julia-jump "evil-matchit-julia" "\
+Use INFO returned by `evilmi-julia-get-tag' and NUM to jump to matched tag.
+
+(fn INFO NUM)")
+(register-definition-prefixes "evil-matchit-julia" '("evilmi-julia-"))
 
 
 ;;; Generated autoloads from evil-matchit-latex.el
@@ -298,19 +309,21 @@ Check if KEYWORD exist in KEYWORD-LIST.
 (autoload 'evilmi-sdk-get-tag-info "evil-matchit-sdk" "\
 Return (row column is-function-exit-point keyword).
 The row and column mark the position in `evilmi-mylang-match-tags'
-is-function-exit-point could be unknown status
+is-function-exit-point could be unknown status.
 
 (fn KEYWORD MATCH-TAGS)")
 (autoload 'evilmi-sdk-get-tag "evil-matchit-sdk" "\
 Use MATCH-TAGS and HOWTOS to return information for jump.
+Lines matching IGNORE-PATTERN will be ignored.
 
-(fn MATCH-TAGS HOWTOS)")
+(fn MATCH-TAGS HOWTOS &optional IGNORE-PATTERN)")
 (autoload 'evilmi-sdk-jump "evil-matchit-sdk" "\
-Use RLT, NUM, MATCH-TAGS and HOWTOS to jump.
+Use INFO, NUM, MATCH-TAGS and HOWTOS to jump.
+Lines matching IGNORE-PATTERN will be ignored.
 Return nil if no matching tag found.  Please note (point) is changed
 after calling this function.
 
-(fn RLT NUM MATCH-TAGS HOWTOS)")
+(fn INFO NUM MATCH-TAGS HOWTOS &optional IGNORE-PATTERN)")
 (autoload 'evilmi-sdk-font-p "evil-matchit-sdk" "\
 If current font at POS is among FONTS.
 

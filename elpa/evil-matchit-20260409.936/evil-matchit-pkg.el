@@ -1,10 +1,10 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "evil-matchit" "20241205.641"
+(define-package "evil-matchit" "20260409.936"
   "Vim matchit ported to Evil."
   '((emacs "27.1"))
-  :url "http://github.com/redguardtoo/evil-matchit"
-  :commit "84a6d34c1a1282c43c6ccef2ead3eaa41fd1535f"
-  :revdesc "84a6d34c1a12"
+  :url "https://github.com/redguardtoo/evil-matchit"
+  :commit "751e74ce2e29c3f32b30e6a1012a33fe81ba0700"
+  :revdesc "751e74ce2e29"
   :keywords '("matchit" "vim" "evil")
   :authors '(("Chen Bin" . "chenbin.sh@gmail.com"))
   :maintainers '(("Chen Bin" . "chenbin.sh@gmail.com")))

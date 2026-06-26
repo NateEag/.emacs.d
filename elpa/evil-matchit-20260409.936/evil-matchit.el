@@ -1,11 +1,11 @@
 ;;; evil-matchit.el --- Vim matchit ported to Evil -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2014-2020 Chen Bin
+;; Copyright (C) 2014-2026 Chen Bin
 
 ;; Author: Chen Bin <chenbin.sh@gmail.com>
 ;; URL: http://github.com/redguardtoo/evil-matchit
-;; Package-Version: 20241205.641
-;; Package-Revision: 84a6d34c1a12
+;; Package-Version: 20260409.936
+;; Package-Revision: 751e74ce2e29
 ;; Keywords: matchit vim evil
 ;; Package-Requires: ((emacs "27.1"))
 ;;
@@ -162,6 +162,7 @@ Some modes can be toggle on/off in the hook."
       (setq ideal-dest (point)))
 
     (if evilmi-debug (message "evilmi-jump-items-internal returned: %s" ideal-dest))
+    (run-hook-with-args 'evilmi-jump-hook nil)
     ideal-dest))
 
 ;;;###autoload
@@ -308,6 +309,9 @@ If APPEND-P is t, new plugin rule is appended into existing rules."
   ;; verilog-mode
   (evilmi-load-plugin-rules '(verilog-mode) '(verilog))
 
+  ;; Julia
+  (evilmi-load-plugin-rules '(julia-mode julia-ts-mode) '(simple julia))
+
   ;; Lua or script
   (evilmi-load-plugin-rules '(lua-mode vimrc-mode) '(simple script))
 
@@ -375,7 +379,7 @@ If IS-INNER is t, the region is inner text object."
 (defun evilmi-version()
   "Print version."
   (interactive)
-  (message "4.0.1"))
+  (message "4.1.0"))
 
 ;; initialize evilmi-plugins only once
 (evilmi-init-plugins)

@@ -1,13 +1,13 @@
 ;;; exec-path-from-shell.el --- Get environment variables such as $PATH from the shell  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2012-2014 Steve Purcell
+;; Copyright (C) 2012-2026 Steve Purcell
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: unix, environment
 ;; URL: https://github.com/purcell/exec-path-from-shell
-;; Package-Version: 20251113.1324
-;; Package-Revision: 7552abf032a3
-;; Package-Requires: ((emacs "24.4"))
+;; Package-Version: 20260423.1833
+;; Package-Revision: dae820da35ad
+;; Package-Requires: ((emacs "26.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -148,8 +148,8 @@ The default value denotes an interactive login shell."
 (defmacro exec-path-from-shell--warn-duration (&rest body)
   "Evaluate BODY and warn if execution duration exceeds a time limit.
 The limit is given by `exec-path-from-shell-warn-duration-millis'."
-  (let ((start-time (cl-gensym))
-        (duration-millis (cl-gensym)))
+  (let ((start-time (gensym))
+        (duration-millis (gensym)))
     `(let ((,start-time (current-time)))
        (prog1
            (progn ,@body)

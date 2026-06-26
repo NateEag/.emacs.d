@@ -18,7 +18,7 @@ If called interactively or if SHOW-VERSION is non-nil, show the
 version in the echo area and the messages buffer.
 
 The returned string includes both, the version from package.el
-and the library version, if both a present and different.
+and the library version, if both are present and different.
 
 If the version number could not be determined, signal an error,
 if called interactively, or if SHOW-VERSION is non-nil, otherwise
@@ -38,6 +38,14 @@ is cleared when there is no current project (unless you give a prefix
 argument).
 
 (fn PROMPT)" t)
+(autoload 'projectile-discard-root-cache "projectile" "\
+Clear `projectile-project-root-cache' without touching other caches.
+Useful after creating, removing, or moving a project marker (e.g.
+`.projectile' or `.git') - Projectile would otherwise keep returning
+its previously cached answer for that directory.
+
+See also `projectile-invalidate-cache', which does this and also drops
+the per-project file list and project-type caches." t)
 (autoload 'projectile-purge-file-from-cache "projectile" "\
 Purge FILE from the cache of the current project.
 
@@ -58,6 +66,22 @@ discover projects there.
 (autoload 'projectile-discover-projects-in-search-path "projectile" "\
 Discover projects in `projectile-project-search-path'.
 Invoked automatically when `projectile-mode' is enabled." t)
+(autoload 'projectile-index-project-async "projectile" "\
+Index PROJECT-ROOT in the background and populate the files cache.
+
+This warms `projectile-projects-cache' without blocking Emacs, so a
+later `projectile-find-file' (or any command that lists project files)
+finds the cache already populated instead of indexing synchronously.
+
+Only the external-command indexing methods (`alien' and `hybrid') can be
+warmed this way; under `native' indexing this is a no-op with a message,
+since the Elisp directory walk cannot run off the main thread.  Warming
+also requires caching to be enabled.
+
+When PROJECT-ROOT is omitted the current project is used.  Returns the
+indexing process, or nil when nothing was started.
+
+(fn &optional PROJECT-ROOT)" t)
 (autoload 'projectile-switch-to-buffer "projectile" "\
 Switch to a project buffer." t)
 (autoload 'projectile-switch-to-buffer-other-window "projectile" "\
@@ -197,6 +221,11 @@ Jump to a project's file using completion and show it in another frame.
 With a prefix arg INVALIDATE-CACHE invalidates the cache first.
 
 (fn &optional INVALIDATE-CACHE)" t)
+(autoload 'projectile-find-file-all "projectile" "\
+Jump to any file in the project, ignoring VCS and projectile ignore rules.
+This lists all files under the project root using a generic file listing
+command (fd or find), bypassing `.gitignore', `.projectile', and other
+ignore mechanisms." t)
 (autoload 'projectile-toggle-project-read-only "projectile" "\
 Toggle project read only." t)
 (autoload 'projectile-add-dir-local-variable "projectile" "\
@@ -304,7 +333,7 @@ Run a ripgrep (rg) search with `SEARCH-TERM' at current project root.
 With an optional prefix argument ARG SEARCH-TERM is interpreted as a
 regular expression.
 
-This command depends on of the Emacs packages ripgrep or rg being
+This command depends on the Emacs packages ripgrep or rg being
 installed to work.
 
 (fn SEARCH-TERM &optional ARG)" t)
@@ -372,6 +401,38 @@ Switch to the project specific term buffer if it already exists.
 Use a prefix argument ARG to indicate creation of a new process instead.
 
 (fn &optional ARG)" t)
+(autoload 'projectile-run-eat "projectile" "\
+Invoke `eat' in the project's root.
+
+Switch to the project specific eat buffer if it already exists.
+
+Use a prefix argument ARG to indicate creation of a new process instead.
+
+(fn &optional ARG)" t)
+(autoload 'projectile-run-eat-other-window "projectile" "\
+Invoke `eat' in the project's root.
+
+Switch to the project specific eat buffer if it already exists.
+
+Use a prefix argument ARG to indicate creation of a new process instead.
+
+(fn &optional ARG)" t)
+(autoload 'projectile-run-ghostel "projectile" "\
+Invoke `ghostel' in the project's root.
+
+Switch to the project specific ghostel buffer if it already exists.
+
+Use a prefix argument ARG to indicate creation of a new process instead.
+
+(fn &optional ARG)" t)
+(autoload 'projectile-run-ghostel-other-window "projectile" "\
+Invoke `ghostel' in the project's root.
+
+Switch to the project specific ghostel buffer if it already exists.
+
+Use a prefix argument ARG to indicate creation of a new process instead.
+
+(fn &optional ARG)" t)
 (autoload 'projectile-replace "projectile" "\
 Replace literal string in project using non-regexp `tags-query-replace'.
 
@@ -389,16 +450,25 @@ to run the replacement.
 (autoload 'projectile-kill-buffers "projectile" "\
 Kill project buffers.
 
-The buffer are killed according to the value of
+The buffers are killed according to the value of
 `projectile-kill-buffers-filter'." t)
 (autoload 'projectile-save-project-buffers "projectile" "\
 Save all project buffers." t)
 (autoload 'projectile-dired "projectile" "\
-Open `dired' at the root of the project." t)
+Open `dired' at the root of the project.
+With a prefix argument ARG, prompt for a known project to open in dired.
+
+(fn &optional ARG)" t)
 (autoload 'projectile-dired-other-window "projectile" "\
-Open `dired'  at the root of the project in another window." t)
+Open `dired' at the root of the project in another window.
+With a prefix argument ARG, prompt for a known project to open in dired.
+
+(fn &optional ARG)" t)
 (autoload 'projectile-dired-other-frame "projectile" "\
-Open `dired' at the root of the project in another frame." t)
+Open `dired' at the root of the project in another frame.
+With a prefix argument ARG, prompt for a known project to open in dired.
+
+(fn &optional ARG)" t)
 (autoload 'projectile-vc "projectile" "\
 Open `vc-dir' at the root of the project.
 
@@ -413,6 +483,17 @@ directory to open.
 (fn &optional PROJECT-ROOT)" t)
 (autoload 'projectile-recentf "projectile" "\
 Show a list of recently visited files in a project." t)
+(autoload 'projectile-discard-command-cache "projectile" "\
+Discard the cached lifecycle commands for the current project.
+
+Projectile caches the last command used for each of the configure,
+compile, test, install, package, and run actions and prefers it over the
+value from `.dir-locals.el' or the project type's default.  After
+editing those, run this command so the next invocation re-reads them.
+Handy on `after-save-hook' for `.dir-locals.el' buffers.
+
+This only clears the cached commands, not the command history offered at
+the prompt.  See also `projectile-discard-root-cache'." t)
 (autoload 'projectile-configure-project "projectile" "\
 Run project configure command.
 
@@ -487,6 +568,34 @@ With a prefix ARG invokes `projectile-commander' instead of
 `projectile-switch-project-action.'
 
 (fn &optional ARG)" t)
+(autoload 'projectile-switch-project-other-window "projectile" "\
+Switch to a project we have visited before and display it in another window.
+
+Like `projectile-switch-project', but runs
+`projectile-switch-project-other-window-action' (by default
+`projectile-find-file-other-window') after switching, so the project is
+shown in another window.  With a prefix ARG invokes `projectile-commander'
+instead.
+
+(fn &optional ARG)" t)
+(autoload 'projectile-switch-project-other-frame "projectile" "\
+Switch to a project we have visited before and display it in another frame.
+
+Like `projectile-switch-project', but runs
+`projectile-switch-project-other-frame-action' (by default
+`projectile-find-file-other-frame') after switching, so the project is
+shown in another frame.  With a prefix ARG invokes `projectile-commander'
+instead.
+
+(fn &optional ARG)" t)
+(autoload 'projectile-switch-to-most-recent-project "projectile" "\
+Switch to the project recorded in `projectile-most-recent-project'.
+That's the project that was current before the most recent project
+switch, so calling this from a buffer in the switched-to project takes
+you back where you came from.  With a prefix ARG invokes
+`projectile-commander' instead of `projectile-switch-project-action'.
+
+(fn &optional ARG)" t)
 (autoload 'projectile-find-file-in-directory "projectile" "\
 Jump to a file in a (maybe regular) DIRECTORY.
 
@@ -497,6 +606,26 @@ This command will first prompt for the directory the file is in.
 Jump to a file in any of the known projects." t)
 (autoload 'projectile-cleanup-known-projects "projectile" "\
 Remove known projects that don't exist anymore." t)
+(defalias 'projectile-forget-zombie-projects #'projectile-cleanup-known-projects "\
+Forget known projects that don't exist any more.
+An alias for `projectile-cleanup-known-projects', provided for
+discoverability and parity with project.el's
+`project-forget-zombie-projects'.")
+(autoload 'projectile-forget-projects-under "projectile" "\
+Remove known projects located under DIRECTORY.
+
+Interactively, prompt for DIRECTORY.  With optional argument
+RECURSIVE non-nil (interactively, the prefix argument), remove
+projects nested at any depth under DIRECTORY; otherwise only remove
+projects that are immediate children of DIRECTORY.
+
+Matching is lexical (after `file-truename' expansion for local paths,
+which is skipped for remote ones to avoid a round-trip), so projects
+are removed even when DIRECTORY has already been deleted.  Mirrors
+project.el's `project-forget-projects-under'.  Return the number of
+projects removed.
+
+(fn DIRECTORY &optional RECURSIVE)" t)
 (autoload 'projectile-clear-known-projects "projectile" "\
 Clear both `projectile-known-projects' and `projectile-known-projects-file'." t)
 (autoload 'projectile-reset-known-projects "projectile" "\
@@ -520,7 +649,7 @@ Let user choose another project when PROMPT-FOR-PROJECT is supplied.
 (autoload 'projectile-commander "projectile" "\
 Execute a Projectile command with a single letter.
 The user is prompted for a single character indicating the action to invoke.
-The `?' character describes then
+The `?' character describes the
 available actions.
 
 See `def-projectile-commander-method' for defining new methods." t)
@@ -561,6 +690,18 @@ Otherwise behave as if called interactively.
 (fn &optional ARG)" t)
 (define-obsolete-function-alias 'projectile-global-mode 'projectile-mode "1.0")
 (register-definition-prefixes "projectile" '("compilation-find-file-projectile-find-compilation-buffer" "def-projectile-commander-method" "delete-file-projectile-remove-from-cache" "projectile-" "savehist-additional-variables"))
+
+
+;;; Generated autoloads from projectile-consult.el
+
+(autoload 'projectile-consult-find-file "projectile-consult" "\
+Find a file in the current project with a streaming Consult UI.
+
+The candidate list is produced by Projectile's own indexing command (see
+`projectile-project-files-producer'), so it honours the project's VCS and
+indexing configuration, and it streams into the minibuffer as the command
+runs instead of blocking until the whole project is indexed." t)
+(register-definition-prefixes "projectile-consult" '("projectile-consult-"))
 
 ;;; End of scraped data
 

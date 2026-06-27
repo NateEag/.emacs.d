@@ -1,11 +1,11 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "bicycle" "20251101.1937"
+(define-package "bicycle" "20260601.1451"
   "Cycle outline and code visibility."
   '((emacs  "28.1")
     (compat "30.1"))
   :url "https://github.com/tarsius/bicycle"
-  :commit "baeb42c79fa213c1e47ab1158c01abdf0a4c54d3"
-  :revdesc "baeb42c79fa2"
+  :commit "b8919e56e7f20e4164002e9b4dba0268779b5645"
+  :revdesc "b8919e56e7f2"
   :keywords '("outlines")
   :authors '(("Jonas Bernoulli" . "emacs.bicycle@jonas.bernoulli.dev"))
   :maintainers '(("Jonas Bernoulli" . "emacs.bicycle@jonas.bernoulli.dev")))

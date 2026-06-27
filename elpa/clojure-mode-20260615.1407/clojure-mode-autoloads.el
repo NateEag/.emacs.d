@@ -113,7 +113,18 @@ Major mode for editing Joker code.
 \\{joker-mode-map}
 
 (fn)" t)
-(add-to-list 'auto-mode-alist '("\\.\\(clj\\|cljd\\|dtm\\|edn\\|lpy\\)\\'" . clojure-mode))
+(autoload 'edn-mode "clojure-mode" "\
+Major mode for editing EDN data files.
+
+EDN (Extensible Data Notation) is a subset of Clojure used as a data format.
+This mode inherits Clojure syntax and navigation but uses simplified
+indentation appropriate for data structures rather than code.
+
+\\{edn-mode-map}
+
+(fn)" t)
+(add-to-list 'auto-mode-alist '("\\.\\(clj\\|dtm\\|lpy\\)\\'" . clojure-mode))
+(add-to-list 'auto-mode-alist '("\\.edn\\'" . edn-mode))
 (add-to-list 'auto-mode-alist '("\\.cljc\\'" . clojurec-mode))
 (add-to-list 'auto-mode-alist '("\\.cljs\\'" . clojurescript-mode))
 (add-to-list 'auto-mode-alist '("\\.cljd\\'" . clojuredart-mode))
@@ -121,7 +132,12 @@ Major mode for editing Joker code.
 (add-to-list 'auto-mode-alist '("\\.joke\\'" . joker-mode))
 (add-to-list 'auto-mode-alist '("\\(?:build\\|profile\\)\\.boot\\'" . clojure-mode))
 (add-to-list 'interpreter-mode-alist '("bb" . clojure-mode))
+(add-to-list 'interpreter-mode-alist '("clojure" . clojure-mode))
+(add-to-list 'interpreter-mode-alist '("clj" . clojure-mode))
 (add-to-list 'interpreter-mode-alist '("nbb" . clojurescript-mode))
+(add-to-list 'interpreter-mode-alist '("planck" . clojurescript-mode))
+(add-to-list 'interpreter-mode-alist '("joker" . joker-mode))
+(add-to-list 'interpreter-mode-alist '("jank" . jank-mode))
 
 ;;; End of scraped data
 

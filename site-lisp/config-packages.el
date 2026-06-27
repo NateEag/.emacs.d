@@ -1221,6 +1221,7 @@ With this alias I hope to not need to remember it.")
          (LilyPond-mode . (lambda () (turn-on-font-lock)))))
 
 (use-package rust-ts-mode
+  :mode "\\.rs$"
   :hook (rust-ts-mode . lsp))
 
 (use-package glsl-mode)

@@ -8,8 +8,8 @@
 ;; Keywords: tools
 ;; Package-Requires: ((emacs "27"))
 ;; SPDX-License-Identifier: MIT
-;; Package-Version: 20251201.2348
-;; Package-Revision: 35ebd1b65291
+;; Package-Version: 20260619.1935
+;; Package-Revision: 14a0bb4454fb
 
 ;;; Commentary:
 
@@ -218,6 +218,7 @@ this is either an error or nil."
   :type 'hook
   :group 'apheleia)
 
+;;;###autoload
 (defcustom apheleia-inhibit-functions nil
   "List of functions that prevent Apheleia from turning on automatically.
 If one of these returns non-nil then `apheleia-mode' is not

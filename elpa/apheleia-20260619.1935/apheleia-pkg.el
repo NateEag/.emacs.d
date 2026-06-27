@@ -1,10 +1,10 @@
 ;; -*- no-byte-compile: t; lexical-binding: nil -*-
-(define-package "apheleia" "20251201.2348"
+(define-package "apheleia" "20260619.1935"
   "Reformat buffer stably."
   '((emacs "27"))
   :url "https://github.com/radian-software/apheleia"
-  :commit "35ebd1b65291483fded1cb939cccfe28c9116782"
-  :revdesc "35ebd1b65291"
+  :commit "14a0bb4454fb2cc3b5b377619288b742ce117da5"
+  :revdesc "14a0bb4454fb"
   :keywords '("tools")
   :authors '(("Radian LLC" . "contact+apheleia@radian.codes"))
   :maintainers '(("Radian LLC" . "contact+apheleia@radian.codes")))

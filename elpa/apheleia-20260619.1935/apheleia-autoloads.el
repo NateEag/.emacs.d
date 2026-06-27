@@ -40,6 +40,16 @@ accept unknown keywords. At present only `:error' is included,
 this is either an error or nil.
 
 (fn FORMATTER &optional SUCCESS-CALLBACK &key CALLBACK)" t)
+(defvar apheleia-inhibit-functions nil "\
+List of functions that prevent Apheleia from turning on automatically.
+If one of these returns non-nil then `apheleia-mode' is not
+enabled in a buffer, even if `apheleia-global-mode' is on. You
+can still manually enable `apheleia-mode' in such a buffer.
+
+See also `apheleia-inhibit' for another way to accomplish a
+similar task. See also `apheleia-skip-functions' for functions
+that prevent Apheleia from running even when the mode is enabled.")
+(custom-autoload 'apheleia-inhibit-functions "apheleia" t)
 (autoload 'apheleia-format-after-save "apheleia" "\
 Run code formatter for current buffer if any configured, then save.")
 (define-minor-mode apheleia-mode "Minor mode for reformatting code on save without moving point.

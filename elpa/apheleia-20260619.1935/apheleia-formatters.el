@@ -59,14 +59,24 @@
                   (apheleia-formatters-indent
                    "--indent-with-tabs" "--indent-size"))
     (dart-format . ("dart" "format"))
-    (denofmt . ("deno" "fmt" "-"))
-    (denofmt-js . ("deno" "fmt" "-" "--ext" "js"))
-    (denofmt-json . ("deno" "fmt" "-" "--ext" "json"))
-    (denofmt-jsonc . ("deno" "fmt" "-" "--ext" "jsonc"))
-    (denofmt-jsx . ("deno" "fmt" "-" "--ext" "jsx"))
-    (denofmt-md . ("deno" "fmt" "-" "--ext" "md"))
-    (denofmt-ts . ("deno" "fmt" "-" "--ext" "ts"))
-    (denofmt-tsx . ("deno" "fmt" "-" "--ext" "tsx"))
+    (denofmt . ("deno" "fmt" "-"
+		(apheleia-formatters-fill-column "--line-width")))
+    (denofmt-js . ("deno" "fmt" "-" "--ext" "js"
+		   (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-json . ("deno" "fmt" "-" "--ext" "json"
+		     (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-jsonc . ("deno" "fmt" "-" "--ext" "jsonc"
+		      (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-jsx . ("deno" "fmt" "-" "--ext" "jsx"
+		    (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-md . ("deno" "fmt" "-" "--ext" "md"
+		   (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-ts . ("deno" "fmt" "-" "--ext" "ts"
+		   (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-tsx . ("deno" "fmt" "-" "--ext" "tsx"
+		    (apheleia-formatters-fill-column "--line-width")))
+    (denofmt-yaml . ("deno" "fmt" "-" "--ext" "yaml"
+		     (apheleia-formatters-fill-column "--line-width")))
     (dhall-format . ("dhall" "format"))
     (docformatter . ("apheleia-docformatter" inplace))
     (dprint . ("dprint" "fmt" "--stdin" filepath))
@@ -79,6 +89,7 @@
     (gofmt . ("gofmt"))
     (gofumpt . ("gofumpt"))
     (goimports . ("goimports"))
+    (golangci-lint . ("golangci-lint" "fmt" "--stdin"))
     (google-java-format . ("google-java-format" "-"))
     (hclfmt . ("hclfmt"))
     (html-beautify "html-beautify" "--file" "-" "--end-with-newline"
@@ -104,14 +115,22 @@
     (lisp-indent . apheleia-indent-lisp-buffer)
     (ktlint . ("ktlint" "--log-level=none" "--stdin" "-F" "-"))
     (latexindent . ("latexindent" "--logfile=/dev/null"))
+    (mago . ("mago" "--no-version-check"
+	     "format" "--stdin-input" "--stdin-filepath" filepath))
+    (mbake . ("mbake" "format" "--stdin"))
+    (meson . ("meson" "format"
+	      "--editor-config" "--source-file-path" filepath "-"))
     (mix-format . ("apheleia-from-project-root"
                    ".formatter.exs" "apheleia-mix-format" filepath))
+    (muon . ("muon" "fmt" "-e" "-"))
     (nixfmt . ("nixfmt"))
     (nomad . ("nomad" "fmt" "-"))
     (ocamlformat . ("ocamlformat" "-" "--name" filepath
                     "--enable-outside-detected-project"))
     (ocp-indent . ("ocp-indent"))
     (ormolu . ("ormolu" "--stdin-input-file" filepath))
+    (opentofu . ("tofu" "fmt" "-"))
+    (oxfmt . ("apheleia-npx" "oxfmt" inplace))
     (perltidy . ("perltidy" "--quiet" "--standard-error-output"
                  (apheleia-formatters-indent "-t" "-i")
                  (apheleia-formatters-fill-column "-l")))
@@ -119,6 +138,7 @@
                     (apheleia-formatters-indent "--tabs" "--spaces" 'tab-width)
                     (apheleia-formatters-fill-column "--wrap-limit")))
     (phpcs . ("apheleia-phpcs"))
+    (pkl . ("apheleia-pkl" "format" "-"))
     (prettier
      . ("apheleia-npx" "prettier" "--stdin-filepath" filepath
         (apheleia-formatters-js-indent "--use-tabs" "--tab-width")))
@@ -181,11 +201,13 @@
      . ("python3" "-m" "json.tool"
         (apheleia-formatters-indent "--tab" "--indent")))
     (rubocop . ("rubocop" "--stdin" filepath "-a"
-                "--stderr" "--format" "quiet" "--fail-level" "fatal"))
+                "--stderr" "--format" "quiet" "--fail-level" "fatal"
+                "--force-exclusion"))
     (ruby-standard . ("standardrb" "--stdin" filepath "--fix" "--stderr"
                       "--format" "quiet" "--fail-level" "fatal"))
     (ruby-syntax-tree . ("apheleia-from-project-root"
                          ".streerc" "stree" "format" filepath))
+    (rumdl . ("rumdl" "fmt" "--stdin" "--stdin-filename" filepath))
     (ruff . ("ruff" "format"
              "--silent"
              (apheleia-formatters-fill-column "--line-length")
@@ -200,20 +222,10 @@
     (snakefmt . ("snakefmt"
                  (apheleia-formatters-fill-column "--line-length")
                  "-"))
-    (shfmt . ("shfmt"
-              "-filename" filepath
-              "-ln" (cl-case (bound-and-true-p sh-shell)
-                      (sh "posix")
-                      (t "bash"))
-              (when apheleia-formatters-respect-indent-level
-                (format
-                 "--indent=%d"
-                 (cond
-                  (indent-tabs-mode 0)
-                  ((boundp 'sh-basic-offset)
-                   sh-basic-offset)
-                  (t 4))))
-              "-"))
+    (sqlfluff . ("sqlfluff" "format" "--disable-progress-bar" "-"))
+    ;; Note: do not pass any parser or printer flags to shfmt,
+    ;; doing so causes editorconfig configuration to be bypassed altogether.
+    (shfmt . ("shfmt" "-filename" filepath "-"))
     (rufo . ("rufo" "--filename" filepath "--simple-exit"))
     (stylua . ("stylua" "-"))
     (rustfmt . ("rustfmt" "--quiet" "--emit" "stdout"))
@@ -231,12 +243,14 @@
                 (apheleia-formatters-indent nil "--indent")))
     (yq-properties . ("yq" "--prettyPrint" "--no-colors"
                       "--input-format" "props" "--output-format" "props"))
+    (yq-toml . ("yq" "--prettyPrint" "--no-colors"
+                "--input-format" "toml" "--output-format" "toml"))
     (yq-tsv . ("yq" "--prettyPrint" "--no-colors"
                "--input-format" "tsv" "--output-format" "tsv"))
     (yq-xml . ("yq" "--prettyPrint" "--no-colors"
                "--input-format" "xml" "--output-format" "xml"
                (apheleia-formatters-indent nil "--indent")))
-    (yq-yaml . ("yq" "--prettyPrint" "--no-colors" "--no-doc"
+    (yq-yaml . ("yq" "--prettyPrint" "--no-colors"
                 "--input-format" "yaml" "--output-format" "yaml"
                 (apheleia-formatters-indent nil "--indent")))
     (zig-fmt . ("zig" "fmt" "--stdin")))
@@ -332,15 +346,17 @@ rather than using this system."
     (cmake-mode . cmake-format)
     (cmake-ts-mode . cmake-format)
     (common-lisp-mode . lisp-indent)
-    (conf-toml-mode . dprint)
+    (conf-toml-mode . taplo)
     (cperl-mode . perltidy)
     (crystal-mode . crystal-tool-format)
     (csharp-mode . csharpier)
+    (csharp-ts-mode . csharpier)
     (css-mode . prettier-css)
     (css-ts-mode . prettier-css)
     (dart-mode . dart-format)
     (dart-ts-mode . dart-format)
     (dockerfile-mode . dprint)
+    (dockerfile-ts-mode . dprint)
     (elixir-mode . mix-format)
     (elixir-ts-mode . mix-format)
     (elm-mode . elm-format)
@@ -377,7 +393,10 @@ rather than using this system."
     ;; markdown-mode not included because so many people format
     ;; markdown code in so many different ways and we don't want to
     ;; try imposing a standard by default
+    (meson-mode . meson)
     (nasm-mode . asmfmt)
+    (neocaml-interface-mode . ocamlformat)
+    (neocaml-mode . ocamlformat)
     (nix-mode . nixfmt)
     (nix-ts-mode . nixfmt)
     (nomad-mode . nomad)
@@ -386,6 +405,8 @@ rather than using this system."
     ("\\.mm\\'" . clang-format)
     (perl-mode . perltidy)
     (php-mode . phpcs)
+    (php-ts-mode . phpcs)
+    (pkl-mode . pkl)
     (purescript-mode . purs-tidy)
     (python-mode . black)
     (python-ts-mode . black)
@@ -399,10 +420,11 @@ rather than using this system."
     (scss-mode . prettier-scss)
     (sql-mode . pgformatter)
     (svelte-mode . prettier-svelte)
-    (terraform-mode . terraform)
+    (terraform-mode . opentofu)
     (TeX-latex-mode . latexindent)
     (TeX-mode . latexindent)
     (toml-ts-mode . taplo)
+    (tsv-mode . yq-tsv)
     (tsx-ts-mode . prettier-typescript)
     (tuareg-mode . ocamlformat)
     (typescript-mode . prettier-typescript)
@@ -464,6 +486,23 @@ in the buffer."
            (point))
          'mhtml-submode)
     #'mhtml-mode))
+
+;; Expected exit code and stderr output for script when real
+;; formatter is not available
+(defvar apheleia-script--formatter-not-available
+  '(:exit-code 100 :stderr "formatter_not_available"))
+
+(defun apheleia-script--formatter-not-available-p (ctx stderr)
+  "Check if script reports that no formatter has been found.
+CTX is a formatter process context.
+STDERR is the stderr output of process."
+  (and (eq (apheleia-formatter--exit-status ctx)
+           (plist-get apheleia-script--formatter-not-available :exit-code))
+       (string= stderr
+                (concat
+                 (apheleia-formatter--arg1 ctx) ":"
+                 (plist-get apheleia-script--formatter-not-available
+                            :stderr)))))
 
 ;;;###autoload
 (defcustom apheleia-mode-predicates '(apheleia-mhtml-mode-predicate)
@@ -745,9 +784,14 @@ its exit status is 0."
                          proc-exit-status)
                    (let ((exit-ok (and
                                    (not proc-interrupted)
-                                   (funcall
-                                    (or exit-status #'zerop)
-                                    (apheleia-formatter--exit-status ctx)))))
+                                   (or
+                                    (funcall
+                                     (or exit-status #'zerop)
+                                     (apheleia-formatter--exit-status ctx))
+                                    (apheleia-script--formatter-not-available-p
+                                     ctx
+                                     (with-current-buffer stderr
+                                       (string-trim (buffer-string))))))))
                      ;; Append standard-error from current formatter
                      ;; to log buffer when
                      ;; `apheleia-log-only-errors' is nil or the
@@ -914,7 +958,10 @@ See `apheleia--run-formatters' for a description of REMOTE."
 
     (let ((ctx (apheleia-formatter--context)))
       (setf (apheleia-formatter--name ctx) nil ; Skip logging on failure
-            (apheleia-formatter--arg1 ctx) "diff"
+            (apheleia-formatter--arg1 ctx)
+            ;; Search gdiff in PATH, else use diff, useful for BSD
+            (if (executable-find "gdiff") "gdiff"
+              "diff")
             (apheleia-formatter--argv ctx) `("--rcs"
                                              "--strip-trailing-cr"
                                              "--text"
@@ -1219,6 +1266,10 @@ For more implementation detail, see
                 (buffer-local-value 'lisp-indent-function buffer))
     (setq-local indent-tabs-mode
                 (buffer-local-value 'indent-tabs-mode buffer))
+    (setq-local lisp-indent-offset
+                (buffer-local-value 'lisp-indent-offset buffer))
+    (setq-local lisp-body-indent
+                (buffer-local-value 'lisp-body-indent buffer))
     (goto-char (point-min))
     (let ((inhibit-message t)
           (message-log-max nil))

@@ -1,31 +1,29 @@
-;;; browse-kill-ring.el --- interactively insert items from kill-ring -*- coding: utf-8 -*-
+;;; browse-kill-ring.el --- interactively insert items from kill-ring -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2001, 2002 Colin Walters <walters@verbum.org>
 
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: browse-kill-ring <browse-kill-ring@tonotdo.com>
 ;; Created: 7 Apr 2001
-;; Package-Version: 20231104.1450
-;; Package-Revision: 03cc18c08a54
+;; Package-Version: 20260503.1620
+;; Package-Revision: 39d65a830b93
 ;; URL: https://github.com/browse-kill-ring/browse-kill-ring
 ;; Keywords: convenience
 
 ;; This file is not currently part of GNU Emacs.
 
-;; This program is free software; you can redistribute it and/or
-;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 2, or (at
-;; your option) any later version.
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 
-;; This program is distributed in the hope that it will be useful, but
-;; WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-;; General Public License for more details.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program ; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
-;; Boston, MA 02111-1307, USA.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -263,6 +261,9 @@ call `browse-kill-ring' again.")
           (shrink-window-if-larger-than-buffer window)
         (shrink-window (- (window-height) window-min-height))))))
 
+(declare-function browse-kill-ring-fit-window "browse-kill-ring"
+                  (window max-height min-height))
+
 (defun browse-kill-ring-resize-window ()
   (when browse-kill-ring-resize-window
     (apply #'browse-kill-ring-fit-window (selected-window)
@@ -291,8 +292,8 @@ well."
 
 (defun browse-kill-ring-insert-new (insert-action post-action &optional quit)
   "Insert the kill ring item at point into the last selected buffer.
-`insert-action' can be 'insert 'append 'prepend.
-`post-action' can be nil 'move 'delete.
+INSERT-ACTION can be \\='insert \\='append \\='prepend.
+POST-ACTION can be nil \\='move \\='delete.
 If optional argument QUIT is non-nil, close the *Kill Ring* buffer as
 well."
   (interactive "P")
@@ -377,6 +378,9 @@ of the *Kill Ring*."
 *Kill Ring* buffer."
   (interactive)
   (browse-kill-ring-prepend-insert-and-move t))
+
+(defvar pulse-delay)
+(defvar pulse-iterations)
 
 (defun browse-kill-ring-highlight-inserted (start end)
   (when browse-kill-ring-highlight-inserted-item
@@ -488,7 +492,7 @@ of the *Kill Ring*."
       (cond
        ;; Don't try to delete anything else in an empty buffer.
        ((and (bobp) (eobp)) t)
-       ;; The last entry was deleted, remove the preceeding separator.
+       ;; The last entry was deleted, remove the preceding separator.
        ((eobp)
         (progn
           (browse-kill-ring-forward -1)
@@ -500,16 +504,16 @@ of the *Kill Ring*."
               (next (next-single-property-change (point) 'browse-kill-ring-extra)))
           (when prev (cl-incf prev))
           (when next (cl-incf next))
-          (delete-region (or prev (point-min)) (or next (point-max))))))))
-  (browse-kill-ring-resize-window)
-  (browse-kill-ring-forward 0))
+          (delete-region (or prev (point-min)) (or next (point-max)))))))
+    (browse-kill-ring-resize-window)
+    (browse-kill-ring-forward 0)))
 
 ;; code from browse-kill-ring+.el
 (defun browse-kill-ring-target-overlay-at (position &optional no-error)
   "Return overlay at POSITION that has property `browse-kill-ring-target'.
 If no such overlay, raise an error unless NO-ERROR is true, in which
 case return nil."
-  (let ((ovs  (overlays-at (point))))
+  (let ((ovs  (overlays-at position)))
     (catch 'browse-kill-ring-target-overlay-at
       (dolist (ov  ovs)
         (when (overlay-get ov 'browse-kill-ring-target)
@@ -518,7 +522,7 @@ case return nil."
         (error "No selection-ring item here")))))
 
 ;; Find the string to insert at the point by looking for the overlay.
-(defun browse-kill-ring-current-string (buf pt &optional no-error)
+(defun browse-kill-ring-current-string (_buf pt &optional no-error)
   (let ((o (browse-kill-ring-target-overlay-at pt t)))
     (if o
         (overlay-get o 'browse-kill-ring-target)
@@ -653,7 +657,7 @@ entry."
   (cl-case browse-kill-ring-quit-action
     (save-and-restore
       (if (< emacs-major-version 24)
-        (let (buf (current-buffer))
+          (let ((buf (current-buffer)))
              (set-window-configuration browse-kill-ring-original-window-config)
            (kill-buffer buf))
        (quit-window)))
@@ -706,27 +710,26 @@ You most likely do not want to call `browse-kill-ring-mode' directly; use
   (define-key browse-kill-ring-mode-map (kbd "b") 'browse-kill-ring-prepend-insert)
   (define-key browse-kill-ring-mode-map (kbd "a") 'browse-kill-ring-append-insert))
 
+;; Use plain "p" instead of "*p" in `yank-pop' so `browse-kill-ring'
+;; can be invoked from read-only buffers.  If we do fall through to
+;; `yank-pop', enforce read-only ourselves first.
+(defun browse-kill-ring--yank-pop-advice (orig-fun &rest args)
+  "Around advice for `yank-pop' used by `browse-kill-ring'."
+  (interactive "p")
+  (if (not (eq last-command 'yank))
+      (browse-kill-ring)
+    (barf-if-buffer-read-only)
+    (apply orig-fun args)))
+
 ;;;###autoload
 (defun browse-kill-ring-default-keybindings ()
-  "Set up M-y (`yank-pop') so that it can invoke `browse-kill-ring'.
-Normally, if M-y was not preceeded by C-y, then it has no useful
-behavior.  This function sets things up so that M-y will invoke
-`browse-kill-ring'."
+  "Make `yank-pop' invoke `browse-kill-ring' when appropriate.
+Normally, `yank-pop' is only useful after `yank'.  This installs
+advice so that invoking `yank-pop' otherwise runs `browse-kill-ring'
+instead."
   (interactive)
-  (defadvice yank-pop (around kill-ring-browse-maybe (arg))
-    "If last action was not a yank, run `browse-kill-ring' instead."
-    ;; yank-pop has an (interactive "*p") form which does not allow
-    ;; it to run in a read-only buffer.  We want browse-kill-ring to
-    ;; be allowed to run in a read only buffer, so we change the
-    ;; interactive form here.  In that case, we need to
-    ;; barf-if-buffer-read-only if we're going to call yank-pop with
-    ;; ad-do-it
-    (interactive "p")
-    (if (not (eq last-command 'yank))
-        (browse-kill-ring)
-      (barf-if-buffer-read-only)
-      ad-do-it))
-  (ad-activate 'yank-pop))
+  (unless (advice-member-p #'browse-kill-ring--yank-pop-advice 'yank-pop)
+    (advice-add 'yank-pop :around #'browse-kill-ring--yank-pop-advice)))
 
 (define-derived-mode browse-kill-ring-edit-mode fundamental-mode
   "Kill Ring Edit"
@@ -870,8 +873,7 @@ reselects ENTRY in the `*Kill Ring*' buffer."
     (browse-kill-ring-insert-as-separated-1 (car items) nil)))
 
 (defun browse-kill-ring-insert-as-separated-1 (origitem separatep)
-  (let* ((item (browse-kill-ring-elide origitem))
-         (len (length item)))
+  (let ((item (browse-kill-ring-elide origitem)))
     (browse-kill-ring-add-overlays-for origitem
                                        (insert item))
     ;; When the kill-ring has items with read-only text property at
@@ -957,7 +959,7 @@ Callback triggered after a change in the *Kill Ring Edit* buffer,
 update the preview in the original buffer."
   (browse-kill-ring-preview-update-text (buffer-string)))
 
-(defun browse-kill-ring-current-index (buf pt)
+(defun browse-kill-ring-current-index (_buf pt)
   "Return current index."
   (let ((overlay-start-point
          (overlay-start
@@ -1070,9 +1072,10 @@ it's turned on."
               ;; display leftmost or rightmost duplicate.
               ;; if `browse-kill-ring-display-leftmost-duplicate' is t,
               ;; display leftmost(last) duplicate.
-              (cl-delete-duplicates items
-                                 :test #'equal
-                                 :from-end browse-kill-ring-display-leftmost-duplicate))
+              (setq items
+                    (cl-delete-duplicates items
+                                          :test #'equal
+                                          :from-end browse-kill-ring-display-leftmost-duplicate)))
             (when (stringp regexp)
               (setq items (delq nil
                                 (mapcar
@@ -1099,7 +1102,6 @@ it's turned on."
               (add-hook 'post-command-hook
                         'browse-kill-ring-update-highlighed-entry
                         nil t))
-;; Code from Michael Slass <mikesl@wrq.com>
             (message
              (let ((entry (if (= 1 (length kill-ring)) "entry" "entries")))
                (concat
@@ -1112,7 +1114,6 @@ it's turned on."
                 (substitute-command-keys
                  (concat "    Type \\[browse-kill-ring-quit] to quit.  "
                          "\\[describe-mode] for help.")))))
-;; End code from Michael Slass <mikesl@wrq.com>
             (set-buffer-modified-p nil)
             (goto-char (point-min))
             (browse-kill-ring-forward 0)

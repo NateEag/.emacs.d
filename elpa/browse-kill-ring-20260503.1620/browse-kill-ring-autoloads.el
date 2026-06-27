@@ -12,10 +12,10 @@
 ;;; Generated autoloads from browse-kill-ring.el
 
 (autoload 'browse-kill-ring-default-keybindings "browse-kill-ring" "\
-Set up M-y (`yank-pop') so that it can invoke `browse-kill-ring'.
-Normally, if M-y was not preceeded by C-y, then it has no useful
-behavior.  This function sets things up so that M-y will invoke
-`browse-kill-ring'." t)
+Make `yank-pop' invoke `browse-kill-ring' when appropriate.
+Normally, `yank-pop' is only useful after `yank'.  This installs
+advice so that invoking `yank-pop' otherwise runs `browse-kill-ring'
+instead." t)
 (autoload 'browse-kill-ring "browse-kill-ring" "\
 Display items in the `kill-ring' in another buffer." t)
 (register-definition-prefixes "browse-kill-ring" '("browse-kill-ring-"))

@@ -1224,7 +1224,12 @@ With this alias I hope to not need to remember it.")
   :mode "\\.rs$"
   :hook (rust-ts-mode . lsp))
 
-(use-package glsl-mode)
+(use-package glsl-mode
+  :config
+  ; It's technically a different binary than the one lsp-mode's plugin was
+  ; written for, but it seems to work.
+  (setq lsp-glsl-executable "glsl_analyzer")
+  :hook lsp)
 
 (use-package chemtable)
 

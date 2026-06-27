@@ -1,14 +1,14 @@
 ;;; auto-compile.el --- Automatically compile Emacs Lisp libraries  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2008-2025 Jonas Bernoulli
+;; Copyright (C) 2008-2026 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <emacs.auto-compile@jonas.bernoulli.dev>
 ;; Homepage: https://github.com/emacscollective/auto-compile
 ;; Keywords: compile convenience lisp
 
-;; Package-Version: 20251111.1802
-;; Package-Revision: 7d314cc13515
-;; Package-Requires: ((emacs "27.1"))
+;; Package-Version: 20260601.1449
+;; Package-Revision: 4db3a0e497fe
+;; Package-Requires: ((emacs "28.1"))
 
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -129,6 +129,13 @@
 (eval-when-compile (require 'subr-x))
 
 (defvar warning-minimum-level)
+
+(defmacro auto-compile--static-if (condition then-form &rest else-forms)
+  (declare (indent 2)
+           (debug (sexp sexp &rest sexp)))
+  (if (eval condition lexical-binding)
+      then-form
+    (cons 'progn else-forms)))
 
 (defgroup auto-compile nil
   "Automatically compile Emacs Lisp source libraries."
@@ -277,14 +284,14 @@ non-nil."
                  ((nbutlast tree) nil))
          (catch 'found
            (dolist (sub tree)
-             (when-let ((found (auto-compile--tree-member elt sub delete)))
+             (when-let* ((found (auto-compile--tree-member elt sub delete)))
                (throw 'found found)))))))
 
 (defun auto-compile-modify-mode-line (after)
   (let ((format (default-value 'mode-line-format)))
     (auto-compile--tree-member 'mode-line-auto-compile format 'delete)
     (when after
-      (if-let ((mem (auto-compile--tree-member after format)))
+      (if-let* ((mem (auto-compile--tree-member after format)))
           (push 'mode-line-auto-compile (cdr mem))
         (message "Could not insert `%s' into `%s'"
                  'mode-line-auto-compile
@@ -425,30 +432,30 @@ multiple files is toggled as follows:
 
 \(fn FILE ACTION)"
   (interactive
-   (let* ((file (and (eq major-mode 'emacs-lisp-mode)
-                     (buffer-file-name)))
-          (action
-           (cond
-            (current-prefix-arg
-             (if (> (prefix-numeric-value current-prefix-arg) 0)
-                 'start
-               'quit))
-            (file
-             (if (file-exists-p (byte-compile-dest-file file))
-                 'quit
-               'start))
-            (t
-             (pcase (read-char-choice
-                     "Toggle automatic compilation (s=tart, q=uit, C-g)? "
-                     '(?s ?q))
-               (?s 'start)
-               (?q 'quit))))))
-     (list (read-file-name (concat (capitalize (symbol-name action))
-                                   " auto-compiling: ")
-                           (and file (file-name-directory file))
-                           nil t
-                           (and file (file-name-nondirectory file)))
-           action t)))
+    (let* ((file (and (eq major-mode 'emacs-lisp-mode)
+                      (buffer-file-name)))
+           (action
+            (cond
+              (current-prefix-arg
+               (if (> (prefix-numeric-value current-prefix-arg) 0)
+                   'start
+                 'quit))
+              (file
+               (if (file-exists-p (byte-compile-dest-file file))
+                   'quit
+                 'start))
+              (t
+               (pcase (read-char-choice
+                       "Toggle automatic compilation (s=tart, q=uit, C-g)? "
+                       '(?s ?q))
+                 (?s 'start)
+                 (?q 'quit))))))
+      (list (read-file-name (concat (capitalize (symbol-name action))
+                                    " auto-compiling: ")
+                            (and file (file-name-directory file))
+                            nil t
+                            (and file (file-name-nondirectory file)))
+            action t)))
   (if (file-regular-p file)
       (pcase action
         ('start (auto-compile-byte-compile file t))
@@ -459,29 +466,29 @@ multiple files is toggled as follows:
           (kill-buffer buffer))))
     (dolist (f (directory-files file t))
       (cond
-       ((file-directory-p f)
-        (unless (or (string-prefix-p "." (file-name-nondirectory
-                                          (directory-file-name f)))
-                    (file-exists-p (expand-file-name ".nosearch" f)))
-          (toggle-auto-compile f action)))
-       ((funcall auto-compile-predicate-function f)
-        (let ((dest (byte-compile-dest-file f)))
-          (if (eq action 'start)
-              (and (file-exists-p f)
-                   (or auto-compile-toggle-recompiles
-                       (file-newer-than-file-p f dest))
-                   (or (not (string-match "^\\.?#" (file-name-nondirectory f)))
-                       (file-exists-p dest))
-                   (auto-compile-byte-compile f t))
-            (auto-compile-delete-dest dest))))
-       ((and auto-compile-toggle-deletes-nonlib-dest
-             (eq action 'quit)
-             (auto-compile-source-file-p f))
-        (auto-compile-delete-dest (byte-compile-dest-file f)))
-       ((and auto-compile-delete-stray-dest
-             (string-match "\\.elc$" f)
-             (not (auto-compile--byte-compile-source-file f t)))
-        (auto-compile-delete-dest f))))))
+        ((file-directory-p f)
+         (unless (or (string-prefix-p "." (file-name-nondirectory
+                                           (directory-file-name f)))
+                     (file-exists-p (expand-file-name ".nosearch" f)))
+           (toggle-auto-compile f action)))
+        ((funcall auto-compile-predicate-function f)
+         (let ((dest (byte-compile-dest-file f)))
+           (if (eq action 'start)
+               (and (file-exists-p f)
+                    (or auto-compile-toggle-recompiles
+                        (file-newer-than-file-p f dest))
+                    (or (not (string-match "^\\.?#" (file-name-nondirectory f)))
+                        (file-exists-p dest))
+                    (auto-compile-byte-compile f t))
+             (auto-compile-delete-dest dest))))
+        ((and auto-compile-toggle-deletes-nonlib-dest
+              (eq action 'quit)
+              (auto-compile-source-file-p f))
+         (auto-compile-delete-dest (byte-compile-dest-file f)))
+        ((and auto-compile-delete-stray-dest
+              (string-match "\\.elc$" f)
+              (not (auto-compile--byte-compile-source-file f t)))
+         (auto-compile-delete-dest f))))))
 
 (defalias 'auto-compile-toggle #'toggle-auto-compile)
 
@@ -501,25 +508,9 @@ Optionally that suffix may be followed by one listed in
   (string-match-p (format "\\.el%s\\'" (regexp-opt load-file-rep-suffixes))
                   file))
 
-(cl-eval-when (compile load eval)
-  (if (fboundp 'file-name-with-extension)
-      ;; Added in Emacs 28.1.
-      (defalias 'auto-compile--file-name-with-extension
-        #'file-name-with-extension)
-    (defun auto-compile--file-name-with-extension (filename extension)
-      (let ((extn (string-trim-left extension "[.]")))
-        (cond ((string-empty-p filename)
-               (error "Empty filename"))
-              ((string-empty-p extn)
-               (error "Malformed extension: %s" extension))
-              ((directory-name-p filename)
-               (error "Filename is a directory: %s" filename))
-              (t
-               (concat (file-name-sans-extension filename) "." extn)))))))
-
 (defun auto-compile--byte-compile-source-file (file &optional must-exist)
-  (let ((standard (auto-compile--file-name-with-extension
-                   (byte-compiler-base-file-name file) ".el"))
+  (let ((standard (file-name-with-extension (byte-compiler-base-file-name file)
+                                            ".el"))
         (suffixes load-file-rep-suffixes)
         (file nil))
     (while (and (not file) suffixes)
@@ -662,15 +653,14 @@ pretend the byte code file exists.")
     (ding)))
 
 (define-advice save-buffers-kill-emacs
-    ;; <= 28 (&optional arg); >= 29 (&optional arg restart)
-    (:around (fn &rest args) auto-compile)
+    (:around (fn &optional arg restart) auto-compile)
   "Bind `auto-compile-mark-failed-modified' to nil when killing Emacs.
 If the regular value of this variable is non-nil the user might
 still be asked whether she wants to save modified buffers, which
 she actually did already safe.  This advice ensures she at least
 is only asked once about each such file."
   (let ((auto-compile-mark-failed-modified nil))
-    (apply fn args)))
+    (funcall fn arg restart)))
 
 (define-advice save-buffers-kill-terminal
     (:around (fn &optional arg) auto-compile)
@@ -692,7 +682,7 @@ This is especially useful during rebase sessions."
 ;;; Mode-Line
 
 (defvar-local mode-line-auto-compile
-    '(auto-compile-mode (:eval (mode-line-auto-compile-control))))
+  '(auto-compile-mode (:eval (mode-line-auto-compile-control))))
 (put 'mode-line-auto-compile 'risky-local-variable t)
 
 (defun mode-line-auto-compile-control ()
@@ -701,64 +691,64 @@ This is especially useful during rebase sessions."
     (when (and src (setq dst (byte-compile-dest-file src)))
       (list
        (cond
-        ((not auto-compile-mode-line-counter) "")
-        ((> auto-compile-warnings 0)
-         (propertize
-          (format "%s" auto-compile-warnings)
-          'help-echo (format "%s compile warnings\nmouse-1 display compile log"
-                             auto-compile-warnings)
-          'face 'error
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'auto-compile-display-log)))
-        (t
-         (propertize
-          ":"
-          'help-echo "No compile warnings\nmouse-1 display compile log"
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'auto-compile-display-log))))
+         ((not auto-compile-mode-line-counter) "")
+         ((> auto-compile-warnings 0)
+          (propertize
+           (format "%s" auto-compile-warnings)
+           'help-echo (format "%s compile warnings\nmouse-1 display compile log"
+                              auto-compile-warnings)
+           'face 'error
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'auto-compile-display-log)))
+         (t
+          (propertize
+           ":"
+           'help-echo "No compile warnings\nmouse-1 display compile log"
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'auto-compile-display-log))))
        (cond
-        ((file-writable-p dst)
-         (propertize
-          "-"
-          'help-echo "Byte-compile destination is writable"
-          'mouse-face 'mode-line))
-        (t
-         (propertize
-          "%%"
-          'help-echo "Byte-compile destination is read-only"
-          'mouse-face 'mode-line)))
+         ((file-writable-p dst)
+          (propertize
+           "-"
+           'help-echo "Byte-compile destination is writable"
+           'mouse-face 'mode-line))
+         (t
+          (propertize
+           "%%"
+           'help-echo "Byte-compile destination is read-only"
+           'mouse-face 'mode-line)))
        (cond
-        ((and auto-compile-pretend-byte-compiled
-              (not (file-exists-p dst)))
-         (propertize
-          "!"
-          'help-echo "Failed to byte-compile\nmouse-1 retry"
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'auto-compile-mode-line-byte-compile)))
-        ((not (file-exists-p dst))
-         (propertize
-          "%%"
-          'help-echo "Byte-compiled file doesn't exist\nmouse-1 create"
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'mode-line-toggle-auto-compile)))
-        ((file-newer-than-file-p src dst)
-         (propertize
-          "*"
-          'help-echo "Byte-compiled file needs updating\nmouse-1 update"
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'auto-compile-mode-line-byte-compile)))
-        (t
-         (propertize
-          "-"
-          'help-echo "Byte-compiled file is up-to-date\nmouse-1 remove"
-          'mouse-face 'mode-line-highlight
-          'local-map (make-mode-line-mouse-map
-                      'mouse-1 #'mode-line-toggle-auto-compile))))))))
+         ((and auto-compile-pretend-byte-compiled
+               (not (file-exists-p dst)))
+          (propertize
+           "!"
+           'help-echo "Failed to byte-compile\nmouse-1 retry"
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'auto-compile-mode-line-byte-compile)))
+         ((not (file-exists-p dst))
+          (propertize
+           "%%"
+           'help-echo "Byte-compiled file doesn't exist\nmouse-1 create"
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'mode-line-toggle-auto-compile)))
+         ((file-newer-than-file-p src dst)
+          (propertize
+           "*"
+           'help-echo "Byte-compiled file needs updating\nmouse-1 update"
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'auto-compile-mode-line-byte-compile)))
+         (t
+          (propertize
+           "-"
+           'help-echo "Byte-compiled file is up-to-date\nmouse-1 remove"
+           'mouse-face 'mode-line-highlight
+           'local-map (make-mode-line-mouse-map
+                       'mouse-1 #'mode-line-toggle-auto-compile))))))))
 
 (defun auto-compile-display-log ()
   "Display the *Compile-Log* buffer."
@@ -867,14 +857,14 @@ Without this advice the outdated source file would get loaded."
 
 ;;; _
 
-(when (fboundp 'setopt) ; since Emacs 29.1
-  (with-no-warnings
+(auto-compile--static-if (fboundp 'setopt) ; since Emacs 29.1
     (defun auto-compile-use-mode-line-set (_ignored value)
-      (declare (obsolete "use `setopt' instead." "Auto-Compile 2.2.0"))
-      (setopt auto-compile-use-mode-line value))))
+      (declare (obsolete "use `setopt' instead." "Auto-Compile 2.1.2"))
+      (setopt auto-compile-use-mode-line value)))
 
 (provide 'auto-compile)
 ;; Local Variables:
 ;; indent-tabs-mode: nil
+;; lisp-indent-local-overrides: ((cond . 0) (interactive . 0))
 ;; End:
 ;;; auto-compile.el ends here

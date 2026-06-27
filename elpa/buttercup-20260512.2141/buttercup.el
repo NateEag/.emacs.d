@@ -1,10 +1,10 @@
 ;;; buttercup.el --- Behavior-Driven Emacs Lisp Testing -*-lexical-binding:t-*-
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
-;; Copyright (C) 2018-2025  Ola Nilsson <ola.nilsson@gmail.com>
+;; Copyright (C) 2018-2026  Ola Nilsson <ola.nilsson@gmail.com>
 
-;; Package-Version: 20250801.1
-;; Package-Revision: cc5a2ab7c7f1
+;; Package-Version: 20260512.2141
+;; Package-Revision: 39c8e762408a
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Maintainer: Ola Nilsson <ola.nilsson@gmail.com>
 ;; Package-Requires: ((emacs "24.4"))
@@ -816,23 +816,33 @@ Return CHILD."
   child)
 
 (defun buttercup-suite-or-spec-parents (suite-or-spec)
-  "Return a list of parents of SUITE-OR-SPEC."
-  (when (buttercup-suite-or-spec-parent suite-or-spec)
-    (cons (buttercup-suite-or-spec-parent suite-or-spec)
-          (buttercup-suite-or-spec-parents (buttercup-suite-or-spec-parent suite-or-spec)))))
+  "Return a list of parents (or ancestors) of SUITE-OR-SPEC.
+The first element of the returned list is the parent, the second the
+grandparent, and so on. Return the empty list if SUITE-OR-SPEC has no
+parent."
+  (cl-loop for parent = (buttercup-suite-or-spec-parent (or parent suite-or-spec))
+           while parent collect parent))
 
 (define-obsolete-function-alias 'buttercup-suite-parents
   #'buttercup-suite-or-spec-parents "emacs-buttercup 1.10")
 (define-obsolete-function-alias 'buttercup-spec-parents
   #'buttercup-suite-or-spec-parents "emacs-buttercup 1.10")
 
-(defun buttercup-suites-total-specs-defined (suite-list)
-  "Return the number of specs defined in all suites in SUITE-LIST."
-  (length (buttercup--specs suite-list)))
+(defun buttercup-suites-total-specs-defined (suite-or-spec-list)
+  "Return the number of specs defined in SUITE-OR-SPEC-LIST."
+  (cl-loop for sos in suite-or-spec-list
+           sum (if (buttercup-spec-p sos)
+                   1
+                 (buttercup-suites-total-specs-defined
+                  (buttercup-suite-children sos)))))
 
 (defun buttercup-suites-total-specs-status (suite-list status)
   "Return the number of specs in SUITE-LIST marked with STATUS."
-  (cl-count status (buttercup--specs suite-list) :key #'buttercup-spec-status))
+  (cl-loop for sos in suite-list
+           sum (if (buttercup-spec-p sos)
+                   (if (eq status (buttercup-spec-status sos)) 1 0)
+                 (buttercup-suites-total-specs-status
+                  (buttercup-suite-children sos) status))))
 
 (defun buttercup-suites-total-specs-pending (suite-list)
   "Return the number of specs marked as pending in all suites in SUITE-LIST."
@@ -844,12 +854,11 @@ Return CHILD."
 
 (defun buttercup--specs (spec-or-suite-list)
   "Return a flat list of all specs in SPEC-OR-SUITE-LIST."
-  (let (specs)
-    (dolist (spec-or-suite spec-or-suite-list specs)
-      (if (buttercup-spec-p spec-or-suite)
-          (setq specs (append specs (list spec-or-suite)))
-        (setq specs (append specs (buttercup--specs
-                                   (buttercup-suite-children spec-or-suite))))))))
+  (cl-loop for spec-or-suite in spec-or-suite-list
+           if (buttercup-spec-p spec-or-suite)
+           collect spec-or-suite
+           else
+           nconc (buttercup--specs (buttercup-suite-children spec-or-suite))))
 
 (defun buttercup--specs-and-suites (spec-or-suite-list)
   "Return a flat list of all specs and suites in SPEC-OR-SUITE-LIST."
@@ -863,26 +872,30 @@ Return CHILD."
                       (buttercup--specs-and-suites
                        (buttercup-suite-children spec-or-suite))))))))
 
-(defun buttercup-suite-full-name (suite)
-  "Return the full name of SUITE, which includes the names of the parents."
-  (mapconcat #'buttercup-suite-description
-             (nreverse (cons suite (buttercup-suite-or-spec-parents suite)))
+(defun buttercup--suite-or-spec-full-name (suite-or-spec)
+  "Return the full name of SUITE-OR-SPEC including the names of the parents."
+  (mapconcat #'buttercup-suite-or-spec-description
+             (nreverse (cons suite-or-spec
+                             (buttercup-suite-or-spec-parents suite-or-spec)))
              " "))
 
-(defun buttercup-spec-full-name (spec)
-  "Return the full name of SPEC, which includes the full name of its suite."
-  (let ((parent (buttercup-spec-parent spec)))
-    (if parent
-        (concat (buttercup-suite-full-name parent)
-                " "
-                (buttercup-spec-description spec))
-      (buttercup-spec-description spec))))
+(defalias 'buttercup-suite-full-name 'buttercup--suite-or-spec-full-name
+  "Return the full name of SUITE including the names of the parents.
+
+\(fn suite)")
+
+(defalias 'buttercup-spec-full-name 'buttercup--suite-or-spec-full-name
+  "Return the full name of SPEC including the names of the parents.
+
+\(fn spec)")
 
 (defun buttercup--full-spec-names (spec-or-suite-list)
   "Return full names of all specs in SPEC-OR-SUITE-LIST."
-  (cl-loop
-   for x in (buttercup--specs spec-or-suite-list)
-   collect (buttercup-spec-full-name x)))
+   (cl-loop for sos in spec-or-suite-list
+            if (buttercup-spec-p sos)
+             collect (buttercup-spec-full-name sos)
+            else
+             nconc (buttercup--full-spec-names sos)))
 
 (defun buttercup--find-duplicate-spec-names (spec-or-suite-list)
   "Return duplicate full spec names among SPEC-OR-SUITE-LIST."
@@ -1290,16 +1303,36 @@ responsibility to ensure ARG is a command."
                 nil))
             (_
              (error "Invalid `spy-on' keyword: `%S'" keyword)))))
-    (unless (buttercup--spy-on-and-call-replacement symbol replacement)
+    (unless (buttercup--spy-on-and-call-replacement symbol replacement orig)
       (error "Spies can only be created in `before-each' or `it'"))))
 
 
-(defun buttercup--spy-on-and-call-replacement (spy fun)
-  "Replace the function in symbol SPY with a spy calling FUN."
-  (let ((orig-function (and (fboundp spy) (symbol-function spy))))
-    (when (buttercup--add-cleanup (lambda ()
-                                  (fset spy orig-function)))
-      (fset spy (buttercup--make-spy fun)))))
+(defvar native-comp-enable-subr-trampolines)
+(defvar comp-enable-subr-trampolines)
+
+(defmacro buttercup--without-subr-trampolines (&rest body)
+  "Execute BODY with subr trampoline generation disabled.
+Redefining certain primitive's trampolines will cause problems,
+see https://github.com/jorgenschaefer/emacs-buttercup/issues/230 and
+https://debbugs.gnu.org/cgi/bugreport.cgi?bug=61880"
+  (declare (indent 0) (debug t))
+  `(,@(if (fboundp 'with-suppressed-warnings)
+          '(with-suppressed-warnings ((obsolete comp-enable-subr-trampolines)))
+        '(progn))
+     (let ((comp-enable-subr-trampolines nil)
+           (native-comp-enable-subr-trampolines nil))
+       ,@body)))
+
+(defun buttercup--spy-on-and-call-replacement (spy fun orig-function)
+  "Replace the function in symbol SPY with a spy calling FUN.
+Register a cleanup function to restore SPY to ORIG-FUNCTION. If the
+cleanup function list is not available, do not set the spy and return
+nil. This means `spy-on' has been called in a non-supported place."
+  (let ((replacement (buttercup--make-spy fun)))
+    (buttercup--without-subr-trampolines
+     (when (buttercup--add-cleanup (lambda ()
+                                     (fset spy orig-function)))
+       (fset spy replacement)))))
 
 (defun buttercup--make-spy (fun)
   "Create a new spy function wrapping FUN and tracking every call to itself."
@@ -1344,24 +1377,13 @@ responsibility to ensure ARG is a command."
 Should always be set to a value that is not `listp', except while
 in a `buttercup-with-cleanup' environment.")
 
-(defvar native-comp-enable-subr-trampolines)
-(defvar comp-enable-subr-trampolines)
-
 (defmacro buttercup-with-cleanup (&rest body)
   "Execute BODY, cleaning spys and the rest afterwards."
-  `(,@(if (fboundp 'with-suppressed-warnings)
-          '(with-suppressed-warnings ((obsolete comp-enable-subr-trampolines)))
-        '(progn))
-     (let ((buttercup--cleanup-functions nil)
-           ;; Redefining certain primitive's trampolines will cause problems,
-           ;; see https://github.com/jorgenschaefer/emacs-buttercup/issues/230 and
-           ;; https://debbugs.gnu.org/cgi/bugreport.cgi?bug=61880
-           (comp-enable-subr-trampolines nil)
-           (native-comp-enable-subr-trampolines nil))
-       (unwind-protect (progn ,@body)
-         (dolist (fun buttercup--cleanup-functions)
-           (ignore-errors
-             (funcall fun)))))))
+  `(let ((buttercup--cleanup-functions nil))
+     (unwind-protect (progn ,@body)
+       (dolist (fun buttercup--cleanup-functions)
+         (ignore-errors
+           (funcall fun))))))
 
 (defun buttercup--add-cleanup (function)
   "Register FUNCTION for cleanup in `buttercup-with-cleanup'."
@@ -1593,22 +1615,28 @@ specs will be marked as pending when MATCHER does not match."
     (function (buttercup--mark-skipped buttercup-suites matcher reverse))
     (list (cond
            ((cl-every #'stringp matcher)
-            (buttercup-mark-skipped (mapconcat (lambda (re)
-                                                 (concat "\\(?:" re "\\)"))
-                                               matcher "\\|")
-                                    reverse))
+            (buttercup-mark-skipped
+             (rx-to-string `(or ,@(mapcar (lambda (p) `(regexp ,p)) matcher)))
+             reverse))
            (t (error "Bad matcher list: %s, should be list of strings" matcher))))))
 
 (defun buttercup--mark-skipped (suites predicate &optional reverse-predicate)
   "Mark all specs in SUITES as skipped if PREDICATE(spec) is true.
 If REVERSE-PREDICATE is non-nil, mark spec where PREDICATE(spec)
-is false."
-  (dolist (spec (buttercup--specs suites))
-    ;; cond implements (xor reverse-predicate (funcall predicate
-    ;; spec)) as xor is introduced in Emacs 27
-    (when (cond ((not reverse-predicate) (funcall predicate spec))
-                ((not (funcall predicate spec)) reverse-predicate))
-      (buttercup--spec-mark-pending spec "SKIPPED"))))
+is false.
+SUITES can actually be a list of specs and suites."
+  (let ((checker (if reverse-predicate
+                     (lambda (spec) (not (funcall predicate spec)))
+                   predicate)))
+    (cl-loop for sos in suites
+             if (buttercup-spec-p sos)
+              if (funcall checker sos)
+               do (buttercup--spec-mark-pending sos "SKIPPED")
+              end
+             else
+              do (buttercup--mark-skipped
+                  (buttercup-suite-children sos)
+                  checker))))
 
 ;;;###autoload
 (defun buttercup-run-markdown-buffer (&rest markdown-buffers)
@@ -1702,16 +1730,38 @@ Do not change the global value.")
     (funcall buttercup-reporter 'suite-started suite)
     (dolist (f (buttercup-suite-before-all suite))
       (buttercup--update-with-funcall suite f))
-    (dolist (sub (buttercup-suite-children suite))
-      (cond
-       ((buttercup-suite-p sub)
-        (buttercup--run-suite sub))
-       ((buttercup-spec-p sub)
-        (buttercup--run-spec sub))))
+    ;; If before-all marked the suite as pending or failed,
+    ;; propagate to all children and skip running them.
+    (if (memq (buttercup-suite-or-spec-status suite) '(pending failed))
+        (buttercup--propagate-suite-status suite)
+      (dolist (sub (buttercup-suite-children suite))
+        (cond
+         ((buttercup-suite-p sub)
+          (buttercup--run-suite sub))
+         ((buttercup-spec-p sub)
+          (buttercup--run-spec sub)))))
     (dolist (f (buttercup-suite-after-all suite))
       (buttercup--update-with-funcall suite f))
     (buttercup--set-end-time suite)
     (funcall buttercup-reporter 'suite-done suite)))
+
+(defun buttercup--propagate-suite-status (suite)
+  "Propagate the status of SUITE to all its children recursively.
+Each child spec is reported as started and done so reporters can
+display them.  Nested suites are handled recursively."
+  (let ((status (buttercup-suite-or-spec-status suite))
+        (desc (buttercup-suite-or-spec-failure-description suite)))
+    (dolist (sub (buttercup-suite-children suite))
+      (setf (buttercup-suite-or-spec-status sub) status
+            (buttercup-suite-or-spec-failure-description sub) desc)
+      (cond
+       ((buttercup-spec-p sub)
+        (funcall buttercup-reporter 'spec-started sub)
+        (funcall buttercup-reporter 'spec-done sub))
+       ((buttercup-suite-p sub)
+        (funcall buttercup-reporter 'suite-started sub)
+        (buttercup--propagate-suite-status sub)
+        (funcall buttercup-reporter 'suite-done sub))))))
 
 (defun buttercup--run-spec (spec)
   "Run SPEC."

@@ -6,8 +6,8 @@
 ;; URL: https://github.com/astoff/buffer-env
 ;; Keywords: processes, tools
 ;; Package-Requires: ((emacs "27.1") (compat "29.1"))
-;; Package-Version: 20250516.1223
-;; Package-Revision: fc5cab4db55f
+;; Package-Version: 20260604.645
+;; Package-Revision: 81968582b2db
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -68,7 +68,7 @@
 
 (defcustom buffer-env-command-alist
   `((,(rx "/" (or ".env" "environment-variables") eos)
-     . "set -a && >&2 . \"$1\" && env -0")
+     . "set -a && >&2 . \"$1\" && { env -0 || env; }")
     (,(rx "/manifest.scm" eos)
      . "guix shell -m \"$1\" -- env -0")
     (,(rx "/guix.scm" eos)
@@ -87,8 +87,8 @@ esac")
     (,(rx ".ps1" eos)
      . "powershell -c '& { param($ignore, $script) . $script > $null; Get-ChildItem env: |\
         % {\"$($_.Name)=$($_.Value)`0\"} | Write-Host -NoNewLine } '")
-    (,(rx any)
-     . ">&2 . \"$1\" && env -0"))
+    ;; POSIX doesn't mandate the -0 option
+    ("" . ">&2 . \"$1\" && { env -0 || env; }"))
   "Alist of commands used to produce environment variables.
 For each entry, the car is a regular expression and the cdr is a
 shell command.  The command specifies how to execute a script and
@@ -97,25 +97,10 @@ collect the environment variables it defines.
 More specifically, the command corresponding to the script file
 name is executed in a shell, in the directory of the script, with
 its absolute file name as argument.  The command should print a
-null-separated list of environment variables, and nothing else,
+null-terminated list of environment variables, and nothing else,
 to standard output."
   :type '(alist :key-type (regexp :tag "File name pattern")
                 :value-type (string :tag "Shell command")))
-
-(defcustom buffer-env-commands nil
-  "Alist of commands used to produce environment variables.
-For each entry, the car is a glob pattern and the cdr is a shell
-command.  The command specifies how to execute a script and
-collect the environment variables it defines.
-
-Specifically, the command corresponding to the script file name
-is executed in a shell, in the directory of the script, with its
-absolute file name as argument.  The command should print a
-null-separated list of environment variables, and nothing else,
-to standard output."
-  :type '(alist :key-type (string :tag "Glob pattern")
-                :value-type (string :tag "Shell command")))
-(make-obsolete-variable 'buffer-env-commands 'buffer-env-command-alist "0.5")
 
 (defcustom buffer-env-safe-files nil
   "List of scripts marked as safe to execute.
@@ -172,27 +157,27 @@ Keys are file names, values are lists of form
   "Check if FILE is safe to execute, or ask for permission.
 Files marked as safe to execute are permanently stored in
 `buffer-env-safe-files' via the Custom mechanism."
-  (let ((hash (with-temp-buffer
-                (insert-file-contents-literally file)
-                (secure-hash 'sha256 (current-buffer)))))
-    (or (member (cons file hash) buffer-env-safe-files)
-        (pcase (car (read-multiple-choice
-                     (format-message "[buffer-env] Execute script `%s'?" file)
-                     '((?! "always")
-                       (?y "yes")
-                       (?n "no"))
-                     "\
+  (let ((help "\
 Please decide if you trust this script and would like to execute it.
 
 If you choose ‘yes’ or ‘no’, the decision holds in this Emacs
 session only and provided the file modification time is unchanged.
 
 If you choose `always', the decision persists for as long as the
-content of the file remains unchanged.  See ‘buffer-env-safe-files’
-for more details."))
-          (?! (customize-save-variable
-               'buffer-env-safe-files
-               (push (cons file hash) buffer-env-safe-files)))
+content of the file remains unchanged.  See `buffer-env-safe-files'
+for more details.")
+        (hash (with-temp-buffer
+                (insert-file-contents-literally file)
+                (secure-hash 'sha256 (current-buffer)))))
+    (or (member (cons file hash) buffer-env-safe-files)
+        (pcase (car (read-multiple-choice
+                     (format-message "[buffer-env] Execute script `%s'?" file)
+                     '((?! "always") (?y "yes") (?n "no"))
+                     help))
+          (?! (setf (alist-get file buffer-env-safe-files nil nil #'string=)
+                    hash)
+              (customize-save-variable 'buffer-env-safe-files
+                                       buffer-env-safe-files))
           (?y t)))))
 
 (defun buffer-env--locate-script ()
@@ -200,8 +185,8 @@ for more details."))
   (unless (file-remote-p default-directory)
     (seq-some
      (lambda (name)
-       (when-let ((dir (locate-dominating-file default-directory
-					       name)))
+       (when-let* ((dir (locate-dominating-file default-directory
+					        name)))
 	 (expand-file-name name dir)))
      (if (stringp buffer-env-script-name)
          (list buffer-env-script-name)
@@ -209,16 +194,7 @@ for more details."))
 
 (defun buffer-env--get-command (file)
   "Return the appropriate shell command to interpret script FILE."
-  (or (when-let
-          ((c (seq-some (pcase-lambda (`(,patt . ,command))
-                          (when (string-match-p (wildcard-to-regexp patt)
-                                                (file-name-nondirectory file))
-                            command))
-                        buffer-env-commands)))
-        (prog1 c
-          (lwarn 'buffer-env :warning "\
-`buffer-env-commands' is obsolete, use 'buffer-env-command-alist' instead.")))
-      (seq-some (pcase-lambda (`(,patt . ,command))
+  (or (seq-some (pcase-lambda (`(,patt . ,command))
                   (when (string-match-p patt file)
                     command))
                 buffer-env-command-alist)
@@ -251,9 +227,7 @@ When called interactively, ask for a FILE."
            (read-file-name (format-prompt "Environment script"
                                           (when file (file-relative-name file)))
                            nil file t))))
-  (when-let ((file (if file
-                       (expand-file-name file)
-                     (buffer-env--locate-script))))
+  (when-let* ((file (if file (expand-file-name file) (buffer-env--locate-script))))
     (let ((modtime (file-attribute-modification-time (file-attributes file)))
           (cached (gethash file buffer-env--cache)))
       (cond
@@ -265,60 +239,64 @@ When called interactively, ask for a FILE."
           (setq-local process-environment (nth 1 cached)
                       exec-path (nth 2 cached)
                       buffer-env-active file)))
-      ((buffer-env--authorize file)
-       (pcase (with-temp-buffer
-                (let* ((default-directory (file-name-directory file))
-                       (message-log-max nil)
-                       (errbuf (with-current-buffer (get-buffer-create " *buffer-env*")
-                                 (erase-buffer)
-                                 (current-buffer)))
-                       (proc (make-process
-                              :name "buffer-env"
-                              :command (list shell-file-name
-                                             shell-command-switch
-                                             (buffer-env--get-command file)
-                                             shell-file-name ;Argument $0
-                                             file)
-                              :sentinel #'ignore
-                              :buffer (current-buffer)
-                              :stderr errbuf)))
-                  ;; Give subprocess a chance to finish
-                  ;; before setting up a progress reporter
-                  (sit-for 0)
-                  (if (not (process-live-p proc))
-                      (accept-process-output proc)
-                    (let* ((msg (format-message "[buffer-env] Running `%s'..." file))
-                           (reporter (make-progress-reporter msg)))
-                      (while (or (accept-process-output proc 1)
-                                 (process-live-p proc))
-                        (progress-reporter-update reporter))
-                      (progress-reporter-done reporter)))
-                  (list (process-exit-status proc)
-                        errbuf
-                        (thread-first
-                          (buffer-substring (point-min) (point-max))
-                          (split-string "\0" t)
-                          (buffer-env--filter-vars)
-                          (nconc buffer-env-extra-variables)))))
-         (`(0 ,_ ,vars)
-          (setq-local process-environment vars)
-          (when-let ((path (getenv "PATH")))
-            (setq-local exec-path (nconc (split-string path path-separator)
-                                         (list exec-directory))))
-          (puthash file (list modtime process-environment exec-path) buffer-env--cache)
-          (when buffer-env-verbose
-            (message "[buffer-env] Environment of `%s' set from `%s'"
-                     (current-buffer) file))
-          (setq buffer-env-active file))
-         (`(,status ,errbuf ,_)
-          (buffer-env-reset)
-          (puthash file `(,modtime . ignore) buffer-env--cache)
-          (lwarn 'buffer-env :warning "\
+       ((buffer-env--authorize file)
+        (let ((default-directory (file-name-directory file))
+              (message-log-max nil)
+              (errbuf (get-buffer-create " *buffer-env*"))
+              proc vars)
+          (with-current-buffer errbuf (erase-buffer))
+          (with-temp-buffer
+            (setq proc (make-process
+                        :name "buffer-env"
+                        :command (list shell-file-name
+                                       shell-command-switch
+                                       (buffer-env--get-command file)
+                                       shell-file-name ;Argument $0
+                                       file)
+                        :sentinel #'ignore
+                        :buffer (current-buffer)
+                        :stderr errbuf))
+            ;; Give subprocess a chance to finish
+            ;; before setting up a progress reporter
+            (sit-for 0)
+            (if (not (process-live-p proc))
+                (accept-process-output proc)
+              (let* ((msg (format-message "[buffer-env] Running `%s'..." file))
+                     (reporter (make-progress-reporter msg)))
+                (while (or (accept-process-output proc 1)
+                           (process-live-p proc))
+                  (progress-reporter-update reporter))
+                (progress-reporter-done reporter)))
+            (let ((varpatt (if (progn (goto-char (point-min))
+                                      (search-forward "\0" nil t))
+                               (rx (+ (not 0))) (rx (+ nonl)))))
+              (goto-char (point-min))
+              (while (re-search-forward varpatt nil t)
+                (push (match-string-no-properties 0) vars))))
+          (cond
+           ((zerop (process-exit-status proc))
+            (setq-local process-environment
+                        (nconc (buffer-env--filter-vars
+                                (nreverse vars))
+                               buffer-env-extra-variables))
+            (when-let* ((path (getenv "PATH")))
+              (setq-local exec-path (nconc (split-string path path-separator)
+                                           (list exec-directory))))
+            (puthash file (list modtime process-environment exec-path)
+                     buffer-env--cache)
+            (when buffer-env-verbose
+              (message "[buffer-env] Environment of `%s' set from `%s'"
+                       (current-buffer) file))
+            (setq buffer-env-active file))
+           (t                           ;Script failed
+            (buffer-env-reset)
+            (puthash file `(,modtime . ignore) buffer-env--cache)
+            (lwarn 'buffer-env :warning "\
 Error running script %s (exit status %s).
 See script output in %s for more information."
-                 (buttonize file #'find-file file)
-                 status
-                 (buttonize (buffer-name errbuf) #'pop-to-buffer errbuf)))))
+                   (buttonize file #'find-file file)
+                   (process-exit-status proc)
+                   (buttonize (buffer-name errbuf) #'pop-to-buffer errbuf))))))
       (t
        (puthash file `(,modtime . ignore) buffer-env--cache))))))
 
@@ -358,11 +336,11 @@ See script output in %s for more information."
                   (buttonize (abbreviate-file-name script) #'find-file script)
                   ".")
           (insert "\n\nOnly in the local process environment:\n")
-          (if-let ((vars (seq-difference local global)))
+          (if-let* ((vars (seq-difference local global)))
               (dolist (var vars) (insert "  " var ?\n))
             (insert "    (None)\n"))
           (insert "\nOnly in the global process environment:\n")
-          (if-let ((vars (seq-difference global local)))
+          (if-let* ((vars (seq-difference global local)))
               (dolist (var vars) (insert "  " var ?\n))
             (insert "    (None)\n"))
           (insert "\nComplete process environment of the buffer:\n")

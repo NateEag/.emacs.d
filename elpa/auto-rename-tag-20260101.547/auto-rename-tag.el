@@ -1,12 +1,12 @@
 ;;; auto-rename-tag.el --- Automatically rename paired HTML/XML tag  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018-2025 Shen, Jen-Chieh
+;; Copyright (C) 2018-2026 Shen, Jen-Chieh
 ;; Created date 2018-12-01 23:56:15
 
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; URL: https://github.com/emacs-vs/auto-rename-tag
-;; Package-Version: 20250101.906
-;; Package-Revision: b38895ff4821
+;; Package-Version: 20260101.547
+;; Package-Revision: ace6de8bc820
 ;; Package-Requires: ((emacs "24.4"))
 ;; Keywords: convenience auto-complete html rename tag xml
 

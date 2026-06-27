@@ -4,8 +4,8 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-aio
-;; Package-Version: 20251117.644
-;; Package-Revision: 58157e51e7eb
+;; Package-Version: 20260214.1529
+;; Package-Revision: 0e94a06bb035
 ;; Package-Requires: ((emacs "26.1"))
 
 ;;; Commentary:
@@ -248,8 +248,8 @@ a chain of promise-yielding promises."
 (defmacro aio-all (promises)
   "Return a promise that resolves when all PROMISES are resolved."
   `(let ((promises ,promises))
-      (while-let ((promise (pop promises)))
-        (aio-await promise))))
+      (while promises
+        (aio-await (pop promises)))))
 
 (defun aio-catch (promise)
   "Return a new promise that wraps PROMISE but will never signal.

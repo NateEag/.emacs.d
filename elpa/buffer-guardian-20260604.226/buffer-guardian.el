@@ -4,8 +4,8 @@
 ;; URL: https://github.com/jamescherti/jc-dev
 ;; Package-Requires: ((emacs "25.1"))
 ;; Keywords: maint
-;; Package-Version: 20260428.135
-;; Package-Revision: 4407655c9a39
+;; Package-Version: 20260604.226
+;; Package-Revision: 44a692448659
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -73,6 +73,24 @@
 (defcustom buffer-guardian-verbose nil
   "Enable verbose mode to log when a buffer is automatically saved."
   :type 'boolean
+  :group 'buffer-guardian)
+
+(defcustom buffer-guardian-before-save-hook nil
+  "Hook run right before `buffer-guardian' attempts to save a buffer.
+This hook executes in the context of the buffer that is about to be saved."
+  :type 'hook
+  :group 'buffer-guardian)
+
+(defcustom buffer-guardian-after-save-hook nil
+  "Hook run right after `buffer-guardian' successfully saves a buffer.
+This hook executes in the context of the buffer that was just saved."
+  :type 'hook
+  :group 'buffer-guardian)
+
+(defcustom buffer-guardian-save-error-hook nil
+  "Hook run when `buffer-guardian' encounters an error while saving a buffer.
+This hook executes in the context of the buffer that failed to save."
+  :type 'hook
   :group 'buffer-guardian)
 
 (defcustom buffer-guardian-save-on-focus-loss t
@@ -293,7 +311,7 @@ buffers ensures modifications are committed back to the original parent buffer."
   :type 'boolean
   :group 'buffer-guardian)
 
-(defcustom buffer-guardian-debounce-delay 1.0
+(defcustom buffer-guardian-debounce-delay 0.6
   "Delay in seconds before saving after a trigger event (e.g., window change).
 
 This prevents excessive saving if events fire rapidly. Because Emacs is
@@ -310,6 +328,54 @@ before the delay expires, the countdown resets to zero."
   :type 'number
   :group 'buffer-guardian)
 
+(defun buffer-guardian--around-save-some-buffers (orig-fun &rest args)
+  "Around advice for `save-some-buffers'.
+ORIG-FUN is the advised function.
+ARGS are the arguments.
+When `buffer-guardian-mode' is enabled, this silently saves all buffers
+handled by the package first, then calls the original function with its
+unmodified arguments to handle any remaining buffers normally."
+  (when (bound-and-true-p buffer-guardian-mode)
+    (buffer-guardian-save-all-buffers))
+  (apply orig-fun args))
+
+(defcustom buffer-guardian-override-save-some-buffers nil
+  "Advise `save-some-buffers' to use `buffer-guardian' logic.
+When non-nil and `buffer-guardian-mode' is active, this intercepts
+`save-some-buffers' to silently pre-save package-managed buffers before allowing
+the native command to run normally."
+  :type 'boolean
+  :group 'buffer-guardian
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (if (and value (bound-and-true-p buffer-guardian-mode))
+             (advice-add 'save-some-buffers :around
+                         #'buffer-guardian--around-save-some-buffers)
+           (advice-remove 'save-some-buffers
+                          #'buffer-guardian--around-save-some-buffers))))
+
+(defcustom buffer-guardian-inhibit-save-on-completion t
+  "If non-nil, `buffer-guardian' saves buffers even if a completion is active.
+When set to nil, the package safely pauses background saves while completion
+menus (like Corfu) are visible."
+  :type 'boolean
+  :group 'buffer-guardian)
+
+(defcustom buffer-guardian-inhibit-save-on-popup nil
+  "If non-nil, `buffer-guardian' saves buffers even if a popup is active.
+When set to nil, the package safely pauses background saves while child frames
+are visible."
+  :type 'boolean
+  :group 'buffer-guardian)
+
+;;; Internal variables
+
+(defvar buffer-guardian--inhibit-interaction t
+  "Internal variable to override `inhibit-interaction' behavior down stack.")
+
+(defvar buffer-guardian--ignore-modified-externally nil
+  "Internal variable to allow manual commands to ignore disk checks safely.")
+
 (defvar buffer-guardian--debounce-timer nil
   "Internal timer used to debounce save operations.")
 
@@ -321,6 +387,25 @@ before the delay expires, the countdown resets to zero."
        (seq-some (lambda (regexp)
                    (string-match-p regexp filename))
                  buffer-guardian-exclude-regexps)))
+
+(defun buffer-guardian--completion-active-p ()
+  "Return non-nil if a completion menu is active.
+
+This function prevents a conflict where automatic background saves are triggered
+prematurely by completion frameworks like Corfu."
+  (or (bound-and-true-p corfu--candidates)
+      (bound-and-true-p completion-in-region-mode)))
+
+(defun buffer-guardian--popup-active-p ()
+  "Return non-nil if a temporary popup is active."
+  (when (fboundp 'frame-parent) ; Emacs > 26.1
+    (let ((current (selected-frame)))
+      (catch 'found
+        (dolist (frame (frame-list))
+          (when (and (frame-visible-p frame)
+                     (eq (frame-parent frame) current))
+            (throw 'found t)))
+        nil))))
 
 (defun buffer-guardian--predicate (&optional include-non-file-visiting)
   "Determine if the current buffer should be automatically saved.
@@ -412,7 +497,8 @@ Returns: \='org-src, \='edit-indirect, t, or nil."
            (buffer (when window
                      (window-buffer window))))
       (when (buffer-live-p buffer)
-        (buffer-guardian-save-buffer-maybe buffer)))))
+        (with-current-buffer buffer
+          (buffer-guardian-save-buffer-maybe buffer))))))
 
 (defun buffer-guardian--mouse-leave-buffer-hook ()
   "Save the current buffer when the mouse clicks on another buffer."
@@ -429,7 +515,7 @@ or moved to a new frame.")
 
 (defun buffer-guardian--on-buffer-change (&optional object)
   "Function called by `window-buffer-change-functions'.
-OBJECT can be a frame or a window."
+OBJECT can be a frame or window."
   (let* ((is-frame (frame-live-p object))
          (frame (if is-frame object (selected-frame)))
          (window (cond
@@ -460,13 +546,29 @@ OBJECT can be a frame or a window."
              (bound-and-true-p buffer-guardian-mode))
     (buffer-guardian--on-buffer-change object)))
 
+(defun buffer-guardian--execute-debounced-save ()
+  "Save all buffers if no popup is active, then reset the debounce timer.
+This prevents saving when temporary UI elements trigger layout hooks."
+  (setq buffer-guardian--debounce-timer nil)
+  (when (and (or (not buffer-guardian-inhibit-save-on-completion)
+                 (not (buffer-guardian--completion-active-p)))
+             (or (not buffer-guardian-inhibit-save-on-popup)
+                 (not (buffer-guardian--popup-active-p))))
+    (buffer-guardian-save-all-buffers)))
+
 (defun buffer-guardian-save-all-buffers-debounced ()
-  "Debounced version of `buffer-guardian-save-all-buffers'."
+  "Debounced version of `buffer-guardian-save-all-buffers'.
+Suppresses saves until `buffer-guardian-debounce-delay' seconds have
+passed without any new calls."
   (when buffer-guardian--debounce-timer
+    ;; We are in the cooldown period. Cancel the existing timer and start
+    ;; a new one to extend the suppression window.
     (cancel-timer buffer-guardian--debounce-timer))
+
   (setq buffer-guardian--debounce-timer
-        (run-with-timer buffer-guardian-debounce-delay nil
-                        #'buffer-guardian-save-all-buffers)))
+        (run-with-timer
+         buffer-guardian-debounce-delay nil
+         #'buffer-guardian--execute-debounced-save)))
 
 (defun buffer-guardian--window-configuration-change ()
   "Run on window configuration change."
@@ -477,92 +579,141 @@ OBJECT can be a frame or a window."
 ;;; Functions
 
 ;;;###autoload
+(defun buffer-guardian-save-buffer (&optional buffer)
+  "Save BUFFER using the buffer-guardian background logic.
+
+If BUFFER is omitted, it defaults to the current buffer.
+
+This command generally provides a non-interactive save. Unlike the default
+`save-buffer', it avoids interrupting your workflow with standard prompts.
+
+The only exception is if the file has been modified outside of Emacs. In that
+case, it will interactively prompt you to discard your edits and revert the
+buffer. If you decline, the save is safely aborted."
+  (interactive)
+  (let* ((initial-buffer (or buffer (current-buffer)))
+         (target-buffer (or (buffer-base-buffer initial-buffer)
+                            initial-buffer))
+         (file-name (buffer-file-name target-buffer))
+         (buffer-guardian--inhibit-interaction nil)
+         (buffer-guardian--ignore-modified-externally t)
+         (buffer-guardian-inhibit-saving-nonexistent-files nil))
+    (when (buffer-live-p target-buffer)
+      (with-current-buffer target-buffer
+        (when (and file-name
+                   (buffer-modified-p target-buffer)
+                   (file-regular-p file-name)
+                   (not (verify-visited-file-modtime)))
+          ;; Was the file modified outside of Emacs? Revert buffer.
+          (if (yes-or-no-p (format "Discard edits and reread from '%s'? "
+                                   file-name))
+              (revert-buffer :ignore-auto :noconfirm)
+            ;; If user does not discard, ask if they want to overwrite
+            (if (yes-or-no-p (format "Overwrite '%s'? " file-name))
+                ;; Acknowledge the file modification to prevent Emacs's
+                ;; native `save-buffer' from triggering a second interactive
+                ;; prompt.
+                (set-visited-file-modtime)
+              ;; User aborted both options
+              (user-error
+               "Save aborted: Resolve external modifications manually")))))
+      ;; Proceed with the save safely outside the macro context
+      (buffer-guardian-save-buffer-maybe target-buffer))))
+
+;;;###autoload
 (defun buffer-guardian-save-buffer-maybe (&optional buffer)
   "Save BUFFER if it is visiting a file that is existing on the disk.
 By default, it only saves when the file exists on the disk."
   (let ((target-buffer (or buffer (current-buffer))))
     (when (buffer-live-p target-buffer)
       (with-current-buffer target-buffer
-        (let ((predicate-result (buffer-guardian--predicate t)))
-          (when predicate-result
-            (cond
-             ((and (eq predicate-result 'org-src)
-                   (fboundp 'org-edit-src-save))
-              (org-edit-src-save)
-              (when buffer-guardian-verbose
-                (message "[buffer-guardian] Org-src Save: '%s'"
-                         (buffer-name))))
+        (let ((inhibit-message (not buffer-guardian-verbose))
+              (save-silently (not buffer-guardian-verbose))
+              (inhibit-interaction buffer-guardian--inhibit-interaction))
+          (ignore inhibit-interaction)
+          (condition-case err
+              (let ((predicate-result (buffer-guardian--predicate t)))
+                (when predicate-result
+                  (cond
+                   ((and (eq predicate-result 'org-src)
+                         (fboundp 'org-edit-src-save))
+                    (run-hooks 'buffer-guardian-before-save-hook)
+                    (org-edit-src-save)
+                    (run-hooks 'buffer-guardian-after-save-hook)
+                    (when buffer-guardian-verbose
+                      (message "[buffer-guardian] Org-src Save: '%s'"
+                               (buffer-name))))
 
-             ((and (eq predicate-result 'edit-indirect)
-                   (fboundp 'edit-indirect--commit))
-              (edit-indirect--commit)
-              (when buffer-guardian-verbose
-                (message "[buffer-guardian] Edit-indirect Save: '%s'"
-                         (buffer-name))))
+                   ((and (eq predicate-result 'edit-indirect)
+                         (fboundp 'edit-indirect--commit))
+                    (run-hooks 'buffer-guardian-before-save-hook)
+                    (edit-indirect--commit)
+                    (run-hooks 'buffer-guardian-after-save-hook)
+                    (when buffer-guardian-verbose
+                      (message "[buffer-guardian] Edit-indirect Save: '%s'"
+                               (buffer-name))))
 
-             ;; File-visiting buffers
-             (t
-              (let* ((file-name (buffer-file-name (buffer-base-buffer)))
-                     (file-dir (when file-name
-                                 (file-name-directory file-name))))
-                (cond
-                 ((not file-name)
-                  (when buffer-guardian-verbose
-                    (message
-                     (concat "[buffer-guardian] Automatic save skipped "
-                             "for '%s' because it is not visiting a file")
-                     (buffer-name))))
-
-                 ;; Disk check: Missing parent directory.
-                 ;; Skip saving to avoid Emacs prompting interactively
-                 ;; to create the missing directory.
-                 ((and file-dir (not (file-directory-p file-dir)))
-                  (when buffer-guardian-verbose
-                    (message
-                     (concat "[buffer-guardian] Warning: Automatic "
-                             "save skipped for '%s' because the parent "
-                             "directory does not exist.")
-                     file-name)))
-
-                 ((not (file-writable-p file-name))
-                  (when buffer-guardian-verbose
-                    (message
-                     (concat "[buffer-guardian] Warning: Automatic save "
-                             "skipped for '%s' because the file is not "
-                             "writable.")
-                     file-name)))
-
-                 ((not (verify-visited-file-modtime (current-buffer)))
-                  (when buffer-guardian-verbose
-                    (message (concat "[buffer-guardian] Warning: Automatic "
-                                     "save skipped for '%s' because the file "
-                                     "was modified externally.")
-                             file-name)))
-
-                 (t
-                  (condition-case err
-                      (progn
-                        (let ((inhibit-interaction t)
-                              (inhibit-message (not buffer-guardian-verbose))
-                              (save-silently (not buffer-guardian-verbose)))
-                          (ignore inhibit-interaction)
-                          (save-buffer))
+                   ;; File-visiting buffers
+                   (t
+                    (let* ((file-name (buffer-file-name (buffer-base-buffer)))
+                           (file-dir (when file-name
+                                       (file-name-directory file-name))))
+                      (cond
+                       ((not file-name)
                         (when buffer-guardian-verbose
-                          (message "[buffer-guardian] Save: '%s'"
+                          (message
+                           (concat "[buffer-guardian] Automatic save skipped "
+                                   "for '%s' because it is not visiting a file")
+                           (buffer-name))))
+
+                       ;; Disk check: Missing parent directory.
+                       ;; Skip saving to avoid Emacs prompting interactively
+                       ;; to create the missing directory.
+                       ((and file-dir (not (file-directory-p file-dir)))
+                        (when buffer-guardian-verbose
+                          (message
+                           (concat "[buffer-guardian] Warning: Automatic "
+                                   "save skipped for '%s' because the parent "
+                                   "directory does not exist.")
+                           file-name)))
+
+                       ((not (file-writable-p file-name))
+                        (when buffer-guardian-verbose
+                          (message
+                           (concat "[buffer-guardian] Warning: Automatic save "
+                                   "skipped for '%s' because the file is not "
+                                   "writable.")
+                           file-name)))
+
+                       ((and (not buffer-guardian--ignore-modified-externally)
+                             (not (verify-visited-file-modtime (current-buffer))))
+                        (when buffer-guardian-verbose
+                          (message (concat "[buffer-guardian] Warning: Automatic "
+                                           "save skipped for '%s' because the file "
+                                           "was modified externally.")
                                    file-name)))
-                    (inhibited-interaction
-                     (message
-                      (concat
-                       "[buffer-guardian] Error: 'save-buffer' attempted an "
-                       "interactive prompt in buffer '%s'. It is expected to "
-                       "be non-interactive. Please report this "
-                       "issue to the `buffer-guardian' author.")
-                      (buffer-name)))
-                    (error
-                     (when buffer-guardian-verbose
-                       (message "[buffer-guardian] Failed to save '%s': %s"
-                                (buffer-name)
-                                (error-message-string err))))))))))))))))
+
+                       (t
+                        (run-hooks 'buffer-guardian-before-save-hook)
+                        (save-buffer)
+                        (when buffer-guardian-verbose
+                          (message "[buffer-guardian] Save: '%s'" file-name))
+                        (run-hooks 'buffer-guardian-after-save-hook))))))))
+            (inhibited-interaction
+             (run-hooks 'buffer-guardian-save-error-hook)
+             (message
+              (concat
+               "[buffer-guardian] Error: 'save-buffer' attempted an "
+               "interactive prompt in buffer '%s'. It is expected to "
+               "be non-interactive. Please report this "
+               "issue to the `buffer-guardian' author.")
+              (buffer-name)))
+            (error
+             (run-hooks 'buffer-guardian-save-error-hook)
+             (when buffer-guardian-verbose
+               (message "[buffer-guardian] Failed to save '%s': %s"
+                        (buffer-name)
+                        (error-message-string err))))))))))
 
 ;;;###autoload
 (defun buffer-guardian-save-all-buffers (&optional buffer-list)
@@ -570,7 +721,10 @@ By default, it only saves when the file exists on the disk."
 BUFFER-LIST is the list of buffers."
   (when (bound-and-true-p buffer-guardian-mode)
     (dolist (buffer (or buffer-list (buffer-list)))
-      (when (and (buffer-live-p buffer) (buffer-modified-p buffer))
+      (when (and (buffer-live-p buffer)
+                 (buffer-modified-p buffer)
+                 ;; Ignore indirect buffers
+                 (not (buffer-base-buffer buffer)))
         (buffer-guardian-save-buffer-maybe buffer)))))
 
 ;;; Mode
@@ -589,6 +743,7 @@ BUFFER-LIST is the list of buffers."
                     buffer-guardian-save-all-buffers-interval
                     buffer-guardian-save-all-buffers-idle
                     buffer-guardian-save-all-buffers-trigger-hooks
+                    buffer-guardian-override-save-some-buffers
                     buffer-guardian-save-trigger-functions)))
     (dolist (setting settings)
       (funcall (or (get setting 'custom-set) #'set-default)

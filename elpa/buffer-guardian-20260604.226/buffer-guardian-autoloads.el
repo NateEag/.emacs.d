@@ -11,6 +11,19 @@
 
 ;;; Generated autoloads from buffer-guardian.el
 
+(autoload 'buffer-guardian-save-buffer "buffer-guardian" "\
+Save BUFFER using the buffer-guardian background logic.
+
+If BUFFER is omitted, it defaults to the current buffer.
+
+This command generally provides a non-interactive save. Unlike the default
+`save-buffer', it avoids interrupting your workflow with standard prompts.
+
+The only exception is if the file has been modified outside of Emacs. In that
+case, it will interactively prompt you to discard your edits and revert the
+buffer. If you decline, the save is safely aborted.
+
+(fn &optional BUFFER)" t)
 (autoload 'buffer-guardian-save-buffer-maybe "buffer-guardian" "\
 Save BUFFER if it is visiting a file that is existing on the disk.
 By default, it only saves when the file exists on the disk.

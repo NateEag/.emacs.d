@@ -83,8 +83,20 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
       (insert "m")
       (aref (aref (font-get-glyphs (font-at 1) 1 2) 0) 4))))
 
-(defun my-set-up-frame (&optional screen-share)
-  "Configure current frame's layout and font size based on display size."
+(defun my-set-up-all-frames (&optional screen-share)
+  "Apply my default layout to all open frames based on display size.
+
+If non-nil, SCREEN-SHARE indicates the frames should be
+configured for a screenshare session."
+  (interactive)
+
+  (dolist (cur-frame (frames-on-display-list))
+    (my-set-up-frame screen-share cur-frame)))
+
+(defun my-set-up-frame (&optional screen-share frame)
+  "Configure FRAME's layout on display size and whether SCREEN-SHARE is true.
+
+SCREEN-SHARE defaults to true - FRAME defaults to (selected-frame)."
 
   (interactive)
 
@@ -105,12 +117,14 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
   ;;
   ;; On rare occasions I'll use a three-way split window, usually for working
   ;; on tricky merge conflicts.
-  (let* ((current-monitor-width
+  (let* (
+         (target-frame (or frame (selected-frame)))
+         (current-monitor-width
           ;; I hate alists. They're hard to read, both when inspecting
           ;; variables and when writing code... :P
           (nth 3
                (assq 'workarea
-                     (car (display-monitor-attributes-list (selected-frame))))))
+                     (car (display-monitor-attributes-list target-frame)))))
          (screen-width-in-chars
           (/ (float current-monitor-width) (default-font-width)))
          (current-monitor-height
@@ -118,7 +132,7 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
           ;; variables and when writing code... :P
           (nth 4
                (assq 'workarea
-                     (car (display-monitor-attributes-list (selected-frame))))))
+                     (car (display-monitor-attributes-list target-frame)))))
          (screen-height-in-chars (floor
                                   (/ (float current-monitor-height)
                                      (default-font-height))))
@@ -141,17 +155,17 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
     (if (= current-monitor-width 1792)
         (setq-local num-windows 1))
 
-    (my-set-frame-width-by-window-count num-windows)
+    (my-set-frame-width-by-window-count num-windows target-frame)
 
-    (set-frame-height (selected-frame)
+    (set-frame-height target-frame
                       screen-height-less-menubar-in-chars)))
 
-(defun my-set-frame-width-by-window-count (num-windows)
-  "Set frame width by number of desired 80-char windows."
+(defun my-set-frame-width-by-window-count (num-windows &optional frame)
+  "Set FRAME's width to fit NUM-WINDOWS 80-char windows."
 
-  (interactive "NHow many side-by-side windows? ")
+  (interactive "nHow many side-by-side windows? ")
 
-  (set-frame-width (selected-frame) (* my-window-width num-windows))
+  (set-frame-width (or frame (selected-frame)) (* my-window-width num-windows))
 
   ;; The below logic is dumb, but I only rarely use even three windows, so why
   ;; bother generalizing?
@@ -167,7 +181,7 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
   (balance-windows))
 
 (defun my-set-up-frame-for-screenshare ()
-  "Set up frame for productive screensharing."
+  "Set up current frame for productive screensharing."
   (interactive)
   (global-display-line-numbers-mode 1)
   (my-set-up-frame 't))

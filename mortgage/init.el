@@ -11,6 +11,6 @@
 
 ;;; Code:
 
-(message "Hello, world!")
+(load-file (concat user-emacs-directory "elpaca-init.el"))
 
 ;;; init.el ends here

@@ -1,0 +1,3 @@
+#! /usr/bin/env bash
+
+emacs --init-directory "$HOME/.emacs.d/mortgage"

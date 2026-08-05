@@ -211,20 +211,49 @@ third-party libraries that I never realized are on package.el, too.
 snippets/ - my personal yasnippets, augmenting the base yasnippet
 collection.
 
+## Emacs Mortgage
+
+My config has become rather crufty and slow over the years. Various corners
+that used to work well have broken.
+
+I don't intend to declare Emacs bankruptcy, as there are many things about my
+config I very much wish to retain.
+
+However, I am, let's say, taking out a mortgage, in `mortgage`. Try it out with
+`bin/emacs-mortgage`.
+
+I am using it to start a second iteration, hanging on to the core features, but
+streamlining, smoothing, and updating several aspects.
+
+Goals:
+
+- Package management with elpaca.el. My hacks for auto-updating via package.el
+  hit occasional explosions, and elpaca seems to enable a better workflow for
+  managing packages that live in their own repos.
+
+- E2E tests for core functionality, with assertions enforcing minimum execution
+  speeds on day-to-day operations.
+  [emacs-director](https://bard.github.io/emacs-director/end-to-end-testing)
+  looks like a promising tool for building that out. Specific features to test
+  / time:
+
+  * startup (< 1 second)
+  * find file by name < 200 ms in 40k files repo (fd in nixpkgs)
+  * search all files < 200 ms in 40k files repo (rg in nixpkgs)
+  * magit status / diff with >1000-line change active
+  * Jump-to-def / find-references via LSP (TS / JS, Python, Rust)
+
+- Tree-sitter major-modes by default.
+
+- Counsel-dash docs exploration auto-installed / auto-enabled as needed.
+
 ## OS X Setup
 
-I used to use the [Emacs for OS X build](https://emacsformacosx.com/) (I
-now build my own emacs to get support for automatic image resizing via
-ImageMagick), and had a hard time making it play nicely with
-command-line tools that use emacs like
-[Cask](https://github.com/cask/cask).
+I use [nix](https://nixos.org) for installing base Emacs.
 
-I eventually solved it by copying the shell script at
-`Emacs.app/Contents/MacOS/Emacs` to `Emacs.app/Contents/MacOS/emacs`, since
-`Emacs.app/Contents/MacOS/` was already on my `$PATH`.
-
-I'm not sure why just putting a symlink on `$PATH` didn't
-work for me, but it didn't.
+I need to figure out how to get nix-built Emacs to bump the maximum files limit
+on macOS, because I keep hitting the limit at $DAYJOB running a few LSP servers
+in medium-sized projects.
 
 ## Notes On Debugging Emacs Lisp
 

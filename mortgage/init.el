@@ -27,4 +27,7 @@
                                                                  before-init-time))))
               (if (> elapsed-start-time 1)
                   (message "Startup was TOO SLOW! %f seconds" elapsed-start-time)))))
+
+;; Now that we're done loading, don't trigger debugging on errors.
+(setq debug-on-error nil)
 ;;; init.el ends here

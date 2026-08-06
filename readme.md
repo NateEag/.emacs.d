@@ -219,33 +219,10 @@ that used to work well have broken.
 I don't intend to declare Emacs bankruptcy, as there are many things about my
 config I very much wish to retain.
 
-However, I am, let's say, taking out a mortgage, in `mortgage`. Try it out with
-`bin/emacs-mortgage`.
+However, I am, let's say, taking out a mortgage, in `mortgage/`. Try it out
+with `bin/emacs-mortgage`.
 
-I am using it to start a second iteration, hanging on to the core features, but
-streamlining, smoothing, and updating several aspects.
-
-Goals:
-
-- Package management with elpaca.el. My hacks for auto-updating via package.el
-  hit occasional explosions, and elpaca seems to enable a better workflow for
-  managing packages that live in their own repos.
-
-- E2E tests for core functionality, with assertions enforcing minimum execution
-  speeds on day-to-day operations.
-  [emacs-director](https://bard.github.io/emacs-director/end-to-end-testing)
-  looks like a promising tool for building that out. Specific features to test
-  / time:
-
-  * startup (< 1 second)
-  * find file by name < 200 ms in 40k files repo (fd in nixpkgs)
-  * search all files < 200 ms in 40k files repo (rg in nixpkgs)
-  * magit status / diff with >1000-line change active
-  * Jump-to-def / find-references via LSP (TS / JS, Python, Rust)
-
-- Tree-sitter major-modes by default.
-
-- Counsel-dash docs exploration auto-installed / auto-enabled as needed.
+Details about the mortgage live in `readme.md`
 
 ## OS X Setup
 

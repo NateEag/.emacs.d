@@ -23,5 +23,9 @@
  inhibit-startup-screen t
  inhibit-startup-echo-area-message t)
 
+;; I'd rather fit another few rows of buffer text than see menus and buttons.
+(menu-bar-mode -1)
+(tool-bar-mode -1)
+
 (provide 'prefs)
 ;;; prefs.el ends here

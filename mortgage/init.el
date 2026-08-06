@@ -17,4 +17,14 @@
 (require 'package-conf)
 (require 'prefs)
 
+;; TODO: Write an actual test that verifies startup time
+;;
+;; Uncomment the following to verify we log the situation.
+;;(sleep-for 2)
+(add-hook 'after-init-hook
+          (lambda ()
+            (let ((elapsed-start-time (float-time (time-subtract after-init-time
+                                                                 before-init-time))))
+              (if (> elapsed-start-time 1)
+                  (message "Startup was TOO SLOW! %f seconds" elapsed-start-time)))))
 ;;; init.el ends here

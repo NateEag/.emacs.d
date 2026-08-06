@@ -15,5 +15,6 @@
 
 (require 'elpaca-init)
 (require 'package-conf)
+(require 'prefs)
 
 ;;; init.el ends here

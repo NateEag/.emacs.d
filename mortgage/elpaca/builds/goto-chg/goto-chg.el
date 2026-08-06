@@ -1,0 +1,1 @@
+/home/nateeag/.emacs.d/mortgage/elpaca/sources/goto-chg/goto-chg.el

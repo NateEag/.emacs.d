@@ -1,0 +1,1053 @@
+This is elpaca.info, produced by makeinfo version 7.2 from elpaca.texi.
+
+INFO-DIR-SECTION Emacs
+START-INFO-DIR-ENTRY
+* Elpaca: (elpaca).     Elisp Package Manager.
+END-INFO-DIR-ENTRY
+
+
+File: elpaca.info,  Node: Top,  Next: Installation,  Up: (dir)
+
+Elpaca User Manual
+******************
+
+Elpaca is an elisp package manager.  It allows users to find, install,
+update, and remove third-party packages for Emacs.  It is a replacement
+for the built-in Emacs package manager, package.el.
+
+     Copyright (C) 2022-2026 Nicholas Vollmer
+
+     You can redistribute this document and/or modify it under the terms
+     of the GNU General Public License as published by the Free Software
+     Foundation, either version 3 of the License, or (at your option)
+     any later version.
+
+     This document is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+     General Public License for more details.
+
+* Menu:
+
+* Installation::                 Installing Elpaca.
+* Usage::                        Using Elpaca.
+* UI::                           Elpaca's package management UI.
+
+-- The Detailed Node Listing --
+
+Installation
+
+* Requirements::                 The required software environment for Elpaca.
+* Installer::                    A script responsible for installing Elpaca.
+
+Usage
+
+* Quick Start::
+* Basic concepts::
+* use-package Integration::
+
+Basic concepts
+
+* Recipes::                      The recipe format description.
+* Menus::                        Where recipes come from.
+* Orders::                       Incomplete, or custom recipes.
+* Queues::                       Order processing groups.
+* Installing Packages::
+* Lock Files::
+
+Recipes
+
+* Package types::
+* General recipe keywords::
+* Repository recipe keywords::
+* Recipe inheritance precedence::
+* elpaca-recipe-functions::
+
+Menus
+
+* elpaca-menu-functions::
+* Updating menus::
+
+Orders
+
+* elpaca-order-functions::
+
+UI
+
+* Searching::                    How to search within the Elpaca UI.
+* Search tags::
+
+
+File: elpaca.info,  Node: Installation,  Next: Usage,  Prev: Top,  Up: Top
+
+1 Installation
+**************
+
+* Menu:
+
+* Requirements::                 The required software environment for Elpaca.
+* Installer::                    A script responsible for installing Elpaca.
+
+
+File: elpaca.info,  Node: Requirements,  Next: Installer,  Up: Installation
+
+1.1 Requirements
+================
+
+Elpaca requires:
+   • Emacs >= 27.1
+   • git (minimum version TBD)
+
+
+File: elpaca.info,  Node: Installer,  Prev: Requirements,  Up: Installation
+
+1.2 Installer
+=============
+
+To install Elpaca, add the following elisp to your init.el.  It must
+come before any calls to other Elpaca functions/macros.  This will clone
+Elpaca into your ‘user-emacs-directory’ under the ‘elpaca’ subdirectory.
+It then builds and activates Elpaca.
+
+     (defvar elpaca-installer-version 0.12)
+     (defvar elpaca-directory (expand-file-name "elpaca/" user-emacs-directory))
+     (defvar elpaca-builds-directory (expand-file-name "builds/" elpaca-directory))
+     (defvar elpaca-sources-directory (expand-file-name "sources/" elpaca-directory))
+     (defvar elpaca-order '(elpaca :repo "https://github.com/progfolio/elpaca.git"
+                                   :ref nil :depth 1 :inherit ignore
+                                   :files (:defaults "elpaca-test.el" (:exclude "extensions"))
+                                   :build (:not elpaca-activate)))
+     (let* ((repo  (expand-file-name "elpaca/" elpaca-sources-directory))
+            (build (expand-file-name "elpaca/" elpaca-builds-directory))
+            (order (cdr elpaca-order))
+            (default-directory repo))
+       (add-to-list 'load-path (if (file-exists-p build) build repo))
+       (unless (file-exists-p repo)
+         (make-directory repo t)
+         (when (<= emacs-major-version 28) (require 'subr-x))
+         (condition-case-unless-debug err
+             (if-let* ((buffer (pop-to-buffer-same-window "*elpaca-bootstrap*"))
+                       ((zerop (apply #'call-process `("git" nil ,buffer t "clone"
+                                                       ,@(when-let* ((depth (plist-get order :depth)))
+                                                           (list (format "--depth=%d" depth) "--no-single-branch"))
+                                                       ,(plist-get order :repo) ,repo))))
+                       ((zerop (call-process "git" nil buffer t "checkout"
+                                             (or (plist-get order :ref) "--"))))
+                       (emacs (concat invocation-directory invocation-name))
+                       ((zerop (call-process emacs nil buffer nil "-Q" "-L" "." "--batch"
+                                             "--eval" "(byte-recompile-directory \".\" 0 'force)")))
+                       ((require 'elpaca))
+                       ((elpaca-generate-autoloads "elpaca" repo)))
+                 (progn (message "%s" (buffer-string)) (kill-buffer buffer))
+               (error "%s" (with-current-buffer buffer (buffer-string))))
+           ((error) (warn "%s" err) (delete-directory repo 'recursive))))
+       (unless (require 'elpaca-autoloads nil t)
+         (require 'elpaca)
+         (elpaca-generate-autoloads "elpaca" repo)
+         (let ((load-source-file-function nil)) (load "./elpaca-autoloads"))))
+     (add-hook 'after-init-hook #'elpaca-process-queues)
+     (elpaca `(,@elpaca-order))
+
+   • Windows users must be able to create symlinks(1), or enable
+     ‘elpaca-no-symlink-mode’
+
+     ;; Uncomment for systems which cannot create symlinks:
+     ;; (elpaca-no-symlink-mode)
+
+   You'll also want to disable package.el in your early-init file(2):
+
+     (setq package-enable-at-startup nil)
+
+   And remove anything related to package.el in your init file.  e.g.
+calls to ‘(package-activate-all)’.
+
+   ---------- Footnotes ----------
+
+   (1) windows symlink guide
+(https://www.howtogeek.com/16226/complete-guide-to-symbolic-links-symlinks-on-windows-or-linux/)
+
+   (2) early-init file
+(https://www.gnu.org/software/emacs/manual/html_node/emacs/Early-Init-File.html)
+
+
+File: elpaca.info,  Node: Usage,  Next: UI,  Prev: Installation,  Up: Top
+
+2 Usage
+*******
+
+* Menu:
+
+* Quick Start::
+* Basic concepts::
+* use-package Integration::
+
+
+File: elpaca.info,  Node: Quick Start,  Next: Basic concepts,  Up: Usage
+
+2.1 Quick Start
+===============
+
+Operation                               UI (keys apply in elpaca-ui-mode)     completing-read interface commands
+-----------------------------------------------------------------------------------------------------------------------
+Finding Packages                        ‘g’ ‘m’ (or ‘M-x’ ‘elpaca-manager’)   ‘elpaca-info’
+Trying Packages (for current session)   ‘i’ ‘x’                               ‘elpaca-try’
+Fetching Package Updates                ‘f’ ‘x’                               ‘elpaca-fetch’ or ‘elpaca-fetch-all’
+Merging Updates                         ‘m’ ‘x’                               ‘elpaca-merge’ or ‘elpaca-merge-all’
+Updating Packages^*                     ‘p’ ‘x’                               ‘elpaca-update’ or ‘elpaca-update-all’
+Rebuilding Packages                     ‘r’ ‘x’                               ‘elpaca-rebuild’
+Deleting Packages                       ‘d’ ‘x’                               ‘elpaca-delete’
+View Package Logs                       ‘g’ ‘l’                               ‘elpaca-log’
+Visit Package Source Directory          ‘v’                                   ‘elpaca-visit’
+Visit Package Build Directory           ‘C-u’ ‘v’                             ‘C-u M-x’ ‘elpaca-visit’
+Browse Package Website                  ‘b’                                   ‘elpaca-browse’
+   ​* Update is an alias for "pull".  It's encouraged to fetch, review,
+and *then* merge package updates rather than pulling.
+
+   Packages installed via the above commands are not loaded on
+subsequent Emacs sessions (after restarting).  To install and load
+packages persistently (across Emacs restarts), use the ‘elpaca’ macro in
+your init file after the installer.  (*note installer: Installer.)
+
+   For example:
+
+     ;; Install a package via the elpaca macro
+     ;; See the "recipes" section of the manual for more details.
+
+     ;; (elpaca example-package)
+
+     ;; Install use-package support
+     (elpaca elpaca-use-package
+       ;; Enable use-package :ensure support for Elpaca.
+       (elpaca-use-package-mode))
+
+     ;;When installing a package used in the init file itself,
+     ;;e.g. a package which adds a use-package key word,
+     ;;use the :wait recipe keyword to block until that package is installed/configured.
+     ;;For example:
+     ;;(use-package general :ensure (:wait t) :demand t)
+
+     ;; Expands to: (elpaca evil (use-package evil :demand t))
+     (use-package evil :ensure t :demand t)
+
+     ;;Turns off elpaca-use-package-mode current declaration
+     ;;Note this will cause evaluate the declaration immediately. It is not deferred.
+     ;;Useful for configuring built-in emacs features.
+     (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+
+   *IMPORTANT*:
+
+   Elpaca installs and activates packages asynchronously.  Elpaca
+processes its package queues _after_ Emacs reads the init file.(1)
+Consider the following example:
+
+     (elpaca package-a (message "First")) ; Queue First
+     (message "Second") ; Second messaged
+     (elpaca package-b (message "Third")) ; Queue Third
+     (elpaca-process-queues) ; Process queue: First messaged, Third messaged.
+
+   "Second" will be messaged _before_ "First" and "Third".  If a form
+should be evaluated after a package is installed/activated, put it in
+that package declaration's _BODY_. Declaration _BODY_ forms are
+evaluated synchronously in declared order.  e.g.
+
+     (elpaca package-a (message "First") (message "Second"))  ; Queue First, Second
+     (elpaca package-b (message "Third"))  ; Queue Third
+     (elpaca-process-queues) ; Process queue: First, Second, then Third messaged.
+
+   Add configuration which relies on ‘after-init-hook’,
+‘emacs-startup-hook’, etc to ‘elpaca-after-init-hook’ so it runs after
+Elpaca has activated all queued packages.  This includes loading of
+saved customizations.  e.g.
+
+     (setq custom-file (expand-file-name "customs.el" user-emacs-directory))
+     (add-hook 'elpaca-after-init-hook (lambda () (load custom-file 'noerror)))
+
+   ---------- Footnotes ----------
+
+   (1) This is so Elpaca can build a proper dependency tree.  It ensures
+packages the user explicitly requests are not preempted by dependencies
+of other packages.
+
+
+File: elpaca.info,  Node: Basic concepts,  Next: use-package Integration,  Prev: Quick Start,  Up: Usage
+
+2.2 Basic concepts
+==================
+
+* Menu:
+
+* Recipes::                      The recipe format description.
+* Menus::                        Where recipes come from.
+* Orders::                       Incomplete, or custom recipes.
+* Queues::                       Order processing groups.
+* Installing Packages::
+* Lock Files::
+
+
+File: elpaca.info,  Node: Recipes,  Next: Menus,  Up: Basic concepts
+
+2.2.1 Recipes
+-------------
+
+A recipe provides Elpaca with the metadata necessary to build and
+install a package.  It is a list of the form:
+
+     (ID . PROPS)
+
+   _ID_ is a symbol uniquely identifying the package.  _PROPS_ is a
+plist with any of the following recipe keywords:
+
+* Menu:
+
+* Package types::
+* General recipe keywords::
+* Repository recipe keywords::
+* Recipe inheritance precedence::
+* elpaca-recipe-functions::
+
+
+File: elpaca.info,  Node: Package types,  Next: General recipe keywords,  Up: Recipes
+
+2.2.1.1 Package types
+.....................
+
+The ‘:type’ recipe keyword allows specifying a symbol representing the
+type of package to install.  Elpaca searches for a matching
+‘elpaca-types’ entry to load a library supporting the type if necessary.
+The default supported types are:
+   • ‘git’ for local and remote git repositories.
+   • ‘tar’ for tarball archives.
+   • ‘file’ for local files and directories.
+
+   Different package types may interpret recipe keywords differently or
+ignore them altogether.
+
+
+File: elpaca.info,  Node: General recipe keywords,  Next: Repository recipe keywords,  Prev: Package types,  Up: Recipes
+
+2.2.1.2 General recipe keywords
+...............................
+
+The following recipe keywords apply to all the default package types.
+
+  1. :autoloads
+
+     The name of the file the package's autoload file.  When ‘nil’,
+     autoload loading and generation are disabled for the package.  When
+     ‘t’, the default autoload file is generated/loaded
+     (‘PACKAGE-NAME-autoloads.el’).  The value may also be a string
+     which is expanded relative to the package's build directory.  e.g.
+     ‘"org-loaddefs.el"’.
+
+  2. :build
+
+     A list of build steps executed in order.  Accepted values are:
+        • nil to disable all build steps
+          (example :build nil) ;; Disable all build steps
+        • A substitution rule of the form ‘(TYPE TARGET
+          SUBSTITUTIONS...)’ The ‘SUBSTITUTIONS’ are function symbols
+          which replace the ‘TARGET’ symbol.  ‘TYPE’ is one of the
+          following keywords:
+             • ‘:after’ places ‘SUBSTITUTIONS’ after ‘TARGET’.
+             • ‘:before’ places ‘SUBSTITUTIONS’ before ‘TARGET’.
+             • ‘:first’ places ‘TARGET’ and ‘SUBSTITUTIONS’ at the
+               beginning of the list.
+             • ‘:last’ places ‘TARGET’ and ‘SUBSTITUTIONS’ at the end of
+               the list.
+             • ‘:sub’ replaces ‘TARGET’ with ‘SUBSTITUTIONS’.
+             • ‘:not’ removes ‘TARGET’ and ‘SUBSTITUTIONS’.
+          (example :build (:after fn1 fn1.5)) ;; Insert fn1.5 after fn1
+          (example :build (:before fn1 fn0)) ;; Insert fn0 before fn1.
+          (example :build (:sub fn1 subbed)) ;; Substitute fn1 with subbed.
+          (example :build (:not fn1 fn2)) ;; Remove fn1 and fn2
+
+        • A list of substitution rules.  Each rule is run in declared
+          order and applied to the previous rule's results.
+          ;; All of the above in a single recipe.
+          (example :build ((:after fn1 fn1.5)) (:before fn1 fn0) (:sub fn1 subbed) (:not fn1 fn2))
+
+     A typical build recipe for an elisp package involves:
+       1. Getting the source files on disk.
+       2. Byte-compiling the package's elisp and generating package
+          autoloads.
+       3. Building and installing package documentation.
+       4. Activating the package (adding the package ‘load-path’,
+          loading autoloads).
+
+     The ‘elpaca-default-build-steps’ variable contains the default
+     build steps.
+
+  3. :files
+
+     The files linked from the package's source directory to its build
+     directory.
+
+     Each element of the list is either:
+        • The symbol ‘:defaults’, which expands to
+          ‘elpaca-default-files-directive’.
+        • A string naming files or folders.  Shell glob patterns match
+          multiple files.
+        • A list starting with the ‘:exclude’ keyword.  The remaining
+          elements are not linked.
+
+          (example :files (:defaults "extensions/*")) ;; Link everything in the extensions folder.
+          (example :files (:defaults (:exclude "*.c"))) ;; Exclude all files with the "c" file extension.
+
+  4. :inherit
+
+     When non-nil, inherit _PROPS_ from ‘elpaca-order-functions’ and
+     possibly ‘elpaca-menu-functions’.  For example, without
+     inheritance:
+
+          (elpaca-recipe '(doct :inherit nil))
+
+     returns the recipe as declared:
+
+          (:source nil :package "doct" :id doct :inherit nil)
+
+     With inheritance enabled:
+
+          (elpaca-recipe '(dracula-theme :inherit t)))
+
+          (:package "dracula-theme" :fetcher github :repo "dracula/emacs" :files
+                    ("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
+                     "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el" "docs/dir"
+                     "docs/*.info" "docs/*.texi" "docs/*.texinfo"
+                     (:exclude ".dir-locals.el" "test.el" "tests.el" "*-test.el"
+                               "*-tests.el" "LICENSE" "README*" "*-pkg.el"))
+                    :source "MELPA" :id dracula-theme :inherit t :type git :protocol https
+                    :depth treeless)
+
+     the Elpaca's MELPA menu provides the rest of the recipe.
+
+     The value may also be a menu symbol or list of menu symbols.  This
+     is a per-recipe way of setting ‘elpaca-menu-functions’.
+
+          (elpaca-recipe '(dracula-theme :inherit elpaca-menu-nongnu-elpa))
+
+          (:package "dracula-theme" :repo
+                    ("https://github.com/dracula/emacs" . "dracula-theme") :tar "1.8.3"
+                    :host nongnu :files
+                    ("*"
+                     (:exclude ".git" "INSTALL.md" "screenshot.png" "start_emacs_test.sh"
+                               "test-profile.el"))
+                    :source "NonGNU ELPA" :id dracula-theme :inherit
+                    elpaca-menu-nongnu-elpa :type git :protocol https :depth treeless)
+
+  5. :main
+
+     The name of the main elisp file.  When provided this can speed up
+     the process of cloning and loading a package's dependencies.  When
+     declared ‘nil’, skip dependency check.
+
+          (example :main "example.el")
+
+          (example :main nil)
+
+  6. :pin
+
+     When non-nil, ignore the package during update commands.
+
+          (example :pin t)
+
+  7. :vars
+
+     A list of values to bind via ‘let*’ when executing a package's
+     build steps.  e.g.
+
+          (elpaca (example :vars ((some-dynamic-var t))))
+
+     The current elpaca data structure and current build step are bound
+     to the ‘elpaca’ and ‘elpaca-build-step’ variables within the form.
+
+     Wrapping a declaration in a ‘let*’ form will not suffice because
+     the steps are run asynchronously.  The bindings will not be in
+     scope by the time each build step is run.
+
+  8. :version
+
+     A function which must accept an Elpaca struct as its sole argument.
+     It must return a version string understood by ‘version-to-list’.
+     e.g.
+
+          (elpaca (example :version (lambda (_) "1.0.0")))
+
+  9. :wait
+
+     When non-nil, process all queued orders immediately before
+     continuing.  e.g.
+
+          (elpaca (general :wait t))
+
+
+File: elpaca.info,  Node: Repository recipe keywords,  Next: Recipe inheritance precedence,  Prev: General recipe keywords,  Up: Recipes
+
+2.2.1.3 Repository recipe keywords
+..................................
+
+The following recipe keywords apply to ‘:type =git’ packages.
+
+  1. :branch
+
+     The repository branch to check out when installing the package.
+
+          (example :host github :repo "user/example" :branch "main")
+
+  2. :depth
+
+     The package repository's history depth.
+
+          (example :depth treeless) ;; https://git-scm.com/docs/partial-clone
+          (example :depth blobless) ;; https://git-scm.com/docs/partial-clone
+          (example :depth 1) ;; Shallow clone with history truncated to 1 commit.
+          (example :depth nil) ;; Full repository clone.
+
+  3. :host | :fetcher
+
+     A symbol or string representing a repository's hosting service.
+     Strings are inserted in the URI verbatim.
+
+          (example :host github)
+          (example :fetcher gitlab)
+          (example :host "www.example.com")
+
+  4. :protocol
+
+     The protocol to use when cloning repositories.
+
+     The value must be a symbol, either ‘https’ or ‘ssh’.
+
+          (example :protocol https) ; Use the https protocol.
+          (example :protocol ssh) ; Use the ssh protocol.
+
+  5. :ref
+
+     The git ref(1) to check out when installing the package.
+
+          (example :host github :repo "user/example" :ref "a76ca0a") ;; Check out a specific commit.
+
+  6. :remotes
+
+     Configures the repository remotes(2).
+
+     The value must be a single remote spec or a list of remote specs.
+     The first remote given will have its ref checked out when cloning
+     the repository.  A spec may be a string to rename the default
+     remote.  The following will rename the cloned remote (usually
+     "origin" by git convention) to "upstream":
+
+          (example :remotes "upstream")
+
+     In order to add a another remote, a spec may be a list of the form:
+
+          ("NAME" [PROPS])
+
+     _NAME_ is a string indicating the name of the remote.  _PROPS_ is
+     an optional plist used to override inherited recipe keywords.
+
+     For example:
+
+          (example :host github :repo "upstream/example"
+                   :remotes ("fork" :repo "fork/zenburn-emacs"))
+
+     Will add a remote named fork which points to a repository hosted on
+     the same forge as the upstream remote.  The following does the same
+     above, additionally adding a third remote at a different forge.
+
+          (example :host github :repo "upstream/example"
+                   :remotes (("fork" :repo "fork/zenburn-emacs") ; :host github inherited from above
+                             ("other" :host gitlab :repo "other/zenburn-emacs")))
+
+  7. :repo
+
+     A string of the form ‘USER/REPO’ when used with the ‘:host’
+     keyword; a local file path or remote URL when ‘:host’ is not used.
+
+          (example :host github :repo "user/example") ;;downloaded from github
+
+          (local :repo "~/repos/local/") ;;built from local filesystem
+
+          (remote :repo "https://foo.example/example.git") ;;remote clone
+
+     A cons cell of the form ‘(REMOTE . LOCAL)’ will rename the local
+     repository:
+
+          (remote :repo ("https://foo.example/example.git" . "local-name"))
+          ;;This will still clone the repository under `elpaca-sources-directory'
+          (remote :repo ("~/repos/local" . "local-name"))
+
+  8. :tag
+
+     The tag to check out when installing the package.
+
+          (example :host github :repo "user/example" :tag "v1.0")
+
+   ---------- Footnotes ----------
+
+   (1) git ref
+(https://git-scm.com/book/en/v2/Git-Internals-Git-References)
+
+   (2) remotes
+(https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes)
+
+
+File: elpaca.info,  Node: Recipe inheritance precedence,  Next: elpaca-recipe-functions,  Prev: Repository recipe keywords,  Up: Recipes
+
+2.2.1.4 Recipe inheritance precedence
+.....................................
+
+The following list shows the precedence of inheritance from highest to
+lowest:
+
+   • elpaca-recipe-functions
+   • declared recipe
+   • elpaca-order-functions
+   • elpaca-menu-functions
+
+   The ‘elpaca-info’ command shows inherited recipe properties:
+
+     ( :package "evil"
+       ;; Inherited from elpaca-order-functions.
+       :depth 1
+       :inherit t
+       :protocol https
+       ;; Inherited from elpaca-menu-item.
+       :files ( :defaults "doc/build/texinfo/evil.texi"
+                (:exclude "evil-test-helpers.el"))
+       :fetcher github
+       :repo "emacs-evil/evil")
+
+
+File: elpaca.info,  Node: elpaca-recipe-functions,  Prev: Recipe inheritance precedence,  Up: Recipes
+
+2.2.1.5 elpaca-recipe-functions
+...............................
+
+The abnormal hook ‘elpaca-recipe-functions’ runs via
+‘run-hook-with-args-until-success’ just before installing the package.
+Each function in the list should accept the current recipe as its sole
+argument and return either nil or a plist.  The first function to return
+a plist has its return value merged with the current recipe.
+
+   This is useful if you want to guarantee the values of certain
+keywords despite allowing recipe inheritance.
+
+     (let ((elpaca-recipe-functions '((lambda (_) "Add extra cheese to everything."
+                                        (list :cheese 'extra)))))
+       (elpaca-recipe 'burger))
+
+     (:source nil :package "burger" :id burger :type git :protocol https :inherit t
+              :depth treeless :cheese extra)
+
+
+File: elpaca.info,  Node: Menus,  Next: Orders,  Prev: Recipes,  Up: Basic concepts
+
+2.2.2 Menus
+-----------
+
+A menu is a function which returns an alist of the form:
+     ((ID . DATA)...)
+
+   _ID_ is a symbol uniquely identifying a package.  _DATA_ is a plist
+of package metadata.  _DATA_ must contain the following keywords:
+
+:recipe
+     A package recipe.  (*note recipe: Recipes.)
+:source
+     A string naming the menu.
+
+   It may also provide additional information about a package.  For
+example, the Elpaca UI utilizes the following keywords when present:
+
+:url
+     The package's website URL.
+:description
+     A description of the package.
+:date 
+     The time of package's last update.
+
+   The function must accept one of the following _REQUEST_ symbols as an
+argument:
+
+index
+     Return the alist described above
+update
+     update the menu's alist.
+
+     (defun elpaca-menu-minimal (request_)
+       "A minimal menu example.
+     Ignore REQUEST, as this is a static, curated list of packages."
+       '((example :source "EXAMPLE" :recipe (example :host github :repo "user/example"))
+         (two :source "EXAMPLE" :recipe (two :host gitlab :repo "user/two"))))
+
+   Menus allow one to offer Elpaca users curated lists of package
+recipes.  For example, melpulls
+(https://www.github.com/progfolio/melpulls) implements an Elpaca menu
+for pending MELPA packages.
+
+* Menu:
+
+* elpaca-menu-functions::
+* Updating menus::
+
+
+File: elpaca.info,  Node: elpaca-menu-functions,  Next: Updating menus,  Up: Menus
+
+2.2.2.1 elpaca-menu-functions
+.............................
+
+The ‘elpaca-menu-functions’ variable contains menu functions for the
+following package sources by default:
+
+   • MELPA (https://www.github.com/melpa/melpa)
+   • Org (https://git.savannah.gnu.org/cgit/emacs/org-mode.git/)
+   • Org-contrib (https://git.sr.ht/~bzg/org-contrib)
+   • GNU ELPA Mirror
+     (https://www.github.com/emacs-straight/gnu-elpa-mirror)
+   • NonGNU ELPA (https://elpa.nongnu.org)
+
+   Menus are checked in order until one returns the requested menu item
+or the menu list is exhausted.
+
+
+File: elpaca.info,  Node: Updating menus,  Prev: elpaca-menu-functions,  Up: Menus
+
+2.2.2.2 Updating menus
+......................
+
+Menus can be updated via the ‘elpaca-update-menus’ command.  Doing so
+will fetch the latest recipes from the menu source and overwrite the
+menu item cache for the updated menus.
+
+
+File: elpaca.info,  Node: Orders,  Next: Queues,  Prev: Menus,  Up: Basic concepts
+
+2.2.3 Orders
+------------
+
+At a minimum, an order is a symbol which represents the name of a menu
+item (*note menu: Menus.):
+
+     (elpaca example)
+
+   An order may also be a partial or full recipe:
+
+     (elpaca (example :host gitlab))
+     (elpaca (example :host gitlab :repo "user/example" :inherit nil))
+
+* Menu:
+
+* elpaca-order-functions::
+
+
+File: elpaca.info,  Node: elpaca-order-functions,  Up: Orders
+
+2.2.3.1 elpaca-order-functions
+..............................
+
+The abnormal hook ‘elpaca-order-functions’ runs via
+‘run-hook-with-args-until-success’ before ‘elpaca-menu-functions’.  Each
+function in the list should accept the current order as its sole
+argument and return either nil or a plist.  The first function to return
+a plist has its return value merged with the current order.
+
+   This is useful for declaring default order properties.  For example,
+the following function disables recipe inheritance by default:
+
+     (let ((elpaca-order-functions '((lambda (_) "Disable inheritance." '(:inherit nil)))))
+       (elpaca-recipe 'burger))
+
+     (:source nil :package "burger" :id burger :inherit nil)
+
+
+File: elpaca.info,  Node: Queues,  Next: Installing Packages,  Prev: Orders,  Up: Basic concepts
+
+2.2.4 Queues
+------------
+
+Elpaca installs packages asynchronously.  Orders (*note orders: Orders.)
+are automatically queued in a list.  When all of a queues orders have
+either finished or failed Elpaca considers it "processed".
+
+   Queues ensure packages installation, activation, and configuration
+take place prior to packages in other queues.  The ‘:wait’ recipe
+keyword splits the current queue and immediately begins processing prior
+queues.  This is useful when one wants to use a package from a previous
+queue in their init file.  For example, a package which implements an
+Elpaca menu (*note menu: Menus.):
+
+     (elpaca (melpulls :host github :repo "progfolio/melpulls" :wait t)
+       (add-to-list 'elpaca-menu-functions #'melpulls)
+       (elpaca-update-menus #'melpulls)))
+
+     ;; Implicitly queued into a new queue.
+     (elpaca menu-item-available-in-melpulls)
+
+
+File: elpaca.info,  Node: Installing Packages,  Next: Lock Files,  Prev: Queues,  Up: Basic concepts
+
+2.2.5 Installing Packages
+-------------------------
+
+elpaca
+     ‘(order &rest body)’
+   Installs _ORDER_ (*note orders: Orders.) and evaluate _BODY_ after
+processing ORDER's queue (*note queue: Queues.).
+
+   This macro is for programmatic use in one's init file.  Any of the
+following will install the "example" package:
+
+     (elpaca example) ;; recipe looked up in `elpaca-menu-functions'.
+
+     (elpaca example (message "Messaged after the order's queue has processed."))
+
+     (elpaca (example :host github :repo "user/example"))
+
+     (elpaca `(example :host github :repo "user/example"
+                       ,@(when (eq system-type 'darwin) ;; backqouting supported
+                           (list :pre-build ((message "Mac specific pre-build"))))))
+
+   Interactively evaluating an ‘elpaca’ declaration will re-process the
+order.  This can be used to change a package's recipe prior to
+rebuilding it.  Note that rebuilding a package does not *reload* a
+package.  It's best to restart Emacs after a successful rebuild if you
+wish to have the changes loaded.
+
+
+File: elpaca.info,  Node: Lock Files,  Prev: Installing Packages,  Up: Basic concepts
+
+2.2.6 Lock Files
+----------------
+
+A lock file is a collection of recipes for the exact versions of
+installed packages.  They can be used to build different versions of an
+Emacs configuration when combined with init file package declarations.
+
+   The ‘elpaca-write-lock-file’ command is used to write a lock file to
+disk.  Setting the ‘elpaca-lock-file’ variable to that file's path will
+cause Elpaca to use those versions of the recipes when installing
+packages assuming the ‘elpaca-menu-lock-file’ is the first menu in
+‘elpaca-menu-functions’.
+
+
+File: elpaca.info,  Node: use-package Integration,  Prev: Basic concepts,  Up: Usage
+
+2.3 use-package Integration
+===========================
+
+Adding the following elisp to your init file will enable Elpaca's
+optional integration with the use-package configuration macro:
+
+     (elpaca elpaca-use-package
+       ;; Enable Elpaca support for use-package's :ensure keyword.
+       (elpaca-use-package-mode))
+
+     (use-package example :ensure t)
+
+   Expands to:
+
+     (elpaca example (use-package example))
+
+   With ‘elpaca-use-package-mode’ enabled the ‘:ensure’ use-package
+keyword can also accept a recipe.
+
+     (use-package example :ensure (:host host :repo "user/repo"))
+
+   Expands to:
+
+     (elpaca (example :host host :repo "user/repo")
+       (use-package example))
+
+   Use the ‘:wait’ recipe keyword to block until a package has been
+installed and configured.  For example:
+
+     (use-package general :ensure (:wait t) :demand t :ensure t)
+     ;; use-package declarations beyond this point may use the `:general' use-package keyword.
+
+   In order to turn off ‘elpaca-use-package-mode’ for a given
+declaration, specify ‘:ensure nil’:
+
+     ;; `emacs' is a pseudo-feature which can be used to configure built-in functionality.
+     (use-package emacs :ensure nil :config (setq ring-bell-function #'ignore))
+
+   Note forms like this are not deferred by Elpaca's queue system.
+
+
+File: elpaca.info,  Node: UI,  Prev: Usage,  Up: Top
+
+3 UI
+****
+
+Elpaca has a UI mode available for managing packages.  The main entry
+points to the UI are the ‘elpaca-manager’ and ‘elpaca-log’ commands.
+Each of these commands utilize modes derived from ‘elpaca-ui-mode’.
+
+   The following commands are available in the ‘elpaca-ui-mode’:
+
+Command                      Binding   Description
+---------------------------------------------------------------------------------------------------------------------
+elpaca-ui-send-input         !         Send input string to current process.
+elpaca-ui-show-hidden-rows   +         Append rows up to N times ‘elpaca-ui-row-limit’.
+elpaca-ui-info               RET       Show info for current package.
+elpaca-ui-browse-package     b         Browse current package’s URL via ‘browse-url’.
+elpaca-ui-mark-delete        d         Mark package at point for ‘elpaca-delete’.
+elpaca-ui-mark-fetch         f         Mark package at point for ‘elpaca-fetch’.
+elpaca-ui-search-marked      g a       Search for "#unique #marked"
+elpaca-ui-search-installed   g i       Search for "#unique #installed"
+elpaca-log                   g l       When INTERACTIVE is non-nil, Display ‘elpaca-log-buffer’ filtered by QUERY.
+elpaca-manager               g m       Display Elpaca’s package management UI.
+elpaca-ui-search-orphaned    g o       Search for "#unique #orphan"
+elpaca-ui-search-refresh     g r       Rerun the current search for BUFFER.
+elpaca-ui-search-tried       g t       Search for "#unique #installed !#declared"
+elpaca-ui-mark-try           i         Mark package at point for ‘elpaca-try’.
+elpaca-ui-mark-merge         m         Mark package at point for ‘elpaca-merge’.
+elpaca-ui-mark-pull          p         Mark package at point for ‘elpaca-pull’.
+elpaca-ui-mark-rebuild       r         Mark package at point for ‘elpaca-rebuild’.
+elpaca-ui-search             s         Filter current buffer by QUERY.  If QUERY is nil, prompt for it.
+elpaca-ui-unmark             u         Unmark current package or packages in active region.
+elpaca-ui-visit              v         Visit current package’s source or BUILD directory.
+elpaca-ui-execute-marks      x         Execute each mark in ‘elpaca-ui-marked-packages’.
+
+ -- Function: elpaca-manager &optional recache
+     Display packages registered with Elpaca.  Packages can searched
+     for, installed, updated, rebuilt, and deleted from this interface.
+     When ‘RECACHE’ is non-nil, via lisp or interactively via the
+     ‘universal-argument’, recompute Elpaca's menu item cache before
+     display.
+
+ -- Function: elpaca-log &optional query
+     Display the log for queued packages filtered by ‘QUERY’.  For
+     acceptable values for ‘QUERY’ see *note searching: Searching.
+
+* Menu:
+
+* Searching::                    How to search within the Elpaca UI.
+* Search tags::
+
+
+File: elpaca.info,  Node: Searching,  Next: Search tags,  Up: UI
+
+3.1 Searching
+=============
+
+The ‘elpaca-ui-search’ command (‘s’) prompts the user for a search query
+in the minibuffer.  Altering the query updates the UI table.  Calling
+with a ‘universal-argument’ (‘C-u’) populates the minibuffer with the
+current search query for editing.  Setting the query to an empty string
+resets the query to ‘elpaca-ui-default-query’.  The buffer's header line
+displays the current query.
+
+   Queries are regular expressions checked against each row of the UI
+table.  For example, ‘test’ will match any row which contains the string
+"test".  Some characters change the matching behavior in queries.
+
+   The pipe character, ‘|’, will delimit text searches to specific
+columns of the table.  Considering the following table:
+
+number   A       B       C
+-----------------------------
+1        one     two     3
+2        four    five    6
+3        seven   eight   9
+
+   The query ‘o’ will match rows 1 (on ‘one’) and 2 (on ‘four’).  The
+query ‘3 |’ will only search for ‘3’ in the first column and match row
+three.  While ‘||| 3’ Will search for ‘3’ in the fourth column of the
+table and match row 1.
+
+   The pound (a.k.a.  hash) character, ‘#’, followed by the name of a
+search tag filters table entries.  For example ‘#random’ will display 10
+random entries.  If the search tag accepts arguments they may passed by
+wrapping the tag name in parenthesis.  e.g.  ‘#(random 20)’ will display
+20 random entries.
+
+
+File: elpaca.info,  Node: Search tags,  Prev: Searching,  Up: UI
+
+3.2 Search tags
+===============
+
+ -- User Option: elpaca-ui-search-tags
+     An alist of with elements of the form (NAME .  FILTER). ‘NAME’ is a
+     unique symbol describing the filter function.  The user types name
+     after ‘#’ in the minibuffer to apply the filter.  ‘FILTER’ is a
+     function which must accept a list of ‘tabulated-list-entries’ as
+     its first argument.  It may accept additional, optional arguments.
+     The function must return a list of ‘tabulated-list-entries’.
+
+     For example, the following search tag will embolden the first
+     column of the ‘elpaca-manager’ table when the search query contains
+     ‘#bold-names’:
+
+     (defun +elpaca-bold-names (entries)
+       (cl-loop for entry in entries
+                for copy = (copy-tree entry)
+                for cols = (cadr copy)
+                for name = (aref cols 0)
+                do (setf (aref cols 0) (propertize name 'face '(:weight bold)))
+                collect copy))
+
+     (cl-pushnew (cons 'bold-names #'+elpaca-bold-names) elpaca-ui-search-tags)
+
+
+Tag Table:
+Node: Top184
+Node: Installation2106
+Node: Requirements2381
+Node: Installer2567
+Ref: installation-script2936
+Ref: Installer-Footnote-15997
+Ref: Installer-Footnote-26124
+Node: Usage6229
+Node: Quick Start6396
+Ref: Quick Start-Footnote-110717
+Node: Basic concepts10882
+Node: Recipes11322
+Node: Package types11822
+Node: General recipe keywords12445
+Ref: autoloads12710
+Ref: build13107
+Ref: files15074
+Ref: inherit15738
+Ref: recipe-inheritance-nil15905
+Ref: recipe-inheritance-t16086
+Ref: recipe-inheritance-menu16947
+Ref: main17522
+Ref: pin17797
+Ref: vars17899
+Ref: version18410
+Ref: wait18643
+Node: Repository recipe keywords18776
+Ref: branch19059
+Ref: depth19213
+Ref: host | fetcher19568
+Ref: protocol19822
+Ref: ref20079
+Ref: remotes20255
+Ref: repo21520
+Ref: tag22218
+Ref: Repository recipe keywords-Footnote-122383
+Ref: Repository recipe keywords-Footnote-222461
+Node: Recipe inheritance precedence22542
+Node: elpaca-recipe-functions23357
+Ref: recipe-functions-example23977
+Node: Menus24290
+Node: elpaca-menu-functions25720
+Node: Updating menus26386
+Node: Orders26702
+Node: elpaca-order-functions27134
+Node: Queues27921
+Node: Installing Packages28902
+Node: Lock Files30081
+Node: use-package Integration30733
+Node: UI32139
+Node: Searching35078
+Node: Search tags36646
+
+End Tag Table
+
+
+Local Variables:
+coding: utf-8
+Info-documentlanguage: en
+End:

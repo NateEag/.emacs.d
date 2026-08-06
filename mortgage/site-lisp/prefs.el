@@ -21,7 +21,11 @@
  ;; I don't need to see the splash screen or other displays of basic emacs
  ;; trivia.
  inhibit-startup-screen t
- inhibit-startup-echo-area-message t)
+ inhibit-startup-echo-area-message t
+
+ ;; I want vanilla emacs plus my explicitly-chosen extensions. That's it.
+ inhibit-default-init t
+ )
 
 ;; I'd rather fit another few rows of buffer text than see menus and buttons.
 (menu-bar-mode -1)

@@ -11,6 +11,9 @@
 
 ;;; Code:
 
-(load-file (concat user-emacs-directory "elpaca-init.el"))
+(add-to-list 'load-path (concat user-emacs-directory "site-lisp"))
+
+(require 'elpaca-init)
+(require 'package-conf)
 
 ;;; init.el ends here

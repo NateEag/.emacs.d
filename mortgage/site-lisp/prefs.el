@@ -25,6 +25,7 @@
 
  ;; I want vanilla emacs plus my explicitly-chosen extensions. That's it.
  inhibit-default-init t
+
  )
 
 ;; I'd rather fit another few rows of buffer text than see menus and buttons.

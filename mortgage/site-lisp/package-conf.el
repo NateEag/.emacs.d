@@ -14,7 +14,11 @@
 
 ;;; Code:
 
-(use-package evil :ensure t :demand t)
+(use-package evil
+  :ensure t
+  :demand t
+  :config
+  (evil-mode 1))
 
 ;; Make emacs' built-in help functions more helpful.
 ;;

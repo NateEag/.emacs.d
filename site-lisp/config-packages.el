@@ -914,7 +914,7 @@ The shell command lives in my dotfiles repo."
   ;; format" for c-sharp-mode? The html-tidy formatter is a decent example of
   ;; how to do this - if csharpier is available, make "csharpier" the second
   ;; arg, otherwise use "format".
-  (apheleia-formatters (add-to-list 'apheleia-formatters '(csharpier "dotnet" "csharpier")))
+  (apheleia-formatters (add-to-list 'apheleia-formatters '(csharpier "dotnet" "csharpier" "format")))
   :hook ((csharp-mode . lsp)
          (csharp-mode . (lambda ()
                           ;; Make lsp-mode stop spewing noise about something it doesn't

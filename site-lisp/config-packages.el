@@ -690,8 +690,18 @@ The shell command lives in my dotfiles repo."
 ;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
 ;; modes should be way better in several respects.
 (use-package typescript
+  :after apheleia
   ;; use-package does not seem to support delighting major modes.
   :init (delight 'typescript-mode "TS" :major)
+  :custom
+  ;; TODO: Remove this after updating apheleia. Ripped from the latest version of
+  ;; it.
+  (apheleia-formatters (add-to-list 'apheleia-formatters
+                                    '(biome "apheleia-npx"
+                                            "biome"
+                                            "check"
+                                            "--write"
+                                            "--stdin-file-path" filepath)))
   ;; FIXME Get comment-auto-fill to Just Work in typescript-mode.
   ;;
   ;; The below binding gives me reasonable behavior in /* */ comment blocks but

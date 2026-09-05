@@ -42,9 +42,9 @@
 (use-package diminish
   :ensure t)
 
-;; I love project-specific custom shell environments.
+;; I love project-specific shell environments.
 ;;
-;; Direnv is the best tool I've encountered for that.
+;; Direnv is the best tool I've encountered for them.
 (use-package envrc
   :ensure t
   :diminish

@@ -1,0 +1,18 @@
+#! /usr/bin/env bash
+
+script_name="$(basename "$0")"
+msg="Run the end-to-end tests for my Emacs config.
+
+Usage: $script_name"
+
+if [ "$1" == '-h' ] || [ "$1" == '--help' ]; then
+    echo "$msg"
+
+    exit
+fi
+
+
+emacs --init-directory "$HOME/.emacs.d/mortgage" \
+      --load ert \
+      -l nateeag-e2e-tests.el \
+      --eval '(nateeag-run-e2e-tests)'

@@ -22,17 +22,25 @@ Goals:
   / time:
 
   * startup (< 1 second)
-  * find file by name < 200 ms in 40k files repo (fd in nixpkgs)
-  * search all files < 200 ms in 40k files repo (rg in nixpkgs)
-  * magit status / diff with >1000-line change active
-  * Jump-to-def / find-references via LSP (TS / JS, Python, Rust)
-
-- Fully-automated, scheduled package updates, driven by elpaca and
-  aforementioned E2E tests.
 
 - Tree-sitter major-modes by default.
 
-- Counsel-dash docs exploration auto-installed / auto-enabled as needed.
+- Find file by name in project - E2E test < 200ms
 
-- Bring over core features of my main config. smart-dash mode, my various
-  custom keybindings, yasnippet config, etc...
+- Jump-to-def / find-references via LSP (TS / JS, Python, Rust) - E2E test < 200ms
+
+- magit + delta + difftastic - status / diff < 1 s with >1000-line change active
+
+- search all files in 40k files repo (rg in nixpkgs) - E2E test < 200 ms
+
+- Set breakpoint, start debugger via dap-mode - E2E test < 1s (from debugger
+  start to breakpoint inspection)
+
+- Fully-automated, scheduled package updates, driven by elpaca and
+  E2E tests (auto-bisect on failures).
+
+- Counsel-dash docs exploration auto-installed / auto-enabled as needed, with
+  hotkeys bound to look up thing-at-point or just open docs for current buffer.
+
+- Bring over core features of my main config. smart-dash mode, my custom
+  keybindings, yasnippet config, etc...

@@ -52,7 +52,11 @@
 (elpaca `(,@elpaca-order))
 
 ;; Uncomment for systems which cannot create symlinks:
-;; (elpaca-no-symlink-mode)
+;;
+;; I use this so I can keep a rigorous history of built source, guaranteeing I
+;; can always get back to a previously-committed state, even if the source
+;; repos drop off the face of the internet.
+(elpaca-no-symlink-mode)
 
 ;; Install use-package support
 (elpaca elpaca-use-package

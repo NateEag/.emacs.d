@@ -1,1 +1,442 @@
-/home/nateeag/.emacs.d/mortgage/elpaca/sources/elpaca/elpaca-git.el
+;;; elpaca-git.el --- Git Elpaca Support             -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2022-2026 Nicholas Vollmer
+
+;; Author:  Nicholas Vollmer
+;; Keywords:
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;;
+
+;;; Code:
+(require 'elpaca)
+(or (executable-find "git") (error "Elpaca unable to find git executable"))
+(declare-function url-filename "url-parse")
+(defgroup elpaca-git nil "Elpaca Git Repo Support." :group 'elpaca :prefix "elpaca-git-")
+(defcustom elpaca-git-default-build-steps (list 'elpaca-git--clone
+                                                'elpaca-git--configure-remotes
+                                                'elpaca-git--checkout-ref)
+  "List of steps which are run when installing/building a package."
+  :type '(repeat function))
+
+(defsubst elpaca-git--repo-name (string)
+  "Return repo name portion of STRING."
+  (setq string (directory-file-name string)) ;; remove external :repo trailing slash
+  (file-name-base (substring string (- (or (string-match-p "/" (reverse string))
+                                           (error "Invalid repo name %S" string))))))
+
+(defsubst elpaca-git--repo-user (string)
+  "Return user name portion of STRING."
+  (substring string 0 (string-match-p "/" string)))
+
+(defun elpaca-git--repo-type (string)
+  "Return type of :repo STRING.
+Type is `local' for a local filesystem path, `remote' for a remote URL, or nil."
+  (cond ((string-match-p "^[\./~]" string) 'local)
+        ((string-match-p ":" string) 'remote)))
+
+(defun elpaca-git-repo-dir (recipe)
+  "Return path to repo given RECIPE."
+  (let* ((url (plist-get recipe :url))
+         (repo (plist-get recipe :repo))
+         (remote (car-safe repo))
+         (local (cdr-safe repo))
+         (pkg (plist-get recipe :package))
+         (host (or (plist-get recipe :host) (plist-get recipe :fetcher)))
+         (hostname (and host (prin1-to-string host 'noescape)))
+         (user nil)
+         (info (concat url (or remote repo) hostname))
+         (key (or (and info (> (length info) 0) (intern info))
+                  (signal 'elpaca-url-error recipe)))
+         (mono-repo (elpaca-alist-get key elpaca--source-dirs))
+         (dirs (and (not mono-repo) (mapcar #'cdr elpaca--source-dirs)))
+         (name (cond
+                (local
+                 (if-let* ((owner (assoc local dirs)))
+                     (error "Local repo %S owned by %s" local (cdr owner))
+                   local))
+                (mono-repo (car mono-repo))
+                (url
+                 (unless (featurep 'url-parse) (require 'url-parse))
+                 (file-name-base (directory-file-name (url-filename
+                                                       (url-generic-parse-url url)))))
+                (repo (if-let* ((r (or remote repo))
+                                ((eq (elpaca-git--repo-type r) 'local)))
+                          (if local
+                              (file-name-base (directory-file-name local))
+                            r)
+                        (when host (setq user (elpaca-git--repo-user r)))
+                        (elpaca-git--repo-name (or local r))))
+                (pkg pkg)
+                (t (error "Unable to determine repo name"))))
+         (dir (if (assoc name dirs)
+                  (string-join (list name hostname user) ".")
+                (and name (replace-regexp-in-string "\\.el$" "" name)))))
+    (unless mono-repo (push (cons key (cons dir pkg)) elpaca--source-dirs))
+    (file-name-as-directory (expand-file-name dir elpaca-sources-directory))))
+
+(defun elpaca-git--repo-uri (recipe)
+  "Return repo URI from RECIPE."
+  (cl-destructuring-bind (&key (protocol 'https)
+                               url
+                               fetcher
+                               (host fetcher)
+                               (repo url) &allow-other-keys)
+      recipe
+    (when (consp repo) (setq repo (car repo))) ; Handle :repo rename
+    (pcase (elpaca-git--repo-type (or repo (signal 'elpaca-url-error recipe)))
+      ('remote repo)
+      ('local  (expand-file-name repo))
+      (_ (let ((p (pcase protocol
+                    ('https '("https://" . "/"))
+                    ('ssh   '("git@" . ":"))
+                    (_      (signal 'wrong-type-argument `((https ssh) ,protocol)))))
+               (h (pcase host
+                    ('github       "github.com")
+                    ('gitlab       "gitlab.com")
+                    ('codeberg     "codeberg.org")
+                    ('sourcehut    "git.sr.ht")
+                    ((pred stringp) host)
+                    (_ (signal 'wrong-type-argument
+                               `(:host (github gitlab codeberg sourcehut stringp)
+                                       ,host ,recipe))))))
+           (concat (car p) h (cdr p) (when (eq host 'sourcehut) "~") repo
+                   (unless (eq host 'sourcehut) ".git")))))))
+
+(defun elpaca-git--remote-default-branch (remote)
+  "Return REMOTE's \"default\" branch.
+This is the branch that would be checked out upon cloning."
+  (elpaca-process-cond ("git" "remote" "show" remote)
+    ((and success (string-match "\\(?:[^z-a]*HEAD branch:[[:space:]]+\\([^z-a]*?\\)$\\)"
+                                stdout))
+     (match-string 1 stdout))
+    (invoked (error "Remote default branch error: %S" stderr))
+    (t (error "Unable to determine remote default branch: %S" result))))
+
+(defun elpaca-git--checkout-ref (e)
+  "Check out E's ref."
+  (let* ((recipe (elpaca<-recipe e))
+         (default-directory (elpaca<-source-dir e))
+         (remotes (plist-get recipe :remotes))
+         (remote (let ((default (car remotes)))
+                   (when (listp default) (setq recipe (elpaca-merge-plists recipe (cdr default))))
+                   default))
+         (ref    (plist-get recipe :ref))
+         (tag    (plist-get recipe :tag))
+         (branch (plist-get recipe :branch))
+         (target (or ref tag branch)))
+    (when-let* ((name    (car-safe remote))
+                (default (elpaca-process-output "git" "rev-parse" "--abbrev-ref" "HEAD")))
+      (elpaca--call-with-log e 1 "git" "checkout" "--detach")
+      (elpaca--call-with-log e 1 "git" "branch"   "--delete" (string-trim default))
+      (elpaca--call-with-log e 1 "git" "config"   "checkout.defaultRemote" name)
+      (when-let* (((not branch))
+                  (default-branch
+                   (condition-case err ;;@FIX: will this stop if we fail elpaca?
+                       (elpaca-git--remote-default-branch name)
+                     (t (elpaca--fail e (format "Remote default branch err: %S" err))))))
+        (setq branch default-branch target branch)))
+    (if (null target)
+        (unless (eq (elpaca<-status e) 'failed)
+          (elpaca-note e "ref checked out")
+          (elpaca-continue e))
+      (cond
+       ((and ref (or branch tag))
+        (elpaca-note e (format ":ref %S overriding %S %S" ref (if branch :branch :tag) (or branch tag))))
+       ((and tag branch)
+        (elpaca--fail e (format "Ambiguous ref: :tag %S, :branch %S" tag branch))))
+      (elpaca-note e (concat "Checking out " target))
+      (unless (eq (elpaca<-status e) 'failed)
+        (elpaca--make-process e
+          :name "checkout-ref"
+          :command
+          `("git" "-c" "advice.detachedHead=false" ;ref, tag may detach HEAD
+            ,@(cond
+               (ref    (list "checkout" ref))
+               (tag    (list "checkout" (concat "tags/" tag)))
+               (branch (list "checkout" "-B" branch "--track" ; "--no-guess"?
+                             (concat (or (elpaca--first remote)
+                                         elpaca-default-remote-name)
+                                     "/" branch)))))
+          :sentinel (lambda (process event)
+                      (elpaca--process-sentinel (concat target " checked out") process event)))))))
+
+(defvar elpaca-git--tag-regexp
+  "\\`\\(?:\\|[RVrv]\\|release[/-]v?\\)?\\(?1:[0-9]+\\(\\.[0-9]+\\)*\\)\\'")
+
+(defmacro elpaca-git--without-config (&rest body)
+  "Eval BODY with user Git config ignored."
+  `(let ((process-environment (append '("GIT_CONFIG_SYSTEM=/dev/null"
+                                        "GIT_CONFIG_GLOBAL=/dev/null")
+                                      process-environment)))
+     ,@body))
+
+(defun elpaca-git--commit-date (e)
+  "Return date of E's checked out commit with FORMAT spec."
+  (let ((default-directory (elpaca<-source-dir e)))
+    (elpaca-git--without-config
+     (elpaca-with-process-call ("git" "log" "-n" "1" "--format=%cd" "--date=unix")
+       (if (not success) (elpaca--fail e stderr)
+         (seconds-to-time (string-to-number stdout)))))))
+
+(defun elpaca-git--blocker (e)
+  "Return E's queued sibling with live git subprocess."
+  (cl-loop with eid = (elpaca<-id e)
+           for (id . d) in (elpaca--queued) for p = (elpaca<-process d)
+           when (and (not (eq id eid)) p (process-live-p p)
+                     (process-get p :elpaca-git-lock)
+                     (equal (elpaca<-source-dir d) (elpaca<-source-dir e)))
+           return d))
+
+(defun elpaca-git--await-unlock (e blocker step)
+  "Reset E's STEP; block until BLOCKER's shared source dir's git lock clears."
+  (elpaca-note e (format "Waiting on %S's git lock" (elpaca<-id blocker)))
+  (push step (elpaca<-build-steps e))
+  (elpaca-block-until e 'elpaca-git--unlocked (elpaca<-source-dir e)))
+
+(defun elpaca-git--fetch (e &rest command)
+  "Fetch E's remotes' commits.
+COMMAND must satisfy `elpaca--make-process' :command SPEC arg, which see."
+  (if-let* ((blocker (elpaca-git--blocker e)))
+      (elpaca-git--await-unlock e blocker (lambda (e) (apply #'elpaca-git--fetch e command)))
+    (elpaca-note e "Fetching remotes")
+    (elpaca-with-dir e source
+      (process-put (elpaca--make-process e
+                     :name "fetch"
+                     :command  (or command '("git" "fetch" "--all" "-v"))
+                     :sentinel `(lambda (process event)
+                                  (elpaca--process-sentinel "Remotes fetched" process event)
+                                  (when (memq (process-status process) '(exit signal))
+                                    (elpaca-resolve 'elpaca-git--unlocked ,default-directory))))
+                   :elpaca-git-lock t))))
+
+(defun elpaca-git--merge-process-sentinel (process _event)
+  "Handle PROCESS EVENT."
+  (if-let* ((e (process-get process :elpaca))
+            ((= (process-exit-status process) 0)))
+      (progn (elpaca-resolve 'elpaca-git--unlocked (elpaca<-source-dir e))
+             (elpaca--propertize-subprocess process)
+             (elpaca-continue e))
+    (elpaca--fail e "Merge failed")))
+
+(defun elpaca-git--merge (e)
+  "Merge E's fetched commits."
+  (if-let* ((blocker (elpaca-git--blocker e)))
+      (elpaca-git--await-unlock e blocker #'elpaca-git--merge)
+    (elpaca-with-dir e source
+      (process-put (elpaca--make-process e :name "merge"
+                                         :command  '("git" "merge" "--ff-only")
+                                         :sentinel #'elpaca-git--merge-process-sentinel)
+                   :elpaca-git-lock t))
+    (elpaca-note e "Merging updates")))
+
+(defun elpaca-git--initial-fetch (e)
+  "Perform initial fetch for E, respecting :remotes recipe inheritance."
+  (let* ((recipe (copy-tree (elpaca<-recipe e)))
+         (remotes (plist-get recipe :remotes)))
+    (setf recipe (elpaca-merge-plists recipe '(:remotes nil)))
+    (cl-loop for remote in remotes
+             for opts = (elpaca-merge-plists recipe (cdr-safe remote))
+             for command = `("git" "fetch" ,@(when-let* ((depth (plist-get opts :depth))
+                                                         ((numberp depth)))
+                                               (list "--depth" (format "%s" depth)))
+                             ,(or (car-safe remote) remote))
+             for fn = `(lambda (e) (elpaca-git--fetch e ,@command))
+             do (push fn (elpaca<-build-steps e))
+             finally (elpaca-continue e))))
+
+(defun elpaca-git--configure-remotes (e)
+  "Add and/or rename E's repo remotes."
+  (let ((fetchp nil))
+    (when-let* ((default-directory (elpaca<-source-dir e))
+                (recipe            (elpaca<-recipe   e))
+                (remotes           (plist-get recipe :remotes)))
+      (elpaca-note e "Configuring Remotes")
+      (cl-loop with renamed for spec in remotes do
+               (if (stringp spec)
+                   (if renamed
+                       (elpaca-note e (format "ignoring :remotes rename %S" spec))
+                     (unless (equal spec elpaca-default-remote-name)
+                       (elpaca--call-with-log
+                        e 1 "git" "remote" "rename" elpaca-default-remote-name spec))
+                     (setq renamed spec))
+                 (when-let* ((remote    (car spec))
+                             (props     (cdr spec))
+                             (inherited (elpaca-merge-plists recipe props))
+                             (URI       (elpaca-git--repo-uri inherited)))
+                   (setq fetchp t)
+                   (elpaca-with-process
+                       (elpaca--call-with-log
+                        e 1 "git" "remote"
+                        (if (zerop (car (elpaca-process-call "git" "remote" "get-url" remote)))
+                            "set-url" "add")
+                        remote URI)
+                     (unless success (elpaca--fail e stderr)))))
+               (when fetchp (push #'elpaca-git--initial-fetch (elpaca<-build-steps e)))))
+    (elpaca-continue e)))
+
+(defun elpaca-git--clone-process-sentinel (process _event)
+  "Sentinel for clone PROCESS."
+  (if-let* ((e (process-get process :elpaca))
+            (success (= (process-exit-status process) 0)))
+      (progn (elpaca--propertize-subprocess process)
+             (elpaca-resolve 'source-dir-exists (elpaca<-source-dir e))
+             (elpaca-continue e))
+    (if (or (process-get process :reclone)
+            (not (plist-get (elpaca<-recipe e) :depth)))
+        (progn (elpaca-resolve 'source-dir-exists (elpaca<-source-dir e)
+                               (format "%S clone failed" (elpaca<-id e)))
+               (elpaca--fail e "Clone failure (see previous log entries)"))
+      (setf (elpaca<-recipe e) (plist-put (elpaca<-recipe e) :depth nil))
+      (elpaca-note e "Re-cloning with recipe :depth nil")
+      (push (lambda (e) (process-put (elpaca-git--clone e) :reclone t))
+            (elpaca<-build-steps e))
+      (elpaca-continue e))))
+
+(defun elpaca-git--clone (e)
+  "Clone E's repo to `elpaca-directory'."
+  (let* ((recipe  (elpaca<-recipe   e))
+         (remotes (plist-get recipe :remotes))
+         (remote  (and remotes (car remotes)))
+         (repodir (elpaca<-source-dir e))
+         (URI     (elpaca-git--repo-uri recipe))
+         (default-directory elpaca-directory)
+         (command
+          `("git" "clone"
+            ;;@TODO: Some refs will need a full clone or specific branch.
+            ,@(when-let* ((depth (plist-get recipe :depth)))
+                (cond
+                 ((plist-get recipe :ref) (elpaca-note e
+                                                       "Ignoring :depth in favor of :ref"))
+                 ((numberp depth) `("--depth" ,(number-to-string depth)))
+                 ((memq depth '(treeless blobless))
+                  (cond ((consp remote)
+                         (setf (elpaca<-recipe e) (plist-put recipe :depth nil))
+                         (elpaca-note e
+                                      ":remotes incompatible with treeless, blobless clones; using :depth nil"
+                                      :face 'warning))
+                        ((eq depth 'treeless) '("--filter=tree:0"))
+                        ((eq depth 'blobless) '("--filter=blob:none"))))))
+            ;;@FIX: allow override
+            ,@(when-let* ((ref (or (plist-get recipe :branch) (plist-get recipe :tag))))
+                `("--single-branch" "--branch" ,ref))
+            ,@(unless (or (null remote) (stringp remote)) '("--no-checkout"))
+            ,URI ,repodir)))
+    (if (file-exists-p repodir)
+        (progn (elpaca-note e (format "%s exists. Skipping clone." repodir))
+               (elpaca-resolve 'source-dir-exists repodir)
+               (elpaca-continue e))
+      (elpaca--make-process e
+        :name "clone" :command command :connection-type 'pty
+        :sentinel #'elpaca-git--clone-process-sentinel))))
+
+(defun elpaca-git-worktree-dirty-p (id)
+  "Return t if ID's associated repository has a dirty worktree, nil otherwise."
+  (when-let* ((e (elpaca-get id))
+              (recipe (elpaca<-recipe e))
+              (source-dir (elpaca<-source-dir e))
+              ((file-exists-p source-dir))
+              (default-directory source-dir))
+    (not (string-empty-p (elpaca-process-output
+                          "git" "-c" "status.branch=false" "status" "--short")))))
+
+(defun elpaca-git-latest-tag (e)
+  "Return E's merged tag matching :version-regexp or `elpaca-git--tag-regexp'."
+  (when-let* ((default-directory (elpaca<-source-dir e))
+              (recipe (elpaca<-recipe e))
+              (regexp (or (plist-get recipe :version-regexp) elpaca-git--tag-regexp))
+              (tags (elpaca-with-process
+                        (elpaca-process-call "git" "tag" "--sort=-creatordate" "--merged")
+                      (and success stdout (split-string stdout "\n" 'omit-nulls)))))
+    (cl-loop for tag in tags when (string-match regexp tag)
+             return (or (match-string 1 tag) (match-string 0 tag)))))
+
+(cl-defmethod elpaca-source-dir ((e (elpaca git)))
+  "Return source directory for :type `git` E."
+  (condition-case err
+      (elpaca-git-repo-dir (elpaca<-recipe e))
+    (elpaca-error (signal (car err) (cdr err)))))
+
+(cl-defmethod elpaca-ref ((e (elpaca git)))
+  "Return :ref for :type git E."
+  (elpaca-with-dir e source
+    (elpaca-with-process-call ("git" "rev-parse" "HEAD")
+      (if success (string-trim stdout)
+        (error "Unable to write lock-file: %s %S" (elpaca<-id e) stderr)))))
+
+(cl-defmethod elpaca--version ((e (elpaca git)) &optional context)
+  "Return version for :type `git` E in CONTEXT."
+  (pcase context
+    (:date (elpaca-git--commit-date e))
+    (:alternative (elpaca-git-latest-tag e))))
+
+(cl-defmethod elpaca-source ((e (elpaca git)))
+  "Populate source files for E :type `git'."
+  (if-let* (((not (elpaca<-builtp e)))
+            (source-dir (elpaca<-source-dir e))
+            (shared (elpaca--shared-source-dir (elpaca<-id e) source-dir))
+            ((or (gethash (cons 'source-dir-exists source-dir) elpaca--conditions)
+                 (eq (elpaca<-current-step shared) 'elpaca-git--checkout-ref)
+                 (memq 'elpaca-git--checkout-ref (elpaca<-build-steps shared)))))
+      (elpaca-block-until e 'source-dir-exists source-dir)
+    (setf (elpaca<-build-steps e)
+          (append elpaca-git-default-build-steps (elpaca<-build-steps e)))
+    (elpaca-continue e)))
+
+(cl-defmethod elpaca--delete ((e (elpaca git)))
+  "Delete :type git E."
+  (when-let*  ((recipe (elpaca<-recipe e))
+               (repo (plist-get recipe :repo))
+               ((stringp repo))
+               ((eq (elpaca-git--repo-type repo) 'local)))
+    (setf (elpaca<-source-dir e) (elpaca<-build-dir e)))
+  (cl-call-next-method e))
+
+(cl-defmethod elpaca-build-steps ((e (elpaca git)) &optional context)
+  "Return build steps for :type `git` E in CONTEXT."
+  (pcase context
+    (:fetch (list :first 'elpaca-git--fetch 'elpaca--log-updates))
+    (:merge (list :first 'elpaca-git--merge))
+    (:pull `(:first ,@(elpaca-build-steps e :fetch) ,@(elpaca-build-steps e :merge)))))
+
+(cl-defmethod elpaca--log-updates ((e (elpaca git)))
+  "Log updates for :type `git` E."
+  (elpaca-note e "Fetching update log")
+  (let* ((default-directory (elpaca<-source-dir e))
+         (date (string-trim (elpaca-process-output "git" "show" "-s" "--format=%ci"))))
+    (elpaca--make-process e
+      :name "log-updates"
+      ;; Pager breaks pipe process.
+      :command (list "git" "--no-pager" "log" "--reverse" (concat "--since=" date)
+                     "--pretty=%h %s (%ch)" "..@{u}")
+      :sentinel (lambda (process event) (elpaca--process-sentinel nil process event)))))
+
+(cl-defmethod elpaca--url ((e (elpaca git)))
+  "Return E's :repo URL or nil."
+  (when-let* ((recipe (elpaca-merge-plists (elpaca<-recipe e) '(:protocol https)))
+              (uri (replace-regexp-in-string "\\.git$" "" (elpaca-git--repo-uri recipe))))
+    uri))
+
+(defvar elpaca-ui-search-tags)
+(with-eval-after-load 'elpaca-ui
+  (defun elpaca-git--tag-dirty (entries)
+    "Return ENTRIES for packages with a dirty worktree."
+    (cl-remove-if-not #'elpaca-git-worktree-dirty-p entries :key #'caar))
+  (add-to-list 'elpaca-ui-search-tags (cons 'dirty 'elpaca-git--tag-dirty)))
+
+(provide 'elpaca-git)
+;;; elpaca-git.el ends here

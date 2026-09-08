@@ -46,11 +46,12 @@ Enable the mode if ARG is nil, omitted, or is a positive number.
 Disable the mode if ARG is a negative number.
 
 Envrc mode is enabled in all buffers where `(lambda nil (when (cond
-((minibufferp) nil) ((file-remote-p default-directory) (and
-envrc-remote (seq-contains-p envrc-supported-tramp-methods
-(with-parsed-tramp-file-name default-directory vec vec-method)))) (t
-(executable-find envrc-direnv-executable))) (envrc-mode 1)))' would do
-it.
+((minibufferp) nil) ((string-prefix-p  *eldoc (buffer-name)) nil)
+((derived-mode-p 'envrc--special-mode) nil) ((file-remote-p
+default-directory) (and envrc-remote (seq-contains-p
+envrc-supported-tramp-methods (with-parsed-tramp-file-name
+default-directory vec vec-method)))) (t (executable-find
+envrc-direnv-executable))) (envrc-mode 1)))' would do it.
 
 See `envrc-mode' for more information on Envrc mode.
 

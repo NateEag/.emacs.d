@@ -66,6 +66,9 @@
 (use-package dash-docs
   :init
   (setq dash-docs-docsets-path (expand-file-name "~/Reference/.docsets"))
+  ;; Debugging is great, but I don't need to see a debug frame for every minor
+  ;; little issue that doesn't impact usability.
+  (setq dash-docs-enable-debugging nil)
   (make-directory dash-docs-docsets-path t)
   :config (cl-map 'list #'dash-docs-ensure-docset-installed '("JavaScript"
                                                               "NodeJS"

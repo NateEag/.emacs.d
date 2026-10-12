@@ -669,31 +669,19 @@ The shell command lives in my dotfiles repo."
                         (setq-local js2-concat-multiline-strings
                                     nil)))))
 
-;; TODO: Start using TypeScript mode for plain JS files. Probably works better
-;; than js2 + tern, these days.
-(use-package js2-mode
-  :mode "\\.js\\'"
-  :init (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
-  :hook ((js2-mode . js-mode-init)
-         (js2-mode . (lambda ()
-                       (setq mode-name "js2-mode")))))
-
 ;; js2-mode works poorly for me on .json files.
 (use-package js-mode
   :mode "\\.*jsbeautifyrc\\'" "\\.*jshintrc\\'" "\\.tern-project\\'"
   :hook ((js-mode . js-mode-init)
          (js-mode . (lambda () (setq mode-name "js-mode")))))
 
-(use-package js-jsx-mode
-  ;; There's a whole lot to be said for working jump-to-definition from
-  ;; templates, and this actually got me that with no extra work in a project
-  ;; where I already had tsserver running via LSP.
-  :mode ".jsx\\'")
-
 ;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
 ;; modes should be way better in several respects.
 (use-package typescript
   :after apheleia
+  ;; TypeScript supports .m/.c as prefixes to the suffix indicating whether the
+  ;; file is an ES module or a CommonJS module.
+  :mode "\\.\\(m\\|c\\)?\\(ts\\|js\\)\\'" "\\.\\(j\\|t\\)sx\\'"
   ;; use-package does not seem to support delighting major modes.
   :init (delight 'typescript-mode "TS" :major)
   :custom

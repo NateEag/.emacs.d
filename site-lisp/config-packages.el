@@ -677,7 +677,7 @@ The shell command lives in my dotfiles repo."
 
 ;; TODO Move to typescript-ts-mode once I'm on Emacs 29. Tree-sitter-based
 ;; modes should be way better in several respects.
-(use-package typescript
+(use-package typescript-mode
   :after apheleia
   ;; TypeScript supports .m/.c as prefixes to the suffix indicating whether the
   ;; file is an ES module or a CommonJS module.

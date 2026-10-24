@@ -48,6 +48,11 @@
   ;; using `load' or `require'.
   (compile-angel-on-load-mode 1))
 
+(use-package elec-pair
+  :demand t
+  :config
+  (electric-pair-mode))
+
 (use-package hydra
   :ensure t
   :diminish)

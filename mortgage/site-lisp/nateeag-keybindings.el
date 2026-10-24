@@ -19,7 +19,7 @@
   ("p" (nateeag/projects/body) "Projects")
 )
 
-(defhydra nateeag/projects ()
+(defhydra nateeag/projects (:exit t)
   "My keybindings for doing things in projects."
   ;; TODO: Figure out how I want to work with projects.
   ;;

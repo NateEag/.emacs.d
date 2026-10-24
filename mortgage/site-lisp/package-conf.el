@@ -48,11 +48,24 @@
   ;; using `load' or `require'.
   (compile-angel-on-load-mode 1))
 
+(use-package hydra
+  :ensure t
+  :diminish)
+
 (use-package evil
   :ensure t
   :demand t
+  :after hydra
   :config
-  (evil-mode 1))
+  (evil-mode 1)
+
+  ;; I used leader-key for ages, but my lesser-used bindings are easily-forgotten.
+  ;;
+  ;; So, I'm giving Hydra a try, which means I don't _need_ a leader key.
+  ;;
+  ;; FIXME: I _do_ need to figure out the correct way to load the hydra. That
+  ;; means working out autoloads, I guess.
+  (evil-define-key 'normal 'global (kbd "SPC") 'nateeag/keybindings/body))
 
 ;; Make emacs' built-in help functions more helpful.
 ;;

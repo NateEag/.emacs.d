@@ -22,6 +22,9 @@ forget. Having a visual orientation to what's available helps me avoid
 that."
 
   ("f" find-file "Open file")
+  ;; Bound to g for obvious historical reasons, but might someday grow
+  ;; beyond strictly working with Git.
+  ("g" (nateeag/vcs/body) "Version control")
   ("w" save-buffer "Save current buffer")
   ("p" (nateeag/projects/body) "Projects"))
 
@@ -33,5 +36,9 @@ that."
   ("p" project-switch-project "Change project")
   ("b" project-switch-to-buffer "Change buffer in project"))
 
+(defhydra nateeag/vcs (:exit t)
+  "Version control shortcuts."
+
+  ("g" magit-status "Current project's status."))
 (provide 'nateeag-keybindings)
 ;;; nateeag-keybindings.el ends here

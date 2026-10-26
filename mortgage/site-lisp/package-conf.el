@@ -121,6 +121,12 @@
   :init
   (envrc-global-mode))
 
+;; Handy for quickly jumping to arbitrary parts of a file.
+;;
+;; Vimium's link following for text views, roughly.
+(use-package avy
+  :ensure t)
+
 ;; Magit remains the best version control interface I've used thus far.
 ;;
 ;; Maybe jj would unseat it if I gave it a fair trial, but I'm not sure I'll

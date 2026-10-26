@@ -26,6 +26,7 @@ that."
   ;; beyond strictly working with Git.
   ("g" (nateeag/vcs/body) "Version control")
   ("w" save-buffer "Save current buffer")
+  ("j" (nateeag/jump/body) "Jump to locations via visual hints.")
   ("p" (nateeag/projects/body) "Projects"))
 
 (defhydra nateeag/projects (:exit t)
@@ -40,5 +41,10 @@ that."
   "Version control shortcuts."
 
   ("g" magit-status "Current project's status."))
+
+(defhydra nateeag/jump (:exit t)
+  "Keybindings for jumping to editor locations by visual hints."
+  ("w" evil-avy-goto-word-1 "Jump to word by initial character."))
+
 (provide 'nateeag-keybindings)
 ;;; nateeag-keybindings.el ends here

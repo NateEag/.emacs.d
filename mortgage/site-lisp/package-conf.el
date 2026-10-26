@@ -55,6 +55,7 @@
 
 (use-package hydra
   :ensure t
+  :demand t
   :diminish)
 
 (use-package evil
@@ -64,9 +65,16 @@
   :config
   (evil-mode 1)
 
+  ;; TODO: Figure out how to load these via use-package.
+  ;;
+  ;; It would be cleaner, and I may eventually want to trigger these hydras
+  ;; from keybindings other than my normal-mode leader key.
+  (require 'nateeag-keybindings)
+
   ;; I used leader-key for ages, but my lesser-used bindings are easily-forgotten.
   ;;
-  ;; So, I'm giving Hydra a try, which means I don't _need_ a leader key.
+  ;; So, I'm giving Hydra a try, which means I don't _need_ a leader key - just
+  ;; to bind the top-level hydra to the appropriate evil keymap.
   ;;
   ;; FIXME: I _do_ need to figure out the correct way to load the hydra. That
   ;; means working out autoloads, I guess.

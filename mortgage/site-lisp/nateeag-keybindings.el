@@ -12,12 +12,13 @@
 
 ;;; Code:
 
+(require 'hydra)
+
 (defhydra nateeag/keybindings (:exit t)
   "keybindings"
   ("f" find-file "Open file")
   ("w" save-buffer "Save current buffer")
-  ("p" (nateeag/projects/body) "Projects")
-)
+  ("p" (nateeag/projects/body) "Projects"))
 
 (defhydra nateeag/projects (:exit t)
   "My keybindings for doing things in projects."

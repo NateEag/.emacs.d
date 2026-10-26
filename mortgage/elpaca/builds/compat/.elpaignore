@@ -1,0 +1,9 @@
+.dir-locals.el
+.elpaignore
+.github
+.gitignore
+COPYING
+Makefile
+README.md
+compat-tests.el
+compat.texi

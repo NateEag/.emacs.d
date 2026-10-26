@@ -121,5 +121,13 @@
   :init
   (envrc-global-mode))
 
+;; Magit remains the best version control interface I've used thus far.
+;;
+;; Maybe jj would unseat it if I gave it a fair trial, but I'm not sure I'll
+;; ever get around to it, when I have my own very strong opinions about how
+;; version control Ought To Work.
+(use-package magit
+  :ensure t)
+
 (provide 'package-conf)
 ;;; package-conf.el ends here

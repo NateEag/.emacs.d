@@ -1,0 +1,3796 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename compat.info
+@settitle Compat Manual
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@copying
+Copyright @copyright{} 2022-2026 Free Software Foundation, Inc.
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the GNU Free Documentation License, Version 1.3 or
+any later version published by the Free Software Foundation; with no
+Invariant Sections, with the Front-Cover Texts being “A GNU Manual,”
+and with the Back-Cover Texts as in (a) below.  A copy of the license
+is included in the section entitled “GNU Free Documentation License.”
+
+(a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
+modify this GNU manual.”
+
+@end quotation
+@end copying
+
+@dircategory Emacs
+@direntry
+* Compat: (compat).     Compatibility Library for Emacs Lisp.
+@end direntry
+
+@finalout
+@titlepage
+@title Compat Manual
+@subtitle For version 31.1.0.0
+@author Philip Kaludercic, Daniel Mendler
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Compat Manual
+
+This manual documents the usage of the Compat Elisp library,
+the forward-compatibility library for Emacs Lisp, corresponding to
+version 31.1.0.0.
+
+@insertcopying
+@end ifnottex
+
+@menu
+* Introduction::
+* Support::
+* Development::
+* Function Index::
+* Variable Index::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Introduction
+
+* Overview::
+* Usage::
+* Limitations::
+
+Support
+
+* Emacs 26.1::                   Compatibility support for Emacs 26.1
+* Emacs 27.1::                   Compatibility support for Emacs 27.1
+* Emacs 28.1::                   Compatibility support for Emacs 28.1
+* Emacs 29.1::                   Compatibility support for Emacs 29.1
+* Emacs 30.1::                   Compatibility support for Emacs 30.1
+* Emacs 31.1::                   Compatibility support for Emacs 31.1
+
+@end detailmenu
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+@menu
+* Overview::
+* Usage::
+* Limitations::
+@end menu
+
+@node Overview
+@section Overview
+
+The objective of Compat is to provide "forwards compatibility" library
+for Emacs Lisp.  By using Compat, an Elisp package does not have to
+make the decision to either use new and useful functionality or
+support old versions of Emacs.
+
+The library provides support back until Emacs 25.1.  The intended
+audience are package developers that are interested in using newer
+developments, without having to break compatibility.
+
+@node Usage
+@section Usage
+
+The intended use-case for this library is for package developers to
+add as a dependency in the header.  The version of the Compat library
+mirrors the version of Emacs releases.  The current version of Compat
+corresponds to the current Emacs release.
+
+@example
+;; Package-Requires: ((emacs "25.1") (compat "31.1"))
+@end example
+
+There is no need to depend on @code{emacs 25.1} specifically.  One can
+choose any newer version, if features not provided by Compat
+necessitate it, for example bug fixes or UI improvements.
+
+In any file where compatibility forms are used, a
+
+@example
+(require 'compat)
+@end example
+
+should be added early on. This will load all necessary Compat
+definitions.  Compat loads the @code{seq} library which is preloaded
+by default on Emacs 29.  Note that if Compat is installed on a recent
+version of Emacs, all of the definitions are disabled at compile time,
+such that no negative performance impact is incurred.
+
+A minimal version of Compat will be present in Emacs version 30 and
+newer. Packages which are part of Emacs itself and want to take
+advantage of Compat, can also use @code{(require 'compat)}.  The
+advantage of the inclusion of a minimal Compat in Emacs is that Compat
+will not be installed if you require a version older or equal than the
+current Emacs version.  For example, if a package depending on Emacs
+25.1 and Compat 29.1 is installed on Emacs 30.1, Compat will not be
+pulled in as dependency, since Emacs 30.1 already provides the
+required functionality.
+
+Compat provides replacement functions with extended functionality for
+functions that are already defined, e.g., @code{sort} or @code{assoc}.
+These functions may have changed their calling convention (additional
+optional arguments) or may have changed their behavior.  These
+functions must be looked up explicitly with @code{compat-function} or
+called explicitly with @code{compat-call}.  We call them @dfn{Extended
+Definitions}.  In contrast, newly @dfn{Added Definitions} can be
+called as usual.  The Compat manual explicitly documents the calling
+convention of each compatibility function.
+
+@example
+(compat-call assoc key alist testfn) ;; Call extended `assoc'
+(mapcan fun seq)                     ;; Call newly added `mapcan'
+@end example
+
+@defmac compat-call fun &rest args
+This macro calls the compatibility function @var{fun} with @var{args}.
+Many functions provided by Compat can be called directly without this
+macro.  However in the case where Compat provides an alternative
+version of an existing function, the function call has to go through
+@code{compat-call}.  This happens for example when the calling
+convention of a function has changed.
+@end defmac
+
+@defmac compat-function fun
+This macro returns the compatibility function symbol for @var{fun}.
+See @code{compat-call} for a more convenient macro to directly call
+compatibility functions.
+@end defmac
+
+If Compat is used in Emacs core packages, the macros
+@code{compat-call} and @code{compat-function} will be available in
+Emacs version 30 and newer.
+
+The macros @code{compat-call} and @code{compat-function} are
+introduced by Compat, since Compat does not advise or override
+existing functions.  Generally Compat is written in defensive style
+which is supposed to reduce potential breakage, and to increase the
+chances of staying binary compatible across releases.  The extensive
+test coverage ensures that we can maintain high quality, which is
+crucial for Compat which is not restricted to a namespace like usual
+libraries.
+
+If you intend to use a compatibility function in your code it is
+recommended that you take a look at the test suite
+@file{compat-tests.el}.  There you can see the supported calling
+conventions, which are guaranteed to work on the supported Emacs
+versions. We ensure this using continuous integration.  All functions
+provided by Compat are covered by the test suite.  There is a link to
+the corresponding test on the first line of each definition.
+
+@node Limitations
+@section Limitations
+
+The Compat library has a number of limitations.  Complete backwards
+compatibility cannot be provided due to the scope of Compat and for
+technical reasons.  The scope is intentionally restricted in order to
+limit the size of Compat and to ensure that the library stays
+maintainable.
+
+Emacs version 25.1 is chosen as the oldest version supported by Compat,
+since Elisp has seen significant changes at that version.  Since 25.1
+Emacs major versions consistently bump the major version number. On the
+library level, seq and generics were introduced in 25.1.  Most popular
+Emacs packages already require 25.1 or even newer versions of
+Emacs. Supporting for more historical Emacs versions would complicate
+maintenance while only few packages and users would benefit.
+
+Below we list a number of reasons why certain functionality cannot be
+provided.  Note that in some special cases exceptions can be made and
+functions can still be added to Compat even if they satisfy the
+criteria from the list. In case you miss functionality which you think
+should belong here, a @ref{Development, , report} would be much
+appreciated.
+
+@itemize
+@item
+The additional functionality is a command or a user-facing minor or
+major mode.  Compat is limited to functionality on the ``library
+level''.  Generally functions provided by Compat are non-interactive,
+such that the user interface (M-x) is unaffected by the presence of
+Compat.
+
+@item
+The function is not useful for package authors or not intended to be
+used by packages, but is only useful on the configuration level.  The
+macro @code{setopt} is such an example.
+
+@item
+Private (double dashed) functions are not ported back.  If Compat
+includes some private functions, they are meant purely for internal
+usage.
+
+@item
+The added or extended function belongs to the ``application level''
+and not the ``library level''.  Features which are not preloaded often
+belong to the ``application level''.  Application examples are
+programming modes or modes like Dired, IRC and Gnus.  If these modes
+are extended with new functions, these are not ported back.
+
+@item
+An existing function or macro was extended by some new functionality.
+To support these cases, the function or macro would have to be
+advised.  Since this is invasive and adds significant overhead, even
+when the new feature is not used, Compat does not use advices.  As a
+compromise, compatibility functions and macros with a changed calling
+convention or behavior can be accessed via the @code{compat-function}
+and @code{compat-call} macros.  In this manual we call such
+definitions @dfn{Extended Definitions}.  An example is the function
+@code{plist-get}.  Note that extended functions are subject to closer
+scrutiny, since their usage via @code{compat-call} is not completely
+painless.  If a particular extended function does not see much usage
+or the extension yields only marginal benefits, we may not provide it
+as part of Compat.
+
+@item
+Bug fixes are usually not ported back as part of Compat.  Sometimes
+library functions show wrong behavior for edge cases.  In those cases
+Compat could in principle provide a compatibility function which is
+invoked via @code{compat-call}. Such extended definitions would
+increase the maintenance burden of Compat. At the same time the
+benefits would be small given that Compat does not override existing
+definitions.
+
+@item
+The definition belongs to an Emacs core package, which is also
+distributed via ELPA.  Compat does not have to provide backward
+compatibility for core packages since the updated package can be
+installed directly from ELPA. Examples include the libraries xref,
+project, seq, map and transient.
+
+@item
+New functionality depends on an entire new, non-trivial core library,
+which is infeasible to duplicate within Compat.  If a backport of such
+a library is required, the preferred approach is to either release the
+library separately on GNU ELPA as a core package or as a separately
+maintained GNU ELPA package.  An example is the iso8601 library.
+
+@item
+New functionality was implemented in the C core, or depends on
+external libraries that cannot be reasonably duplicated in the scope
+of a compatibility library. Sometimes new functions on the C level
+rely on internal data structures, which we cannot access, rendering a
+backport impossible. For example a missing libxml or libtreesitter
+cannot be emulated.
+
+@item
+The semantics of Elisp changed on a deep level. For example the
+addition of big integer support in Emacs 27.1 cannot be replicated on
+the level of Compat.
+@end itemize
+
+@node Support
+@chapter Support
+
+This section goes into the features that Compat manages and doesn't
+manage to provide for each Emacs version.
+
+@menu
+* Emacs 26.1::                   Compatibility support for Emacs 26.1
+* Emacs 27.1::                   Compatibility support for Emacs 27.1
+* Emacs 28.1::                   Compatibility support for Emacs 28.1
+* Emacs 29.1::                   Compatibility support for Emacs 29.1
+* Emacs 30.1::                   Compatibility support for Emacs 30.1
+* Emacs 31.1::                   Compatibility support for Emacs 31.1
+@end menu
+
+@node Emacs 26.1
+@section Emacs 26.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+26.1. These functions are made available by Compat on Emacs versions
+older than 26.1.
+
+@c based on lispref/lists.texi
+@defun assoc-delete-all key alist
+This function is like @code{assq-delete-all} except that it uses
+@code{equal} to compare elements.
+@end defun
+
+@c copied from lispref/minibuf.texi
+@defun read-answer question answers
+This function prompts the user with text in @var{question}, which
+should end in the @samp{SPC} character.  The function includes in the
+prompt the possible responses in @var{answers} by appending them to
+the end of @var{question}.  The possible responses are provided in
+@var{answers} as an alist whose elements are of the following form:
+
+@lisp
+(@var{long-answer} @var{short-answer} @var{help-message})
+@end lisp
+
+@noindent
+where @var{long-answer} is the complete text of the user response, a
+string; @var{short-answer} is a short form of the same response, a
+single character or a function key; and @var{help-message} is the text
+that describes the meaning of the answer.  If the variable
+@code{read-answer-short} is non-@code{nil}, the prompt will show the
+short variants of the possible answers and the user is expected to
+type the single characters/keys shown in the prompt; otherwise the
+prompt will show the long variants of the answers, and the user is
+expected to type the full text of one of the answers and end by
+pressing @key{RET}.  If @code{use-dialog-box} is non-@code{nil}, and
+this function was invoked by mouse events, the question and the
+answers will be displayed in a GUI dialog box.
+
+The function returns the text of the @var{long-answer} selected by the
+user, regardless of whether long or short answers were shown in the
+prompt and typed by the user.
+
+Here is an example of using this function:
+
+@lisp
+(let ((read-answer-short t))
+  (read-answer "Foo "
+     '(("yes"  ?y "perform the action")
+       ("no"   ?n "skip to the next")
+       ("all"  ?! "perform for the rest without more questions")
+       ("help" ?h "show help")
+       ("quit" ?q "exit"))))
+@end lisp
+@end defun
+
+@c copied from lispref/functions.texi
+@defun mapcan function sequence
+This function applies @var{function} to each element of
+@var{sequence}, like @code{mapcar}, but instead of collecting the
+results into a list, it returns a single list with all the elements of
+the results (which must be lists), by altering the results (using
+@code{nconc}; @pxref{Rearrangement,,,elisp}).  Like with
+@code{mapcar}, @var{sequence} can be of any type except a char-table.
+
+@example
+@group
+;; @r{Contrast this:} (mapcar #'list '(a b c d)) @result{} ((a) (b) (c)
+(d)) ;; @r{with this:} (mapcan #'list '(a b c d)) @result{} (a b c d)
+@end group
+@end example
+
+@xref{Mapping Functions,,,elisp}.
+@end defun
+
+@defun cXXXr
+@end defun
+@defun cXXXXr
+@xref{List Elements,,,elisp}.
+@end defun
+
+@c copied from lispref/symbols.texi
+@defun gensym &optional prefix
+This function returns a symbol using @code{make-symbol}, whose name is
+made by appending @code{gensym-counter} to @var{prefix} and
+incrementing that counter, guaranteeing that no two calls to this
+function will generate a symbol with the same name.  The prefix
+defaults to @code{"g"}.
+@end defun
+
+@defvar gensym-counter
+See @code{gensym}.
+@end defvar
+
+@c copied from lispref/text.texi
+@defun buffer-hash &optional buffer-or-name
+Return a hash of @var{buffer-or-name}.  If @code{nil}, this defaults
+to the current buffer.  As opposed to @code{secure-hash}, this
+function computes the hash based on the internal representation of the
+buffer, disregarding any coding systems.  It's therefore only useful
+when comparing two buffers running in the same Emacs, and is not
+guaranteed to return the same hash between different Emacs versions.
+It should be somewhat more efficient on larger buffers than
+@code{secure-hash} is, and should not allocate more memory.
+@c Note that we do not document what hashing function we're using, or
+@c even whether it's a cryptographic hash, since that may change
+@c according to what we find useful.
+@end defun
+
+@c copied from lispref/files.texi
+@defmac file-name-unquote name
+This macro removes the quotation prefix @samp{/:} from the file
+@var{name}, if any. If @var{name} is a remote file name, the local
+part of @var{name} is unquoted.
+@end defmac
+
+@c copied from lispref/files.texi
+@defun file-name-quoted-p name
+This macro returns non-@code{nil}, when @var{name} is quoted with the
+prefix @samp{/:}.  If @var{name} is a remote file name, the local part
+of @var{name} is checked.
+
+@xref{File Name Expansion,,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-name-quote name
+This macro adds the quotation prefix @samp{/:} to the file @var{name}.
+For a local file @var{name}, it prefixes @var{name} with @samp{/:}.  If
+@var{name} is a remote file name, the local part of @var{name}
+(@pxref{Magic File Names,,,elisp}) is quoted.  If @var{name} is already
+a quoted file name, @var{name} is returned unchanged.
+
+@example
+@group
+(substitute-in-file-name (compat-call file-name-quote "bar/~/foo")) @result{}
+     "/:bar/~/foo"
+@end group
+
+@group
+(substitute-in-file-name (compat-call file-name-quote "/ssh:host:bar/~/foo"))
+     @result{} "/ssh:host:/:bar/~/foo"
+@end group
+@end example
+
+The macro cannot be used to suppress file name handlers from magic file
+names (@pxref{Magic File Names,,,elisp}).
+
+@xref{File Name Expansion,,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun make-nearby-temp-file prefix &optional dir-flag suffix
+This function is similar to @code{make-temp-file}, but it creates a
+temporary file as close as possible to @code{default-directory}.  If
+@var{prefix} is a relative file name, and @code{default-directory} is a
+remote file name or located on a mounted file systems, the temporary
+file is created in the directory returned by the function
+@code{temporary-file-directory}.  Otherwise, the function
+@code{make-temp-file} is used.  @var{prefix}, @var{dir-flag} and
+@var{suffix} have the same meaning as in @code{make-temp-file}.
+
+@example
+@group
+(let ((default-directory "/ssh:remotehost:")) (make-nearby-temp-file
+  "foo")) @result{} "/ssh:remotehost:/tmp/foo232J6v"
+@end group
+@end example
+@end defun
+
+@c based on lisp/files.el
+@defvar mounted-file-systems
+A regular expression matching files names that are probably on a
+mounted file system.
+@end defvar
+
+@c copied from lispref/fiels.texi
+@defun temporary-file-directory
+The directory for writing temporary files via
+@code{make-nearby-temp-file}.  In case of a remote
+@code{default-directory}, this is a directory for temporary files on
+that remote host.  If such a directory does not exist, or
+@code{default-directory} ought to be located on a mounted file system
+(see @code{mounted-file-systems}), the function returns
+@code{default-directory}.  For a non-remote and non-mounted
+@code{default-directory}, the value of the variable
+@code{temporary-file-directory} is returned.
+
+@xref{Unique File Names,,,elisp}.
+@end defun
+
+@defmac if-let* (bindings@dots{}) then &rest else
+@code{if-let*} is mostly equivalent to @code{if-let}, with the
+exception that the legacy @code{(if (@var{var} (test)) foo bar)}
+syntax is not permitted.
+@end defmac
+
+@defmac when-let* (bindings@dots{}) then &rest else
+@code{when-let*} is mostly equivalent to @code{when-let}, with the
+exception that the legacy @code{(when-let (@var{var} (test)) foo bar)}
+syntax is not permitted.
+@end defmac
+
+@defmac and-let* (bindings@dots{}) &rest body
+A combination of @var{let*} and @var{and}, analogous to
+@code{when-let*}.  If all @var{bindings} are non-@code{nil} and
+@var{body} is @code{nil}, then the result of the @code{and-let*} form
+will be the last value bound in @var{bindings}.
+
+@strong{@strong{Please Note:}} The implementation provided by Compat
+does not include a bug that was observed with Emacs 26 (see
+@uref{https://debbugs.gnu.org/cgi/bugreport.cgi?bug=31840}).
+@end defmac
+
+@c copied from lispref/files.texi
+@defun file-local-name filename
+This function returns the @emph{local part} of @var{filename}.  This
+is the part of the file's name that identifies it on the remote host,
+and is typically obtained by removing from the remote file name the
+parts that specify the remote host and the method of accessing it.
+For example:
+
+@smallexample
+(file-local-name "/ssh:@var{user}@@@var{host}:/foo/bar") @result{}
+     "/foo/bar"
+@end smallexample
+
+For a remote @var{filename}, this function returns a file name which
+could be used directly as an argument of a remote process
+(@pxref{Asynchronous Processes,,,elisp}, and @pxref{Synchronous
+Processes,,,elisp}), and as the program to run on the remote host.  If
+@var{filename} is local, this function returns it unchanged.
+
+@xref{Magic File Names,,,elisp}.
+@end defun
+
+@defun read-multiple-choice prompt choices
+Ask user a multiple choice question.  @var{prompt} should be a string
+that will be displayed as the prompt.
+
+@var{choices} is an alist where the first element in each entry is a
+character to be entered, the second element is a short name for the
+entry to be displayed while prompting (if there's room, it might be
+shortened), and the third, optional entry is a longer explanation that
+will be displayed in a help buffer if the user requests more help.
+
+See @ref{Reading One Event,Reading One Event,,elisp,}.
+@end defun
+
+@defun image-property
+Defined in @code{image.el}.
+
+This function can also be used as a generalised variable.
+@end defun
+
+@defun file-attribute-type
+Return the field @emph{type} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-link-number
+Return the field @emph{link-number} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-user-id
+Return the field @emph{user-id} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-group-id
+Return the field @emph{group-id} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-access-time
+Return the field @emph{access-time} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-modification-time
+Return the field @emph{modification-time} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-status-change-time
+Return the field @emph{modification-time} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-size
+Return the field @emph{size} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-modes
+Return the field @emph{modes} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-inode-number
+Return the field @emph{inode-number} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@defun file-attribute-device-number
+Return the field @emph{device-number} as generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@c based on lisp/files.el
+@defun file-attribute-collect attributes &rest attr-names
+Filter the file attributes @var{attributes}, as generated by
+@code{file-attributes}, according to @var{attr-names}.
+
+Valid attribute names for @var{attr-names} are: type, link-number,
+user-id, group-id, access-time, modification-time, status-change-time,
+size, modes, inode-number and device-number.
+
+@example
+@group
+(file-attributes ".") @result{} (t 1 1000 1000 (25329 18215 325481 96000) (25325 15364 530263 840000) (25325 15364 530263 840000) 788 "drwxr-xr-x" t 137819 40)
+@end group
+@group
+(file-attribute-collect (file-attributes ".") 'type 'modes
+'inode-number) @result{} (t "drwxr-xr-x" 137819)
+@end group
+@end example
+@end defun
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 26.1:
+
+@c copied from lispref/files.texi
+@defun compat-call@ make-temp-file prefix &optional dir-flag suffix text
+This function creates a temporary file and returns its name.  Emacs
+creates the temporary file's name by adding to @var{prefix} some
+random characters that are different in each Emacs job.  The result is
+guaranteed to be a newly created file, containing @var{text} if that's
+given as a string and empty otherwise. On MS-DOS, this function can
+truncate @var{prefix} to fit into the 8+3 file-name limits.  If
+@var{prefix} is a relative file name, it is expanded against
+@code{temporary-file-directory}.
+
+The compatibility version adds support for handling the optional
+argument @var{TEXT}.
+
+@example
+@group
+(make-temp-file "foo")
+     @result{} "/tmp/foo232J6v"
+@end group
+@end example
+
+When @code{make-temp-file} returns, the file has been created and is
+empty.  At that point, you should write the intended contents into the
+file.
+
+If @var{dir-flag} is non-@code{nil}, @code{make-temp-file} creates an
+empty directory instead of an empty file.  It returns the file name,
+not the directory name, of that directory.  @xref{Directory Names,,,elisp}.
+
+If @var{suffix} is non-@code{nil}, @code{make-temp-file} adds it at
+the end of the file name.
+
+If @var{text} is a string, @code{make-temp-file} inserts it in the file.
+
+To prevent conflicts among different libraries running in the same
+Emacs, each Lisp program that uses @code{make-temp-file} should have its
+own @var{prefix}.  The number added to the end of @var{prefix}
+distinguishes between the same application running in different Emacs
+jobs.  Additional added characters permit a large number of distinct
+names even in one Emacs job.
+@end defun
+
+@defun compat-call@ assoc key alist &optional testfn
+This function returns the first association for @var{key} in
+@var{alist}, comparing @var{key} against the alist elements using
+@var{testfn} if it is a function, and @code{equal} otherwise
+(@pxref{Equality Predicates,,,elisp}).  If @var{testfn} is a function,
+it is called with two arguments: the @sc{car} of an element from
+@var{alist} and @var{key}.  The function returns @code{nil} if no
+association in @var{alist} has a @sc{car} equal to @var{key}, as
+tested by @var{testfn}.
+
+@xref{Association Lists,,,elisp}.
+
+The compatibility version adds support for handling the optional
+argument @var{testfn}.
+@end defun
+
+@defun compat-call@ line-number-at-pos &optional pos absolute
+This function returns the line number in the current buffer
+corresponding to the buffer position @var{pos}.  If @var{pos} is
+@code{nil} or omitted, the current buffer position is used. If
+@var{absolute} is @code{nil}, the default, counting starts at
+@code{(point-min)}, so the value refers to the contents of the
+accessible portion of the (potentially narrowed) buffer.  If
+@var{absolute} is non-@code{nil}, ignore any narrowing and return
+
+@xref{Text Lines,,,elisp}.
+
+The compatibility version adds support for handling the optional
+argument @var{absolute}.
+@end defun
+
+@defun compat-call@ alist-get key alist &optional default remove testfn
+@xref{Association Lists,,,elisp}.  This function is similar to
+@code{assq}.  It finds the first association @w{@code{(@var{key}
+. @var{value})}} by comparing @var{key} with @var{alist} elements,
+and, if found, returns the @var{value} of that association.  If no
+association is found, the function returns @var{default}.  Comparison
+of @var{key} against @var{alist} elements uses the function specified
+by @var{testfn}, defaulting to @code{eq}.
+
+@xref{Association Lists,,,elisp,}.
+
+The compatibility version handles the optional argument @var{testfn}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun compat-call@ string-trim-left string &optional regexp
+Remove the leading text that matches @var{regexp} from @var{string}.
+@var{regexp} defaults to @samp{[ \t\n\r]+}.
+
+@xref{Creating Strings,,,elisp}.
+
+The compatibility version handles the optional argument @var{regexp}.
+@end defun
+
+@defun compat-call@ string-trim-right string &optional regexp
+Remove the trailing text that matches @var{regexp} from @var{string}.
+@var{regexp} defaults to @samp{[ \t\n\r]+}.
+
+@xref{Creating Strings,,,elisp}.
+
+The compatibility version handles the optional argument @var{regexp}.
+@end defun
+
+@defun compat-call@ string-trim string &optional trim-left trim-right
+Remove the leading text that matches @var{trim-left} and trailing text
+that matches @var{trim-right} from @var{string}.  Both regexps default
+to @samp{[ \t\n\r]+}.
+
+@xref{Creating Strings,,,elisp}.
+
+The compatibility version handles the optional arguments @var{trim-left}
+and @var{trim-right}.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 26.1:
+
+@itemize
+@item
+The function @code{func-arity}.
+@item
+The function @code{secure-hash-algorithms}.
+@item
+The function @code{gnutls-available-p}.
+@item
+Support for records and record functions.
+@item
+The function @code{mapbacktrace}.
+@item
+The function @code{file-name-case-insensitive-p}.
+@item
+The additional elements of @code{parse-partial-sexp}.
+@item
+The function @code{add-variable-watcher}.
+@item
+The function @code{undo-amalgamate-change-group}.
+@item
+The function @code{char-from-name}
+@item
+Signalling errors when @code{length} or @code{member} deal with list
+cycles.
+@item
+The function @code{frame-list-z-order}.
+@item
+The function @code{frame-restack}.
+@item
+All changes related to @code{display-buffer}.
+@item
+The function @code{window-swap-states}.
+@item
+The function @code{string-version-lessp}.
+@item
+The @code{xdg} library.
+@item
+The @code{svg} library (published separately as a :core package).
+@end itemize
+
+@node Emacs 27.1
+@section Emacs 27.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+27.1. These functions are made available by Compat on Emacs versions
+older than 27.1.
+
+@c copied from lispref/modes.texi
+@defun major-mode-suspend
+This function works like @code{fundamental-mode}, in that it kills all
+buffer-local variables, but it also records the major mode in effect,
+so that it could subsequently be restored.  This function and
+@code{major-mode-restore} (described next) are useful when you need to
+put a buffer under some specialized mode other than the one Emacs
+chooses for it automatically, but would also like to be able to switch
+back to the original mode later.
+@end defun
+
+@c copied from lispref/modes.texi
+@defun major-mode-restore &optional avoided-modes
+This function restores the major mode recorded by
+@code{major-mode-suspend}.  If no major mode was recorded, this
+function calls @code{normal-mode}, but tries to force it not to choose
+any modes in @var{avoided-modes}, if that argument is non-@code{nil}.
+@end defun
+
+@c copied from lispref/sequences.texi
+@defun ring-resize ring size
+Set the size of @var{ring} to @var{size}.  If the new size is smaller,
+then the oldest items in the ring are discarded.
+@end defun
+
+@c based on lisp/simple.el
+@defun minibuffer-history-value
+Return the value of the minibuffer input history list.  If
+@var{minibuffer-history-variable} points to a buffer-local variable
+and the minibuffer is active, return the buffer-local value for the
+buffer that was current when the minibuffer was activated."
+@end defun
+
+@c based on lisp/minibuffer.el
+@defmac with-minibuffer-selected-window &rest body
+Execute the forms in @var{body} from the minibuffer in its original
+window. When used in a minibuffer window, select the window selected
+just before the minibuffer was activated, and execute the forms.
+@end defmac
+
+@c copied from lispref/minbuf.texi
+@defun read-char-from-minibuffer prompt &optional chars history
+This function uses the minibuffer to read and return a single
+character.  Optionally, it ignores any input that is not a member of
+@var{chars}, a list of accepted characters.  The @var{history}
+argument specifies the history list symbol to use; if it is omitted or
+@code{nil}, this function doesn't use the history.
+
+If you bind @code{help-form} to a non-@code{nil} value while calling
+@code{read-char-from-minibuffer}, then pressing @code{help-char}
+causes it to evaluate @code{help-form} and display the result.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defun bignump object
+This predicate tests whether its argument is a large integer, and
+returns @code{t} if so, @code{nil} otherwise.  Unlike small integers,
+large integers can be @code{=} or @code{eql} even if they are not
+@code{eq}.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defun fixnump object
+This predicate tests whether its argument is a small integer, and
+returns @code{t} if so, @code{nil} otherwise.  Small integers can be
+compared with @code{eq}.
+@end defun
+
+@c copied from lispref/compile.texi
+@defspec with-suppressed-warnings warnings body@dots{}
+In execution, this is equivalent to @code{(progn @var{body}...)}, but
+the compiler does not issue warnings for the specified conditions in
+@var{body}.  @var{warnings} is an association list of warning symbols
+and function/variable symbols they apply to.  For instance, if you
+wish to call an obsolete function called @code{foo}, but want to
+suppress the compilation warning, say:
+
+@lisp
+(with-suppressed-warnings ((obsolete foo))
+  (foo ...))
+@end lisp
+@end defspec
+
+@c copied from lispref/lists.texi
+@defun proper-list-p object
+This function returns the length of @var{object} if it is a proper list,
+@code{nil} otherwise (@pxref{Cons Cells,,,elisp}).  In addition to
+satisfying @code{listp}, a proper list is neither circular nor dotted.
+
+@example
+@group
+(proper-list-p '(a b c)) @result{} 3
+@end group
+@group
+(proper-list-p '(a b . c)) @result{} nil
+@end group
+@end example
+
+@xref{List-related Predicates,,,elisp}.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-distance string1 string2 &optional bytecompare
+This function returns the @emph{Levenshtein distance} between the source
+string @var{string1} and the target string @var{string2}.  The
+Levenshtein distance is the number of single-character
+changes---deletions, insertions, or replacements---required to transform
+the source string into the target string; it is one possible definition
+of the @emph{edit distance} between strings.
+
+Letter-case of the strings is significant for the computed distance, but
+their text properties are ignored.  If the optional argument
+@var{bytecompare} is non-@code{nil}, the function calculates the
+distance in terms of bytes instead of characters.  The byte-wise
+comparison uses the internal Emacs representation of characters, so it
+will produce inaccurate results for multibyte strings that include raw
+bytes (@pxref{Text Representations,,,elisp}); make the strings unibyte
+by encoding them (@pxref{Explicit Encoding,,,elisp}) if you need
+accurate results with raw bytes.
+
+@xref{Text Comparison,,,elisp}.
+@end defun
+
+@c copied from lispref/control.texi
+@defmac ignore-errors body@dots{}
+This construct executes @var{body}, ignoring any errors that occur
+during its execution.  If the execution is without error,
+@code{ignore-errors} returns the value of the last form in @var{body};
+otherwise, it returns @code{nil}.
+
+Here's the example at the beginning of this subsection rewritten using
+@code{ignore-errors}:
+
+@example
+@group
+  (ignore-errors (delete-file filename))
+@end group
+@end example
+
+@xref{Handling Errors,,,elisp}.
+@end defmac
+
+@c copied from lispref/display.texi
+@defmac dolist-with-progress-reporter (var count [result]) reporter-or-message body@dots{}
+This is another convenience macro that works the same way as
+@code{dolist} does, but also reports loop progress using the functions
+described above.  As in @code{dotimes-with-progress-reporter},
+@code{reporter-or-message} can be a progress reporter or a string.  You
+can rewrite the previous example with this macro as follows:
+
+@example
+@group
+(dolist-with-progress-reporter (k (number-sequence 0 500)) "Collecting
+    some mana for Emacs..."  (sit-for 0.01))
+@end group
+@end example
+
+@xref{Progress,,,elisp}.
+@end defmac
+
+@c copied from lispref/lists.texi
+@defun flatten-tree tree
+This function returns a ``flattened'' copy of @var{tree}, that is, a
+list containing all the non-@code{nil} terminal nodes, or leaves, of the
+tree of cons cells rooted at @var{tree}.  Leaves in the returned list
+are in the same order as in @var{tree}.
+
+@example
+(flatten-tree '(1 (2 . 3) nil (4 5 (6)) 7)) @result{}(1 2 3 4 5 6 7)
+@end example
+
+@xref{Building Lists,,,elisp}.
+@end defun
+
+@c copied from lispref/control.texi
+@defun xor condition1 condition2
+This function returns the boolean exclusive-or of @var{condition1} and
+@var{condition2}.  That is, @code{xor} returns @code{nil} if either both
+arguments are @code{nil}, or both are non-@code{nil}.  Otherwise, it
+returns the value of that argument which is non-@code{nil}.
+
+Note that in contrast to @code{or}, both arguments are always evaluated.
+
+@xref{Combining Conditions,,,elisp}.
+@end defun
+
+@defvar regexp-unmatchable
+This variable contains a regexp that is guaranteed not to match any
+string at all.  It is particularly useful as default value for variables
+that may be set to a pattern that actually matches something.
+
+@xref{Regexp Functions,,,elisp}
+@end defvar
+
+@defun decoded-time-second time
+Return the @var{seconds} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-minute time
+Return the @var{minute} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-hour time
+Return the @var{hour} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-day time
+Return the @var{day} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-month time
+Return the @var{month} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-year time
+Return the @var{year} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-weekday time
+Return the @var{weekday} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@defun decoded-time-dst time
+Return the @var{dst} (daylight saving time indicator) field of a
+@code{decoded-time} record @var{time}. It can also be used as a
+@ref{generalised variable,Generalized Variables,,elisp}.
+@end defun
+
+@defun decoded-time-zone time
+Return the @var{zone} field of a @code{decoded-time} record @var{time}.
+It can also be used as a @ref{generalised variable,Generalized
+Variables,,elisp}.
+@end defun
+
+@c copied from lisp/emacs-lisp/package.el
+@defun package-get-version
+Return the version number of the package in which this is used.
+@end defun
+
+@c copied from lispref/os.texi
+@defun time-equal-p t1 t2
+This returns @code{t} if the two time values @var{t1} and @var{t2} are
+equal.
+
+@xref{Time Calculations,,,elisp}.
+@end defun
+
+@defun date-days-in-month year month
+Return the number of days in @var{month} in @var{year}.  For instance,
+February 2020 has 29 days.
+
+@xref{Time Calculations,,,elisp}.  This function requires the
+@code{time-date} feature to be loaded.
+@end defun
+
+@defun date-ordinal-to-time year ordinal
+Convert a @var{year}/@var{ordinal} to the equivalent decoded-time
+structure. @var{ordinal} is the number of days since the start of the
+year, with January 1st being 1.
+
+@xref{Time Calculations,,,elisp}.  This function requires the
+@code{time-date} feature to be loaded.
+@end defun
+
+@defopt exec-path
+The value of this variable is a list of directories to search for
+programs to run in subprocesses.  Each element is either the name of a
+directory (i.e., a string), or @code{nil}, which stands for the default
+directory (which is the value of @code{default-directory}).
+@xref{Locating Files, executable-find,,elisp}, for the details of this
+search.
+@cindex program directories
+
+The value of @code{exec-path} is used by @code{call-process} and
+@code{start-process} when the @var{program} argument is not an absolute
+file name.
+
+Generally, you should not modify @code{exec-path} directly.  Instead,
+ensure that your @env{PATH} environment variable is set appropriately
+before starting Emacs.  Trying to modify @code{exec-path} independently
+of @env{PATH} can lead to confusing results.
+
+@xref{Subprocess Creation,,,elisp}.
+@end defopt
+
+@c based on lisp/modes.el
+@defun provided-mode-derived-p mode &rest modes
+This function returns non-@code{nil} if @var{mode} is derived from any
+of the major modes given by the symbols @var{modes}.
+@end defun
+
+@c based on lisp/files.texi
+@defun file-size-human-readable-iec size
+Human-readable string for @var{size} bytes, using IEC prefixes.
+@end defun
+
+@c based on lispref/files.texi
+@defun make-empty-file filename &optional parents
+This function creates an empty file named @var{filename}.  As
+@code{make-directory}, this function creates parent directories if
+@var{parents} is non-@code{nil}.  If @var{filename} already exists, this
+function signals an error.
+@end defun
+
+@defun text-property-search-forward prop &optional value predicate not-current
+Search for the next region that has text property @var{prop} set to
+@var{value} according to @var{predicate}.
+
+This function is modeled after @code{search-forward} and friends in
+that it moves point, but it returns a structure that describes the
+match instead of returning it in @code{match-beginning} and friends.
+
+If the text property can't be found, the function returns @code{nil}.
+If it's found, point is placed at the end of the region that has this
+text property match, and a @code{prop-match} structure is returned.
+
+@var{predicate} can either be @code{t} (which is a synonym for
+@code{equal}), @code{nil} (which means ``not equal''), or a predicate
+that will be called with two parameters: The first is @var{value}, and
+the second is the value of the text property we're inspecting.
+
+If @var{not-current}, if point is in a region where we have a match,
+then skip past that and find the next instance instead.
+
+The @code{prop-match} structure has the following accessors:
+@code{prop-match-beginning} (the start of the match),
+@code{prop-match-end} (the end of the match), and
+@code{prop-match-value} (the value of @var{property} at the start of
+the match).
+
+In the examples below, imagine that you're in a buffer that looks like
+this:
+
+@example
+This is a bold and here's bolditalic and this is the end.
+@end example
+
+That is, the ``bold'' words are the @code{bold} face, and the
+``italic'' word is in the @code{italic} face.
+
+With point at the start:
+
+@lisp
+(while (setq match (text-property-search-forward 'face 'bold t))
+  (push (buffer-substring (prop-match-beginning match)
+                          (prop-match-end match))
+        words))
+@end lisp
+
+This will pick out all the words that use the @code{bold} face.
+
+@lisp
+(while (setq match (text-property-search-forward 'face nil t))
+  (push (buffer-substring (prop-match-beginning match)
+                          (prop-match-end match))
+        words))
+@end lisp
+
+This will pick out all the bits that have no face properties, which
+will result in the list @samp{("This is a " "and here's " "and this is
+the end")} (only reversed, since we used @code{push}).
+
+@lisp
+(while (setq match (text-property-search-forward 'face nil nil))
+  (push (buffer-substring (prop-match-beginning match)
+                          (prop-match-end match))
+        words))
+@end lisp
+
+This will pick out all the regions where @code{face} is set to
+something, but this is split up into where the properties change, so
+the result here will be @samp{("bold" "bold" "italic")}.
+
+For a more realistic example where you might use this, consider that
+you have a buffer where certain sections represent URLs, and these are
+tagged with @code{shr-url}.
+
+@lisp
+(while (setq match (text-property-search-forward 'shr-url nil nil))
+  (push (prop-match-value match) urls))
+@end lisp
+
+This will give you a list of all those URLs.
+
+@xref{elisp,,,Property Search}.
+@end defun
+
+@defun text-property-search-backward prop &optional value predicate not-current
+This is just like @code{text-property-search-forward}, but searches
+backward instead.  Point is placed at the beginning of the matched
+region instead of the end, though.
+
+@xref{elisp,,,Property Search}.
+@end defun
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 27.1:
+
+@c based on lispref/windows.texi
+@defun compat-call@ recenter &optional count redisplay
+This function scrolls the text in the selected window so that point is
+displayed at a specified vertical position within the window.  It does
+not move point with respect to the text.
+
+@xref{Textual Scrolling,,,elisp}.
+
+This compatibility version adds support for the optional argument
+@var{redisplay}.
+@end defun
+
+@c based on lispref/keymaps.texi
+@defun compat-call@ lookup-key keymap key &optional accept-defaults
+This function returns the definition of @var{key} in @var{keymap}.  If
+the string or vector @var{key} is not a valid key sequence according
+to the prefix keys specified in @var{keymap}, it must be too long and
+have extra events at the end that do not fit into a single key
+sequence.  Then the value is a number, the number of events at the
+front of @var{key} that compose a complete key.
+
+@xref{Low-Level Key Binding,,,elisp}.
+
+This compatibility version allows for @var{keymap} to be a list of
+keymaps, instead of just a singular keymap.
+@end defun
+
+@c based on lispref/variables.texi
+@defmac compat-call@ setq-local &rest pairs
+@var{pairs} is a list of variable and value pairs.  This macro creates
+a buffer-local binding in the current buffer for each of the
+variables, and gives them a buffer-local value.  It is equivalent to
+calling @code{make-local-variable} followed by @code{setq} for each of
+the variables.  The variables should be unquoted symbols.
+
+@lisp
+(setq-local var1 "value1"
+            var2 "value2")
+@end lisp
+
+@xref{Creating Buffer-Local,,,elisp}.
+
+This compatibility version allows for more than one variable to be set
+at once, as can be done with @code{setq}.
+@end defmac
+
+@c based on lispref/searching.texi
+@defun compat-call@ regexp-opt strings &optional paren
+This function returns an efficient regular expression that will match
+any of the strings in the list @var{strings}.  This is useful when you
+need to make matching or searching as fast as possible---for example,
+for Font Lock mode.
+
+@xref{Regexp Functions,,,elisp}.
+
+The compatibility version of this functions handles the case where
+@var{strings} in an empty list.  In that case, a regular expression is
+generated that never matches anything (see @code{regexp-unmatchable}).
+@end defun
+
+@c based on lisp/files.texi
+@defun compat-call@ file-size-human-readable file-size &optional flavor space unit
+Return a string with a human readable representation of @var{file-size}.
+
+The optional second argument @var{flavor} controls the units and the
+display format.  If @var{flavor} is@dots{}
+
+@itemize
+@item
+@code{si}, each kilobyte is 1000 bytes and the produced suffixes are
+@code{k}, @code{M}, @code{G}, @code{T}, etc.
+@item
+@code{iec}, each kilobyte is 1024 bytes and the produced suffixes are
+@code{KiB}, @code{MiB}, @code{GiB}, @code{TiB}, etc.
+@item
+@code{nil} or omitted, each kilobyte is 1024 bytes and the produced
+suffixes are @code{k}, @code{M}, @code{G}, @code{T}, etc.
+@end itemize
+
+The compatibility version handles the optional third (@var{space}) and
+forth (@var{unit}) arguments.  The argument @var{space} can be a
+string that is placed between the number and the unit.  The argument
+@var{unit} determines the unit to use.  By default it will be an empty
+string, unless @var{flavor} is @code{iec}, in which case it will be
+@code{B}.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun compat-call@ assoc-delete-all key alist &optional test
+This function is like @code{assq-delete-all} except that it accepts
+an optional argument @var{test}, a predicate function to compare the
+keys in @var{alist}.  If omitted or @code{nil}, @var{test} defaults to
+@code{equal}.  As @code{assq-delete-all}, this function often modifies
+the original list structure of @var{alist}.
+
+@xref{Association Lists,,,elisp}.
+
+This compatibility version handles the optional third (@var{testfn})
+argument.
+@end defun
+
+@c copied from lispref/files.texi
+@defun compat-call@ executable-find program &optional remote
+This function searches for the executable file of the named
+@var{program} and returns the absolute file name of the executable,
+including its file-name extensions, if any.  It returns @code{nil} if
+the file is not found.  The function searches in all the directories in
+@code{exec-path}, and tries all the file-name extensions in
+@code{exec-suffixes} (@pxref{Subprocess Creation,,,elisp}).
+
+If @var{remote} is non-@code{nil}, and @code{default-directory} is a
+remote directory, @var{program} is searched on the respective remote host.
+
+@xref{Locating Files,,,elisp}.
+
+This compatibility version adds support to handle the optional second
+(@var{remote}) argument.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 27.1:
+
+@itemize
+@item
+The functions @code{base64url-encode-*}.
+@item
+The function @code{decoded-time-add}.
+@item
+The function @code{decoded-time-set-defaults}.
+@item
+The function @code{time-convert}.
+@item
+The macro @code{benchmark-progn}.
+@item
+Support for @code{condition-case} to handle t.
+@item
+The function @code{file-system-info}.
+@item
+The function @code{group-name}.
+@item
+The function @code{face-extend-p} and @code{set-face-extend}.
+@item
+Additional @code{format-spec} modifiers.
+@item
+Support for additional body forms for
+@code{define-globalized-minor-mode}.
+@item
+The macro @code{with-connection-local-variables} and related
+functionality.
+@item
+The @code{iso8601} library.
+@item
+The @code{exif} library.
+@item
+The @code{image-converter} library.
+@end itemize
+
+@node Emacs 28.1
+@section Emacs 28.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+28.1. These functions are made available by Compat on Emacs versions
+older than 28.1.
+
+The @code{defcustom} type @code{natnum} and the @code{pcase} pattern
+@code{cl-type} introduced in Emacs 28.1 are made available by Compat.
+
+@c copied from lispref/processes.texi
+@defun process-lines-ignore-status program &rest args
+This function is just like @code{process-lines}, but does not signal
+an error if @var{program} exits with a non-zero exit status.
+@end defun
+
+@c based on lisp/subr.el
+@defun process-lines-handling-status program status-handler &rest args
+Execute @var{program} with @var{args}, returning its output as a list
+of lines. If @var{status-handler} is non-nil, it must be a function
+with one argument, which will be called with the exit status of the
+program before the output is collected.  If @var{status-handler} is
+nil, an error is signaled if the program returns with a non-zero exit
+status.
+@end defun
+
+@c copied from lispref/help.texi
+@defun text-quoting-style
+You should not read the value of the variable
+@code{text-quoting-style} directly.  Instead, use this function with
+the same name to dynamically compute the correct quoting style on the
+current terminal in the @code{nil} case described above.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-search needle haystack &optional start-pos
+Return the position of the first instance of @var{needle} in
+@var{haystack}, both of which are strings.  If @var{start-pos} is
+non-@code{nil}, start searching from that position in @var{needle}.
+Return @code{nil} if no match was found.  This function only considers
+the characters in the strings when doing the comparison; text
+properties are ignored.  Matching is always case-sensitive.
+@end defun
+
+@c copied from lispref/sequences.texi
+@defun length= sequence length
+Return non-@code{nil} if the length of @var{sequence} is equal to
+@var{length}.
+@end defun
+
+@c copied from lispref/sequences.texi
+@defun length< sequence length
+Return non-@code{nil} if @var{sequence} is shorter than @var{length}.
+This may be more efficient than computing the length of @var{sequence}
+if @var{sequence} is a long list.
+@end defun
+
+@c copied from lispref/sequences.texi
+@defun length> sequence length
+Return non-@code{nil} if @var{sequence} is longer than @var{length}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-name-concat directory &rest components
+Concatenate @var{components} to @var{directory}, inserting a slash
+before the components if @var{directory} or the preceding component
+didn't end with a slash.
+
+@example
+@group
+(file-name-concat "/tmp" "foo") @result{} "/tmp/foo"
+@end group
+@end example
+
+A @var{directory} or components that are @code{nil} or the empty
+string are ignored---they are filtered out first and do not affect the
+results in any way.
+
+This is almost the same as using @code{concat}, but @var{dirname} (and
+the non-final components) may or may not end with slash characters,
+and this function will not double those characters.
+@end defun
+
+@c based on src/alloc.c
+@defun garbage-collect-maybe factor
+Suggest to run garbage collection, if @emph{enough} data has been
+allocated.  This is determined by the positive numerical argument
+@var{factor}, that would proportionally increase the likelihood of
+garbage collection taking place.
+
+This compatibility function does nothing and ignores any suggestion.
+@end defun
+
+@c copied from lispref/searching.texi
+@defun string-replace from-string to-string in-string
+This function replaces all occurrences of @var{from-string} with
+@var{to-string} in @var{in-string} and returns the result.  It may
+return one of its arguments unchanged, a constant string or a new
+string.  Case is significant, and text properties are ignored.
+@end defun
+
+@c copied from lispef/functions.texi
+@defun always &rest arguments
+This function ignores any @var{arguments} and returns @code{t}.
+
+@xref{Calling Functions,,,elisp}.
+@end defun
+
+@defun make-separator-line &optional length
+Make a string appropriate for usage as a visual separator line.
+If @var{length} is nil, use the window width.
+@end defun
+
+@c copied from lispref/text.texi
+@defun insert-into-buffer to-buffer &optional start end
+This is like @code{insert-buffer-substring}, but works in the opposite
+direction: The text is copied from the current buffer into
+@var{to-buffer}.  The block of text is copied to the current point in
+@var{to-buffer}, and point (in that buffer) is advanced to after the
+end of the copied text.  Is @code{start}/@code{end} is @code{nil}, the
+entire text in the current buffer is copied over.
+
+@xref{Insertion,,,elisp}.
+@end defun
+
+@c copied from lispref/searching.texi
+@defun replace-string-in-region string replacement &optional start end
+  This function works similarly to @code{replace-regexp-in-region},
+but searches for, and replaces, literal @var{string}s instead of
+regular expressions.
+@end defun
+
+@c copied from lispref/searching.texi
+@defun replace-regexp-in-string regexp rep string &optional fixedcase literal subexp start
+This function copies @var{string} and searches it for matches for
+@var{regexp}, and replaces them with @var{rep}.  It returns the
+modified copy.  If @var{start} is non-@code{nil}, the search for
+matches starts at that index in @var{string}, and the returned value
+does not include the first @var{start} characters of @var{string}.
+To get the whole transformed string, concatenate the first
+@var{start} characters of @var{string} with the return value.
+
+This function uses @code{replace-match} to do the replacement, and it
+passes the optional arguments @var{fixedcase}, @var{literal} and
+@var{subexp} along to @code{replace-match}.
+
+Instead of a string, @var{rep} can be a function.  In that case,
+@code{replace-regexp-in-string} calls @var{rep} for each match,
+passing the text of the match as its sole argument.  It collects the
+value @var{rep} returns and passes that to @code{replace-match} as the
+replacement string.  The match data at this point are the result
+of matching @var{regexp} against a substring of @var{string}.
+@end defun
+
+@c copied from lispref/variables
+@defun buffer-local-boundp variable buffer
+This returns non-@code{nil} if there's either a buffer-local binding
+of @var{variable} (a symbol) in buffer @var{buffer}, or @var{variable}
+has a global binding.
+
+@xref{Creating Buffer-Local,,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defmac with-existing-directory body@dots{}
+This macro ensures that @code{default-directory} is bound to an
+existing directory before executing @var{body}.  If
+@code{default-directory} already exists, that's preferred, and
+otherwise some other directory is used.  This macro can be useful, for
+instance, when calling an external command that requires that it's
+running in a directory that exists.  The chosen directory is not
+guaranteed to be writable.
+
+@xref{Testing Accessibility,,,elisp}.
+@end defmac
+
+@c copied from lispref/variables.texi
+@defmac dlet (bindings@dots{}) forms@dots{}
+This special form is like @code{let}, but it binds all variables
+dynamically.  This is rarely useful---you usually want to bind normal
+variables lexically, and special variables (i.e., variables that are
+defined with @code{defvar}) dynamically, and this is what @code{let}
+does.
+
+@code{dlet} can be useful when interfacing with old code that assumes
+that certain variables are dynamically bound (@pxref{Dynamic
+Binding,,,elisp}), but it's impractical to @code{defvar} these
+variables.  @code{dlet} will temporarily make the bound variables
+special, execute the forms, and then make the variables non-special
+again.
+
+@xref{Local Variables,,,elisp}.
+@end defmac
+
+@c copied from lispref/lists.texi
+@defun ensure-list object
+This function returns @var{object} as a list.  If @var{object} is
+already a list, the function returns it; otherwise, the function
+returns a one-element list containing @var{object}.
+
+This is usually useful if you have a variable that may or may not be a
+list, and you can then say, for instance:
+
+@lisp
+(dolist (elem (ensure-list foo))
+  (princ elem))
+@end lisp
+
+@xref{Building Lists,,,elisp}.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-clean-whitespace string
+Clean up the whitespace in @var{string} by collapsing stretches of
+whitespace to a single space character, as well as removing all
+whitespace from the start and the end of @var{string}.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-fill string length
+Attempt to Word-wrap @var{string} so that no lines are longer than
+@var{length}.  Filling is done on whitespace boundaries only.  If
+there are individual words that are longer than @var{length}, these
+will not be shortened.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-lines string &optional omit-nulls
+Split @var{string} into a list of strings on newline boundaries.  If
+the optional argument @var{omit-nulls} is non-@code{nil}, remove empty
+lines from the results.  Note that this function returns trailing
+newlines on Emacs 28, use @code{compat-call string-lines} instead if
+you want consistent behavior.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-pad string length &optional padding start
+Pad @var{string} to be of the given @var{length} using @var{padding}
+as the padding character.  @var{padding} defaults to the space
+character.  If @var{string} is longer than @var{length}, no padding is
+done.  If @var{start} is @code{nil} or omitted, the padding is
+appended to the characters of @var{string}, and if it's
+non-@code{nil}, the padding is prepended to @var{string}'s characters.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-chop-newline string
+Remove the final newline, if any, from @var{string}.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c based on lispref/variables.texi
+@defmac named-let name bindings &rest body
+This special form is a looping construct inspired from the Scheme
+language.  It is similar to @code{let}: It binds the variables in
+@var{bindings}, and then evaluates @var{body}.  However,
+@code{named-let} also binds @var{name} to a local function whose
+formal arguments are the variables in @var{bindings} and whose body is
+@var{body}.  This allows @var{body} to call itself recursively by
+calling @var{name}, where the arguments passed to @var{name} are used
+as the new values of the bound variables in the recursive invocation.
+
+Recursive calls to @var{name} that occur in @emph{tail positions} in
+@var{body} are guaranteed to be optimized as @emph{tail calls}, which
+means that they will not consume any additional stack space no matter
+how deeply the recursion runs.  Such recursive calls will effectively
+jump to the top of the loop with new values for the variables.
+
+@xref{Local Variables,,,elisp}.
+@end defmac
+
+@c copied from lispref/files.texi
+@defun file-name-with-extension filename extension
+This function returns @var{filename} with its extension set to
+@var{extension}.  A single leading dot in the @var{extension} will be
+stripped if there is one.  For example:
+
+@example
+(file-name-with-extension "file" "el")
+     @result{} "file.el"
+(file-name-with-extension "file" ".el")
+     @result{} "file.el"
+(file-name-with-extension "file.c" "el")
+     @result{} "file.el"
+@end example
+
+Note that this function will error if @var{filename} or
+@var{extension} are empty, or if the @var{filename} is shaped like a
+directory (i.e., if @code{directory-name-p} returns non-@code{nil}).
+
+@xref{File Name Components,File Name Components,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun directory-empty-p directory
+This utility function returns @code{t} if given @var{directory} is an
+accessible directory and it does not contain any files, i.e., is an
+empty directory.  It will ignore @samp{.} and @samp{..} on systems
+that return them as files in a directory.
+
+Symbolic links to directories count as directories.
+See @var{file-symlink-p} to distinguish symlinks.
+
+@xref{Contents of Directories,,,elisp}.
+@end defun
+
+@c copied from lispref/minibuf.texi
+@defun format-prompt prompt default &rest format-args
+Format @var{prompt} with default value @var{default} according to the
+@code{minibuffer-default-prompt-format} variable.
+
+@code{minibuffer-default-prompt-format} is a format string (defaulting
+to @samp{" (default %s)"} that says how the ``default'' bit in prompts
+like @samp{"Local filename (default somefile): "} are to be formatted.
+
+To allow the users to customize how this is displayed, code that
+prompts the user for a value (and has a default) should look something
+along the lines of this code snippet:
+
+@lisp
+(read-file-name
+ (format-prompt "Local filename" file)
+ nil file)
+@end lisp
+
+If @var{format-args} is @code{nil}, @var{prompt} is used as a literal
+string.  If @var{format-args} is non-@code{nil}, @var{prompt} is used
+as a format control string, and @var{prompt} and @var{format-args} are
+passed to @code{format} (@pxref{Formatting Strings,,,elisp}).
+
+@code{minibuffer-default-prompt-format} can be @samp{""}, in which
+case no default values are displayed.
+
+If @var{default} is @code{nil}, there is no default value, and
+therefore no ``default value'' string is included in the result value.
+If @var{default} is a non-@code{nil} list, the first element of the
+list is used in the prompt.
+
+@xref{Text from Minibuffer,,,elisp}.
+@end defun
+
+@c based on lisp/thingatpt.el
+@defun thing-at-mouse event thing &optional no-properties
+Mouse-@var{event} equivalent of @code{thing-at-point}.  @var{thing} can
+be @code{symbol}, @code{list}, @code{sexp}, @code{filename}, @code{url},
+@dots{} among other things.
+
+When @var{no-properties} has a non-@code{nil} value, any text properties
+that might have been present in the buffer are stripped away.
+@end defun
+
+@c based on lisp/thingatpt.el
+@defun bounds-of-thing-at-mouse event thing
+Determine start and end locations for @var{thing} at mouse click given
+by @var{event}.  Like @code{bounds-of-thing-at-point}, but tries to use
+the position in @var{event} where the mouse button is clicked to find
+the thing nearby.
+@end defun
+
+@c based on lisp/mouse.el
+@defun mark-thing-at-mouse click thing
+Activate the region around @var{thing} found near the mouse @var{click}.
+@end defun
+
+@c based on lisp/emacs-lisp/macroexp.el
+@defun macroexp-file-name
+Return the name of the file in which the code is currently being
+evaluated, or @code{nil} if it cannot be determined.
+@end defun
+
+@c based on lisp/emacs-lisp/macroexp.el
+@defun macroexp-warn-and-return msg form &optional category compile-only arg
+Return code equivalent to @code{form} labeled with warning @code{msg}.
+@end defun
+
+@c copied from on lispref/os.texi
+@defmac with-environment-variables variables body@dots{}
+This macro sets the environment variables according to @var{variables}
+temporarily when executing @var{body}.  The previous values are
+restored when the form finishes.  The argument @var{variables} should
+be a list of pairs of strings of the form
+@w{@code{(@var{var} @var{value})}}, where @var{var} is the name of the
+environment variable and @var{value} is that variable's value.
+
+@lisp
+(with-environment-variables (("LANG" "C")
+                             ("LANGUAGE" "en_US:en"))
+  (call-process "ls" nil t))
+@end lisp
+
+@xref{System Environment,System Environment,,elisp}.
+@end defmac
+
+@c based on lisp/faces.el
+@defun color-dark-p rgb
+Whether @var{rgb} is more readable against white than black. @var{rgb}
+is a 3-element list (R G B), each component in the range [0,1].  This
+predicate can be used both for determining a suitable (black or white)
+contrast color with @var{rgb} as background and as foreground.
+@end defun
+
+@c based on src/xfaces.c
+@defun color-values-from-color-spec spec
+Convert the textual color specification @var{spec} to a color triple
+@code{(@var{red} @var{green} @code{blue})}.  Each of @var{red},
+@var{green} and @code{blue} is a integer value between 0 and 65535.
+
+The specification @var{spec} can be one of the following
+@itemize
+@item
+@code{#RGB}, where R, G and B are hex numbers of equal length, 1-4 digits each.
+@item
+@code{rgb:R/G/B}, where R, G, and B are hex numbers, 1-4 digits each.
+@item
+@code{rgbi:R/G/B}, where R, G and B are floating-point numbers in [0,1].
+@end itemize
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-modes-number-to-symbolic modes
+This function converts a numeric file mode specification in
+@var{modes} into the equivalent symbolic form.
+
+@xref{Changing Files,Changing Files,,elisp}.
+@end defun
+
+@c copied from lispref/backups.texi
+@defun file-backup-file-names filename
+This function returns a list of all the backup file names for
+@var{filename}, or @code{nil} if there are none.  The files are sorted
+by modification time, descending, so that the most recent files are
+first.
+
+@xref{Backup Names,,,elisp}.
+@end defun
+
+@c based on lisp/files.el
+@defun make-lock-file-name filename
+Return a string containing a lock file name for @var{filename}, obeying
+@code{lock-file-name-transforms}.
+@end defun
+
+@c copied from lisp/calendar/time-date.el
+@defun decoded-time-period time
+Interpret @var{time} as a period and return its length in seconds.  For
+computational purposes, years are 365 days long and months are 30 days
+long.
+@end defun
+
+@c based on lisp/subr.el
+@defun subr-primitive-p object
+Return @code{t} if @var{object} is a primitive, built-in function.  On
+systems with native compilation @code{subrp} does not distinguish
+between built-in functions and functions that have been compiled.  If
+native compilation is not available, this function behaves identically
+to @code{subrp}.
+@end defun
+
+@c copied from lispref/compile.texi
+@defun native-comp-available-p
+This function returns non-@code{nil} if the running Emacs process has
+the native-compilation support compiled into it.  On systems that load
+@file{libgccjit} dynamically, it also makes sure that library is
+available and can be loaded.  Lisp programs that need to know up front
+whether native-compilation is available should use this predicate.
+@end defun
+
+@c copied from on lisp/window.el
+@defmac with-window-non-dedicated window &rest body
+Evaluate @var{body} with @var{window} temporarily made non-dedicated.
+If @var{window} is nil, use the selected window.  Return the value of
+the last form in @var{body}.
+@end defmac
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 28.1:
+
+@defun compat-call@ string-width string &optional from to
+This function returns the width in columns of the string @var{string},
+if it were displayed in the current buffer and the selected window.
+Optional arguments @var{from} and @var{to} specify the substring of
+@var{string} to consider, and are interpreted as in @code{substring}
+(@pxref{Creating Strings,,,elisp}).
+
+The return value is an approximation: it only considers the values
+returned by @code{char-width} for the constituent characters, always
+takes a tab character as taking @code{tab-width} columns, ignores
+display properties and fonts, etc.
+
+@xref{Size of Displayed Text,,,elisp}.
+
+This compatibility version handles the optional arguments @var{from} and
+@var{to}.
+@end defun
+
+@c copied from on lisp/window.el
+@defun compat-call@ count-windows
+Return the number of live windows on the selected frame.
+
+The optional argument @var{minibuf} specifies whether the minibuffer
+window is included in the count.
+
+If @var{all-frames} is non-@code{nil}, count the windows in all frames
+instead just the selected frame.
+
+This compatibility version handles the optional argument
+@var{all-frames}.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 28.1:
+
+@itemize
+@item
+Support for @code{interactive} or @code{declare} to list applicable
+modes.
+@item
+Support for @code{:interactive} argument to @code{define-minor-mode} and
+@code{define-derived-mode}.
+@item
+Support for @code{:predicate} argument to
+@code{define-globalized-minor-mode}.
+@item
+Support for the @code{:success} handler of @code{condition-case}.
+@item
+The function @code{benchmark-call}.
+@item
+Additional Edebug keywords.
+@item
+The libjansson JSON APIs, e.g., @code{json-parse-string}.
+@item
+The macro @code{pcase-setq}.
+@item
+The function @code{custom-add-choice}.
+@item
+The functions @code{dom-print} and @code{dom-remove-attribute}.
+@item
+The function @code{dns-query-asynchronous}.
+@item
+The function @code{get-locale-names}.
+@item
+The functions @code{mail-header-parse-addresses-lax} and
+@code{mail-header-parse-address-lax}.
+@item
+The function @code{num-processors}.
+@item
+The function @code{object-intervals}.
+@item
+The function @code{require-theme}.
+@item
+The function @code{syntax-class-to-char}.
+@item
+The function @code{path-separator}.
+@item
+The function @code{null-device}.
+@item
+The function @code{macroexp-compiling-p}.
+@item
+The function @code{split-string-shell-command}.
+@item
+The function @code{string-limit}.
+@item
+The functions @code{innermost-minibuffer-p} and
+@code{minibuffer-innermost-command-loop-p}.
+@item
+The function @code{max-mini-window-lines}.
+@item
+The function @code{lock-file} and @code{unlock-file}.
+@item
+The @code{multisession} library.
+@end itemize
+
+@node Emacs 29.1
+@section Emacs 29.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+29.1. These functions are made available by Compat on Emacs versions
+older than 29.1.  Note that due to upstream changes, it might happen
+that there will be the need for changes, so use these functions with
+care.
+
+The @code{defcustom} type @code{key} introduced in Emacs 29.1 is
+made available by Compat.
+
+@defvar untrusted-content
+Non-nil means that current buffer originated from an untrusted source.
+Email clients and some other modes may set this non-nil to mark the
+buffer contents as untrusted. This variable might be subject to change
+without notice.
+@end defvar
+
+@c copied from lispref/loading.texi
+@defvar lisp-directory
+This variable holds a string naming the directory which holds Emacs's
+own @file{*.el} and @file{*.elc} files.  This is usually the place
+where those files are located in the Emacs installation tree, unless
+Emacs is run from its build directory in which case it points to the
+@file{lisp} subdirectory in the source directory from which Emacs was
+built.
+@end defvar
+
+@c based on lisp/textmodes/paragraphs.el
+@defun count-sentences start end
+Count sentences in current buffer from @var{start} to @var{end}.
+@end defun
+
+@c copied from lispref/streams.texi
+@defun readablep object
+This predicate says whether @var{object} has @dfn{readable syntax},
+i.e., it can be written out and then read back by the Emacs Lisp
+reader.  If it can't, this function returns @code{nil}; if it can,
+this function returns a printed representation (via @code{prin1}).
+@end defun
+
+@c copied from lispref/help.texi
+@defun substitute-quotes string
+This function works like @code{substitute-command-keys}, but only
+replaces quote characters.
+@end defun
+
+@c based on lisp/simple.el
+@defun get-scratch-buffer-create
+Return the *scratch* buffer, creating a new one if needed.
+@end defun
+
+@c based on lisp/simple.el
+@defun use-region-noncontiguous-p
+Return non-nil for a non-contiguous region if @code{use-region-p}.
+@end defun
+
+@c based on lisp/simple.el
+@defun use-region-end
+Return the end of the region if @code{use-region-p}.
+@end defun
+
+@c based on lisp/simple.el
+@defun use-region-beginning
+Return the start of the region if @code{use-region-p}.
+@end defun
+
+@c copied from lispref/modes.texi
+@findex buffer-local-restore-state
+@defmac buffer-local-set-state variable value...
+Minor modes often set buffer-local variables that affect some features
+in Emacs.  When a minor mode is switched off, the mode is expected to
+restore the previous state of these variables.  This convenience macro
+helps with doing that: It works much like @code{setq-local}, but
+returns an object that can be used to restore these values back to
+their previous values/states (using the companion function
+@code{buffer-local-restore-state}).
+@end defmac
+
+@c based on lisp/subr.el
+@defun delete-line
+Delete the current line.
+@end defun
+
+@c based on lisp/subr.el
+@defun list-of-strings-p object
+Return @code{t} if @var{object} is @code{nil} or a list of strings.
+@end defun
+
+@c based on lisp/subr.el
+@defun plistp object
+Non-nil if and only if @var{object} is a valid plist.
+@end defun
+
+@c copied from lispref/cl.texi
+@defmac with-memoization @var{place} @var{code}@dots{}
+This macro provides a simple way to do memoization.  @var{code} is
+evaluated and then stashed in @var{place}.  If @var{place}'s value is
+non-@code{nil}, return that value instead of evaluating @var{code}.
+@end defmac
+
+@c copied from lispref/positions.texi
+@defspec with-restriction start end [:label label] body
+This special form saves the current bounds of the accessible portion
+of the buffer, sets the accessible portion to start at @var{start} and
+end at @var{end}, evaluates the @var{body} forms, and restores the
+saved bounds.  In that case it is equivalent to
+
+@example
+(save-restriction
+  (narrow-to-region start end)
+  body)
+@end example
+
+@cindex labeled narrowing
+When the optional argument @var{label}, a symbol, is present, the
+narrowing is @dfn{labeled}.  A labeled narrowing differs from a
+non-labeled one in several ways:
+
+@itemize @bullet
+@item
+During the evaluation of the @var{body} form, @code{narrow-to-region}
+and @code{widen} can be used only within the @var{start} and @var{end}
+limits.
+
+@item
+To lift the restriction introduced by @code{with-restriction} and gain
+access to other portions of the buffer, use @code{without-restriction}
+with the same @var{label} argument.  (Another way to gain access to
+other portions of the buffer is to use an indirect buffer
+(@pxref{Indirect Buffers,,,elisp}).)
+
+@item
+Labeled narrowings can be nested.
+
+@item
+Labeled narrowings can only be used in Lisp programs: they are never
+visible on display, and never interfere with narrowings set by the
+user.
+@end itemize
+
+If you use @code{with-restriction} with the optional @var{label}
+argument, we recommend documenting the @var{label} in the doc strings
+of the functions which use it, so that other Lisp programs your code
+calls could lift the labeled narrowing if and when it needs.
+@end defspec
+
+@c copied from lispref/positions.texi
+@defspec without-restriction [:label label] body
+This special form saves the current bounds of the accessible portion
+of the buffer, widens the buffer, evaluates the @var{body} forms, and
+restores the saved bounds.  In that case it is equivalent to
+
+@example
+(save-restriction
+  (widen)
+  body)
+@end example
+
+When the optional argument @var{label} is present, the narrowing set
+by @code{with-restriction} with the same @var{label} argument is
+lifted.
+@end defspec
+
+@c copied from lispref/positions.texi
+@defun pos-bol &optional count
+Like @code{line-beginning-position}, but ignores fields (and is more
+efficient).
+@end defun
+
+@c copied from lispref/positions.texi
+@defun pos-eol &optional count
+Like @code{line-end-position}, but ignores fields (and is more
+efficient).
+@end defun
+
+@c copied from lispref/display.texi
+@defun char-uppercase-p char
+Return non-@code{nil} if @var{char} is an uppercase character
+according to Unicode.
+@end defun
+
+@c copied from lispref/display.texi
+@defmac with-delayed-message (timeout message) body@dots{}
+Sometimes it's unclear whether an operation will take a long time to
+execute or not, or it can be inconvenient to implement a progress
+reporter.  This macro can be used in those situations.
+
+@lisp
+(with-delayed-message (2 (format "Gathering data for %s" entry))
+  (setq data (gather-data entry)))
+@end lisp
+
+In this example, if the body takes more than two seconds to execute,
+the message will be displayed.  If it takes a shorter time than that,
+the message won't be displayed.  In either case, the body is evaluated
+as normally, and the return value of the final element in the body is
+the return value of the macro.
+
+The @var{message} element is evaluated before @var{body}, and is
+always evaluated, whether the message is displayed or not.
+@end defmac
+
+@c based on src/eval.c
+@defun funcall-with-delayed-message timeout message function
+Like @code{funcall}, but display @var{message} if @var{function} takes
+longer than @var{timeout}.  @var{timeout} is a number of seconds, and
+can be an integer or a floating point number.
+
+If @var{function} takes less time to execute than @var{timeout}
+seconds, @var{message} is not displayed.
+@end defun
+
+@c copied from lispref/display.texi
+@defun buttonize string callback &optional data help-echo
+Sometimes it's more convenient to make a string into a button without
+inserting it into a buffer immediately, for instance when creating
+data structures that may then, later, be inserted into a buffer.  This
+function makes @var{string} into such a string, and @var{callback}
+will be called when the user clicks on the button.  The optional
+@var{data} parameter will be used as the parameter when @var{callback}
+is called.  If @code{nil}, the button is used as the parameter instead.
+@end defun
+
+@c copied from lispref/display.texi
+@defun buttonize-region start end callback &optional data help-echo
+Make the region between @var{start} and @var{end} into a button. When
+clicked, @var{callback} will be called with the @var{data} as the
+function argument. If @var{data} isn't present (or is nil), the button
+itself will be used instead as the function argument. If
+@var{help-echo}, use that as the help-echo property.
+@end defun
+
+@c copied from lispref/display.texi
+@defun get-display-property position prop &optional object properties
+This convenience function can be used to get a specific display
+property, no matter whether the @code{display} property is a vector, a
+list or a simple property.  This is like @code{get-text-property}
+(@pxref{Examining Properties,Examining Properties,,elisp,}), but works
+on the @code{display} property only.
+
+@var{position} is the position in the buffer or string to examine, and
+@var{prop} is the @code{display} property to return.  The optional
+@var{object} argument should be either a string or a buffer, and
+defaults to the current buffer.  If the optional @var{properties}
+argument is non-@code{nil}, it should be a @code{display} property,
+and in that case, @var{position} and @var{object} are ignored.  (This
+can be useful if you've already gotten the @code{display} property
+with @code{get-char-property}, for instance (@pxref{Examining
+Properties,Examining
+Properties,,elisp,}).
+@end defun
+
+@c copied from lisp/emacs-lisp/subr-x.el
+@defun add-display-text-property start end prop value &optional object
+Add display property @var{prop} with @var{value} to the text from
+@var{start} to @var{end}.  If any text in the region has a non-nil
+@code{display} property, those properties are retained.
+
+If @var{object} is non-@code{nil}, it should be a string or a buffer.
+If @code{nil}, this defaults to the current buffer.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun take n list
+This function returns the @var{n} first elements of @var{list}.
+Essentially, it returns the part of @var{list} that @code{nthcdr}
+skips.
+
+@code{take} returns @var{list} if shorter than @var{n} elements;
+it returns @code{nil} if @var{n} is zero or negative.
+
+@example
+@group
+(take 3 '(a b c d))
+     @result{} (a b c)
+@end group
+@group
+(take 10 '(a b c d))
+     @result{} (a b c d)
+@end group
+@group
+(take 0 '(a b c d))
+     @result{} nil
+@end group
+@end example
+@end defun
+
+@c copied from lispref/lists.texi
+@defun ntake n list
+This is a version of @code{take} that works by destructively modifying
+the list structure of the argument.  That makes it faster, but the
+original value of @var{list} may be lost.
+
+@code{ntake} returns @var{list} unmodified if shorter than @var{n}
+elements; it returns @code{nil} if @var{n} is zero or negative.
+Otherwise, it returns @var{list} truncated to its first @var{n}
+elements.
+
+This means that it is usually a good idea to use the return value and
+not just rely on the truncation effect unless @var{n} is known to be
+positive.
+@end defun
+
+@c copied from lispref/functions.texi
+@defun compiled-function-p object
+This function returns @code{t} if @var{object} is a function object
+that is not in the form of ELisp source code but something like
+machine code or byte code instead. More specifically it returns
+@code{t} if the function is built-in, or byte-compiled, or
+natively-compiled, or a function loaded from a dynamic module.
+@end defun
+
+@c copied from lispref/functions.texi
+@defun function-alias-p object &optional noerror
+Checks whether @var{object} is a function alias.  If it is, it returns
+a list of symbols representing the function alias chain, else
+@code{nil}.  For instance, if @code{a} is an alias for @code{b}, and
+@code{b} is an alias for @code{c}:
+
+@example
+(function-alias-p 'a)
+    @result{} (b c)
+@end example
+
+If there's a loop in the definitions, an error will be signalled.  If
+@var{noerror} is non-@code{nil}, the non-looping parts of the chain is
+returned instead.
+@end defun
+
+@c copied from lispref/strings.texi
+@defun string-equal-ignore-case string1 string2
+@code{string-equal-ignore-case} compares strings ignoring case
+differences, like @code{char-equal} when @code{case-fold-search} is
+@code{t}.
+
+@xref{Text Comparison,,,elisp}.
+@end defun
+
+@defun string-split string &optional separators omit-nulls trim
+@code{string-split} is an alias for the function @code{split-string}.
+The name follows the convention of other string functions.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c copied from lispref/buffers.texi
+@defun buffer-match-p condition buffer-or-name &optional arg
+This function checks if a buffer designated by @code{buffer-or-name}
+satisfies a @code{condition}.  Optional third argument @var{arg} is
+passed to the predicate function in @var{condition}.  A condition can
+be one of the following:
+@itemize @bullet{}
+@item
+A string, interpreted as a regular expression.  The buffer
+satisfies the condition if the regular expression matches the buffer
+name.
+@item
+A predicate function, which should return non-@code{nil} if the buffer
+matches.  If the function expects one argument, it is called with
+@var{buffer-or-name} as the argument; if it expects 2 arguments, the
+first argument is @var{buffer-or-name} and the second is @var{arg}
+(or @code{nil} if @var{arg} is omitted).
+@item
+A cons-cell @code{(@var{oper} . @var{expr})} where @var{oper} is one
+of
+@table @code
+@item not
+Satisfied if @var{expr} doesn't satisfy @code{buffer-match-p} with
+the same buffer and @code{arg}.
+@item or
+Satisfied if @var{expr} is a list and @emph{any} condition in
+@var{expr} satisfies @code{buffer-match-p}, with the same buffer and
+@code{arg}.
+@item and
+Satisfied if @var{expr} is a list and @emph{all} conditions in
+@var{expr} satisfy @code{buffer-match-p}, with the same buffer and
+@code{arg}.
+@item derived-mode
+Satisfied if the buffer's major mode derives from @var{expr}.
+@item major-mode
+Satisfied if the buffer's major mode is equal to @var{expr}.  Prefer
+using @code{derived-mode} instead when both can work.
+@end table
+@item t
+Satisfied by any buffer.  A convenient alternative to @code{""} (empty
+string), @code{(and)} (empty conjunction) or @code{always}.
+@end itemize
+
+@xref{Buffer List,,,elisp}.
+@end defun
+
+@c copied from lispref/buffers.texi
+@defun match-buffers condition &optional buffers arg
+This function returns a list of all buffers that satisfy a
+@code{condition}, as defined for @code{buffer-match-p}.  By default
+all buffers are considered, but this can be restricted via the second
+optional @code{buffer-list} argument.  Optional third argument
+@var{arg} will be used by @var{condition} in the same way as
+@code{buffer-match-p} does.
+
+@xref{Buffer List,,,elisp}.
+@end defun
+
+@c copied from lispref/display.texi
+@defun string-glyph-split string
+When character compositions are in effect, sequence of characters can
+be composed for display to form @emph{grapheme clusters}, for example
+to display accented characters, or ligatures, or Emoji, or when
+complex text shaping requires that for some scripts.  When that
+happens, characters no longer map in a simple way to display columns,
+and display layout decisions with such strings, such as truncating too
+wide strings, can be a complex job.  This function helps in performing
+such jobs: it splits up its argument @var{string} into a list of
+substrings, where each substring produces a single grapheme cluster
+that should be displayed as a unit.  Lisp programs can then use this
+list to construct visually-valid substrings of @var{string} which will
+look correctly on display, or compute the width of any substring of
+@var{string} by adding the width of its constituents in the returned
+list, etc.
+
+For instance, if you want to display a string without the first glyph,
+you can say:
+
+@example
+(apply #'insert (cdr (string-glyph-split string))))
+@end example
+
+@xref{Size of Displayed Text,,,elisp}.
+@end defun
+
+@c copied from lisp/international/ucs-normalize.el
+@defun string-glyph-compose string
+Compose @var{string} according to the Unicode NFC.  This returns a new
+string obtained by canonical decomposition of @var{string} followed by
+canonical composition, a.k.a. the "Unicode Normalization Form C" of
+@var{string}.
+@end defun
+
+@c copied from lisp/international/ucs-normalize.el
+@defun string-glyph-decompose string
+Decompose @var{string} according to the Unicode NFD.  This returns a
+new string that is the canonical decomposition of @var{string},
+a.k.a. the "Unicode Normalization Form D" of @var{string}.
+@end defun
+
+@c based on lisp/emacs-lisp/subr-x.el
+@defmac with-buffer-unmodified-if-unchanged &rest body@dots{}
+Evaluate @var{body} like @code{progn}, but change buffer-modified
+status only if buffer text changes.  If the buffer was unmodified
+before execution of @var{body}, and buffer text after execution of
+@var{body} is identical to what it was before, ensure that buffer is
+still marked unmodified afterwards.
+
+Note that only changes in the raw byte sequence of the buffer text, as
+stored in the internal representation, are monitored for the purpose of
+detecting the lack of changes in buffer text.  Any other changes that
+are normally perceived as "buffer modifications", such as changes in
+text properties, @code{buffer-file-coding-system}, buffer multibyteness,
+etc. -- will not be noticed, and the buffer will still be marked
+unmodified, effectively ignoring those changes.
+@end defmac
+
+@defun file-attribute-file-identifier
+Return the fields @code{(inodenum device)} as a list from attributes
+generated by @code{file-attributes}.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-name-split filename
+This function splits a file name into its components, and can be
+thought of as the inverse of @code{string-join} with the appropriate
+directory separator.  For example,
+
+@example
+(file-name-split "/tmp/foo.txt")
+    @result{} ("" "tmp" "foo.txt")
+(string-join (file-name-split "/tmp/foo.txt") "/")
+    @result{} "/tmp/foo.txt"
+@end example
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-name-parent-directory filename
+This function returns the directory name of the parent directory of
+@var{filename}.  If @var{filename} is at the root directory of the
+filesystem, it returns @code{nil}.  A relative @var{filename} is
+assumed to be relative to @code{default-directory}, and the return
+value will also be relative in that case.  If the return value is
+non-@code{nil}, it ends in a slash.
+
+@xref{Directory Names,,,elisp}.
+@end defun
+
+@c copied from lispref/files.texi
+@defun file-has-changed-p file &optional tag
+This function returns non-@code{nil} if the time stamp of
+@var{filename} has changed since the last call.  When called for the
+first time for some @var{filename}, it records the last modification
+time and size of the file, and returns non-@code{nil} when
+@var{filename} exists.  Thereafter, when called for the same
+@var{filename}, it compares the current time stamp and size with the
+recorded ones, and returns non-@code{nil} only if either the time
+stamp or the size (or both) are different.  This is useful when a Lisp
+program wants to re-read a file whenever it changes.  With an optional
+argument @var{tag}, which must be a symbol, the size and modification
+time comparisons are limited to calls with the same tag.
+
+@xref{File Attributes,,,elisp}.
+@end defun
+
+@c based on lisp/files.el
+@defun directory-abbrev-make-regexp directory
+Create a regexp to match @var{directory} for
+@code{directory-abbrev-alist}.
+@end defun
+
+@c based on lisp/files.el
+@defun directory-abbrev-apply filename
+Apply the abbreviations in @code{directory-abbrev-alist} to @var{filename}.
+Note that when calling this, you should set @code{case-fold-search} as
+appropriate for the filesystem used for @var{filename}.
+@end defun
+
+@c based on lisp/keymap.el
+@defun key-valid-p keys
+Say whether @var{keys} is a valid key.  A key is a string consisting of
+one or more key strokes.  The key strokes are separated by single space
+characters.
+
+Each key stroke is either a single character, or the name of an
+event, surrounded by angle brackets.  In addition, any key stroke
+may be preceded by one or more modifier keys.  Finally, a limited
+number of characters have a special shorthand syntax.
+
+Here's some example key sequences.
+
+@table @kbd
+@item f
+The key @kbd{f}.
+@item S o m
+A three key sequence of the keys @kbd{S}, @kbd{o} and @kbd{m}.
+@item C-c o
+A two key sequence of the keys @kbd{c} with the control modifier and
+then the key @kbd{o}.
+@item H-<left>
+The key named "left" with the hyper modifier.
+@item M-RET
+The "return" key with a meta modifier.
+@item C-M-<space>
+The "space" key with both the control and meta modifiers.
+@end table
+
+These are the characters that have shorthand syntax:
+@kbd{NUL}, @kbd{RET}, @kbd{TAB}, @kbd{LFD}, @kbd{ESC}, @kbd{SPC}, @kbd{DEL}.
+
+Modifiers have to be specified in this order
+@verbatim
+Alt (A)-Control (C)-Hyper (H)-Meta (M)-Shift (s)-Super (s)
+@end verbatim
+@end defun
+
+@c based on lisp/keymap.el and lisp/subr.el
+@defun key-parse keys
+Convert @var{keys} to the internal Emacs key representation.  See
+@code{key-valid-p} for a description of valid key sequences.  Examples
+include @kbd{f}, @kbd{C-c C-c}, @kbd{H-<left>}, @kbd{M-RET} or
+@kbd{C-M-<return>}.
+
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-set keymap key definition
+This function sets the binding for @var{key} in @var{keymap}.  (If
+@var{key} is more than one event long, the change is actually made in
+another keymap reached from @var{keymap}.)  The argument @var{binding}
+can be any Lisp object, but only certain types are meaningful.  (For a
+list of meaningful types, see @ref{Key Lookup,,,elisp}.)  The value
+returned by @code{keymap-set} is @var{binding}.
+
+If @var{key} is @kbd{<t>}, this sets the default binding in
+@var{keymap}.  When an event has no binding of its own, the Emacs
+command loop uses the keymap's default binding, if there is one.
+
+Every prefix of @var{key} must be a prefix key (i.e., bound to a keymap)
+or undefined; otherwise an error is signaled.  If some prefix of
+@var{key} is undefined, then @code{keymap-set} defines it as a prefix
+key so that the rest of @var{key} can be defined as specified.
+
+If there was previously no binding for @var{key} in @var{keymap}, the
+new binding is added at the beginning of @var{keymap}.  The order of
+bindings in a keymap makes no difference for keyboard input, but it
+does matter for menu keymaps (@pxref{Menu Keymaps,,,elisp}).
+
+@xref{Changing Key Bindings,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-global-set key command
+This function sets the binding of @var{key} in the current global map
+to @var{binding}.
+
+@smallexample
+@group
+(keymap-global-set @var{key} @var{binding})
+@equiv{}
+(keymap-set (current-global-map) @var{key} @var{binding})
+@end group
+@end smallexample
+
+@xref{Key Binding Commands,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-local-set key command
+This function sets the binding of @var{key} in the current local
+keymap to @var{binding}.
+
+@smallexample
+@group
+(keymap-local-set @var{key} @var{binding})
+@equiv{}
+(keymap-set (current-local-map) @var{key} @var{binding})
+@end group
+@end smallexample
+
+@xref{Key Binding Commands,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-global-unset key &optional remove
+This function removes the binding of @var{key} from the current
+global map.
+
+One use of this function is in preparation for defining a longer key
+that uses @var{key} as a prefix---which would not be allowed if
+@var{key} has a non-prefix binding.  For example:
+
+@smallexample
+@group
+(keymap-global-unset "C-l")
+    @result{} nil
+@end group
+@group
+(keymap-global-set "C-l C-l" 'redraw-display)
+    @result{} nil
+@end group
+@end smallexample
+
+@xref{Key Binding Commands,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-local-unset key &optional remove
+This function removes the binding of @var{key} from the current
+local map.
+
+@xref{Key Binding Commands,,,elisp}.
+@end defun
+
+@c based on lisp/keymap.el
+@defun keymap-substitute keymap olddef newdef &optional oldmap prefix
+Replace @var{olddef} with @var{newdef} for any keys in @var{keymap}
+now defined as @var{olddef}.  In other words, @var{olddef} is replaced
+with @var{newdef} wherever it appears.  Alternatively, if optional
+fourth argument @var{oldmap} is specified, we redefine in @var{keymap}
+as @var{newdef} those keys that are defined as @var{olddef} in
+@var{oldmap}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-lookup keymap key &optional accept-default no-remap position
+This function returns the definition of @var{key} in @var{keymap}.  All
+the other functions described in this chapter that look up keys use
+@code{keymap-lookup}.  Here are examples:
+
+@example
+@group
+(keymap-lookup (current-global-map) "C-x C-f")
+    @result{} find-file
+@end group
+@group
+(keymap-lookup (current-global-map) "C-x C-f 1 2 3 4 5")
+    @result{} 2
+@end group
+@end example
+
+@xref{Functions for Key Lookup,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-local-lookup keys &optional accept-default
+Like @code{keymap-lookup}, but restricting the search for commands bound
+to @var{keys} to the current local keymap.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun keymap-global-lookup keys &optional accept-default
+Like @code{keymap-lookup}, but restricting the search for commands bound
+to @var{keys} to the current global keymap.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun define-keymap &rest definitions
+You can create a keymap with the functions described above, and then
+use @code{keymap-set} (@pxref{Changing Key Bindings,,,elisp}) to
+specify key bindings in that map.  When writing modes, however, you
+frequently have to bind a large number of keys at once, and using
+@code{keymap-set} on them all can be tedious and error-prone.  Instead
+you can use @code{define-keymap}, which creates a keymap and binds a
+number of keys.  Here's a very basic example:
+
+@lisp
+(define-keymap
+  "n" #'forward-line
+  "f" #'previous-line
+  "C-c C-c" #'quit-window)
+@end lisp
+
+This function creates a new sparse keymap, defines the keystrokes in
+@var{pairs}, and returns the new keymap.
+
+@var{pairs} is a list of alternating key bindings and key definitions,
+as accepted by @code{keymap-set}.  In addition, the key can be the
+special symbol @code{:menu}, in which case the definition should be a
+menu definition as accepted by @code{easy-menu-define} (@pxref{Easy
+Menu,,,elisp}).  Here's a brief example of this usage:
+
+@lisp
+(define-keymap :full t
+  "g" #'eww-reload
+  :menu '("Eww"
+          ["Exit" quit-window t]
+          ["Reload" eww-reload t]))
+@end lisp
+
+A number of keywords can be used before the key/definition pairs to
+change features of the new keymap.  If any of the feature keywords is
+missing from the @code{define-keymap} call, the default value for that
+feature is @code{nil}.  Here's a list of the available feature
+keywords:
+
+@table @code
+@item :full
+If non-@code{nil}, create a char-table keymap (as from
+@code{make-keymap}) instead of a sparse keymap (as from
+@code{make-sparse-keymap} (@pxref{Creating Keymaps,,,elisp}).  A sparse
+keymap is the default.
+
+@item :parent
+If non-@code{nil}, the value should be a keymap to use as the parent
+(@pxref{Inheritance and Keymaps,,,elisp}).
+
+@item :keymap
+If non-@code{nil}, the value should be a keymap.  Instead of creating
+a new keymap, the specified keymap is modified instead.
+
+@item :suppress
+If non-@code{nil}, the keymap will be suppressed with
+@code{suppress-keymap} (@pxref{Changing Key Bindings,,,elisp}).  By
+default, digits and the minus sign are exempt from suppressing, but if
+the value is @code{nodigits}, this suppresses digits and minus-sign like
+it does with other characters.
+
+@item :name
+If non-@code{nil}, the value should be a string to use as the menu for
+the keymap if you use it as a menu with @code{x-popup-menu}
+(@pxref{Pop-Up Menus,,,elisp}).
+
+@item :prefix
+If non-@code{nil}, the value should be a symbol to be used as a prefix
+command (@pxref{Prefix Keys,,,elisp}).  If this is the case, this symbol
+is returned by @code{define-keymap} instead of the map itself.
+@end table
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun defvar-keymap (variable-name &rest defs)
+By far, the most common thing to do with a keymap is to bind it to a
+variable.  This is what virtually all modes do---a mode called
+@code{foo} almost always has a variable called @code{foo-mode-map}.
+
+This macro defines @var{name} as a variable, passes @var{options}
+and @var{pairs} to @code{define-keymap}, and uses the result as the
+default value for the variable.
+
+@var{options} is like the keywords in @code{define-keymap}, but
+there's an additional @code{:doc} keyword that provides the doc
+string for the defined variable.
+
+Here's an example:
+
+@lisp
+(defvar-keymap eww-textarea-map
+  :parent text-mode-map
+  "RET" #'forward-line
+  "TAB" #'shr-next-link)
+@end lisp
+@end defun
+
+@c copied from lispref/control.texi
+@defmac while-let spec then-forms...
+Like @code{when-let}, but repeat until a binding in @var{spec} is
+@code{nil}.  The return value is always @code{nil}.
+
+This is comparable to @code{and-let*}.
+@end defmac
+
+@c copied from lispref/windows.texi
+@defun window-configuration-equal-p config1 config2
+This function says whether two window configurations have the same
+window layout, but ignores the values of point and the saved scrolling
+positions---it can return @code{t} even if those aspects differ.
+@end defun
+
+@c based on lisp/emacs-lisp/ert-x.el
+@defmac ert-with-temp-file name &rest body
+Bind @var{name} to the name of a new temporary file and evaluate
+@var{body}.  Delete the temporary file after @var{body} exits normally
+or non-locally.  @var{name} will be bound to the file name of the
+temporary file. See the docstring for supported keyword arguments.
+@end defmac
+
+@c based on lisp/emacs-lisp/ert-x.el
+@defmac ert-with-temp-directory name &rest body
+Bind @var{name} to the name of a new temporary directory and evaluate
+@var{body}.  Delete the temporary directory after @var{body} exits
+normally or non-locally.
+
+@var{name} is bound to the directory name, not the directory file
+name.  (In other words, it will end with the directory delimiter; on
+Unix-like systems, it will end with "/".)
+
+The same keyword arguments are supported as in
+@code{ert-with-temp-file} (which see), except for @code{:text}.
+@end defmac
+
+@c based on lisp/emacs-lisp/cl-lib.el
+@defun cl-constantly value
+Return a function that takes any number of arguments, but returns
+@var{value}.
+@end defun
+
+@c copied from lispref/cl.texi
+@defmac cl-with-gensyms names@dots{} body
+This macro expands to code that executes @var{body} with each of the
+variables in @var{names} bound to a fresh uninterned symbol, or
+@dfn{gensym}, in Common Lisp parlance.  For macros requiring more than
+one gensym, use of @code{cl-with-gensyms} shortens the code and
+renders one's intentions clearer.  Compare:
+
+@example
+(defmacro my-macro (foo)
+  (let ((bar (gensym "bar"))
+        (baz (gensym "baz"))
+        (quux (gensym "quux")))
+    `(let ((,bar (+ @dots{})))
+       @dots{})))
+
+(defmacro my-macro (foo)
+  (cl-with-gensyms (bar baz quux)
+    `(let ((,bar (+ @dots{})))
+       @dots{})))
+@end example
+@end defmac
+
+@c copied from lispref/cl.texi
+@defmac cl-once-only ((variable form)@dots{}) body
+This macro is primarily to help the macro programmer ensure that forms
+supplied by the user of the macro are evaluated just once by its
+expansion even though the result of evaluating the form is to occur
+more than once.  Less often, this macro is used to ensure that forms
+supplied by the macro programmer are evaluated just once.
+
+Each @var{variable} may be used to refer to the result of evaluating
+@var{form} in @var{body}.  @code{cl-once-only} binds each
+@var{variable} to a fresh uninterned symbol during the evaluation of
+@var{body}.  Then, @code{cl-once-only} wraps the final expansion in
+code to evaluate each @var{form} and bind the result to the
+corresponding uninterned symbol.  Thus, when the macro writer
+substitutes the value for @var{variable} into the expansion they are
+effectively referring to the result of evaluating @var{form}, rather
+than @var{form} itself.  Another way to put this is that each
+@var{variable} is bound to an expression for the (singular) result of
+evaluating @var{form}.
+
+The most common case is where @var{variable} is one of the arguments
+to the macro being written, so @code{(variable variable)} may be
+abbreviated to just @code{variable}.
+
+For example, consider this macro:
+
+@example
+(defmacro my-list (x y &rest forms)
+  (let ((x-result (gensym))
+        (y-result (gensym)))
+    `(let ((,x-result ,x)
+           (,y-result ,y))
+       (list ,x-result ,y-result ,x-result ,y-result
+             (progn ,@@forms))))
+@end example
+
+In a call like @w{@code{(my-list (pop foo) @dots{})}} the intermediate
+binding to @code{x-result} ensures that the @code{pop} is not done
+twice.  But as a result the code is rather complex: the reader must
+keep track of how @code{x-result} really just means the first
+parameter of the call to the macro, and the required use of multiple
+gensyms to avoid variable capture by @code{(progn ,@@forms)} obscures
+things further.  @code{cl-once-only} takes care of these details:
+
+@example
+(defmacro my-list (x y &rest forms)
+  (cl-once-only (x y)
+    `(list ,x ,y ,x ,y
+           (progn ,@@forms))))
+@end example
+@end defmac
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 29.1:
+
+@c copied from lispref/keymaps.texi
+@defun compat-call@ set-transient-map keymap &optional keep-pred on-exit message timeout
+This function adds @var{keymap} as a @dfn{transient} keymap, which
+takes precedence over other keymaps for one (or more) subsequent keys.
+
+Normally, @var{keymap} is used just once, to look up the very next
+key.  If the optional argument @var{keep-pred} is @code{t}, the map
+stays active as long as the user types keys defined in @var{keymap};
+when the user types a key that is not in @var{keymap}, the transient
+keymap is deactivated and normal key lookup continues for that key.
+
+The @var{keep-pred} argument can also be a function.  In that case,
+the function is called with no arguments, prior to running each
+command, while @var{keymap} is active; it should return non-@code{nil}
+if @var{keymap} should stay active.
+
+The optional argument @var{on-exit}, if non-@code{nil}, specifies a
+function that is called, with no arguments, after @var{keymap} is
+deactivated.
+
+The optional argument @var{message} specifies the message to display
+after activating the transient map.  If @var{message} is a string, it
+is the format string for the message, and any @samp{%k} specifier in
+that string is replaced with the list of keys from the transient map.
+Any other non-@code{nil} value of @var{message} stands for the default
+message format @samp{Repeat with %k}.
+
+@vindex set-transient-map-timeout
+If the optional argument @var{timeout} is non-@code{nil}, it should be
+a number that specifies how many seconds of idle time to wait before
+deactivating @var{keymap}.  The value of the variable
+@code{set-transient-map-timeout}, if non-@code{nil}, overrides the
+value of this argument.
+
+This function works by adding and removing @var{keymap} from the
+variable @code{overriding-terminal-local-map}, which takes precedence
+over all other active keymaps (@pxref{elisp,,,Searching Keymaps}).
+@end defun
+
+@c copied from lispref/strings.texi
+@defun compat-call@ string-lines string &optional omit-nulls keep-newlines
+Split @var{string} into a list of strings on newline boundaries.  If
+the optional argument @var{omit-nulls} is non-@code{nil}, remove empty
+lines from the results.  If the optional argument @var{keep-newlines}
+is non-@code{nil}, don't remove the trailing newlines from the result
+strings.
+
+@xref{Creating Strings,,,elisp}.
+@end defun
+
+@c copied from lispref/keymaps.texi
+@defun compat-call@ define-key
+This function is like @code{keymap-set} (@pxref{Changing Key
+Bindings,,,elisp}, but understands only the legacy key syntaxes.
+
+In addition, this function also has a @var{remove} argument.  If it is
+non-@code{nil}, the definition will be removed.  This is almost the
+same as setting the definition to @code{nil}, but makes a difference
+if the @var{keymap} has a parent, and @var{key} is shadowing the same
+binding in the parent.  With @var{remove}, subsequent lookups will
+return the binding in the parent, whereas with a @code{nil} definition
+the lookups will return @code{nil}.
+
+@xref{Low-Level Key Binding,,,elisp}.
+
+This compatibility version handles the optional argument
+@var{remove}.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun compat-call@ plist-get plist prop &optional predicate
+This returns the value of the @var{property} property stored in the
+property list @var{plist}.  Comparisons are done with @var{predicate},
+and defaults to @code{eq}.  It accepts a malformed @var{plist}
+argument.  If @var{property} is not found in the @var{plist}, it
+returns @code{nil}.
+
+@xref{Plist Access,,,elisp}.
+
+This compatibility version handles the optional argument
+@var{predicate}.  This is a generalized variable (@pxref{Generalized
+Variables,,,elisp}) that can be used to change a value with
+@code{setf}.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun compat-call@ plist-put plist prop val &optional predicate
+This stores @var{value} as the value of the @var{property} property in
+the property list @var{plist}.  Comparisons are done with
+@var{predicate}, and defaults to @code{eq}.  It may modify @var{plist}
+destructively, or it may construct a new list structure without
+altering the old.  The function returns the modified property list, so
+you can store that back in the place where you got @var{plist}.
+
+@xref{Plist Access,,,elisp}.
+
+This compatibility version handles the optional argument
+@var{predicate}.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun compat-call@ plist-member plist prop &optional predicate
+This returns non-@code{nil} if @var{plist} contains the given
+@var{property}.  Comparisons are done with @var{predicate}, and
+defaults to @code{eq}.  Unlike @code{plist-get}, this allows you to
+distinguish between a missing property and a property with the value
+@code{nil}.  The value is actually the tail of @var{plist} whose
+@code{car} is @var{property}.
+
+@xref{Plist Access,,,elisp}.
+
+This compatibility version handles the optional argument
+@var{predicate}.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 29.1:
+
+@itemize
+@item
+The function @code{imagep}.
+@item
+The function @code{image-at-point-p}.
+@item
+The function @code{function-documentation}.
+@item
+The macro @code{with-undo-amalgamate}.
+@item
+The function @code{string-glyph-split}.
+@item
+The function @code{string-limit}.
+@item
+The function @code{string-pixel-width} and @code{buffer-text-pixel-size}.
+@item
+The function @code{minibuffer-lazy-highlight-setup}.
+@item
+The function @code{pp-emacs-lisp-code}.
+@item
+The function @code{bidi-string-strip-control-characters}.
+@item
+The native function @code{current-cpu-time}.
+@item
+The functions @code{xdg-state-home}, @code{xdg-current-desktop} and @code{xdg-session-type}.
+@item
+The macro @code{setopt}.
+@item
+The @code{oclosure} library.
+@item
+The @code{textsec} library.
+@item
+The @code{range} library.
+@item
+The @code{string-edit} library.
+@item
+The @code{vtable} library.
+@item
+The @code{pixel-fill} library.
+@item
+Support for symbols with position information.
+@end itemize
+
+@node Emacs 30.1
+@section Emacs 30.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+30.1. These functions are made available by Compat on Emacs versions
+older than 30.1.  Note that due to upstream changes, it might happen
+that there will be the need for changes, so use these functions with
+care.
+
+@defvar trusted-content
+List of files and directories whose content we trust.  Be extra careful
+here since trusting means that Emacs might execute the code contained
+within those files and directories without an explicit request by the
+user.  One important case when this might happen is when
+@code{flymake-mode} is enabled (for example, when it is added to a mode
+hook).  Each element of the list should be a string:
+- If it ends in "/", it is considered as a directory name and means that
+  Emacs should trust all the files whose name has this directory as a prefix.
+- else it is considered as a file name.
+Use abbreviated file names.  For example, an entry "~/mycode" means
+that Emacs will trust all the files in your directory "mycode".  This
+variable can also be set to @code{:all}, in which case Emacs will trust all
+files, which opens a gaping security hole.
+@end defvar
+
+@defun trusted-content-p
+Return non-nil if we trust the contents of the current buffer.  Here,
+"trust" means that we are willing to run code found inside of it.  See
+also @code{trusted-content}.
+@end defun
+
+@c based on lisp/color.el
+@defun color-oklab-to-xyz l a b
+Convert the OkLab color represented by @var{l} @var{a} @var{b} to CIE XYZ.
+Oklab is a perceptual color space created by Björn Ottosson
+<https://bottosson.github.io/posts/oklab/>.  It has the property that
+changes in the hue and saturation of a color can be made while maintaining
+the same perceived lightness.
+@end defun
+
+@c based on lisp/color.el
+@defun color-xyz-to-oklab x y z
+Convert the CIE XYZ color represented by @var{x} @var{y} @var{z} to Oklab.
+@end defun
+
+@c based on lisp/color.el
+@defun color-oklab-to-srgb l a b
+Convert the Oklab color represented by @var{l} @var{a} @var{b} to sRGB.
+@end defun
+
+@c based on lisp/color.el
+@defun color-srgb-to-oklab r g b
+Convert the sRGB color @var{r} @var{g} @var{b} to Oklab.
+@end defun
+
+@c copied from lispref/nonascii.texi
+@defun char-to-name char
+This function returns the Unicode name of @var{char}.  It returns
+@code{nil} if @var{char} is not a character or has no Unicode name.
+@end defun
+
+@c copied from lispref/symbols.texi
+@defun obarray-clear obarray
+This function removes all symbols from @var{obarray}.
+@end defun
+
+@c copied from lispref/functions.texi
+@defun closurep object
+This function returns @code{t} if @var{object} is a closure, which is
+a particular kind of function object.  Currently closures are used
+for all byte-code functions and all interpreted functions.
+@end defun
+
+@c copied from lispref/functions.texi
+@defun interpreted-function-p object
+This function returns @code{t} if @var{object} is an interpreted function.
+@end defun
+
+@c based on lisp/subr.el
+@defun primitive-function-p object
+Return @code{t} if @var{object} is a built-in primitive function.
+This excludes special forms, since they are not functions.
+@end defun
+
+@c copied from lispref/sequences.texi
+@defun value< a b
+This function returns non-@code{nil} if @var{a} comes before @var{b}
+in the standard sorting order; this means that it returns @code{nil}
+when @var{b} comes before @var{a}, or if they are equal or unordered.
+
+The arguments @var{a} and @var{b} must have the same type.
+Specifically:
+
+@itemize @bullet
+@item
+Numbers are compared using @code{<}.
+@item
+Strings are compared using @code{string<} and symbols are compared by
+comparing their names as strings.
+@item
+Conses, lists, vectors and records are compared lexicographically.
+This means that the two sequences are compared element-wise from left
+to right until they differ, and the result is then that of
+@code{value<} on the first pair of differing elements.  If one
+sequence runs out of elements before the other, the shorter sequence
+comes before the longer.
+@item
+Markers are compared first by buffer, then by position.
+@item
+Buffers and processes are compared by comparing their names as
+strings.  Dead buffers (whose name is @code{nil}) will compare before
+any live buffer.
+@item
+Other types are considered unordered and the return value will be
+@code{nil}.
+@end itemize
+
+Examples:
+@example
+(value< -4 3.5) @result{} t
+(value< "dog" "cat") @result{} nil
+(value< 'yip 'yip) @result{} nil
+(value< '(3 2) '(3 2 0)) @result{} t
+(value< [3 2 "a"] [3 2 "b"]) @result{} t
+@end example
+
+@noindent
+Note that @code{nil} is treated as either a symbol or an empty list,
+depending on what it is compared against:
+
+@example
+(value< nil '(0)) @result{} t
+(value< 'nib nil) @result{} t
+@end example
+
+@noindent
+There is no limit to the length of sequences (lists, vectors and so
+on) that can be compared, but @code{value<} may fail with an error if
+used to compare circular or deeply nested data structures.
+@end defun
+
+@c based on lispref/lists.texi
+@defun drop n list
+This function is an alias for @code{nthcdr}. It returns the @var{n}th
+@sc{cdr} of @var{list}.  In other words, it skips past the first
+@var{n} links of @var{list} and returns what follows.
+@end defun
+
+@defun get-truename-buffer filename
+Return the buffer with @code{file-truename} equal to @var{filename} (a string).
+If there is no such live buffer, return nil.
+See also @code{find-buffer-visiting}.
+@end defun
+
+@defun find-buffer variable value
+Return the buffer with buffer-local @var{variable} equal to @var{value}.
+If there is no such live buffer, return nil.
+@end defun
+
+@c copied from lispref/loading.texi
+@defun require-with-check feature &optional filename noerror
+This function works like @code{require}, except if @var{feature} is
+already loaded (i.e.@: is already a member of the list in
+@code{features}, see below).  If @var{feature} is already loaded, this
+function checks if @var{feature} was provided by a file different from
+@var{filename}, and if so, it by default signals an error.  If the
+value of the optional argument @var{noerror} is @code{reload}, the
+function doesn't signal an error, but instead forcibly reloads
+@var{filename}; if @var{noerror} is some other non-@code{nil} value,
+the function emits a warning about @var{feature} being already
+provided by another file.
+@end defun
+
+@defun merge-ordered-lists lists &optional error-function
+Merge @var{lists} in a consistent order.  @var{lists} is a list of
+lists of elements.  Merge them into a single list containing the same
+elements (removing duplicates), obeying their relative positions in
+each list.  The order of the (sub)lists determines the final order in
+those cases where the order within the sublists does not impose a
+unique choice.  Equality of elements is tested with @code{eql}.
+
+If a consistent order does not exist, call @var{error-function} with a
+remaining list of lists that we do not know how to merge.  It should
+return the candidate to use to continue the merge, which has to be the
+head of one of the lists.  By default we choose the head of the first
+list.
+@end defun
+
+@defvar completion-lazy-hilit
+If non-nil, request lazy highlighting of completion candidates.
+
+Lisp programs (a.k.a. "front ends") that present completion candidates
+may opt to bind this variable to a non-nil value when calling
+functions (such as @code{completion-all-completions}) which produce
+completion candidates.  This tells the underlying completion styles
+that they do not need to fontify (i.e., propertize with the
+@code{face} property) completion candidates in a way that highlights
+the matching parts.  Then it is the front end which presents the
+candidates that becomes responsible for this fontification.  The front
+end does that by calling the function @code{completion-lazy-hilit} on
+each completion candidate that is to be displayed to the user.
+
+Note that only some completion styles take advantage of this variable
+for optimization purposes.  Other styles will ignore the hint and
+fontify eagerly as usual.  It is still safe for a front end to call
+@code{completion-lazy-hilit} in these situations.
+
+To author a completion style that takes advantage of this variable,
+see @code{completion-lazy-hilit-fn} and
+@code{completion-pcm--hilit-commonality}.
+@end defvar
+
+@defvar completion-lazy-hilit-fn
+Fontification function set by lazy-highlighting completions styles.
+When a given style wants to enable support for
+@code{completion-lazy-hilit} (which see), that style should set this
+variable to a function of one argument.  It will be called with each
+completion candidate, a string, to be displayed to the user, and
+should destructively propertize these strings with the @code{face}
+property.
+@end defvar
+
+@defun completion-lazy-hilit str
+Return a copy of completion candidate @var{str} that is
+face-propertized.  See documentation of the variable
+@code{completion-lazy-hilit} for more details.
+@end defun
+
+@defmac static-if condition then-form else-forms...
+Test @var{condition} at macro-expansion time.  If its value is
+non-@code{nil}, expand the macro to @var{then-form}, otherwise expand
+it to @var{else-forms} enclosed in a @code{progn}.  @var{else-forms}
+may be empty.
+
+Here is an example of its use from CC Mode, which prevents a
+@code{defadvice} form being compiled in newer versions of Emacs:
+@example
+@group
+(static-if (boundp 'comment-line-break-function)
+    (progn)
+  (defvar c-inside-line-break-advice nil)
+  (defadvice indent-new-comment-line (around c-line-break-advice
+                                             activate preactivate)
+    "Call `c-indent-new-comment-line' if in CC Mode."
+    (if (or c-inside-line-break-advice
+            (not c-buffer-is-cc-mode))
+        ad-do-it
+      (let ((c-inside-line-break-advice t))
+        (c-indent-new-comment-line (ad-get-arg 0))))))
+@end group
+@end example
+@end defmac
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 30.1:
+
+@c copied from lisp/sequences.texi
+@defun compat-call@ sort sequence &rest keyword-args
+This function sorts @var{sequence}, which must be a list or vector,
+and returns a sorted sequence of the same type.  The sort is stable,
+which means that elements with equal sort keys maintain their relative
+order.  It takes the following optional keyword arguments:
+
+@table @code
+@item :key @var{keyfunc}
+Use @var{keyfunc}, a function that takes a single element from
+@var{sequence} and returns its key value, to generate the keys used in
+comparison.  If this argument is absent or if @var{keyfunc} is
+@code{nil} then @code{identity} is assumed; that is, the elements
+themselves are used as sorting keys.
+
+@item :lessp @var{predicate}
+Use @var{predicate} to order the keys.  @var{predicate} is a function
+that takes two sort keys as arguments and returns non-@code{nil} if
+the first should come before the second.  If this argument is absent
+or @var{predicate} is @code{nil}, then @code{value<} is used, which is
+applicable to many different Lisp types and generally sorts in
+ascending order.
+
+For consistency, any predicate must obey the following rules:
+@itemize @bullet
+@item
+It must be @dfn{antisymmetric}: it cannot both order @var{a} before
+@var{b} and @var{b} before @var{a}.
+@item
+It must be @dfn{transitive}: if it orders @var{a} before @var{b} and
+@var{b} before @var{c}, then it must also order @var{a} before @var{c}.
+@end itemize
+
+@item :reverse @var{flag}
+If @var{flag} is non-@code{nil}, the sorting order is reversed.  With
+the default @code{:lessp} predicate this means sorting in descending order.
+
+@item :in-place @var{flag}
+If @var{flag} is non-@code{nil}, then @var{sequence} is sorted
+in-place (destructively) and returned.  If @code{nil}, or if this
+argument is not given, a sorted copy of the input is returned and
+@var{sequence} itself remains unmodified.  In-place sorting is
+slightly faster, but the original sequence is lost.
+@end table
+
+If the default behaviour is not suitable for your needs, it is usually
+easier and faster to supply a new @code{:key} function than a
+different @code{:lessp} predicate.  For example, consider sorting
+these strings:
+
+@example
+@group
+(setq numbers '("one" "two" "three" "four" "five" "six"))
+(sort numbers)
+     @result{} ("five" "four" "one" "six" "three" "two")
+@end group
+@end example
+
+You can sort the strings by length instead by supplying a different key
+function:
+
+@example
+@group
+(sort numbers :key #'length)
+     @result{} ("one" "two" "six" "four" "five" "three")
+@end group
+@end example
+
+@noindent
+Note how strings of the same length keep their original order, thanks to
+the sorting stability.  Now suppose you want to sort by length, but use
+the string contents to break ties.  The easiest way is to specify a key
+function that transforms an element to a value that is sorted this way.
+Since @code{value<} orders compound objects (conses, lists,
+vectors and records) lexicographically, you could do:
+
+@example
+@group
+(sort numbers :key (lambda (x) (cons (length x) x)))
+     @result{} ("one" "six" "two" "five" "four" "three")
+@end group
+@end example
+
+@noindent
+because @code{(3 . "six")} is ordered before @code{(3 . "two")} and so on.
+
+For compatibility with previous versions of Emacs, the @code{sort}
+function can also be called using the fixed two-argument form:
+
+@example
+(@code{sort} @var{sequence} @var{predicate})
+@end example
+
+@noindent
+where @var{predicate} is the @code{:lessp} argument.  When using this
+form, sorting is always done in-place.
+@end defun
+
+@c based on lisp/minibuffer.el
+@defun compat-call@ completion-metadata-get metadata prop
+Get property @var{prop} from completion @var{metadata}.  If the
+metadata specifies a completion category, the variables
+@code{completion-category-overrides} and
+@code{completion-category-defaults} take precedence for
+category-specific overrides.  If the completion metadata does not
+specify the property, the @code{completion-extra-properties} plist is
+consulted.  Note that the keys of the
+@code{completion-extra-properties} plist are keyword symbols, not
+plain symbols.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun compat-call@ copy-tree tree &optional vectors-and-records
+This function returns a copy of the tree @var{tree}.  If @var{tree} is a
+cons cell, this makes a new cons cell with the same @sc{car} and
+@sc{cdr}, then recursively copies the @sc{car} and @sc{cdr} in the
+same way.
+
+Normally, when @var{tree} is anything other than a cons cell,
+@code{copy-tree} simply returns @var{tree}.  However, if
+@var{vectors-and-records} is non-@code{nil}, it copies vectors and records
+too (and operates recursively on their elements).  The @var{tree}
+argument must not contain cycles.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 30.1:
+
+@node Emacs 31.1
+@section Emacs 31.1
+
+@subsection Added Definitions
+The following functions and macros are implemented in Emacs
+31.1. These functions are made available by Compat on Emacs versions
+older than 31.1.  Note that due to upstream changes, it might happen
+that there will be the need for changes, so use these functions with
+care.
+
+@c copied from lispref/control.texi
+@defun error-type-p symbol
+This function returns non-@code{nil} if @var{symbol} is a valid
+error condition name.
+@end defun
+
+@c copied from lispref/control.texi
+@defun error-has-type-p error condition
+This function tests whether @var{condition} is a parent of the error
+symbol of the error descriptor @var{error}.
+It returns non-@code{nil} if the type of the error descriptor
+@var{error} belongs to the condition name @var{condition}.
+@end defun
+
+@c copied from lispref/control.texi
+@defun error-type error
+This function returns the error symbol of the error descriptor @var{error}.
+@end defun
+
+@c copied from lispref/control.texi
+@defun error-slot-value error pos
+This function returns the value in the field number @var{pos} of the error
+descriptor @var{error}.  The fields are numbered starting with 1.  E.g.,
+for an error of type @code{wrong-type-argument}, @code{(error-slot-value
+@var{error} 2)} returns the object that failed the type test, and
+@code{(error-slot-value @var{error} 1)} returns the predicate that failed.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun ensure-proper-list object
+This function returns @var{object} as a proper list (@pxref{(elisp) Cons
+Cells}).  If @var{object} is already a proper list, the function returns
+it; otherwise, the function returns a one-element list containing
+@var{object}.
+
+If @var{object} might be a long list, prefer @code{ensure-list}, because
+the latter function runs in constant time, whereas
+@code{ensure-proper-list} runs in linear time.  For short lists this
+function is a convenient way to treat cons-cells as non-lists:
+
+@lisp
+(ensure-list '(1 . 2))
+    @result{}(1 . 2)
+
+(ensure-proper-list '(1 . 2))
+    @result{}((1 . 2))
+@end lisp
+@end defun
+
+@c based on lisp/subr.el
+@defun set-local variable value
+Make @var{variable} buffer local and set it to @var{value}.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun drop-while pred list
+This function skips leading list elements for which the predicate @var{pred}
+returns non-@code{nil}, and returns the rest.
+
+@example
+@group
+(drop-while #'numberp '(1 2 a b 3 4))
+     @result{} (a b 3 4)
+@end group
+@end example
+@end defun
+
+@c copied from lispref/lists.texi
+@defun take-while pred list
+This function returns the leading list elements for which the predicate
+@var{pred} returns non-@code{nil}, and ignores the rest.
+
+In general,
+@code{(append (take-while @var{p} @var{list}) (drop-while @var{p} @var{list}))}
+will return a list equal to @var{list}.
+
+@example
+@group
+(take-while #'numberp '(1 2 a b 3 4))
+     @result{} (1 2)
+@end group
+@end example
+@end defun
+
+@c copied from lispref/lists.texi
+@defun all pred list
+This function returns @code{t} if @var{pred} is true for all elements in
+@var{list}.
+
+@example
+@group
+(all #'numberp '(1 2 3 4))     @result{} t
+(all #'numberp '(1 2 a b 3 4)) @result{} nil
+(all #'numberp '())            @result{} t
+@end group
+@end example
+@end defun
+
+@c copied from lispref/lists.texi
+@defun any pred list
+This function is an alias for @code{member-if}.  It may be preferable in
+contexts which do not make use of the returned value but only whether or
+not it was nil.
+@end defun
+
+@c copied from lispref/lists.texi
+@defun member-if pred list
+This function returns non-@code{nil} if @var{pred} is true for at least
+one element in @var{list}.  The returned value is the longest @var{list}
+suffix whose first element satisfies @var{pred}.
+
+@example
+@group
+(member-if #'symbolp '(1 2 3 4))     @result{} nil
+(member-if #'symbolp '(1 2 a b 3 4)) @result{} (a b 3 4)
+(member-if #'symbolp '())            @result{} nil
+@end group
+@end example
+@end defun
+
+@c copied from lispref/display.texi
+@defun remove-display-text-property start end spec &optional object
+Remove the display specification @var{spec} from the text from
+@var{start} to @var{end}.  @var{spec} is the @sc{car} of the display
+specification to remove, e.g.@: @code{height} or @code{'(margin nil)}.
+
+If any text in the region has any other @code{display} properties, those
+properties are retained.  For instance:
+
+@lisp
+@group
+(add-display-text-property 1 8 'raise 0.5)
+(add-display-text-property 4 8 'height 2.0)
+(remove-display-text-property 2 6 'raise)
+@end group
+@end lisp
+
+After doing this, the text will have the following @code{display}
+properties:
+
+@itemize @bullet
+@item
+The region from 1 to 2, only @code{raise}
+
+@item
+The region from 2 to 4, no properties
+
+@item
+The region from 4 to 6, only @code{height}
+
+@item
+The region from 6 to 8, both @code{raise} and @code{height}
+
+@end itemize
+
+@var{object} is either a string or a buffer to remove the specification
+from. If omitted, @var{object} defaults to the current buffer.
+@end defun
+
+@c based on lisp/subr.el
+@defmac hash-table-contains-p key table
+Return non-nil if @var{table} has an element with @var{key}.
+@end defmac
+
+@c copied from lispref/control.texi
+@defmac static-when condition body...
+Test @var{condition} at macro-expansion time.  If its value is
+non-@code{nil}, expand the macro to evaluate all @var{body} forms
+sequentially and return the value of the last one, or @code{nil} if there
+are none.
+@end defmac
+
+@c copied from lispref/control.texi
+@defmac static-unless condition body...
+Test @var{condition} at macro-expansion time.  If its value is @code{nil},
+expand the macro to evaluate all @var{body} forms sequentially and return
+the value of the last one, or @code{nil} if there are none.
+@end defmac
+
+@c copied from lispref/display.texi
+@defun unbuttonize-region start end
+This function removes all buttons between @var{start} and @var{end} in
+the current buffer (both overlay and text-property based ones).
+@end defun
+
+@c based on lisp/minibuffer.el
+@defun completion-table-with-metadata table metadata
+Return new completion @var{table} with @var{metadata}.  @var{metadata}
+should be an alist of completion metadata.  See
+@code{completion-metadata} for a list of supported metadata.
+@end defun
+
+@c based on lisp/minibuffer.el
+@defun completion-list-candidate-at-point &optional pt
+Candidate string and bounds at @var{pt} in completions buffer.  The
+return value has the format (@var{str} @var{beg} @var{end}).  The
+optional argument @var{pt} defaults to @code{(point)}.
+@end defun
+
+@c based on lisp/emacs-lisp/subr-x.el
+@defmac with-work-buffer &rest body
+Create a work buffer, and evaluate @var{body} there like @code{progn}.
+Like @code{with-temp-buffer}, but reuse an already created temporary
+buffer when possible, instead of creating a new one on each call.
+@end defmac
+
+@c copied from lispref/numbers.texi
+@defun plusp number
+This predicate tests whether its argument is positive, and returns
+@code{t} if so, @code{nil} otherwise.  The argument must be a number.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defun minusp number
+This predicate tests whether its argument is negative, and returns
+@code{t} if so, @code{nil} otherwise.  The argument must be a number.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defun oddp integer
+This predicate tests whether its argument is an odd number, and returns
+@code{t} if so, @code{nil} otherwise.  The argument must be an integer.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defun evenp integer
+This predicate tests whether its argument is an even number, and returns
+@code{t} if so, @code{nil} otherwise.  The argument must be an integer.
+@end defun
+
+@c copied from lispref/numbers.texi
+@defmac incf place &optional delta
+This macro increments the number stored in @var{place} by one, or
+by @var{delta} if specified.  It returns the incremented value.
+
+@var{place} can be a symbol or a generalized variable,
+@pxref{generalised variable,Generalized Variables,,elisp}.  For example,
+@w{@samp{(incf i)}} is equivalent to @w{@samp{(setq i (1+ i))}}, and
+@w{@samp{(incf (car x) 2)}} is equivalent to @w{@samp{(setcar x (+ (car
+x) 2))}}.
+@end defmac
+
+@c copied from lispref/numbers.texi
+@defmac decf place &optional delta
+This macro decrements the number stored in @var{place} by one, or
+by @var{delta} if specified.  It returns the decremented value.
+@end defmac
+
+@defun color-blend a b &optional alpha
+Interpolate between the two colors @var{a} and @var{b}.  Both arguments
+are a list of three numbers @samp{(RED GREEN BLUE)} representing a
+coordinate in a (0,1)-RGB color space.  The optional argument
+@var{alpha} should be a value between 0 and 1 and adjusts how strongly
+the function will skew in either direction: Values towards 1 tend
+towards @var{a}, while values towards 0 tend towards @var{b}.  By
+default, the argument defaults to 0.5.
+@end defun
+
+@subsection Extended Definitions
+These functions must be called explicitly via @code{compat-call},
+since their calling convention or behavior was extended in Emacs 31.1:
+
+@c copied from lispref/os.texi
+@defun compat-call@ seconds-to-string delay &optional readable abbrev precision
+Return a string describing a given @var{delay} (in seconds).  By
+default, this function formats the returned string as a floating-point
+number in units selected according to the value of @var{delay}.  For
+example, a delay of 9861.5 seconds yields @samp{2.74h}, since the value
+of @var{delay} is longer than 1 hour, but shorter than 1 day.  The
+output formatting can be further controlled by the optional arguments,
+if optional argument @var{readable} is non-@code{nil}.  If
+@var{readable}'s value is @code{expanded}, the returned string will
+describe @var{delay} using two units; for example, a delay of 9861.5
+seconds with @var{readable} set to the symbol @code{expanded} returns
+@samp{2 hours 44 minutes}, but if @var{readable} is @code{t}, the
+function returns @samp{3 hours}.  Optional argument @var{abbrev}, if
+non-@code{nil}, means to abbreviate the units: use @samp{h} instead of
+@samp{hours}, @samp{m} instead of @samp{minutes}, etc.  If
+@var{precision} is a whole integer number, the function rounds the value
+of the smallest unit it produces to that many digits after the decimal
+point; thus, 9861.5 with @var{precision} set to 3 yields @samp{2.739
+hours}.  If @var{precision} is a non-negative float smaller than 1, the
+function rounds to that value.
+@end defun
+
+@subsection Missing Definitions
+Compat does not provide support for the following Lisp features
+implemented in 31.1:
+
+@c Placeholder
+
+@node Development
+@chapter Development
+
+Compat is developed on GitHub.
+
+Bug reports, patches and comments are best sent to the
+@uref{https://github.com/emacs-compat/compat/issues, issue tracker}.
+These may include issues in the compatibility code, missing
+definitions or performance issues.
+
+Please note that as a GNU ELPA package, Compat requires contributors
+to have signed the
+@uref{https://www.gnu.org/software/emacs/manual/html_node/emacs/Copyright-Assignment.html,
+FSF copyright assignment}, before any non-trivial contribution
+(roughly 15 lines of code) can be applied.
+
+It is important that you provide tests when you contribute new
+functionality.  Compat has 100% test coverage by the test suite.  We
+use continuous integration to check if patches preserve existing
+functionality.
+
+Development for the currently stable Emacs version happens in the main
+branch of the Compat Git repository.  ELPA-devel nightly builds are
+created from this branch.  New features, which are not yet ready to be
+merged directly into the main branch, are developed in feature
+branches.  Furthermore the Git repository has a branch emacs-<version>
+where the development for the upcoming Emacs release takes place.
+This branch is separate from the main branch since the new
+functionality should not be made available (neither via ELPA nor
+ELPA-devel) before the new Emacs version has been reasonably
+stabilized, e.g., around the time when the Emacs version branch is
+created in the Emacs repository on Savannah.
+
+@node Function Index
+@appendix Function Index
+
+@printindex fn
+
+@node Variable Index
+@appendix Variable Index
+
+@printindex vr
+
+@bye

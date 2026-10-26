@@ -15,7 +15,12 @@
 (require 'hydra)
 
 (defhydra nateeag/keybindings (:exit t)
-  "keybindings"
+  "Root hydra for my various custom keybindings.
+
+Exists mainly because keybindings I don't use as often I sometimes
+forget. Having a visual orientation to what's available helps me avoid
+that."
+
   ("f" find-file "Open file")
   ("w" save-buffer "Save current buffer")
   ("p" (nateeag/projects/body) "Projects"))

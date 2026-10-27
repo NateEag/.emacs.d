@@ -30,6 +30,7 @@
 
 (defhydra nateeag/hydras/buffers (:exit t)
   "Buffer / file ops"
+  ("b" switch-to-buffer)
   ("f" find-file "Open file")
   ("w" save-buffer "Save current buffer"))
 

@@ -20,9 +20,8 @@
 (defhydra nateeag/keybindings (:exit t)
   "My custom keybindings"
 
-
-  ("f" (nateeag/hydras/buffers/body) "General buffer / file operations")
   ("e" (nateeag/hydras/elisp/body) "Emacs Lisp")
+  ("b" (nateeag/hydras/buffers/body) "General buffer / file operations")
   ;; Bound to g for obvious historical reasons, but might someday grow
   ;; beyond strictly working with Git.
   ("g" (nateeag/hydras/vcs/body) "Version control")

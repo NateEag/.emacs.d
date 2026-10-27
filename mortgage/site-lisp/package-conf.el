@@ -113,6 +113,9 @@
          ("C-h F" . helpful-function)
          ("C-h C" . helpful-command)))
 
+(use-package autorevert
+  :diminish)
+
 ;; Many minor modes don't need to be documented in the precious space of the
 ;; modeline.
 ;;

@@ -71,9 +71,16 @@
 (use-package evil
   :ensure t
   :demand t
-  :after hydra
+  :after hydra evil-surround
   :config
+
+  ;; Evil everywhere, by default.
+  ;;
+  ;; I didn't do this in my previous config, but at this point it
+  ;; seems simpler to opt out in the rare case where I don't want it.
   (evil-mode 1)
+
+  (global-evil-surround-mode)
 
   ;; TODO: Figure out how to load these via use-package.
   ;;
@@ -89,6 +96,9 @@
   ;; FIXME: I _do_ need to figure out the correct way to load the hydra. That
   ;; means working out autoloads, I guess.
   (evil-define-key 'normal 'global (kbd "SPC") 'nateeag/keybindings/body))
+
+(use-package evil-surround
+  :ensure t)
 
 ;; Make emacs' built-in help functions more helpful.
 ;;

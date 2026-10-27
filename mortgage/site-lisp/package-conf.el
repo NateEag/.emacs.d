@@ -64,7 +64,7 @@
 ;; For me, vi really is a better editor, in that changing text is faster and
 ;; easier on my fragile wrists than it is with Emacs default keybindings or an
 ;; editor that requires using the mouse (i.e. anything other than the Ancient
-;; Trio of ed, emacs, vi).
+;; Trio of ed, emacs, and vi).
 ;;
 ;; Fortunately, if you have a good operating system, eventually people port or
 ;; rewrite just about anything to it. :P

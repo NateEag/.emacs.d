@@ -14,12 +14,12 @@
 
 (require 'hydra)
 
+;; Exists mainly because keybindings I don't use as often I sometimes
+;; forget. Having a visual orientation to what's available helps me
+;; avoid that.
 (defhydra nateeag/keybindings (:exit t)
-  "Root hydra for my various custom keybindings.
+  "My custom keybindings"
 
-Exists mainly because keybindings I don't use as often I sometimes
-forget. Having a visual orientation to what's available helps me avoid
-that."
 
   ("f" (nateeag/hydras/buffers/body) "General buffer / file operations")
   ("e" (nateeag/hydras/elisp/body) "Emacs Lisp")

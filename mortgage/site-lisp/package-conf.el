@@ -148,5 +148,11 @@
 (use-package magit
   :ensure t)
 
+;; I just ran into the scdoc documentation format for the first time.
+;;
+;; I didn't see a mode in MELPA or GNU ELPA, but did find this one.
+(use-package scdoc-mode
+  :ensure (:host codeberg :repo "armaan/scdoc-mode"))
+
 (provide 'package-conf)
 ;;; package-conf.el ends here

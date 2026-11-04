@@ -20,6 +20,7 @@
 (use-package compile-angel
   :ensure t
   :demand t
+  :diminish compile-angel-on-load-mode compile-angel-on-save-local-mode
   :config
   ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
   ;; (When set to nil, compile-angel won't show which file is being compiled.)
@@ -47,6 +48,9 @@
   ;; A global mode that compiles .el files when they are loaded
   ;; using `load' or `require'.
   (compile-angel-on-load-mode 1))
+
+(use-package diminish
+  :ensure t)
 
 (use-package elec-pair
   :demand t

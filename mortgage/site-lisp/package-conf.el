@@ -118,7 +118,7 @@
          ("C-h C" . helpful-command)))
 
 (use-package autorevert
-  :diminish)
+  :diminish auto-revert-mode)
 
 (use-package orderless
   :ensure t

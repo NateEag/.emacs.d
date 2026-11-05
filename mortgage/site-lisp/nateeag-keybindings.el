@@ -51,7 +51,8 @@
   ;;
   ;; These are placeholders for some core operations, but I probably want Counsel or similar.
   ("p" project-switch-project "Change project")
-  ("b" consult-project-extra-find "Change buffer / open file"))
+  ("b" consult-project-extra-find "Change buffer / open file")
+  ("s" consult-ripgrep "Search in project"))
 
 (defhydra nateeag/hydras/vcs (:exit t)
   "Version control shortcuts"

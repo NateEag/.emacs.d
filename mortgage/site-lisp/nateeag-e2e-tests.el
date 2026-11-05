@@ -30,8 +30,14 @@
 ;; the test for.
 ;;
 ;; This was enough to demonstrate that ert-play-keys is working.
-;;(ert-deftest open-project-test () (ert-play-keys "SPC f ~/.emacs.d/readme.md
-;;  C-j"))
+(ert-deftest open-project-test ()
+  (ert-with-test-buffer (:selected t)
+    (ert-play-keys "SPC p p .emacs.d C-j f readme.md C-j")
+    (should (and (equal (buffer-name)
+		    "readme.md")
+		 (equal (buffer-substring 1 30)
+		    "# Nate Eagleson's Emacs Config")))))
+
 
 (defun nateeag-run-e2e-tests ()
   "Run E2E tests, exiting with nonzero status if any fail.

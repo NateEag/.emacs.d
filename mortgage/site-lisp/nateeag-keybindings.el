@@ -51,11 +51,7 @@
   ;;
   ;; These are placeholders for some core operations, but I probably want Counsel or similar.
   ("p" project-switch-project "Change project")
-  ;; FIXME: Update this to support buffer/file swaps seamlessly, maybe by merging the two.
-  ;;
-  ;; Two bindings for this is annoying.
-  ("b" consult-project-buffer "Change buffer in project")
-  ("f" project-find-file "Open file in project"))
+  ("b" consult-project-extra-find "Change buffer / open file"))
 
 (defhydra nateeag/hydras/vcs (:exit t)
   "Version control shortcuts"

@@ -26,7 +26,11 @@
   ;; beyond strictly working with Git.
   ("g" (nateeag/hydras/vcs/body) "Version control")
   ("j" (nateeag/hydras/jump/body) "Visual jump")
-  ("p" (nateeag/hydras/projects/body) "Projects"))
+  ("p" (nateeag/hydras/projects/body) "Projects")
+
+  ;; A little easier on the hands than M-x.
+  ("x" execute-extended-command "Run command")
+  )
 
 (defhydra nateeag/hydras/buffers (:exit t)
   "Buffer / file ops"

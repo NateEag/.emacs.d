@@ -120,6 +120,16 @@
 (use-package autorevert
   :diminish auto-revert-mode)
 
+;; Select items more easily in functions using Emacs' built-in
+;; completing-read, by filtering with space-separated fragments.
+(use-package consult
+  :ensure t)
+
+;; Support filtering completions with regex fragments in no particular order.
+;;
+;; This makes it easier to narrow progressively, because you can add
+;; specificity based on remaining candidate strings without having to
+;; worry about which parts of those strings you're targeting.
 (use-package orderless
   :ensure t
   :custom
@@ -127,17 +137,24 @@
   (completion-category-overrides '((file (styles partial-completion))))
   (completion-pcm-leading-wildcard t))
 
-(use-package marginalia
-  :ensure t
-  :init
-  (marginalia-mode))
-
+;; A more-readable completion UI than the default Emacs one.
 (use-package vertico
   :ensure t
   :init
   (vertico-mode))
 
-(use-package consult
+;; Annotates completion candidates with metadata.
+;;
+;; I'm not sure I'll keep all of them - the file metadata feels like noise to me.
+;;
+;; Function summaries in execute-extended-command are gold, though. <3
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode))
+
+;; Offers a way to search for buffers _or_ files within a project.
+(use-package consult-project-extra
   :ensure t)
 
 ;; Many minor modes don't need to be documented in the precious space of the

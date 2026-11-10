@@ -129,7 +129,9 @@
          ("C-h C" . helpful-command)))
 
 (use-package autorevert
-  :diminish auto-revert-mode)
+  :diminish auto-revert-mode
+  :init
+  (global-auto-revert-mode))
 
 ;; Select items more easily in functions using Emacs' built-in
 ;; completing-read, by filtering with space-separated fragments.

@@ -76,8 +76,12 @@
   :ensure t
   :demand t
   :after hydra evil-surround
-  :config
+  :init
+  ;; Ensure evil-collection initialization works.
+  (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
+  (setq evil-want-keybinding nil)
 
+  :config
   ;; Evil everywhere, by default.
   ;;
   ;; I didn't do this in my previous config, but at this point it
@@ -100,6 +104,13 @@
   ;; FIXME: I _do_ need to figure out the correct way to load the hydra. That
   ;; means working out autoloads, I guess.
   (evil-define-key 'normal 'global (kbd "SPC") 'nateeag/keybindings/body))
+
+;; Let's see if I can adapt to the standard evil community keybindings.
+(use-package evil-collection
+  :ensure t
+  :after evil
+  :config
+  (evil-collection-init))
 
 (use-package evil-surround
   :ensure t)

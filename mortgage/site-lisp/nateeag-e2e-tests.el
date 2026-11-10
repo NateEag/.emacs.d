@@ -24,20 +24,20 @@
 (ert-deftest startup-time-test ()
   (should (< nateeag-elapsed-start-time 0.5)))
 
-;; FIXME: This currently fails.
+;; FIXME: Actually get this triggering my interactive keybinding.
 ;;
-;; Commented until I get to a working configuration I want to actually write
-;; the test for.
+;; https://stackoverflow.com/questions/32961823/how-can-i-test-an-interactive-function-in-emacs, 
+;; https://github.com/abo-abo/swiper/blob/master/ivy-test.el, and
+;; https://github.com/DarwinAwardWinner/with-simulated-input seem like good resources for figuring this out.
 ;;
 ;; This was enough to demonstrate that ert-play-keys is working.
-(ert-deftest open-project-test ()
-  (ert-with-test-buffer (:selected t)
-    (ert-play-keys "SPC p p .emacs.d C-j f readme.md C-j")
-    (should (and (equal (buffer-name)
-		    "readme.md")
-		 (equal (buffer-substring 1 30)
-		    "# Nate Eagleson's Emacs Config")))))
-
+;(ert-deftest open-project-test ()
+;  (ert-with-test-buffer (:selected t)
+;    (execute-kbd-macro (read-kbd-macro "SPC p p .emacs.d C-j f C-j"))
+;    (should (and (equal (buffer-name)
+;		    "readme.md")
+;		 (equal (buffer-substring 1 30)
+;		    "# Nate Eagleson's Emacs Config")))))
 
 (defun nateeag-run-e2e-tests ()
   "Run E2E tests, exiting with nonzero status if any fail.

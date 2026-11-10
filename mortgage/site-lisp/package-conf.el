@@ -62,6 +62,11 @@
   :demand t
   :diminish)
 
+(use-package eldoc
+  :init
+  (setq eldoc-minor-mode-string nil)
+  :diminish)
+
 ;; Emacs is a better operating system, hands down, and you can take it from me
 ;; when you pry it from my cold, dead hands.
 ;;
@@ -109,6 +114,7 @@
 (use-package evil-collection
   :ensure t
   :after evil
+  :diminish evil-collection-unimpaired-mode
   :config
   (evil-collection-init))
 

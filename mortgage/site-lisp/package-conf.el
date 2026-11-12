@@ -234,5 +234,17 @@
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
+;; TODO: Move to glsl-ts-mode
+(use-package glsl-mode
+  :ensure t
+  :config
+  (add-to-list 'eglot-server-programs '((glsl-mode) "glsl_analyzer"))
+  ;; The eglot docs warn against this as potentially flaky.
+  ;;
+  ;; I guess we'll see how bad it is.
+  ;;
+  ;; TODO: Move this to prog-mode generally? Might need a smartish wrapper then.
+  :hook (glsl-mode . eglot-ensure))
+
 (provide 'package-conf)
 ;;; package-conf.el ends here

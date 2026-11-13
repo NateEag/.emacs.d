@@ -246,5 +246,12 @@
   ;; TODO: Move this to prog-mode generally? Might need a smartish wrapper then.
   :hook (glsl-mode . eglot-ensure))
 
+;; If you haven't tried nix or NixOS, you're missing out.
+(use-package nix-mode
+  :ensure t
+  :config
+  (add-to-list 'eglot-server-programs '((nix-mode) "nil"))
+  :hook (nix-mode . eglot-ensure))
+
 (provide 'package-conf)
 ;;; package-conf.el ends here

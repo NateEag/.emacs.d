@@ -185,6 +185,11 @@
 (use-package diminish
   :ensure t)
 
+(use-package apheleia
+  :ensure t
+  :config
+  (apheleia-global-mode))
+
 ;; I love project-specific shell environments.
 ;;
 ;; Direnv is the best tool I've encountered for them.

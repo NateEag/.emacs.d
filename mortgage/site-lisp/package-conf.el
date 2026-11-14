@@ -223,7 +223,7 @@
   :ensure t
   :config
   (load-theme 'solarized-dark t)
-    (let ((line (face-attribute 'mode-line :underline)))
+  (let ((line (face-attribute 'mode-line :underline)))
     (set-face-attribute 'mode-line nil :overline line)
     (set-face-attribute 'mode-line nil :underline line)
     (set-face-attribute 'mode-line nil :box nil)

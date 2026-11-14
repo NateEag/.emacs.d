@@ -258,5 +258,8 @@
   (add-to-list 'eglot-server-programs '((nix-mode) "nil"))
   :hook (nix-mode . eglot-ensure))
 
+(use-package ast-grep
+  :ensure t)
+
 (provide 'package-conf)
 ;;; package-conf.el ends here

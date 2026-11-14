@@ -47,12 +47,10 @@
 
 (defhydra nateeag/hydras/projects (:exit t)
   "Project ops"
-  ;; TODO: Figure out how I want to work with projects.
-  ;;
-  ;; These are placeholders for some core operations, but I probably want Counsel or similar.
   ("p" project-switch-project "Change project")
   ("b" consult-project-extra-find "Change buffer / open file")
-  ("s" consult-ripgrep "Search in project"))
+  ("s" consult-ripgrep "Search in project")
+  ("a" ast-grep-project "Seach in project - ast-grep"))
 
 (defhydra nateeag/hydras/vcs (:exit t)
   "Version control shortcuts"

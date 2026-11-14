@@ -187,6 +187,7 @@
 
 (use-package apheleia
   :ensure t
+  :diminish
   :config
   (apheleia-global-mode))
 

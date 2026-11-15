@@ -14,6 +14,14 @@
 
 ;;; Code:
 
+;; Configuration of core Emacs behaviors, using the dummy emacs package.
+;;
+;; I should probably move my prefs.el settings in here.
+(use-package emacs
+  :custom
+  ;; Use tab for completions.
+  (tab-always-indent 'complete))
+
 ;; I'm not confident compile-angel is actually better than auto-compile.
 ;;
 ;; I'm giving it a try. We'll see how it feels.
@@ -141,6 +149,7 @@
 (use-package lisp-mode
   :mode (("\\.el\\'" . emacs-lisp-mode)
          ("/Cask\\'" . emacs-lisp-mode))
+  :after corfu cape
   ;; Wait to set up elisp customizations until initialization is done.
   ;;
   ;; Otherwise, the various elisp buffers like *scratch* that appear before my
@@ -185,6 +194,22 @@
   :ensure t
   :init
   (vertico-mode))
+
+;; It can be nice to have a standard inline completion popup.
+;;
+;; Corfu's approach of sticking as close to built-in Emacs featues as
+;; possible seems like a good idea.
+(use-package corfu
+  :ensure t
+  :init
+  (global-corfu-mode)
+  (corfu-popupinfo-mode))
+
+(use-package cape
+  :ensure t
+  :init
+  (add-hook 'completion-at-point-functions #'cape-elisp-symbol)
+  (add-hook 'completion-at-point-functions #'cape-elisp-block))
 
 ;; Annotates completion candidates with metadata.
 ;;

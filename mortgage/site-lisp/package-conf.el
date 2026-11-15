@@ -134,6 +134,30 @@
          ("C-h F" . helpful-function)
          ("C-h C" . helpful-command)))
 
+(use-package elisp-slime-nav
+  :ensure t
+  :diminish)
+
+(use-package lisp-mode
+  :mode (("\\.el\\'" . emacs-lisp-mode)
+         ("/Cask\\'" . emacs-lisp-mode))
+  ;; Wait to set up elisp customizations until initialization is done.
+  ;;
+  ;; Otherwise, the various elisp buffers like *scratch* that appear before my
+  ;; config is finished loading throw errors for all the dependencies that
+  ;; aren't loaded yet.
+  ;;
+  ;; This still results in *scratch* having the extras, though, since the hook
+  ;; runs first time it's set. For a workaround, this is a pretty seamless one.
+  :hook
+  (after-init
+   .
+   (lambda ()
+     (add-hook
+      'emacs-lisp-mode-hook
+      #'(lambda ()
+	  (turn-on-elisp-slime-nav-mode))))))
+
 (use-package autorevert
   :diminish auto-revert-mode
   :init

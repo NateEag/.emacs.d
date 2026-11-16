@@ -16,4 +16,7 @@
 ;; If something goes wrong during startup, let's debug it.
 (setq debug-on-error t)
 
+;; Make evil stop whining at me about not configuring this soon enough.
+(setq evil-want-keybinding nil)
+
 ;;; early-init.el ends here

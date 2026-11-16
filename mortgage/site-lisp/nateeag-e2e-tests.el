@@ -1,4 +1,4 @@
-;;; nateeag-e2e-tests.el --- E2E tests for my core Emacs config behaviors.
+;;; nateeag-e2e-tests.el --- E2E tests for my core Emacs config behaviors. -*- lexical-binding: t; -*-
 
 ;;; Author: Nate Eagleson
 

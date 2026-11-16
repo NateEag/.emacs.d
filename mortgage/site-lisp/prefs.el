@@ -32,5 +32,8 @@
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 
+;; Ditto for another column.
+(scroll-bar-mode -1)
+
 (provide 'prefs)
 ;;; prefs.el ends here

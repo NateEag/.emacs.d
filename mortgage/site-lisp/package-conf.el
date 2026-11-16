@@ -1,4 +1,4 @@
-;;; package-conf.el --- My package configuration.
+;;; package-conf.el --- My package configuration. -*- lexical-binding: t; -*-
 
 ;;; Author: Nate Eagleson
 

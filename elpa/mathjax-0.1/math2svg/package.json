@@ -3,7 +3,7 @@
     "mathjax-full": "^3.2.2"
   },
   "devDependencies": {
-    "webpack": "^5.95.0",
+    "webpack": "^5.105.0",
     "webpack-cli": "^5.1.4"
   },
   "scripts": {

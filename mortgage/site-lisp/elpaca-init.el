@@ -53,15 +53,16 @@
 
 ;; Uncomment for systems which cannot create symlinks:
 ;;
-;; I use this so I can keep a rigorous history of built source, guaranteeing I
-;; can always get back to a previously-committed state, even if the source
-;; repos drop off the face of the internet.
+;; I use this so I can keep a rigorous history of built source.
+;;
+;; That guarantees I can always get back to a previously-committed
+;; state, even if the source repos drop off the face of the internet.
 (elpaca-no-symlink-mode)
 
 ;; Install use-package support
 (elpaca elpaca-use-package
-        ;; Enable use-package :ensure support for Elpaca.
-        (elpaca-use-package-mode))
+  ;; Enable use-package :ensure support for Elpaca.
+  (elpaca-use-package-mode))
 
 (provide 'elpaca-init)
 ;;; elpaca-init.el ends here

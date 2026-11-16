@@ -57,9 +57,6 @@
   ;; using `load' or `require'.
   (compile-angel-on-load-mode 1))
 
-(use-package diminish
-  :ensure t)
-
 (use-package elec-pair
   :demand t
   :config

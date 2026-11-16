@@ -21,8 +21,13 @@
 ;; The ert-play-keys function is in this package.
 (require 'ert-x)
 
-(ert-deftest startup-time-test ()
+(ert-deftest nateeag/startup-time-test ()
+  "Ensure my Emacs instance starts up in a reasonable amount of time."
   (should (< nateeag-elapsed-start-time 0.5)))
+
+(ert-deftest nateeag/no-startup-warnings ()
+  "Ensure there aren't any warnings after I start Emacs."
+  (should (eq (get-buffer "*Warnings*") nil)))
 
 ;; FIXME: Actually get this triggering my interactive keybinding.
 ;;

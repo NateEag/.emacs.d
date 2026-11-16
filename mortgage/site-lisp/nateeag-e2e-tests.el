@@ -54,8 +54,7 @@ equal to number of unsuccessful tests."
 
   (let ((stats (ert-run-tests-interactively t)))
     (ert-write-junit-test-report stats)
-    (kill-emacs (ert-stats-completed-unexpected stats))
-    ))
+    (kill-emacs (ert-stats-completed-unexpected stats))))
 
 (provide 'nateeag-e2e-tests)
 ;;; nateeag-e2e-tests.el ends here

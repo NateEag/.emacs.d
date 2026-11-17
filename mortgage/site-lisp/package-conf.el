@@ -18,9 +18,50 @@
 ;;
 ;; I should probably move my prefs.el settings in here.
 (use-package emacs
+  :ensure nil
+  :bind (;; I'd much rather have a sane way to goto-line than to
+	 ;; interactively change my font settings.
+	 ("M-g" . goto-line-preview)
+
+	 ;; Reverting a buffer is much like refreshing.
+	 ([f5] . (lambda () (interactive) (revert-buffer t t)))
+
+	 ;; I overrode this default keybinding over a decade ago, so
+	 ;; it's deep in my subconscious.
+	 ;;
+	 ;; I'm not going to change it now.
+	 ("M-;" . (lambda ()
+		    (interactive)
+		    (let (beg end)
+		      (if (region-active-p)
+			  (setq beg (region-beginning) end (region-end))
+			(setq beg (line-beginning-position) end (line-end-position)))
+		      (comment-or-uncomment-region beg end))))
+	 )
+
+  :init
+  ;; I'd rather fit another few rows of buffer text than see menus and
+  ;; buttons.
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+
+  ;; Ditto for another column.
+  (scroll-bar-mode -1)
+
   :custom
-  ;; Use tab for completions.
-  (tab-always-indent 'complete))
+  ;; Use tab key for completions.
+  (tab-always-indent 'complete)
+
+  ;; I've been using Emacs since 2003.
+  ;;
+  ;; I don't need to see the splash screen or other displays of basic emacs
+  ;; trivia.
+  (inhibit-startup-screen t)
+  (inhibit-startup-echo-area-message t)
+
+  ;; I want vanilla emacs plus my explicitly-chosen extensions. That's it.
+  (inhibit-default-init t)
+  )
 
 ;; I'm not confident compile-angel is actually better than auto-compile.
 ;;
@@ -71,6 +112,9 @@
   :init
   (setq eldoc-minor-mode-string nil)
   :diminish)
+
+(use-package goto-line-preview
+  :ensure t)
 
 ;; Emacs is a better operating system, hands down, and you can take it from me
 ;; when you pry it from my cold, dead hands.

@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: crontab-item
+# key: crontab-item
+# --
+# ${1:Explain entry's purpose here.}
+${2:*} ${3:*} ${4:*} ${5:*} ${6:*} ${0:command}

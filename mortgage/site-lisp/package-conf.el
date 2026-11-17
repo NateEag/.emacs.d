@@ -275,6 +275,27 @@
 (use-package diminish
   :ensure t)
 
+(use-package yasnippet
+  :ensure t
+  :diminish
+  :init
+  (yas-minor-mode)
+  :config
+
+  ;; Set up all snippet dirs to lazy-load.
+  (yas-reload-all)
+
+  ;; Give keys_with_underscores priority over non-underscored-keys.
+  ;; This lets things like require_once in php-mode not be overridden by
+  ;; 'once' from cc-mode, php-mode's parent mode.
+  (setq yas-key-syntaxes (list "w_" "w" "w_." "w_.()" "^ "))
+
+  (defalias 'nateeag/yas-edit-snippet
+    'yas-visit-snippet-file
+    "I always forget this function's name.
+
+With this alias I hope to not need to remember it."))
+
 (use-package apheleia
   :ensure t
   :diminish

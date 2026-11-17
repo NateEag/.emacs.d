@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: log_die
+# key: log_die
+# --
+console.log($0); process.exit(1);

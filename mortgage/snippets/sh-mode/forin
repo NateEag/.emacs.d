@@ -1,0 +1,6 @@
+# key: forin
+# name: forin
+# --
+for ${1:item} in "\${${2:array_name}[@]}"; do
+    $0
+done

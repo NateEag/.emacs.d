@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: output_http_status_code
+# key: output_http_status_code
+# --
+curl --silent \
+     --output /dev/null \
+     --write-out '%{http_code}' \
+     "${0:url}"

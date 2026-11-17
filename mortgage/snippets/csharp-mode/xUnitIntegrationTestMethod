@@ -1,0 +1,13 @@
+# key: xUnitIntegrationTestMethod
+# name: xUnitIntegrationTestMethod
+# --
+[Fact]
+public async Task ${1:TestMethodName}()
+{
+    // Arrange
+    $0
+
+    // Act
+
+    // Assert
+}

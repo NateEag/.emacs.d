@@ -1,0 +1,12 @@
+# -*- mode: snippet -*-
+#
+# A reminder of how to output messages nicely on terminals. Incomplete, as it
+# requires that you set fold_width using `tput cols` with a default of 80
+# earlier in the script.
+#
+# Mostly an attempt to help me remember that this is how you should echo.
+#
+# name: output
+# key: output
+# --
+echo "$${0:msg}" | fold -sw "$fold_width"

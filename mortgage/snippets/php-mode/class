@@ -1,0 +1,10 @@
+# key: class
+# name: class ...
+# --
+class ${class_name}
+{
+   public function __construct()
+   {
+      $0
+   }
+}

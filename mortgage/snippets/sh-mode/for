@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: for
+# key: for
+# --
+
+for ${1:file} in ${2:glob}; do
+    $0
+done

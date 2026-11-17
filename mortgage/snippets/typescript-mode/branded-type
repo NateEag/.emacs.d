@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: branded-type
+# key: branded-type
+# --
+type $1 = $2 & { __brand: "${1:$(downcase yas-text)}"};

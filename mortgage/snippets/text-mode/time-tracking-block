@@ -1,0 +1,17 @@
+# -*- mode: snippet -*-
+# Just a one-off snippet for inserting a time tracking block in my ad-hoc time
+# tracking text files.
+# name: time-tracking-block
+# key: time-tracking-block
+# binding: direct-keybinding
+# contributor: Nate Eagleson
+# --
+
+Started: ${1:`(format-time-string "%l:%M %p")`}
+Client: $2
+Project: $3
+Hourly Rate: $4
+
+$0
+
+Stopped:

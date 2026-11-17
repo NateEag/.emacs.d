@@ -1,0 +1,10 @@
+# key: start-profiling
+# name: start-profiling
+#
+# This will only work with the shabang #! /bin/bash -x. Thus, I include that as
+# a reminder.
+#
+# --
+
+#! /bin/bash -x
+PS4='+ $(date "+%s.%N")\011 '

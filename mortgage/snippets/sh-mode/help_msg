@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# A not-very-rigorous approach I use for adding help messages to bash scripts.
+# I imagine over time this will evolve.
+#
+# name: help_msg
+# key: help_msg
+# --
+script_name="$(basename "\$0")"
+msg="${1:summary}
+
+Usage: $script_name ${0:argspec}"

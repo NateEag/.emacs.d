@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# expand-env: ((yas-indent-line 'fixed))
+# name: main
+# key: main
+#
+# TODO Add elisp to infer args based on what's passed to the invocation
+# --
+
+def $1(${2:args}):
+    $0
+
+if __name__ == '__main__':
+    ${1:main}()

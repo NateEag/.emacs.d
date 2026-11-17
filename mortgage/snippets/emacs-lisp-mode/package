@@ -1,0 +1,20 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: package
+# key: package
+# binding: direct-keybinding
+# --
+;;; ${1:`(file-name-base)`}.el --- $2 -*- lexical-binding: t; -*-
+
+;;; Author: $3
+
+;;; Version: $4
+
+;;; Commentary:
+
+;; $0
+
+;;; Code:
+
+
+(provide '$1)
+;;; $1.el ends here

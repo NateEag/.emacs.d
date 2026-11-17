@@ -143,6 +143,7 @@
   (evil-mode 1)
 
   (global-evil-surround-mode)
+  (evil-commentary-mode)
 
   ;; TODO: Figure out how to load these via use-package.
   ;;
@@ -168,6 +169,9 @@
   (evil-collection-init))
 
 (use-package evil-surround
+  :ensure t)
+
+(use-package evil-commentary
   :ensure t)
 
 ;; Make emacs' built-in help functions more helpful.

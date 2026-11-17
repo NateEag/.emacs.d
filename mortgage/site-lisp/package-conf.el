@@ -300,6 +300,22 @@
 
 With this alias I hope to not need to remember it."))
 
+(use-package prog-mode
+  :bind (:map prog-mode-map
+	      ("RET" . indent-new-comment-line))
+
+  :hook
+  (prog-mode
+   .
+   (lambda ()
+     ;; Get a language server going.
+     ;;
+     ;; The docs say not to do this unless you're sure it will always
+     ;; work, but it looks like all it's fussing about is that you'll
+     ;; get a warning displayed when it can't start one.
+     (eglot-ensure)))
+  )
+
 ;; Code formatters make life a lot simpler, both when writing code and during review.
 ;;
 ;; apheleia runs code formatters automatically, and leaves your cursor as close to its
@@ -362,21 +378,16 @@ With this alias I hope to not need to remember it."))
 ;; TODO: Move to glsl-ts-mode
 (use-package glsl-mode
   :ensure t
+  :after eglot
   :config
-  (add-to-list 'eglot-server-programs '((glsl-mode) "glsl_analyzer"))
-  ;; The eglot docs warn against this as potentially flaky.
-  ;;
-  ;; I guess we'll see how bad it is.
-  ;;
-  ;; TODO: Move this to prog-mode generally? Might need a smartish wrapper then.
-  :hook (glsl-mode . eglot-ensure))
+  (add-to-list 'eglot-server-programs '((glsl-mode) "glsl_analyzer")))
 
 ;; If you haven't tried nix or NixOS, you're missing out.
 (use-package nix-mode
   :ensure t
+  :after eglot
   :config
-  (add-to-list 'eglot-server-programs '((nix-mode) "nil"))
-  :hook (nix-mode . eglot-ensure))
+  (add-to-list 'eglot-server-programs '((nix-mode) "nil")))
 
 (use-package ast-grep
   :ensure t)

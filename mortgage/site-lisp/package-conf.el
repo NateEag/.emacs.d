@@ -296,6 +296,10 @@
 
 With this alias I hope to not need to remember it."))
 
+;; Code formatters make life a lot simpler, both when writing code and during review.
+;;
+;; apheleia runs code formatters automatically, and leaves your cursor as close to its
+;; original location as it can.
 (use-package apheleia
   :ensure t
   :diminish

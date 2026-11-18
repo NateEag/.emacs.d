@@ -279,6 +279,16 @@
 (use-package diminish
   :ensure t)
 
+;; When buffers would otherwise have matching names, put their parent
+;; directory after them, with a colon separating.
+(use-package uniquify
+  :init
+  (setq
+   uniquify-buffer-name-style 'post-forward
+   uniquify-separator ":"
+   uniquify-after-kill-buffer-p t
+   uniquify-ignore-buffers-re "^\\*"))
+
 (use-package yasnippet
   :ensure t
   :diminish

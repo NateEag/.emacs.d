@@ -54,7 +54,11 @@
 
 (defhydra nateeag/hydras/vcs (:exit t)
   "Version control shortcuts"
-  ("g" magit-status "Current project's status."))
+  ("b" magit-blame "See line history.")
+  ("g" magit-status "Current project's status.")
+  ("n" git-gutter:next-hunk "Next change.")
+  ("p" git-gutter:previous-hunk "Last change.")
+  ("r" git-gutter:revert-hunk "Revert change."))
 
 (defhydra nateeag/hydras/jump (:exit t)
   "Jump!"

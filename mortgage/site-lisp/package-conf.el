@@ -359,6 +359,12 @@ With this alias I hope to not need to remember it."))
 (use-package magit
   :ensure t)
 
+;; It's nice to be able to see what parts of a file you've changed.
+(use-package git-gutter
+  :ensure t
+  :config
+  (global-git-gutter-mode))
+
 ;; I just ran into the scdoc documentation format for the first time.
 ;;
 ;; I didn't see a mode in MELPA or GNU ELPA, but did find this one.

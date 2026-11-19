@@ -27,6 +27,7 @@
   ("g" (nateeag/hydras/vcs/body) "Version control")
   ("j" (nateeag/hydras/jump/body) "Visual jump")
   ("p" (nateeag/hydras/projects/body) "Projects")
+  ("u" (nateeag/hydras/urls/body) "URLs")
 
   ;; A little easier on the hands than M-x.
   ("x" execute-extended-command "Run command")
@@ -65,6 +66,10 @@
   "Version control links"
   ("f" git-link "Link to current file.")
   ("c" git-link-commit "Link to commit at point."))
+
+(defhydra nateeag/hydras/urls (:exit t)
+  "URLs"
+  ("u" browse-url-at-point "Open URL in browser"))
 
 (defhydra nateeag/hydras/jump (:exit t)
   "Jump!"

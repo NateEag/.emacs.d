@@ -365,6 +365,9 @@ With this alias I hope to not need to remember it."))
 (use-package magit
   :ensure t)
 
+(use-package git-link
+  :ensure t)
+
 ;; It's nice to be able to see what parts of a file you've changed.
 (use-package git-gutter
   :ensure t

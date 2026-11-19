@@ -56,9 +56,15 @@
   "Version control shortcuts"
   ("b" magit-blame "See line history.")
   ("g" magit-status "Current project's status.")
+  ("h" (nateeag/hydras/vcs/hyperlink/body) "Hyperlinks")
   ("n" git-gutter:next-hunk "Next change.")
   ("p" git-gutter:previous-hunk "Last change.")
   ("r" git-gutter:revert-hunk "Revert change."))
+
+(defhydra nateeag/hydras/vcs/hyperlink (:exit t)
+  "Version control links"
+  ("f" git-link "Link to current file.")
+  ("c" git-link-commit "Link to commit at point."))
 
 (defhydra nateeag/hydras/jump (:exit t)
   "Jump!"

@@ -289,6 +289,10 @@
    uniquify-after-kill-buffer-p t
    uniquify-ignore-buffers-re "^\\*"))
 
+(use-package smart-dash
+  :ensure t
+  :diminish)
+
 ;; I've been using yasnippet to generate (small amounts of)
 ;; boilerplate for several years now.
 ;;
@@ -317,6 +321,7 @@
 With this alias I hope to not need to remember it."))
 
 (use-package prog-mode
+  :after smart-dash
   :bind (:map prog-mode-map
 	      ("RET" . indent-new-comment-line))
 
@@ -329,7 +334,17 @@ With this alias I hope to not need to remember it."))
      ;; The docs say not to do this unless you're sure it will always
      ;; work, but it looks like all it's fussing about is that you'll
      ;; get a warning displayed when it can't start one.
-     (eglot-ensure)))
+     (eglot-ensure)
+
+     ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
+     ;;
+     ;; TODO: Port my bash-related smart-dash hacks. Or maybe upstream them.
+     (if (not (member major-mode '(emacs-lisp-mode
+                                   lisp-mode
+                                   lisp-interaction-mode
+                                   css-mode
+                                   scss-mode)))
+         (smart-dash-mode))))
   )
 
 ;; Code formatters make life a lot simpler, both when writing code and during review.

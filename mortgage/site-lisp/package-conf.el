@@ -289,6 +289,12 @@
    uniquify-after-kill-buffer-p t
    uniquify-ignore-buffers-re "^\\*"))
 
+;; I've been using yasnippet to generate (small amounts of)
+;; boilerplate for several years now.
+;;
+;; In general I disapprove of boilerplate, and think that if it isn't
+;; getting folded into abstractions, the project is not healthy, but
+;; some languages do require a relatively large amount of ceremony.
 (use-package yasnippet
   :ensure t
   :diminish

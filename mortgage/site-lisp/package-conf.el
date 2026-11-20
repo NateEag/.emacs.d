@@ -172,7 +172,8 @@
   :ensure t)
 
 (use-package evil-commentary
-  :ensure t)
+  :ensure t
+  :diminish)
 
 ;; Make emacs' built-in help functions more helpful.
 ;;

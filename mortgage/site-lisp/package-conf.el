@@ -142,6 +142,15 @@
   ;; seems simpler to opt out in the rare case where I don't want it.
   (evil-mode 1)
 
+  ;; ...but I was not born a vimmer, and some of the Emacs keys are
+  ;; embedded deep in my spinal cord.
+  ;;
+  ;; So, use Emacs' default bindings in insert-state, by removing the
+  ;; default insert-state keybindings, and adding back only Escape to return
+  ;; to normal-state.
+  (setq evil-insert-state-map (make-sparse-keymap))
+  (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
+
   (global-evil-surround-mode)
   (evil-commentary-mode)
 

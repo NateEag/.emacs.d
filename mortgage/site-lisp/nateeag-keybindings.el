@@ -1,8 +1,8 @@
 ;;; nateeag-keybindings.el --- My custom keybindings. -*- lexical-binding: t; -*-
 
 ;;; Author: Nate Eagleson
-
 ;;; Version: 0.0.1
+;;; Package-Requires ((hydra "0.15.0"))
 
 ;;; Commentary:
 
@@ -12,7 +12,18 @@
 
 ;;; Code:
 
-(require 'hydra)
+;; TODO: Is there a cleaner way to ensure required libraries are loaded at compile time?
+;;
+;;
+(eval-when-compile
+  (require 'hydra)
+  (require 'consult)
+  (require 'ast-grep)
+  (require 'magit)
+  (require 'git-gutter)
+  (require 'git-link)
+  (require 'consult-project-extra)
+  (require 'evil-integration))
 
 ;; Exists mainly because keybindings I don't use as often I sometimes
 ;; forget. Having a visual orientation to what's available helps me

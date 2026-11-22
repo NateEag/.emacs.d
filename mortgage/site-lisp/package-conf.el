@@ -116,6 +116,16 @@
 (use-package goto-line-preview
   :ensure t)
 
+(use-package nateeag-keybindings
+  :after hydra
+  :ensure nil
+  ;; TODO: Use elpaca to generate autoloads?
+  ;;
+  ;; Doesn't really matter in this case, since I just need the single
+  ;; entry point bindable, but if I start to pile up more local files,
+  ;; it would be a more-sustainable strategy.
+  :functions nateeag/keybindings)
+
 ;; Emacs is a better operating system, hands down, and you can take it from me
 ;; when you pry it from my cold, dead hands.
 ;;
@@ -128,8 +138,7 @@
 ;; rewrite just about anything to it. :P
 (use-package evil
   :ensure t
-  :demand t
-  :after hydra evil-surround
+  :after hydra evil-surround nateeag-keybindings
   :init
   ;; Ensure evil-collection initialization works.
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
@@ -154,19 +163,12 @@
   (global-evil-surround-mode)
   (evil-commentary-mode)
 
-  ;; TODO: Figure out how to load these via use-package.
-  ;;
-  ;; It would be cleaner, and I may eventually want to trigger these hydras
-  ;; from keybindings other than my normal-mode leader key.
-  (require 'nateeag-keybindings)
+  ;; Adds evil operators for manipulating paired characters.
 
   ;; I used leader-key for ages, but my lesser-used bindings are easily-forgotten.
   ;;
   ;; So, I'm giving Hydra a try, which means I don't _need_ a leader key - just
   ;; to bind the top-level hydra to the appropriate evil keymap.
-  ;;
-  ;; FIXME: I _do_ need to figure out the correct way to load the hydra. That
-  ;; means working out autoloads, I guess.
   (evil-define-key 'normal 'global (kbd "SPC") 'nateeag/keybindings/body))
 
 ;; Let's see if I can adapt to the standard evil community keybindings.

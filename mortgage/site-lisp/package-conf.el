@@ -223,7 +223,7 @@
      (add-hook
       'emacs-lisp-mode-hook
       #'(lambda ()
-	  (turn-on-elisp-slime-nav-mode))))))
+	  (elisp-slime-nav-mode))))))
 
 (use-package autorevert
   :diminish auto-revert-mode global-auto-revert-mode
@@ -299,7 +299,7 @@
   (setq
    uniquify-buffer-name-style 'post-forward
    uniquify-separator ":"
-   uniquify-after-kill-buffer-p t
+   uniquify-after-kill-buffer-flag t
    uniquify-ignore-buffers-re "^\\*"))
 
 (use-package smart-dash

@@ -105,7 +105,6 @@
 
 (use-package hydra
   :ensure t
-  :demand t
   :diminish)
 
 (use-package eldoc

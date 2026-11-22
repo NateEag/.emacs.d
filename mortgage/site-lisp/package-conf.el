@@ -69,7 +69,7 @@
 (use-package compile-angel
   :ensure t
   :demand t
-  :diminish compile-angel-on-load-mode compile-angel-on-save-local-mode
+  :diminish compile-angel-on-load-mode compile-angel-on-save-local-mode compile-angel-on-save-mode
   :config
   ;; Set `compile-angel-verbose' to nil to disable compile-angel messages.
   ;; (When set to nil, compile-angel won't show which file is being compiled.)
@@ -225,7 +225,7 @@
 	  (turn-on-elisp-slime-nav-mode))))))
 
 (use-package autorevert
-  :diminish auto-revert-mode
+  :diminish auto-revert-mode global-auto-revert-mode
   :init
   (global-auto-revert-mode))
 
@@ -365,7 +365,7 @@ With this alias I hope to not need to remember it."))
 ;; original location as it can.
 (use-package apheleia
   :ensure t
-  :diminish
+  :diminish apheleia-mode apheleia-global-mode
   :config
   (apheleia-global-mode))
 
@@ -398,6 +398,7 @@ With this alias I hope to not need to remember it."))
 ;; It's nice to be able to see what parts of a file you've changed.
 (use-package git-gutter
   :ensure t
+  :diminish global-git-gutter-mode git-gutter-mode
   :config
   (global-git-gutter-mode))
 

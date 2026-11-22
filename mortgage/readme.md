@@ -36,6 +36,8 @@ Goals:
 - Set breakpoint, start debugger via dap-mode - E2E test < 1s (from debugger
   start to breakpoint inspection)
 
+- Build checks for any compile errors, including use of deprecated variables / functions.
+
 - Fully-automated, scheduled package updates, driven by elpaca and
   E2E tests (auto-bisect on failures).
 

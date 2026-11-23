@@ -442,6 +442,13 @@ With this alias I hope to not need to remember it."))
   :config
   (add-to-list 'eglot-server-programs '((nix-mode) "nil")))
 
+;; Included with Emacs 31.1, but not enabled by default.
+(use-package markdown-ts-mode
+  :ensure nil
+  :mode ("\\.md\\'" "\\.mdx\\'" "\\.markdown\\'")
+  :config
+  (require 'markdown-ts-mode-x))
+
 (use-package ast-grep
   :ensure t)
 

@@ -332,6 +332,17 @@
 
 With this alias I hope to not need to remember it."))
 
+(use-package yasnippet-capf
+  :ensure t
+  :after cape
+  :config
+  (add-to-list 'completion-at-point-functions #'yasnippet-capf))
+
+(use-package nateeag-eglot-exts
+  :after cape yasnippet-capf eglot
+  :functions nateeag/eglot-capf
+  :hook (eglot-managed-mode . nateeag/eglot-capf))
+
 (use-package prog-mode
   :after smart-dash
   :bind (:map prog-mode-map

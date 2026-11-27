@@ -1,4 +1,4 @@
-;;; elpaca-init.el --- My elpaca configuration.  -*- lexical-binding: t; -*- 
+;;; elpaca-init.el --- My elpaca configuration.  -*- lexical-binding: t; -*-
 
 ;;; Author: Nate Eagleson
 

@@ -1,4 +1,4 @@
-;;; early-init.el --- early initialization options.
+;;; early-init.el --- early initialization options.  -*- lexical-binding: t; -*-
 
 ;;; Author:
 

@@ -1,4 +1,4 @@
-;;; init.el ---
+;;; init.el --- Core initialization details.  -*- lexical-binding: t; -*-
 
 ;;; Author: Nate Eagleson
 

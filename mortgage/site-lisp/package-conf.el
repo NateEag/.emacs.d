@@ -123,6 +123,13 @@
   ;; Doesn't really matter in this case, since I just need the single
   ;; entry point bindable, but if I start to pile up more local files,
   ;; it would be a more-sustainable strategy.
+  ;;
+  ;; I tried using 31.1's new user-lisp-directory setting, with the
+  ;; suggestions from this thread on the elpaca repo:
+  ;;
+  ;; https://github.com/progfolio/elpaca/issues/581
+  ;;
+  ;; but kept hitting issues where things got compiled wrongly (I'm not sure why).
   :functions nateeag/keybindings)
 
 ;; Emacs is a better operating system, hands down, and you can take it from me

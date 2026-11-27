@@ -137,7 +137,7 @@
 ;; rewrite just about anything to it. :P
 (use-package evil
   :ensure t
-  :after hydra evil-surround nateeag-keybindings
+  :after hydra evil-surround evil-commentary nateeag-keybindings
   :init
   ;; Ensure evil-collection initialization works.
   (setq evil-want-integration t) ;; This is optional since it's already set to t by default.
